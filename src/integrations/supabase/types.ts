@@ -53,6 +53,7 @@ export type Database = {
         Row: {
           access_instructions_snapshot: string | null
           address_snapshot: string | null
+          checkout_session_id: string | null
           created_at: string
           delivery_address: string | null
           delivery_fee_snapshot: number | null
@@ -64,6 +65,9 @@ export type Database = {
           id: string
           listing_id: string
           message: string | null
+          paid_at: string | null
+          payment_intent_id: string | null
+          payment_status: string | null
           responded_at: string | null
           shopper_id: string
           start_date: string
@@ -74,6 +78,7 @@ export type Database = {
         Insert: {
           access_instructions_snapshot?: string | null
           address_snapshot?: string | null
+          checkout_session_id?: string | null
           created_at?: string
           delivery_address?: string | null
           delivery_fee_snapshot?: number | null
@@ -85,6 +90,9 @@ export type Database = {
           id?: string
           listing_id: string
           message?: string | null
+          paid_at?: string | null
+          payment_intent_id?: string | null
+          payment_status?: string | null
           responded_at?: string | null
           shopper_id: string
           start_date: string
@@ -95,6 +103,7 @@ export type Database = {
         Update: {
           access_instructions_snapshot?: string | null
           address_snapshot?: string | null
+          checkout_session_id?: string | null
           created_at?: string
           delivery_address?: string | null
           delivery_fee_snapshot?: number | null
@@ -106,6 +115,9 @@ export type Database = {
           id?: string
           listing_id?: string
           message?: string | null
+          paid_at?: string | null
+          payment_intent_id?: string | null
+          payment_status?: string | null
           responded_at?: string | null
           shopper_id?: string
           start_date?: string
