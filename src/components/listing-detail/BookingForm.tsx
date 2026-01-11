@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Calendar, Loader2, MapPin, Truck, Building, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -8,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
 import { format, differenceInDays, eachDayOfInterval } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -88,6 +90,7 @@ const BookingForm = ({
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   
   // Fulfillment state
   const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>(defaultFulfillment);
@@ -143,6 +146,9 @@ const BookingForm = ({
     }
     if (fulfillmentSelected === 'delivery' && !deliveryAddress.trim()) {
       return 'Please enter a delivery address';
+    }
+    if (!agreedToTerms) {
+      return 'Please agree to the Terms of Service to continue';
     }
     return null;
   };
@@ -538,12 +544,35 @@ const BookingForm = ({
         </div>
       )}
 
+      {/* Terms of Service Agreement */}
+      <div className="flex items-start space-x-3 mb-6">
+        <Checkbox
+          id="terms"
+          checked={agreedToTerms}
+          onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+          disabled={!isListingAvailable}
+        />
+        <Label 
+          htmlFor="terms" 
+          className="text-sm text-muted-foreground leading-relaxed cursor-pointer"
+        >
+          I agree to the{' '}
+          <Link 
+            to="/terms" 
+            target="_blank" 
+            className="text-primary hover:underline font-medium"
+          >
+            Terms of Service
+          </Link>
+        </Label>
+      </div>
+
       {/* Submit Button */}
       <Button 
         className="w-full bg-primary hover:bg-primary/90" 
         size="lg"
         onClick={handleSubmit}
-        disabled={isSubmitting || rentalDays <= 0 || !isListingAvailable}
+        disabled={isSubmitting || rentalDays <= 0 || !isListingAvailable || !agreedToTerms}
       >
         {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
         {!user ? 'Sign in to Book' : isListingAvailable ? 'Request Booking' : 'Unavailable'}
