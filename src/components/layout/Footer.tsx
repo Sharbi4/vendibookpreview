@@ -45,6 +45,7 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Support</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
+              <li><Link to="/how-it-works" className="hover:text-primary transition-colors">How Vendibook Works</Link></li>
               <li><Link to="/help" className="hover:text-primary transition-colors">Help Center</Link></li>
               <li><Link to="/contact" className="hover:text-primary transition-colors">Contact Us</Link></li>
               <li><Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
