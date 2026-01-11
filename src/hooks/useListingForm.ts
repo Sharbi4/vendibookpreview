@@ -8,6 +8,7 @@ const initialFormData: ListingFormData = {
   description: '',
   highlights: [],
   fulfillment_type: null,
+  is_static_location: false,
   pickup_location_text: '',
   address: '',
   delivery_fee: '',
@@ -41,10 +42,25 @@ export const useListingForm = () => {
     setFormData(prev => {
       const newData = { ...prev, category };
       
-      // Auto-set fulfillment type for static locations
+      // Auto-set fulfillment type and static location for inherently static locations
       if (isStaticLocation(category)) {
         newData.fulfillment_type = 'on_site';
-      } else if (prev.fulfillment_type === 'on_site') {
+        newData.is_static_location = true;
+      } else if (prev.fulfillment_type === 'on_site' && !prev.is_static_location) {
+        newData.fulfillment_type = null;
+      }
+      
+      return newData;
+    });
+  }, []);
+
+  const toggleStaticLocation = useCallback((isStatic: boolean) => {
+    setFormData(prev => {
+      const newData = { ...prev, is_static_location: isStatic };
+      
+      if (isStatic) {
+        newData.fulfillment_type = 'on_site';
+      } else {
         newData.fulfillment_type = null;
       }
       
@@ -76,7 +92,9 @@ export const useListingForm = () => {
       case 2:
         return formData.title.trim().length > 0 && formData.description.trim().length > 0;
       case 3:
-        if (isStaticLocation(formData.category)) {
+        // Check if this is a static location (either by category or user toggle)
+        const isStatic = isStaticLocation(formData.category) || formData.is_static_location;
+        if (isStatic) {
           return formData.address.trim().length > 0 && formData.access_instructions.trim().length > 0;
         }
         return !!formData.fulfillment_type && formData.pickup_location_text.trim().length > 0;
@@ -101,11 +119,15 @@ export const useListingForm = () => {
     return true;
   }, [validateStep]);
 
+  // Determine if showing static location UI (by category OR user toggle)
+  const showStaticLocationUI = isStaticLocation(formData.category) || formData.is_static_location;
+
   return {
     formData,
     currentStep,
     updateField,
     updateCategory,
+    toggleStaticLocation,
     nextStep,
     prevStep,
     goToStep,
@@ -113,6 +135,7 @@ export const useListingForm = () => {
     validateStep,
     canPublish,
     isMobileAsset: isMobileAsset(formData.category),
-    isStaticLocation: isStaticLocation(formData.category),
+    isStaticLocation: showStaticLocationUI,
+    isCategoryStaticLocation: isStaticLocation(formData.category),
   };
 };

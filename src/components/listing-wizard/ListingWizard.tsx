@@ -28,6 +28,7 @@ export const ListingWizard: React.FC = () => {
     currentStep,
     updateField,
     updateCategory,
+    toggleStaticLocation,
     nextStep,
     prevStep,
     goToStep,
@@ -35,6 +36,7 @@ export const ListingWizard: React.FC = () => {
     canPublish,
     isMobileAsset,
     isStaticLocation,
+    isCategoryStaticLocation,
   } = useListingForm();
 
   const {
@@ -203,6 +205,8 @@ export const ListingWizard: React.FC = () => {
             updateField={updateField}
             isMobileAsset={isMobileAsset}
             isStaticLocation={isStaticLocation}
+            isCategoryStaticLocation={isCategoryStaticLocation}
+            onToggleStaticLocation={toggleStaticLocation}
           />
         );
       case 4:

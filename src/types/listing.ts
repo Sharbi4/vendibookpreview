@@ -44,6 +44,7 @@ export interface ListingFormData {
   description: string;
   highlights: string[];
   fulfillment_type: FulfillmentType | null;
+  is_static_location: boolean;
   pickup_location_text: string;
   address: string;
   delivery_fee: string;
