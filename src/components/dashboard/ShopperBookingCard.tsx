@@ -11,7 +11,10 @@ import {
   ExternalLink,
   X,
   MessageCircle,
-  Star
+  Star,
+  CreditCard,
+  Loader2,
+  DollarSign
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,12 +32,15 @@ import {
 import { MessageDialog } from '@/components/messaging/MessageDialog';
 import ReviewForm from '@/components/reviews/ReviewForm';
 import { useBookingReview } from '@/hooks/useReviews';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { CATEGORY_LABELS } from '@/types/listing';
 import type { ShopperBooking } from '@/hooks/useShopperBookings';
 
 interface ShopperBookingCardProps {
   booking: ShopperBooking;
   onCancel: (id: string) => void;
+  onPaymentInitiated?: () => void;
 }
 
 const StatusBadge = ({ status }: { status: ShopperBooking['status'] }) => {
@@ -76,9 +82,43 @@ const StatusBadge = ({ status }: { status: ShopperBooking['status'] }) => {
   );
 };
 
-const ShopperBookingCard = ({ booking, onCancel }: ShopperBookingCardProps) => {
+const PaymentStatusBadge = ({ status }: { status: string | null }) => {
+  if (!status || status === 'unpaid') return null;
+  
+  const config: Record<string, { label: string; className: string }> = {
+    pending: {
+      label: 'Payment Pending',
+      className: 'bg-amber-100 text-amber-700 border-amber-200',
+    },
+    paid: {
+      label: 'Paid',
+      className: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    },
+    refunded: {
+      label: 'Refunded',
+      className: 'bg-purple-100 text-purple-700 border-purple-200',
+    },
+    failed: {
+      label: 'Payment Failed',
+      className: 'bg-red-100 text-red-700 border-red-200',
+    },
+  };
+
+  const { label, className } = config[status] || { label: status, className: 'bg-muted text-muted-foreground' };
+
+  return (
+    <Badge variant="outline" className={`gap-1 ${className}`}>
+      <DollarSign className="h-3 w-3" />
+      {label}
+    </Badge>
+  );
+};
+
+const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBookingCardProps) => {
+  const { toast } = useToast();
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const { data: existingReview } = useBookingReview(booking.id);
   const listing = booking.listing;
   const location = listing?.address || listing?.pickup_location_text || 'Location TBD';
@@ -87,6 +127,50 @@ const ShopperBookingCard = ({ booking, onCancel }: ShopperBookingCardProps) => {
   const isCompleted = booking.status === 'completed';
   const canReview = isCompleted && !existingReview;
   const canMessage = booking.status !== 'cancelled' && booking.status !== 'declined';
+  
+  // Check if payment is needed (approved but not paid)
+  const paymentStatus = (booking as any).payment_status as string | null;
+  const needsPayment = isApproved && (!paymentStatus || paymentStatus === 'unpaid' || paymentStatus === 'failed');
+  const isPaid = paymentStatus === 'paid';
+
+  const handlePayNow = async () => {
+    if (!listing) return;
+    
+    setIsProcessingPayment(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          booking_id: booking.id,
+          listing_id: listing.id,
+          mode: 'rent',
+          amount: booking.total_price,
+          delivery_fee: booking.delivery_fee_snapshot || 0,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.url) {
+        // Open Stripe Checkout in new tab
+        window.open(data.url, '_blank');
+        toast({
+          title: 'Checkout opened',
+          description: 'Complete your payment in the new tab.',
+        });
+        onPaymentInitiated?.();
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast({
+        title: 'Payment Error',
+        description: error instanceof Error ? error.message : 'Failed to initiate payment. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="flex flex-col sm:flex-row">
@@ -114,7 +198,10 @@ const ShopperBookingCard = ({ booking, onCancel }: ShopperBookingCardProps) => {
                 <span className="line-clamp-1">{location}</span>
               </div>
             </div>
-            <StatusBadge status={booking.status} />
+            <div className="flex flex-col items-end gap-1">
+              <StatusBadge status={booking.status} />
+              <PaymentStatusBadge status={paymentStatus} />
+            </div>
           </div>
 
           {/* Booking Details */}
@@ -200,7 +287,32 @@ const ShopperBookingCard = ({ booking, onCancel }: ShopperBookingCardProps) => {
               </AlertDialog>
             )}
 
-            {isApproved && (
+            {/* Pay Now Button for approved unpaid bookings */}
+            {needsPayment && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handlePayNow}
+                disabled={isProcessingPayment}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {isProcessingPayment ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <CreditCard className="h-4 w-4 mr-1" />
+                )}
+                Pay Now · ${booking.total_price}
+              </Button>
+            )}
+
+            {isApproved && isPaid && (
+              <span className="text-xs text-emerald-600 flex items-center gap-1 ml-auto">
+                <CheckCircle2 className="h-3 w-3" />
+                Paid & Confirmed
+              </span>
+            )}
+
+            {isApproved && !isPaid && !needsPayment && (
               <span className="text-xs text-emerald-600 flex items-center gap-1 ml-auto">
                 <CheckCircle2 className="h-3 w-3" />
                 Confirmed by host
