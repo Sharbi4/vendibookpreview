@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useListingForm } from '@/hooks/useListingForm';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { supabase } from '@/integrations/supabase/client';
+import { CATEGORY_LABELS } from '@/types/listing';
 
 import { WizardProgress } from './WizardProgress';
 import { StepListingType } from './StepListingType';
@@ -164,6 +165,32 @@ export const ListingWizard: React.FC = () => {
       }
 
       if (publish) {
+        // Format price for email
+        const formatPrice = () => {
+          if (formData.mode === 'rent') {
+            if (formData.price_daily) return `$${formData.price_daily}/day`;
+            if (formData.price_weekly) return `$${formData.price_weekly}/week`;
+          }
+          if (formData.price_sale) return `$${parseFloat(formData.price_sale).toLocaleString()}`;
+          return 'Contact for price';
+        };
+
+        // Send listing live email (fire and forget)
+        supabase.functions.invoke('send-listing-live-email', {
+          body: {
+            hostEmail: user.email,
+            hostName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'there',
+            listingTitle: formData.title,
+            listingId: listing.id,
+            listingImageUrl: coverImageUrl,
+            listingPrice: formatPrice(),
+            category: CATEGORY_LABELS[formData.category as keyof typeof CATEGORY_LABELS] || formData.category,
+          },
+        }).then(({ error }) => {
+          if (error) console.error('Failed to send listing live email:', error);
+          else console.log('Listing live email sent successfully');
+        });
+
         // Set published listing for success modal
         setPublishedListing({
           id: listing.id,

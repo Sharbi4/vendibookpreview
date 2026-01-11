@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.optimize-description]
 verify_jwt = false
+
+[functions.send-listing-live-email]
+verify_jwt = false
