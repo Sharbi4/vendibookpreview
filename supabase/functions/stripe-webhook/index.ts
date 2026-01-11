@@ -74,7 +74,9 @@ serve(async (req) => {
         const bookingId = session.metadata?.booking_id;
         const listingId = session.metadata?.listing_id;
         const mode = session.metadata?.mode;
+        const isEscrow = session.metadata?.escrow === 'true';
 
+        // Handle rental bookings
         if (bookingId && session.payment_status === "paid") {
           // Get booking details for admin notification
           const { data: bookingData } = await supabaseClient
@@ -135,8 +137,38 @@ serve(async (req) => {
               logStep("WARNING: Failed to send admin notification", { error: String(adminNotifyError) });
             }
           }
-        } else if (!bookingId) {
-          logStep("No booking_id in metadata, skipping update", { sessionId: session.id });
+        } else if (isEscrow && listingId && session.payment_status === "paid") {
+          // Handle escrow sale payments - the sale_transaction is created on the success page
+          // Just log for now, the actual transaction creation happens client-side via create-sale-transaction
+          logStep("Escrow sale payment completed", { 
+            listingId, 
+            sessionId: session.id,
+            paymentIntent: session.payment_intent 
+          });
+
+          // Send admin notification for sale payment
+          try {
+            await supabaseClient.functions.invoke("send-admin-notification", {
+              body: {
+                type: "sale_payment",
+                data: {
+                  listing_id: listingId,
+                  checkout_session_id: session.id,
+                  payment_intent_id: typeof session.payment_intent === 'string' 
+                    ? session.payment_intent 
+                    : session.payment_intent?.id,
+                  buyer_id: session.metadata?.buyer_id,
+                  seller_id: session.metadata?.seller_id,
+                  amount: session.amount_total ? session.amount_total / 100 : null,
+                },
+              },
+            });
+            logStep("Admin notification sent for sale payment");
+          } catch (adminNotifyError) {
+            logStep("WARNING: Failed to send admin notification for sale", { error: String(adminNotifyError) });
+          }
+        } else if (!bookingId && !isEscrow) {
+          logStep("No booking_id or escrow flag in metadata, skipping update", { sessionId: session.id });
         }
         break;
       }

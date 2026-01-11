@@ -11,7 +11,7 @@ const corsHeaders = {
 };
 
 interface NotificationRequest {
-  type: "new_user" | "new_booking" | "booking_paid" | "newsletter_signup";
+  type: "new_user" | "new_booking" | "booking_paid" | "sale_payment" | "newsletter_signup";
   data: Record<string, any>;
 }
 
@@ -77,6 +77,25 @@ const handler = async (req: Request): Promise<Response> => {
               <p><strong>Paid at:</strong> ${new Date().toLocaleString()}</p>
             </div>
             <p style="color: #666;">A booking payment has been successfully processed on VendiBook.</p>
+          </div>
+        `;
+        break;
+
+      case "sale_payment":
+        subject = "🛒 Sale Payment Received (Escrow) - VendiBook";
+        html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #22c55e;">Sale Payment in Escrow!</h1>
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p><strong>Listing ID:</strong> ${data.listing_id || "N/A"}</p>
+              <p><strong>Amount:</strong> $${data.amount || "N/A"}</p>
+              <p><strong>Checkout Session:</strong> ${data.checkout_session_id || "N/A"}</p>
+              <p><strong>Payment Intent:</strong> ${data.payment_intent_id || "N/A"}</p>
+              <p><strong>Buyer ID:</strong> ${data.buyer_id || "N/A"}</p>
+              <p><strong>Seller ID:</strong> ${data.seller_id || "N/A"}</p>
+              <p><strong>Received at:</strong> ${new Date().toLocaleString()}</p>
+            </div>
+            <p style="color: #666;">A sale payment has been received and is held in escrow until both parties confirm.</p>
           </div>
         `;
         break;
