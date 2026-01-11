@@ -8,11 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { format, differenceInDays } from 'date-fns';
+import { format, differenceInDays, eachDayOfInterval } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useBlockedDates } from '@/hooks/useBlockedDates';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { TablesInsert } from '@/integrations/supabase/types';
 
@@ -63,6 +65,7 @@ const BookingForm = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isDateUnavailable } = useBlockedDates({ listingId });
   
   // Determine if this is a mobile asset or static location
   const isMobileAsset = category === 'food_truck' || category === 'food_trailer';
@@ -121,12 +124,22 @@ const BookingForm = ({
   
   const isListingAvailable = status === 'published';
 
+  // Check if any date in the selected range is unavailable
+  const hasUnavailableDatesInRange = (): boolean => {
+    if (!startDate || !endDate) return false;
+    const datesInRange = eachDayOfInterval({ start: startDate, end: endDate });
+    return datesInRange.some(date => isDateUnavailable(date));
+  };
+
   const validateForm = (): string | null => {
     if (!startDate || !endDate) {
       return 'Please select your rental dates';
     }
     if (rentalDays <= 0) {
       return 'End date must be after start date';
+    }
+    if (hasUnavailableDatesInRange()) {
+      return 'Your selected dates include unavailable dates. Please choose different dates.';
     }
     if (fulfillmentSelected === 'delivery' && !deliveryAddress.trim()) {
       return 'Please enter a delivery address';
@@ -272,8 +285,21 @@ const BookingForm = ({
                 selected={startDate}
                 onSelect={setStartDate}
                 disabled={(date) => 
-                  date < minDate || (maxDate && date > maxDate) || (endDate && date >= endDate)
+                  date < minDate || 
+                  (maxDate && date > maxDate) || 
+                  (endDate && date >= endDate) ||
+                  isDateUnavailable(date)
                 }
+                modifiers={{
+                  unavailable: (date) => isDateUnavailable(date),
+                }}
+                modifiersStyles={{
+                  unavailable: { 
+                    textDecoration: 'line-through',
+                    opacity: 0.5,
+                  },
+                }}
+                className={cn("p-3 pointer-events-auto")}
                 initialFocus
               />
             </PopoverContent>
@@ -296,8 +322,21 @@ const BookingForm = ({
                 selected={endDate}
                 onSelect={setEndDate}
                 disabled={(date) => 
-                  date < minDate || (maxDate && date > maxDate) || (startDate && date <= startDate)
+                  date < minDate || 
+                  (maxDate && date > maxDate) || 
+                  (startDate && date <= startDate) ||
+                  isDateUnavailable(date)
                 }
+                modifiers={{
+                  unavailable: (date) => isDateUnavailable(date),
+                }}
+                modifiersStyles={{
+                  unavailable: { 
+                    textDecoration: 'line-through',
+                    opacity: 0.5,
+                  },
+                }}
+                className={cn("p-3 pointer-events-auto")}
                 initialFocus
               />
             </PopoverContent>
