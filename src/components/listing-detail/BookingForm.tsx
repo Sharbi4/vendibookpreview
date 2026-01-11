@@ -19,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { TablesInsert } from '@/integrations/supabase/types';
+import { calculateRentalFees, RENTAL_RENTER_FEE_PERCENT } from '@/lib/commissions';
 
 interface BookingFormProps {
   listingId: string;
@@ -102,7 +103,7 @@ const BookingForm = ({
 
   const rentalDays = startDate && endDate ? differenceInDays(endDate, startDate) : 0;
   
-  const calculateTotal = () => {
+  const calculateBasePrice = () => {
     if (!priceDaily || rentalDays <= 0) return 0;
     
     const weeks = Math.floor(rentalDays / 7);
@@ -115,15 +116,12 @@ const BookingForm = ({
       basePrice = rentalDays * priceDaily;
     }
     
-    // Add delivery fee if delivery is selected
-    if (fulfillmentSelected === 'delivery' && deliveryFee) {
-      basePrice += deliveryFee;
-    }
-    
     return basePrice;
   };
 
-  const total = calculateTotal();
+  const basePrice = calculateBasePrice();
+  const currentDeliveryFee = fulfillmentSelected === 'delivery' && deliveryFee ? deliveryFee : 0;
+  const fees = calculateRentalFees(basePrice, currentDeliveryFee);
   
   const isListingAvailable = status === 'published';
 
@@ -179,7 +177,7 @@ const BookingForm = ({
         start_date: format(startDate!, 'yyyy-MM-dd'),
         end_date: format(endDate!, 'yyyy-MM-dd'),
         message: message.trim() || null,
-        total_price: total,
+        total_price: fees.customerTotal,
         fulfillment_selected: fulfillmentSelected,
       };
 
@@ -526,20 +524,28 @@ const BookingForm = ({
               ${priceDaily} × {rentalDays} day{rentalDays > 1 ? 's' : ''}
             </span>
             <span className="text-foreground">
-              ${priceWeekly && Math.floor(rentalDays / 7) > 0
-                ? (Math.floor(rentalDays / 7) * priceWeekly) + ((rentalDays % 7) * priceDaily!)
-                : rentalDays * priceDaily!}
+              ${basePrice.toFixed(2)}
             </span>
           </div>
           {fulfillmentSelected === 'delivery' && deliveryFee && (
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Delivery fee</span>
-              <span className="text-foreground">${deliveryFee}</span>
+              <span className="text-foreground">${deliveryFee.toFixed(2)}</span>
             </div>
           )}
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Subtotal</span>
+            <span className="text-foreground">${fees.subtotal.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">
+              Platform fee ({RENTAL_RENTER_FEE_PERCENT}%)
+            </span>
+            <span className="text-foreground">${fees.renterFee.toFixed(2)}</span>
+          </div>
           <div className="flex justify-between font-semibold pt-2 border-t border-border">
             <span>Total</span>
-            <span>${total}</span>
+            <span>${fees.customerTotal.toFixed(2)}</span>
           </div>
         </div>
       )}
@@ -575,7 +581,7 @@ const BookingForm = ({
         disabled={isSubmitting || rentalDays <= 0 || !isListingAvailable || !agreedToTerms}
       >
         {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-        {!user ? 'Sign in to Book' : isListingAvailable ? 'Request Booking' : 'Unavailable'}
+        {!user ? 'Sign in to Book' : isListingAvailable ? `Request Booking · $${fees.customerTotal.toFixed(2)}` : 'Unavailable'}
       </Button>
 
       <p className="text-xs text-muted-foreground text-center mt-4">
