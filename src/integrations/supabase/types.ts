@@ -198,7 +198,9 @@ export type Database = {
           hours_of_access: string | null
           id: string
           image_urls: string[] | null
+          latitude: number | null
           location_notes: string | null
+          longitude: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
           pickup_instructions: string | null
           pickup_location_text: string | null
@@ -228,7 +230,9 @@ export type Database = {
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
+          latitude?: number | null
           location_notes?: string | null
+          longitude?: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
           pickup_instructions?: string | null
           pickup_location_text?: string | null
@@ -258,7 +262,9 @@ export type Database = {
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
+          latitude?: number | null
           location_notes?: string | null
+          longitude?: number | null
           mode?: Database["public"]["Enums"]["listing_mode"]
           pickup_instructions?: string | null
           pickup_location_text?: string | null
