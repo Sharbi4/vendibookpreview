@@ -76,6 +76,13 @@ serve(async (req) => {
         const mode = session.metadata?.mode;
 
         if (bookingId && session.payment_status === "paid") {
+          // Get booking details for admin notification
+          const { data: bookingData } = await supabaseClient
+            .from("booking_requests")
+            .select("*, listings(title)")
+            .eq("id", bookingId)
+            .single();
+
           // Update booking with payment info
           const { error: updateError } = await supabaseClient
             .from("booking_requests")
@@ -94,7 +101,7 @@ serve(async (req) => {
           } else {
             logStep("Booking marked as paid", { bookingId });
 
-            // Send payment confirmation notification
+            // Send payment confirmation notification to host
             try {
               await supabaseClient.functions.invoke("send-booking-notification", {
                 body: { booking_id: bookingId, event_type: "payment_received" },
@@ -102,6 +109,30 @@ serve(async (req) => {
               logStep("Payment notification sent", { bookingId });
             } catch (notifyError) {
               logStep("WARNING: Failed to send notification", { error: String(notifyError) });
+            }
+
+            // Send admin notification for booking payment
+            try {
+              await supabaseClient.functions.invoke("send-admin-notification", {
+                body: {
+                  type: "booking_paid",
+                  data: {
+                    booking_id: bookingId,
+                    listing_title: bookingData?.listings?.title || "Unknown listing",
+                    total_price: bookingData?.total_price,
+                    payment_intent_id: typeof session.payment_intent === 'string' 
+                      ? session.payment_intent 
+                      : session.payment_intent?.id,
+                    shopper_id: bookingData?.shopper_id,
+                    host_id: bookingData?.host_id,
+                    start_date: bookingData?.start_date,
+                    end_date: bookingData?.end_date,
+                  },
+                },
+              });
+              logStep("Admin notification sent for payment", { bookingId });
+            } catch (adminNotifyError) {
+              logStep("WARNING: Failed to send admin notification", { error: String(adminNotifyError) });
             }
           }
         } else if (!bookingId) {
