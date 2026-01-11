@@ -92,8 +92,8 @@ const Dashboard = () => {
         {/* Host Dashboard */}
         {isHost && <HostDashboard />}
 
-        {/* Shopper Dashboard */}
-        {isShopper && !isHost && <ShopperDashboard />}
+        {/* Shopper Dashboard - show for shoppers OR users with no roles */}
+        {(!isHost || isShopper) && <ShopperDashboard />}
 
         {/* Account Info */}
         <div className="bg-muted/50 rounded-xl p-6 mt-8">
