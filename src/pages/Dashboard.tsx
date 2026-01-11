@@ -1,18 +1,15 @@
 import { useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import HostDashboard from '@/components/dashboard/HostDashboard';
+import ShopperDashboard from '@/components/dashboard/ShopperDashboard';
 import { 
   Loader2, 
   Shield, 
-  ShieldCheck, 
-  Calendar, 
-  MessageSquare,
-  Settings,
-  Store
+  ShieldCheck
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -95,70 +92,8 @@ const Dashboard = () => {
         {/* Host Dashboard */}
         {isHost && <HostDashboard />}
 
-        {/* Shopper Quick Actions */}
-        {isShopper && !isHost && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <Link 
-              to="/"
-              className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Store className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">Browse Listings</h3>
-                  <p className="text-sm text-muted-foreground">Find your next asset</p>
-                </div>
-              </div>
-            </Link>
-
-            <Link 
-              to="/dashboard/my-bookings"
-              className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Calendar className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">My Bookings</h3>
-                  <p className="text-sm text-muted-foreground">Track your rentals</p>
-                </div>
-              </div>
-            </Link>
-
-            <Link 
-              to="/dashboard/inquiries"
-              className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <MessageSquare className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">My Inquiries</h3>
-                  <p className="text-sm text-muted-foreground">View sale inquiries</p>
-                </div>
-              </div>
-            </Link>
-
-            <Link 
-              to="/dashboard/settings"
-              className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                  <Settings className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">Settings</h3>
-                  <p className="text-sm text-muted-foreground">Account preferences</p>
-                </div>
-              </div>
-            </Link>
-          </div>
-        )}
+        {/* Shopper Dashboard */}
+        {isShopper && !isHost && <ShopperDashboard />}
 
         {/* Account Info */}
         <div className="bg-muted/50 rounded-xl p-6 mt-8">
