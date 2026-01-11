@@ -29,21 +29,22 @@ const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
       listings = listings.filter(l => l.category === filters.category);
     }
 
-    // Filter by query (city/state)
+    // Filter by query (location text or address)
     if (filters?.query) {
       const q = filters.query.toLowerCase();
       listings = listings.filter(
-        l => l.city.toLowerCase().includes(q) || l.state.toLowerCase().includes(q)
+        l => (l.pickup_location_text?.toLowerCase().includes(q)) || 
+             (l.address?.toLowerCase().includes(q))
       );
     }
 
     // Sort
     if (sortBy === 'newest') {
-      listings.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      listings.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     } else if (sortBy === 'price-low') {
       listings.sort((a, b) => {
-        const priceA = a.mode === 'rent' ? (a.priceDaily || 0) : (a.priceSale || 0);
-        const priceB = b.mode === 'rent' ? (b.priceDaily || 0) : (b.priceSale || 0);
+        const priceA = a.mode === 'rent' ? (a.price_daily || 0) : (a.price_sale || 0);
+        const priceB = b.mode === 'rent' ? (b.price_daily || 0) : (b.price_sale || 0);
         return priceA - priceB;
       });
     }

@@ -1,5 +1,5 @@
-import { Heart } from 'lucide-react';
-import { Listing, categoryLabels } from '@/types/listing';
+import { Heart, MapPin } from 'lucide-react';
+import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -10,18 +10,21 @@ interface ListingCardProps {
 
 const ListingCard = ({ listing, className }: ListingCardProps) => {
   const price = listing.mode === 'rent' 
-    ? `$${listing.priceDaily}/day`
-    : `$${listing.priceSale?.toLocaleString()}`;
+    ? `$${listing.price_daily}/day`
+    : `$${listing.price_sale?.toLocaleString()}`;
 
   const modeLabel = listing.mode === 'rent' ? 'For Rent' : 'For Sale';
   const modeColor = listing.mode === 'rent' ? 'bg-primary' : 'bg-emerald-500';
+
+  // Get location from pickup_location_text or address
+  const location = listing.pickup_location_text || listing.address?.split(',').slice(-2).join(',').trim() || 'Location TBD';
 
   return (
     <div className={cn("group cursor-pointer card-hover", className)}>
       {/* Image Container */}
       <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-muted">
         <img
-          src={listing.images[0]}
+          src={listing.cover_image_url || listing.image_urls[0] || '/placeholder.svg'}
           alt={listing.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
@@ -52,11 +55,12 @@ const ListingCard = ({ listing, className }: ListingCardProps) => {
       <div className="mt-3 space-y-1">
         {/* Location & Category */}
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">
-            {listing.city}, {listing.state}
+          <span className="text-sm text-muted-foreground flex items-center gap-1">
+            <MapPin className="h-3 w-3" />
+            {location}
           </span>
           <span className="text-xs px-2 py-1 bg-secondary rounded-full text-muted-foreground">
-            {categoryLabels[listing.category]}
+            {CATEGORY_LABELS[listing.category]}
           </span>
         </div>
 
@@ -68,9 +72,9 @@ const ListingCard = ({ listing, className }: ListingCardProps) => {
         {/* Price */}
         <p className="text-foreground">
           <span className="font-bold">{price}</span>
-          {listing.mode === 'rent' && listing.priceWeekly && (
+          {listing.mode === 'rent' && listing.price_weekly && (
             <span className="text-sm text-muted-foreground ml-2">
-              · ${listing.priceWeekly}/week
+              · ${listing.price_weekly}/week
             </span>
           )}
         </p>
