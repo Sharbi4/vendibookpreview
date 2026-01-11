@@ -683,22 +683,14 @@ const Search = () => {
                     const isHostVerified = hostVerificationMap[listing.host_id] ?? false;
                     return (
                       <div key={listing.id} className="relative">
-                        <ListingCard listing={listing} hostVerified={isHostVerified} />
-                        {listing.mode === 'rent' && (
-                          <Button
-                            size="sm"
-                            className="absolute bottom-[calc(25%+1rem)] right-3 shadow-lg text-xs px-3 py-1 h-auto"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleQuickBook(listing);
-                            }}
-                          >
-                            Quick Book
-                          </Button>
-                        )}
+                        <ListingCard 
+                          listing={listing} 
+                          hostVerified={isHostVerified}
+                          showQuickBook
+                          onQuickBook={handleQuickBook}
+                        />
                         {distance !== null && (
-                          <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                          <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 z-10">
                             <Navigation className="h-3 w-3" />
                             {distance < 1 ? '< 1' : Math.round(distance)} mi
                           </div>
