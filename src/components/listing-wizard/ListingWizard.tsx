@@ -112,6 +112,26 @@ export const ListingWizard: React.FC = () => {
     setIsSaving(true);
 
     try {
+      // Geocode address to get coordinates
+      let latitude: number | null = null;
+      let longitude: number | null = null;
+      const addressToGeocode = formData.address || formData.pickup_location_text;
+      
+      if (addressToGeocode) {
+        try {
+          const { data: geoData } = await supabase.functions.invoke('geocode-location', {
+            body: { query: addressToGeocode, limit: 1 },
+          });
+          if (geoData?.results?.length > 0) {
+            const [lng, lat] = geoData.results[0].center;
+            latitude = lat;
+            longitude = lng;
+          }
+        } catch (geoError) {
+          console.warn('Failed to geocode address:', geoError);
+        }
+      }
+
       // Create listing first to get ID for image uploads
       const listingData = {
         host_id: user.id,
@@ -137,6 +157,8 @@ export const ListingWizard: React.FC = () => {
         available_from: formData.available_from || null,
         available_to: formData.available_to || null,
         published_at: publish ? new Date().toISOString() : null,
+        latitude,
+        longitude,
       };
 
       const { data: listing, error: insertError } = await supabase

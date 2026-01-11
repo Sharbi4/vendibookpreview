@@ -42,9 +42,10 @@ interface UnavailableDates {
   [listingId: string]: string[];
 }
 
-// Cache for geocoded listing addresses
-interface ListingCoordinates {
-  [listingId: string]: [number, number] | null;
+// Extended listing type with coordinates
+interface ListingWithCoords extends Listing {
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 const Search = () => {
@@ -80,10 +81,7 @@ const Search = () => {
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
-  // Geocoded listing coordinates cache
-  const [listingCoordinates, setListingCoordinates] = useState<ListingCoordinates>({});
-
-  // Fetch all published listings
+  // Fetch all published listings with coordinates
   const { data: listings = [], isLoading: isLoadingListings } = useQuery({
     queryKey: ['search-listings'],
     queryFn: async () => {
@@ -94,51 +92,9 @@ const Search = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as Listing[];
+      return data as ListingWithCoords[];
     },
   });
-
-  // Geocode listing addresses when they change
-  useEffect(() => {
-    const geocodeListings = async () => {
-      const uncachedListings = listings.filter(
-        l => l.address && listingCoordinates[l.id] === undefined
-      );
-      
-      if (uncachedListings.length === 0) return;
-
-      // Batch geocode (limit to avoid rate limits)
-      const toGeocode = uncachedListings.slice(0, 10);
-      const newCoords: ListingCoordinates = { ...listingCoordinates };
-
-      for (const listing of toGeocode) {
-        if (!listing.address) {
-          newCoords[listing.id] = null;
-          continue;
-        }
-
-        try {
-          const { data, error } = await supabase.functions.invoke('geocode-location', {
-            body: { query: listing.address, limit: 1 },
-          });
-
-          if (!error && data.results?.length > 0) {
-            newCoords[listing.id] = data.results[0].center;
-          } else {
-            newCoords[listing.id] = null;
-          }
-        } catch {
-          newCoords[listing.id] = null;
-        }
-      }
-
-      setListingCoordinates(newCoords);
-    };
-
-    if (locationCoords && listings.length > 0) {
-      geocodeListings();
-    }
-  }, [listings, locationCoords]);
 
   // Fetch unavailable dates for all listings (blocked dates + approved bookings)
   const { data: unavailableDates = {} } = useQuery({
@@ -219,34 +175,32 @@ const Search = () => {
   };
 
   // Check if a listing is within the search radius
-  const isListingWithinRadius = (listing: Listing): boolean => {
+  const isListingWithinRadius = (listing: ListingWithCoords): boolean => {
     if (!locationCoords) return true;
     
-    const coords = listingCoordinates[listing.id];
-    if (!coords) return true; // Include if we couldn't geocode
+    if (listing.latitude == null || listing.longitude == null) return true; // Include if no coords stored
     
     const distance = calculateDistance(
       locationCoords[1], // lat
       locationCoords[0], // lng
-      coords[1],
-      coords[0]
+      listing.latitude,
+      listing.longitude
     );
     
     return distance <= searchRadius;
   };
 
   // Get distance for display
-  const getListingDistance = (listing: Listing): number | null => {
+  const getListingDistance = (listing: ListingWithCoords): number | null => {
     if (!locationCoords) return null;
     
-    const coords = listingCoordinates[listing.id];
-    if (!coords) return null;
+    if (listing.latitude == null || listing.longitude == null) return null;
     
     return calculateDistance(
       locationCoords[1],
       locationCoords[0],
-      coords[1],
-      coords[0]
+      listing.latitude,
+      listing.longitude
     );
   };
 
@@ -301,7 +255,7 @@ const Search = () => {
     }
 
     return results;
-  }, [listings, searchQuery, mode, category, locationCoords, searchRadius, priceRange, dateRange, fuse, unavailableDates, listingCoordinates]);
+  }, [listings, searchQuery, mode, category, locationCoords, searchRadius, priceRange, dateRange, fuse, unavailableDates]);
 
   // Update URL params
   const handleSearch = (value: string) => {
