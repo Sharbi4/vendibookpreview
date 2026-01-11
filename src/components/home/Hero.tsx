@@ -23,11 +23,11 @@ const Hero = ({ onSearch }: HeroProps) => {
         {/* Hero Content */}
         <div className="max-w-3xl mx-auto text-center mb-10 animate-fade-in">
           {/* Logo */}
-          <div className="flex justify-center">
+          <div className="flex justify-center animate-fade-in">
             <img 
               src={vendibookLogo} 
               alt="Vendibook" 
-              className="h-32 md:h-40 w-auto mix-blend-multiply mb-4"
+              className="h-32 md:h-40 w-auto mix-blend-multiply mb-4 transition-transform duration-300 hover:scale-105"
             />
           </div>
           
