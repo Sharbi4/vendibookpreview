@@ -5,6 +5,8 @@ import Footer from '@/components/layout/Footer';
 import Hero from '@/components/home/Hero';
 import FeaturedListings from '@/components/home/FeaturedListings';
 import HowItWorks from '@/components/home/HowItWorks';
+import NewsletterSection from '@/components/newsletter/NewsletterSection';
+import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
 import { ListingCategory, ListingMode } from '@/types/listing';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -48,8 +50,10 @@ const Index = () => {
         <Hero onSearch={handleSearch} />
         <FeaturedListings filters={filters} />
         <HowItWorks />
+        <NewsletterSection />
       </main>
 
+      <NewsletterPopup />
       <Footer />
     </div>
   );

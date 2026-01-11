@@ -9,6 +9,7 @@ import Footer from '@/components/layout/Footer';
 import ListingCard from '@/components/listing/ListingCard';
 import QuickBookingModal from '@/components/search/QuickBookingModal';
 import DateRangeFilter from '@/components/search/DateRangeFilter';
+import NewsletterSection from '@/components/newsletter/NewsletterSection';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -516,6 +517,9 @@ const Search = () => {
             </div>
           </div>
         </div>
+
+        {/* Newsletter Section */}
+        <NewsletterSection />
       </main>
 
       <Footer />
