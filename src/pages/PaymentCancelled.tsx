@@ -15,7 +15,7 @@ const PaymentCancelled = () => {
       
       <main className="flex-1 flex items-center justify-center py-16">
         <div className="container max-w-lg">
-          <Card className="border-2 border-amber-200 shadow-lg">
+          <Card className="border-2 border-foreground shadow-lg">
             <CardContent className="pt-8 pb-8 text-center">
               <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <XCircle className="h-10 w-10 text-amber-600" />
