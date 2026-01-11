@@ -22,6 +22,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
+import { RequiredDocumentsBanner } from '@/components/documents/RequiredDocumentsBanner';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { calculateRentalFees, RENTAL_RENTER_FEE_PERCENT } from '@/lib/commissions';
 import type { TablesInsert } from '@/integrations/supabase/types';
@@ -417,6 +418,11 @@ const QuickBookingModal = ({
                 </div>
                 <p className="text-sm text-muted-foreground">{listing.address}</p>
               </div>
+            )}
+
+            {/* Required Documents Banner */}
+            {listing.mode === 'rent' && (
+              <RequiredDocumentsBanner listingId={listing.id} variant="compact" />
             )}
 
             {/* Message */}

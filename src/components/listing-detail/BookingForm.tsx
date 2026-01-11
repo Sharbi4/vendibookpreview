@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
+import { RequiredDocumentsBanner } from '@/components/documents/RequiredDocumentsBanner';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { calculateRentalFees, RENTAL_RENTER_FEE_PERCENT } from '@/lib/commissions';
@@ -503,6 +504,11 @@ const BookingForm = ({
           </div>
         </div>
       )}
+
+      {/* Required Documents Banner */}
+      <div className="mb-6">
+        <RequiredDocumentsBanner listingId={listingId} variant="full" />
+      </div>
 
       {/* Booking Notes */}
       <div className="mb-6">
