@@ -15,6 +15,7 @@ import ListingDetail from "./pages/ListingDetail";
 import Profile from "./pages/Profile";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import Search from "./pages/Search";
 import IdentityVerification from "./pages/IdentityVerification";
 import VerificationComplete from "./pages/VerificationComplete";
 import NotFound from "./pages/NotFound";
@@ -31,6 +32,7 @@ const App = () => (
           <CookieConsent />
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/search" element={<Search />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/dashboard" element={<Dashboard />} />
