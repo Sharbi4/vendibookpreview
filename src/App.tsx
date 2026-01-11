@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import CreateListing from "./pages/CreateListing";
+import ListingDetail from "./pages/ListingDetail";
 import IdentityVerification from "./pages/IdentityVerification";
 import VerificationComplete from "./pages/VerificationComplete";
 import NotFound from "./pages/NotFound";
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/create-listing" element={<CreateListing />} />
+            <Route path="/listing/:id" element={<ListingDetail />} />
             <Route path="/verify-identity" element={<IdentityVerification />} />
             <Route path="/verification-complete" element={<VerificationComplete />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

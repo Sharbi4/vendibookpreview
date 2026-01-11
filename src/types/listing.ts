@@ -74,6 +74,13 @@ export const MODE_LABELS: Record<ListingMode, string> = {
   sale: 'For Sale',
 };
 
+export const FULFILLMENT_LABELS: Record<FulfillmentType, string> = {
+  pickup: 'Pickup Only',
+  delivery: 'Delivery Only',
+  both: 'Pickup & Delivery',
+  on_site: 'On-site Access',
+};
+
 export const isMobileAsset = (category: ListingCategory | null): boolean => {
   return category === 'food_truck' || category === 'food_trailer';
 };
