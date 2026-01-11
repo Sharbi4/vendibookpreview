@@ -126,7 +126,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Sending email to admin: ${ADMIN_EMAIL}`);
     
     const emailResponse = await resend.emails.send({
-      from: "VendiBook <onboarding@resend.dev>",
+      from: "Vendibook <updates@vendibook.com>",
       to: [ADMIN_EMAIL],
       subject,
       html,
