@@ -52,7 +52,7 @@ const Dashboard = () => {
 
         {/* Verification Banner */}
         {!isVerified && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8">
+          <div className="bg-amber-50 border border-foreground rounded-xl p-4 mb-8">
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-3">
                 <Shield className="h-6 w-6 text-amber-600" />
@@ -66,7 +66,7 @@ const Dashboard = () => {
               <Button 
                 onClick={() => navigate('/verify-identity')}
                 variant="outline"
-                className="border-amber-300 text-amber-800 hover:bg-amber-100"
+                className="border-foreground text-amber-800 hover:bg-amber-100"
               >
                 Verify Now
               </Button>
@@ -76,7 +76,7 @@ const Dashboard = () => {
 
         {/* Verified Badge */}
         {isVerified && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-8">
+          <div className="bg-emerald-50 border border-foreground rounded-xl p-4 mb-8">
             <div className="flex items-center gap-3">
               <ShieldCheck className="h-6 w-6 text-emerald-600" />
               <div>
