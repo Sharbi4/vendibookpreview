@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.create-sale-transaction]
 verify_jwt = false
+
+[functions.send-document-notification]
+verify_jwt = false

@@ -7,8 +7,33 @@ import type { DocumentStatus } from '@/types/documents';
 interface ReviewDocumentParams {
   documentId: string;
   bookingId: string;
+  documentType: string;
   status: 'approved' | 'rejected';
   rejectionReason?: string;
+}
+
+// Helper to send document notification emails
+async function sendDocumentNotification(
+  bookingId: string,
+  documentType: string,
+  eventType: 'uploaded' | 'approved' | 'rejected',
+  rejectionReason?: string
+) {
+  try {
+    const { error } = await supabase.functions.invoke('send-document-notification', {
+      body: {
+        booking_id: bookingId,
+        document_type: documentType,
+        event_type: eventType,
+        rejection_reason: rejectionReason,
+      },
+    });
+    if (error) {
+      console.error('Failed to send document notification:', error);
+    }
+  } catch (err) {
+    console.error('Error sending document notification:', err);
+  }
 }
 
 export function useReviewBookingDocument() {
@@ -17,7 +42,7 @@ export function useReviewBookingDocument() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ documentId, bookingId, status, rejectionReason }: ReviewDocumentParams) => {
+    mutationFn: async ({ documentId, bookingId, documentType, status, rejectionReason }: ReviewDocumentParams) => {
       if (!user) throw new Error('Must be logged in to review documents');
 
       const { data, error } = await supabase
@@ -33,16 +58,24 @@ export function useReviewBookingDocument() {
         .single();
 
       if (error) throw error;
-      return data;
+      return { data, bookingId, documentType, status, rejectionReason };
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['booking-documents', variables.bookingId] });
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['booking-documents', result.bookingId] });
       toast({
-        title: variables.status === 'approved' ? 'Document approved' : 'Document rejected',
-        description: variables.status === 'approved' 
+        title: result.status === 'approved' ? 'Document approved' : 'Document rejected',
+        description: result.status === 'approved' 
           ? 'The document has been verified.' 
           : 'The renter has been notified to upload a new document.',
       });
+      
+      // Send email notification to renter
+      sendDocumentNotification(
+        result.bookingId, 
+        result.documentType, 
+        result.status, 
+        result.rejectionReason
+      );
     },
     onError: (error) => {
       toast({

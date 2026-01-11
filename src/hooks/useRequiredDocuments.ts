@@ -29,6 +29,30 @@ export interface BookingDocument {
   reviewed_by: string | null;
 }
 
+// Helper to send document notification emails
+async function sendDocumentNotification(
+  bookingId: string,
+  documentType: string,
+  eventType: 'uploaded' | 'approved' | 'rejected',
+  rejectionReason?: string
+) {
+  try {
+    const { error } = await supabase.functions.invoke('send-document-notification', {
+      body: {
+        booking_id: bookingId,
+        document_type: documentType,
+        event_type: eventType,
+        rejection_reason: rejectionReason,
+      },
+    });
+    if (error) {
+      console.error('Failed to send document notification:', error);
+    }
+  } catch (err) {
+    console.error('Error sending document notification:', err);
+  }
+}
+
 // Fetch required documents for a listing
 export function useListingRequiredDocuments(listingId: string | undefined) {
   return useQuery({
@@ -133,7 +157,7 @@ export function useUploadBookingDocument() {
           .single();
 
         if (error) throw error;
-        return data;
+        return { document: data, bookingId, documentType };
       } else {
         // Create new document record
         const { data, error } = await supabase
@@ -149,15 +173,18 @@ export function useUploadBookingDocument() {
           .single();
 
         if (error) throw error;
-        return data;
+        return { document: data, bookingId, documentType };
       }
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['booking-documents', variables.bookingId] });
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['booking-documents', result.bookingId] });
       toast({
         title: 'Document uploaded',
         description: 'Your document has been submitted for review.',
       });
+      
+      // Send email notification to host
+      sendDocumentNotification(result.bookingId, result.documentType, 'uploaded');
     },
     onError: (error) => {
       console.error('Upload error:', error);
