@@ -19,6 +19,7 @@ import InquiryForm from '@/components/listing-detail/InquiryForm';
 import HostCard from '@/components/listing-detail/HostCard';
 import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
 import ReviewsSection from '@/components/reviews/ReviewsSection';
+import { RequiredDocumentsSection } from '@/components/documents';
 import { useListing } from '@/hooks/useListing';
 import { useListingAverageRating } from '@/hooks/useReviews';
 import { CATEGORY_LABELS, FULFILLMENT_LABELS } from '@/types/listing';
@@ -287,6 +288,11 @@ const ListingDetail = () => {
                   )}
                 </div>
               </div>
+
+              {/* Required Documents Section (for rentals) */}
+              {isRental && (
+                <RequiredDocumentsSection listingId={listing.id} />
+              )}
 
               {/* Host Card - Mobile */}
               <div className="lg:hidden">
