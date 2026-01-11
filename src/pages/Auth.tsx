@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Truck, Store, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { z } from 'zod';
+import vendibookLogo from '@/assets/vendibook-logo.jpg';
 
 const authSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -125,12 +126,11 @@ const Auth = () => {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary mb-4">
-            <span className="text-primary-foreground text-2xl font-bold">V</span>
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">
-            vendi<span className="text-primary">book</span>
-          </h1>
+          <img 
+            src={vendibookLogo} 
+            alt="Vendibook" 
+            className="h-20 w-auto mx-auto mb-4 rounded-xl"
+          />
         </div>
 
         {/* Auth Card */}
