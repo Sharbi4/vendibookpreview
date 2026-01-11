@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import CookieConsent from "@/components/CookieConsent";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -12,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import CreateListing from "./pages/CreateListing";
 import ListingDetail from "./pages/ListingDetail";
 import Profile from "./pages/Profile";
+import Privacy from "./pages/Privacy";
 import IdentityVerification from "./pages/IdentityVerification";
 import VerificationComplete from "./pages/VerificationComplete";
 import NotFound from "./pages/NotFound";
@@ -25,6 +27,7 @@ const App = () => (
         <AuthProvider>
           <Toaster />
           <Sonner />
+          <CookieConsent />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -34,6 +37,7 @@ const App = () => (
             <Route path="/listing/:id" element={<ListingDetail />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:id" element={<Profile />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/verify-identity" element={<IdentityVerification />} />
             <Route path="/verification-complete" element={<VerificationComplete />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
