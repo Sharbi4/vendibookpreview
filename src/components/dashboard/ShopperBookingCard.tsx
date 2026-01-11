@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { 
@@ -8,7 +9,8 @@ import {
   XCircle, 
   AlertCircle,
   ExternalLink,
-  X
+  X,
+  MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { MessageDialog } from '@/components/messaging/MessageDialog';
 import { CATEGORY_LABELS } from '@/types/listing';
 import type { ShopperBooking } from '@/hooks/useShopperBookings';
 
@@ -71,11 +74,12 @@ const StatusBadge = ({ status }: { status: ShopperBooking['status'] }) => {
 };
 
 const ShopperBookingCard = ({ booking, onCancel }: ShopperBookingCardProps) => {
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
   const listing = booking.listing;
   const location = listing?.address || listing?.pickup_location_text || 'Location TBD';
   const isPending = booking.status === 'pending';
   const isApproved = booking.status === 'approved';
-
+  const canMessage = booking.status !== 'cancelled' && booking.status !== 'declined';
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="flex flex-col sm:flex-row">
@@ -150,6 +154,17 @@ const ShopperBookingCard = ({ booking, onCancel }: ShopperBookingCardProps) => {
                 View Listing
               </Link>
             </Button>
+
+            {canMessage && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowMessageDialog(true)}
+              >
+                <MessageCircle className="h-4 w-4 mr-1" />
+                Message Host
+              </Button>
+            )}
             
             {isPending && (
               <AlertDialog>
@@ -187,6 +202,14 @@ const ShopperBookingCard = ({ booking, onCancel }: ShopperBookingCardProps) => {
           </div>
         </div>
       </div>
+
+      <MessageDialog
+        open={showMessageDialog}
+        onOpenChange={setShowMessageDialog}
+        bookingId={booking.id}
+        listingTitle={listing?.title || 'Booking'}
+        otherPartyName="Host"
+      />
     </div>
   );
 };
