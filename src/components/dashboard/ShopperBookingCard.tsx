@@ -14,7 +14,10 @@ import {
   Star,
   CreditCard,
   Loader2,
-  DollarSign
+  DollarSign,
+  FileText,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,9 +32,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { MessageDialog } from '@/components/messaging/MessageDialog';
 import ReviewForm from '@/components/reviews/ReviewForm';
+import { DocumentUploadSection } from '@/components/documents/DocumentUploadSection';
 import { useBookingReview } from '@/hooks/useReviews';
+import { useDocumentComplianceStatus } from '@/hooks/useRequiredDocuments';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CATEGORY_LABELS } from '@/types/listing';
@@ -119,8 +129,15 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [showDocuments, setShowDocuments] = useState(false);
   const { data: existingReview } = useBookingReview(booking.id);
+  
   const listing = booking.listing;
+  const listingId = listing?.id;
+  
+  // Check document compliance
+  const compliance = useDocumentComplianceStatus(listingId, booking.id);
+  
   const location = listing?.address || listing?.pickup_location_text || 'Location TBD';
   const isPending = booking.status === 'pending';
   const isApproved = booking.status === 'approved';
@@ -132,6 +149,11 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
   const paymentStatus = (booking as any).payment_status as string | null;
   const needsPayment = isApproved && (!paymentStatus || paymentStatus === 'unpaid' || paymentStatus === 'failed');
   const isPaid = paymentStatus === 'paid';
+  
+  // Check if documents need attention
+  const hasDocumentRequirements = compliance.hasRequirements;
+  const needsDocuments = hasDocumentRequirements && !compliance.allSubmitted;
+  const hasRejectedDocs = compliance.rejectedCount > 0;
 
   const handlePayNow = async () => {
     if (!listing) return;
@@ -337,7 +359,38 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
                 Reviewed
               </span>
             )}
+
+            {/* Document upload toggle button */}
+            {hasDocumentRequirements && (isPending || isApproved) && (
+              <Collapsible open={showDocuments} onOpenChange={setShowDocuments}>
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant={needsDocuments || hasRejectedDocs ? 'default' : 'outline'}
+                    size="sm"
+                    className={needsDocuments || hasRejectedDocs ? 'bg-amber-500 hover:bg-amber-600' : ''}
+                  >
+                    <FileText className="h-4 w-4 mr-1" />
+                    {needsDocuments ? 'Upload Documents' : hasRejectedDocs ? 'Fix Documents' : 'View Documents'}
+                    {showDocuments ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
+                  </Button>
+                </CollapsibleTrigger>
+              </Collapsible>
+            )}
           </div>
+
+          {/* Document Upload Section (Collapsible) */}
+          {hasDocumentRequirements && listingId && (isPending || isApproved) && (
+            <Collapsible open={showDocuments} onOpenChange={setShowDocuments}>
+              <CollapsibleContent>
+                <div className="mt-4 pt-4 border-t border-border">
+                  <DocumentUploadSection
+                    listingId={listingId}
+                    bookingId={booking.id}
+                  />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
 
           {/* Review Form */}
           {showReviewForm && listing && (
