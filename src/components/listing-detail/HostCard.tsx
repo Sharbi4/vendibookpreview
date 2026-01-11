@@ -3,6 +3,7 @@ import { ShieldCheck, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import MessageHostButton from '@/components/messaging/MessageHostButton';
+import VerificationBadge from '@/components/verification/VerificationBadge';
 
 interface HostCardProps {
   hostId: string;
@@ -32,21 +33,25 @@ const HostCard = ({
       <h3 className="font-semibold text-foreground mb-4">Hosted by</h3>
       
       <Link to={profileLink} className="flex items-center gap-4 mb-4 group">
-        <Avatar className="h-16 w-16 transition-transform group-hover:scale-105">
-          <AvatarImage src={hostAvatar || undefined} alt={hostName || 'Host'} />
-          <AvatarFallback className="bg-primary/10 text-primary text-lg">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
+        <div className="relative">
+          <Avatar className="h-16 w-16 transition-transform group-hover:scale-105">
+            <AvatarImage src={hostAvatar || undefined} alt={hostName || 'Host'} />
+            <AvatarFallback className="bg-primary/10 text-primary text-lg">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          {isVerified && (
+            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-background rounded-full p-0.5">
+              <ShieldCheck className="h-5 w-5 text-emerald-600" />
+            </div>
+          )}
+        </div>
         
         <div>
           <div className="flex items-center gap-2">
             <span className="font-semibold text-foreground text-lg group-hover:text-primary transition-colors">
               {hostName || 'Host'}
             </span>
-            {isVerified && (
-              <ShieldCheck className="h-5 w-5 text-emerald-600" />
-            )}
           </div>
           {memberSince && (
             <p className="text-sm text-muted-foreground">
@@ -56,12 +61,10 @@ const HostCard = ({
         </div>
       </Link>
 
-      {isVerified && (
-        <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2 mb-4">
-          <ShieldCheck className="h-4 w-4" />
-          <span>Identity verified</span>
-        </div>
-      )}
+      {/* Verification Badge Card */}
+      <div className="mb-4">
+        <VerificationBadge isVerified={isVerified} variant="card" />
+      </div>
 
       <div className="flex gap-2">
         <MessageHostButton 
