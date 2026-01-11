@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import CreateListing from "./pages/CreateListing";
 import ListingDetail from "./pages/ListingDetail";
 import Profile from "./pages/Profile";
+import EditProfile from "./pages/EditProfile";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Search from "./pages/Search";
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/create-listing" element={<CreateListing />} />
             <Route path="/listing/:id" element={<ListingDetail />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/edit" element={<EditProfile />} />
             <Route path="/profile/:id" element={<Profile />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
