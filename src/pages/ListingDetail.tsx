@@ -23,20 +23,12 @@ import { RequiredDocumentsSection } from '@/components/documents';
 import { useListing } from '@/hooks/useListing';
 import { useListingAverageRating } from '@/hooks/useReviews';
 import { CATEGORY_LABELS, FULFILLMENT_LABELS } from '@/types/listing';
-import { useToast } from '@/hooks/use-toast';
+import MessageHostButton from '@/components/messaging/MessageHostButton';
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { listing, host, isLoading, error } = useListing(id);
   const { data: ratingData } = useListingAverageRating(id);
-  const { toast } = useToast();
-
-  const handleContactHost = () => {
-    toast({
-      title: 'Contact feature coming soon',
-      description: 'Messaging will be available shortly.',
-    });
-  };
 
   if (isLoading) {
     return (
@@ -298,11 +290,11 @@ const ListingDetail = () => {
               <div className="lg:hidden">
                 <HostCard
                   hostId={listing.host_id}
+                  listingId={listing.id}
                   hostName={host?.full_name || null}
                   hostAvatar={host?.avatar_url}
                   isVerified={host?.identity_verified || false}
                   memberSince={host?.created_at}
-                  onContact={handleContactHost}
                 />
               </div>
 
@@ -348,11 +340,11 @@ const ListingDetail = () => {
               <div className="hidden lg:block">
                 <HostCard
                   hostId={listing.host_id}
+                  listingId={listing.id}
                   hostName={host?.full_name || null}
                   hostAvatar={host?.avatar_url}
                   isVerified={host?.identity_verified || false}
                   memberSince={host?.created_at}
-                  onContact={handleContactHost}
                 />
               </div>
             </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield } from 'lucide-react';
+import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -79,6 +79,10 @@ const Header = () => {
                 <DropdownMenuItem onClick={() => navigate('/dashboard')}>
                   <LayoutDashboard className="h-4 w-4 mr-2" />
                   Dashboard
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/messages')}>
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Messages
                 </DropdownMenuItem>
                 {!isVerified && (
                   <DropdownMenuItem onClick={() => navigate('/verify-identity')}>
