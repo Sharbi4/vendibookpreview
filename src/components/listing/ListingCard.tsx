@@ -2,6 +2,7 @@ import { Heart, MapPin } from 'lucide-react';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import RatingBadge from '@/components/reviews/RatingBadge';
 
 interface ListingCardProps {
   listing: Listing;
@@ -64,10 +65,13 @@ const ListingCard = ({ listing, className }: ListingCardProps) => {
           </span>
         </div>
 
-        {/* Title */}
-        <h3 className="font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
-          {listing.title}
-        </h3>
+        {/* Title & Rating */}
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+            {listing.title}
+          </h3>
+          <RatingBadge listingId={listing.id} />
+        </div>
 
         {/* Price */}
         <p className="text-foreground">

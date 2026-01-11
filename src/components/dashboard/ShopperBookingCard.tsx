@@ -10,7 +10,8 @@ import {
   AlertCircle,
   ExternalLink,
   X,
-  MessageCircle
+  MessageCircle,
+  Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,8 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { MessageDialog } from '@/components/messaging/MessageDialog';
+import ReviewForm from '@/components/reviews/ReviewForm';
+import { useBookingReview } from '@/hooks/useReviews';
 import { CATEGORY_LABELS } from '@/types/listing';
 import type { ShopperBooking } from '@/hooks/useShopperBookings';
 
@@ -75,10 +78,14 @@ const StatusBadge = ({ status }: { status: ShopperBooking['status'] }) => {
 
 const ShopperBookingCard = ({ booking, onCancel }: ShopperBookingCardProps) => {
   const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const { data: existingReview } = useBookingReview(booking.id);
   const listing = booking.listing;
   const location = listing?.address || listing?.pickup_location_text || 'Location TBD';
   const isPending = booking.status === 'pending';
   const isApproved = booking.status === 'approved';
+  const isCompleted = booking.status === 'completed';
+  const canReview = isCompleted && !existingReview;
   const canMessage = booking.status !== 'cancelled' && booking.status !== 'declined';
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -199,7 +206,38 @@ const ShopperBookingCard = ({ booking, onCancel }: ShopperBookingCardProps) => {
                 Confirmed by host
               </span>
             )}
+
+            {canReview && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setShowReviewForm(true)}
+                className="ml-auto"
+              >
+                <Star className="h-4 w-4 mr-1" />
+                Leave Review
+              </Button>
+            )}
+
+            {existingReview && (
+              <span className="text-xs text-primary flex items-center gap-1 ml-auto">
+                <Star className="h-3 w-3 fill-primary" />
+                Reviewed
+              </span>
+            )}
           </div>
+
+          {/* Review Form */}
+          {showReviewForm && listing && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <ReviewForm
+                bookingId={booking.id}
+                listingId={listing.id}
+                hostId={booking.host_id}
+                onSuccess={() => setShowReviewForm(false)}
+              />
+            </div>
+          )}
         </div>
       </div>
 
