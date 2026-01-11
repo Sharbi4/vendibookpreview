@@ -193,7 +193,7 @@ export const HostDocumentReviewSection = ({
 
             {/* Compliance summary */}
             {compliance.allApproved && (
-              <Alert className="bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800">
+              <Alert className="bg-emerald-50 dark:bg-emerald-950/30 border-foreground dark:border-foreground">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                 <AlertDescription className="text-emerald-800 dark:text-emerald-200 text-sm">
                   All required documents have been verified. This booking is compliant.

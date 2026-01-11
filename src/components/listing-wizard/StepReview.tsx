@@ -154,7 +154,7 @@ export const StepReview: React.FC<StepReviewProps> = ({
       )}
 
       {issues.length === 0 && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+        <div className="bg-green-50 border border-foreground rounded-xl p-4 flex items-center gap-3">
           <Check className="w-5 h-5 text-green-600" />
           <p className="text-green-700 font-medium">
             Your listing is ready to publish!

@@ -36,17 +36,17 @@ const StatusBadge = ({ status }: { status: DocumentStatus }) => {
     pending: {
       label: 'Pending Review',
       icon: Clock,
-      className: 'bg-amber-100 text-amber-700 border-amber-200',
+      className: 'bg-amber-100 text-amber-700 border-foreground',
     },
     approved: {
       label: 'Approved',
       icon: CheckCircle2,
-      className: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+      className: 'bg-emerald-100 text-emerald-700 border-foreground',
     },
     rejected: {
       label: 'Rejected',
       icon: XCircle,
-      className: 'bg-red-100 text-red-700 border-red-200',
+      className: 'bg-red-100 text-red-700 border-foreground',
     },
   };
 
@@ -94,9 +94,9 @@ export const HostDocumentReviewCard = ({ document, bookingId }: HostDocumentRevi
         className={cn(
           'rounded-lg border p-3 transition-all',
           document.status === 'approved'
-            ? 'bg-emerald-50/50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800'
+            ? 'bg-emerald-50/50 border-foreground dark:bg-emerald-950/20 dark:border-foreground'
             : document.status === 'rejected'
-            ? 'bg-red-50/50 border-red-200 dark:bg-red-950/20 dark:border-red-800'
+            ? 'bg-red-50/50 border-foreground dark:bg-red-950/20 dark:border-foreground'
             : 'bg-card border-border'
         )}
       >

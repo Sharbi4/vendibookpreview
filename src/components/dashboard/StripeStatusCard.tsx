@@ -22,7 +22,7 @@ const StripeStatusCard = ({ isConnected, hasAccountStarted, isLoading, onConnect
 
   if (isConnected) {
     return (
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6">
+      <div className="bg-emerald-50 border border-foreground rounded-xl p-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
             <Check className="h-5 w-5 text-emerald-600" />
@@ -39,7 +39,7 @@ const StripeStatusCard = ({ isConnected, hasAccountStarted, isLoading, onConnect
   // User started onboarding but didn't complete it
   if (hasAccountStarted) {
     return (
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+      <div className="bg-blue-50 border border-foreground rounded-xl p-6">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
@@ -63,7 +63,7 @@ const StripeStatusCard = ({ isConnected, hasAccountStarted, isLoading, onConnect
   }
 
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
+    <div className="bg-amber-50 border border-foreground rounded-xl p-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
