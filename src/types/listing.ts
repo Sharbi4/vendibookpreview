@@ -211,6 +211,14 @@ export interface ListingFormData {
   available_to: string;
   images: File[];
   existingImages: string[];
+  // Required documents for rentals
+  required_documents?: {
+    document_type: string;
+    is_required: boolean;
+    deadline_type: string;
+    deadline_offset_hours?: number;
+    description?: string;
+  }[];
 }
 
 export const CATEGORY_LABELS: Record<ListingCategory, string> = {

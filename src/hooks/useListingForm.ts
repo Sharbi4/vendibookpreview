@@ -26,7 +26,10 @@ const initialFormData: ListingFormData = {
   available_to: '',
   images: [],
   existingImages: [],
+  required_documents: [],
 };
+
+const TOTAL_STEPS = 7;
 
 export const useListingForm = () => {
   const [formData, setFormData] = useState<ListingFormData>(initialFormData);
@@ -70,7 +73,7 @@ export const useListingForm = () => {
   }, []);
 
   const nextStep = useCallback(() => {
-    setCurrentStep(prev => Math.min(prev + 1, 6));
+    setCurrentStep(prev => Math.min(prev + 1, TOTAL_STEPS));
   }, []);
 
   const prevStep = useCallback(() => {
@@ -78,7 +81,7 @@ export const useListingForm = () => {
   }, []);
 
   const goToStep = useCallback((step: number) => {
-    setCurrentStep(Math.max(1, Math.min(step, 6)));
+    setCurrentStep(Math.max(1, Math.min(step, TOTAL_STEPS)));
   }, []);
 
   const resetForm = useCallback(() => {
@@ -105,8 +108,11 @@ export const useListingForm = () => {
         }
         return formData.price_daily.trim().length > 0 && parseFloat(formData.price_daily) > 0;
       case 5:
-        return formData.images.length > 0 || formData.existingImages.length > 0;
+        // Documents step - always valid (documents are optional)
+        return true;
       case 6:
+        return formData.images.length > 0 || formData.existingImages.length > 0;
+      case 7:
         return true;
       default:
         return false;
@@ -114,7 +120,8 @@ export const useListingForm = () => {
   }, [formData]);
 
   const canPublish = useCallback((): boolean => {
-    for (let i = 1; i <= 5; i++) {
+    // Validate steps 1-6 (excluding review step 7)
+    for (let i = 1; i <= 6; i++) {
       if (!validateStep(i)) return false;
     }
     return true;
