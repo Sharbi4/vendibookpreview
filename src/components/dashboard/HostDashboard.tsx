@@ -6,6 +6,7 @@ import StatCard from './StatCard';
 import StripeStatusCard from './StripeStatusCard';
 import HostListingCard from './HostListingCard';
 import BookingRequestsSection from './BookingRequestsSection';
+import SellerSalesSection from './SellerSalesSection';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
@@ -154,6 +155,9 @@ const HostDashboard = () => {
           <BookingRequestsSection />
         </TabsContent>
       </Tabs>
+
+      {/* Sales Section */}
+      <SellerSalesSection />
 
       {/* Stripe Connect Modal */}
       <StripeConnectModal
