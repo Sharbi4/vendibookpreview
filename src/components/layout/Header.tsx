@@ -34,20 +34,19 @@ const Header = () => {
           />
         </Link>
 
+        {/* Centered Search */}
+        <div className="hidden md:flex flex-1 justify-center max-w-xl mx-6">
+          <button
+            onClick={() => navigate('/search')}
+            className="w-full flex items-center gap-3 px-4 py-2 rounded-full border border-border bg-muted/50 hover:bg-muted transition-colors text-muted-foreground text-sm"
+          >
+            <Search className="h-4 w-4" />
+            <span>Search food trucks, trailers, ghost kitchens, or equipment</span>
+          </button>
+        </div>
+
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
-          <Link 
-            to="/?mode=rent" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            For Rent
-          </Link>
-          <Link 
-            to="/?mode=sale" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            For Sale
-          </Link>
           <Link 
             to="/create-listing" 
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -58,14 +57,6 @@ const Header = () => {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full"
-            onClick={() => navigate('/search')}
-          >
-            <Search className="h-5 w-5" />
-          </Button>
           
           {user ? (
             <DropdownMenu>
@@ -137,18 +128,11 @@ const Header = () => {
         <div className="md:hidden border-t border-border bg-background animate-fade-in">
           <nav className="container py-4 flex flex-col gap-4">
             <Link 
-              to="/?mode=rent" 
+              to="/search" 
               className="text-sm font-medium py-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              For Rent
-            </Link>
-            <Link 
-              to="/?mode=sale" 
-              className="text-sm font-medium py-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              For Sale
+              Search
             </Link>
             <Link 
               to="/create-listing" 
