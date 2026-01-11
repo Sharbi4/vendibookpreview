@@ -1,16 +1,20 @@
 import { Link } from 'react-router-dom';
-import { Plus, Truck, FileText, Eye, Loader2 } from 'lucide-react';
+import { Plus, Truck, FileText, Eye, Loader2, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StatCard from './StatCard';
 import StripeStatusCard from './StripeStatusCard';
 import HostListingCard from './HostListingCard';
+import BookingRequestsSection from './BookingRequestsSection';
 import { useHostListings } from '@/hooks/useHostListings';
+import { useHostBookings } from '@/hooks/useHostBookings';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectModal';
 import { useState } from 'react';
 
 const HostDashboard = () => {
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing } = useHostListings();
+  const { stats: bookingStats } = useHostBookings();
   const { isConnected, isLoading: stripeLoading, connectStripe, isConnecting } = useStripeConnect();
   const [showStripeModal, setShowStripeModal] = useState(false);
 
@@ -68,66 +72,87 @@ const HostDashboard = () => {
           iconClass="text-emerald-600"
         />
         <StatCard 
+          icon={Calendar} 
+          label="Pending Requests" 
+          value={bookingStats.pending}
+          iconBgClass="bg-amber-100"
+          iconClass="text-amber-600"
+        />
+        <StatCard 
           icon={FileText} 
           label="Drafts" 
           value={stats.drafts}
           iconBgClass="bg-muted"
           iconClass="text-muted-foreground"
         />
-        <StatCard 
-          icon={Truck} 
-          label="For Rent" 
-          value={stats.rentals}
-          subtext={`${stats.sales} for sale`}
-        />
       </div>
 
-      {/* My Listings */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-foreground">My Listings</h3>
-          {listings.length > 0 && (
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/create-listing">
-                <Plus className="h-4 w-4 mr-1" />
-                New Listing
-              </Link>
-            </Button>
-          )}
-        </div>
+      {/* Main Tabs */}
+      <Tabs defaultValue="listings" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="listings">My Listings</TabsTrigger>
+          <TabsTrigger value="bookings" className="relative">
+            Booking Requests
+            {bookingStats.pending > 0 && (
+              <span className="ml-2 px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded-full">
+                {bookingStats.pending}
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <TabsContent value="listings">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-foreground">My Listings</h3>
+              {listings.length > 0 && (
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/create-listing">
+                    <Plus className="h-4 w-4 mr-1" />
+                    New Listing
+                  </Link>
+                </Button>
+              )}
+            </div>
+
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : listings.length === 0 ? (
+              <div className="bg-muted/50 rounded-xl p-12 text-center">
+                <Truck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h4 className="font-semibold text-foreground mb-2">No listings yet</h4>
+                <p className="text-muted-foreground mb-6">
+                  Create your first listing to start earning on Vendibook.
+                </p>
+                <Button asChild>
+                  <Link to="/create-listing">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Your First Listing
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {listings.map((listing) => (
+                  <HostListingCard
+                    key={listing.id}
+                    listing={listing}
+                    onPause={pauseListing}
+                    onPublish={handlePublish}
+                    onDelete={deleteListing}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        ) : listings.length === 0 ? (
-          <div className="bg-muted/50 rounded-xl p-12 text-center">
-            <Truck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h4 className="font-semibold text-foreground mb-2">No listings yet</h4>
-            <p className="text-muted-foreground mb-6">
-              Create your first listing to start earning on Vendibook.
-            </p>
-            <Button asChild>
-              <Link to="/create-listing">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Your First Listing
-              </Link>
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {listings.map((listing) => (
-              <HostListingCard
-                key={listing.id}
-                listing={listing}
-                onPause={pauseListing}
-                onPublish={handlePublish}
-                onDelete={deleteListing}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+        </TabsContent>
+
+        <TabsContent value="bookings">
+          <BookingRequestsSection />
+        </TabsContent>
+      </Tabs>
 
       {/* Stripe Connect Modal */}
       <StripeConnectModal

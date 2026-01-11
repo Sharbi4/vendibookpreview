@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      booking_requests: {
+        Row: {
+          created_at: string
+          end_date: string
+          host_id: string
+          host_response: string | null
+          id: string
+          listing_id: string
+          message: string | null
+          responded_at: string | null
+          shopper_id: string
+          start_date: string
+          status: Database["public"]["Enums"]["booking_status"]
+          total_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          host_id: string
+          host_response?: string | null
+          id?: string
+          listing_id: string
+          message?: string | null
+          responded_at?: string | null
+          shopper_id: string
+          start_date: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          total_price: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          host_id?: string
+          host_response?: string | null
+          id?: string
+          listing_id?: string
+          message?: string | null
+          responded_at?: string | null
+          shopper_id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          total_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_requests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           access_instructions: string | null
@@ -189,6 +245,12 @@ export type Database = {
     }
     Enums: {
       app_role: "host" | "shopper"
+      booking_status:
+        | "pending"
+        | "approved"
+        | "declined"
+        | "cancelled"
+        | "completed"
       fulfillment_type: "pickup" | "delivery" | "both" | "on_site"
       listing_category:
         | "food_truck"
@@ -325,6 +387,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["host", "shopper"],
+      booking_status: [
+        "pending",
+        "approved",
+        "declined",
+        "cancelled",
+        "completed",
+      ],
       fulfillment_type: ["pickup", "delivery", "both", "on_site"],
       listing_category: [
         "food_truck",
