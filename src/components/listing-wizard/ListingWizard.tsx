@@ -16,8 +16,21 @@ import { StepPricing } from './StepPricing';
 import { StepPhotos } from './StepPhotos';
 import { StepReview } from './StepReview';
 import { StripeConnectModal } from './StripeConnectModal';
+import { PublishSuccessModal } from './PublishSuccessModal';
 
 const STEPS = ['Type', 'Details', 'Location', 'Pricing', 'Photos', 'Review'];
+
+interface PublishedListing {
+  id: string;
+  title: string;
+  coverImageUrl: string | null;
+  category: string;
+  mode: string;
+  address: string | null;
+  priceDaily: number | null;
+  priceWeekly: number | null;
+  priceSale: number | null;
+}
 
 export const ListingWizard: React.FC = () => {
   const navigate = useNavigate();
@@ -49,6 +62,8 @@ export const ListingWizard: React.FC = () => {
 
   const [isSaving, setIsSaving] = useState(false);
   const [showStripeModal, setShowStripeModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [publishedListing, setPublishedListing] = useState<PublishedListing | null>(null);
 
   const uploadImages = async (listingId: string): Promise<string[]> => {
     const urls: string[] = [];
@@ -131,14 +146,16 @@ export const ListingWizard: React.FC = () => {
 
       if (insertError) throw insertError;
 
-      // Upload images
+      // Upload images and get the final cover URL
+      let coverImageUrl: string | null = null;
       if (formData.images.length > 0) {
         const imageUrls = await uploadImages(listing.id);
+        coverImageUrl = imageUrls[0] || null;
         
         const { error: updateError } = await supabase
           .from('listings')
           .update({
-            cover_image_url: imageUrls[0] || null,
+            cover_image_url: coverImageUrl,
             image_urls: imageUrls,
           } as any)
           .eq('id', listing.id);
@@ -146,14 +163,27 @@ export const ListingWizard: React.FC = () => {
         if (updateError) throw updateError;
       }
 
-      toast({
-        title: publish ? 'Listing Published!' : 'Draft Saved',
-        description: publish 
-          ? 'Your listing is now live.'
-          : 'You can continue editing later.',
-      });
-
-      navigate('/dashboard');
+      if (publish) {
+        // Set published listing for success modal
+        setPublishedListing({
+          id: listing.id,
+          title: formData.title,
+          coverImageUrl: coverImageUrl,
+          category: formData.category!,
+          mode: formData.mode!,
+          address: formData.address || null,
+          priceDaily: formData.price_daily ? parseFloat(formData.price_daily) : null,
+          priceWeekly: formData.price_weekly ? parseFloat(formData.price_weekly) : null,
+          priceSale: formData.price_sale ? parseFloat(formData.price_sale) : null,
+        });
+        setShowSuccessModal(true);
+      } else {
+        toast({
+          title: 'Draft Saved',
+          description: 'You can continue editing later.',
+        });
+        navigate('/dashboard');
+      }
     } catch (error) {
       console.error('Error saving listing:', error);
       toast({
@@ -164,6 +194,19 @@ export const ListingWizard: React.FC = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleViewListing = () => {
+    if (publishedListing) {
+      navigate(`/listing/${publishedListing.id}`);
+    }
+  };
+
+  const handleCloseSuccessModal = (open: boolean) => {
+    if (!open) {
+      navigate('/dashboard');
+    }
+    setShowSuccessModal(open);
   };
 
   const handleStripeConnect = async () => {
@@ -325,6 +368,13 @@ export const ListingWizard: React.FC = () => {
         onOpenChange={setShowStripeModal}
         onConnect={handleStripeConnect}
         isConnecting={isConnecting}
+      />
+
+      <PublishSuccessModal
+        open={showSuccessModal}
+        onOpenChange={handleCloseSuccessModal}
+        listing={publishedListing}
+        onViewListing={handleViewListing}
       />
     </div>
   );
