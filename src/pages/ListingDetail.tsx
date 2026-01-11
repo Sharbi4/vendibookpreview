@@ -282,6 +282,7 @@ const ListingDetail = () => {
               {/* Host Card - Mobile */}
               <div className="lg:hidden">
                 <HostCard
+                  hostId={listing.host_id}
                   hostName={host?.full_name || null}
                   hostAvatar={host?.avatar_url}
                   isVerified={host?.identity_verified || false}
@@ -331,6 +332,7 @@ const ListingDetail = () => {
               {/* Host Card - Desktop */}
               <div className="hidden lg:block">
                 <HostCard
+                  hostId={listing.host_id}
                   hostName={host?.full_name || null}
                   hostAvatar={host?.avatar_url}
                   isVerified={host?.identity_verified || false}
