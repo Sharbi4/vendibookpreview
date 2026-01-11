@@ -16,8 +16,14 @@ export type Database = {
     Tables: {
       booking_requests: {
         Row: {
+          access_instructions_snapshot: string | null
+          address_snapshot: string | null
           created_at: string
+          delivery_address: string | null
+          delivery_fee_snapshot: number | null
+          delivery_instructions: string | null
           end_date: string
+          fulfillment_selected: string | null
           host_id: string
           host_response: string | null
           id: string
@@ -31,8 +37,14 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          access_instructions_snapshot?: string | null
+          address_snapshot?: string | null
           created_at?: string
+          delivery_address?: string | null
+          delivery_fee_snapshot?: number | null
+          delivery_instructions?: string | null
           end_date: string
+          fulfillment_selected?: string | null
           host_id: string
           host_response?: string | null
           id?: string
@@ -46,8 +58,14 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          access_instructions_snapshot?: string | null
+          address_snapshot?: string | null
           created_at?: string
+          delivery_address?: string | null
+          delivery_fee_snapshot?: number | null
+          delivery_instructions?: string | null
           end_date?: string
+          fulfillment_selected?: string | null
           host_id?: string
           host_response?: string | null
           id?: string
