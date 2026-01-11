@@ -67,8 +67,10 @@ export const useStripeConnect = () => {
   };
 
   return {
-    isConnected: status?.connected ?? false,
+    // Only consider "connected" when both account exists AND onboarding is complete
+    isConnected: (status?.connected && status?.onboarding_complete) ?? false,
     isOnboardingComplete: status?.onboarding_complete ?? false,
+    hasAccountStarted: status?.connected ?? false, // Account created but may not be fully set up
     accountId: status?.account_id,
     isLoading,
     isConnecting,
