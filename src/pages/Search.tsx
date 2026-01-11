@@ -1,0 +1,500 @@
+import { useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import Fuse from 'fuse.js';
+import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign } from 'lucide-react';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
+import ListingCard from '@/components/listing/ListingCard';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { Listing, CATEGORY_LABELS, ListingCategory, ListingMode } from '@/types/listing';
+
+const Search = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Get initial values from URL params
+  const initialQuery = searchParams.get('q') || '';
+  const initialMode = searchParams.get('mode') as ListingMode | 'all' || 'all';
+  const initialCategory = searchParams.get('category') as ListingCategory | 'all' || 'all';
+  
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [mode, setMode] = useState<ListingMode | 'all'>(initialMode);
+  const [category, setCategory] = useState<ListingCategory | 'all'>(initialCategory);
+  const [location, setLocation] = useState('');
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  // Fetch all published listings
+  const { data: listings = [], isLoading } = useQuery({
+    queryKey: ['search-listings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('status', 'published')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as Listing[];
+    },
+  });
+
+  // Set up Fuse.js for fuzzy search
+  const fuse = useMemo(() => {
+    return new Fuse(listings, {
+      keys: [
+        { name: 'title', weight: 0.4 },
+        { name: 'description', weight: 0.2 },
+        { name: 'address', weight: 0.2 },
+        { name: 'pickup_location_text', weight: 0.2 },
+      ],
+      threshold: 0.4, // Lower = stricter matching
+      includeScore: true,
+      ignoreLocation: true,
+    });
+  }, [listings]);
+
+  // Apply all filters
+  const filteredListings = useMemo(() => {
+    let results = listings;
+
+    // Apply fuzzy search if query exists
+    if (searchQuery.trim()) {
+      const fuseResults = fuse.search(searchQuery);
+      results = fuseResults.map(result => result.item);
+    }
+
+    // Filter by mode
+    if (mode !== 'all') {
+      results = results.filter(listing => listing.mode === mode);
+    }
+
+    // Filter by category
+    if (category !== 'all') {
+      results = results.filter(listing => listing.category === category);
+    }
+
+    // Filter by location (fuzzy match on address/pickup_location_text)
+    if (location.trim()) {
+      const locationLower = location.toLowerCase();
+      results = results.filter(listing => 
+        listing.address?.toLowerCase().includes(locationLower) ||
+        listing.pickup_location_text?.toLowerCase().includes(locationLower)
+      );
+    }
+
+    // Filter by price range
+    results = results.filter(listing => {
+      const price = listing.mode === 'rent' 
+        ? (listing.price_daily || 0) 
+        : (listing.price_sale || 0);
+      return price >= priceRange[0] && price <= priceRange[1];
+    });
+
+    return results;
+  }, [listings, searchQuery, mode, category, location, priceRange, fuse]);
+
+  // Update URL params when search changes
+  const handleSearch = (value: string) => {
+    setSearchQuery(value);
+    const params = new URLSearchParams(searchParams);
+    if (value) {
+      params.set('q', value);
+    } else {
+      params.delete('q');
+    }
+    setSearchParams(params);
+  };
+
+  const handleModeChange = (value: string) => {
+    const newMode = value as ListingMode | 'all';
+    setMode(newMode);
+    const params = new URLSearchParams(searchParams);
+    if (newMode !== 'all') {
+      params.set('mode', newMode);
+    } else {
+      params.delete('mode');
+    }
+    setSearchParams(params);
+  };
+
+  const handleCategoryChange = (value: string) => {
+    const newCategory = value as ListingCategory | 'all';
+    setCategory(newCategory);
+    const params = new URLSearchParams(searchParams);
+    if (newCategory !== 'all') {
+      params.set('category', newCategory);
+    } else {
+      params.delete('category');
+    }
+    setSearchParams(params);
+  };
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setMode('all');
+    setCategory('all');
+    setLocation('');
+    setPriceRange([0, 50000]);
+    setSearchParams({});
+  };
+
+  const activeFiltersCount = [
+    mode !== 'all',
+    category !== 'all',
+    location.trim() !== '',
+    priceRange[0] > 0 || priceRange[1] < 50000,
+  ].filter(Boolean).length;
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      <Header />
+      
+      <main className="flex-1">
+        {/* Search Header */}
+        <div className="bg-gradient-to-b from-primary/5 to-background border-b border-border">
+          <div className="container py-8">
+            <h1 className="text-3xl font-bold text-foreground mb-6">
+              Find Your Perfect Asset
+            </h1>
+            
+            {/* Search Bar */}
+            <div className="flex gap-3">
+              <div className="relative flex-1">
+                <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search food trucks, trailers, kitchens..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-12 h-12 text-base rounded-full border-2 focus:border-primary"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => handleSearch('')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              
+              {/* Filter Button (Mobile) */}
+              <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="lg" className="md:hidden rounded-full relative">
+                    <SlidersHorizontal className="h-5 w-5" />
+                    {activeFiltersCount > 0 && (
+                      <span className="absolute -top-1 -right-1 h-5 w-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
+                        {activeFiltersCount}
+                      </span>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[80vh]">
+                  <SheetHeader>
+                    <SheetTitle>Filters</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6 space-y-6">
+                    <FilterContent
+                      mode={mode}
+                      category={category}
+                      location={location}
+                      priceRange={priceRange}
+                      onModeChange={handleModeChange}
+                      onCategoryChange={handleCategoryChange}
+                      onLocationChange={setLocation}
+                      onPriceRangeChange={setPriceRange}
+                      onClear={clearFilters}
+                    />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            {/* Quick Filters */}
+            <div className="flex flex-wrap gap-2 mt-4">
+              <Select value={mode} onValueChange={handleModeChange}>
+                <SelectTrigger className="w-[140px] rounded-full">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="rent">For Rent</SelectItem>
+                  <SelectItem value="sale">For Sale</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={category} onValueChange={handleCategoryChange}>
+                <SelectTrigger className="w-[160px] rounded-full">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {activeFiltersCount > 0 && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+                  Clear all
+                  <X className="h-4 w-4 ml-1" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Results */}
+        <div className="container py-8">
+          <div className="flex gap-8">
+            {/* Desktop Sidebar Filters */}
+            <aside className="hidden md:block w-64 shrink-0">
+              <div className="sticky top-24 space-y-6 p-4 bg-card rounded-xl border border-border">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-semibold text-foreground">Filters</h2>
+                  {activeFiltersCount > 0 && (
+                    <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs">
+                      Clear all
+                    </Button>
+                  )}
+                </div>
+                <FilterContent
+                  mode={mode}
+                  category={category}
+                  location={location}
+                  priceRange={priceRange}
+                  onModeChange={handleModeChange}
+                  onCategoryChange={handleCategoryChange}
+                  onLocationChange={setLocation}
+                  onPriceRangeChange={setPriceRange}
+                  onClear={clearFilters}
+                />
+              </div>
+            </aside>
+
+            {/* Results Grid */}
+            <div className="flex-1">
+              {/* Results Count */}
+              <div className="mb-6 flex items-center justify-between">
+                <p className="text-muted-foreground">
+                  {isLoading ? (
+                    'Loading...'
+                  ) : (
+                    <>
+                      <span className="font-semibold text-foreground">{filteredListings.length}</span>
+                      {' '}result{filteredListings.length !== 1 ? 's' : ''} found
+                      {searchQuery && (
+                        <span> for "<span className="text-foreground">{searchQuery}</span>"</span>
+                      )}
+                    </>
+                  )}
+                </p>
+              </div>
+
+              {/* Active Filters Badges */}
+              {(mode !== 'all' || category !== 'all' || location) && (
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {mode !== 'all' && (
+                    <Badge variant="secondary" className="gap-1">
+                      <Tag className="h-3 w-3" />
+                      {mode === 'rent' ? 'For Rent' : 'For Sale'}
+                      <button onClick={() => handleModeChange('all')}>
+                        <X className="h-3 w-3 ml-1" />
+                      </button>
+                    </Badge>
+                  )}
+                  {category !== 'all' && (
+                    <Badge variant="secondary" className="gap-1">
+                      {CATEGORY_LABELS[category]}
+                      <button onClick={() => handleCategoryChange('all')}>
+                        <X className="h-3 w-3 ml-1" />
+                      </button>
+                    </Badge>
+                  )}
+                  {location && (
+                    <Badge variant="secondary" className="gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {location}
+                      <button onClick={() => setLocation('')}>
+                        <X className="h-3 w-3 ml-1" />
+                      </button>
+                    </Badge>
+                  )}
+                </div>
+              )}
+
+              {isLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="aspect-[4/3] bg-muted rounded-xl" />
+                      <div className="mt-3 space-y-2">
+                        <div className="h-4 bg-muted rounded w-3/4" />
+                        <div className="h-4 bg-muted rounded w-1/2" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : filteredListings.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredListings.map((listing) => (
+                    <ListingCard key={listing.id} listing={listing} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-16">
+                  <SearchIcon className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">No results found</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Try adjusting your search or filters to find what you're looking for.
+                  </p>
+                  <Button onClick={clearFilters} variant="outline">
+                    Clear all filters
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+};
+
+// Filter Content Component
+interface FilterContentProps {
+  mode: ListingMode | 'all';
+  category: ListingCategory | 'all';
+  location: string;
+  priceRange: [number, number];
+  onModeChange: (value: string) => void;
+  onCategoryChange: (value: string) => void;
+  onLocationChange: (value: string) => void;
+  onPriceRangeChange: (value: [number, number]) => void;
+  onClear: () => void;
+}
+
+const FilterContent = ({
+  mode,
+  category,
+  location,
+  priceRange,
+  onModeChange,
+  onCategoryChange,
+  onLocationChange,
+  onPriceRangeChange,
+}: FilterContentProps) => {
+  return (
+    <>
+      {/* Location Filter */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium flex items-center gap-2">
+          <MapPin className="h-4 w-4" />
+          Location
+        </Label>
+        <Input
+          type="text"
+          placeholder="City, state, or zip code"
+          value={location}
+          onChange={(e) => onLocationChange(e.target.value)}
+          className="rounded-lg"
+        />
+      </div>
+
+      {/* Type Filter */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium flex items-center gap-2">
+          <Tag className="h-4 w-4" />
+          Listing Type
+        </Label>
+        <div className="space-y-2">
+          {[
+            { value: 'all', label: 'All Types' },
+            { value: 'rent', label: 'For Rent' },
+            { value: 'sale', label: 'For Sale' },
+          ].map((option) => (
+            <label key={option.value} className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={mode === option.value}
+                onCheckedChange={() => onModeChange(option.value)}
+              />
+              <span className="text-sm">{option.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Category Filter */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium">Category</Label>
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <Checkbox
+              checked={category === 'all'}
+              onCheckedChange={() => onCategoryChange('all')}
+            />
+            <span className="text-sm">All Categories</span>
+          </label>
+          {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
+            <label key={key} className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={category === key}
+                onCheckedChange={() => onCategoryChange(key)}
+              />
+              <span className="text-sm">{label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Price Range Filter */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium flex items-center gap-2">
+          <DollarSign className="h-4 w-4" />
+          Price Range
+        </Label>
+        <div className="px-2">
+          <Slider
+            value={priceRange}
+            min={0}
+            max={50000}
+            step={100}
+            onValueChange={(value) => onPriceRangeChange(value as [number, number])}
+            className="my-4"
+          />
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>${priceRange[0].toLocaleString()}</span>
+            <span>${priceRange[1].toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Search;

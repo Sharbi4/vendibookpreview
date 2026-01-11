@@ -58,7 +58,12 @@ const Header = () => {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="rounded-full">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="rounded-full"
+            onClick={() => navigate('/search')}
+          >
             <Search className="h-5 w-5" />
           </Button>
           
