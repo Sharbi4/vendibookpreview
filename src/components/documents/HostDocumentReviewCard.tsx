@@ -71,6 +71,7 @@ export const HostDocumentReviewCard = ({ document, bookingId }: HostDocumentRevi
     reviewMutation.mutate({
       documentId: document.id,
       bookingId,
+      documentType: document.document_type,
       status: 'approved',
     });
   };
@@ -79,6 +80,7 @@ export const HostDocumentReviewCard = ({ document, bookingId }: HostDocumentRevi
     reviewMutation.mutate({
       documentId: document.id,
       bookingId,
+      documentType: document.document_type,
       status: 'rejected',
       rejectionReason: rejectionReason.trim() || undefined,
     });
