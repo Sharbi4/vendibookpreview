@@ -1,20 +1,38 @@
 import { useState } from 'react';
-import { Search, Calendar, MapPin } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Calendar as CalendarIcon, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { DateRange } from 'react-day-picker';
 
 interface SearchBarProps {
-  onSearch?: (query: string) => void;
+  onSearch?: (query: string, dateRange?: DateRange) => void;
   className?: string;
   compact?: boolean;
 }
 
 const SearchBar = ({ onSearch, className, compact = false }: SearchBarProps) => {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch?.(query);
+    
+    if (onSearch) {
+      onSearch(query, dateRange);
+    } else {
+      // Navigate to search page with params
+      const params = new URLSearchParams();
+      if (query) params.set('q', query);
+      if (dateRange?.from) params.set('start', format(dateRange.from, 'yyyy-MM-dd'));
+      if (dateRange?.to) params.set('end', format(dateRange.to, 'yyyy-MM-dd'));
+      navigate(`/search?${params.toString()}`);
+    }
   };
 
   if (compact) {
@@ -55,24 +73,45 @@ const SearchBar = ({ onSearch, className, compact = false }: SearchBarProps) => 
             />
           </div>
 
-          {/* Date Inputs */}
-          <div className="flex items-center gap-3 px-4 py-3 flex-1 border-b md:border-b-0 md:border-r border-border">
-            <Calendar className="h-5 w-5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Booking start date"
-              className="flex-1 bg-transparent border-0 outline-none text-foreground placeholder:text-muted-foreground text-sm"
-            />
-          </div>
-
-          <div className="flex items-center gap-3 px-4 py-3 flex-1">
-            <Calendar className="h-5 w-5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Booking end date"
-              className="flex-1 bg-transparent border-0 outline-none text-foreground placeholder:text-muted-foreground text-sm"
-            />
-          </div>
+          {/* Date Range Picker */}
+          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+            <PopoverTrigger asChild>
+              <div className="flex items-center gap-3 px-4 py-3 flex-1 cursor-pointer hover:bg-muted/50 rounded-lg transition-colors">
+                <CalendarIcon className="h-5 w-5 text-primary" />
+                <div className="flex-1 text-left">
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <span className="text-foreground text-sm">
+                        {format(dateRange.from, 'MMM d')} - {format(dateRange.to, 'MMM d')}
+                      </span>
+                    ) : (
+                      <span className="text-foreground text-sm">
+                        {format(dateRange.from, 'MMM d, yyyy')}
+                      </span>
+                    )
+                  ) : (
+                    <span className="text-muted-foreground text-sm">Select dates</span>
+                  )}
+                </div>
+              </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 z-[60]" align="center">
+              <Calendar
+                mode="range"
+                selected={dateRange}
+                onSelect={(range) => {
+                  setDateRange(range);
+                  if (range?.from && range?.to) {
+                    setIsCalendarOpen(false);
+                  }
+                }}
+                numberOfMonths={2}
+                disabled={(date) => date < new Date()}
+                className={cn("p-3 pointer-events-auto")}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
 
           {/* Search Button */}
           <Button type="submit" size="lg" className="rounded-xl mx-2 px-8">

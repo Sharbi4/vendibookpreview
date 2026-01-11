@@ -1,10 +1,14 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Fuse from 'fuse.js';
-import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign } from 'lucide-react';
+import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon } from 'lucide-react';
+import { DateRange } from 'react-day-picker';
+import { format, parseISO, eachDayOfInterval, isWithinInterval } from 'date-fns';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ListingCard from '@/components/listing/ListingCard';
+import QuickBookingModal from '@/components/search/QuickBookingModal';
+import DateRangeFilter from '@/components/search/DateRangeFilter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,6 +33,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Listing, CATEGORY_LABELS, ListingCategory, ListingMode } from '@/types/listing';
 
+// Fetch all blocked dates and bookings for availability filtering
+interface UnavailableDates {
+  [listingId: string]: string[];
+}
+
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -36,16 +45,27 @@ const Search = () => {
   const initialQuery = searchParams.get('q') || '';
   const initialMode = searchParams.get('mode') as ListingMode | 'all' || 'all';
   const initialCategory = searchParams.get('category') as ListingCategory | 'all' || 'all';
+  const initialStartDate = searchParams.get('start');
+  const initialEndDate = searchParams.get('end');
   
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [mode, setMode] = useState<ListingMode | 'all'>(initialMode);
   const [category, setCategory] = useState<ListingCategory | 'all'>(initialCategory);
   const [location, setLocation] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(
+    initialStartDate && initialEndDate
+      ? { from: parseISO(initialStartDate), to: parseISO(initialEndDate) }
+      : undefined
+  );
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  
+  // Quick booking modal state
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   // Fetch all published listings
-  const { data: listings = [], isLoading } = useQuery({
+  const { data: listings = [], isLoading: isLoadingListings } = useQuery({
     queryKey: ['search-listings'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -59,6 +79,57 @@ const Search = () => {
     },
   });
 
+  // Fetch unavailable dates for all listings (blocked dates + approved bookings)
+  const { data: unavailableDates = {} } = useQuery({
+    queryKey: ['search-unavailable-dates', listings.map(l => l.id)],
+    queryFn: async () => {
+      if (listings.length === 0) return {};
+      
+      const listingIds = listings.map(l => l.id);
+      
+      // Fetch blocked dates
+      const { data: blockedData } = await supabase
+        .from('listing_blocked_dates')
+        .select('listing_id, blocked_date')
+        .in('listing_id', listingIds);
+      
+      // Fetch approved bookings
+      const { data: bookingData } = await supabase
+        .from('booking_requests')
+        .select('listing_id, start_date, end_date')
+        .in('listing_id', listingIds)
+        .eq('status', 'approved');
+      
+      const result: UnavailableDates = {};
+      
+      // Initialize all listings
+      listingIds.forEach(id => {
+        result[id] = [];
+      });
+      
+      // Add blocked dates
+      blockedData?.forEach(bd => {
+        if (!result[bd.listing_id]) result[bd.listing_id] = [];
+        result[bd.listing_id].push(bd.blocked_date);
+      });
+      
+      // Add booked date ranges
+      bookingData?.forEach(booking => {
+        if (!result[booking.listing_id]) result[booking.listing_id] = [];
+        const dates = eachDayOfInterval({
+          start: parseISO(booking.start_date),
+          end: parseISO(booking.end_date),
+        });
+        dates.forEach(d => {
+          result[booking.listing_id].push(format(d, 'yyyy-MM-dd'));
+        });
+      });
+      
+      return result;
+    },
+    enabled: listings.length > 0,
+  });
+
   // Set up Fuse.js for fuzzy search
   const fuse = useMemo(() => {
     return new Fuse(listings, {
@@ -68,11 +139,23 @@ const Search = () => {
         { name: 'address', weight: 0.2 },
         { name: 'pickup_location_text', weight: 0.2 },
       ],
-      threshold: 0.4, // Lower = stricter matching
+      threshold: 0.4,
       includeScore: true,
       ignoreLocation: true,
     });
   }, [listings]);
+
+  // Check if a listing is available for the selected date range
+  const isListingAvailableForDates = (listingId: string): boolean => {
+    if (!dateRange?.from || !dateRange?.to) return true;
+    
+    const unavailable = unavailableDates[listingId] || [];
+    const requestedDates = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
+    
+    return !requestedDates.some(date => 
+      unavailable.includes(format(date, 'yyyy-MM-dd'))
+    );
+  };
 
   // Apply all filters
   const filteredListings = useMemo(() => {
@@ -94,7 +177,7 @@ const Search = () => {
       results = results.filter(listing => listing.category === category);
     }
 
-    // Filter by location (fuzzy match on address/pickup_location_text)
+    // Filter by location
     if (location.trim()) {
       const locationLower = location.toLowerCase();
       results = results.filter(listing => 
@@ -111,10 +194,15 @@ const Search = () => {
       return price >= priceRange[0] && price <= priceRange[1];
     });
 
-    return results;
-  }, [listings, searchQuery, mode, category, location, priceRange, fuse]);
+    // Filter by date availability
+    if (dateRange?.from && dateRange?.to) {
+      results = results.filter(listing => isListingAvailableForDates(listing.id));
+    }
 
-  // Update URL params when search changes
+    return results;
+  }, [listings, searchQuery, mode, category, location, priceRange, dateRange, fuse, unavailableDates]);
+
+  // Update URL params
   const handleSearch = (value: string) => {
     setSearchQuery(value);
     const params = new URLSearchParams(searchParams);
@@ -150,13 +238,32 @@ const Search = () => {
     setSearchParams(params);
   };
 
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    const params = new URLSearchParams(searchParams);
+    if (range?.from && range?.to) {
+      params.set('start', format(range.from, 'yyyy-MM-dd'));
+      params.set('end', format(range.to, 'yyyy-MM-dd'));
+    } else {
+      params.delete('start');
+      params.delete('end');
+    }
+    setSearchParams(params);
+  };
+
   const clearFilters = () => {
     setSearchQuery('');
     setMode('all');
     setCategory('all');
     setLocation('');
     setPriceRange([0, 50000]);
+    setDateRange(undefined);
     setSearchParams({});
+  };
+
+  const handleQuickBook = (listing: Listing) => {
+    setSelectedListing(listing);
+    setIsBookingModalOpen(true);
   };
 
   const activeFiltersCount = [
@@ -164,6 +271,7 @@ const Search = () => {
     category !== 'all',
     location.trim() !== '',
     priceRange[0] > 0 || priceRange[1] < 50000,
+    dateRange?.from && dateRange?.to,
   ].filter(Boolean).length;
 
   return (
@@ -211,7 +319,7 @@ const Search = () => {
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="h-[80vh]">
+                <SheetContent side="bottom" className="h-[85vh] overflow-y-auto">
                   <SheetHeader>
                     <SheetTitle>Filters</SheetTitle>
                   </SheetHeader>
@@ -221,10 +329,12 @@ const Search = () => {
                       category={category}
                       location={location}
                       priceRange={priceRange}
+                      dateRange={dateRange}
                       onModeChange={handleModeChange}
                       onCategoryChange={handleCategoryChange}
                       onLocationChange={setLocation}
                       onPriceRangeChange={setPriceRange}
+                      onDateRangeChange={handleDateRangeChange}
                       onClear={clearFilters}
                     />
                   </div>
@@ -286,10 +396,12 @@ const Search = () => {
                   category={category}
                   location={location}
                   priceRange={priceRange}
+                  dateRange={dateRange}
                   onModeChange={handleModeChange}
                   onCategoryChange={handleCategoryChange}
                   onLocationChange={setLocation}
                   onPriceRangeChange={setPriceRange}
+                  onDateRangeChange={handleDateRangeChange}
                   onClear={clearFilters}
                 />
               </div>
@@ -300,7 +412,7 @@ const Search = () => {
               {/* Results Count */}
               <div className="mb-6 flex items-center justify-between">
                 <p className="text-muted-foreground">
-                  {isLoading ? (
+                  {isLoadingListings ? (
                     'Loading...'
                   ) : (
                     <>
@@ -315,7 +427,7 @@ const Search = () => {
               </div>
 
               {/* Active Filters Badges */}
-              {(mode !== 'all' || category !== 'all' || location) && (
+              {(mode !== 'all' || category !== 'all' || location || dateRange?.from) && (
                 <div className="flex flex-wrap gap-2 mb-6">
                   {mode !== 'all' && (
                     <Badge variant="secondary" className="gap-1">
@@ -343,10 +455,19 @@ const Search = () => {
                       </button>
                     </Badge>
                   )}
+                  {dateRange?.from && dateRange?.to && (
+                    <Badge variant="secondary" className="gap-1">
+                      <CalendarIcon className="h-3 w-3" />
+                      {format(dateRange.from, 'MMM d')} - {format(dateRange.to, 'MMM d')}
+                      <button onClick={() => handleDateRangeChange(undefined)}>
+                        <X className="h-3 w-3 ml-1" />
+                      </button>
+                    </Badge>
+                  )}
                 </div>
               )}
 
-              {isLoading ? (
+              {isLoadingListings ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[...Array(6)].map((_, i) => (
                     <div key={i} className="animate-pulse">
@@ -361,7 +482,23 @@ const Search = () => {
               ) : filteredListings.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredListings.map((listing) => (
-                    <ListingCard key={listing.id} listing={listing} />
+                    <div key={listing.id} className="group relative">
+                      <ListingCard listing={listing} />
+                      {/* Quick Book Button - only for rentals */}
+                      {listing.mode === 'rent' && (
+                        <Button
+                          size="sm"
+                          className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleQuickBook(listing);
+                          }}
+                        >
+                          Quick Book
+                        </Button>
+                      )}
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -382,6 +519,15 @@ const Search = () => {
       </main>
 
       <Footer />
+
+      {/* Quick Booking Modal */}
+      <QuickBookingModal
+        listing={selectedListing}
+        open={isBookingModalOpen}
+        onOpenChange={setIsBookingModalOpen}
+        initialStartDate={dateRange?.from}
+        initialEndDate={dateRange?.to}
+      />
     </div>
   );
 };
@@ -392,10 +538,12 @@ interface FilterContentProps {
   category: ListingCategory | 'all';
   location: string;
   priceRange: [number, number];
+  dateRange: DateRange | undefined;
   onModeChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onLocationChange: (value: string) => void;
   onPriceRangeChange: (value: [number, number]) => void;
+  onDateRangeChange: (range: DateRange | undefined) => void;
   onClear: () => void;
 }
 
@@ -404,13 +552,21 @@ const FilterContent = ({
   category,
   location,
   priceRange,
+  dateRange,
   onModeChange,
   onCategoryChange,
   onLocationChange,
   onPriceRangeChange,
+  onDateRangeChange,
 }: FilterContentProps) => {
   return (
     <>
+      {/* Date Range Filter */}
+      <DateRangeFilter
+        dateRange={dateRange}
+        onDateRangeChange={onDateRangeChange}
+      />
+
       {/* Location Filter */}
       <div className="space-y-3">
         <Label className="text-sm font-medium flex items-center gap-2">
