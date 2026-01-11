@@ -20,6 +20,21 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CONTACT-EMAIL] ${step}${detailsStr}`);
 };
 
+// HTML entity encoding to prevent XSS in emails
+const escapeHtml = (text: string): string => {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
+// Sanitize phone number for tel: links (only allow digits, +, -, spaces, parentheses)
+const sanitizePhone = (phone: string): string => {
+  return phone.replace(/[^\d+\-\s()]/g, '');
+};
+
 const sendEmail = async (to: string[], subject: string, html: string) => {
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -93,6 +108,15 @@ const handler = async (req: Request): Promise<Response> => {
       minute: "2-digit",
     });
 
+    // Sanitize all user inputs for HTML emails to prevent XSS
+    const safeName = escapeHtml(name);
+    const safeSubject = escapeHtml(subject);
+    const safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
+    const safePhone = sanitizePhone(phone);
+    const safePhoneDisplay = escapeHtml(phone);
+    // Email is already validated with regex, but escape for display
+    const safeEmail = escapeHtml(email);
+
     // Send notification email to support
     logStep("Sending support notification email");
     
@@ -130,32 +154,32 @@ const handler = async (req: Request): Promise<Response> => {
 
             <div class="field">
               <div class="label">Name</div>
-              <div class="value">${name}</div>
+              <div class="value">${safeName}</div>
             </div>
             
             <div class="field">
               <div class="label">📞 Phone Number (CALL NOW!)</div>
               <div class="value" style="font-size: 24px; color: #F97316; font-weight: bold;">
-                <a href="tel:${phone}" style="color: #F97316; text-decoration: none;">${phone}</a>
+                <a href="tel:${safePhone}" style="color: #F97316; text-decoration: none;">${safePhoneDisplay}</a>
               </div>
             </div>
             
             <div class="field">
               <div class="label">Email</div>
-              <div class="value"><a href="mailto:${email}">${email}</a></div>
+              <div class="value"><a href="mailto:${email}">${safeEmail}</a></div>
             </div>
             
             <div class="field">
               <div class="label">Subject</div>
-              <div class="value">${subject}</div>
+              <div class="value">${safeSubject}</div>
             </div>
             
             <div class="field">
               <div class="label">Message</div>
-              <div class="message-box">${message.replace(/\n/g, '<br>')}</div>
+              <div class="message-box">${safeMessage}</div>
             </div>
             
-            <a href="tel:${phone}" class="cta">📞 Call ${name} Now</a>
+            <a href="tel:${safePhone}" class="cta">📞 Call ${safeName} Now</a>
           </div>
         </div>
       </body>
@@ -164,7 +188,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     await sendEmail(
       ["support@vendibook.com"],
-      `🔔 URGENT: New Contact Form - ${subject}`,
+      `🔔 URGENT: New Contact Form - ${safeSubject}`,
       supportEmailHtml
     );
     logStep("Support email sent");
@@ -188,15 +212,15 @@ const handler = async (req: Request): Promise<Response> => {
       <body>
         <div class="container">
           <div class="header">
-            <h1 style="margin:0;">Thank You, ${name}!</h1>
+            <h1 style="margin:0;">Thank You, ${safeName}!</h1>
             <p style="margin:10px 0 0 0; opacity: 0.9;">We have received your message</p>
           </div>
           <div class="content">
-            <p>Hi ${name},</p>
+            <p>Hi ${safeName},</p>
             
             <p>Thank you for reaching out to Vendibook! We have received your inquiry regarding:</p>
             
-            <p><strong>"${subject}"</strong></p>
+            <p><strong>"${safeSubject}"</strong></p>
             
             <div class="highlight">
               <p style="margin:0; font-size: 18px;">📞 <strong>We will call you within 2 minutes</strong></p>
