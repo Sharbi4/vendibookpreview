@@ -15,7 +15,7 @@ const authSchema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters').optional(),
 });
 
-type AuthMode = 'signin' | 'signup';
+type AuthMode = 'signin' | 'signup' | 'forgot';
 type RoleType = 'host' | 'shopper';
 
 const Auth = () => {
@@ -28,7 +28,7 @@ const Auth = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { signIn, signUp, user, isLoading } = useAuth();
+  const { signIn, signUp, resetPassword, user, isLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -42,6 +42,8 @@ const Auth = () => {
     try {
       if (mode === 'signup') {
         authSchema.parse({ email, password, fullName });
+      } else if (mode === 'forgot') {
+        authSchema.pick({ email: true }).parse({ email });
       } else {
         authSchema.omit({ fullName: true }).parse({ email, password });
       }
@@ -69,7 +71,23 @@ const Auth = () => {
     setIsSubmitting(true);
 
     try {
-      if (mode === 'signup') {
+      if (mode === 'forgot') {
+        const { error } = await resetPassword(email);
+        if (error) {
+          toast({
+            title: 'Request failed',
+            description: error.message,
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Check your email',
+            description: 'We sent you a password reset link. Please check your inbox.',
+          });
+          setMode('signin');
+          setEmail('');
+        }
+      } else if (mode === 'signup') {
         const { error } = await signUp(email, password, fullName, selectedRole);
         if (error) {
           if (error.message.includes('already registered')) {
@@ -136,8 +154,14 @@ const Auth = () => {
         {/* Auth Card */}
         <div className="bg-card rounded-2xl shadow-lg p-8">
           <h2 className="text-xl font-semibold text-center mb-6">
-            {mode === 'signin' ? 'Welcome back' : 'Create your account'}
+            {mode === 'signin' ? 'Welcome back' : mode === 'signup' ? 'Create your account' : 'Reset your password'}
           </h2>
+
+          {mode === 'forgot' && (
+            <p className="text-sm text-muted-foreground text-center mb-6">
+              Enter your email address and we'll send you a link to reset your password.
+            </p>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'signup' && (
@@ -172,29 +196,45 @@ const Auth = () => {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={errors.password ? 'border-destructive pr-10' : 'pr-10'}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+            {mode !== 'forgot' && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  {mode === 'signin' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode('forgot');
+                        setErrors({});
+                      }}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={errors.password ? 'border-destructive pr-10' : 'pr-10'}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-destructive">{errors.password}</p>
+                )}
               </div>
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password}</p>
-              )}
-            </div>
+            )}
 
             {mode === 'signup' && (
               <div className="space-y-3">
@@ -240,24 +280,40 @@ const Auth = () => {
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : null}
-              {mode === 'signin' ? 'Sign In' : 'Create Account'}
+              {mode === 'signin' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link'}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              {mode === 'signin' ? "Don't have an account?" : 'Already have an account?'}
-              <button
-                type="button"
-                onClick={() => {
-                  setMode(mode === 'signin' ? 'signup' : 'signin');
-                  setErrors({});
-                }}
-                className="ml-1 text-primary font-medium hover:underline"
-              >
-                {mode === 'signin' ? 'Sign up' : 'Sign in'}
-              </button>
-            </p>
+            {mode === 'forgot' ? (
+              <p className="text-sm text-muted-foreground">
+                Remember your password?
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('signin');
+                    setErrors({});
+                  }}
+                  className="ml-1 text-primary font-medium hover:underline"
+                >
+                  Sign in
+                </button>
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {mode === 'signin' ? "Don't have an account?" : 'Already have an account?'}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode(mode === 'signin' ? 'signup' : 'signin');
+                    setErrors({});
+                  }}
+                  className="ml-1 text-primary font-medium hover:underline"
+                >
+                  {mode === 'signin' ? 'Sign up' : 'Sign in'}
+                </button>
+              </p>
+            )}
           </div>
         </div>
       </div>
