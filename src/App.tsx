@@ -16,6 +16,7 @@ import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import Insurance from "./pages/Insurance";
 import Search from "./pages/Search";
 import HowItWorks from "./pages/HowItWorks";
 import Contact from "./pages/Contact";
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/profile/:id" element={<Profile />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/insurance" element={<Insurance />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/verify-identity" element={<IdentityVerification />} />
