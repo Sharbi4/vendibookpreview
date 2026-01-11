@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Heart, MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, ShieldCheck } from 'lucide-react';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import RatingBadge from '@/components/reviews/RatingBadge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -10,6 +11,8 @@ interface ListingCardProps {
   listing: Listing;
   className?: string;
   hostVerified?: boolean;
+  showQuickBook?: boolean;
+  onQuickBook?: (listing: Listing) => void;
 }
 
 // Map of popular amenities to icons (subset for compact display)
@@ -33,7 +36,7 @@ const popularAmenityIcons: Record<string, { icon: React.ElementType; label: stri
   three_compartment_sink: { icon: Droplet, label: '3 Compartment Sink' },
 };
 
-const ListingCard = ({ listing, className, hostVerified }: ListingCardProps) => {
+const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook }: ListingCardProps) => {
   const price = listing.mode === 'rent' 
     ? `$${listing.price_daily}/day`
     : `$${listing.price_sale?.toLocaleString()}`;
@@ -100,34 +103,51 @@ const ListingCard = ({ listing, className, hostVerified }: ListingCardProps) => 
         </div>
 
         {/* Amenities Icons Overlay */}
-        {displayAmenities.length > 0 && (
-          <div className="absolute bottom-3 left-3 flex items-center gap-1">
-            <TooltipProvider delayDuration={200}>
-              {displayAmenities.map((amenityId) => {
-                const amenity = popularAmenityIcons[amenityId];
-                if (!amenity) return null;
-                const IconComponent = amenity.icon;
-                return (
-                  <Tooltip key={amenityId}>
-                    <TooltipTrigger asChild>
-                      <div className="w-7 h-7 bg-background/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm">
-                        <IconComponent className="h-3.5 w-3.5 text-foreground" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">
-                      {amenity.label}
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
-              {(listing.amenities?.length || 0) > 4 && (
-                <div className="w-7 h-7 bg-background/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm text-xs font-medium text-muted-foreground">
-                  +{(listing.amenities?.length || 0) - 4}
-                </div>
-              )}
-            </TooltipProvider>
+        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            {displayAmenities.length > 0 && (
+              <TooltipProvider delayDuration={200}>
+                {displayAmenities.map((amenityId) => {
+                  const amenity = popularAmenityIcons[amenityId];
+                  if (!amenity) return null;
+                  const IconComponent = amenity.icon;
+                  return (
+                    <Tooltip key={amenityId}>
+                      <TooltipTrigger asChild>
+                        <div className="w-7 h-7 bg-background/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm">
+                          <IconComponent className="h-3.5 w-3.5 text-foreground" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">
+                        {amenity.label}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+                {(listing.amenities?.length || 0) > 4 && (
+                  <div className="w-7 h-7 bg-background/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm text-xs font-medium text-muted-foreground">
+                    +{(listing.amenities?.length || 0) - 4}
+                  </div>
+                )}
+              </TooltipProvider>
+            )}
           </div>
-        )}
+          
+          {/* Quick Book Button */}
+          {showQuickBook && listing.mode === 'rent' && onQuickBook && (
+            <Button
+              size="sm"
+              className="shadow-lg text-xs px-3 py-1 h-auto"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onQuickBook(listing);
+              }}
+            >
+              Quick Book
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Content */}
