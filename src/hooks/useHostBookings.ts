@@ -8,6 +8,7 @@ type BookingRequest = Tables<'booking_requests'>;
 
 interface BookingWithListing extends BookingRequest {
   listing?: {
+    id: string;
     title: string;
     cover_image_url: string | null;
     category: string;
@@ -45,7 +46,7 @@ export const useHostBookings = () => {
           const [listingResult, shopperResult] = await Promise.all([
             supabase
               .from('listings')
-              .select('title, cover_image_url, category')
+              .select('id, title, cover_image_url, category')
               .eq('id', booking.listing_id)
               .maybeSingle(),
             supabase

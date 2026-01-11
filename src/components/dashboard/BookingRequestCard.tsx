@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Check, X, Calendar, User, MessageSquare, Loader2, MessageCircle } from 'lucide-react';
+import { Check, X, Calendar, User, MessageSquare, Loader2, MessageCircle, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +13,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { MessageDialog } from '@/components/messaging/MessageDialog';
+import { HostDocumentReviewSection } from '@/components/documents/HostDocumentReviewSection';
+import { useDocumentComplianceStatus } from '@/hooks/useRequiredDocuments';
 
 interface BookingRequestCardProps {
   booking: {
@@ -23,7 +25,9 @@ interface BookingRequestCardProps {
     status: string;
     total_price: number;
     created_at: string;
+    listing_id: string;
     listing?: {
+      id?: string;
       title: string;
       cover_image_url: string | null;
       category: string;
@@ -68,6 +72,14 @@ const BookingRequestCard = ({ booking, onApprove, onDecline }: BookingRequestCar
   const [responseAction, setResponseAction] = useState<'approve' | 'decline'>('approve');
   const [responseMessage, setResponseMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Get listing ID for document check
+  const listingId = booking.listing_id || booking.listing?.id;
+  
+  // Check document compliance for this booking
+  const compliance = useDocumentComplianceStatus(listingId, booking.id);
+  const hasDocumentRequirements = compliance.hasRequirements;
+  const hasPendingDocReviews = compliance.pendingCount > 0;
 
   const shopperInitials = booking.shopper?.full_name
     ? booking.shopper.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -150,6 +162,17 @@ const BookingRequestCard = ({ booking, onApprove, onDecline }: BookingRequestCar
               <div className="flex items-start gap-2 text-sm text-muted-foreground mb-3">
                 <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <p className="line-clamp-2">{booking.message}</p>
+              </div>
+            )}
+
+            {/* Document Review Section */}
+            {hasDocumentRequirements && listingId && (
+              <div className="mb-3">
+                <HostDocumentReviewSection
+                  listingId={listingId}
+                  bookingId={booking.id}
+                  defaultOpen={hasPendingDocReviews}
+                />
               </div>
             )}
 
