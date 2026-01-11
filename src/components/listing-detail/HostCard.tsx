@@ -1,24 +1,25 @@
 import { Link } from 'react-router-dom';
-import { ShieldCheck, MessageCircle, ExternalLink } from 'lucide-react';
+import { ShieldCheck, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import MessageHostButton from '@/components/messaging/MessageHostButton';
 
 interface HostCardProps {
-  hostId?: string;
+  hostId: string;
+  listingId: string;
   hostName: string | null;
   hostAvatar?: string | null;
   isVerified?: boolean;
   memberSince?: string;
-  onContact: () => void;
 }
 
 const HostCard = ({ 
   hostId,
+  listingId,
   hostName, 
   hostAvatar, 
   isVerified = false,
   memberSince,
-  onContact 
 }: HostCardProps) => {
   const initials = hostName 
     ? hostName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -63,14 +64,12 @@ const HostCard = ({
       )}
 
       <div className="flex gap-2">
-        <Button 
-          variant="outline" 
+        <MessageHostButton 
+          listingId={listingId}
+          hostId={hostId}
+          variant="outline"
           className="flex-1"
-          onClick={onContact}
-        >
-          <MessageCircle className="h-4 w-4 mr-2" />
-          Contact
-        </Button>
+        />
         <Button 
           variant="ghost" 
           size="icon"
