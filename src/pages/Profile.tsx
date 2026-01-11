@@ -20,6 +20,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import StarRating from '@/components/reviews/StarRating';
 import ListingCard from '@/components/listing/ListingCard';
+import VerificationBadge from '@/components/verification/VerificationBadge';
 import { 
   useUserProfile, 
   useUserStats, 
@@ -135,12 +136,11 @@ const Profile = () => {
                   <h1 className="text-2xl md:text-3xl font-bold text-foreground">
                     {profile.full_name || 'User'}
                   </h1>
-                  {profile.identity_verified && (
-                    <Badge variant="secondary" className="gap-1 w-fit mx-auto md:mx-0">
-                      <Shield className="h-3 w-3 text-emerald-600" />
-                      Verified
-                    </Badge>
-                  )}
+                  <VerificationBadge 
+                    isVerified={profile.identity_verified || false} 
+                    size="md"
+                    className="w-fit mx-auto md:mx-0"
+                  />
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-muted-foreground mb-4">
@@ -154,6 +154,14 @@ const Profile = () => {
                       {stats.averageRating} ({stats.totalReviewsReceived} reviews)
                     </div>
                   )}
+                </div>
+
+                {/* Verification Card for Profile */}
+                <div className="mb-4 max-w-sm mx-auto md:mx-0">
+                  <VerificationBadge 
+                    isVerified={profile.identity_verified || false} 
+                    variant="card"
+                  />
                 </div>
 
                 {/* Stats */}
