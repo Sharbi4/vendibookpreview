@@ -1,10 +1,25 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, X, Search, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, profile, signOut, isVerified } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border">
@@ -48,11 +63,55 @@ const Header = () => {
           <Button variant="ghost" size="icon" className="rounded-full">
             <Search className="h-5 w-5" />
           </Button>
-          <Button variant="outline" className="rounded-full gap-2">
-            <User className="h-4 w-4" />
-            <span>Sign In</span>
-          </Button>
-          <Button className="rounded-full">Get Started</Button>
+          
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="rounded-full gap-2">
+                  <User className="h-4 w-4" />
+                  <span className="max-w-[100px] truncate">
+                    {profile?.full_name || user.email?.split('@')[0]}
+                  </span>
+                  {!isVerified && (
+                    <Shield className="h-3 w-3 text-amber-500" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                  <LayoutDashboard className="h-4 w-4 mr-2" />
+                  Dashboard
+                </DropdownMenuItem>
+                {!isVerified && (
+                  <DropdownMenuItem onClick={() => navigate('/verify-identity')}>
+                    <Shield className="h-4 w-4 mr-2 text-amber-500" />
+                    Verify Identity
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Button 
+                variant="outline" 
+                className="rounded-full"
+                onClick={() => navigate('/auth')}
+              >
+                Sign In
+              </Button>
+              <Button 
+                className="rounded-full"
+                onClick={() => navigate('/auth')}
+              >
+                Get Started
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -91,11 +150,54 @@ const Header = () => {
             >
               List Your Asset
             </Link>
+            
             <div className="flex flex-col gap-2 pt-2 border-t border-border">
-              <Button variant="outline" className="w-full rounded-full">
-                Sign In
-              </Button>
-              <Button className="w-full rounded-full">Get Started</Button>
+              {user ? (
+                <>
+                  <Button 
+                    variant="outline" 
+                    className="w-full rounded-full"
+                    onClick={() => {
+                      navigate('/dashboard');
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    Dashboard
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full rounded-full"
+                    onClick={() => {
+                      handleSignOut();
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button 
+                    variant="outline" 
+                    className="w-full rounded-full"
+                    onClick={() => {
+                      navigate('/auth');
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    Sign In
+                  </Button>
+                  <Button 
+                    className="w-full rounded-full"
+                    onClick={() => {
+                      navigate('/auth');
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    Get Started
+                  </Button>
+                </>
+              )}
             </div>
           </nav>
         </div>
