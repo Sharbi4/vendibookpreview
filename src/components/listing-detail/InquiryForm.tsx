@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { calculateSaleFees, SALE_SELLER_FEE_PERCENT } from '@/lib/commissions';
 
 interface InquiryFormProps {
   listingId: string;
@@ -21,6 +23,8 @@ const InquiryForm = ({ listingId, priceSale }: InquiryFormProps) => {
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const saleFees = priceSale ? calculateSaleFees(priceSale) : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,8 +61,32 @@ const InquiryForm = ({ listingId, priceSale }: InquiryFormProps) => {
         <span className="text-2xl font-bold text-foreground">
           ${priceSale?.toLocaleString()}
         </span>
-        <p className="text-sm text-muted-foreground mt-1">Asking price</p>
+        <p className="text-sm text-muted-foreground mt-1">Asking price (No buyer fees)</p>
       </div>
+
+      {/* Fee info for sellers */}
+      {saleFees && (
+        <div className="mb-6 p-4 bg-muted/50 rounded-xl">
+          <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide">
+            Seller Breakdown
+          </p>
+          <div className="space-y-1.5 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Sale price</span>
+              <span className="text-foreground">${saleFees.salePrice.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Platform fee ({SALE_SELLER_FEE_PERCENT}%)</span>
+              <span className="text-destructive">-${saleFees.sellerFee.toLocaleString()}</span>
+            </div>
+            <Separator className="my-2" />
+            <div className="flex justify-between font-medium">
+              <span>Seller receives</span>
+              <span className="text-primary">${saleFees.sellerReceives.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

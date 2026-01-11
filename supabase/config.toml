@@ -12,6 +12,9 @@ verify_jwt = false
 [functions.create-stripe-connect]
 verify_jwt = false
 
+[functions.create-checkout]
+verify_jwt = false
+
 [functions.send-booking-notification]
 verify_jwt = false
 
