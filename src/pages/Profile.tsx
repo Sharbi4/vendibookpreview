@@ -177,7 +177,7 @@ const Profile = () => {
               {isOwnProfile && (
                 <div className="flex gap-2">
                   <Button variant="outline" asChild>
-                    <Link to="/dashboard">Edit Profile</Link>
+                    <Link to="/profile/edit">Edit Profile</Link>
                   </Button>
                 </div>
               )}
