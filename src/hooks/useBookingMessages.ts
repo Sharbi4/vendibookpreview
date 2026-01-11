@@ -10,6 +10,9 @@ export interface BookingMessage {
   message: string;
   read_at: string | null;
   created_at: string;
+  attachment_url: string | null;
+  attachment_name: string | null;
+  attachment_type: string | null;
 }
 
 export const useBookingMessages = (bookingId: string) => {
@@ -38,17 +41,52 @@ export const useBookingMessages = (bookingId: string) => {
     }
   }, [user, bookingId]);
 
-  const sendMessage = async (messageText: string) => {
-    if (!user || !bookingId || !messageText.trim()) return;
+  const uploadAttachment = async (file: File): Promise<{ url: string; name: string; type: string } | null> => {
+    if (!user) return null;
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('message-attachments')
+      .upload(fileName, file);
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      throw uploadError;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('message-attachments')
+      .getPublicUrl(fileName);
+
+    return {
+      url: publicUrl,
+      name: file.name,
+      type: file.type,
+    };
+  };
+
+  const sendMessage = async (messageText: string, attachment?: File) => {
+    if (!user || !bookingId || (!messageText.trim() && !attachment)) return;
 
     setIsSending(true);
     try {
+      let attachmentData: { url: string; name: string; type: string } | null = null;
+
+      if (attachment) {
+        attachmentData = await uploadAttachment(attachment);
+      }
+
       const { error } = await supabase
         .from('booking_messages')
         .insert({
           booking_id: bookingId,
           sender_id: user.id,
-          message: messageText.trim(),
+          message: messageText.trim() || (attachment ? `Sent ${attachment.name}` : ''),
+          attachment_url: attachmentData?.url || null,
+          attachment_name: attachmentData?.name || null,
+          attachment_type: attachmentData?.type || null,
         });
 
       if (error) throw error;
