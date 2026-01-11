@@ -687,7 +687,7 @@ const Search = () => {
                         {listing.mode === 'rent' && (
                           <Button
                             size="sm"
-                            className="absolute bottom-4 right-4 shadow-lg"
+                            className="absolute bottom-[calc(25%+1rem)] right-3 shadow-lg text-xs px-3 py-1 h-auto"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
