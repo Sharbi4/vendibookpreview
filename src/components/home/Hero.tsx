@@ -23,11 +23,13 @@ const Hero = ({ onSearch }: HeroProps) => {
         {/* Hero Content */}
         <div className="max-w-3xl mx-auto text-center mb-10 animate-fade-in">
           {/* Logo */}
-          <img 
-            src={vendibookLogo} 
-            alt="Vendibook" 
-            className="h-20 md:h-24 w-auto mix-blend-multiply mb-4"
-          />
+          <div className="flex justify-center">
+            <img 
+              src={vendibookLogo} 
+              alt="Vendibook" 
+              className="h-32 md:h-40 w-auto mix-blend-multiply mb-4"
+            />
+          </div>
           
           <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
             Rent or buy food trucks, food trailers, ghost kitchens, vendor lots and other mobile business assets.
