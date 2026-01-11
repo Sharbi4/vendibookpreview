@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import vendibookLogo from '@/assets/vendibook-logo.jpg';
 
 const Footer = () => {
   return (
@@ -7,13 +8,12 @@ const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground text-lg font-bold">V</span>
-              </div>
-              <span className="text-lg font-bold">
-                vendi<span className="text-primary">book</span>
-              </span>
+            <Link to="/" className="flex items-center mb-4">
+              <img 
+                src={vendibookLogo} 
+                alt="Vendibook" 
+                className="h-10 w-auto brightness-0 invert"
+              />
             </Link>
             <p className="text-sm text-muted-foreground">
               The marketplace for mobile food businesses.
