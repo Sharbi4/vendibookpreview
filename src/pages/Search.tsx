@@ -1,14 +1,16 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Fuse from 'fuse.js';
-import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon } from 'lucide-react';
+import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
-import { format, parseISO, eachDayOfInterval, isWithinInterval } from 'date-fns';
+import { format, parseISO, eachDayOfInterval } from 'date-fns';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ListingCard from '@/components/listing/ListingCard';
 import QuickBookingModal from '@/components/search/QuickBookingModal';
 import DateRangeFilter from '@/components/search/DateRangeFilter';
+import { LocationSearchInput } from '@/components/search/LocationSearchInput';
+import { RadiusFilter } from '@/components/search/RadiusFilter';
 import NewsletterSection from '@/components/newsletter/NewsletterSection';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,10 +35,16 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Listing, CATEGORY_LABELS, ListingCategory, ListingMode } from '@/types/listing';
+import { calculateDistance } from '@/lib/geolocation';
 
 // Fetch all blocked dates and bookings for availability filtering
 interface UnavailableDates {
   [listingId: string]: string[];
+}
+
+// Cache for geocoded listing addresses
+interface ListingCoordinates {
+  [listingId: string]: [number, number] | null;
 }
 
 const Search = () => {
@@ -48,11 +56,18 @@ const Search = () => {
   const initialCategory = searchParams.get('category') as ListingCategory | 'all' || 'all';
   const initialStartDate = searchParams.get('start');
   const initialEndDate = searchParams.get('end');
+  const initialLat = searchParams.get('lat');
+  const initialLng = searchParams.get('lng');
+  const initialRadius = searchParams.get('radius');
   
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [mode, setMode] = useState<ListingMode | 'all'>(initialMode);
   const [category, setCategory] = useState<ListingCategory | 'all'>(initialCategory);
-  const [location, setLocation] = useState('');
+  const [locationText, setLocationText] = useState('');
+  const [locationCoords, setLocationCoords] = useState<[number, number] | null>(
+    initialLat && initialLng ? [parseFloat(initialLng), parseFloat(initialLat)] : null
+  );
+  const [searchRadius, setSearchRadius] = useState(initialRadius ? parseInt(initialRadius) : 25);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(
     initialStartDate && initialEndDate
@@ -64,6 +79,9 @@ const Search = () => {
   // Quick booking modal state
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+
+  // Geocoded listing coordinates cache
+  const [listingCoordinates, setListingCoordinates] = useState<ListingCoordinates>({});
 
   // Fetch all published listings
   const { data: listings = [], isLoading: isLoadingListings } = useQuery({
@@ -79,6 +97,48 @@ const Search = () => {
       return data as Listing[];
     },
   });
+
+  // Geocode listing addresses when they change
+  useEffect(() => {
+    const geocodeListings = async () => {
+      const uncachedListings = listings.filter(
+        l => l.address && listingCoordinates[l.id] === undefined
+      );
+      
+      if (uncachedListings.length === 0) return;
+
+      // Batch geocode (limit to avoid rate limits)
+      const toGeocode = uncachedListings.slice(0, 10);
+      const newCoords: ListingCoordinates = { ...listingCoordinates };
+
+      for (const listing of toGeocode) {
+        if (!listing.address) {
+          newCoords[listing.id] = null;
+          continue;
+        }
+
+        try {
+          const { data, error } = await supabase.functions.invoke('geocode-location', {
+            body: { query: listing.address, limit: 1 },
+          });
+
+          if (!error && data.results?.length > 0) {
+            newCoords[listing.id] = data.results[0].center;
+          } else {
+            newCoords[listing.id] = null;
+          }
+        } catch {
+          newCoords[listing.id] = null;
+        }
+      }
+
+      setListingCoordinates(newCoords);
+    };
+
+    if (locationCoords && listings.length > 0) {
+      geocodeListings();
+    }
+  }, [listings, locationCoords]);
 
   // Fetch unavailable dates for all listings (blocked dates + approved bookings)
   const { data: unavailableDates = {} } = useQuery({
@@ -158,6 +218,38 @@ const Search = () => {
     );
   };
 
+  // Check if a listing is within the search radius
+  const isListingWithinRadius = (listing: Listing): boolean => {
+    if (!locationCoords) return true;
+    
+    const coords = listingCoordinates[listing.id];
+    if (!coords) return true; // Include if we couldn't geocode
+    
+    const distance = calculateDistance(
+      locationCoords[1], // lat
+      locationCoords[0], // lng
+      coords[1],
+      coords[0]
+    );
+    
+    return distance <= searchRadius;
+  };
+
+  // Get distance for display
+  const getListingDistance = (listing: Listing): number | null => {
+    if (!locationCoords) return null;
+    
+    const coords = listingCoordinates[listing.id];
+    if (!coords) return null;
+    
+    return calculateDistance(
+      locationCoords[1],
+      locationCoords[0],
+      coords[1],
+      coords[0]
+    );
+  };
+
   // Apply all filters
   const filteredListings = useMemo(() => {
     let results = listings;
@@ -178,13 +270,9 @@ const Search = () => {
       results = results.filter(listing => listing.category === category);
     }
 
-    // Filter by location
-    if (location.trim()) {
-      const locationLower = location.toLowerCase();
-      results = results.filter(listing => 
-        listing.address?.toLowerCase().includes(locationLower) ||
-        listing.pickup_location_text?.toLowerCase().includes(locationLower)
-      );
+    // Filter by location radius
+    if (locationCoords) {
+      results = results.filter(listing => isListingWithinRadius(listing));
     }
 
     // Filter by price range
@@ -200,8 +288,20 @@ const Search = () => {
       results = results.filter(listing => isListingAvailableForDates(listing.id));
     }
 
+    // Sort by distance if location is set
+    if (locationCoords) {
+      results = results.sort((a, b) => {
+        const distA = getListingDistance(a);
+        const distB = getListingDistance(b);
+        if (distA === null && distB === null) return 0;
+        if (distA === null) return 1;
+        if (distB === null) return -1;
+        return distA - distB;
+      });
+    }
+
     return results;
-  }, [listings, searchQuery, mode, category, location, priceRange, dateRange, fuse, unavailableDates]);
+  }, [listings, searchQuery, mode, category, locationCoords, searchRadius, priceRange, dateRange, fuse, unavailableDates, listingCoordinates]);
 
   // Update URL params
   const handleSearch = (value: string) => {
@@ -239,6 +339,33 @@ const Search = () => {
     setSearchParams(params);
   };
 
+  const handleLocationSelect = (location: { name: string; coordinates: [number, number] } | null) => {
+    if (location) {
+      setLocationCoords(location.coordinates);
+      const params = new URLSearchParams(searchParams);
+      params.set('lat', location.coordinates[1].toString());
+      params.set('lng', location.coordinates[0].toString());
+      params.set('radius', searchRadius.toString());
+      setSearchParams(params);
+    } else {
+      setLocationCoords(null);
+      const params = new URLSearchParams(searchParams);
+      params.delete('lat');
+      params.delete('lng');
+      params.delete('radius');
+      setSearchParams(params);
+    }
+  };
+
+  const handleRadiusChange = (radius: number) => {
+    setSearchRadius(radius);
+    if (locationCoords) {
+      const params = new URLSearchParams(searchParams);
+      params.set('radius', radius.toString());
+      setSearchParams(params);
+    }
+  };
+
   const handleDateRangeChange = (range: DateRange | undefined) => {
     setDateRange(range);
     const params = new URLSearchParams(searchParams);
@@ -256,7 +383,9 @@ const Search = () => {
     setSearchQuery('');
     setMode('all');
     setCategory('all');
-    setLocation('');
+    setLocationText('');
+    setLocationCoords(null);
+    setSearchRadius(25);
     setPriceRange([0, 50000]);
     setDateRange(undefined);
     setSearchParams({});
@@ -270,7 +399,7 @@ const Search = () => {
   const activeFiltersCount = [
     mode !== 'all',
     category !== 'all',
-    location.trim() !== '',
+    locationCoords !== null,
     priceRange[0] > 0 || priceRange[1] < 50000,
     dateRange?.from && dateRange?.to,
   ].filter(Boolean).length;
@@ -328,12 +457,16 @@ const Search = () => {
                     <FilterContent
                       mode={mode}
                       category={category}
-                      location={location}
+                      locationText={locationText}
+                      locationCoords={locationCoords}
+                      searchRadius={searchRadius}
                       priceRange={priceRange}
                       dateRange={dateRange}
                       onModeChange={handleModeChange}
                       onCategoryChange={handleCategoryChange}
-                      onLocationChange={setLocation}
+                      onLocationTextChange={setLocationText}
+                      onLocationSelect={handleLocationSelect}
+                      onRadiusChange={handleRadiusChange}
                       onPriceRangeChange={setPriceRange}
                       onDateRangeChange={handleDateRangeChange}
                       onClear={clearFilters}
@@ -395,12 +528,16 @@ const Search = () => {
                 <FilterContent
                   mode={mode}
                   category={category}
-                  location={location}
+                  locationText={locationText}
+                  locationCoords={locationCoords}
+                  searchRadius={searchRadius}
                   priceRange={priceRange}
                   dateRange={dateRange}
                   onModeChange={handleModeChange}
                   onCategoryChange={handleCategoryChange}
-                  onLocationChange={setLocation}
+                  onLocationTextChange={setLocationText}
+                  onLocationSelect={handleLocationSelect}
+                  onRadiusChange={handleRadiusChange}
                   onPriceRangeChange={setPriceRange}
                   onDateRangeChange={handleDateRangeChange}
                   onClear={clearFilters}
@@ -422,13 +559,16 @@ const Search = () => {
                       {searchQuery && (
                         <span> for "<span className="text-foreground">{searchQuery}</span>"</span>
                       )}
+                      {locationCoords && (
+                        <span> within <span className="text-foreground">{searchRadius} miles</span></span>
+                      )}
                     </>
                   )}
                 </p>
               </div>
 
               {/* Active Filters Badges */}
-              {(mode !== 'all' || category !== 'all' || location || dateRange?.from) && (
+              {(mode !== 'all' || category !== 'all' || locationCoords || dateRange?.from) && (
                 <div className="flex flex-wrap gap-2 mb-6">
                   {mode !== 'all' && (
                     <Badge variant="secondary" className="gap-1">
@@ -447,11 +587,14 @@ const Search = () => {
                       </button>
                     </Badge>
                   )}
-                  {location && (
+                  {locationCoords && (
                     <Badge variant="secondary" className="gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {location}
-                      <button onClick={() => setLocation('')}>
+                      <Navigation className="h-3 w-3" />
+                      {locationText || 'Selected location'} ({searchRadius} mi)
+                      <button onClick={() => {
+                        setLocationText('');
+                        handleLocationSelect(null);
+                      }}>
                         <X className="h-3 w-3 ml-1" />
                       </button>
                     </Badge>
@@ -468,39 +611,36 @@ const Search = () => {
                 </div>
               )}
 
-              {isLoadingListings ? (
+              {/* Listings Grid */}
+              {filteredListings.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="animate-pulse">
-                      <div className="aspect-[4/3] bg-muted rounded-xl" />
-                      <div className="mt-3 space-y-2">
-                        <div className="h-4 bg-muted rounded w-3/4" />
-                        <div className="h-4 bg-muted rounded w-1/2" />
+                  {filteredListings.map((listing) => {
+                    const distance = getListingDistance(listing);
+                    return (
+                      <div key={listing.id} className="relative">
+                        <ListingCard listing={listing} />
+                        {listing.mode === 'rent' && (
+                          <Button
+                            size="sm"
+                            className="absolute bottom-4 right-4 shadow-lg"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleQuickBook(listing);
+                            }}
+                          >
+                            Quick Book
+                          </Button>
+                        )}
+                        {distance !== null && (
+                          <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                            <Navigation className="h-3 w-3" />
+                            {distance < 1 ? '< 1' : Math.round(distance)} mi
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : filteredListings.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredListings.map((listing) => (
-                    <div key={listing.id} className="group relative">
-                      <ListingCard listing={listing} />
-                      {/* Quick Book Button - only for rentals */}
-                      {listing.mode === 'rent' && (
-                        <Button
-                          size="sm"
-                          className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleQuickBook(listing);
-                          }}
-                        >
-                          Quick Book
-                        </Button>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-16">
@@ -540,12 +680,16 @@ const Search = () => {
 interface FilterContentProps {
   mode: ListingMode | 'all';
   category: ListingCategory | 'all';
-  location: string;
+  locationText: string;
+  locationCoords: [number, number] | null;
+  searchRadius: number;
   priceRange: [number, number];
   dateRange: DateRange | undefined;
   onModeChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
-  onLocationChange: (value: string) => void;
+  onLocationTextChange: (value: string) => void;
+  onLocationSelect: (location: { name: string; coordinates: [number, number] } | null) => void;
+  onRadiusChange: (radius: number) => void;
   onPriceRangeChange: (value: [number, number]) => void;
   onDateRangeChange: (range: DateRange | undefined) => void;
   onClear: () => void;
@@ -554,12 +698,16 @@ interface FilterContentProps {
 const FilterContent = ({
   mode,
   category,
-  location,
+  locationText,
+  locationCoords,
+  searchRadius,
   priceRange,
   dateRange,
   onModeChange,
   onCategoryChange,
-  onLocationChange,
+  onLocationTextChange,
+  onLocationSelect,
+  onRadiusChange,
   onPriceRangeChange,
   onDateRangeChange,
 }: FilterContentProps) => {
@@ -571,20 +719,27 @@ const FilterContent = ({
         onDateRangeChange={onDateRangeChange}
       />
 
-      {/* Location Filter */}
+      {/* Location Filter with Geocoding */}
       <div className="space-y-3">
         <Label className="text-sm font-medium flex items-center gap-2">
           <MapPin className="h-4 w-4" />
           Location
         </Label>
-        <Input
-          type="text"
+        <LocationSearchInput
+          value={locationText}
+          onChange={onLocationTextChange}
+          onLocationSelect={onLocationSelect}
+          selectedCoordinates={locationCoords}
           placeholder="City, state, or zip code"
-          value={location}
-          onChange={(e) => onLocationChange(e.target.value)}
-          className="rounded-lg"
         />
       </div>
+
+      {/* Radius Filter */}
+      <RadiusFilter
+        radius={searchRadius}
+        onChange={onRadiusChange}
+        disabled={!locationCoords}
+      />
 
       {/* Type Filter */}
       <div className="space-y-3">
