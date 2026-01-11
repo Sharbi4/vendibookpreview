@@ -133,7 +133,7 @@ const IdentityVerification = () => {
 
           {verificationStatus === 'pending' || verificationStatus === 'processing' ? (
             <>
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+              <div className="bg-amber-50 border border-foreground rounded-xl p-4 mb-6">
                 <div className="flex items-start gap-3">
                   <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
                   <div className="text-left">

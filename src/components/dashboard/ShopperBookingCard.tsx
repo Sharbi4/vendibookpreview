@@ -58,27 +58,27 @@ const StatusBadge = ({ status }: { status: ShopperBooking['status'] }) => {
     pending: {
       label: 'Pending',
       icon: Clock,
-      className: 'bg-amber-100 text-amber-700 border-amber-200',
+      className: 'bg-amber-100 text-amber-700 border-foreground',
     },
     approved: {
       label: 'Approved',
       icon: CheckCircle2,
-      className: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+      className: 'bg-emerald-100 text-emerald-700 border-foreground',
     },
     declined: {
       label: 'Declined',
       icon: XCircle,
-      className: 'bg-red-100 text-red-700 border-red-200',
+      className: 'bg-red-100 text-red-700 border-foreground',
     },
     cancelled: {
       label: 'Cancelled',
       icon: X,
-      className: 'bg-muted text-muted-foreground border-border',
+      className: 'bg-muted text-muted-foreground border-foreground',
     },
     completed: {
       label: 'Completed',
       icon: CheckCircle2,
-      className: 'bg-blue-100 text-blue-700 border-blue-200',
+      className: 'bg-blue-100 text-blue-700 border-foreground',
     },
   };
 
@@ -98,19 +98,19 @@ const PaymentStatusBadge = ({ status }: { status: string | null }) => {
   const config: Record<string, { label: string; className: string }> = {
     pending: {
       label: 'Payment Pending',
-      className: 'bg-amber-100 text-amber-700 border-amber-200',
+      className: 'bg-amber-100 text-amber-700 border-foreground',
     },
     paid: {
       label: 'Paid',
-      className: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+      className: 'bg-emerald-100 text-emerald-700 border-foreground',
     },
     refunded: {
       label: 'Refunded',
-      className: 'bg-purple-100 text-purple-700 border-purple-200',
+      className: 'bg-purple-100 text-purple-700 border-foreground',
     },
     failed: {
       label: 'Payment Failed',
-      className: 'bg-red-100 text-red-700 border-red-200',
+      className: 'bg-red-100 text-red-700 border-foreground',
     },
   };
 

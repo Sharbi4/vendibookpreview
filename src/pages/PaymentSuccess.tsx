@@ -103,7 +103,7 @@ const PaymentSuccess = () => {
       
       <main className="flex-1 flex items-center justify-center py-16">
         <div className="container max-w-lg">
-          <Card className="border-2 border-emerald-200 shadow-lg">
+          <Card className="border-2 border-foreground shadow-lg">
             <CardContent className="pt-8 pb-8 text-center">
               {isLoading ? (
                 <div className="flex flex-col items-center gap-4">
