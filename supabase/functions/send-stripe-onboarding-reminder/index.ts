@@ -78,7 +78,7 @@ serve(async (req) => {
 
       try {
         const { error: emailError } = await resend.emails.send({
-          from: "Vendibook <onboarding@resend.dev>",
+          from: "Vendibook <updates@vendibook.com>",
           to: [user.email],
           subject: "Complete your Vendibook payment setup",
           html: `

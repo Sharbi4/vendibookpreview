@@ -44,7 +44,7 @@ const handler = async (req: Request): Promise<Response> => {
     const dashboardUrl = `${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '.lovable.app')}/dashboard`;
 
     const emailResponse = await resend.emails.send({
-      from: "Vendibook <onboarding@resend.dev>",
+      from: "Vendibook <updates@vendibook.com>",
       to: [hostEmail],
       subject: `🎉 Your listing "${listingTitle}" is now live!`,
       html: `
