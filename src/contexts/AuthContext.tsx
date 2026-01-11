@@ -164,6 +164,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (roleError) {
           console.error('Error adding role:', roleError);
         }
+
+        // Send admin notification for new user signup
+        try {
+          await supabase.functions.invoke('send-admin-notification', {
+            body: {
+              type: 'new_user',
+              data: {
+                email,
+                full_name: fullName,
+                role,
+                user_id: data.user.id,
+              },
+            },
+          });
+        } catch (notifyError) {
+          console.error('Failed to send admin notification:', notifyError);
+        }
       }
 
       return { error: null };
