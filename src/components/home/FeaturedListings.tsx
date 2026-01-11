@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import ListingCard from '@/components/listing/ListingCard';
 import { mockListings } from '@/data/mockListings';
 import { ListingCategory, ListingMode } from '@/types/listing';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FeaturedListingsProps {
   filters?: {
@@ -15,6 +17,33 @@ interface FeaturedListingsProps {
 
 const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
   const [sortBy, setSortBy] = useState<'newest' | 'price-low'>('newest');
+
+  // Extract unique host IDs from mock listings
+  const hostIds = useMemo(() => [...new Set(mockListings.map(l => l.host_id))], []);
+
+  // Fetch host verification status
+  const { data: hostProfiles = [] } = useQuery({
+    queryKey: ['featured-host-profiles', hostIds],
+    queryFn: async () => {
+      if (hostIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, identity_verified')
+        .in('id', hostIds);
+      if (error) throw error;
+      return data;
+    },
+    enabled: hostIds.length > 0,
+  });
+
+  // Create a map of host_id -> identity_verified
+  const hostVerificationMap = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    hostProfiles.forEach(profile => {
+      map[profile.id] = profile.identity_verified ?? false;
+    });
+    return map;
+  }, [hostProfiles]);
 
   const filteredListings = useMemo(() => {
     let listings = [...mockListings];
@@ -89,7 +118,11 @@ const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
         {filteredListings.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredListings.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
+              <ListingCard 
+                key={listing.id} 
+                listing={listing} 
+                hostVerified={hostVerificationMap[listing.host_id] ?? false}
+              />
             ))}
           </div>
         ) : (

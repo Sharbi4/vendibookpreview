@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Heart, MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun } from 'lucide-react';
+import { Heart, MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, ShieldCheck } from 'lucide-react';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 interface ListingCardProps {
   listing: Listing;
   className?: string;
+  hostVerified?: boolean;
 }
 
 // Map of popular amenities to icons (subset for compact display)
@@ -32,7 +33,7 @@ const popularAmenityIcons: Record<string, { icon: React.ElementType; label: stri
   three_compartment_sink: { icon: Droplet, label: '3 Compartment Sink' },
 };
 
-const ListingCard = ({ listing, className }: ListingCardProps) => {
+const ListingCard = ({ listing, className, hostVerified }: ListingCardProps) => {
   const price = listing.mode === 'rent' 
     ? `$${listing.price_daily}/day`
     : `$${listing.price_sale?.toLocaleString()}`;
@@ -68,16 +69,35 @@ const ListingCard = ({ listing, className }: ListingCardProps) => {
           {modeLabel}
         </Badge>
 
-        {/* Favorite Button */}
-        <button 
-          className="absolute top-3 right-3 p-2 rounded-full bg-white/80 hover:bg-white transition-colors shadow-sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            // Handle favorite
-          }}
-        >
-          <Heart className="h-4 w-4 text-foreground" />
-        </button>
+        {/* Top Right Badges */}
+        <div className="absolute top-3 right-3 flex items-center gap-2">
+          {/* Verified Badge */}
+          {hostVerified && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="p-2 rounded-full bg-emerald-500 shadow-sm">
+                    <ShieldCheck className="h-4 w-4 text-white" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  Host identity verified
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          
+          {/* Favorite Button */}
+          <button 
+            className="p-2 rounded-full bg-white/80 hover:bg-white transition-colors shadow-sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              // Handle favorite
+            }}
+          >
+            <Heart className="h-4 w-4 text-foreground" />
+          </button>
+        </div>
 
         {/* Amenities Icons Overlay */}
         {displayAmenities.length > 0 && (

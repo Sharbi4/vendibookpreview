@@ -113,6 +113,32 @@ const Search = () => {
     },
   });
 
+  // Fetch host verification status for all listings
+  const hostIds = useMemo(() => [...new Set(listings.map(l => l.host_id))], [listings]);
+  
+  const { data: hostProfiles = [] } = useQuery({
+    queryKey: ['host-profiles', hostIds],
+    queryFn: async () => {
+      if (hostIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, identity_verified')
+        .in('id', hostIds);
+      if (error) throw error;
+      return data;
+    },
+    enabled: hostIds.length > 0,
+  });
+
+  // Create a map of host_id -> identity_verified
+  const hostVerificationMap = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    hostProfiles.forEach(profile => {
+      map[profile.id] = profile.identity_verified ?? false;
+    });
+    return map;
+  }, [hostProfiles]);
+
   // Fetch unavailable dates for all listings (blocked dates + approved bookings)
   const { data: unavailableDates = {} } = useQuery({
     queryKey: ['search-unavailable-dates', listings.map(l => l.id)],
@@ -654,9 +680,10 @@ const Search = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredListings.map((listing) => {
                     const distance = getListingDistance(listing);
+                    const isHostVerified = hostVerificationMap[listing.host_id] ?? false;
                     return (
                       <div key={listing.id} className="relative">
-                        <ListingCard listing={listing} />
+                        <ListingCard listing={listing} hostVerified={isHostVerified} />
                         {listing.mode === 'rent' && (
                           <Button
                             size="sm"
