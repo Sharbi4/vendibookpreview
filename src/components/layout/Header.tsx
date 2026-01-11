@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import vendibookLogo from '@/assets/vendibook-logo.jpg';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -25,15 +26,12 @@ const Header = () => {
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground text-lg font-bold">V</span>
-            </div>
-            <span className="text-xl font-bold text-foreground">
-              vendi<span className="text-primary">book</span>
-            </span>
-          </div>
+        <Link to="/" className="flex items-center">
+          <img 
+            src={vendibookLogo} 
+            alt="Vendibook" 
+            className="h-10 w-auto mix-blend-multiply"
+          />
         </Link>
 
         {/* Desktop Navigation */}
