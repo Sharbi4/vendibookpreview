@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Check, X, Calendar, User, MessageSquare, Loader2 } from 'lucide-react';
+import { Check, X, Calendar, User, MessageSquare, Loader2, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { MessageDialog } from '@/components/messaging/MessageDialog';
 
 interface BookingRequestCardProps {
   booking: {
@@ -63,6 +64,7 @@ const StatusPill = ({ status }: { status: string }) => {
 
 const BookingRequestCard = ({ booking, onApprove, onDecline }: BookingRequestCardProps) => {
   const [showResponseDialog, setShowResponseDialog] = useState(false);
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [responseAction, setResponseAction] = useState<'approve' | 'decline'>('approve');
   const [responseMessage, setResponseMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -89,6 +91,7 @@ const BookingRequestCard = ({ booking, onApprove, onDecline }: BookingRequestCar
   };
 
   const isPending = booking.status === 'pending';
+  const canMessage = booking.status !== 'cancelled' && booking.status !== 'declined';
 
   return (
     <>
@@ -151,27 +154,40 @@ const BookingRequestCard = ({ booking, onApprove, onDecline }: BookingRequestCar
             )}
 
             {/* Actions */}
-            {isPending && (
-              <div className="flex items-center gap-2 pt-3 border-t border-border">
-                <Button
-                  size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700"
-                  onClick={() => handleAction('approve')}
-                >
-                  <Check className="h-4 w-4 mr-1" />
-                  Approve
-                </Button>
+            <div className="flex items-center gap-2 pt-3 border-t border-border">
+              {isPending && (
+                <>
+                  <Button
+                    size="sm"
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                    onClick={() => handleAction('approve')}
+                  >
+                    <Check className="h-4 w-4 mr-1" />
+                    Approve
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                    onClick={() => handleAction('decline')}
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Decline
+                  </Button>
+                </>
+              )}
+              {canMessage && (
                 <Button
                   size="sm"
                   variant="outline"
-                  className="text-destructive border-destructive/30 hover:bg-destructive/10"
-                  onClick={() => handleAction('decline')}
+                  onClick={() => setShowMessageDialog(true)}
+                  className={isPending ? '' : 'ml-0'}
                 >
-                  <X className="h-4 w-4 mr-1" />
-                  Decline
+                  <MessageCircle className="h-4 w-4 mr-1" />
+                  Message
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -217,6 +233,15 @@ const BookingRequestCard = ({ booking, onApprove, onDecline }: BookingRequestCar
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Message Dialog */}
+      <MessageDialog
+        open={showMessageDialog}
+        onOpenChange={setShowMessageDialog}
+        bookingId={booking.id}
+        listingTitle={booking.listing?.title || 'Booking'}
+        otherPartyName={booking.shopper?.full_name || 'Guest'}
+      />
     </>
   );
 };
