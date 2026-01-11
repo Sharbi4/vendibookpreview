@@ -7,7 +7,7 @@ import ShopperBookingCard from './ShopperBookingCard';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 
 const ShopperDashboard = () => {
-  const { bookings, isLoading, stats, cancelBooking } = useShopperBookings();
+  const { bookings, isLoading, stats, cancelBooking, refetch } = useShopperBookings();
 
   const pendingBookings = bookings.filter(b => b.status === 'pending');
   const approvedBookings = bookings.filter(b => b.status === 'approved');
@@ -109,6 +109,7 @@ const ShopperDashboard = () => {
                   key={booking.id}
                   booking={booking}
                   onCancel={cancelBooking}
+                  onPaymentInitiated={refetch}
                 />
               ))}
             </div>
@@ -136,6 +137,7 @@ const ShopperDashboard = () => {
                   key={booking.id}
                   booking={booking}
                   onCancel={cancelBooking}
+                  onPaymentInitiated={refetch}
                 />
               ))}
             </div>
@@ -163,6 +165,7 @@ const ShopperDashboard = () => {
                   key={booking.id}
                   booking={booking}
                   onCancel={cancelBooking}
+                  onPaymentInitiated={refetch}
                 />
               ))}
             </div>
