@@ -1,14 +1,36 @@
 import { Link } from 'react-router-dom';
-import { Heart, MapPin } from 'lucide-react';
+import { Heart, MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun } from 'lucide-react';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import RatingBadge from '@/components/reviews/RatingBadge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ListingCardProps {
   listing: Listing;
   className?: string;
 }
+
+// Map of popular amenities to icons (subset for compact display)
+const popularAmenityIcons: Record<string, { icon: React.ElementType; label: string }> = {
+  generator: { icon: Zap, label: 'Generator' },
+  electrical_hookup: { icon: Plug, label: 'Electric Hookup' },
+  electric_hookup: { icon: Plug, label: 'Electric Hookup' },
+  refrigerator: { icon: Refrigerator, label: 'Refrigerator' },
+  freezer: { icon: Refrigerator, label: 'Freezer' },
+  fryer: { icon: Flame, label: 'Fryer' },
+  flat_top_grill: { icon: Flame, label: 'Flat Top Grill' },
+  hood_system: { icon: Wind, label: 'Hood System' },
+  ac_unit: { icon: Wind, label: 'A/C Unit' },
+  hvac: { icon: Wind, label: 'HVAC' },
+  wifi: { icon: Wifi, label: 'WiFi' },
+  parking_available: { icon: Car, label: 'Parking' },
+  customer_parking: { icon: Car, label: 'Parking' },
+  security: { icon: Shield, label: '24/7 Security' },
+  lighting: { icon: Sun, label: 'Night Lighting' },
+  water_hookup: { icon: Droplet, label: 'Water Hookup' },
+  three_compartment_sink: { icon: Droplet, label: '3 Compartment Sink' },
+};
 
 const ListingCard = ({ listing, className }: ListingCardProps) => {
   const price = listing.mode === 'rent' 
@@ -20,6 +42,11 @@ const ListingCard = ({ listing, className }: ListingCardProps) => {
 
   // Get location from pickup_location_text or address
   const location = listing.pickup_location_text || listing.address?.split(',').slice(-2).join(',').trim() || 'Location TBD';
+
+  // Get displayable amenities (max 4 for compact view)
+  const displayAmenities = (listing.amenities || [])
+    .filter(a => popularAmenityIcons[a])
+    .slice(0, 4);
 
   return (
     <Link to={`/listing/${listing.id}`} className={cn("group cursor-pointer card-hover block", className)}>
@@ -51,6 +78,36 @@ const ListingCard = ({ listing, className }: ListingCardProps) => {
         >
           <Heart className="h-4 w-4 text-foreground" />
         </button>
+
+        {/* Amenities Icons Overlay */}
+        {displayAmenities.length > 0 && (
+          <div className="absolute bottom-3 left-3 flex items-center gap-1">
+            <TooltipProvider delayDuration={200}>
+              {displayAmenities.map((amenityId) => {
+                const amenity = popularAmenityIcons[amenityId];
+                if (!amenity) return null;
+                const IconComponent = amenity.icon;
+                return (
+                  <Tooltip key={amenityId}>
+                    <TooltipTrigger asChild>
+                      <div className="w-7 h-7 bg-background/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm">
+                        <IconComponent className="h-3.5 w-3.5 text-foreground" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      {amenity.label}
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+              {(listing.amenities?.length || 0) > 4 && (
+                <div className="w-7 h-7 bg-background/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm text-xs font-medium text-muted-foreground">
+                  +{(listing.amenities?.length || 0) - 4}
+                </div>
+              )}
+            </TooltipProvider>
+          </div>
+        )}
       </div>
 
       {/* Content */}

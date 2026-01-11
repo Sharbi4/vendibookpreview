@@ -1,7 +1,7 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Fuse from 'fuse.js';
-import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2 } from 'lucide-react';
+import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format, parseISO, eachDayOfInterval } from 'date-fns';
 import Header from '@/components/layout/Header';
@@ -36,6 +36,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Listing, CATEGORY_LABELS, ListingCategory, ListingMode, AMENITIES_BY_CATEGORY } from '@/types/listing';
 import { calculateDistance } from '@/lib/geolocation';
+import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Fetch all blocked dates and bookings for availability filtering
@@ -48,6 +49,20 @@ interface ListingWithCoords extends Listing {
   latitude?: number | null;
   longitude?: number | null;
 }
+
+// Popular features for quick filter bar
+const POPULAR_FEATURES = [
+  { id: 'generator', label: 'Generator', icon: Zap },
+  { id: 'electrical_hookup', label: 'Electric Hookup', icon: Plug },
+  { id: 'electric_hookup', label: 'Electric Hookup', icon: Plug },
+  { id: 'refrigerator', label: 'Refrigerator', icon: Refrigerator },
+  { id: 'fryer', label: 'Fryer', icon: Flame },
+  { id: 'hood_system', label: 'Hood System', icon: Wind },
+  { id: 'wifi', label: 'WiFi', icon: Wifi },
+  { id: 'parking_available', label: 'Parking', icon: Car },
+  { id: 'security', label: '24/7 Security', icon: Shield },
+  { id: 'water_hookup', label: 'Water Hookup', icon: Droplet },
+];
 
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -493,6 +508,32 @@ const Search = () => {
                   <X className="h-4 w-4 ml-1" />
                 </Button>
               )}
+            </div>
+
+            {/* Popular Features Quick Filter Bar */}
+            <div className="mt-4">
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Popular:</span>
+                {POPULAR_FEATURES.slice(0, 8).map((feature) => {
+                  const IconComponent = feature.icon;
+                  const isSelected = selectedAmenities.includes(feature.id);
+                  return (
+                    <button
+                      key={feature.id}
+                      onClick={() => toggleAmenity(feature.id)}
+                      className={cn(
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap",
+                        isSelected 
+                          ? "bg-primary text-primary-foreground" 
+                          : "bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+                      )}
+                    >
+                      <IconComponent className="h-3 w-3" />
+                      {feature.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
