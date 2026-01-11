@@ -49,7 +49,7 @@ const Header = () => {
             For Sale
           </Link>
           <Link 
-            to="/list" 
+            to="/create-listing" 
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             List Your Asset
@@ -146,7 +146,7 @@ const Header = () => {
               For Sale
             </Link>
             <Link 
-              to="/list" 
+              to="/create-listing" 
               className="text-sm font-medium py-2"
               onClick={() => setIsMenuOpen(false)}
             >
