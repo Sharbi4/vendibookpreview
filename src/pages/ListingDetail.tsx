@@ -281,10 +281,21 @@ const ListingDetail = () => {
                 <BookingForm
                   listingId={listing.id}
                   hostId={listing.host_id}
+                  category={listing.category}
+                  fulfillmentType={listing.fulfillment_type}
                   priceDaily={listing.price_daily}
                   priceWeekly={listing.price_weekly}
                   availableFrom={listing.available_from}
                   availableTo={listing.available_to}
+                  pickupLocation={listing.pickup_location_text}
+                  pickupInstructions={listing.pickup_instructions}
+                  deliveryFee={listing.delivery_fee}
+                  deliveryRadiusMiles={listing.delivery_radius_miles}
+                  deliveryInstructions={listing.delivery_instructions}
+                  address={listing.address}
+                  accessInstructions={listing.access_instructions}
+                  hoursOfAccess={listing.hours_of_access}
+                  status={listing.status}
                 />
               ) : (
                 <InquiryForm
