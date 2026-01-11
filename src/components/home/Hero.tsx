@@ -3,6 +3,7 @@ import SearchBar from '@/components/search/SearchBar';
 import CategoryPills from '@/components/search/CategoryPills';
 import ModeToggle from '@/components/search/ModeToggle';
 import { ListingCategory, ListingMode } from '@/types/listing';
+import vendibookLogo from '@/assets/vendibook-logo.jpg';
 
 interface HeroProps {
   onSearch?: (filters: { query: string; category: ListingCategory | null; mode: ListingMode | null }) => void;
@@ -21,16 +22,12 @@ const Hero = ({ onSearch }: HeroProps) => {
       <div className="container">
         {/* Hero Content */}
         <div className="max-w-3xl mx-auto text-center mb-10 animate-fade-in">
-          {/* Logo Mark */}
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-lg">
-              <span className="text-primary-foreground text-3xl font-bold">V</span>
-            </div>
-          </div>
-          
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-            vendi<span className="text-primary">book</span>
-          </h1>
+          {/* Logo */}
+          <img 
+            src={vendibookLogo} 
+            alt="Vendibook" 
+            className="h-20 md:h-24 w-auto mix-blend-multiply mb-4"
+          />
           
           <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
             Rent or buy food trucks, food trailers, ghost kitchens, vendor lots and other mobile business assets.
