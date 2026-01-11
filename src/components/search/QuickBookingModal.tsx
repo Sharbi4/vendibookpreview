@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Calendar, Loader2, MapPin, Truck, Building, Info, X } from 'lucide-react';
+import { Calendar, Loader2, MapPin, Truck, Building, Info, CreditCard, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
+import { calculateRentalFees, RENTAL_RENTER_FEE_PERCENT } from '@/lib/commissions';
 import type { TablesInsert } from '@/integrations/supabase/types';
 
 interface QuickBookingModalProps {
@@ -96,7 +97,7 @@ const QuickBookingModal = ({
 
   const rentalDays = startDate && endDate ? differenceInDays(endDate, startDate) : 0;
 
-  const calculateTotal = () => {
+  const calculateBasePrice = () => {
     if (!listing.price_daily || rentalDays <= 0) return 0;
 
     const weeks = Math.floor(rentalDays / 7);
@@ -109,14 +110,13 @@ const QuickBookingModal = ({
       basePrice = rentalDays * listing.price_daily;
     }
 
-    if (fulfillmentSelected === 'delivery' && listing.delivery_fee) {
-      basePrice += listing.delivery_fee;
-    }
-
     return basePrice;
   };
 
-  const total = calculateTotal();
+  const basePrice = calculateBasePrice();
+  const currentDeliveryFee = fulfillmentSelected === 'delivery' && listing.delivery_fee ? listing.delivery_fee : 0;
+  const fees = calculateRentalFees(basePrice, currentDeliveryFee);
+  
   const isListingAvailable = listing.status === 'published';
 
   const hasUnavailableDatesInRange = (): boolean => {
@@ -170,7 +170,7 @@ const QuickBookingModal = ({
         start_date: format(startDate!, 'yyyy-MM-dd'),
         end_date: format(endDate!, 'yyyy-MM-dd'),
         message: message.trim() || null,
-        total_price: total,
+        total_price: fees.customerTotal,
         fulfillment_selected: fulfillmentSelected,
       };
 
@@ -466,17 +466,27 @@ const QuickBookingModal = ({
                   <span className="text-muted-foreground">
                     ${listing.price_daily} × {rentalDays} day{rentalDays > 1 ? 's' : ''}
                   </span>
-                  <span>${rentalDays * (listing.price_daily || 0)}</span>
+                  <span>${basePrice.toFixed(2)}</span>
                 </div>
                 {fulfillmentSelected === 'delivery' && listing.delivery_fee && (
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Delivery fee</span>
-                    <span>${listing.delivery_fee}</span>
+                    <span>${listing.delivery_fee.toFixed(2)}</span>
                   </div>
                 )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span>${fees.subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    Platform fee ({RENTAL_RENTER_FEE_PERCENT}%)
+                  </span>
+                  <span>${fees.renterFee.toFixed(2)}</span>
+                </div>
                 <div className="flex justify-between font-semibold text-lg pt-2 border-t border-border">
                   <span>Total</span>
-                  <span>${total.toLocaleString()}</span>
+                  <span>${fees.customerTotal.toFixed(2)}</span>
                 </div>
               </div>
             )}
@@ -494,7 +504,7 @@ const QuickBookingModal = ({
                   Submitting...
                 </>
               ) : user ? (
-                'Request to Book'
+                `Request to Book · $${fees.customerTotal.toFixed(2)}`
               ) : (
                 'Sign in to Book'
               )}

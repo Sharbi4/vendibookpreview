@@ -189,8 +189,8 @@ serve(async (req) => {
           host_id: listing.host_id,
         },
       },
-      success_url: `${origin}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/listing/${listing_id}?payment=cancelled`,
+      success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/payment-cancelled?listing=${listing_id}`,
       metadata: {
         booking_id: booking_id || '',
         listing_id,
