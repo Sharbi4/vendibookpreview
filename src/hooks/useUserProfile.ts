@@ -27,24 +27,64 @@ export const useUserProfile = (userId: string | undefined) => {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       const isOwnProfile = currentUser?.id === userId;
 
-      // Fetch profile - exclude email from public queries for privacy
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url, identity_verified, created_at, email')
-        .eq('id', userId)
-        .single();
+      if (isOwnProfile) {
+        // For own profile, fetch all data directly (RLS allows this)
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url, identity_verified, created_at, email')
+          .eq('id', userId)
+          .single();
 
-      if (error) throw error;
-      
-      // Only expose email for user's own profile (privacy protection)
-      return {
-        id: data.id,
-        full_name: data.full_name,
-        avatar_url: data.avatar_url,
-        identity_verified: data.identity_verified,
-        created_at: data.created_at,
-        email: isOwnProfile ? data.email : null,
-      } as UserProfile;
+        if (error) throw error;
+        
+        return {
+          id: data.id,
+          full_name: data.full_name,
+          avatar_url: data.avatar_url,
+          identity_verified: data.identity_verified,
+          created_at: data.created_at,
+          email: data.email,
+        } as UserProfile;
+      } else {
+        // For public profiles, use the secure function that only returns safe fields
+        const { data, error } = await supabase.rpc('get_safe_host_profile', {
+          host_user_id: userId
+        });
+
+        if (error) throw error;
+        
+        // Function returns an array, get first result
+        const profile = data?.[0];
+        if (!profile) {
+          // If no profile found via secure function, try direct query
+          // This covers cases where user might be a booking/conversation participant
+          const { data: directData, error: directError } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url, identity_verified, created_at')
+            .eq('id', userId)
+            .single();
+          
+          if (directError) throw directError;
+          
+          return {
+            id: directData.id,
+            full_name: directData.full_name,
+            avatar_url: directData.avatar_url,
+            identity_verified: directData.identity_verified,
+            created_at: directData.created_at,
+            email: null, // Never expose email for other users
+          } as UserProfile;
+        }
+
+        return {
+          id: profile.id,
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
+          identity_verified: profile.identity_verified,
+          created_at: profile.created_at,
+          email: null, // Never expose email for public profiles
+        } as UserProfile;
+      }
     },
     enabled: !!userId,
   });
