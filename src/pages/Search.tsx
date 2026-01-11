@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Fuse from 'fuse.js';
-import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation } from 'lucide-react';
+import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2 } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format, parseISO, eachDayOfInterval } from 'date-fns';
 import Header from '@/components/layout/Header';
@@ -34,8 +34,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { Listing, CATEGORY_LABELS, ListingCategory, ListingMode } from '@/types/listing';
+import { Listing, CATEGORY_LABELS, ListingCategory, ListingMode, AMENITIES_BY_CATEGORY } from '@/types/listing';
 import { calculateDistance } from '@/lib/geolocation';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Fetch all blocked dates and bookings for availability filtering
 interface UnavailableDates {
@@ -75,6 +76,7 @@ const Search = () => {
       ? { from: parseISO(initialStartDate), to: parseISO(initialEndDate) }
       : undefined
   );
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   
   // Quick booking modal state
@@ -242,6 +244,14 @@ const Search = () => {
       results = results.filter(listing => isListingAvailableForDates(listing.id));
     }
 
+    // Filter by amenities
+    if (selectedAmenities.length > 0) {
+      results = results.filter(listing => {
+        const listingAmenities = listing.amenities || [];
+        return selectedAmenities.every(amenity => listingAmenities.includes(amenity));
+      });
+    }
+
     // Sort by distance if location is set
     if (locationCoords) {
       results = results.sort((a, b) => {
@@ -255,7 +265,7 @@ const Search = () => {
     }
 
     return results;
-  }, [listings, searchQuery, mode, category, locationCoords, searchRadius, priceRange, dateRange, fuse, unavailableDates]);
+  }, [listings, searchQuery, mode, category, locationCoords, searchRadius, priceRange, dateRange, selectedAmenities, fuse, unavailableDates]);
 
   // Update URL params
   const handleSearch = (value: string) => {
@@ -342,7 +352,26 @@ const Search = () => {
     setSearchRadius(25);
     setPriceRange([0, 50000]);
     setDateRange(undefined);
+    setSelectedAmenities([]);
     setSearchParams({});
+  };
+
+  const toggleAmenity = (amenityId: string) => {
+    setSelectedAmenities(prev =>
+      prev.includes(amenityId)
+        ? prev.filter(a => a !== amenityId)
+        : [...prev, amenityId]
+    );
+  };
+
+  const getAmenityLabel = (amenityId: string): string => {
+    for (const cat of Object.values(AMENITIES_BY_CATEGORY)) {
+      for (const group of cat) {
+        const item = group.items.find(i => i.id === amenityId);
+        if (item) return item.label;
+      }
+    }
+    return amenityId;
   };
 
   const handleQuickBook = (listing: Listing) => {
@@ -356,6 +385,7 @@ const Search = () => {
     locationCoords !== null,
     priceRange[0] > 0 || priceRange[1] < 50000,
     dateRange?.from && dateRange?.to,
+    selectedAmenities.length > 0,
   ].filter(Boolean).length;
 
   return (
@@ -416,6 +446,7 @@ const Search = () => {
                       searchRadius={searchRadius}
                       priceRange={priceRange}
                       dateRange={dateRange}
+                      selectedAmenities={selectedAmenities}
                       onModeChange={handleModeChange}
                       onCategoryChange={handleCategoryChange}
                       onLocationTextChange={setLocationText}
@@ -423,6 +454,7 @@ const Search = () => {
                       onRadiusChange={handleRadiusChange}
                       onPriceRangeChange={setPriceRange}
                       onDateRangeChange={handleDateRangeChange}
+                      onAmenityToggle={toggleAmenity}
                       onClear={clearFilters}
                     />
                   </div>
@@ -487,6 +519,7 @@ const Search = () => {
                   searchRadius={searchRadius}
                   priceRange={priceRange}
                   dateRange={dateRange}
+                  selectedAmenities={selectedAmenities}
                   onModeChange={handleModeChange}
                   onCategoryChange={handleCategoryChange}
                   onLocationTextChange={setLocationText}
@@ -494,6 +527,7 @@ const Search = () => {
                   onRadiusChange={handleRadiusChange}
                   onPriceRangeChange={setPriceRange}
                   onDateRangeChange={handleDateRangeChange}
+                  onAmenityToggle={toggleAmenity}
                   onClear={clearFilters}
                 />
               </div>
@@ -522,7 +556,7 @@ const Search = () => {
               </div>
 
               {/* Active Filters Badges */}
-              {(mode !== 'all' || category !== 'all' || locationCoords || dateRange?.from) && (
+              {(mode !== 'all' || category !== 'all' || locationCoords || dateRange?.from || selectedAmenities.length > 0) && (
                 <div className="flex flex-wrap gap-2 mb-6">
                   {mode !== 'all' && (
                     <Badge variant="secondary" className="gap-1">
@@ -562,6 +596,15 @@ const Search = () => {
                       </button>
                     </Badge>
                   )}
+                  {selectedAmenities.map(amenityId => (
+                    <Badge key={amenityId} variant="secondary" className="gap-1">
+                      <CheckCircle2 className="h-3 w-3" />
+                      {getAmenityLabel(amenityId)}
+                      <button onClick={() => toggleAmenity(amenityId)}>
+                        <X className="h-3 w-3 ml-1" />
+                      </button>
+                    </Badge>
+                  ))}
                 </div>
               )}
 
@@ -639,6 +682,7 @@ interface FilterContentProps {
   searchRadius: number;
   priceRange: [number, number];
   dateRange: DateRange | undefined;
+  selectedAmenities: string[];
   onModeChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onLocationTextChange: (value: string) => void;
@@ -646,6 +690,7 @@ interface FilterContentProps {
   onRadiusChange: (radius: number) => void;
   onPriceRangeChange: (value: [number, number]) => void;
   onDateRangeChange: (range: DateRange | undefined) => void;
+  onAmenityToggle: (amenityId: string) => void;
   onClear: () => void;
 }
 
@@ -657,6 +702,7 @@ const FilterContent = ({
   searchRadius,
   priceRange,
   dateRange,
+  selectedAmenities,
   onModeChange,
   onCategoryChange,
   onLocationTextChange,
@@ -664,7 +710,18 @@ const FilterContent = ({
   onRadiusChange,
   onPriceRangeChange,
   onDateRangeChange,
+  onAmenityToggle,
 }: FilterContentProps) => {
+  // Get amenities to show based on selected category
+  const getAvailableAmenities = () => {
+    if (category !== 'all') {
+      return AMENITIES_BY_CATEGORY[category] || [];
+    }
+    // If no category selected, show all amenities grouped by category
+    return [];
+  };
+
+  const availableAmenities = getAvailableAmenities();
   return (
     <>
       {/* Date Range Filter */}
@@ -740,6 +797,51 @@ const FilterContent = ({
           ))}
         </div>
       </div>
+
+      {/* Amenities Filter - Show when category is selected */}
+      {availableAmenities.length > 0 && (
+        <div className="space-y-3">
+          <Label className="text-sm font-medium flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4" />
+            Features & Amenities
+          </Label>
+          <ScrollArea className="h-[200px] pr-3">
+            <div className="space-y-4">
+              {availableAmenities.map((group) => (
+                <div key={group.label} className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    {group.label}
+                  </p>
+                  <div className="space-y-1">
+                    {group.items.map((item) => (
+                      <label key={item.id} className="flex items-center gap-2 cursor-pointer py-1">
+                        <Checkbox
+                          checked={selectedAmenities.includes(item.id)}
+                          onCheckedChange={() => onAmenityToggle(item.id)}
+                        />
+                        <span className="text-sm">{item.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          {selectedAmenities.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {selectedAmenities.length} feature{selectedAmenities.length !== 1 ? 's' : ''} selected
+            </p>
+          )}
+        </div>
+      )}
+
+      {category === 'all' && (
+        <div className="p-3 bg-muted/50 rounded-lg">
+          <p className="text-xs text-muted-foreground">
+            Select a category above to filter by specific features and amenities.
+          </p>
+        </div>
+      )}
 
       {/* Price Range Filter */}
       <div className="space-y-3">
