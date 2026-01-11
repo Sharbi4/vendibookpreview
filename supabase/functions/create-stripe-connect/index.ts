@@ -66,10 +66,13 @@ serve(async (req) => {
       });
       accountId = account.id;
 
-      // Save account ID to profile
+      // Save account ID and onboarding start time to profile
       await supabaseClient
         .from('profiles')
-        .update({ stripe_account_id: accountId })
+        .update({ 
+          stripe_account_id: accountId,
+          stripe_onboarding_started_at: new Date().toISOString()
+        })
         .eq('id', user.id);
 
       logStep("Stripe account created", { accountId });

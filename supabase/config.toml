@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.send-booking-notification]
 verify_jwt = false
+
+[functions.send-stripe-onboarding-reminder]
+verify_jwt = false
+
+[functions.suggest-pricing]
+verify_jwt = false
