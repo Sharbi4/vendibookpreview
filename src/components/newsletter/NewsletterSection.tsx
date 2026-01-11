@@ -52,6 +52,11 @@ const NewsletterSection = ({ variant = 'default', source = 'section' }: Newslett
           title: 'Successfully subscribed!',
           description: 'Thanks for joining our newsletter.',
         });
+
+        // Send admin notification (fire and forget)
+        supabase.functions.invoke('send-admin-notification', {
+          body: { type: 'newsletter_signup', data: { email, source } }
+        }).catch(err => console.error('Admin notification error:', err));
       }
     } catch (error) {
       console.error('Newsletter signup error:', error);
