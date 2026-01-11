@@ -23,14 +23,28 @@ export const useUserProfile = (userId: string | undefined) => {
     queryFn: async () => {
       if (!userId) return null;
 
+      // Get current user to determine if viewing own profile
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const isOwnProfile = currentUser?.id === userId;
+
+      // Fetch profile - exclude email from public queries for privacy
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, full_name, avatar_url, identity_verified, created_at, email')
         .eq('id', userId)
         .single();
 
       if (error) throw error;
-      return data as UserProfile;
+      
+      // Only expose email for user's own profile (privacy protection)
+      return {
+        id: data.id,
+        full_name: data.full_name,
+        avatar_url: data.avatar_url,
+        identity_verified: data.identity_verified,
+        created_at: data.created_at,
+        email: isOwnProfile ? data.email : null,
+      } as UserProfile;
     },
     enabled: !!userId,
   });
@@ -110,7 +124,7 @@ export const useUserReviewsReceived = (userId: string | undefined) => {
 
       if (error) throw error;
 
-      // Fetch reviewer names
+      // Fetch reviewer names - only non-sensitive fields
       const reviewerIds = [...new Set(data.map(r => r.reviewer_id))];
       const { data: profiles } = await supabase
         .from('profiles')
@@ -152,7 +166,7 @@ export const useUserReviewsGiven = (userId: string | undefined) => {
 
       if (error) throw error;
 
-      // Fetch listing titles and host names
+      // Fetch listing titles and host names - only non-sensitive fields
       const listingIds = [...new Set(data.map(r => r.listing_id))];
       const { data: listings } = await supabase
         .from('listings')
