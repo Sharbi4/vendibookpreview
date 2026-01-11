@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      booking_documents: {
+        Row: {
+          booking_id: string
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name: string
+          file_url: string
+          id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["document_status"]
+          uploaded_at: string
+        }
+        Insert: {
+          booking_id: string
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name: string
+          file_url: string
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["document_status"]
+          uploaded_at?: string
+        }
+        Update: {
+          booking_id?: string
+          document_type?: Database["public"]["Enums"]["document_type"]
+          file_name?: string
+          file_url?: string
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["document_status"]
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_documents_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_messages: {
         Row: {
           attachment_name: string | null
@@ -172,6 +219,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "listing_blocked_dates_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_required_documents: {
+        Row: {
+          created_at: string
+          deadline_offset_hours: number | null
+          deadline_type: Database["public"]["Enums"]["document_deadline_type"]
+          description: string | null
+          document_type: Database["public"]["Enums"]["document_type"]
+          id: string
+          is_required: boolean
+          listing_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deadline_offset_hours?: number | null
+          deadline_type?: Database["public"]["Enums"]["document_deadline_type"]
+          description?: string | null
+          document_type: Database["public"]["Enums"]["document_type"]
+          id?: string
+          is_required?: boolean
+          listing_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deadline_offset_hours?: number | null
+          deadline_type?: Database["public"]["Enums"]["document_deadline_type"]
+          description?: string | null
+          document_type?: Database["public"]["Enums"]["document_type"]
+          id?: string
+          is_required?: boolean
+          listing_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_required_documents_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
@@ -518,6 +609,22 @@ export type Database = {
         | "declined"
         | "cancelled"
         | "completed"
+      document_deadline_type:
+        | "before_booking_request"
+        | "before_approval"
+        | "after_approval_deadline"
+      document_status: "pending" | "approved" | "rejected"
+      document_type:
+        | "drivers_license"
+        | "business_license"
+        | "food_handler_certificate"
+        | "safeserve_certification"
+        | "health_department_permit"
+        | "commercial_liability_insurance"
+        | "vehicle_insurance"
+        | "certificate_of_insurance"
+        | "work_history_proof"
+        | "prior_experience_proof"
       fulfillment_type: "pickup" | "delivery" | "both" | "on_site"
       listing_category:
         | "food_truck"
@@ -660,6 +767,24 @@ export const Constants = {
         "declined",
         "cancelled",
         "completed",
+      ],
+      document_deadline_type: [
+        "before_booking_request",
+        "before_approval",
+        "after_approval_deadline",
+      ],
+      document_status: ["pending", "approved", "rejected"],
+      document_type: [
+        "drivers_license",
+        "business_license",
+        "food_handler_certificate",
+        "safeserve_certification",
+        "health_department_permit",
+        "commercial_liability_insurance",
+        "vehicle_insurance",
+        "certificate_of_insurance",
+        "work_history_proof",
+        "prior_experience_proof",
       ],
       fulfillment_type: ["pickup", "delivery", "both", "on_site"],
       listing_category: [

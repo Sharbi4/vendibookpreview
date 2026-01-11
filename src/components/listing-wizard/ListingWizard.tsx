@@ -14,12 +14,13 @@ import { StepListingType } from './StepListingType';
 import { StepDetails } from './StepDetails';
 import { StepLocation } from './StepLocation';
 import { StepPricing } from './StepPricing';
+import { StepRequiredDocuments } from './StepRequiredDocuments';
 import { StepPhotos } from './StepPhotos';
 import { StepReview } from './StepReview';
 import { StripeConnectModal } from './StripeConnectModal';
 import { PublishSuccessModal } from './PublishSuccessModal';
 
-const STEPS = ['Type', 'Details', 'Location', 'Pricing', 'Photos', 'Review'];
+const STEPS = ['Type', 'Details', 'Location', 'Pricing', 'Documents', 'Photos', 'Review'];
 
 interface PublishedListing {
   id: string;
@@ -187,6 +188,27 @@ export const ListingWizard: React.FC = () => {
         if (updateError) throw updateError;
       }
 
+      // Save required documents for rental listings
+      if (formData.mode === 'rent' && formData.required_documents && formData.required_documents.length > 0) {
+        const docsToInsert = formData.required_documents.map(doc => ({
+          listing_id: listing.id,
+          document_type: doc.document_type,
+          is_required: doc.is_required,
+          deadline_type: doc.deadline_type,
+          deadline_offset_hours: doc.deadline_offset_hours || null,
+          description: doc.description || null,
+        }));
+
+        const { error: docsError } = await supabase
+          .from('listing_required_documents' as any)
+          .insert(docsToInsert);
+
+        if (docsError) {
+          console.error('Error saving required documents:', docsError);
+          // Don't fail the whole listing save, just log the error
+        }
+      }
+
       if (publish) {
         // Format price for email
         const formatPrice = () => {
@@ -311,12 +333,19 @@ export const ListingWizard: React.FC = () => {
         );
       case 5:
         return (
-          <StepPhotos
+          <StepRequiredDocuments
             formData={formData}
             updateField={updateField}
           />
         );
       case 6:
+        return (
+          <StepPhotos
+            formData={formData}
+            updateField={updateField}
+          />
+        );
+      case 7:
         return (
           <StepReview
             formData={formData}
@@ -329,7 +358,7 @@ export const ListingWizard: React.FC = () => {
     }
   };
 
-  const completedSteps = Array.from({ length: 6 }, (_, i) => i + 1)
+  const completedSteps = Array.from({ length: 7 }, (_, i) => i + 1)
     .filter(step => step < currentStep && validateStep(step));
 
   return (
@@ -374,7 +403,7 @@ export const ListingWizard: React.FC = () => {
           </Button>
 
           <div className="flex items-center gap-3">
-            {currentStep === 6 ? (
+            {currentStep === 7 ? (
               <>
                 <Button
                   variant="outline"
