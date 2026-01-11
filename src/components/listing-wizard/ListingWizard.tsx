@@ -141,6 +141,7 @@ export const ListingWizard: React.FC = () => {
         title: formData.title,
         description: formData.description,
         highlights: formData.highlights,
+        amenities: formData.amenities || [],
         fulfillment_type: formData.fulfillment_type || 'on_site',
         pickup_location_text: formData.pickup_location_text || null,
         address: formData.address || null,

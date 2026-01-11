@@ -7,6 +7,7 @@ const initialFormData: ListingFormData = {
   title: '',
   description: '',
   highlights: [],
+  amenities: [],
   fulfillment_type: null,
   is_static_location: false,
   pickup_location_text: '',

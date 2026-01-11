@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Plus, X, Sparkles, Loader2, Check, RotateCcw } from 'lucide-react';
-import { ListingFormData } from '@/types/listing';
+import { ListingFormData, AMENITIES_BY_CATEGORY, ListingCategory } from '@/types/listing';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -38,6 +39,15 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
     if (e.key === 'Enter') {
       e.preventDefault();
       addHighlight();
+    }
+  };
+
+  const toggleAmenity = (amenityId: string) => {
+    const current = formData.amenities || [];
+    if (current.includes(amenityId)) {
+      updateField('amenities', current.filter(a => a !== amenityId));
+    } else {
+      updateField('amenities', [...current, amenityId]);
     }
   };
 
@@ -97,6 +107,11 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
       });
     }
   };
+
+  // Get amenities for the selected category
+  const categoryAmenities = formData.category 
+    ? AMENITIES_BY_CATEGORY[formData.category as ListingCategory] 
+    : [];
 
   return (
     <div className="space-y-6">
@@ -188,6 +203,51 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
           )}
         </div>
       </div>
+
+      {/* What's Included - Category-specific amenities */}
+      {categoryAmenities.length > 0 && (
+        <div className="space-y-4">
+          <div>
+            <Label className="text-base font-medium">What's Included</Label>
+            <p className="text-sm text-muted-foreground mt-1">
+              Select all features and amenities that come with your listing.
+            </p>
+          </div>
+          
+          <div className="space-y-6">
+            {categoryAmenities.map((group) => (
+              <div key={group.label} className="space-y-3">
+                <h4 className="text-sm font-medium text-muted-foreground">{group.label}</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  {group.items.map((item) => (
+                    <label
+                      key={item.id}
+                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                        formData.amenities?.includes(item.id)
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                      }`}
+                    >
+                      <Checkbox
+                        checked={formData.amenities?.includes(item.id) || false}
+                        onCheckedChange={() => toggleAmenity(item.id)}
+                        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                      />
+                      <span className="text-sm">{item.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {formData.amenities && formData.amenities.length > 0 && (
+            <p className="text-sm text-muted-foreground">
+              {formData.amenities.length} item{formData.amenities.length !== 1 ? 's' : ''} selected
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Highlights */}
       <div className="space-y-3">
