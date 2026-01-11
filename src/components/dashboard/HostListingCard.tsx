@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Edit2, Eye, Pause, Play, Trash2 } from 'lucide-react';
+import { Edit2, Eye, Pause, Play, Trash2, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CATEGORY_LABELS } from '@/types/listing';
+import AvailabilityCalendar from './AvailabilityCalendar';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Listing = Tables<'listings'>;
@@ -34,96 +36,119 @@ const StatusPill = ({ status }: { status: Listing['status'] }) => {
 };
 
 const HostListingCard = ({ listing, onPause, onPublish, onDelete }: HostListingCardProps) => {
+  const [showCalendar, setShowCalendar] = useState(false);
+  
   const displayPrice = listing.mode === 'rent' 
     ? `$${listing.price_daily}/day` 
     : `$${listing.price_sale?.toLocaleString()}`;
 
   const location = listing.address || listing.pickup_location_text || 'No location set';
+  const isRental = listing.mode === 'rent';
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden card-hover">
-      <div className="flex flex-col sm:flex-row">
-        {/* Image */}
-        <div className="sm:w-48 h-40 sm:h-auto flex-shrink-0">
-          <img
-            src={listing.cover_image_url || '/placeholder.svg'}
-            alt={listing.title}
-            className="w-full h-full object-cover"
-          />
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 p-4 flex flex-col justify-between">
-          <div>
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <div>
-                <h3 className="font-semibold text-foreground line-clamp-1">{listing.title}</h3>
-                <p className="text-sm text-muted-foreground">{location}</p>
-              </div>
-              <StatusPill status={listing.status} />
-            </div>
-
-            <div className="flex items-center gap-3 text-sm">
-              <span className="text-primary font-semibold">{displayPrice}</span>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-muted-foreground capitalize">
-                {CATEGORY_LABELS[listing.category]}
-              </span>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-muted-foreground capitalize">
-                For {listing.mode === 'rent' ? 'Rent' : 'Sale'}
-              </span>
-            </div>
+    <>
+      <div className="bg-card border border-border rounded-xl overflow-hidden card-hover">
+        <div className="flex flex-col sm:flex-row">
+          {/* Image */}
+          <div className="sm:w-48 h-40 sm:h-auto flex-shrink-0">
+            <img
+              src={listing.cover_image_url || '/placeholder.svg'}
+              alt={listing.title}
+              className="w-full h-full object-cover"
+            />
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
-            <Button variant="outline" size="sm" asChild>
-              <Link to={`/listing/${listing.id}`}>
-                <Eye className="h-4 w-4 mr-1" />
-                View
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link to={`/edit-listing/${listing.id}`}>
-                <Edit2 className="h-4 w-4 mr-1" />
-                Edit
-              </Link>
-            </Button>
-            {listing.status === 'published' && onPause && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => onPause(listing.id)}
-              >
-                <Pause className="h-4 w-4 mr-1" />
-                Pause
+          {/* Content */}
+          <div className="flex-1 p-4 flex flex-col justify-between">
+            <div>
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div>
+                  <h3 className="font-semibold text-foreground line-clamp-1">{listing.title}</h3>
+                  <p className="text-sm text-muted-foreground">{location}</p>
+                </div>
+                <StatusPill status={listing.status} />
+              </div>
+
+              <div className="flex items-center gap-3 text-sm">
+                <span className="text-primary font-semibold">{displayPrice}</span>
+                <span className="text-muted-foreground">•</span>
+                <span className="text-muted-foreground capitalize">
+                  {CATEGORY_LABELS[listing.category]}
+                </span>
+                <span className="text-muted-foreground">•</span>
+                <span className="text-muted-foreground capitalize">
+                  For {listing.mode === 'rent' ? 'Rent' : 'Sale'}
+                </span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border flex-wrap">
+              <Button variant="outline" size="sm" asChild>
+                <Link to={`/listing/${listing.id}`}>
+                  <Eye className="h-4 w-4 mr-1" />
+                  View
+                </Link>
               </Button>
-            )}
-            {(listing.status === 'draft' || listing.status === 'paused') && onPublish && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => onPublish(listing.id)}
-              >
-                <Play className="h-4 w-4 mr-1" />
-                Publish
+              <Button variant="outline" size="sm" asChild>
+                <Link to={`/edit-listing/${listing.id}`}>
+                  <Edit2 className="h-4 w-4 mr-1" />
+                  Edit
+                </Link>
               </Button>
-            )}
-            {onDelete && (
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="text-destructive hover:text-destructive hover:bg-destructive/10 ml-auto"
-                onClick={() => onDelete(listing.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
+              {isRental && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowCalendar(true)}
+                >
+                  <Calendar className="h-4 w-4 mr-1" />
+                  Availability
+                </Button>
+              )}
+              {listing.status === 'published' && onPause && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => onPause(listing.id)}
+                >
+                  <Pause className="h-4 w-4 mr-1" />
+                  Pause
+                </Button>
+              )}
+              {(listing.status === 'draft' || listing.status === 'paused') && onPublish && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => onPublish(listing.id)}
+                >
+                  <Play className="h-4 w-4 mr-1" />
+                  Publish
+                </Button>
+              )}
+              {onDelete && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 ml-auto"
+                  onClick={() => onDelete(listing.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Availability Calendar Modal */}
+      {showCalendar && (
+        <AvailabilityCalendar 
+          listing={listing} 
+          onClose={() => setShowCalendar(false)} 
+        />
+      )}
+    </>
   );
 };
 

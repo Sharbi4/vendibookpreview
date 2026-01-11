@@ -88,6 +88,41 @@ export type Database = {
           },
         ]
       }
+      listing_blocked_dates: {
+        Row: {
+          blocked_date: string
+          created_at: string
+          host_id: string
+          id: string
+          listing_id: string
+          reason: string | null
+        }
+        Insert: {
+          blocked_date: string
+          created_at?: string
+          host_id: string
+          id?: string
+          listing_id: string
+          reason?: string | null
+        }
+        Update: {
+          blocked_date?: string
+          created_at?: string
+          host_id?: string
+          id?: string
+          listing_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_blocked_dates_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           access_instructions: string | null
