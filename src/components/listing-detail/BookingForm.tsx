@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar } from 'lucide-react';
+import { Calendar, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -8,9 +8,11 @@ import { format, differenceInDays } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface BookingFormProps {
   listingId: string;
+  hostId: string;
   priceDaily: number | null;
   priceWeekly: number | null;
   availableFrom?: string | null;
@@ -18,7 +20,8 @@ interface BookingFormProps {
 }
 
 const BookingForm = ({ 
-  listingId, 
+  listingId,
+  hostId,
   priceDaily, 
   priceWeekly,
   availableFrom,
@@ -68,15 +71,51 @@ const BookingForm = ({
       return;
     }
 
+    if (rentalDays <= 0) {
+      toast({
+        title: 'Invalid dates',
+        description: 'End date must be after start date',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
-    // TODO: Implement booking request submission
-    toast({
-      title: 'Request sent!',
-      description: 'The host will review your booking request.',
-    });
-    
-    setIsSubmitting(false);
+    try {
+      const { error } = await supabase
+        .from('booking_requests')
+        .insert({
+          listing_id: listingId,
+          host_id: hostId,
+          shopper_id: user.id,
+          start_date: format(startDate, 'yyyy-MM-dd'),
+          end_date: format(endDate, 'yyyy-MM-dd'),
+          message: message.trim() || null,
+          total_price: total,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Request sent!',
+        description: 'The host will review your booking request.',
+      });
+
+      // Reset form
+      setStartDate(undefined);
+      setEndDate(undefined);
+      setMessage('');
+    } catch (error) {
+      console.error('Error submitting booking:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to submit booking request. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -184,8 +223,9 @@ const BookingForm = ({
         className="w-full bg-primary hover:bg-primary/90" 
         size="lg"
         onClick={handleSubmit}
-        disabled={isSubmitting}
+        disabled={isSubmitting || rentalDays <= 0}
       >
+        {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
         {user ? 'Request to Book' : 'Sign in to Book'}
       </Button>
 

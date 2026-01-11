@@ -280,6 +280,7 @@ const ListingDetail = () => {
               {isRental ? (
                 <BookingForm
                   listingId={listing.id}
+                  hostId={listing.host_id}
                   priceDaily={listing.price_daily}
                   priceWeekly={listing.price_weekly}
                   availableFrom={listing.available_from}
