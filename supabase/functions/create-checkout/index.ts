@@ -125,7 +125,8 @@ serve(async (req) => {
         hostReceives: (hostReceives / 100).toFixed(2),
       });
     } else {
-      // Sales: 15% from seller only
+      // Sales: 15% from seller only - ESCROW MODE
+      // Payment is captured but NOT transferred until both parties confirm
       const salePrice = amount;
       
       // Customer pays full price (no buyer fee)
@@ -138,7 +139,7 @@ serve(async (req) => {
       // Seller receives sale price minus 15%
       hostReceives = Math.round((salePrice - sellerFee) * 100);
       
-      logStep("Sale fee calculation", {
+      logStep("Sale fee calculation (escrow)", {
         salePrice,
         sellerFee: sellerFee.toFixed(2),
         customerTotal: (customerTotal / 100).toFixed(2),
@@ -156,31 +157,46 @@ serve(async (req) => {
     }
 
     // Create the Checkout Session
-    const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      payment_method_types: ['card'],
-      mode: 'payment',
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: listing.title,
-              description: mode === 'rent' 
-                ? `Rental booking${delivery_fee > 0 ? ' (includes delivery)' : ''}`
-                : 'Purchase',
+    // For sales: Use separate charges (escrow) - funds go to platform first
+    // For rentals: Use destination charges - funds go directly to host
+    
+    let sessionParams: Stripe.Checkout.SessionCreateParams;
+    
+    if (mode === 'rent') {
+      // Rentals: Direct transfer to host
+      sessionParams = {
+        payment_method_types: ['card'],
+        mode: 'payment',
+        customer: customerId,
+        customer_email: customerId ? undefined : user.email,
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: listing.title,
+                description: `Rental booking${delivery_fee > 0 ? ' (includes delivery)' : ''}`,
+              },
+              unit_amount: customerTotal,
             },
-            unit_amount: customerTotal,
+            quantity: 1,
           },
-          quantity: 1,
+        ],
+        payment_intent_data: {
+          application_fee_amount: applicationFee,
+          transfer_data: {
+            destination: hostProfile.stripe_account_id,
+          },
+          metadata: {
+            booking_id: booking_id || '',
+            listing_id,
+            mode,
+            buyer_id: user.id,
+            host_id: listing.host_id,
+          },
         },
-      ],
-      payment_intent_data: {
-        application_fee_amount: applicationFee,
-        transfer_data: {
-          destination: hostProfile.stripe_account_id,
-        },
+        success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/payment-cancelled?listing=${listing_id}`,
         metadata: {
           booking_id: booking_id || '',
           listing_id,
@@ -188,17 +204,50 @@ serve(async (req) => {
           buyer_id: user.id,
           host_id: listing.host_id,
         },
-      },
-      success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/payment-cancelled?listing=${listing_id}`,
-      metadata: {
-        booking_id: booking_id || '',
-        listing_id,
-        mode,
-        buyer_id: user.id,
-        host_id: listing.host_id,
-      },
-    };
+      };
+    } else {
+      // Sales: ESCROW - Funds held on platform, transferred after confirmation
+      // No transfer_data - funds stay on platform until both parties confirm
+      sessionParams = {
+        payment_method_types: ['card'],
+        mode: 'payment',
+        customer: customerId,
+        customer_email: customerId ? undefined : user.email,
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: listing.title,
+                description: 'Purchase (Escrow - funds released after confirmation)',
+              },
+              unit_amount: customerTotal,
+            },
+            quantity: 1,
+          },
+        ],
+        payment_intent_data: {
+          metadata: {
+            listing_id,
+            mode: 'sale',
+            buyer_id: user.id,
+            seller_id: listing.host_id,
+            escrow: 'true',
+            platform_fee: applicationFee.toString(),
+            seller_payout: hostReceives.toString(),
+          },
+        },
+        success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true`,
+        cancel_url: `${origin}/payment-cancelled?listing=${listing_id}`,
+        metadata: {
+          listing_id,
+          mode: 'sale',
+          buyer_id: user.id,
+          seller_id: listing.host_id,
+          escrow: 'true',
+        },
+      };
+    }
 
     const session = await stripe.checkout.sessions.create(sessionParams);
     logStep("Checkout session created", { sessionId: session.id, url: session.url });

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StatCard from './StatCard';
 import ShopperBookingCard from './ShopperBookingCard';
+import BuyerSalesSection from './BuyerSalesSection';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 
 const ShopperDashboard = () => {
@@ -172,6 +173,9 @@ const ShopperDashboard = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Purchases/Sales Section */}
+      <BuyerSalesSection />
     </div>
   );
 };

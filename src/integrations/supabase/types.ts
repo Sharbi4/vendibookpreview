@@ -404,6 +404,74 @@ export type Database = {
           },
         ]
       }
+      sale_transactions: {
+        Row: {
+          amount: number
+          buyer_confirmed_at: string | null
+          buyer_id: string
+          checkout_session_id: string | null
+          created_at: string
+          id: string
+          listing_id: string
+          message: string | null
+          payment_intent_id: string | null
+          payout_completed_at: string | null
+          platform_fee: number
+          seller_confirmed_at: string | null
+          seller_id: string
+          seller_payout: number
+          status: string
+          transfer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          buyer_confirmed_at?: string | null
+          buyer_id: string
+          checkout_session_id?: string | null
+          created_at?: string
+          id?: string
+          listing_id: string
+          message?: string | null
+          payment_intent_id?: string | null
+          payout_completed_at?: string | null
+          platform_fee: number
+          seller_confirmed_at?: string | null
+          seller_id: string
+          seller_payout: number
+          status?: string
+          transfer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          buyer_confirmed_at?: string | null
+          buyer_id?: string
+          checkout_session_id?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: string
+          message?: string | null
+          payment_intent_id?: string | null
+          payout_completed_at?: string | null
+          platform_fee?: number
+          seller_confirmed_at?: string | null
+          seller_id?: string
+          seller_payout?: number
+          status?: string
+          transfer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_transactions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string

@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { calculateSaleFees, SALE_SELLER_FEE_PERCENT } from '@/lib/commissions';
+import { supabase } from '@/integrations/supabase/client';
+import { ShieldCheck, Loader2 } from 'lucide-react';
 
 interface InquiryFormProps {
   listingId: string;
@@ -23,8 +25,43 @@ const InquiryForm = ({ listingId, priceSale }: InquiryFormProps) => {
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
 
   const saleFees = priceSale ? calculateSaleFees(priceSale) : null;
+
+  const handlePurchase = async () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    if (!priceSale) return;
+
+    setIsPurchasing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          listing_id: listingId,
+          mode: 'sale',
+          amount: priceSale,
+        },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      // Redirect to Stripe checkout
+      window.location.href = data.url;
+    } catch (error) {
+      toast({
+        title: 'Purchase Error',
+        description: error instanceof Error ? error.message : 'Failed to start checkout',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,7 +167,8 @@ const InquiryForm = ({ listingId, priceSale }: InquiryFormProps) => {
 
         <Button 
           type="submit"
-          className="w-full bg-primary hover:bg-primary/90" 
+          variant="outline"
+          className="w-full" 
           size="lg"
           disabled={isSubmitting}
         >
@@ -138,9 +176,31 @@ const InquiryForm = ({ listingId, priceSale }: InquiryFormProps) => {
         </Button>
       </form>
 
-      <p className="text-xs text-muted-foreground text-center mt-4">
-        The seller will respond to your inquiry directly
-      </p>
+      <Separator className="my-4" />
+
+      {/* Buy Now Button with Escrow */}
+      <Button 
+        onClick={handlePurchase}
+        className="w-full bg-primary hover:bg-primary/90" 
+        size="lg"
+        disabled={isPurchasing || !priceSale}
+      >
+        {isPurchasing ? (
+          <>
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            Processing...
+          </>
+        ) : user ? (
+          'Buy Now'
+        ) : (
+          'Sign in to Purchase'
+        )}
+      </Button>
+
+      <div className="flex items-center gap-2 justify-center mt-3 text-xs text-muted-foreground">
+        <ShieldCheck className="h-4 w-4 text-emerald-500" />
+        <span>Protected by escrow - funds released after confirmation</span>
+      </div>
     </div>
   );
 };
