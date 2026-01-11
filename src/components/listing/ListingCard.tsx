@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Heart, MapPin } from 'lucide-react';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +22,7 @@ const ListingCard = ({ listing, className }: ListingCardProps) => {
   const location = listing.pickup_location_text || listing.address?.split(',').slice(-2).join(',').trim() || 'Location TBD';
 
   return (
-    <div className={cn("group cursor-pointer card-hover", className)}>
+    <Link to={`/listing/${listing.id}`} className={cn("group cursor-pointer card-hover block", className)}>
       {/* Image Container */}
       <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-muted">
         <img
@@ -83,7 +84,7 @@ const ListingCard = ({ listing, className }: ListingCardProps) => {
           )}
         </p>
       </div>
-    </div>
+    </Link>
   );
 };
 
