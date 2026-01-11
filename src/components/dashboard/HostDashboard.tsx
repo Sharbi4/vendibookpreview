@@ -15,7 +15,7 @@ import { useState } from 'react';
 const HostDashboard = () => {
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing } = useHostListings();
   const { stats: bookingStats } = useHostBookings();
-  const { isConnected, isLoading: stripeLoading, connectStripe, isConnecting } = useStripeConnect();
+  const { isConnected, hasAccountStarted, isLoading: stripeLoading, connectStripe, isConnecting } = useStripeConnect();
   const [showStripeModal, setShowStripeModal] = useState(false);
 
   const handleConnectStripe = async () => {
@@ -52,7 +52,8 @@ const HostDashboard = () => {
 
       {/* Stripe Status */}
       <StripeStatusCard 
-        isConnected={isConnected} 
+        isConnected={isConnected}
+        hasAccountStarted={hasAccountStarted}
         isLoading={stripeLoading}
         onConnect={handleConnectStripe}
       />
