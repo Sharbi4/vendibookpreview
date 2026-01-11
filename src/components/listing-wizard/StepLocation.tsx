@@ -1,9 +1,10 @@
 import React from 'react';
-import { MapPin, Truck, Package, Info } from 'lucide-react';
+import { MapPin, Truck, Package, Info, Building2 } from 'lucide-react';
 import { ListingFormData, FulfillmentType } from '@/types/listing';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 
 interface StepLocationProps {
@@ -11,6 +12,8 @@ interface StepLocationProps {
   updateField: <K extends keyof ListingFormData>(field: K, value: ListingFormData[K]) => void;
   isMobileAsset: boolean;
   isStaticLocation: boolean;
+  isCategoryStaticLocation: boolean;
+  onToggleStaticLocation: (isStatic: boolean) => void;
 }
 
 const fulfillmentOptions: { value: FulfillmentType; label: string; icon: React.ReactNode; description: string }[] = [
@@ -24,6 +27,8 @@ export const StepLocation: React.FC<StepLocationProps> = ({
   updateField,
   isMobileAsset,
   isStaticLocation,
+  isCategoryStaticLocation,
+  onToggleStaticLocation,
 }) => {
   if (isStaticLocation) {
     return (
@@ -85,10 +90,96 @@ export const StepLocation: React.FC<StepLocationProps> = ({
     );
   }
 
-  // Mobile Asset (Food Truck / Trailer)
+  // Mobile Asset (Food Truck / Trailer) - with option to mark as static
   return (
     <div className="space-y-6">
-      {/* Fulfillment Type */}
+      {/* Static Location Toggle - Only show for mobile assets that aren't inherently static */}
+      {isMobileAsset && !isCategoryStaticLocation && (
+        <div className="p-4 bg-muted/50 rounded-xl border">
+          <div className="flex items-center justify-between">
+            <div className="flex items-start gap-3">
+              <Building2 className="w-5 h-5 text-muted-foreground mt-0.5" />
+              <div>
+                <Label htmlFor="static-toggle" className="text-base font-medium cursor-pointer">
+                  Static Location
+                </Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  This asset is parked at a fixed location (e.g., permanently stationed at a venue, lot, or property)
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="static-toggle"
+              checked={formData.is_static_location}
+              onCheckedChange={onToggleStaticLocation}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Show static location fields if toggled on */}
+      {formData.is_static_location && !isCategoryStaticLocation && (
+        <div className="space-y-6 animate-in fade-in-50 duration-200">
+          <div className="p-4 bg-primary/5 rounded-xl flex items-start gap-3 border border-primary/20">
+            <Info className="w-5 h-5 text-primary mt-0.5" />
+            <p className="text-sm text-muted-foreground">
+              Since this is a stationary asset, customers will come to this location. Provide the address and access details below.
+            </p>
+          </div>
+
+          {/* Full Address */}
+          <div className="space-y-2">
+            <Label htmlFor="address" className="text-base font-medium">Full Address *</Label>
+            <Textarea
+              id="address"
+              value={formData.address}
+              onChange={(e) => updateField('address', e.target.value)}
+              placeholder="123 Main Street, Suite 100, City, State ZIP"
+              rows={2}
+            />
+          </div>
+
+          {/* Access Instructions */}
+          <div className="space-y-2">
+            <Label htmlFor="access_instructions" className="text-base font-medium">Access Instructions *</Label>
+            <Textarea
+              id="access_instructions"
+              value={formData.access_instructions}
+              onChange={(e) => updateField('access_instructions', e.target.value)}
+              placeholder="How do guests access the asset? Any gate codes, parking instructions, or check-in procedures?"
+              rows={3}
+            />
+          </div>
+
+          {/* Hours of Access */}
+          <div className="space-y-2">
+            <Label htmlFor="hours_of_access" className="text-base font-medium">Hours of Access (Optional)</Label>
+            <Input
+              id="hours_of_access"
+              value={formData.hours_of_access}
+              onChange={(e) => updateField('hours_of_access', e.target.value)}
+              placeholder="e.g., 6 AM - 10 PM daily"
+            />
+          </div>
+
+          {/* Location Notes */}
+          <div className="space-y-2">
+            <Label htmlFor="location_notes" className="text-base font-medium">Additional Notes (Optional)</Label>
+            <Textarea
+              id="location_notes"
+              value={formData.location_notes}
+              onChange={(e) => updateField('location_notes', e.target.value)}
+              placeholder="Utilities included, parking availability, nearby amenities..."
+              rows={3}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Show mobile fulfillment options if NOT static */}
+      {!formData.is_static_location && (
+        <>
+          {/* Fulfillment Type */}
       <div className="space-y-3">
         <Label className="text-base font-medium">Fulfillment Options *</Label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -211,6 +302,8 @@ export const StepLocation: React.FC<StepLocationProps> = ({
               rows={2}
             />
           </div>
+        </>
+      )}
         </>
       )}
     </div>
