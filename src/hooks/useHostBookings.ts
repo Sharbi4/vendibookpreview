@@ -98,6 +98,15 @@ export const useHostBookings = () => {
 
       if (error) throw error;
 
+      // Send email notification (fire and forget)
+      supabase.functions.invoke('send-booking-notification', {
+        body: { 
+          booking_id: bookingId, 
+          event_type: status, 
+          host_response: response || undefined,
+        },
+      }).catch(console.error);
+
       setBookings(prev =>
         prev.map(b =>
           b.id === bookingId

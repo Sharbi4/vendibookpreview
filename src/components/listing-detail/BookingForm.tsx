@@ -187,11 +187,18 @@ const BookingForm = ({
         bookingData.access_instructions_snapshot = accessInstructions || null;
       }
 
-      const { error } = await supabase
+      const { data: bookingResult, error } = await supabase
         .from('booking_requests')
-        .insert(bookingData);
+        .insert(bookingData)
+        .select('id')
+        .single();
 
       if (error) throw error;
+
+      // Send email notification (fire and forget)
+      supabase.functions.invoke('send-booking-notification', {
+        body: { booking_id: bookingResult.id, event_type: 'submitted' },
+      }).catch(console.error);
 
       setShowConfirmation(true);
 

@@ -1,0 +1,279 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+interface NotificationRequest {
+  booking_id: string;
+  event_type: "submitted" | "approved" | "declined";
+  host_response?: string;
+}
+
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[BOOKING-NOTIFICATION] ${step}${detailsStr}`);
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    logStep("Function started");
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
+    const { booking_id, event_type, host_response }: NotificationRequest = await req.json();
+    logStep("Request received", { booking_id, event_type });
+
+    if (!booking_id || !event_type) {
+      throw new Error("Missing required fields: booking_id and event_type");
+    }
+
+    // Fetch booking details with listing and user info
+    const { data: booking, error: bookingError } = await supabaseClient
+      .from("booking_requests")
+      .select("*")
+      .eq("id", booking_id)
+      .single();
+
+    if (bookingError || !booking) {
+      throw new Error(`Failed to fetch booking: ${bookingError?.message}`);
+    }
+    logStep("Booking fetched", { booking_id: booking.id, status: booking.status });
+
+    // Fetch listing details
+    const { data: listing, error: listingError } = await supabaseClient
+      .from("listings")
+      .select("title, cover_image_url")
+      .eq("id", booking.listing_id)
+      .single();
+
+    if (listingError) {
+      logStep("Warning: Could not fetch listing", { error: listingError.message });
+    }
+
+    // Fetch shopper profile
+    const { data: shopper, error: shopperError } = await supabaseClient
+      .from("profiles")
+      .select("email, full_name")
+      .eq("id", booking.shopper_id)
+      .single();
+
+    if (shopperError) {
+      logStep("Warning: Could not fetch shopper", { error: shopperError.message });
+    }
+
+    // Fetch host profile
+    const { data: host, error: hostError } = await supabaseClient
+      .from("profiles")
+      .select("email, full_name")
+      .eq("id", booking.host_id)
+      .single();
+
+    if (hostError) {
+      logStep("Warning: Could not fetch host", { error: hostError.message });
+    }
+
+    const listingTitle = listing?.title || "your listing";
+    const startDate = new Date(booking.start_date).toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    const endDate = new Date(booking.end_date).toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    const emails: { to: string; subject: string; html: string }[] = [];
+
+    if (event_type === "submitted") {
+      // Email to host about new booking request
+      if (host?.email) {
+        emails.push({
+          to: host.email,
+          subject: `New Booking Request for ${listingTitle}`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 20px;">New Booking Request 📩</h1>
+              <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+                You have received a new booking request for <strong>${listingTitle}</strong>.
+              </p>
+              <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                <p style="margin: 0 0 10px 0;"><strong>Guest:</strong> ${shopper?.full_name || "A shopper"}</p>
+                <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
+                <p style="margin: 0 0 10px 0;"><strong>Total:</strong> $${booking.total_price}</p>
+                ${booking.message ? `<p style="margin: 0;"><strong>Message:</strong> ${booking.message}</p>` : ""}
+              </div>
+              <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+                Please log in to your dashboard to approve or decline this request.
+              </p>
+              <p style="color: #888; font-size: 14px; margin-top: 30px;">
+                — The FoodTruck Marketplace Team
+              </p>
+            </div>
+          `,
+        });
+      }
+
+      // Confirmation email to shopper
+      if (shopper?.email) {
+        emails.push({
+          to: shopper.email,
+          subject: `Booking Request Submitted - ${listingTitle}`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 20px;">Booking Request Submitted ✓</h1>
+              <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+                Hi ${shopper.full_name || "there"},
+              </p>
+              <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+                Your booking request for <strong>${listingTitle}</strong> has been submitted successfully.
+              </p>
+              <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
+                <p style="margin: 0;"><strong>Total:</strong> $${booking.total_price}</p>
+              </div>
+              <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+                The host will review your request and respond soon. We'll notify you once they respond.
+              </p>
+              <p style="color: #888; font-size: 14px; margin-top: 30px;">
+                — The FoodTruck Marketplace Team
+              </p>
+            </div>
+          `,
+        });
+      }
+    } else if (event_type === "approved") {
+      // Email to shopper about approval
+      if (shopper?.email) {
+        emails.push({
+          to: shopper.email,
+          subject: `🎉 Booking Approved - ${listingTitle}`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h1 style="color: #16a34a; font-size: 24px; margin-bottom: 20px;">Booking Approved! 🎉</h1>
+              <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+                Great news, ${shopper.full_name || "there"}!
+              </p>
+              <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+                Your booking for <strong>${listingTitle}</strong> has been approved by the host.
+              </p>
+              <div style="background: #dcfce7; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                <p style="margin: 0 0 10px 0;"><strong>Confirmed Dates:</strong> ${startDate} - ${endDate}</p>
+                <p style="margin: 0;"><strong>Total:</strong> $${booking.total_price}</p>
+              </div>
+              ${host_response ? `
+                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                  <p style="margin: 0 0 10px 0; font-weight: bold;">Message from host:</p>
+                  <p style="margin: 0; color: #4a4a4a;">${host_response}</p>
+                </div>
+              ` : ""}
+              <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+                You can message the host through your dashboard if you have any questions.
+              </p>
+              <p style="color: #888; font-size: 14px; margin-top: 30px;">
+                — The FoodTruck Marketplace Team
+              </p>
+            </div>
+          `,
+        });
+      }
+    } else if (event_type === "declined") {
+      // Email to shopper about decline
+      if (shopper?.email) {
+        emails.push({
+          to: shopper.email,
+          subject: `Booking Update - ${listingTitle}`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 20px;">Booking Not Available</h1>
+              <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+                Hi ${shopper.full_name || "there"},
+              </p>
+              <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+                Unfortunately, the host was unable to approve your booking request for <strong>${listingTitle}</strong> for ${startDate} - ${endDate}.
+              </p>
+              ${host_response ? `
+                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                  <p style="margin: 0 0 10px 0; font-weight: bold;">Message from host:</p>
+                  <p style="margin: 0; color: #4a4a4a;">${host_response}</p>
+                </div>
+              ` : ""}
+              <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+                Don't worry! There are plenty of other great options available. Browse our marketplace to find your perfect match.
+              </p>
+              <p style="color: #888; font-size: 14px; margin-top: 30px;">
+                — The FoodTruck Marketplace Team
+              </p>
+            </div>
+          `,
+        });
+      }
+    }
+
+    // Send all emails using fetch to Resend API
+    const results = [];
+    for (const email of emails) {
+      try {
+        const response = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${RESEND_API_KEY}`,
+          },
+          body: JSON.stringify({
+            from: "FoodTruck Marketplace <onboarding@resend.dev>",
+            to: [email.to],
+            subject: email.subject,
+            html: email.html,
+          }),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to send email");
+        }
+        
+        logStep("Email sent", { to: email.to, subject: email.subject });
+        results.push({ success: true, to: email.to });
+      } catch (emailError: any) {
+        logStep("Failed to send email", { to: email.to, error: emailError.message });
+        results.push({ success: false, to: email.to, error: emailError.message });
+      }
+    }
+
+    logStep("Function completed", { emailsSent: results.filter(r => r.success).length });
+
+    return new Response(
+      JSON.stringify({ success: true, results }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      }
+    );
+  } catch (error: any) {
+    logStep("ERROR", { message: error.message });
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      }
+    );
+  }
+});
