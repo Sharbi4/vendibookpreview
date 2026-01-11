@@ -7,7 +7,8 @@ import {
   Package,
   Clock,
   CheckCircle2,
-  Loader2
+  Loader2,
+  Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/layout/Header';
@@ -16,13 +17,16 @@ import PhotoGallery from '@/components/listing-detail/PhotoGallery';
 import BookingForm from '@/components/listing-detail/BookingForm';
 import InquiryForm from '@/components/listing-detail/InquiryForm';
 import HostCard from '@/components/listing-detail/HostCard';
+import ReviewsSection from '@/components/reviews/ReviewsSection';
 import { useListing } from '@/hooks/useListing';
+import { useListingAverageRating } from '@/hooks/useReviews';
 import { CATEGORY_LABELS, FULFILLMENT_LABELS } from '@/types/listing';
 import { useToast } from '@/hooks/use-toast';
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { listing, host, isLoading, error } = useListing(id);
+  const { data: ratingData } = useListingAverageRating(id);
   const { toast } = useToast();
 
   const handleContactHost = () => {
@@ -111,12 +115,24 @@ const ListingDetail = () => {
                   {listing.title}
                 </h1>
                 
-                {location && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
-                    <span>{location}</span>
-                  </div>
-                )}
+                <div className="flex flex-wrap items-center gap-4">
+                  {location && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <MapPin className="h-4 w-4" />
+                      <span>{location}</span>
+                    </div>
+                  )}
+                  
+                  {ratingData && (
+                    <div className="flex items-center gap-1.5">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-medium">{ratingData.average}</span>
+                      <span className="text-muted-foreground">
+                        ({ratingData.count} review{ratingData.count !== 1 ? 's' : ''})
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Quick Info */}
@@ -272,6 +288,14 @@ const ListingDetail = () => {
                   memberSince={host?.created_at}
                   onContact={handleContactHost}
                 />
+              </div>
+
+              {/* Reviews Section */}
+              <div>
+                <h2 className="text-lg font-semibold text-foreground mb-4">
+                  Reviews
+                </h2>
+                <ReviewsSection listingId={listing.id} />
               </div>
             </div>
 
