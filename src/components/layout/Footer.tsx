@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import vendibookLogo from '@/assets/vendibook-logo.jpg';
+import vendibookFavicon from '@/assets/vendibook-favicon.jpg';
 
 const Footer = () => {
   return (
@@ -10,9 +10,9 @@ const Footer = () => {
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center mb-4">
               <img 
-                src={vendibookLogo} 
+                src={vendibookFavicon} 
                 alt="Vendibook" 
-                className="h-10 w-auto brightness-0 invert"
+                className="h-12 w-12 rounded-lg"
               />
             </Link>
             <p className="text-sm text-white/80">
