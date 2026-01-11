@@ -17,6 +17,7 @@ import PhotoGallery from '@/components/listing-detail/PhotoGallery';
 import BookingForm from '@/components/listing-detail/BookingForm';
 import InquiryForm from '@/components/listing-detail/InquiryForm';
 import HostCard from '@/components/listing-detail/HostCard';
+import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
 import ReviewsSection from '@/components/reviews/ReviewsSection';
 import { useListing } from '@/hooks/useListing';
 import { useListingAverageRating } from '@/hooks/useReviews';
@@ -195,6 +196,14 @@ const ListingDetail = () => {
                     ))}
                   </ul>
                 </div>
+              )}
+
+              {/* Amenities / What's Included */}
+              {listing.amenities && listing.amenities.length > 0 && (
+                <AmenitiesSection
+                  category={listing.category}
+                  amenities={listing.amenities}
+                />
               )}
 
               {/* Fulfillment Details */}
