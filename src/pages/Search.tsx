@@ -85,7 +85,7 @@ const Search = () => {
     initialLat && initialLng ? [parseFloat(initialLng), parseFloat(initialLat)] : null
   );
   const [searchRadius, setSearchRadius] = useState(initialRadius ? parseInt(initialRadius) : 25);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, Infinity]);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(
     initialStartDate && initialEndDate
       ? { from: parseISO(initialStartDate), to: parseISO(initialEndDate) }
@@ -272,12 +272,14 @@ const Search = () => {
       results = results.filter(listing => isListingWithinRadius(listing));
     }
 
-    // Filter by price range
+    // Filter by price range (only apply max if it's not Infinity)
     results = results.filter(listing => {
       const price = listing.mode === 'rent' 
         ? (listing.price_daily || 0) 
         : (listing.price_sale || 0);
-      return price >= priceRange[0] && price <= priceRange[1];
+      const meetsMin = price >= priceRange[0];
+      const meetsMax = priceRange[1] === Infinity || price <= priceRange[1];
+      return meetsMin && meetsMax;
     });
 
     // Filter by date availability
@@ -391,7 +393,7 @@ const Search = () => {
     setLocationText('');
     setLocationCoords(null);
     setSearchRadius(25);
-    setPriceRange([0, 50000]);
+    setPriceRange([0, Infinity]);
     setDateRange(undefined);
     setSelectedAmenities([]);
     setSearchParams({});
@@ -424,7 +426,7 @@ const Search = () => {
     mode !== 'all',
     category !== 'all',
     locationCoords !== null,
-    priceRange[0] > 0 || priceRange[1] < 50000,
+    priceRange[0] > 0 || priceRange[1] !== Infinity,
     dateRange?.from && dateRange?.to,
     selectedAmenities.length > 0,
   ].filter(Boolean).length;
@@ -907,20 +909,20 @@ const FilterContent = ({
       <div className="space-y-3">
         <Label className="text-sm font-medium flex items-center gap-2">
           <DollarSign className="h-4 w-4" />
-          Price Range
+          Minimum Price
         </Label>
         <div className="px-2">
           <Slider
-            value={priceRange}
+            value={[priceRange[0]]}
             min={0}
-            max={50000}
-            step={100}
-            onValueChange={(value) => onPriceRangeChange(value as [number, number])}
+            max={10000}
+            step={50}
+            onValueChange={(value) => onPriceRangeChange([value[0], priceRange[1]])}
             className="my-4"
           />
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>${priceRange[0].toLocaleString()}</span>
-            <span>${priceRange[1].toLocaleString()}</span>
+            <span>No max</span>
           </div>
         </div>
       </div>
