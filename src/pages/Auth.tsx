@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Truck, Store, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 import vendibookLogo from '@/assets/vendibook-logo.jpg';
+import Header from '@/components/layout/Header';
 
 const authSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -141,8 +142,10 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-vendibook-cream to-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-vendibook-cream to-background">
+      <Header />
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <img 
@@ -372,6 +375,7 @@ const Auth = () => {
               </p>
             )}
           </div>
+        </div>
         </div>
       </div>
     </div>
