@@ -14,6 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
+      listings: {
+        Row: {
+          access_instructions: string | null
+          address: string | null
+          available_from: string | null
+          available_to: string | null
+          category: Database["public"]["Enums"]["listing_category"]
+          cover_image_url: string | null
+          created_at: string
+          delivery_fee: number | null
+          delivery_instructions: string | null
+          delivery_radius_miles: number | null
+          description: string
+          fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
+          highlights: string[] | null
+          host_id: string
+          hours_of_access: string | null
+          id: string
+          image_urls: string[] | null
+          location_notes: string | null
+          mode: Database["public"]["Enums"]["listing_mode"]
+          pickup_instructions: string | null
+          pickup_location_text: string | null
+          price_daily: number | null
+          price_sale: number | null
+          price_weekly: number | null
+          published_at: string | null
+          status: Database["public"]["Enums"]["listing_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          access_instructions?: string | null
+          address?: string | null
+          available_from?: string | null
+          available_to?: string | null
+          category: Database["public"]["Enums"]["listing_category"]
+          cover_image_url?: string | null
+          created_at?: string
+          delivery_fee?: number | null
+          delivery_instructions?: string | null
+          delivery_radius_miles?: number | null
+          description: string
+          fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
+          highlights?: string[] | null
+          host_id: string
+          hours_of_access?: string | null
+          id?: string
+          image_urls?: string[] | null
+          location_notes?: string | null
+          mode: Database["public"]["Enums"]["listing_mode"]
+          pickup_instructions?: string | null
+          pickup_location_text?: string | null
+          price_daily?: number | null
+          price_sale?: number | null
+          price_weekly?: number | null
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["listing_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          access_instructions?: string | null
+          address?: string | null
+          available_from?: string | null
+          available_to?: string | null
+          category?: Database["public"]["Enums"]["listing_category"]
+          cover_image_url?: string | null
+          created_at?: string
+          delivery_fee?: number | null
+          delivery_instructions?: string | null
+          delivery_radius_miles?: number | null
+          description?: string
+          fulfillment_type?: Database["public"]["Enums"]["fulfillment_type"]
+          highlights?: string[] | null
+          host_id?: string
+          hours_of_access?: string | null
+          id?: string
+          image_urls?: string[] | null
+          location_notes?: string | null
+          mode?: Database["public"]["Enums"]["listing_mode"]
+          pickup_instructions?: string | null
+          pickup_location_text?: string | null
+          price_daily?: number | null
+          price_sale?: number | null
+          price_weekly?: number | null
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["listing_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -23,7 +116,9 @@ export type Database = {
           id: string
           identity_verified: boolean | null
           identity_verified_at: string | null
+          stripe_account_id: string | null
           stripe_identity_session_id: string | null
+          stripe_onboarding_complete: boolean | null
           updated_at: string
         }
         Insert: {
@@ -34,7 +129,9 @@ export type Database = {
           id: string
           identity_verified?: boolean | null
           identity_verified_at?: string | null
+          stripe_account_id?: string | null
           stripe_identity_session_id?: string | null
+          stripe_onboarding_complete?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -45,7 +142,9 @@ export type Database = {
           id?: string
           identity_verified?: boolean | null
           identity_verified_at?: string | null
+          stripe_account_id?: string | null
           stripe_identity_session_id?: string | null
+          stripe_onboarding_complete?: boolean | null
           updated_at?: string
         }
         Relationships: []
@@ -90,6 +189,14 @@ export type Database = {
     }
     Enums: {
       app_role: "host" | "shopper"
+      fulfillment_type: "pickup" | "delivery" | "both" | "on_site"
+      listing_category:
+        | "food_truck"
+        | "food_trailer"
+        | "ghost_kitchen"
+        | "vendor_lot"
+      listing_mode: "rent" | "sale"
+      listing_status: "draft" | "published" | "paused"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -218,6 +325,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["host", "shopper"],
+      fulfillment_type: ["pickup", "delivery", "both", "on_site"],
+      listing_category: [
+        "food_truck",
+        "food_trailer",
+        "ghost_kitchen",
+        "vendor_lot",
+      ],
+      listing_mode: ["rent", "sale"],
+      listing_status: ["draft", "published", "paused"],
     },
   },
 } as const
