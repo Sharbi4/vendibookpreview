@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
-import { Calendar, DollarSign, Sparkles, Loader2, TrendingUp, TrendingDown, Target } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Calendar, DollarSign, Sparkles, Loader2, TrendingUp, TrendingDown, Target, Wallet, Info } from 'lucide-react';
 import { ListingFormData } from '@/types/listing';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  calculateRentalFees,
+  calculateSaleFees,
+  formatCurrency,
+  RENTAL_HOST_FEE_PERCENT,
+  SALE_SELLER_FEE_PERCENT,
+} from '@/lib/commissions';
 
 interface StepPricingProps {
   formData: ListingFormData;
@@ -38,6 +45,22 @@ export const StepPricing: React.FC<StepPricingProps> = ({
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [rentalSuggestions, setRentalSuggestions] = useState<RentalSuggestions | null>(null);
   const [saleSuggestions, setSaleSuggestions] = useState<SaleSuggestions | null>(null);
+
+  // Calculate payout estimates
+  const rentalPayoutEstimates = useMemo(() => {
+    const dailyPrice = parseFloat(formData.price_daily) || 0;
+    const weeklyPrice = parseFloat(formData.price_weekly) || 0;
+    
+    return {
+      daily: dailyPrice > 0 ? calculateRentalFees(dailyPrice) : null,
+      weekly: weeklyPrice > 0 ? calculateRentalFees(weeklyPrice) : null,
+    };
+  }, [formData.price_daily, formData.price_weekly]);
+
+  const salePayoutEstimate = useMemo(() => {
+    const salePrice = parseFloat(formData.price_sale) || 0;
+    return salePrice > 0 ? calculateSaleFees(salePrice) : null;
+  }, [formData.price_sale]);
 
   const getLocation = () => {
     if (formData.address) return formData.address;
@@ -250,6 +273,52 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                 <p className="text-sm text-muted-foreground">Offer a discount for weekly rentals</p>
               </div>
             </div>
+
+            {/* Payout Estimate for Rentals */}
+            {(rentalPayoutEstimates.daily || rentalPayoutEstimates.weekly) && (
+              <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-green-500/20">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-green-500/10 rounded-lg">
+                    <Wallet className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-foreground mb-2">Estimated Payout</h4>
+                    <div className="space-y-2">
+                      {rentalPayoutEstimates.daily && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Daily rental:</span>
+                          <div className="text-right">
+                            <span className="font-semibold text-green-600">
+                              {formatCurrency(rentalPayoutEstimates.daily.hostReceives)}
+                            </span>
+                            <span className="text-xs text-muted-foreground ml-2">
+                              ({formatCurrency(rentalPayoutEstimates.daily.hostFee)} fee)
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      {rentalPayoutEstimates.weekly && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Weekly rental:</span>
+                          <div className="text-right">
+                            <span className="font-semibold text-green-600">
+                              {formatCurrency(rentalPayoutEstimates.weekly.hostReceives)}
+                            </span>
+                            <span className="text-xs text-muted-foreground ml-2">
+                              ({formatCurrency(rentalPayoutEstimates.weekly.hostFee)} fee)
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-start gap-1.5 mt-3 text-xs text-muted-foreground">
+                      <Info className="w-3 h-3 mt-0.5 shrink-0" />
+                      <span>Platform fee is {RENTAL_HOST_FEE_PERCENT}% of the rental price</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Availability */}
@@ -368,6 +437,38 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                 Set a competitive price based on market value and condition.
               </p>
             </div>
+
+            {/* Payout Estimate for Sales */}
+            {salePayoutEstimate && (
+              <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-green-500/20 max-w-sm">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-green-500/10 rounded-lg">
+                    <Wallet className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-foreground mb-2">Estimated Payout</h4>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">You receive:</span>
+                      <div className="text-right">
+                        <span className="font-semibold text-green-600 text-lg">
+                          {formatCurrency(salePayoutEstimate.sellerReceives)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-sm text-muted-foreground">Platform fee:</span>
+                      <span className="text-sm text-muted-foreground">
+                        {formatCurrency(salePayoutEstimate.sellerFee)}
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-1.5 mt-3 text-xs text-muted-foreground">
+                      <Info className="w-3 h-3 mt-0.5 shrink-0" />
+                      <span>Platform fee is {SALE_SELLER_FEE_PERCENT}% of the sale price</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
