@@ -15,6 +15,7 @@ export interface Listing {
   title: string;
   description: string;
   highlights: string[];
+  amenities: string[];
   fulfillment_type: FulfillmentType;
   pickup_location_text: string | null;
   address: string | null;
@@ -37,12 +38,161 @@ export interface Listing {
   published_at: string | null;
 }
 
+// Category-specific amenities
+export const AMENITIES_BY_CATEGORY: Record<ListingCategory, { label: string; items: { id: string; label: string }[] }[]> = {
+  food_truck: [
+    {
+      label: 'Kitchen Equipment',
+      items: [
+        { id: 'three_compartment_sink', label: '3 Compartment Sink' },
+        { id: 'hand_wash_sink', label: 'Hand Wash Sink' },
+        { id: 'refrigerator', label: 'Refrigerator' },
+        { id: 'freezer', label: 'Freezer' },
+        { id: 'fryer', label: 'Fryer' },
+        { id: 'flat_top_grill', label: 'Flat Top Grill' },
+        { id: 'oven', label: 'Oven' },
+        { id: 'warmers', label: 'Food Warmers' },
+        { id: 'steam_table', label: 'Steam Table' },
+        { id: 'hood_system', label: 'Hood Ventilation System' },
+      ],
+    },
+    {
+      label: 'Power & Utilities',
+      items: [
+        { id: 'generator', label: 'Generator Included' },
+        { id: 'propane_tanks', label: 'Propane Tanks' },
+        { id: 'water_tank', label: 'Fresh Water Tank' },
+        { id: 'waste_water_tank', label: 'Waste Water Tank' },
+        { id: 'electrical_hookup', label: 'Shore Power Hookup' },
+      ],
+    },
+    {
+      label: 'Additional Features',
+      items: [
+        { id: 'pos_system', label: 'POS System' },
+        { id: 'serving_window', label: 'Serving Window' },
+        { id: 'awning', label: 'Awning/Canopy' },
+        { id: 'ac_unit', label: 'A/C Unit' },
+        { id: 'fire_suppression', label: 'Fire Suppression System' },
+      ],
+    },
+  ],
+  food_trailer: [
+    {
+      label: 'Kitchen Equipment',
+      items: [
+        { id: 'three_compartment_sink', label: '3 Compartment Sink' },
+        { id: 'hand_wash_sink', label: 'Hand Wash Sink' },
+        { id: 'refrigerator', label: 'Refrigerator' },
+        { id: 'freezer', label: 'Freezer' },
+        { id: 'fryer', label: 'Fryer' },
+        { id: 'flat_top_grill', label: 'Flat Top Grill' },
+        { id: 'oven', label: 'Oven' },
+        { id: 'warmers', label: 'Food Warmers' },
+        { id: 'steam_table', label: 'Steam Table' },
+        { id: 'hood_system', label: 'Hood Ventilation System' },
+      ],
+    },
+    {
+      label: 'Power & Utilities',
+      items: [
+        { id: 'generator', label: 'Generator Included' },
+        { id: 'propane_tanks', label: 'Propane Tanks' },
+        { id: 'water_tank', label: 'Fresh Water Tank' },
+        { id: 'waste_water_tank', label: 'Waste Water Tank' },
+        { id: 'electrical_hookup', label: 'Shore Power Hookup' },
+      ],
+    },
+    {
+      label: 'Additional Features',
+      items: [
+        { id: 'pos_system', label: 'POS System' },
+        { id: 'serving_window', label: 'Serving Window' },
+        { id: 'awning', label: 'Awning/Canopy' },
+        { id: 'ac_unit', label: 'A/C Unit' },
+        { id: 'fire_suppression', label: 'Fire Suppression System' },
+      ],
+    },
+  ],
+  ghost_kitchen: [
+    {
+      label: 'Kitchen Equipment',
+      items: [
+        { id: 'three_compartment_sink', label: '3 Compartment Sink' },
+        { id: 'commercial_refrigerator', label: 'Commercial Refrigerator' },
+        { id: 'walk_in_cooler', label: 'Walk-in Cooler' },
+        { id: 'walk_in_freezer', label: 'Walk-in Freezer' },
+        { id: 'fryer', label: 'Commercial Fryer' },
+        { id: 'range', label: 'Commercial Range' },
+        { id: 'convection_oven', label: 'Convection Oven' },
+        { id: 'prep_tables', label: 'Prep Tables' },
+        { id: 'hood_system', label: 'Hood Ventilation System' },
+      ],
+    },
+    {
+      label: 'Utilities & Infrastructure',
+      items: [
+        { id: 'grease_trap', label: 'Grease Trap' },
+        { id: 'fire_suppression', label: 'Fire Suppression System' },
+        { id: 'hvac', label: 'HVAC System' },
+        { id: 'high_voltage', label: 'High Voltage Electrical' },
+        { id: 'gas_hookup', label: 'Gas Hookup' },
+      ],
+    },
+    {
+      label: 'Additional Features',
+      items: [
+        { id: 'storage_area', label: 'Storage Area' },
+        { id: 'office_space', label: 'Office Space' },
+        { id: 'restroom', label: 'Restroom Access' },
+        { id: 'loading_dock', label: 'Loading Dock' },
+        { id: 'wifi', label: 'WiFi Included' },
+      ],
+    },
+  ],
+  vendor_lot: [
+    {
+      label: 'Utility Hookups',
+      items: [
+        { id: 'electric_hookup', label: 'Electric Hookup' },
+        { id: 'water_hookup', label: 'Water Hookup' },
+        { id: 'trash_service', label: 'Trash Service' },
+        { id: 'oil_dumping', label: 'Oil Dumping Available' },
+        { id: 'grease_disposal', label: 'Grease Disposal' },
+        { id: 'sewage_hookup', label: 'Sewage Hookup' },
+      ],
+    },
+    {
+      label: 'Location Features',
+      items: [
+        { id: 'major_street', label: 'Major Street Location' },
+        { id: 'high_traffic', label: 'High Traffic Area' },
+        { id: 'corner_lot', label: 'Corner Lot' },
+        { id: 'visibility', label: 'High Visibility' },
+        { id: 'parking_available', label: 'Customer Parking' },
+      ],
+    },
+    {
+      label: 'Amenities',
+      items: [
+        { id: 'covered_parking', label: 'Covered Parking' },
+        { id: 'customer_seating', label: 'Customer Seating Area' },
+        { id: 'restroom_access', label: 'Restroom Access' },
+        { id: 'security', label: '24/7 Security' },
+        { id: 'lighting', label: 'Night Lighting' },
+        { id: 'wifi', label: 'WiFi Available' },
+      ],
+    },
+  ],
+};
+
 export interface ListingFormData {
   mode: ListingMode | null;
   category: ListingCategory | null;
   title: string;
   description: string;
   highlights: string[];
+  amenities: string[];
   fulfillment_type: FulfillmentType | null;
   is_static_location: boolean;
   pickup_location_text: string;

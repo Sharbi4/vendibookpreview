@@ -183,6 +183,7 @@ export type Database = {
         Row: {
           access_instructions: string | null
           address: string | null
+          amenities: string[] | null
           available_from: string | null
           available_to: string | null
           category: Database["public"]["Enums"]["listing_category"]
@@ -215,6 +216,7 @@ export type Database = {
         Insert: {
           access_instructions?: string | null
           address?: string | null
+          amenities?: string[] | null
           available_from?: string | null
           available_to?: string | null
           category: Database["public"]["Enums"]["listing_category"]
@@ -247,6 +249,7 @@ export type Database = {
         Update: {
           access_instructions?: string | null
           address?: string | null
+          amenities?: string[] | null
           available_from?: string | null
           available_to?: string | null
           category?: Database["public"]["Enums"]["listing_category"]
