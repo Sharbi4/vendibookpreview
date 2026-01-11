@@ -64,6 +64,11 @@ const NewsletterPopup = () => {
         setIsSuccess(true);
         localStorage.setItem('newsletter_subscribed', 'true');
         
+        // Send admin notification (fire and forget)
+        supabase.functions.invoke('send-admin-notification', {
+          body: { type: 'newsletter_signup', data: { email, source: 'popup' } }
+        }).catch(err => console.error('Admin notification error:', err));
+
         setTimeout(() => {
           setIsOpen(false);
         }, 2000);

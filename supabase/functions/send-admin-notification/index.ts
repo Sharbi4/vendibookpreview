@@ -11,7 +11,7 @@ const corsHeaders = {
 };
 
 interface NotificationRequest {
-  type: "new_user" | "new_booking" | "booking_paid";
+  type: "new_user" | "new_booking" | "booking_paid" | "newsletter_signup";
   data: Record<string, any>;
 }
 
@@ -77,6 +77,21 @@ const handler = async (req: Request): Promise<Response> => {
               <p><strong>Paid at:</strong> ${new Date().toLocaleString()}</p>
             </div>
             <p style="color: #666;">A booking payment has been successfully processed on VendiBook.</p>
+          </div>
+        `;
+        break;
+
+      case "newsletter_signup":
+        subject = "📧 New Newsletter Subscriber - VendiBook";
+        html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #FF5124;">New Newsletter Subscriber!</h1>
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p><strong>Email:</strong> ${data.email || "N/A"}</p>
+              <p><strong>Source:</strong> ${data.source || "Unknown"}</p>
+              <p><strong>Subscribed at:</strong> ${new Date().toLocaleString()}</p>
+            </div>
+            <p style="color: #666;">A new user has subscribed to the VendiBook newsletter.</p>
           </div>
         `;
         break;
