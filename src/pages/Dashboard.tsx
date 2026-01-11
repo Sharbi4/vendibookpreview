@@ -4,15 +4,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
+import HostDashboard from '@/components/dashboard/HostDashboard';
 import { 
   Loader2, 
   Shield, 
   ShieldCheck, 
-  Plus, 
   Calendar, 
   MessageSquare,
   Settings,
-  Truck,
   Store
 } from 'lucide-react';
 
@@ -93,124 +92,76 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {isHost && (
-            <>
-              <Link 
-                to="/dashboard/listings"
-                className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Truck className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">My Listings</h3>
-                    <p className="text-sm text-muted-foreground">Manage your assets</p>
-                  </div>
-                </div>
-              </Link>
+        {/* Host Dashboard */}
+        {isHost && <HostDashboard />}
 
-              <Link 
-                to="/dashboard/create-listing"
-                className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Plus className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">Create Listing</h3>
-                    <p className="text-sm text-muted-foreground">Add a new asset</p>
-                  </div>
+        {/* Shopper Quick Actions */}
+        {isShopper && !isHost && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <Link 
+              to="/"
+              className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Store className="h-6 w-6 text-primary" />
                 </div>
-              </Link>
-
-              <Link 
-                to="/dashboard/bookings"
-                className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Calendar className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">Booking Requests</h3>
-                    <p className="text-sm text-muted-foreground">Review pending requests</p>
-                  </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Browse Listings</h3>
+                  <p className="text-sm text-muted-foreground">Find your next asset</p>
                 </div>
-              </Link>
-            </>
-          )}
-
-          {isShopper && (
-            <>
-              <Link 
-                to="/"
-                className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Store className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">Browse Listings</h3>
-                    <p className="text-sm text-muted-foreground">Find your next asset</p>
-                  </div>
-                </div>
-              </Link>
-
-              <Link 
-                to="/dashboard/my-bookings"
-                className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Calendar className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">My Bookings</h3>
-                    <p className="text-sm text-muted-foreground">Track your rentals</p>
-                  </div>
-                </div>
-              </Link>
-
-              <Link 
-                to="/dashboard/inquiries"
-                className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <MessageSquare className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">My Inquiries</h3>
-                    <p className="text-sm text-muted-foreground">View sale inquiries</p>
-                  </div>
-                </div>
-              </Link>
-            </>
-          )}
-
-          <Link 
-            to="/dashboard/settings"
-            className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                <Settings className="h-6 w-6 text-muted-foreground" />
               </div>
-              <div>
-                <h3 className="font-semibold text-foreground">Settings</h3>
-                <p className="text-sm text-muted-foreground">Account preferences</p>
-              </div>
-            </div>
-          </Link>
-        </div>
+            </Link>
 
-        {/* Role Display */}
-        <div className="bg-muted/50 rounded-xl p-6">
+            <Link 
+              to="/dashboard/my-bookings"
+              className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Calendar className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">My Bookings</h3>
+                  <p className="text-sm text-muted-foreground">Track your rentals</p>
+                </div>
+              </div>
+            </Link>
+
+            <Link 
+              to="/dashboard/inquiries"
+              className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <MessageSquare className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">My Inquiries</h3>
+                  <p className="text-sm text-muted-foreground">View sale inquiries</p>
+                </div>
+              </div>
+            </Link>
+
+            <Link 
+              to="/dashboard/settings"
+              className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                  <Settings className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Settings</h3>
+                  <p className="text-sm text-muted-foreground">Account preferences</p>
+                </div>
+              </div>
+            </Link>
+          </div>
+        )}
+
+        {/* Account Info */}
+        <div className="bg-muted/50 rounded-xl p-6 mt-8">
           <h3 className="font-semibold text-foreground mb-3">Your Account</h3>
           <div className="grid gap-3">
             <div className="flex items-center justify-between">
