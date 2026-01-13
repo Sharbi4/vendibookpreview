@@ -330,9 +330,13 @@ const ListingDetail = () => {
                   status={listing.status}
                 />
               ) : (
-                <InquiryForm
+              <InquiryForm
                   listingId={listing.id}
                   priceSale={listing.price_sale}
+                  fulfillmentType={listing.fulfillment_type}
+                  deliveryFee={listing.delivery_fee}
+                  deliveryRadiusMiles={listing.delivery_radius_miles}
+                  pickupLocation={listing.pickup_location_text || listing.address}
                 />
               )}
 

@@ -589,9 +589,16 @@ export type Database = {
         Row: {
           amount: number
           buyer_confirmed_at: string | null
+          buyer_email: string | null
           buyer_id: string
+          buyer_name: string | null
+          buyer_phone: string | null
           checkout_session_id: string | null
           created_at: string
+          delivery_address: string | null
+          delivery_fee: number | null
+          delivery_instructions: string | null
+          fulfillment_type: string | null
           id: string
           listing_id: string
           message: string | null
@@ -608,9 +615,16 @@ export type Database = {
         Insert: {
           amount: number
           buyer_confirmed_at?: string | null
+          buyer_email?: string | null
           buyer_id: string
+          buyer_name?: string | null
+          buyer_phone?: string | null
           checkout_session_id?: string | null
           created_at?: string
+          delivery_address?: string | null
+          delivery_fee?: number | null
+          delivery_instructions?: string | null
+          fulfillment_type?: string | null
           id?: string
           listing_id: string
           message?: string | null
@@ -627,9 +641,16 @@ export type Database = {
         Update: {
           amount?: number
           buyer_confirmed_at?: string | null
+          buyer_email?: string | null
           buyer_id?: string
+          buyer_name?: string | null
+          buyer_phone?: string | null
           checkout_session_id?: string | null
           created_at?: string
+          delivery_address?: string | null
+          delivery_fee?: number | null
+          delivery_instructions?: string | null
+          fulfillment_type?: string | null
           id?: string
           listing_id?: string
           message?: string | null

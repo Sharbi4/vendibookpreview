@@ -23,6 +23,13 @@ interface CheckoutRequest {
   mode: 'rent' | 'sale';
   amount: number; // Base price in dollars
   delivery_fee?: number;
+  // Sale-specific fields
+  fulfillment_type?: 'pickup' | 'delivery';
+  delivery_address?: string | null;
+  delivery_instructions?: string | null;
+  buyer_name?: string;
+  buyer_email?: string;
+  buyer_phone?: string | null;
 }
 
 serve(async (req) => {
@@ -54,9 +61,21 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     const body: CheckoutRequest = await req.json();
-    const { booking_id, listing_id, mode, amount, delivery_fee = 0 } = body;
+    const { 
+      booking_id, 
+      listing_id, 
+      mode, 
+      amount, 
+      delivery_fee = 0,
+      fulfillment_type,
+      delivery_address,
+      delivery_instructions,
+      buyer_name,
+      buyer_email,
+      buyer_phone,
+    } = body;
     
-    logStep("Request received", { booking_id, listing_id, mode, amount, delivery_fee });
+    logStep("Request received", { booking_id, listing_id, mode, amount, delivery_fee, fulfillment_type });
 
     if (!listing_id || !mode || !amount) {
       throw new Error("Missing required fields: listing_id, mode, or amount");
@@ -128,19 +147,23 @@ serve(async (req) => {
       // Sales: 15% from seller only - ESCROW MODE
       // Payment is captured but NOT transferred until both parties confirm
       const salePrice = amount;
+      const saleDeliveryFee = delivery_fee || 0;
+      const totalSalePrice = salePrice + saleDeliveryFee;
       
-      // Customer pays full price (no buyer fee)
-      customerTotal = Math.round(salePrice * 100);
+      // Customer pays full price + delivery (no buyer fee)
+      customerTotal = Math.round(totalSalePrice * 100);
       
-      // Seller pays 15% fee
+      // Seller pays 15% fee on the sale price (not on delivery)
       const sellerFee = salePrice * (SALE_SELLER_FEE_PERCENT / 100);
       applicationFee = Math.round(sellerFee * 100);
       
-      // Seller receives sale price minus 15%
-      hostReceives = Math.round((salePrice - sellerFee) * 100);
+      // Seller receives sale price minus 15% + full delivery fee
+      hostReceives = Math.round((salePrice - sellerFee + saleDeliveryFee) * 100);
       
       logStep("Sale fee calculation (escrow)", {
         salePrice,
+        saleDeliveryFee,
+        totalSalePrice,
         sellerFee: sellerFee.toFixed(2),
         customerTotal: (customerTotal / 100).toFixed(2),
         applicationFee: (applicationFee / 100).toFixed(2),
@@ -208,6 +231,11 @@ serve(async (req) => {
     } else {
       // Sales: ESCROW - Funds held on platform, transferred after confirmation
       // No transfer_data - funds stay on platform until both parties confirm
+      const saleDeliveryFee = delivery_fee || 0;
+      const productDescription = saleDeliveryFee > 0 
+        ? `Purchase (Escrow) - includes $${saleDeliveryFee} delivery`
+        : 'Purchase (Escrow - funds released after confirmation)';
+      
       sessionParams = {
         payment_method_types: ['card'],
         mode: 'payment',
@@ -219,7 +247,7 @@ serve(async (req) => {
               currency: 'usd',
               product_data: {
                 name: listing.title,
-                description: 'Purchase (Escrow - funds released after confirmation)',
+                description: productDescription,
               },
               unit_amount: customerTotal,
             },
@@ -235,6 +263,13 @@ serve(async (req) => {
             escrow: 'true',
             platform_fee: applicationFee.toString(),
             seller_payout: hostReceives.toString(),
+            fulfillment_type: fulfillment_type || 'pickup',
+            delivery_fee: saleDeliveryFee.toString(),
+            delivery_address: delivery_address || '',
+            delivery_instructions: delivery_instructions || '',
+            buyer_name: buyer_name || '',
+            buyer_email: buyer_email || user.email,
+            buyer_phone: buyer_phone || '',
           },
         },
         success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true`,
@@ -245,6 +280,7 @@ serve(async (req) => {
           buyer_id: user.id,
           seller_id: listing.host_id,
           escrow: 'true',
+          fulfillment_type: fulfillment_type || 'pickup',
         },
       };
     }

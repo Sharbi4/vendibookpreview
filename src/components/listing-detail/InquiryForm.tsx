@@ -1,33 +1,77 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { calculateSaleFees, SALE_SELLER_FEE_PERCENT } from '@/lib/commissions';
 import { supabase } from '@/integrations/supabase/client';
-import { ShieldCheck, Loader2 } from 'lucide-react';
+import { ShieldCheck, Loader2, MapPin, Truck } from 'lucide-react';
+import type { FulfillmentType } from '@/types/listing';
 
 interface InquiryFormProps {
   listingId: string;
   priceSale: number | null;
+  fulfillmentType?: FulfillmentType;
+  deliveryFee?: number | null;
+  deliveryRadiusMiles?: number | null;
+  pickupLocation?: string | null;
 }
 
-const InquiryForm = ({ listingId, priceSale }: InquiryFormProps) => {
+type FulfillmentSelection = 'pickup' | 'delivery';
+
+const InquiryForm = ({ 
+  listingId, 
+  priceSale,
+  fulfillmentType = 'pickup',
+  deliveryFee,
+  deliveryRadiusMiles,
+  pickupLocation,
+}: InquiryFormProps) => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  // Customer info
   const [name, setName] = useState(profile?.full_name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState('');
-  const [message, setMessage] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Fulfillment
+  const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>(
+    fulfillmentType === 'delivery' ? 'delivery' : 'pickup'
+  );
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [deliveryInstructions, setDeliveryInstructions] = useState('');
+  
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
 
-  const saleFees = priceSale ? calculateSaleFees(priceSale) : null;
+  // Determine available fulfillment options
+  const getAvailableFulfillmentOptions = (): FulfillmentSelection[] => {
+    if (fulfillmentType === 'both') return ['pickup', 'delivery'];
+    if (fulfillmentType === 'delivery') return ['delivery'];
+    return ['pickup'];
+  };
+
+  const fulfillmentOptions = getAvailableFulfillmentOptions();
+
+  // Calculate total price including delivery if applicable
+  const currentDeliveryFee = fulfillmentSelected === 'delivery' && deliveryFee ? deliveryFee : 0;
+  const totalPrice = (priceSale || 0) + currentDeliveryFee;
+
+  const validateForm = (): string | null => {
+    if (!name.trim()) return 'Please enter your name';
+    if (!email.trim()) return 'Please enter your email';
+    if (fulfillmentSelected === 'delivery' && !deliveryAddress.trim()) {
+      return 'Please enter a delivery address';
+    }
+    if (!agreedToTerms) return 'Please agree to the Terms of Service';
+    return null;
+  };
 
   const handlePurchase = async () => {
     if (!user) {
@@ -37,6 +81,16 @@ const InquiryForm = ({ listingId, priceSale }: InquiryFormProps) => {
 
     if (!priceSale) return;
 
+    const validationError = validateForm();
+    if (validationError) {
+      toast({
+        title: 'Missing information',
+        description: validationError,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsPurchasing(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
@@ -44,6 +98,13 @@ const InquiryForm = ({ listingId, priceSale }: InquiryFormProps) => {
           listing_id: listingId,
           mode: 'sale',
           amount: priceSale,
+          delivery_fee: currentDeliveryFee,
+          fulfillment_type: fulfillmentSelected,
+          delivery_address: fulfillmentSelected === 'delivery' ? deliveryAddress.trim() : null,
+          delivery_instructions: fulfillmentSelected === 'delivery' ? deliveryInstructions.trim() : null,
+          buyer_name: name.trim(),
+          buyer_email: email.trim(),
+          buyer_phone: phone.trim() || null,
         },
       });
 
@@ -63,71 +124,116 @@ const InquiryForm = ({ listingId, priceSale }: InquiryFormProps) => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-
-    if (!message.trim()) {
-      toast({
-        title: 'Message required',
-        description: 'Please add a message for the seller',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-    
-    // TODO: Implement inquiry submission
-    toast({
-      title: 'Inquiry sent!',
-      description: 'The seller will get back to you soon.',
-    });
-    
-    setMessage('');
-    setIsSubmitting(false);
-  };
-
   return (
     <div className="bg-card border border-border rounded-xl p-6 shadow-card sticky top-24">
+      {/* Price Header */}
       <div className="mb-6">
         <span className="text-2xl font-bold text-foreground">
           ${priceSale?.toLocaleString()}
         </span>
-        <p className="text-sm text-muted-foreground mt-1">Asking price (No buyer fees)</p>
+        {currentDeliveryFee > 0 && (
+          <span className="text-sm text-muted-foreground ml-2">
+            + ${currentDeliveryFee} delivery
+          </span>
+        )}
       </div>
 
-      {/* Fee info for sellers */}
-      {saleFees && (
+      {/* Fulfillment Selection */}
+      {fulfillmentOptions.length > 1 && (
+        <div className="mb-6">
+          <Label className="text-sm font-medium mb-3 block">
+            How would you like to receive this?
+          </Label>
+          <RadioGroup
+            value={fulfillmentSelected}
+            onValueChange={(val) => setFulfillmentSelected(val as FulfillmentSelection)}
+            className="space-y-3"
+          >
+            {fulfillmentOptions.includes('pickup') && (
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary/50 transition-colors cursor-pointer">
+                <RadioGroupItem value="pickup" id="sale-pickup" />
+                <Label htmlFor="sale-pickup" className="flex items-center gap-2 cursor-pointer flex-1">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  <span>Pickup</span>
+                </Label>
+              </div>
+            )}
+            {fulfillmentOptions.includes('delivery') && (
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary/50 transition-colors cursor-pointer">
+                <RadioGroupItem value="delivery" id="sale-delivery" />
+                <Label htmlFor="sale-delivery" className="flex items-center gap-2 cursor-pointer flex-1">
+                  <Truck className="h-4 w-4 text-primary" />
+                  <span>Delivery</span>
+                  {deliveryFee && (
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      +${deliveryFee}
+                    </span>
+                  )}
+                </Label>
+              </div>
+            )}
+          </RadioGroup>
+        </div>
+      )}
+
+      {/* Pickup Location Info */}
+      {fulfillmentSelected === 'pickup' && pickupLocation && (
         <div className="mb-6 p-4 bg-muted/50 rounded-xl">
-          <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide">
-            Seller Breakdown
+          <div className="flex items-center gap-2 mb-2">
+            <MapPin className="h-4 w-4 text-primary" />
+            <span className="font-medium text-sm text-foreground">Pickup Location</span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {pickupLocation}
           </p>
-          <div className="space-y-1.5 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Sale price</span>
-              <span className="text-foreground">${saleFees.salePrice.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Platform fee ({SALE_SELLER_FEE_PERCENT}%)</span>
-              <span className="text-destructive">-${saleFees.sellerFee.toLocaleString()}</span>
-            </div>
-            <Separator className="my-2" />
-            <div className="flex justify-between font-medium">
-              <span>Seller receives</span>
-              <span className="text-primary">${saleFees.sellerReceives.toLocaleString()}</span>
-            </div>
+        </div>
+      )}
+
+      {/* Delivery Address Input */}
+      {fulfillmentSelected === 'delivery' && (
+        <div className="mb-6 space-y-4">
+          <div>
+            <Label htmlFor="saleDeliveryAddress" className="text-sm font-medium mb-2 block">
+              Delivery Address *
+            </Label>
+            <Input
+              id="saleDeliveryAddress"
+              placeholder="Enter your delivery address"
+              value={deliveryAddress}
+              onChange={(e) => setDeliveryAddress(e.target.value)}
+            />
+            {deliveryRadiusMiles && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Delivery available within {deliveryRadiusMiles} miles
+              </p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="saleDeliveryInstructions" className="text-sm font-medium mb-2 block">
+              Delivery Instructions (optional)
+            </Label>
+            <Textarea
+              id="saleDeliveryInstructions"
+              placeholder="Gate code, parking notes, etc."
+              value={deliveryInstructions}
+              onChange={(e) => setDeliveryInstructions(e.target.value)}
+              rows={2}
+              className="resize-none"
+            />
           </div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Customer Information */}
+      <div className="space-y-4 mb-6">
+        <h3 className="text-sm font-medium text-foreground">Your Information</h3>
+        
         <div>
+          <Label htmlFor="buyerName" className="text-sm text-muted-foreground mb-1 block">
+            Full Name *
+          </Label>
           <Input
+            id="buyerName"
             placeholder="Your name"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -136,7 +242,11 @@ const InquiryForm = ({ listingId, priceSale }: InquiryFormProps) => {
         </div>
         
         <div>
+          <Label htmlFor="buyerEmail" className="text-sm text-muted-foreground mb-1 block">
+            Email *
+          </Label>
           <Input
+            id="buyerEmail"
             type="email"
             placeholder="Your email"
             value={email}
@@ -146,39 +256,55 @@ const InquiryForm = ({ listingId, priceSale }: InquiryFormProps) => {
         </div>
         
         <div>
+          <Label htmlFor="buyerPhone" className="text-sm text-muted-foreground mb-1 block">
+            Phone (optional)
+          </Label>
           <Input
+            id="buyerPhone"
             type="tel"
-            placeholder="Phone (optional)"
+            placeholder="Phone number"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />
         </div>
+      </div>
 
-        <div>
-          <Textarea
-            placeholder="I'm interested in this listing..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            rows={4}
-            className="resize-none"
-            required
-          />
+      {/* Terms Agreement */}
+      <div className="flex items-start gap-3 mb-6">
+        <Checkbox
+          id="saleTerms"
+          checked={agreedToTerms}
+          onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+          className="mt-0.5"
+        />
+        <Label htmlFor="saleTerms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
+          I agree to the{' '}
+          <a href="/terms" target="_blank" className="text-primary hover:underline">
+            Terms of Service
+          </a>{' '}
+          and understand this is a binding purchase.
+        </Label>
+      </div>
+
+      {/* Price Summary */}
+      <div className="mb-4 p-4 bg-muted/50 rounded-xl space-y-2">
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Price</span>
+          <span className="text-foreground">${priceSale?.toLocaleString()}</span>
         </div>
+        {currentDeliveryFee > 0 && (
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Delivery Fee</span>
+            <span className="text-foreground">${currentDeliveryFee}</span>
+          </div>
+        )}
+        <div className="flex justify-between font-semibold pt-2 border-t border-border">
+          <span>Total</span>
+          <span className="text-primary">${totalPrice.toLocaleString()}</span>
+        </div>
+      </div>
 
-        <Button 
-          type="submit"
-          variant="outline"
-          className="w-full" 
-          size="lg"
-          disabled={isSubmitting}
-        >
-          {user ? 'Send Inquiry' : 'Sign in to Inquire'}
-        </Button>
-      </form>
-
-      <Separator className="my-4" />
-
-      {/* Buy Now Button with Escrow */}
+      {/* Buy Now Button */}
       <Button 
         onClick={handlePurchase}
         className="w-full bg-primary hover:bg-primary/90" 
@@ -191,7 +317,7 @@ const InquiryForm = ({ listingId, priceSale }: InquiryFormProps) => {
             Processing...
           </>
         ) : user ? (
-          'Buy Now'
+          `Buy Now - $${totalPrice.toLocaleString()}`
         ) : (
           'Sign in to Purchase'
         )}
