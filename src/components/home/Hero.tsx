@@ -19,7 +19,7 @@ const Hero = ({ onSearch }: HeroProps) => {
 
   return (
     <section className="relative bg-gradient-to-b from-vendibook-cream to-background pt-8 pb-16">
-      <div className="container">
+      <div className="container max-w-5xl mx-auto px-4">
         {/* Hero Content */}
         <div className="max-w-3xl mx-auto text-center mb-10 animate-fade-in">
           {/* Logo */}
@@ -36,12 +36,12 @@ const Hero = ({ onSearch }: HeroProps) => {
           </p>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-8 animate-slide-up">
+        {/* Search Bar - Centered */}
+        <div className="max-w-3xl mx-auto mb-8 animate-slide-up">
           <SearchBar onSearch={handleSearch} />
         </div>
 
-        {/* Filters */}
+        {/* Filters - Centered */}
         <div className="flex flex-col items-center gap-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
           {/* Mode Toggle */}
           <ModeToggle mode={selectedMode} onModeChange={setSelectedMode} />
