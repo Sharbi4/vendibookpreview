@@ -108,6 +108,17 @@ serve(async (req) => {
     const sellerPayout = paymentIntent.metadata?.seller_payout 
       ? Number(paymentIntent.metadata.seller_payout) / 100 
       : amount - platformFee;
+    
+    // Get fulfillment data from payment intent metadata
+    const fulfillmentType = paymentIntent.metadata?.fulfillment_type || 'pickup';
+    const deliveryAddress = paymentIntent.metadata?.delivery_address || null;
+    const deliveryInstructions = paymentIntent.metadata?.delivery_instructions || null;
+    const deliveryFee = paymentIntent.metadata?.delivery_fee 
+      ? Number(paymentIntent.metadata.delivery_fee) 
+      : 0;
+    const buyerName = paymentIntent.metadata?.buyer_name || null;
+    const buyerEmail = paymentIntent.metadata?.buyer_email || null;
+    const buyerPhone = paymentIntent.metadata?.buyer_phone || null;
 
     // Create the sale transaction record
     const { data: transaction, error: txError } = await supabaseClient
@@ -122,6 +133,13 @@ serve(async (req) => {
         payment_intent_id: paymentIntent.id,
         checkout_session_id: session_id,
         status: 'paid',
+        fulfillment_type: fulfillmentType,
+        delivery_address: deliveryAddress,
+        delivery_instructions: deliveryInstructions,
+        delivery_fee: deliveryFee,
+        buyer_name: buyerName,
+        buyer_email: buyerEmail,
+        buyer_phone: buyerPhone,
       })
       .select()
       .single();
