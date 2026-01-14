@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
+declare const EdgeRuntime: { waitUntil: (promise: Promise<unknown>) => void };
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -149,6 +151,28 @@ serve(async (req) => {
     }
 
     logStep("Transaction created", { id: transaction.id, status: transaction.status });
+
+    // Send payment received notification (background task)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    
+    EdgeRuntime.waitUntil(
+      fetch(`${supabaseUrl}/functions/v1/send-sale-notification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({
+          transaction_id: transaction.id,
+          notification_type: 'payment_received',
+        }),
+      }).then(res => {
+        logStep("Notification sent", { status: res.status });
+      }).catch(err => {
+        logStep("Notification failed", { error: err.message });
+      })
+    );
 
     return new Response(
       JSON.stringify({ 
