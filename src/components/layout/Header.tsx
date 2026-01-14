@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, Phone } from 'lucide-react';
+import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, Phone, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +18,18 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, profile, signOut, isVerified } = useAuth();
   const navigate = useNavigate();
+
+  // Check if user is admin
+  const { data: isAdmin = false } = useQuery({
+    queryKey: ['is-admin-header', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return false;
+      const { data, error } = await supabase.rpc('is_admin', { user_id: user.id });
+      if (error) return false;
+      return data as boolean;
+    },
+    enabled: !!user?.id,
+  });
 
   const handleSignOut = async () => {
     await signOut();
@@ -91,6 +105,12 @@ const Header = () => {
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
+                {isAdmin && (
+                  <DropdownMenuItem onClick={() => navigate('/admin')}>
+                    <ShieldCheck className="h-4 w-4 mr-2 text-primary" />
+                    Admin Dashboard
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => navigate('/how-it-works')}>
                   <HelpCircle className="h-4 w-4 mr-2" />
                   How It Works
@@ -190,6 +210,16 @@ const Header = () => {
                     >
                       <Shield className="h-4 w-4" />
                       Verify Identity
+                    </Link>
+                  )}
+                  {isAdmin && (
+                    <Link 
+                      to="/admin" 
+                      className="flex items-center gap-2 text-sm font-medium py-2 text-primary"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <ShieldCheck className="h-4 w-4" />
+                      Admin Dashboard
                     </Link>
                   )}
                   <Link 
