@@ -489,6 +489,63 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          booking_request_email: boolean
+          booking_request_inapp: boolean
+          booking_response_email: boolean
+          booking_response_inapp: boolean
+          created_at: string
+          dispute_email: boolean
+          dispute_inapp: boolean
+          document_email: boolean
+          document_inapp: boolean
+          id: string
+          message_email: boolean
+          message_inapp: boolean
+          sale_email: boolean
+          sale_inapp: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_request_email?: boolean
+          booking_request_inapp?: boolean
+          booking_response_email?: boolean
+          booking_response_inapp?: boolean
+          created_at?: string
+          dispute_email?: boolean
+          dispute_inapp?: boolean
+          document_email?: boolean
+          document_inapp?: boolean
+          id?: string
+          message_email?: boolean
+          message_inapp?: boolean
+          sale_email?: boolean
+          sale_inapp?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_request_email?: boolean
+          booking_request_inapp?: boolean
+          booking_response_email?: boolean
+          booking_response_inapp?: boolean
+          created_at?: string
+          dispute_email?: boolean
+          dispute_inapp?: boolean
+          document_email?: boolean
+          document_inapp?: boolean
+          id?: string
+          message_email?: boolean
+          message_inapp?: boolean
+          sale_email?: boolean
+          sale_inapp?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
