@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.create-notification]
 verify_jwt = false
+
+[functions.send-message-email]
+verify_jwt = false
