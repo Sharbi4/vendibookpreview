@@ -2,14 +2,14 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Bell, Mail, Loader2 } from 'lucide-react';
+import { ArrowLeft, Bell, Mail, Loader2, Smartphone } from 'lucide-react';
 
 interface PreferenceRowProps {
   label: string;
@@ -62,6 +62,14 @@ const NotificationPreferences = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const { preferences, isLoading, updatePreferences, isUpdating } = useNotificationPreferences(user?.id);
+  const { 
+    isSupported: isPushSupported, 
+    isSubscribed: isPushSubscribed, 
+    isLoading: isPushLoading,
+    permission: pushPermission,
+    subscribe: subscribeToPush,
+    unsubscribe: unsubscribeFromPush,
+  } = usePushNotifications(user?.id);
 
   React.useEffect(() => {
     if (!authLoading && !user) {
@@ -89,6 +97,14 @@ const NotificationPreferences = () => {
     updatePreferences({ [key]: value });
   };
 
+  const handlePushToggle = async () => {
+    if (isPushSubscribed) {
+      await unsubscribeFromPush();
+    } else {
+      await subscribeToPush();
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -102,12 +118,53 @@ const NotificationPreferences = () => {
           Back
         </Button>
 
-        <div className="max-w-2xl mx-auto">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Notification Preferences</h1>
-          <p className="text-muted-foreground mb-8">
-            Choose how you want to receive notifications. Email notifications are sent to your registered email address.
-          </p>
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Notification Preferences</h1>
+            <p className="text-muted-foreground">
+              Choose how you want to receive notifications. Email notifications are sent to your registered email address.
+            </p>
+          </div>
 
+          {/* Push Notifications Card */}
+          {isPushSupported && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Smartphone className="h-5 w-5" />
+                  Push Notifications
+                </CardTitle>
+                <CardDescription>
+                  Receive notifications even when your browser is minimized or closed
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-foreground">
+                      {isPushSubscribed ? 'Push notifications are enabled' : 'Enable push notifications'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {pushPermission === 'denied' 
+                        ? 'Notifications are blocked. Please enable them in your browser settings.'
+                        : isPushSubscribed 
+                          ? 'You will receive notifications on this device'
+                          : 'Get real-time alerts on your device'
+                      }
+                    </p>
+                  </div>
+                  <Switch
+                    checked={isPushSubscribed}
+                    onCheckedChange={handlePushToggle}
+                    disabled={isPushLoading || pushPermission === 'denied'}
+                    aria-label="Push notifications"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Email & In-app Preferences Card */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
