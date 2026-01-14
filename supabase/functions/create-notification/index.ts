@@ -16,6 +16,27 @@ interface NotificationRequest {
   email_subject?: string;
 }
 
+// Map notification types to preference keys
+const getPreferenceKey = (type: string): { email: string; inapp: string } | null => {
+  const typeMap: Record<string, { email: string; inapp: string }> = {
+    booking_request: { email: 'booking_request_email', inapp: 'booking_request_inapp' },
+    booking_response: { email: 'booking_response_email', inapp: 'booking_response_inapp' },
+    booking_approved: { email: 'booking_response_email', inapp: 'booking_response_inapp' },
+    booking_declined: { email: 'booking_response_email', inapp: 'booking_response_inapp' },
+    message: { email: 'message_email', inapp: 'message_inapp' },
+    document: { email: 'document_email', inapp: 'document_inapp' },
+    document_uploaded: { email: 'document_email', inapp: 'document_inapp' },
+    document_approved: { email: 'document_email', inapp: 'document_inapp' },
+    document_rejected: { email: 'document_email', inapp: 'document_inapp' },
+    sale: { email: 'sale_email', inapp: 'sale_inapp' },
+    sale_confirmed: { email: 'sale_email', inapp: 'sale_inapp' },
+    dispute: { email: 'dispute_email', inapp: 'dispute_inapp' },
+    dispute_raised: { email: 'dispute_email', inapp: 'dispute_inapp' },
+    dispute_resolved: { email: 'dispute_email', inapp: 'dispute_inapp' },
+  };
+  return typeMap[type] || null;
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -47,31 +68,57 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create in-app notification
-    const { data: notification, error: notifError } = await supabase
-      .from("notifications")
-      .insert({
-        user_id,
-        type,
-        title,
-        message,
-        link,
-      })
-      .select()
-      .single();
+    // Fetch user preferences
+    const { data: preferences } = await supabase
+      .from("notification_preferences")
+      .select("*")
+      .eq("user_id", user_id)
+      .maybeSingle();
 
-    if (notifError) {
-      console.error("Failed to create notification:", notifError);
-      return new Response(
-        JSON.stringify({ error: "Failed to create notification" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const preferenceKeys = getPreferenceKey(type);
+    
+    // Default to true if no preferences exist
+    const shouldSendInapp = preferences && preferenceKeys 
+      ? preferences[preferenceKeys.inapp] !== false 
+      : true;
+    const shouldSendEmail = preferences && preferenceKeys 
+      ? preferences[preferenceKeys.email] !== false 
+      : true;
+
+    console.log("Notification preferences:", { shouldSendInapp, shouldSendEmail, type });
+
+    let notification = null;
+
+    // Create in-app notification if enabled
+    if (shouldSendInapp) {
+      const { data: notifData, error: notifError } = await supabase
+        .from("notifications")
+        .insert({
+          user_id,
+          type,
+          title,
+          message,
+          link,
+        })
+        .select()
+        .single();
+
+      if (notifError) {
+        console.error("Failed to create notification:", notifError);
+        return new Response(
+          JSON.stringify({ error: "Failed to create notification" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      notification = notifData;
+      console.log("In-app notification created:", notification.id);
+    } else {
+      console.log("In-app notification skipped due to user preferences");
     }
 
-    console.log("In-app notification created:", notification.id);
-
-    // Send email if requested
-    if (send_email && resendApiKey) {
+    // Send email if requested and enabled
+    if (send_email && shouldSendEmail && resendApiKey) {
       try {
         // Get user email
         const { data: profile } = await supabase
@@ -112,7 +159,7 @@ Deno.serve(async (req) => {
                   ` : ""}
                   <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
                   <p style="color: #999; font-size: 12px; text-align: center;">
-                    This email was sent by VendiBook. If you have any questions, please contact support@vendibook.com
+                    This email was sent by VendiBook. You can manage your notification preferences in your account settings.
                   </p>
                 </div>
               </body>
@@ -126,10 +173,12 @@ Deno.serve(async (req) => {
         console.error("Failed to send email notification:", emailError);
         // Don't fail the request if email fails
       }
+    } else if (!shouldSendEmail) {
+      console.log("Email notification skipped due to user preferences");
     }
 
     return new Response(
-      JSON.stringify({ success: true, notification }),
+      JSON.stringify({ success: true, notification, inapp_sent: shouldSendInapp, email_sent: shouldSendEmail }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
