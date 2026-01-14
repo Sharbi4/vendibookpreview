@@ -20,12 +20,19 @@ export interface SaleTransaction {
   message: string | null;
   created_at: string;
   updated_at: string;
+  // Fulfillment fields
+  fulfillment_type: string | null;
+  delivery_address: string | null;
+  delivery_instructions: string | null;
+  delivery_fee: number | null;
   // Joined fields
   listing?: {
     id: string;
     title: string;
     cover_image_url: string | null;
     category: string;
+    pickup_location_text: string | null;
+    pickup_instructions: string | null;
   };
   buyer?: {
     id: string;
@@ -55,7 +62,7 @@ export const useBuyerSaleTransactions = (userId: string | undefined) => {
         .from('sale_transactions' as any)
         .select(`
           *,
-          listing:listings(id, title, cover_image_url, category),
+          listing:listings(id, title, cover_image_url, category, pickup_location_text, pickup_instructions),
           seller:profiles!sale_transactions_seller_id_fkey(id, full_name, avatar_url)
         `)
         .eq('buyer_id', userId)
@@ -152,7 +159,7 @@ export const useSellerSaleTransactions = (userId: string | undefined) => {
         .from('sale_transactions' as any)
         .select(`
           *,
-          listing:listings(id, title, cover_image_url, category),
+          listing:listings(id, title, cover_image_url, category, pickup_location_text, pickup_instructions),
           buyer:profiles!sale_transactions_buyer_id_fkey(id, full_name, avatar_url)
         `)
         .eq('seller_id', userId)

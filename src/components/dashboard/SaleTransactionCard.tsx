@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { CheckCircle2, Clock, DollarSign, ShieldCheck, AlertCircle, Loader2, Flag } from 'lucide-react';
+import { CheckCircle2, Clock, DollarSign, ShieldCheck, AlertCircle, Loader2, Flag, MapPin, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -146,6 +146,56 @@ const SaleTransactionCard = ({
                 <p className="font-medium">{format(new Date(transaction.created_at), 'MMM d, yyyy')}</p>
               </div>
             </div>
+            
+            {/* Fulfillment Details */}
+            {transaction.fulfillment_type && (
+              <div className="bg-muted/50 rounded-lg p-3 mb-4">
+                <div className="flex items-start gap-2">
+                  {transaction.fulfillment_type === 'delivery' ? (
+                    <Truck className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                  )}
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">
+                      {transaction.fulfillment_type === 'delivery' ? 'Delivery' : 'Pickup'}
+                    </p>
+                    {transaction.fulfillment_type === 'delivery' ? (
+                      <>
+                        {transaction.delivery_address && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {transaction.delivery_address}
+                          </p>
+                        )}
+                        {transaction.delivery_instructions && (
+                          <p className="text-xs text-muted-foreground mt-1 italic">
+                            "{transaction.delivery_instructions}"
+                          </p>
+                        )}
+                        {transaction.delivery_fee && transaction.delivery_fee > 0 && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Delivery fee: ${transaction.delivery_fee.toLocaleString()}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {transaction.listing?.pickup_location_text && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {transaction.listing.pickup_location_text}
+                          </p>
+                        )}
+                        {transaction.listing?.pickup_instructions && (
+                          <p className="text-xs text-muted-foreground mt-1 italic">
+                            "{transaction.listing.pickup_instructions}"
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* Confirmation status */}
             <div className="flex flex-wrap items-center gap-4 mb-4 text-sm">
