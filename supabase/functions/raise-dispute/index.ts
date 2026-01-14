@@ -131,6 +131,17 @@ serve(async (req) => {
     const sellerName = sellerProfile?.full_name || 'Seller';
     const disputeRaiser = isBuyer ? buyerName : sellerName;
     const otherParty = isBuyer ? sellerName : buyerName;
+    const otherPartyId = isBuyer ? transaction.seller_id : transaction.buyer_id;
+
+    // Create in-app notification for the other party
+    await supabaseClient.from("notifications").insert({
+      user_id: otherPartyId,
+      type: "dispute",
+      title: "Dispute Raised",
+      message: `${disputeRaiser} raised a dispute for ${listingTitle}: "${reason.substring(0, 100)}${reason.length > 100 ? '...' : ''}"`,
+      link: "/dashboard",
+    });
+    logStep("In-app notification created for other party");
 
     const emailPromises = [];
 
