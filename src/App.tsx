@@ -26,6 +26,7 @@ import VerificationComplete from "./pages/VerificationComplete";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancelled from "./pages/PaymentCancelled";
 import Messages from "./pages/Messages";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ const App = () => (
             <Route path="/payment-cancelled" element={<PaymentCancelled />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/messages/:conversationId" element={<Messages />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -50,3 +50,12 @@ verify_jwt = false
 
 [functions.send-admin-notification]
 verify_jwt = false
+
+[functions.send-sale-notification]
+verify_jwt = false
+
+[functions.raise-dispute]
+verify_jwt = false
+
+[functions.resolve-dispute]
+verify_jwt = false
