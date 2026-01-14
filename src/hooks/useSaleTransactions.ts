@@ -93,11 +93,38 @@ export const useBuyerSaleTransactions = (userId: string | undefined) => {
     },
   });
 
+  const raiseDispute = useMutation({
+    mutationFn: async ({ transactionId, reason }: { transactionId: string; reason: string }) => {
+      const { data, error } = await supabase.functions.invoke('raise-dispute', {
+        body: { transaction_id: transactionId, reason },
+      });
+      
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Dispute Submitted',
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ['buyer-sale-transactions'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Failed to Submit Dispute',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   const stats = {
     total: transactions.length,
     awaitingConfirmation: transactions.filter(t => ['paid', 'seller_confirmed'].includes(t.status)).length,
     confirmed: transactions.filter(t => t.buyer_confirmed_at !== null).length,
     completed: transactions.filter(t => t.status === 'completed').length,
+    disputed: transactions.filter(t => t.status === 'disputed').length,
   };
 
   return {
@@ -106,6 +133,8 @@ export const useBuyerSaleTransactions = (userId: string | undefined) => {
     refetch,
     confirmSale: confirmSale.mutate,
     isConfirming: confirmSale.isPending,
+    raiseDispute: raiseDispute.mutate,
+    isDisputing: raiseDispute.isPending,
     stats,
   };
 };
@@ -161,12 +190,39 @@ export const useSellerSaleTransactions = (userId: string | undefined) => {
     },
   });
 
+  const raiseDispute = useMutation({
+    mutationFn: async ({ transactionId, reason }: { transactionId: string; reason: string }) => {
+      const { data, error } = await supabase.functions.invoke('raise-dispute', {
+        body: { transaction_id: transactionId, reason },
+      });
+      
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Dispute Submitted',
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ['seller-sale-transactions'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Failed to Submit Dispute',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   const stats = {
     total: transactions.length,
     awaitingConfirmation: transactions.filter(t => ['paid', 'buyer_confirmed'].includes(t.status)).length,
     confirmed: transactions.filter(t => t.seller_confirmed_at !== null).length,
     completed: transactions.filter(t => t.status === 'completed').length,
     pendingPayout: transactions.filter(t => t.status === 'completed' && !t.payout_completed_at).length,
+    disputed: transactions.filter(t => t.status === 'disputed').length,
   };
 
   return {
@@ -175,6 +231,8 @@ export const useSellerSaleTransactions = (userId: string | undefined) => {
     refetch,
     confirmSale: confirmSale.mutate,
     isConfirming: confirmSale.isPending,
+    raiseDispute: raiseDispute.mutate,
+    isDisputing: raiseDispute.isPending,
     stats,
   };
 };

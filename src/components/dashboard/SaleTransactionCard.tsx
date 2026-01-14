@@ -1,10 +1,21 @@
+import { useState } from 'react';
 import { format } from 'date-fns';
-import { CheckCircle2, Clock, DollarSign, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import { CheckCircle2, Clock, DollarSign, ShieldCheck, AlertCircle, Loader2, Flag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { SaleTransaction } from '@/hooks/useSaleTransactions';
 import { CATEGORY_LABELS } from '@/types/listing';
 
@@ -12,7 +23,9 @@ interface SaleTransactionCardProps {
   transaction: SaleTransaction;
   role: 'buyer' | 'seller';
   onConfirm: (id: string) => void;
+  onDispute?: (params: { transactionId: string; reason: string }) => void;
   isConfirming?: boolean;
+  isDisputing?: boolean;
 }
 
 const STATUS_CONFIG = {
@@ -30,8 +43,13 @@ const SaleTransactionCard = ({
   transaction, 
   role, 
   onConfirm,
+  onDispute,
   isConfirming = false,
+  isDisputing = false,
 }: SaleTransactionCardProps) => {
+  const [disputeReason, setDisputeReason] = useState('');
+  const [disputeDialogOpen, setDisputeDialogOpen] = useState(false);
+  
   const statusConfig = STATUS_CONFIG[transaction.status];
   const StatusIcon = statusConfig.icon;
   
@@ -42,9 +60,19 @@ const SaleTransactionCard = ({
     ? ['paid', 'seller_confirmed'].includes(transaction.status) && !transaction.buyer_confirmed_at
     : ['paid', 'buyer_confirmed'].includes(transaction.status) && !transaction.seller_confirmed_at;
 
+  const canDispute = ['paid', 'buyer_confirmed', 'seller_confirmed'].includes(transaction.status);
+
   const isWaitingForOther = role === 'buyer'
     ? transaction.buyer_confirmed_at && !transaction.seller_confirmed_at
     : transaction.seller_confirmed_at && !transaction.buyer_confirmed_at;
+
+  const handleSubmitDispute = () => {
+    if (onDispute && disputeReason.length >= 10) {
+      onDispute({ transactionId: transaction.id, reason: disputeReason });
+      setDisputeDialogOpen(false);
+      setDisputeReason('');
+    }
+  };
 
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
@@ -142,6 +170,19 @@ const SaleTransactionCard = ({
                 </span>
               </div>
             </div>
+
+            {/* Dispute message if disputed */}
+            {transaction.status === 'disputed' && transaction.message && (
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 mb-4">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-destructive">Dispute Reason</p>
+                    <p className="text-sm text-muted-foreground mt-1">{transaction.message}</p>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* Actions */}
             <div className="flex flex-wrap gap-2">
@@ -164,6 +205,57 @@ const SaleTransactionCard = ({
                   )}
                 </Button>
               )}
+
+              {canDispute && onDispute && (
+                <Dialog open={disputeDialogOpen} onOpenChange={setDisputeDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10">
+                      <Flag className="h-4 w-4 mr-2" />
+                      Raise Dispute
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Raise a Dispute</DialogTitle>
+                      <DialogDescription>
+                        Explain the issue with this transaction. Our team will review and work to resolve it. 
+                        Payment will remain in escrow until the dispute is resolved.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <Textarea
+                        placeholder="Please describe the issue in detail (minimum 10 characters)..."
+                        value={disputeReason}
+                        onChange={(e) => setDisputeReason(e.target.value)}
+                        rows={4}
+                        className="resize-none"
+                      />
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {disputeReason.length}/10 minimum characters
+                      </p>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setDisputeDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        onClick={handleSubmitDispute}
+                        disabled={disputeReason.length < 10 || isDisputing}
+                      >
+                        {isDisputing ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Submitting...
+                          </>
+                        ) : (
+                          'Submit Dispute'
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
               
               {isWaitingForOther && (
                 <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
@@ -185,6 +277,13 @@ const SaleTransactionCard = ({
                       : 'Transaction complete'
                     }
                   </span>
+                </div>
+              )}
+
+              {transaction.status === 'disputed' && (
+                <div className="flex items-center gap-2 text-destructive bg-destructive/10 px-3 py-2 rounded-lg">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="text-sm">Under review by our team</span>
                 </div>
               )}
             </div>

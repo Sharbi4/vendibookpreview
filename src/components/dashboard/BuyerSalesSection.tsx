@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const BuyerSalesSection = () => {
   const { user } = useAuth();
-  const { transactions, isLoading, confirmSale, isConfirming, stats } = useBuyerSaleTransactions(user?.id);
+  const { transactions, isLoading, confirmSale, isConfirming, raiseDispute, isDisputing, stats } = useBuyerSaleTransactions(user?.id);
 
   const escrowTransactions = transactions.filter(t => 
     ['paid', 'seller_confirmed'].includes(t.status) && !t.buyer_confirmed_at
@@ -99,6 +99,8 @@ const BuyerSalesSection = () => {
                   role="buyer"
                   onConfirm={confirmSale}
                   isConfirming={isConfirming}
+                  onDispute={raiseDispute}
+                  isDisputing={isDisputing}
                 />
               ))}
             </div>
@@ -127,6 +129,8 @@ const BuyerSalesSection = () => {
                   role="buyer"
                   onConfirm={confirmSale}
                   isConfirming={isConfirming}
+                  onDispute={raiseDispute}
+                  isDisputing={isDisputing}
                 />
               ))}
             </div>
