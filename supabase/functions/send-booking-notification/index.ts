@@ -100,6 +100,7 @@ serve(async (req) => {
     });
 
     const emails: { to: string; subject: string; html: string }[] = [];
+    const inAppNotifications: { user_id: string; type: string; title: string; message: string; link: string }[] = [];
 
     if (event_type === "submitted") {
       // Email to host about new booking request
@@ -123,12 +124,21 @@ serve(async (req) => {
                 Please log in to your dashboard to approve or decline this request.
               </p>
               <p style="color: #888; font-size: 14px; margin-top: 30px;">
-                — The FoodTruck Marketplace Team
+                — The VendiBook Team
               </p>
             </div>
           `,
         });
       }
+      
+      // In-app notification to host
+      inAppNotifications.push({
+        user_id: booking.host_id,
+        type: "booking_request",
+        title: "New Booking Request",
+        message: `${shopper?.full_name || "Someone"} requested to book ${listingTitle} from ${startDate} to ${endDate}`,
+        link: "/dashboard",
+      });
 
       // Confirmation email to shopper
       if (shopper?.email) {
@@ -152,7 +162,7 @@ serve(async (req) => {
                 The host will review your request and respond soon. We'll notify you once they respond.
               </p>
               <p style="color: #888; font-size: 14px; margin-top: 30px;">
-                — The FoodTruck Marketplace Team
+                — The VendiBook Team
               </p>
             </div>
           `,
@@ -187,12 +197,21 @@ serve(async (req) => {
                 You can message the host through your dashboard if you have any questions.
               </p>
               <p style="color: #888; font-size: 14px; margin-top: 30px;">
-                — The FoodTruck Marketplace Team
+                — The VendiBook Team
               </p>
             </div>
           `,
         });
       }
+      
+      // In-app notification to shopper
+      inAppNotifications.push({
+        user_id: booking.shopper_id,
+        type: "booking_approved",
+        title: "Booking Approved!",
+        message: `Your booking for ${listingTitle} from ${startDate} to ${endDate} has been approved`,
+        link: "/dashboard",
+      });
     } else if (event_type === "declined") {
       // Email to shopper about decline
       if (shopper?.email) {
@@ -218,11 +237,30 @@ serve(async (req) => {
                 Don't worry! There are plenty of other great options available. Browse our marketplace to find your perfect match.
               </p>
               <p style="color: #888; font-size: 14px; margin-top: 30px;">
-                — The FoodTruck Marketplace Team
+                — The VendiBook Team
               </p>
             </div>
           `,
         });
+      }
+      
+      // In-app notification to shopper
+      inAppNotifications.push({
+        user_id: booking.shopper_id,
+        type: "booking_declined",
+        title: "Booking Declined",
+        message: `Your booking request for ${listingTitle} was not approved${host_response ? `: "${host_response}"` : ""}`,
+        link: "/dashboard",
+      });
+    }
+    
+    // Create in-app notifications
+    for (const notif of inAppNotifications) {
+      try {
+        await supabaseClient.from("notifications").insert(notif);
+        logStep("In-app notification created", { user_id: notif.user_id, type: notif.type });
+      } catch (notifError: any) {
+        logStep("Failed to create in-app notification", { error: notifError.message });
       }
     }
 

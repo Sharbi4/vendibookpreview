@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import vendibookLogo from '@/assets/vendibook-logo.jpg';
+import NotificationCenter from '@/components/notifications/NotificationCenter';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -70,8 +71,8 @@ const Header = () => {
         </nav>
 
         {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-3">
-          
+        <div className="hidden md:flex items-center gap-2">
+          {user && <NotificationCenter />}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
