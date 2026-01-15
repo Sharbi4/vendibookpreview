@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminTransactions } from '@/hooks/useAdminTransactions';
 import Header from '@/components/layout/Header';
@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import DisputeResolutionCard from '@/components/admin/DisputeResolutionCard';
+import TrackingManagementCard from '@/components/admin/TrackingManagementCard';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -19,10 +20,14 @@ const AdminDashboard = () => {
     isCheckingAdmin, 
     disputedTransactions, 
     allTransactions,
+    shippingTransactions,
     isLoading,
     resolveDispute,
     isResolving,
+    updateTracking,
+    isUpdatingTracking,
     stats,
+    shippingStats,
   } = useAdminTransactions(user?.id);
 
   useEffect(() => {
@@ -72,7 +77,7 @@ const AdminDashboard = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage disputes and monitor transactions</p>
+            <p className="text-muted-foreground">Manage disputes, shipping, and transactions</p>
           </div>
         </div>
 
@@ -108,19 +113,19 @@ const AdminDashboard = () => {
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                <span className="text-sm text-muted-foreground">Completed</span>
+                <Truck className="h-4 w-4 text-blue-500" />
+                <span className="text-sm text-muted-foreground">In Transit</span>
               </div>
-              <p className="text-2xl font-bold text-emerald-600">{stats.completed}</p>
+              <p className="text-2xl font-bold text-blue-600">{shippingStats.inTransit}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
-                <XCircle className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Refunded</span>
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                <span className="text-sm text-muted-foreground">Completed</span>
               </div>
-              <p className="text-2xl font-bold">{stats.refunded}</p>
+              <p className="text-2xl font-bold text-emerald-600">{stats.completed}</p>
             </CardContent>
           </Card>
           <Card>
@@ -142,6 +147,14 @@ const AdminDashboard = () => {
               {stats.disputed > 0 && (
                 <Badge variant="destructive" className="ml-2 h-5 px-1.5">
                   {stats.disputed}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="shipping" className="relative">
+              Shipping
+              {shippingStats.pending > 0 && (
+                <Badge variant="secondary" className="ml-2 h-5 px-1.5">
+                  {shippingStats.pending}
                 </Badge>
               )}
             </TabsTrigger>
@@ -171,6 +184,35 @@ const AdminDashboard = () => {
                     transaction={transaction}
                     onResolve={resolveDispute}
                     isResolving={isResolving}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="shipping" className="space-y-4">
+            {isLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-48" />
+                ))}
+              </div>
+            ) : shippingTransactions.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground">No Shipping Orders</h3>
+                  <p className="text-muted-foreground">No orders requiring shipping management.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {shippingTransactions.map((transaction) => (
+                  <TrackingManagementCard
+                    key={transaction.id}
+                    transaction={transaction}
+                    onUpdateTracking={updateTracking}
+                    isUpdating={isUpdatingTracking}
                   />
                 ))}
               </div>
@@ -208,6 +250,7 @@ const AdminDashboard = () => {
                           <th className="text-left py-3 px-2 font-medium">Seller</th>
                           <th className="text-left py-3 px-2 font-medium">Amount</th>
                           <th className="text-left py-3 px-2 font-medium">Status</th>
+                          <th className="text-left py-3 px-2 font-medium">Shipping</th>
                           <th className="text-left py-3 px-2 font-medium">Date</th>
                         </tr>
                       </thead>
@@ -235,6 +278,22 @@ const AdminDashboard = () => {
                               >
                                 {tx.status}
                               </Badge>
+                            </td>
+                            <td className="py-3 px-2">
+                              {tx.fulfillment_type === 'delivery' || tx.fulfillment_type === 'vendibook_freight' ? (
+                                <Badge 
+                                  variant="outline"
+                                  className={
+                                    tx.shipping_status === 'delivered' ? 'border-emerald-500 text-emerald-600' :
+                                    tx.shipping_status === 'shipped' || tx.shipping_status === 'in_transit' ? 'border-blue-500 text-blue-600' :
+                                    'border-amber-500 text-amber-600'
+                                  }
+                                >
+                                  {tx.shipping_status || 'pending'}
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
                             </td>
                             <td className="py-3 px-2 text-muted-foreground">
                               {new Date(tx.created_at).toLocaleDateString()}
