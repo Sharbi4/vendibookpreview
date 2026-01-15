@@ -245,11 +245,12 @@ const Header = () => {
           ) : (
             <Button
               variant="ghost"
-              size="icon"
+              size="sm"
               onClick={() => setIsMobileSearchOpen(true)}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground gap-1.5 px-3"
             >
-              <Search className="h-5 w-5" />
+              <Search className="h-4 w-4" />
+              <span className="text-sm font-medium">Search</span>
             </Button>
           )}
         </div>
