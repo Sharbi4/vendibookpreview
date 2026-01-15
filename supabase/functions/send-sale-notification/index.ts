@@ -339,7 +339,7 @@ serve(async (req) => {
       const buyerContent = getEmailContent(notification_type, 'buyer', emailData);
       emailPromises.push(
         resend.emails.send({
-          from: "Vendibook <updates@vendibook.com>",
+          from: "VendiBook <noreply@updates.vendibook.com>",
           to: [buyerEmail],
           subject: buyerContent.subject,
           html: buyerContent.html,
@@ -358,7 +358,7 @@ serve(async (req) => {
       const sellerContent = getEmailContent(notification_type, 'seller', emailData);
       emailPromises.push(
         resend.emails.send({
-          from: "Vendibook <updates@vendibook.com>",
+          from: "VendiBook <noreply@updates.vendibook.com>",
           to: [sellerEmail],
           subject: sellerContent.subject,
           html: sellerContent.html,

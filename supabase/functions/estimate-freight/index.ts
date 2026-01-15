@@ -194,9 +194,9 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const mapboxToken = Deno.env.get("MAPBOX_ACCESS_TOKEN");
+    const mapboxToken = Deno.env.get("MAPBOX_ACCESS_TOKEN") || Deno.env.get("MAPBOX_PUBLIC_TOKEN");
     if (!mapboxToken) {
-      throw new Error("MAPBOX_ACCESS_TOKEN is not configured");
+      throw new Error("MAPBOX_ACCESS_TOKEN or MAPBOX_PUBLIC_TOKEN is not configured");
     }
 
     const body: FreightEstimateRequest = await req.json();
