@@ -60,7 +60,8 @@ self.addEventListener('push', (event) => {
     }
   }
 
-  const options: NotificationOptions = {
+  // Extended NotificationOptions (actions, renotify) are supported in SW but not in DOM typings
+  const options = {
     body: data.body || data.message,
     icon: '/favicon.png',
     badge: '/favicon.png',
@@ -74,7 +75,7 @@ self.addEventListener('push', (event) => {
     ],
     tag: data.tag || 'vendibook-notification',
     renotify: true,
-  };
+  } as NotificationOptions;
 
   event.waitUntil(self.registration.showNotification(data.title || 'Vendibook', options));
 });
