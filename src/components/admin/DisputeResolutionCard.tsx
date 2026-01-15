@@ -6,9 +6,11 @@ import {
   XCircle, 
   Loader2, 
   DollarSign,
-  User,
   MessageSquare,
   ExternalLink,
+  Headset,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Dialog,
   DialogContent,
@@ -36,8 +39,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { SaleTransaction } from '@/hooks/useSaleTransactions';
 import { CATEGORY_LABELS } from '@/types/listing';
+import { useZendeskComments } from '@/hooks/useZendeskComments';
 
 interface DisputeResolutionCardProps {
   transaction: SaleTransaction;
@@ -58,6 +67,10 @@ const DisputeResolutionCard = ({
   const [showRefundConfirm, setShowRefundConfirm] = useState(false);
   const [showReleaseConfirm, setShowReleaseConfirm] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+
+  // Fetch Zendesk comments for this transaction
+  const { data: zendeskComments, isLoading: loadingComments } = useZendeskComments(transaction.id);
 
   const handleResolve = (resolution: 'refund_buyer' | 'release_to_seller') => {
     onResolve({
@@ -70,6 +83,18 @@ const DisputeResolutionCard = ({
     setDetailsOpen(false);
   };
 
+  const getRoleBadgeColor = (role: string | null) => {
+    switch (role) {
+      case 'agent':
+      case 'admin':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'end-user':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
+  };
+
   return (
     <>
       <Card className="overflow-hidden border-destructive/30">
@@ -79,7 +104,15 @@ const DisputeResolutionCard = ({
               <AlertCircle className="h-5 w-5 text-destructive" />
               <CardTitle className="text-lg">Dispute #{transaction.id.slice(0, 8)}</CardTitle>
             </div>
-            <Badge variant="destructive">Disputed</Badge>
+            <div className="flex items-center gap-2">
+              {zendeskComments && zendeskComments.length > 0 && (
+                <Badge variant="outline" className="gap-1">
+                  <Headset className="h-3 w-3" />
+                  {zendeskComments.length} support {zendeskComments.length === 1 ? 'message' : 'messages'}
+                </Badge>
+              )}
+              <Badge variant="destructive">Disputed</Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="pt-4">
@@ -152,6 +185,77 @@ const DisputeResolutionCard = ({
             </div>
           )}
 
+          {/* Zendesk Support Comments */}
+          {zendeskComments && zendeskComments.length > 0 && (
+            <Collapsible open={commentsOpen} onOpenChange={setCommentsOpen} className="mt-4">
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" size="sm" className="w-full justify-between">
+                  <div className="flex items-center gap-2">
+                    <Headset className="h-4 w-4" />
+                    <span>Support Team Messages ({zendeskComments.length})</span>
+                  </div>
+                  {commentsOpen ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2">
+                <ScrollArea className="h-[200px] rounded-lg border p-3">
+                  <div className="space-y-3">
+                    {zendeskComments.map((comment) => (
+                      <div
+                        key={comment.id}
+                        className={`p-3 rounded-lg ${
+                          comment.author_role === 'agent' || comment.author_role === 'admin'
+                            ? 'bg-blue-50 dark:bg-blue-950/30 border-l-2 border-blue-500'
+                            : 'bg-muted/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm">
+                              {comment.author_name || 'Unknown'}
+                            </span>
+                            <Badge
+                              variant="secondary"
+                              className={`text-xs ${getRoleBadgeColor(comment.author_role)}`}
+                            >
+                              {comment.author_role === 'agent' || comment.author_role === 'admin'
+                                ? 'Support'
+                                : comment.author_role || 'User'}
+                            </Badge>
+                            {!comment.is_public && (
+                              <Badge variant="outline" className="text-xs">
+                                Internal
+                              </Badge>
+                            )}
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {comment.zendesk_created_at
+                              ? format(new Date(comment.zendesk_created_at), 'MMM d, h:mm a')
+                              : format(new Date(comment.created_at), 'MMM d, h:mm a')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-foreground whitespace-pre-wrap">
+                          {comment.body}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
+          {loadingComments && (
+            <div className="mt-4 flex items-center justify-center gap-2 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-sm">Loading support messages...</span>
+            </div>
+          )}
+
           <Separator className="my-4" />
 
           {/* Actions */}
@@ -163,7 +267,7 @@ const DisputeResolutionCard = ({
                   View Details & Resolve
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Resolve Dispute</DialogTitle>
                   <DialogDescription>
@@ -227,6 +331,45 @@ const DisputeResolutionCard = ({
                     <div>
                       <Label className="text-muted-foreground">Dispute Reason</Label>
                       <p className="mt-1 text-sm bg-muted/50 p-3 rounded-lg">{transaction.message}</p>
+                    </div>
+                  )}
+
+                  {/* Support Messages in Dialog */}
+                  {zendeskComments && zendeskComments.length > 0 && (
+                    <div>
+                      <Label className="text-muted-foreground flex items-center gap-2">
+                        <Headset className="h-4 w-4" />
+                        Support Team Messages ({zendeskComments.length})
+                      </Label>
+                      <ScrollArea className="h-[150px] mt-2 rounded-lg border p-3">
+                        <div className="space-y-3">
+                          {zendeskComments.map((comment) => (
+                            <div
+                              key={comment.id}
+                              className={`p-2 rounded-lg text-sm ${
+                                comment.author_role === 'agent' || comment.author_role === 'admin'
+                                  ? 'bg-blue-50 dark:bg-blue-950/30 border-l-2 border-blue-500'
+                                  : 'bg-muted/50'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-medium text-xs">
+                                  {comment.author_name || 'Unknown'}
+                                  {(comment.author_role === 'agent' || comment.author_role === 'admin') && (
+                                    <span className="ml-1 text-blue-600 dark:text-blue-400">(Support)</span>
+                                  )}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {comment.zendesk_created_at
+                                    ? format(new Date(comment.zendesk_created_at), 'MMM d, h:mm a')
+                                    : format(new Date(comment.created_at), 'MMM d, h:mm a')}
+                                </span>
+                              </div>
+                              <p className="text-xs whitespace-pre-wrap">{comment.body}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
                     </div>
                   )}
 

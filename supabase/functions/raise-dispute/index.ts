@@ -273,6 +273,7 @@ serve(async (req) => {
             priority: 'urgent',
             type: 'problem',
             tags: ['vendibook', 'dispute', 'escrow', `${role}-dispute`],
+            external_id: transaction_id, // Link for webhook sync
           }),
         }
       ).then(async (res) => {
