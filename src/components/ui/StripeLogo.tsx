@@ -2,12 +2,13 @@ import stripeLogo from '@/assets/stripe-logo.png';
 import { cn } from '@/lib/utils';
 
 interface StripeLogoProps {
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   className?: string;
   showText?: boolean;
 }
 
 const sizeClasses = {
+  xs: 'w-4 h-4',
   sm: 'w-5 h-5',
   md: 'w-8 h-8',
   lg: 'w-12 h-12',
