@@ -14,61 +14,24 @@ const ZendeskWidget = () => {
     const configureWidget = () => {
       if (!window.zE) return;
 
-      if (user && profile) {
-        // User is logged in - prefill their info and customize experience
-        window.zE('webWidget', 'prefill', {
-          name: {
-            value: profile.full_name || '',
-            readOnly: !!profile.full_name,
-          },
-          email: {
-            value: profile.email || user.email || '',
-            readOnly: true,
-          },
-        });
+      try {
+        if (user && profile) {
+          // User is logged in - set conversation fields for the Messaging SDK
+          // This pre-fills user info when they open the messenger
+          window.zE('messenger:set', 'conversationFields', [
+            { id: 'email', value: profile.email || user.email || '' },
+            { id: 'name', value: profile.full_name || '' },
+          ]);
 
-        // Update launcher label for authenticated users
-        window.zE('webWidget', 'updateSettings', {
-          webWidget: {
-            launcher: {
-              chatLabel: {
-                'en-US': 'Support',
-              },
-            },
-            contactForm: {
-              title: {
-                'en-US': 'How can we help?',
-              },
-              fields: [
-                { id: 'description', prefill: { '*': '' } },
-              ],
-            },
-          },
-        });
-
-        // Identify the user for better support tracking
-        window.zE('webWidget', 'identify', {
-          name: profile.full_name || 'Vendibook User',
-          email: profile.email || user.email || '',
-        });
-      } else {
-        // User is logged out - reset to default
-        window.zE('webWidget', 'reset');
-        
-        window.zE('webWidget', 'updateSettings', {
-          webWidget: {
-            launcher: {
-              chatLabel: {
-                'en-US': 'Need Help?',
-              },
-            },
-            contactForm: {
-              title: {
-                'en-US': 'Contact Vendibook Support',
-              },
-            },
-          },
-        });
+          // Set locale
+          window.zE('messenger:set', 'locale', 'en-US');
+        } else {
+          // User logged out - clear conversation fields
+          window.zE('messenger:set', 'conversationFields', []);
+        }
+      } catch (error) {
+        // Silently handle any API compatibility issues
+        console.debug('Zendesk Messaging SDK configuration:', error);
       }
     };
 
@@ -85,13 +48,16 @@ const ZendeskWidget = () => {
       }, 500);
 
       // Clean up after 10 seconds if it never loads
-      setTimeout(() => clearInterval(checkInterval), 10000);
+      const timeout = setTimeout(() => clearInterval(checkInterval), 10000);
 
-      return () => clearInterval(checkInterval);
+      return () => {
+        clearInterval(checkInterval);
+        clearTimeout(timeout);
+      };
     }
   }, [user, profile]);
 
-  return null; // This component doesn't render anything
+  return null;
 };
 
 export default ZendeskWidget;
