@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import ListingCard from '@/components/listing/ListingCard';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Navigation, Map, List } from 'lucide-react';
+import { MapPin, Navigation, Map, List, Columns } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Pagination,
@@ -31,7 +31,7 @@ const FeaturedListings = () => {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'map' | 'split'>('list');
   
   const navigate = useNavigate();
   const { token: mapToken, isLoading: isMapLoading, error: mapError } = useMapboxToken();
@@ -303,14 +303,25 @@ const FeaturedListings = () => {
                 size="sm"
                 onClick={() => setViewMode('list')}
                 className="rounded-none"
+                title="List view"
               >
                 <List className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'split' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('split')}
+                className="rounded-none hidden lg:flex"
+                title="Split view"
+              >
+                <Columns className="h-4 w-4" />
               </Button>
               <Button
                 variant={viewMode === 'map' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('map')}
                 className="rounded-none"
+                title="Map view"
               >
                 <Map className="h-4 w-4" />
               </Button>
@@ -346,8 +357,82 @@ const FeaturedListings = () => {
           </div>
         </div>
 
-        {/* Map View */}
-        {viewMode === 'map' ? (
+        {/* Split View */}
+        {viewMode === 'split' ? (
+          <div className="flex gap-6 h-[600px]">
+            {/* Listings Panel */}
+            <div className="w-1/2 overflow-y-auto pr-2 space-y-4">
+              {paginatedListings.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    {paginatedListings.map((listing) => (
+                      <ListingCard 
+                        key={listing.id} 
+                        listing={listing} 
+                        hostVerified={hostVerificationMap[listing.host_id] ?? false}
+                        distanceMiles={listing.distance_miles}
+                      />
+                    ))}
+                  </div>
+                  {/* Pagination in split view */}
+                  {totalPages > 1 && (
+                    <div className="pt-4">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious 
+                              onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                              className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                            />
+                          </PaginationItem>
+                          {getPageNumbers().map((page, index) => (
+                            <PaginationItem key={index}>
+                              {page === 'ellipsis' ? (
+                                <PaginationEllipsis />
+                              ) : (
+                                <PaginationLink
+                                  onClick={() => handlePageChange(page)}
+                                  isActive={currentPage === page}
+                                  className="cursor-pointer"
+                                >
+                                  {page}
+                                </PaginationLink>
+                              )}
+                            </PaginationItem>
+                          ))}
+                          <PaginationItem>
+                            <PaginationNext 
+                              onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                              className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-16 bg-secondary/30 rounded-2xl">
+                  <div className="text-4xl mb-4">🔍</div>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No listings found</h3>
+                </div>
+              )}
+            </div>
+            {/* Map Panel */}
+            <div className="w-1/2 rounded-xl overflow-hidden border border-border">
+              <SearchResultsMap
+                listings={sortedListings}
+                mapToken={mapToken}
+                isLoading={isMapLoading}
+                error={mapError}
+                userLocation={userLocation ? [userLocation.longitude, userLocation.latitude] : null}
+                searchRadius={userLocation ? 100 : undefined}
+                onListingClick={handleListingClick}
+              />
+            </div>
+          </div>
+        ) : viewMode === 'map' ? (
+          /* Map View */
           <div className="h-[500px] rounded-xl overflow-hidden border border-border">
             <SearchResultsMap
               listings={sortedListings}
