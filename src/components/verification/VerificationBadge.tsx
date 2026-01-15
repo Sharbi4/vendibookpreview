@@ -1,4 +1,4 @@
-import { ShieldCheck, Shield, BadgeCheck } from 'lucide-react';
+import { Shield, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -7,9 +7,80 @@ interface VerificationBadgeProps {
   isVerified: boolean;
   size?: 'sm' | 'md' | 'lg';
   showLabel?: boolean;
-  variant?: 'badge' | 'inline' | 'card';
+  variant?: 'badge' | 'inline' | 'card' | 'starburst';
   className?: string;
 }
+
+// Custom starburst SVG badge component
+const StarburstBadge = ({ size = 'md', className }: { size?: 'sm' | 'md' | 'lg'; className?: string }) => {
+  const sizes = {
+    sm: { outer: 24, inner: 10 },
+    md: { outer: 32, inner: 14 },
+    lg: { outer: 48, inner: 20 },
+  };
+
+  const { outer, inner } = sizes[size];
+  const center = outer / 2;
+  const points = 16;
+  const outerRadius = outer / 2 - 1;
+  const innerRadius = outerRadius * 0.78;
+
+  // Generate starburst path
+  const generateStarburstPath = () => {
+    const path: string[] = [];
+    for (let i = 0; i < points * 2; i++) {
+      const angle = (i * Math.PI) / points - Math.PI / 2;
+      const radius = i % 2 === 0 ? outerRadius : innerRadius;
+      const x = center + radius * Math.cos(angle);
+      const y = center + radius * Math.sin(angle);
+      path.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`);
+    }
+    path.push('Z');
+    return path.join(' ');
+  };
+
+  return (
+    <svg 
+      width={outer} 
+      height={outer} 
+      viewBox={`0 0 ${outer} ${outer}`} 
+      className={cn("drop-shadow-md", className)}
+    >
+      <defs>
+        <linearGradient id={`starburstGradient-${size}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FBBF24" />
+          <stop offset="50%" stopColor="#F59E0B" />
+          <stop offset="100%" stopColor="#EA580C" />
+        </linearGradient>
+      </defs>
+      <path
+        d={generateStarburstPath()}
+        fill={`url(#starburstGradient-${size})`}
+      />
+      {/* White circle for checkmark background */}
+      <circle 
+        cx={center} 
+        cy={center} 
+        r={innerRadius * 0.65} 
+        fill="white" 
+        stroke="white" 
+        strokeWidth="1"
+      />
+      {/* Checkmark */}
+      <Check 
+        className="text-amber-500"
+        style={{
+          position: 'absolute',
+        }}
+        x={center - inner / 2}
+        y={center - inner / 2}
+        width={inner}
+        height={inner}
+        strokeWidth={3}
+      />
+    </svg>
+  );
+};
 
 const VerificationBadge = ({
   isVerified,
@@ -30,31 +101,48 @@ const VerificationBadge = ({
     lg: 'text-base',
   };
 
+  // Starburst variant - just the badge icon
+  if (variant === 'starburst') {
+    if (!isVerified) return null;
+    
+    return (
+      <TooltipProvider>
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild>
+            <div className={cn("inline-flex", className)}>
+              <StarburstBadge size={size} />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Identity verified via Stripe Identity</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
   if (variant === 'card') {
     return (
       <div
         className={cn(
           'flex items-center gap-3 p-4 rounded-xl border',
           isVerified
-            ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800'
+            ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200 dark:from-amber-950/30 dark:to-orange-950/30 dark:border-amber-800'
             : 'bg-muted/50 border-border',
           className
         )}
       >
-        <div
-          className={cn(
-            'p-2 rounded-full',
-            isVerified ? 'bg-emerald-100 dark:bg-emerald-900/50' : 'bg-muted'
-          )}
-        >
+        <div className="flex-shrink-0">
           {isVerified ? (
-            <ShieldCheck className={cn(iconSizes.lg, 'text-emerald-600')} />
+            <StarburstBadge size="lg" />
           ) : (
-            <Shield className={cn(iconSizes.lg, 'text-muted-foreground')} />
+            <div className="p-2 rounded-full bg-muted">
+              <Shield className={cn(iconSizes.lg, 'text-muted-foreground')} />
+            </div>
           )}
         </div>
         <div>
-          <p className={cn('font-medium', isVerified ? 'text-emerald-700 dark:text-emerald-400' : 'text-foreground')}>
+          <p className={cn('font-medium', isVerified ? 'text-amber-700 dark:text-amber-400' : 'text-foreground')}>
             {isVerified ? 'Identity Verified' : 'Not Verified'}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -75,12 +163,12 @@ const VerificationBadge = ({
             <div
               className={cn(
                 'inline-flex items-center gap-1.5',
-                isVerified ? 'text-emerald-600' : 'text-muted-foreground',
+                isVerified ? 'text-amber-600' : 'text-muted-foreground',
                 className
               )}
             >
               {isVerified ? (
-                <ShieldCheck className={iconSizes[size]} />
+                <StarburstBadge size={size} />
               ) : (
                 <Shield className={iconSizes[size]} />
               )}
@@ -111,15 +199,15 @@ const VerificationBadge = ({
           <Badge
             variant={isVerified ? 'default' : 'secondary'}
             className={cn(
-              'gap-1',
+              'gap-1.5',
               isVerified
-                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/50 dark:text-emerald-400'
+                ? 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 hover:from-amber-100 hover:to-orange-100 border-amber-200 dark:from-amber-900/50 dark:to-orange-900/50 dark:text-amber-400 dark:border-amber-700'
                 : 'bg-muted text-muted-foreground',
               className
             )}
           >
             {isVerified ? (
-              <ShieldCheck className={iconSizes[size]} />
+              <StarburstBadge size="sm" />
             ) : (
               <Shield className={iconSizes[size]} />
             )}
