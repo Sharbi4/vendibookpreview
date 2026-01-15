@@ -63,6 +63,7 @@ const Footer = () => {
             <ul className="space-y-2 text-sm text-background/80">
               <li><a href="tel:+18778836342" className="hover:text-background transition-colors">1877-8VENDI2</a></li>
               <li><Link to="/help" className="hover:text-background transition-colors">Help Center</Link></li>
+              <li><Link to="/faq" className="hover:text-background transition-colors">FAQ</Link></li>
               <li><Link to="/how-it-works" className="hover:text-background transition-colors">How Vendibook Works</Link></li>
               <li><Link to="/contact" className="hover:text-background transition-colors">Contact Us</Link></li>
               <li><Link to="/insurance" className="hover:text-background transition-colors">Insurance Information</Link></li>

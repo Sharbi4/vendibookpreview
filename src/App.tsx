@@ -40,6 +40,7 @@ const OrderTracking = lazy(() => import("./pages/OrderTracking"));
 const HostOnboarding = lazy(() => import("./pages/HostOnboarding"));
 const Install = lazy(() => import("./pages/Install"));
 const VendorLots = lazy(() => import("./pages/VendorLots"));
+const FAQ = lazy(() => import("./pages/FAQ"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -94,6 +95,7 @@ const App = () => (
               <Route path="/host" element={<HostOnboarding />} />
               <Route path="/install" element={<Install />} />
               <Route path="/vendor-lots" element={<VendorLots />} />
+              <Route path="/faq" element={<FAQ />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
