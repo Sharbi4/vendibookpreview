@@ -50,30 +50,16 @@ const Index = () => {
         <Hero />
         <Suspense fallback={<SectionSkeleton />}>
           <FeaturedListings />
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton />}>
           <CategoryCarousels />
-        </Suspense>
-        <Suspense fallback={null}>
           <TrustSafetySection />
-        </Suspense>
-        <Suspense fallback={null}>
           <AIToolsSection />
-        </Suspense>
-        <Suspense fallback={null}>
           <HelpCenterPreview />
-        </Suspense>
-        <Suspense fallback={null}>
           <HowItWorks />
-        </Suspense>
-        <Suspense fallback={null}>
           <NewsletterSection />
+          <NewsletterPopup />
         </Suspense>
       </main>
 
-      <Suspense fallback={null}>
-        <NewsletterPopup />
-      </Suspense>
       <Footer />
     </div>
   );
