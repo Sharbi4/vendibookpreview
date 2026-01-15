@@ -8,6 +8,7 @@ import HowItWorks from '@/components/home/HowItWorks';
 import NewsletterSection from '@/components/newsletter/NewsletterSection';
 import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
 import { TrustSafetySection } from '@/components/trust';
+import AIToolsSection from '@/components/home/AIToolsSection';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
@@ -32,6 +33,7 @@ const Index = () => {
         <Hero />
         <FeaturedListings />
         <TrustSafetySection />
+        <AIToolsSection />
         <HowItWorks />
         <NewsletterSection />
       </main>
