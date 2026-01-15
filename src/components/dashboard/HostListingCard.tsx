@@ -69,7 +69,7 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete }: HostListingC
                 <StatusPill status={listing.status} />
               </div>
 
-              <div className="flex items-center gap-3 text-sm">
+              <div className="flex items-center gap-3 text-sm flex-wrap">
                 <span className="text-primary font-semibold">{displayPrice}</span>
                 <span className="text-muted-foreground">•</span>
                 <span className="text-muted-foreground capitalize">
@@ -79,6 +79,15 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete }: HostListingC
                 <span className="text-muted-foreground capitalize">
                   For {listing.mode === 'rent' ? 'Rent' : 'Sale'}
                 </span>
+                {listing.view_count !== null && listing.view_count > 0 && (
+                  <>
+                    <span className="text-muted-foreground">•</span>
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <Eye className="h-3.5 w-3.5" />
+                      {listing.view_count.toLocaleString()} views
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 
