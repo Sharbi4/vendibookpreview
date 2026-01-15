@@ -57,7 +57,7 @@ const getEmailContent = (
             <p style="color: #6a6a6a; font-size: 14px; margin-top: 24px;">
               Your payment is protected by our escrow system until the transaction is complete.
             </p>
-            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong></p>
+            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong><br><a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a></p>
           </div>
         `,
       },
@@ -85,7 +85,7 @@ const getEmailContent = (
                 <li>Payment will be released once both parties confirm</li>
               </ol>
             </div>
-            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong></p>
+            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong><br><a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a></p>
           </div>
         `,
       },
@@ -108,7 +108,7 @@ const getEmailContent = (
             <p style="color: #6a6a6a; font-size: 14px;">
               Once the seller confirms, the transaction will be complete and funds will be released.
             </p>
-            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong></p>
+            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong><br><a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a></p>
           </div>
         `,
       },
@@ -128,7 +128,7 @@ const getEmailContent = (
             <p style="color: #4a4a4a; font-size: 16px;">
               Once you confirm, <strong>$${sellerPayout.toLocaleString()}</strong> will be transferred to your account.
             </p>
-            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong></p>
+            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong><br><a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a></p>
           </div>
         `,
       },
@@ -150,7 +150,7 @@ const getEmailContent = (
             <p style="color: #6a6a6a; font-size: 14px;">
               Once you confirm receipt, the funds will be released to the seller.
             </p>
-            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong></p>
+            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong><br><a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a></p>
           </div>
         `,
       },
@@ -171,7 +171,7 @@ const getEmailContent = (
             <p style="color: #6a6a6a; font-size: 14px;">
               Once the buyer confirms receipt, <strong>$${sellerPayout.toLocaleString()}</strong> will be transferred to your account.
             </p>
-            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong></p>
+            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong><br><a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a></p>
           </div>
         `,
       },
@@ -193,7 +193,7 @@ const getEmailContent = (
             <p style="color: #4a4a4a; font-size: 16px;">
               Thank you for using Vendibook! We hope you enjoy your purchase.
             </p>
-            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong></p>
+            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong><br><a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a></p>
           </div>
         `,
       },
@@ -214,7 +214,7 @@ const getEmailContent = (
             <p style="color: #6a6a6a; font-size: 14px;">
               Funds typically arrive in your bank account within 2-3 business days.
             </p>
-            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong></p>
+            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong><br><a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a></p>
           </div>
         `,
       },
@@ -228,7 +228,7 @@ const getEmailContent = (
             <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
               There was an issue processing the payout for <strong>${listingTitle}</strong>. Our team is looking into this and will resolve it shortly.
             </p>
-            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong></p>
+            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong><br><a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a></p>
           </div>
         `,
       },
@@ -245,7 +245,7 @@ const getEmailContent = (
                 Please ensure your Stripe account is properly set up. Our team will retry the transfer and contact you if needed.
               </p>
             </div>
-            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong></p>
+            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong><br><a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a></p>
           </div>
         `,
       },
