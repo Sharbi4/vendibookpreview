@@ -245,6 +245,47 @@ serve(async (req) => {
       }).catch(err => logStep("Admin email failed", { error: err.message }))
     );
 
+    // Create Zendesk ticket for the dispute
+    emailPromises.push(
+      fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/create-zendesk-ticket`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+          },
+          body: JSON.stringify({
+            requester_name: disputeRaiser,
+            requester_email: raiserEmail || 'unknown@vendibook.com',
+            subject: `[DISPUTE] ${listingTitle} - Transaction ${transaction_id.slice(0, 8)}`,
+            description: `A dispute has been raised for a VendiBook transaction.\n\n` +
+              `TRANSACTION DETAILS:\n` +
+              `- Transaction ID: ${transaction_id}\n` +
+              `- Listing: ${listingTitle}\n` +
+              `- Amount: $${Number(transaction.amount).toLocaleString()}\n` +
+              `- Seller Payout: $${Number(transaction.seller_payout).toLocaleString()}\n\n` +
+              `PARTIES:\n` +
+              `- Buyer: ${buyerName} (${buyerEmail || 'No email'})\n` +
+              `- Seller: ${sellerName} (${sellerEmail || 'No email'})\n\n` +
+              `DISPUTE RAISED BY: ${disputeRaiser} (${role})\n\n` +
+              `REASON:\n${reason}`,
+            priority: 'urgent',
+            type: 'problem',
+            tags: ['vendibook', 'dispute', 'escrow', `${role}-dispute`],
+          }),
+        }
+      ).then(async (res) => {
+        if (res.ok) {
+          const result = await res.json();
+          logStep("Zendesk dispute ticket created", { ticketId: result.ticket_id });
+        } else {
+          const errorData = await res.json();
+          logStep("Zendesk ticket creation failed", { error: errorData });
+        }
+      }).catch(err => logStep("Zendesk integration error", { error: err.message }))
+    );
+
     // Wait for emails in background
     EdgeRuntime.waitUntil(Promise.all(emailPromises));
 
