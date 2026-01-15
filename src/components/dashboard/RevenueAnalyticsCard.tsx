@@ -5,6 +5,7 @@ import { StripeLogo } from '@/components/ui/StripeLogo';
 import { cn } from '@/lib/utils';
 import { RevenueAnalytics } from '@/hooks/useRevenueAnalytics';
 import { format } from 'date-fns';
+import { PayoutScheduleCard } from './PayoutScheduleCard';
 import {
   AreaChart,
   Area,
@@ -19,6 +20,8 @@ import {
 
 interface RevenueAnalyticsCardProps {
   analytics: RevenueAnalytics;
+  onOpenStripeDashboard?: () => void;
+  isOpeningDashboard?: boolean;
 }
 
 const formatCurrency = (value: number) => {
@@ -39,7 +42,7 @@ const formatCurrencyFull = (value: number) => {
   }).format(value / 100);
 };
 
-export const RevenueAnalyticsCard = ({ analytics }: RevenueAnalyticsCardProps) => {
+export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeningDashboard }: RevenueAnalyticsCardProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -285,6 +288,14 @@ export const RevenueAnalyticsCard = ({ analytics }: RevenueAnalyticsCardProps) =
           </CardContent>
         </Card>
       </div>
+
+      {/* Payout Schedule */}
+      <PayoutScheduleCard
+        pendingPayout={analytics.pendingPayout}
+        payoutHistory={analytics.payoutHistory}
+        onOpenStripeDashboard={onOpenStripeDashboard}
+        isOpeningDashboard={isOpeningDashboard}
+      />
 
       {/* Payout History */}
       <Card className="border-0 shadow-lg bg-gradient-to-br from-card to-card/80">

@@ -218,7 +218,11 @@ const HostDashboard = () => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : revenueAnalytics ? (
-            <RevenueAnalyticsCard analytics={revenueAnalytics} />
+            <RevenueAnalyticsCard 
+              analytics={revenueAnalytics} 
+              onOpenStripeDashboard={openStripeDashboard}
+              isOpeningDashboard={isOpeningDashboard}
+            />
           ) : (
             <div className="relative overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl p-12 text-center border border-border/50">
               <div className="absolute inset-0 bg-grid-pattern opacity-5" />
