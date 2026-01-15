@@ -162,9 +162,15 @@ const HelpCenter = () => {
 
       <main className="flex-1">
         {/* Hero Section with Search */}
-        <section className="bg-gradient-to-br from-primary/10 via-background to-secondary/20 py-16 md:py-24">
-          <div className="container text-center">
-            <Badge variant="secondary" className="mb-4">
+        <section className="relative py-16 md:py-24 overflow-hidden">
+          {/* Orange-Yellow Gradient Element */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-vendibook-orange via-amber-400 to-yellow-300 opacity-20 blur-3xl" />
+            <div className="absolute -bottom-40 -left-40 w-[400px] h-[400px] rounded-full bg-gradient-to-tr from-yellow-300 via-amber-400 to-vendibook-orange opacity-15 blur-3xl" />
+          </div>
+
+          <div className="container relative z-10 text-center">
+            <Badge variant="secondary" className="mb-4 bg-gradient-to-r from-vendibook-orange/20 to-amber-400/20 border-vendibook-orange/30">
               <HelpCircle className="h-3 w-3 mr-1" />
               Help Center
             </Badge>
@@ -177,6 +183,17 @@ const HelpCenter = () => {
             
             {/* Search Bar */}
             <HelpCenterSearch />
+
+            {/* Quick Link to FAQ */}
+            <div className="mt-6">
+              <Link 
+                to="/faq" 
+                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                <ArrowRight className="h-4 w-4" />
+                View Frequently Asked Questions
+              </Link>
+            </div>
           </div>
         </section>
 
