@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Calendar, Loader2, MapPin, Truck, Building, Info } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, Loader2, MapPin, Truck, Building, Info, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -9,15 +9,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { format, differenceInDays, eachDayOfInterval } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
 import { RequiredDocumentsBanner } from '@/components/documents/RequiredDocumentsBanner';
+import { BookingInfoModal, type BookingUserInfo } from '@/components/booking';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { calculateRentalFees, RENTAL_RENTER_FEE_PERCENT } from '@/lib/commissions';
@@ -92,7 +92,8 @@ const BookingForm = ({
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [userInfo, setUserInfo] = useState<BookingUserInfo | null>(null);
   
   // Fulfillment state
   const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>(defaultFulfillment);
@@ -146,8 +147,8 @@ const BookingForm = ({
     if (fulfillmentSelected === 'delivery' && !deliveryAddress.trim()) {
       return 'Please enter a delivery address';
     }
-    if (!agreedToTerms) {
-      return 'Please agree to the Terms of Service to continue';
+    if (!userInfo) {
+      return 'Please complete your booking information';
     }
     return null;
   };
@@ -556,27 +557,56 @@ const BookingForm = ({
         </div>
       )}
 
-      {/* Terms of Service Agreement */}
-      <div className="flex items-start space-x-3 mb-6">
-        <Checkbox
-          id="terms"
-          checked={agreedToTerms}
-          onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
-          disabled={!isListingAvailable}
-        />
-        <Label 
-          htmlFor="terms" 
-          className="text-sm text-muted-foreground leading-relaxed cursor-pointer"
-        >
-          I agree to the{' '}
-          <Link 
-            to="/terms" 
-            target="_blank" 
-            className="text-primary hover:underline font-medium"
+      {/* Booking Info Section */}
+      <div className="mb-6">
+        {userInfo ? (
+          <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <UserCheck className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium text-green-700 dark:text-green-400">Information Complete</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowInfoModal(true)}
+                className="text-xs h-auto py-1"
+              >
+                Edit
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {userInfo.firstName} {userInfo.lastName}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {userInfo.address1}{userInfo.address2 ? `, ${userInfo.address2}` : ''}, {userInfo.city}, {userInfo.state} {userInfo.zipCode}
+            </p>
+            <div className="flex items-center gap-2 mt-2">
+              <Badge variant="outline" className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-300 dark:border-green-700">
+                Insurance Acknowledged
+              </Badge>
+              <Badge variant="outline" className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-300 dark:border-green-700">
+                Terms Accepted
+              </Badge>
+            </div>
+          </div>
+        ) : (
+          <Button
+            variant="outline"
+            className="w-full gap-2"
+            onClick={() => {
+              if (!user) {
+                navigate('/auth');
+                return;
+              }
+              setShowInfoModal(true);
+            }}
+            disabled={!isListingAvailable || rentalDays <= 0}
           >
-            Terms of Service
-          </Link>
-        </Label>
+            <UserCheck className="h-4 w-4" />
+            Complete Booking Information
+          </Button>
+        )}
       </div>
 
       {/* Submit Button */}
@@ -584,7 +614,7 @@ const BookingForm = ({
         className="w-full bg-primary hover:bg-primary/90" 
         size="lg"
         onClick={handleSubmit}
-        disabled={isSubmitting || rentalDays <= 0 || !isListingAvailable || !agreedToTerms}
+        disabled={isSubmitting || rentalDays <= 0 || !isListingAvailable || !userInfo}
       >
         {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
         {!user ? 'Sign in to Book' : isListingAvailable ? `Request Booking · $${fees.customerTotal.toFixed(2)}` : 'Unavailable'}
@@ -593,6 +623,17 @@ const BookingForm = ({
       <p className="text-xs text-muted-foreground text-center mt-4">
         You won't be charged yet
       </p>
+
+      {/* Booking Info Modal */}
+      <BookingInfoModal
+        open={showInfoModal}
+        onOpenChange={setShowInfoModal}
+        onComplete={(info) => {
+          setUserInfo(info);
+          setShowInfoModal(false);
+        }}
+        initialData={userInfo || undefined}
+      />
     </div>
   );
 };
