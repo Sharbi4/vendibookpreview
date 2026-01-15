@@ -1,9 +1,10 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import ListingCard from '@/components/listing/ListingCard';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Navigation } from 'lucide-react';
+import { MapPin, Navigation, Map, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Pagination,
@@ -14,6 +15,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import SearchResultsMap from '@/components/search/SearchResultsMap';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 
 const ITEMS_PER_PAGE = 8;
 
@@ -28,6 +31,10 @@ const FeaturedListings = () => {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  
+  const navigate = useNavigate();
+  const { token: mapToken, isLoading: isMapLoading, error: mapError } = useMapboxToken();
 
   // Request user location on mount
   useEffect(() => {
@@ -195,6 +202,10 @@ const FeaturedListings = () => {
     }
   };
 
+  const handleListingClick = (listing: typeof sortedListings[0]) => {
+    navigate(`/listing/${listing.id}`);
+  };
+
   // Generate page numbers to display
   const getPageNumbers = () => {
     const pages: (number | 'ellipsis')[] = [];
@@ -284,6 +295,26 @@ const FeaturedListings = () => {
           </div>
           
           <div className="flex items-center gap-3">
+            {/* View Mode Toggle */}
+            <div className="flex items-center border border-border rounded-lg overflow-hidden">
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="rounded-none"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'map' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('map')}
+                className="rounded-none"
+              >
+                <Map className="h-4 w-4" />
+              </Button>
+            </div>
+
             {/* Location button if not enabled */}
             {!userLocation && !locationError && (
               <Button
@@ -314,67 +345,82 @@ const FeaturedListings = () => {
           </div>
         </div>
 
-        {/* Listings Grid */}
-        {paginatedListings.length > 0 ? (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {paginatedListings.map((listing) => (
-                <ListingCard 
-                  key={listing.id} 
-                  listing={listing} 
-                  hostVerified={hostVerificationMap[listing.host_id] ?? false}
-                  distanceMiles={listing.distance_miles}
-                />
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-10">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
-                        className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                      />
-                    </PaginationItem>
-                    
-                    {getPageNumbers().map((page, index) => (
-                      <PaginationItem key={index}>
-                        {page === 'ellipsis' ? (
-                          <PaginationEllipsis />
-                        ) : (
-                          <PaginationLink
-                            onClick={() => handlePageChange(page)}
-                            isActive={currentPage === page}
-                            className="cursor-pointer"
-                          >
-                            {page}
-                          </PaginationLink>
-                        )}
-                      </PaginationItem>
-                    ))}
-                    
-                    <PaginationItem>
-                      <PaginationNext 
-                        onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
-                        className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="text-center py-16 bg-secondary/30 rounded-2xl">
-            <div className="text-4xl mb-4">🔍</div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">No listings found</h3>
-            <p className="text-muted-foreground mb-6">
-              Try adjusting your search or filters to find what you're looking for.
-            </p>
+        {/* Map View */}
+        {viewMode === 'map' ? (
+          <div className="h-[500px] rounded-xl overflow-hidden border border-border">
+            <SearchResultsMap
+              listings={sortedListings}
+              mapToken={mapToken}
+              isLoading={isMapLoading}
+              error={mapError}
+              userLocation={userLocation ? [userLocation.longitude, userLocation.latitude] : null}
+              searchRadius={userLocation ? 100 : undefined}
+              onListingClick={handleListingClick}
+            />
           </div>
+        ) : (
+          /* Listings Grid */
+          paginatedListings.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {paginatedListings.map((listing) => (
+                  <ListingCard 
+                    key={listing.id} 
+                    listing={listing} 
+                    hostVerified={hostVerificationMap[listing.host_id] ?? false}
+                    distanceMiles={listing.distance_miles}
+                  />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-10">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                          className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                      
+                      {getPageNumbers().map((page, index) => (
+                        <PaginationItem key={index}>
+                          {page === 'ellipsis' ? (
+                            <PaginationEllipsis />
+                          ) : (
+                            <PaginationLink
+                              onClick={() => handlePageChange(page)}
+                              isActive={currentPage === page}
+                              className="cursor-pointer"
+                            >
+                              {page}
+                            </PaginationLink>
+                          )}
+                        </PaginationItem>
+                      ))}
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                          className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-16 bg-secondary/30 rounded-2xl">
+              <div className="text-4xl mb-4">🔍</div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">No listings found</h3>
+              <p className="text-muted-foreground mb-6">
+                Try adjusting your search or filters to find what you're looking for.
+              </p>
+            </div>
+          )
         )}
       </div>
     </section>
