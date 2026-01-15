@@ -121,6 +121,23 @@ serve(async (req) => {
     const buyerName = paymentIntent.metadata?.buyer_name || null;
     const buyerEmail = paymentIntent.metadata?.buyer_email || null;
     const buyerPhone = paymentIntent.metadata?.buyer_phone || null;
+    
+    // Vendibook freight metadata
+    const vendibookFreightEnabled = paymentIntent.metadata?.vendibook_freight_enabled === 'true';
+    const freightPayer = paymentIntent.metadata?.freight_payer || 'buyer';
+    const freightCost = paymentIntent.metadata?.freight_cost 
+      ? Number(paymentIntent.metadata.freight_cost) 
+      : 0;
+    const sellerFreightDeduction = paymentIntent.metadata?.seller_freight_deduction 
+      ? Number(paymentIntent.metadata.seller_freight_deduction) 
+      : 0;
+    
+    logStep("Freight metadata", {
+      vendibookFreightEnabled,
+      freightPayer,
+      freightCost,
+      sellerFreightDeduction,
+    });
 
     // Create the sale transaction record
     const { data: transaction, error: txError } = await supabaseClient
@@ -142,6 +159,8 @@ serve(async (req) => {
         buyer_name: buyerName,
         buyer_email: buyerEmail,
         buyer_phone: buyerPhone,
+        // Vendibook freight fields
+        freight_cost: vendibookFreightEnabled ? freightCost : 0,
       })
       .select()
       .single();
