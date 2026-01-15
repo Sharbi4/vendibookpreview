@@ -1034,11 +1034,44 @@ const AITools = () => {
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
+                        {/* Popular Equipment Presets */}
+                        <div className="mb-4">
+                          <Label className="mb-2 block">Quick Select Popular Equipment</Label>
+                          <div className="flex flex-wrap gap-2">
+                            {[
+                              { name: 'Commercial Deep Fryer', icon: '🍟' },
+                              { name: 'Flat Top Griddle', icon: '🥓' },
+                              { name: 'Walk-in Cooler', icon: '❄️' },
+                              { name: 'Ice Machine', icon: '🧊' },
+                              { name: 'Commercial Oven', icon: '🔥' },
+                              { name: 'Exhaust Hood System', icon: '💨' },
+                              { name: 'Refrigerator/Freezer', icon: '🧊' },
+                              { name: 'Commercial Dishwasher', icon: '🍽️' },
+                              { name: 'Steam Table', icon: '♨️' },
+                              { name: 'Propane System', icon: '⛽' },
+                              { name: 'Generator', icon: '⚡' },
+                              { name: 'POS System', icon: '💳' },
+                            ].map((item) => (
+                              <Button
+                                key={item.name}
+                                type="button"
+                                variant={equipmentForm.equipment === item.name ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setEquipmentForm({ ...equipmentForm, equipment: item.name })}
+                                className="text-xs"
+                              >
+                                <span className="mr-1">{item.icon}</span>
+                                {item.name}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                           <div className="space-y-2 lg:col-span-2">
                             <Label>Equipment Name</Label>
                             <Input
-                              placeholder="e.g., Commercial Deep Fryer, Flat Top Griddle, Walk-in Cooler..."
+                              placeholder="Or type custom equipment name..."
                               value={equipmentForm.equipment}
                               onChange={(e) => setEquipmentForm({ ...equipmentForm, equipment: e.target.value })}
                             />
