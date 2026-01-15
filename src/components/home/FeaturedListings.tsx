@@ -25,7 +25,7 @@ interface FeaturedListingsProps {
 const ITEMS_PER_PAGE = 8;
 
 const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
-  const [sortBy, setSortBy] = useState<'newest' | 'price-low'>('newest');
+  const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high'>('newest');
   const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch real listings from the database
@@ -102,6 +102,12 @@ const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
         const priceA = a.mode === 'rent' ? (a.price_daily || 0) : (a.price_sale || 0);
         const priceB = b.mode === 'rent' ? (b.price_daily || 0) : (b.price_sale || 0);
         return priceA - priceB;
+      });
+    } else if (sortBy === 'price-high') {
+      result.sort((a, b) => {
+        const priceA = a.mode === 'rent' ? (a.price_daily || 0) : (a.price_sale || 0);
+        const priceB = b.mode === 'rent' ? (b.price_daily || 0) : (b.price_sale || 0);
+        return priceB - priceA;
       });
     }
 
@@ -206,11 +212,12 @@ const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
             <span className="text-sm text-muted-foreground">Sort by:</span>
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as 'newest' | 'price-low')}
+              onChange={(e) => setSortBy(e.target.value as 'newest' | 'price-low' | 'price-high')}
               className="text-sm border border-border rounded-lg px-3 py-2 bg-background"
             >
               <option value="newest">Newest</option>
               <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
             </select>
           </div>
         </div>

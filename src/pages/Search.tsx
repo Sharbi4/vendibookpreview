@@ -76,6 +76,7 @@ const Search = () => {
   const initialLat = searchParams.get('lat');
   const initialLng = searchParams.get('lng');
   const initialRadius = searchParams.get('radius');
+  const initialSort = searchParams.get('sort') as 'newest' | 'price-low' | 'price-high' | 'distance' || 'newest';
   
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [mode, setMode] = useState<ListingMode | 'all'>(initialMode);
@@ -93,6 +94,7 @@ const Search = () => {
   );
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance'>(initialSort);
   
   // Quick booking modal state
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
@@ -295,8 +297,8 @@ const Search = () => {
       });
     }
 
-    // Sort by distance if location is set
-    if (locationCoords) {
+    // Apply sorting
+    if (sortBy === 'distance' && locationCoords) {
       results = results.sort((a, b) => {
         const distA = getListingDistance(a);
         const distB = getListingDistance(b);
@@ -305,10 +307,26 @@ const Search = () => {
         if (distB === null) return -1;
         return distA - distB;
       });
+    } else if (sortBy === 'newest') {
+      results = results.sort((a, b) => 
+        new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime()
+      );
+    } else if (sortBy === 'price-low') {
+      results = results.sort((a, b) => {
+        const priceA = a.mode === 'rent' ? (a.price_daily || 0) : (a.price_sale || 0);
+        const priceB = b.mode === 'rent' ? (b.price_daily || 0) : (b.price_sale || 0);
+        return priceA - priceB;
+      });
+    } else if (sortBy === 'price-high') {
+      results = results.sort((a, b) => {
+        const priceA = a.mode === 'rent' ? (a.price_daily || 0) : (a.price_sale || 0);
+        const priceB = b.mode === 'rent' ? (b.price_daily || 0) : (b.price_sale || 0);
+        return priceB - priceA;
+      });
     }
 
     return results;
-  }, [listings, searchQuery, mode, category, locationCoords, searchRadius, priceRange, dateRange, selectedAmenities, fuse, unavailableDates]);
+  }, [listings, searchQuery, mode, category, locationCoords, searchRadius, priceRange, dateRange, selectedAmenities, fuse, unavailableDates, sortBy]);
 
   // Update URL params
   const handleSearch = (value: string) => {
@@ -396,7 +414,20 @@ const Search = () => {
     setPriceRange([0, Infinity]);
     setDateRange(undefined);
     setSelectedAmenities([]);
+    setSortBy('newest');
     setSearchParams({});
+  };
+
+  const handleSortChange = (value: string) => {
+    const newSort = value as 'newest' | 'price-low' | 'price-high' | 'distance';
+    setSortBy(newSort);
+    const params = new URLSearchParams(searchParams);
+    if (newSort !== 'newest') {
+      params.set('sort', newSort);
+    } else {
+      params.delete('sort');
+    }
+    setSearchParams(params);
   };
 
   const toggleAmenity = (amenityId: string) => {
@@ -604,8 +635,8 @@ const Search = () => {
 
             {/* Results Grid */}
             <div className="flex-1">
-              {/* Results Count */}
-              <div className="mb-6 flex items-center justify-between">
+              {/* Results Count & Sort */}
+              <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <p className="text-muted-foreground">
                   {isLoadingListings ? (
                     'Loading...'
@@ -622,6 +653,19 @@ const Search = () => {
                     </>
                   )}
                 </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Sort by:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => handleSortChange(e.target.value)}
+                    className="text-sm border border-border rounded-lg px-3 py-2 bg-background"
+                  >
+                    <option value="newest">Newest</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    {locationCoords && <option value="distance">Distance</option>}
+                  </select>
+                </div>
               </div>
 
               {/* Active Filters Badges */}
