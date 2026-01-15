@@ -1,7 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import ListingCard from '@/components/listing/ListingCard';
-import { ListingCategory, ListingMode } from '@/types/listing';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -14,17 +13,9 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 
-interface FeaturedListingsProps {
-  filters?: {
-    category: ListingCategory | null;
-    mode: ListingMode | null;
-    query: string;
-  };
-}
-
 const ITEMS_PER_PAGE = 8;
 
-const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
+const FeaturedListings = () => {
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high'>('newest');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -70,29 +61,8 @@ const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
     return map;
   }, [hostProfiles]);
 
-  const filteredListings = useMemo(() => {
+  const sortedListings = useMemo(() => {
     let result = [...listings];
-
-    // Filter by mode
-    if (filters?.mode) {
-      result = result.filter(l => l.mode === filters.mode);
-    }
-
-    // Filter by category
-    if (filters?.category) {
-      result = result.filter(l => l.category === filters.category);
-    }
-
-    // Filter by query (location text or address)
-    if (filters?.query) {
-      const q = filters.query.toLowerCase();
-      result = result.filter(
-        l => (l.pickup_location_text?.toLowerCase().includes(q)) || 
-             (l.address?.toLowerCase().includes(q)) ||
-             (l.title?.toLowerCase().includes(q)) ||
-             (l.description?.toLowerCase().includes(q))
-      );
-    }
 
     // Sort
     if (sortBy === 'newest') {
@@ -112,24 +82,17 @@ const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
     }
 
     return result;
-  }, [listings, filters, sortBy]);
+  }, [listings, sortBy]);
 
-  // Reset to page 1 when filters change
-  useMemo(() => {
+  // Reset to page 1 when sort changes
+  useEffect(() => {
     setCurrentPage(1);
-  }, [filters, sortBy]);
+  }, [sortBy]);
 
   // Pagination calculations
-  const totalPages = Math.ceil(filteredListings.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(sortedListings.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedListings = filteredListings.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-
-  const getTitle = () => {
-    if (filters?.category || filters?.mode || filters?.query) {
-      return 'Search Results';
-    }
-    return 'Featured Listings';
-  };
+  const paginatedListings = sortedListings.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -200,9 +163,9 @@ const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">{getTitle()}</h2>
+            <h2 className="text-2xl font-bold text-foreground">Featured Listings</h2>
             <p className="text-muted-foreground mt-1">
-              {filteredListings.length} listing{filteredListings.length !== 1 ? 's' : ''} available
+              {sortedListings.length} listing{sortedListings.length !== 1 ? 's' : ''} available
               {totalPages > 1 && ` • Page ${currentPage} of ${totalPages}`}
             </p>
           </div>
