@@ -11,13 +11,9 @@ const Hero = () => {
             <img 
               src={vendibookLogo} 
               alt="Vendibook" 
-              className="h-64 md:h-80 w-auto mix-blend-multiply mb-4 transition-transform duration-300 hover:scale-105"
+              className="h-64 md:h-80 w-auto mix-blend-multiply transition-transform duration-300 hover:scale-105"
             />
           </div>
-          
-          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-            Rent or buy food trucks, food trailers, ghost kitchens, vendor lots and other mobile business assets.
-          </p>
         </div>
       </div>
     </section>
