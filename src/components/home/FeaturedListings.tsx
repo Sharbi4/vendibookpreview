@@ -47,6 +47,7 @@ const FeaturedListings = () => {
             longitude: position.coords.longitude
           });
           setIsRequestingLocation(false);
+          setViewMode('map'); // Default to map view when location is available
         },
         (error) => {
           console.log('Geolocation error:', error.message);
