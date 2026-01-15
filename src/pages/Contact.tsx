@@ -231,7 +231,7 @@ const Contact = () => {
                             </div>
                             <div className="flex-1">
                               <h3 className="font-semibold text-foreground mb-0.5">Call Us</h3>
-                              <p className="text-primary font-medium">1877-8VENDI2</p>
+                              <p className="text-primary font-medium">1-877-8-VENDI-2</p>
                             </div>
                             <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                           </a>
