@@ -18,6 +18,7 @@ import BookingForm from '@/components/listing-detail/BookingForm';
 import InquiryForm from '@/components/listing-detail/InquiryForm';
 import HostCard from '@/components/listing-detail/HostCard';
 import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
+import DeliveryRadiusMap from '@/components/listing-detail/DeliveryRadiusMap';
 import ReviewsSection from '@/components/reviews/ReviewsSection';
 import { RequiredDocumentsSection } from '@/components/documents';
 import { useListing } from '@/hooks/useListing';
@@ -280,6 +281,18 @@ const ListingDetail = () => {
                   )}
                 </div>
               </div>
+
+              {/* Delivery Radius Map */}
+              {(listing.fulfillment_type === 'delivery' || listing.fulfillment_type === 'both') && 
+               listing.latitude && listing.longitude && listing.delivery_radius_miles && (
+                <DeliveryRadiusMap
+                  latitude={listing.latitude}
+                  longitude={listing.longitude}
+                  radiusMiles={listing.delivery_radius_miles}
+                  address={listing.address || listing.pickup_location_text}
+                  deliveryFee={listing.delivery_fee}
+                />
+              )}
 
               {/* Required Documents Section (for rentals) */}
               {isRental && (
