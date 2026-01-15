@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Loader2, MapPin, Truck, Building, Info, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -94,11 +94,83 @@ const BookingForm = ({
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [userInfo, setUserInfo] = useState<BookingUserInfo | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   
   // Fulfillment state
   const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>(defaultFulfillment);
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryInstructionsInput, setDeliveryInstructionsInput] = useState('');
+
+  // Fetch saved profile data on mount
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (!user) return;
+      
+      setIsLoadingProfile(true);
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('full_name, phone_number, address1, address2, city, state, zip_code')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        // Only pre-populate if we have saved data
+        if (profile && (profile.phone_number || profile.address1)) {
+          const nameParts = (profile.full_name || '').split(' ');
+          const firstName = nameParts[0] || '';
+          const lastName = nameParts.slice(1).join(' ') || '';
+
+          setUserInfo({
+            firstName,
+            lastName,
+            phoneNumber: profile.phone_number || '',
+            address1: profile.address1 || '',
+            address2: profile.address2 || '',
+            city: profile.city || '',
+            state: profile.state || '',
+            zipCode: profile.zip_code || '',
+            agreedToTerms: false, // Always require re-agreement
+            acknowledgedInsurance: false, // Always require re-acknowledgment
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching profile data:', error);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [user]);
+
+  // Save profile data when user completes booking info
+  const handleBookingInfoComplete = async (info: BookingUserInfo) => {
+    setUserInfo(info);
+    setShowInfoModal(false);
+
+    // Save to profile in background
+    if (user) {
+      try {
+        const fullName = `${info.firstName} ${info.lastName}`.trim();
+        await supabase
+          .from('profiles')
+          .update({
+            full_name: fullName,
+            phone_number: info.phoneNumber,
+            address1: info.address1,
+            address2: info.address2 || null,
+            city: info.city,
+            state: info.state,
+            zip_code: info.zipCode,
+          })
+          .eq('id', user.id);
+      } catch (error) {
+        console.error('Error saving profile data:', error);
+      }
+    }
+  };
 
   const minDate = availableFrom ? new Date(availableFrom) : new Date();
   const maxDate = availableTo ? new Date(availableTo) : undefined;
@@ -628,10 +700,7 @@ const BookingForm = ({
       <BookingInfoModal
         open={showInfoModal}
         onOpenChange={setShowInfoModal}
-        onComplete={(info) => {
-          setUserInfo(info);
-          setShowInfoModal(false);
-        }}
+        onComplete={handleBookingInfoComplete}
         initialData={userInfo || undefined}
       />
     </div>
