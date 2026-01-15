@@ -90,7 +90,7 @@ const NewsletterSection = ({ variant = 'default', source = 'section' }: Newslett
                 disabled={isSubmitting}
               />
             </div>
-            <Button type="submit" disabled={isSubmitting} className="h-11">
+            <Button type="submit" variant="gradient" disabled={isSubmitting} className="h-11">
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (

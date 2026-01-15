@@ -60,7 +60,7 @@ const SearchBar = ({ onSearch, className, compact = false }: SearchBarProps) => 
               className="border-0 shadow-none [&_input]:border-0 [&_input]:shadow-none [&_input]:bg-transparent"
             />
           </div>
-          <Button type="submit" className="rounded-full m-1.5 px-5">
+          <Button type="submit" variant="gradient" className="rounded-full m-1.5 px-5">
             Search
           </Button>
         </div>
@@ -125,7 +125,7 @@ const SearchBar = ({ onSearch, className, compact = false }: SearchBarProps) => 
           </Popover>
 
           {/* Search Button */}
-          <Button type="submit" size="lg" className="rounded-xl mx-2 px-8">
+          <Button type="submit" variant="gradient" size="lg" className="rounded-xl mx-2 px-8">
             <Search className="h-5 w-5 mr-2" />
             Search
           </Button>
