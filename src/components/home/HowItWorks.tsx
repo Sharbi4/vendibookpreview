@@ -1,18 +1,24 @@
-import { Search, Calendar, Truck } from 'lucide-react';
+import { Search, Calendar, Truck, LucideIcon } from 'lucide-react';
 
-const steps = [
+interface Step {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}
+
+const steps: Step[] = [
   {
-    icon: <Search className="h-8 w-8" />,
+    icon: Search,
     title: 'Search',
     description: 'Browse food trucks, trailers, ghost kitchens, and vendor lots in your area.',
   },
   {
-    icon: <Calendar className="h-8 w-8" />,
+    icon: Calendar,
     title: 'Book',
     description: 'Select your dates, submit a booking request, and wait for host approval.',
   },
   {
-    icon: <Truck className="h-8 w-8" />,
+    icon: Truck,
     title: 'Launch',
     description: 'Pick up your rental or access your space and start your mobile food business.',
   },
@@ -32,16 +38,23 @@ const HowItWorks = () => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          {steps.map((step, index) => (
-            <div key={index} className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
-                {step.icon}
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+            return (
+              <div key={index} className="text-center group">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full 
+                                icon-gradient-container icon-shimmer mb-4 transition-transform duration-300
+                                group-hover:scale-110">
+                  <div className="icon-gradient">
+                    <Icon className="h-8 w-8 text-primary" strokeWidth={1.5} />
+                  </div>
+                </div>
+                <div className="text-sm font-medium text-primary mb-2">Step {index + 1}</div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{step.title}</h3>
+                <p className="text-muted-foreground text-sm">{step.description}</p>
               </div>
-              <div className="text-sm font-medium text-primary mb-2">Step {index + 1}</div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">{step.title}</h3>
-              <p className="text-muted-foreground text-sm">{step.description}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
