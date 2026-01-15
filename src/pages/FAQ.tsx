@@ -403,16 +403,14 @@ const FAQ = () => {
       <Header />
 
       <main className="flex-1">
-        {/* Hero Section with Gradient */}
+        {/* Hero Section - GRADIENT */}
         <section className="relative py-16 md:py-24 overflow-hidden">
-          {/* Vibrant gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-300/25 via-fuchsia-200/30 to-amber-300/20" />
-          
-          {/* Decorative orbs */}
+          {/* Orange-Yellow Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/30 via-amber-200/25 to-orange-300/20" />
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-20 right-20 w-96 h-96 bg-purple-400/30 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-20 left-20 w-80 h-80 bg-fuchsia-400/25 rounded-full blur-3xl" />
-            <div className="absolute top-1/2 left-1/3 w-[500px] h-[500px] bg-amber-300/20 rounded-full blur-3xl" />
+            <div className="absolute top-20 right-20 w-96 h-96 bg-yellow-400/30 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-20 left-20 w-80 h-80 bg-orange-400/25 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-300/20 rounded-full blur-3xl" />
           </div>
 
           <div className="container relative z-10 text-center">
@@ -429,8 +427,8 @@ const FAQ = () => {
           </div>
         </section>
 
-        {/* Main Content with Sidebar */}
-        <section className="py-12 md:py-16">
+        {/* Main Content with Sidebar - NATURAL */}
+        <section className="py-12 md:py-16 bg-background">
           <div className="container">
             <div className="flex gap-8">
               {/* Collapsible Sticky Sidebar - Hidden on mobile */}
@@ -732,9 +730,15 @@ const FAQ = () => {
           </div>
         </section>
 
-        {/* Still Need Help CTA */}
-        <section className="py-12 md:py-16 bg-gradient-to-br from-vendibook-orange/10 via-amber-400/5 to-yellow-300/10">
-          <div className="container max-w-3xl text-center">
+        {/* Still Need Help CTA - GRADIENT */}
+        <section className="relative py-12 md:py-16 overflow-hidden">
+          {/* Orange-Yellow Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-200/25 via-yellow-100/20 to-amber-200/15" />
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-10 left-20 w-72 h-72 bg-orange-300/20 rounded-full blur-3xl" />
+            <div className="absolute bottom-10 right-20 w-80 h-80 bg-yellow-300/25 rounded-full blur-3xl animate-pulse" />
+          </div>
+          <div className="container max-w-3xl text-center relative z-10">
             <Card className="border-2 border-vendibook-orange/20 bg-gradient-to-br from-background to-vendibook-orange/5">
               <CardContent className="pt-8 pb-8">
                 <div className="p-3 rounded-xl bg-gradient-to-br from-vendibook-orange/20 to-amber-400/20 w-fit mx-auto mb-4">
