@@ -120,8 +120,8 @@ const NewsletterSection = ({ variant = 'default', source = 'section' }: Newslett
 
   return (
     <section className="py-16 md:py-20 relative overflow-hidden">
-      {/* Orange/Yellow gradient background consistent with site theme */}
-      <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500" />
+      {/* Orange gradient background - #FF5124 based with subtle hints */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#FF5124] via-[#FF6B3D] to-[#FF7D4D]" />
       
       {/* Decorative curved lines */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -132,9 +132,9 @@ const NewsletterSection = ({ variant = 'default', source = 'section' }: Newslett
           <circle cx="400" cy="200" r="200" stroke="white" strokeWidth="1" fill="none" />
           <circle cx="400" cy="200" r="150" stroke="white" strokeWidth="0.5" fill="none" />
         </svg>
-        {/* Additional glow effects - orange/yellow themed */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-300/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-orange-400/25 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3" />
+        {/* Additional glow effects - orange themed */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#FF5124]/25 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3" />
       </div>
       
       <div className="container relative z-10">

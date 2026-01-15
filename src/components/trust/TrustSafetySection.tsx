@@ -55,12 +55,12 @@ const TrustSafetySection = () => {
       className="py-16 md:py-20 relative overflow-hidden" 
       aria-labelledby="trust-safety-heading"
     >
-      {/* GRADIENT Section - Orange/Yellow */}
-      <div className="absolute inset-0 bg-gradient-to-br from-orange-300/30 via-yellow-200/25 to-amber-300/20" />
+      {/* GRADIENT Section - #FF5124 Orange based */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/20 via-[#FF5124]/12 to-amber-200/10" />
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 right-20 w-80 h-80 bg-orange-400/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 left-10 w-64 h-64 bg-yellow-400/25 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-1/2 left-1/3 w-96 h-96 bg-amber-300/20 rounded-full blur-3xl" />
+        <div className="absolute top-20 right-20 w-80 h-80 bg-[#FF5124]/18 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 left-10 w-64 h-64 bg-[#FF5124]/15 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/2 left-1/3 w-96 h-96 bg-amber-300/12 rounded-full blur-3xl" />
       </div>
       <div className="container max-w-7xl mx-auto px-4 relative z-10">
         {/* Header */}
