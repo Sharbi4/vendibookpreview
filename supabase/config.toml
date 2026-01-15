@@ -86,3 +86,6 @@ verify_jwt = false
 
 [functions.create-zendesk-ticket]
 verify_jwt = false
+
+[functions.get-checkout-session]
+verify_jwt = false

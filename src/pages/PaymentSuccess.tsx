@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { CheckCircle2, Calendar, ArrowRight, Loader2, Home, ShieldCheck, Clock, Sparkles, PartyPopper, Mail, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle2, Calendar, ArrowRight, Loader2, Home, ShieldCheck, Clock, Sparkles, PartyPopper, Mail, ChevronDown, ChevronUp, Receipt } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Separator } from '@/components/ui/separator';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +13,7 @@ import { useCreateSaleTransaction } from '@/hooks/useSaleTransactions';
 import { EmailReceiptPreview } from '@/components/checkout';
 import { useAuth } from '@/contexts/AuthContext';
 import { calculateRentalFees } from '@/lib/commissions';
+
 interface BookingDetails {
   id: string;
   start_date: string;
@@ -39,6 +41,23 @@ interface SaleTransactionDetails {
   } | null;
 }
 
+interface TaxBreakdown {
+  amount: number;
+  rate: string;
+  percentage: number;
+  jurisdiction: string;
+  tax_type: string;
+}
+
+interface CheckoutSessionInfo {
+  subtotal: number;
+  tax_total: number;
+  total: number;
+  taxes: TaxBreakdown[];
+  billing_state: string | null;
+  currency: string;
+}
+
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
@@ -47,10 +66,12 @@ const PaymentSuccess = () => {
   
   const [booking, setBooking] = useState<BookingDetails | null>(null);
   const [saleTransaction, setSaleTransaction] = useState<SaleTransactionDetails | null>(null);
+  const [sessionInfo, setSessionInfo] = useState<CheckoutSessionInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showContent, setShowContent] = useState(false);
   const [showEmailPreview, setShowEmailPreview] = useState(false);
+  const [showTaxBreakdown, setShowTaxBreakdown] = useState(false);
   const [userProfile, setUserProfile] = useState<{ full_name: string | null; email: string | null } | null>(null);
   const confettiFired = useRef(false);
   
@@ -154,6 +175,22 @@ const PaymentSuccess = () => {
             setUserProfile(profile);
           }
         }
+
+        // Fetch checkout session details for tax breakdown
+        if (sessionId) {
+          try {
+            const { data: sessionData, error: sessionError } = await supabase.functions.invoke('get-checkout-session', {
+              body: { session_id: sessionId }
+            });
+            
+            if (!sessionError && sessionData) {
+              setSessionInfo(sessionData as CheckoutSessionInfo);
+            }
+          } catch (taxErr) {
+            console.error('Error fetching tax info:', taxErr);
+            // Non-critical error, continue without tax breakdown
+          }
+        }
       } catch (err) {
         console.error('Error processing payment:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -247,6 +284,57 @@ const PaymentSuccess = () => {
                         </div>
                       </div>
                     </div>
+                  )}
+
+                  {/* Tax Breakdown */}
+                  {sessionInfo && sessionInfo.tax_total > 0 && (
+                    <Collapsible open={showTaxBreakdown} onOpenChange={setShowTaxBreakdown} className="mb-6">
+                      <div className="bg-muted/30 rounded-xl p-4 text-left border border-border">
+                        <CollapsibleTrigger asChild>
+                          <button className="w-full flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Receipt className="h-4 w-4 text-primary" />
+                              <span className="font-semibold text-sm text-foreground">Payment Summary</span>
+                            </div>
+                            {showTaxBreakdown ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                          </button>
+                        </CollapsibleTrigger>
+                        
+                        <div className="mt-3 space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Subtotal</span>
+                            <span className="text-foreground">${sessionInfo.subtotal.toFixed(2)}</span>
+                          </div>
+                          
+                          <CollapsibleContent>
+                            {sessionInfo.taxes.length > 0 && (
+                              <div className="space-y-1.5 py-2">
+                                {sessionInfo.taxes.map((tax, index) => (
+                                  <div key={index} className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">
+                                      {tax.jurisdiction} {tax.rate} ({tax.percentage.toFixed(2)}%)
+                                    </span>
+                                    <span className="text-foreground">${tax.amount.toFixed(2)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </CollapsibleContent>
+                          
+                          <div className="flex justify-between text-amber-600">
+                            <span>Tax{sessionInfo.billing_state ? ` (${sessionInfo.billing_state})` : ''}</span>
+                            <span>${sessionInfo.tax_total.toFixed(2)}</span>
+                          </div>
+                          
+                          <Separator className="my-2" />
+                          
+                          <div className="flex justify-between font-semibold">
+                            <span className="text-foreground">Total Paid</span>
+                            <span className="text-emerald-600">${sessionInfo.total.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Collapsible>
                   )}
 
                   {/* Escrow Process Steps */}
@@ -380,6 +468,57 @@ const PaymentSuccess = () => {
                         </div>
                       </div>
                     </div>
+                  )}
+
+                  {/* Tax Breakdown for Rentals */}
+                  {sessionInfo && sessionInfo.tax_total > 0 && (
+                    <Collapsible open={showTaxBreakdown} onOpenChange={setShowTaxBreakdown} className="mb-6">
+                      <div className="bg-muted/30 rounded-xl p-4 text-left border border-border">
+                        <CollapsibleTrigger asChild>
+                          <button className="w-full flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Receipt className="h-4 w-4 text-primary" />
+                              <span className="font-semibold text-sm text-foreground">Payment Summary</span>
+                            </div>
+                            {showTaxBreakdown ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                          </button>
+                        </CollapsibleTrigger>
+                        
+                        <div className="mt-3 space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Subtotal</span>
+                            <span className="text-foreground">${sessionInfo.subtotal.toFixed(2)}</span>
+                          </div>
+                          
+                          <CollapsibleContent>
+                            {sessionInfo.taxes.length > 0 && (
+                              <div className="space-y-1.5 py-2">
+                                {sessionInfo.taxes.map((tax, index) => (
+                                  <div key={index} className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">
+                                      {tax.jurisdiction} {tax.rate} ({tax.percentage.toFixed(2)}%)
+                                    </span>
+                                    <span className="text-foreground">${tax.amount.toFixed(2)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </CollapsibleContent>
+                          
+                          <div className="flex justify-between text-amber-600">
+                            <span>Tax{sessionInfo.billing_state ? ` (${sessionInfo.billing_state})` : ''}</span>
+                            <span>${sessionInfo.tax_total.toFixed(2)}</span>
+                          </div>
+                          
+                          <Separator className="my-2" />
+                          
+                          <div className="flex justify-between font-semibold">
+                            <span className="text-foreground">Total Paid</span>
+                            <span className="text-primary">${sessionInfo.total.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Collapsible>
                   )}
 
                   <div className="space-y-3">
