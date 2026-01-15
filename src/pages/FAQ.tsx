@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -11,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { 
   HelpCircle, 
   ArrowRight, 
@@ -22,7 +24,10 @@ import {
   Truck, 
   FileCheck, 
   Sparkles,
-  MessageCircle
+  MessageCircle,
+  ChevronLeft,
+  ChevronRight,
+  List
 } from 'lucide-react';
 
 interface FAQSection {
@@ -307,6 +312,39 @@ const generateFAQSchema = () => {
 
 const FAQ = () => {
   const faqSchema = generateFAQSchema();
+  const [activeSection, setActiveSection] = useState<string>('getting-started');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Track scroll position to highlight active section
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 150; // Offset for header
+
+      for (const section of faqSections) {
+        const element = sectionRefs.current[section.id];
+        if (element) {
+          const { offsetTop, offsetHeight } = element;
+          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+            setActiveSection(section.id);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToSection = (sectionId: string) => {
+    const element = sectionRefs.current[sectionId];
+    if (element) {
+      const yOffset = -100; // Offset for sticky header
+      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -348,54 +386,155 @@ const FAQ = () => {
           </div>
         </section>
 
-        {/* Table of Contents */}
-        <section className="py-8 border-b bg-muted/30">
-          <div className="container">
-            <div className="flex flex-wrap gap-2 justify-center">
-              {faqSections.map((section) => (
-                <a
-                  key={section.id}
-                  href={`#${section.id}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-background border hover:bg-primary/10 hover:border-primary/30 transition-colors"
-                >
-                  <section.icon className="h-3.5 w-3.5" />
-                  {section.title}
-                </a>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* FAQ Sections */}
+        {/* Main Content with Sidebar */}
         <section className="py-12 md:py-16">
-          <div className="container max-w-4xl">
-            {faqSections.map((section, sectionIndex) => (
-              <div
-                key={section.id}
-                id={section.id}
-                className={sectionIndex > 0 ? 'mt-12 pt-12 border-t' : ''}
+          <div className="container">
+            <div className="flex gap-8">
+              {/* Collapsible Sticky Sidebar - Hidden on mobile */}
+              <aside 
+                className={cn(
+                  "hidden lg:block shrink-0 transition-all duration-300",
+                  isSidebarCollapsed ? "w-14" : "w-64"
+                )}
               >
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 rounded-lg bg-gradient-to-br from-vendibook-orange/20 to-amber-400/20">
-                    <section.icon className="h-5 w-5 text-vendibook-orange" />
+                <div className="sticky top-24">
+                  <div className={cn(
+                    "bg-card border rounded-xl shadow-sm overflow-hidden transition-all duration-300",
+                    isSidebarCollapsed ? "p-2" : "p-4"
+                  )}>
+                    {/* Sidebar Header */}
+                    <div className={cn(
+                      "flex items-center justify-between mb-4",
+                      isSidebarCollapsed && "flex-col gap-2"
+                    )}>
+                      {!isSidebarCollapsed && (
+                        <div className="flex items-center gap-2">
+                          <List className="h-4 w-4 text-vendibook-orange" />
+                          <span className="font-semibold text-sm text-foreground">Contents</span>
+                        </div>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                        aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                      >
+                        {isSidebarCollapsed ? (
+                          <ChevronRight className="h-4 w-4" />
+                        ) : (
+                          <ChevronLeft className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+
+                    {/* Navigation Links */}
+                    <nav className="space-y-1">
+                      {faqSections.map((section) => {
+                        const isActive = activeSection === section.id;
+                        const Icon = section.icon;
+                        
+                        return (
+                          <button
+                            key={section.id}
+                            onClick={() => scrollToSection(section.id)}
+                            className={cn(
+                              "w-full flex items-center gap-2 rounded-lg transition-all duration-200 text-left",
+                              isSidebarCollapsed 
+                                ? "p-2 justify-center" 
+                                : "px-3 py-2",
+                              isActive 
+                                ? "bg-gradient-to-r from-vendibook-orange/20 to-amber-400/10 text-vendibook-orange border-l-2 border-vendibook-orange" 
+                                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                            )}
+                            title={isSidebarCollapsed ? section.title : undefined}
+                          >
+                            <Icon className={cn(
+                              "shrink-0",
+                              isSidebarCollapsed ? "h-5 w-5" : "h-4 w-4"
+                            )} />
+                            {!isSidebarCollapsed && (
+                              <span className="text-sm truncate">{section.title}</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </nav>
+
+                    {/* Back to top */}
+                    {!isSidebarCollapsed && (
+                      <div className="mt-4 pt-4 border-t">
+                        <button
+                          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                          className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+                        >
+                          <ArrowRight className="h-3 w-3 rotate-[-90deg]" />
+                          Back to top
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <h2 className="text-2xl font-bold text-foreground">{section.title}</h2>
+                </div>
+              </aside>
+
+              {/* Main FAQ Content */}
+              <div className="flex-1 max-w-4xl">
+                {/* Mobile Table of Contents */}
+                <div className="lg:hidden mb-8 pb-8 border-b">
+                  <div className="flex items-center gap-2 mb-4">
+                    <List className="h-4 w-4 text-vendibook-orange" />
+                    <span className="font-semibold text-sm text-foreground">Jump to section</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {faqSections.map((section) => (
+                      <button
+                        key={section.id}
+                        onClick={() => scrollToSection(section.id)}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors",
+                          activeSection === section.id
+                            ? "bg-gradient-to-r from-vendibook-orange/20 to-amber-400/10 border-vendibook-orange/30 text-vendibook-orange"
+                            : "bg-background hover:bg-primary/10 hover:border-primary/30"
+                        )}
+                      >
+                        <section.icon className="h-3.5 w-3.5" />
+                        {section.title}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <Accordion type="single" collapsible className="w-full">
-                  {section.questions.map((faq, index) => (
-                    <AccordionItem key={index} value={`${section.id}-${index}`}>
-                      <AccordionTrigger className="text-left text-foreground hover:no-underline hover:text-primary">
-                        {faq.question}
-                      </AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground leading-relaxed">
-                        {faq.answer}
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
+                {/* FAQ Sections */}
+                {faqSections.map((section, sectionIndex) => (
+                  <div
+                    key={section.id}
+                    id={section.id}
+                    ref={(el) => (sectionRefs.current[section.id] = el)}
+                    className={sectionIndex > 0 ? 'mt-12 pt-12 border-t' : ''}
+                  >
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-vendibook-orange/20 to-amber-400/20">
+                        <section.icon className="h-5 w-5 text-vendibook-orange" />
+                      </div>
+                      <h2 className="text-2xl font-bold text-foreground">{section.title}</h2>
+                    </div>
+
+                    <Accordion type="single" collapsible className="w-full">
+                      {section.questions.map((faq, index) => (
+                        <AccordionItem key={index} value={`${section.id}-${index}`}>
+                          <AccordionTrigger className="text-left text-foreground hover:no-underline hover:text-primary">
+                            {faq.question}
+                          </AccordionTrigger>
+                          <AccordionContent className="text-muted-foreground leading-relaxed">
+                            {faq.answer}
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </section>
 
