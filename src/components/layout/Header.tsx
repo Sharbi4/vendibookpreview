@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import vendibookLogo from '@/assets/vendibook-logo.jpg';
+import vendibookLogo from '@/assets/vendibook-logo.svg';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { Input } from '@/components/ui/input';
 
