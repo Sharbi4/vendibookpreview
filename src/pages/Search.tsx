@@ -346,10 +346,20 @@ const Search = () => {
   const handleSearch = (value: string) => {
     setSearchQuery(value);
     const params = new URLSearchParams(searchParams);
-    if (value) {
+    if (value.trim()) {
       params.set('q', value);
+      // Auto-select relevance sort when searching
+      if (sortBy !== 'relevance') {
+        setSortBy('relevance');
+        params.set('sort', 'relevance');
+      }
     } else {
       params.delete('q');
+      // Reset to newest when clearing search
+      if (sortBy === 'relevance') {
+        setSortBy('newest');
+        params.delete('sort');
+      }
     }
     setSearchParams(params);
   };
