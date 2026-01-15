@@ -165,7 +165,7 @@ serve(async (req) => {
               </div>
               
               <div style="padding: 16px; text-align: center; color: #9ca3af; font-size: 12px;">
-                <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a></p>
+                <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1877-8VENDI2</a></p>
                 <p style="margin: 0;">© ${new Date().getFullYear()} Vendibook. All rights reserved.</p>
               </div>
             </div>
@@ -217,7 +217,7 @@ serve(async (req) => {
               </div>
               
               <div style="padding: 16px; text-align: center; color: #9ca3af; font-size: 12px;">
-                <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a></p>
+                <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1877-8VENDI2</a></p>
                 <p style="margin: 0;">© ${new Date().getFullYear()} Vendibook. All rights reserved.</p>
               </div>
             </div>
@@ -279,7 +279,7 @@ serve(async (req) => {
               </div>
               
               <div style="padding: 16px; text-align: center; color: #9ca3af; font-size: 12px;">
-                <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a></p>
+                <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1877-8VENDI2</a></p>
                 <p style="margin: 0;">© ${new Date().getFullYear()} Vendibook. All rights reserved.</p>
               </div>
             </div>

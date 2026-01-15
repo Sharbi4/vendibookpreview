@@ -118,7 +118,7 @@ const Contact = () => {
                         href="tel:+18778836342" 
                         className="text-sm text-primary hover:underline font-medium"
                       >
-                        1 (877) 883-6342
+                        1877-8VENDI2
                       </a>
                       <p className="text-sm text-muted-foreground mt-1">
                         We will call you back within 2 minutes during business hours
