@@ -14,6 +14,14 @@ const Hero = () => {
               className="h-64 md:h-80 w-auto mix-blend-multiply transition-transform duration-300 hover:scale-105"
             />
           </div>
+          
+          {/* Tagline */}
+          <p 
+            className="text-lg md:text-xl text-muted-foreground font-medium mt-2 animate-fade-in"
+            style={{ animationDelay: '0.2s', animationFillMode: 'backwards' }}
+          >
+            The Marketplace for Mobile Food Businesses
+          </p>
         </div>
       </div>
     </section>
