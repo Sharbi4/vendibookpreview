@@ -353,6 +353,11 @@ const ListingDetail = () => {
                   vendibookFreightEnabled={(listing as any).vendibook_freight_enabled || false}
                   freightPayer={((listing as any).freight_payer === 'seller' ? 'seller' : 'buyer') as 'buyer' | 'seller'}
                   originAddress={listing.address}
+                  weightLbs={(listing as any).weight_lbs}
+                  lengthInches={(listing as any).length_inches}
+                  widthInches={(listing as any).width_inches}
+                  heightInches={(listing as any).height_inches}
+                  freightCategory={(listing as any).freight_category}
                 />
               )}
 

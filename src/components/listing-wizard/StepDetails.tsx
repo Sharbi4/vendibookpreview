@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { Plus, X, Sparkles, Loader2, Check, RotateCcw } from 'lucide-react';
-import { ListingFormData, AMENITIES_BY_CATEGORY, ListingCategory } from '@/types/listing';
+import { Plus, X, Sparkles, Loader2, Check, RotateCcw, Package, Scale, Ruler } from 'lucide-react';
+import { ListingFormData, AMENITIES_BY_CATEGORY, ListingCategory, FREIGHT_CATEGORY_LABELS, FreightCategory } from '@/types/listing';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 
 interface StepDetailsProps {
   formData: ListingFormData;
@@ -246,6 +248,119 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
               {formData.amenities.length} item{formData.amenities.length !== 1 ? 's' : ''} selected
             </p>
           )}
+        </div>
+      )}
+
+      {/* Item Dimensions - Only show for sale listings with mobile assets */}
+      {formData.mode === 'sale' && (formData.category === 'food_truck' || formData.category === 'food_trailer') && (
+        <div className="space-y-4 p-4 rounded-xl border border-border bg-muted/30">
+          <div className="flex items-center gap-2">
+            <Package className="h-5 w-5 text-primary" />
+            <Label className="text-base font-medium">Item Dimensions</Label>
+            <InfoTooltip content="Provide accurate dimensions for freight cost estimates. This helps buyers understand shipping costs." />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            These dimensions are used to calculate accurate freight estimates for buyers.
+          </p>
+          
+          <div className="grid grid-cols-2 gap-4">
+            {/* Weight */}
+            <div className="space-y-2">
+              <Label htmlFor="weight_lbs" className="flex items-center gap-1.5 text-sm">
+                <Scale className="h-3.5 w-3.5" />
+                Weight (lbs)
+              </Label>
+              <Input
+                id="weight_lbs"
+                type="number"
+                min="0"
+                step="1"
+                value={formData.weight_lbs}
+                onChange={(e) => updateField('weight_lbs', e.target.value)}
+                placeholder="e.g., 5000"
+              />
+            </div>
+
+            {/* Freight Category */}
+            <div className="space-y-2">
+              <Label htmlFor="freight_category" className="flex items-center gap-1.5 text-sm">
+                <Package className="h-3.5 w-3.5" />
+                Freight Type
+              </Label>
+              <Select
+                value={formData.freight_category || ''}
+                onValueChange={(value) => updateField('freight_category', value as FreightCategory)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(FREIGHT_CATEGORY_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            {/* Length */}
+            <div className="space-y-2">
+              <Label htmlFor="length_inches" className="flex items-center gap-1.5 text-sm">
+                <Ruler className="h-3.5 w-3.5" />
+                Length (in)
+              </Label>
+              <Input
+                id="length_inches"
+                type="number"
+                min="0"
+                step="1"
+                value={formData.length_inches}
+                onChange={(e) => updateField('length_inches', e.target.value)}
+                placeholder="e.g., 240"
+              />
+            </div>
+
+            {/* Width */}
+            <div className="space-y-2">
+              <Label htmlFor="width_inches" className="flex items-center gap-1.5 text-sm">
+                <Ruler className="h-3.5 w-3.5" />
+                Width (in)
+              </Label>
+              <Input
+                id="width_inches"
+                type="number"
+                min="0"
+                step="1"
+                value={formData.width_inches}
+                onChange={(e) => updateField('width_inches', e.target.value)}
+                placeholder="e.g., 96"
+              />
+            </div>
+
+            {/* Height */}
+            <div className="space-y-2">
+              <Label htmlFor="height_inches" className="flex items-center gap-1.5 text-sm">
+                <Ruler className="h-3.5 w-3.5" />
+                Height (in)
+              </Label>
+              <Input
+                id="height_inches"
+                type="number"
+                min="0"
+                step="1"
+                value={formData.height_inches}
+                onChange={(e) => updateField('height_inches', e.target.value)}
+                placeholder="e.g., 120"
+              />
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            💡 Tip: Typical food truck dimensions are 16-26 ft long (192-312 in), 7-8 ft wide (84-96 in), and 8-10 ft tall (96-120 in).
+          </p>
         </div>
       )}
 

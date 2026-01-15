@@ -193,6 +193,15 @@ export const AMENITIES_BY_CATEGORY: Record<ListingCategory, { label: string; ite
 
 export type FreightPayer = 'buyer' | 'seller';
 
+export type FreightCategory = 'standard' | 'fragile' | 'heavy_equipment' | 'oversized';
+
+export const FREIGHT_CATEGORY_LABELS: Record<FreightCategory, string> = {
+  standard: 'Standard',
+  fragile: 'Fragile',
+  heavy_equipment: 'Heavy Equipment',
+  oversized: 'Oversized',
+};
+
 export interface ListingFormData {
   mode: ListingMode | null;
   category: ListingCategory | null;
@@ -221,6 +230,12 @@ export interface ListingFormData {
   // Vendibook Freight settings (for sales)
   vendibook_freight_enabled: boolean;
   freight_payer: FreightPayer;
+  // Item dimensions for freight estimates
+  weight_lbs: string;
+  length_inches: string;
+  width_inches: string;
+  height_inches: string;
+  freight_category: FreightCategory | null;
   // Required documents for rentals
   required_documents?: {
     document_type: string;
