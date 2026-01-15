@@ -485,6 +485,7 @@ const Header = () => {
                 Sign In
               </Button>
               <Button 
+                variant="gradient"
                 className="rounded-full"
                 onClick={() => navigate('/auth')}
               >
@@ -648,6 +649,7 @@ const Header = () => {
                       Sign In
                     </Button>
                     <Button 
+                      variant="gradient"
                       className="w-full rounded-full"
                       onClick={() => {
                         navigate('/auth');
