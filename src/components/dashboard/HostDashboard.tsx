@@ -21,7 +21,7 @@ import { useState } from 'react';
 const HostDashboard = () => {
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing } = useHostListings();
   const { stats: bookingStats } = useHostBookings();
-  const { isConnected, hasAccountStarted, isLoading: stripeLoading, connectStripe, isConnecting } = useStripeConnect();
+  const { isConnected, hasAccountStarted, isLoading: stripeLoading, connectStripe, isConnecting, openStripeDashboard, isOpeningDashboard } = useStripeConnect();
   const { analytics, isLoading: analyticsLoading } = useListingAnalytics();
   const { analytics: revenueAnalytics, isLoading: revenueLoading } = useRevenueAnalytics();
   const [showStripeModal, setShowStripeModal] = useState(false);
@@ -67,7 +67,9 @@ const HostDashboard = () => {
         isConnected={isConnected}
         hasAccountStarted={hasAccountStarted}
         isLoading={stripeLoading}
+        isOpeningDashboard={isOpeningDashboard}
         onConnect={handleConnectStripe}
+        onOpenDashboard={openStripeDashboard}
       />
 
       {/* AI Insights Section */}

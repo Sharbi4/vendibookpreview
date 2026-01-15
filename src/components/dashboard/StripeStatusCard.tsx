@@ -1,4 +1,4 @@
-import { Check, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
+import { Check, Loader2, ArrowRight, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StripeLogo } from '@/components/ui/StripeLogo';
 
@@ -6,10 +6,19 @@ interface StripeStatusCardProps {
   isConnected: boolean;
   hasAccountStarted: boolean;
   isLoading: boolean;
+  isOpeningDashboard?: boolean;
   onConnect: () => void;
+  onOpenDashboard?: () => void;
 }
 
-const StripeStatusCard = ({ isConnected, hasAccountStarted, isLoading, onConnect }: StripeStatusCardProps) => {
+const StripeStatusCard = ({ 
+  isConnected, 
+  hasAccountStarted, 
+  isLoading, 
+  isOpeningDashboard,
+  onConnect,
+  onOpenDashboard 
+}: StripeStatusCardProps) => {
   if (isLoading) {
     return (
       <div className="bg-card border border-border rounded-xl p-6">
@@ -24,7 +33,7 @@ const StripeStatusCard = ({ isConnected, hasAccountStarted, isLoading, onConnect
   if (isConnected) {
     return (
       <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
               <Check className="h-5 w-5 text-emerald-600" />
@@ -37,7 +46,25 @@ const StripeStatusCard = ({ isConnected, hasAccountStarted, isLoading, onConnect
               <p className="text-sm text-emerald-700 dark:text-emerald-300">You can receive payments and payouts</p>
             </div>
           </div>
-          <StripeLogo size="md" />
+          <div className="flex items-center gap-3">
+            {onOpenDashboard && (
+              <Button 
+                onClick={onOpenDashboard}
+                variant="outline"
+                className="border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+                disabled={isOpeningDashboard}
+              >
+                {isOpeningDashboard ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                )}
+                <StripeLogo size="xs" />
+                <span className="ml-1.5">Dashboard</span>
+              </Button>
+            )}
+            <StripeLogo size="md" />
+          </div>
         </div>
       </div>
     );

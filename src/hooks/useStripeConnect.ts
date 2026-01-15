@@ -13,6 +13,7 @@ export const useStripeConnect = () => {
   const [status, setStatus] = useState<StripeConnectStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isOpeningDashboard, setIsOpeningDashboard] = useState(false);
 
   const checkStatus = useCallback(async () => {
     if (!session?.access_token) {
@@ -66,6 +67,30 @@ export const useStripeConnect = () => {
     }
   };
 
+  const openStripeDashboard = async () => {
+    if (!session?.access_token) return;
+
+    setIsOpeningDashboard(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-stripe-dashboard-link', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+      
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error opening Stripe dashboard:', error);
+      throw error;
+    } finally {
+      setIsOpeningDashboard(false);
+    }
+  };
+
   return {
     // Only consider "connected" when both account exists AND onboarding is complete
     isConnected: (status?.connected && status?.onboarding_complete) ?? false,
@@ -74,7 +99,9 @@ export const useStripeConnect = () => {
     accountId: status?.account_id,
     isLoading,
     isConnecting,
+    isOpeningDashboard,
     connectStripe,
+    openStripeDashboard,
     refreshStatus: checkStatus,
   };
 };
