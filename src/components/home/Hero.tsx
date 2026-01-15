@@ -2,7 +2,7 @@ import vendibookLogo from '@/assets/vendibook-logo.png';
 
 const Hero = () => {
   return (
-    <section className="relative bg-gradient-to-b from-vendibook-cream to-background pt-8 pb-16">
+    <section className="relative bg-gradient-to-b from-vendibook-cream to-background pt-4 pb-4">
       <div className="container max-w-5xl mx-auto px-4">
         {/* Hero Content */}
         <div className="max-w-3xl mx-auto text-center animate-fade-in">
