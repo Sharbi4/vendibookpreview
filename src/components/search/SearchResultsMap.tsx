@@ -37,6 +37,15 @@ const SearchResultsMap = ({
   useEffect(() => {
     if (!mapContainer.current || !mapToken) return;
 
+    // Clean up existing map if any
+    if (map.current) {
+      markersRef.current.forEach((marker) => marker.remove());
+      markersRef.current = [];
+      map.current.remove();
+      map.current = null;
+      setMapLoaded(false);
+    }
+
     mapboxgl.accessToken = mapToken;
 
     // Get initial center and zoom
@@ -71,6 +80,9 @@ const SearchResultsMap = ({
 
     map.current.on('load', () => {
       setMapLoaded(true);
+      
+      // Trigger resize to ensure proper rendering
+      map.current?.resize();
 
       // Add user location circle if available
       if (userLocation && searchRadius && map.current) {
@@ -114,7 +126,7 @@ const SearchResultsMap = ({
       map.current = null;
       setMapLoaded(false);
     };
-  }, [mapToken]);
+  }, [mapToken, listings.length, userLocation, searchRadius]);
 
   // Update markers when listings change
   useEffect(() => {
