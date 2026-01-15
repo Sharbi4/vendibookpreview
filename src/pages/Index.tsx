@@ -9,6 +9,7 @@ import NewsletterSection from '@/components/newsletter/NewsletterSection';
 import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
 import { TrustSafetySection } from '@/components/trust';
 import AIToolsSection from '@/components/home/AIToolsSection';
+import HelpCenterPreview from '@/components/home/HelpCenterPreview';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
@@ -34,6 +35,7 @@ const Index = () => {
         <FeaturedListings />
         <TrustSafetySection />
         <AIToolsSection />
+        <HelpCenterPreview />
         <HowItWorks />
         <NewsletterSection />
       </main>
