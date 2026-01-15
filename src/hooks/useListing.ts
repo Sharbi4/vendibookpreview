@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
-import { mockListings } from '@/data/mockListings';
-import { Listing } from '@/types/listing';
 
 type DbListing = Tables<'listings'>;
 
@@ -14,7 +12,7 @@ interface HostProfile {
 }
 
 export const useListing = (listingId: string | undefined) => {
-  const [listing, setListing] = useState<DbListing | Listing | null>(null);
+  const [listing, setListing] = useState<DbListing | null>(null);
   const [host, setHost] = useState<HostProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +29,6 @@ export const useListing = (listingId: string | undefined) => {
       setError(null);
 
       try {
-        // First try to fetch from database
         const { data: listingData, error: listingError } = await supabase
           .from('listings')
           .select('*')
@@ -41,7 +38,6 @@ export const useListing = (listingId: string | undefined) => {
         if (listingError) throw listingError;
         
         if (listingData) {
-          // Found in database
           setListing(listingData);
 
           // Fetch host profile
@@ -55,21 +51,7 @@ export const useListing = (listingId: string | undefined) => {
             setHost(hostData);
           }
         } else {
-          // Not found in database - check mock data for demo listings
-          const mockListing = mockListings.find(l => l.id === listingId);
-          
-          if (mockListing) {
-            setListing(mockListing);
-            // Mock host data for demo
-            setHost({
-              full_name: 'Demo Host',
-              avatar_url: null,
-              identity_verified: true,
-              created_at: '2024-01-01',
-            });
-          } else {
-            setError('Listing not found');
-          }
+          setError('Listing not found');
         }
       } catch (err) {
         console.error('Error fetching listing:', err);
