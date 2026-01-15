@@ -2,10 +2,17 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import ListingCard from '@/components/listing/ListingCard';
 import { ListingCategory, ListingMode } from '@/types/listing';
-import { ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 interface FeaturedListingsProps {
   filters?: {
@@ -15,8 +22,11 @@ interface FeaturedListingsProps {
   };
 }
 
+const ITEMS_PER_PAGE = 8;
+
 const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
   const [sortBy, setSortBy] = useState<'newest' | 'price-low'>('newest');
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch real listings from the database
   const { data: listings = [], isLoading } = useQuery({
@@ -98,11 +108,58 @@ const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
     return result;
   }, [listings, filters, sortBy]);
 
+  // Reset to page 1 when filters change
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [filters, sortBy]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredListings.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedListings = filteredListings.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
   const getTitle = () => {
     if (filters?.category || filters?.mode || filters?.query) {
       return 'Search Results';
     }
     return 'Featured Listings';
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const pages: (number | 'ellipsis')[] = [];
+    
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      
+      if (currentPage > 3) {
+        pages.push('ellipsis');
+      }
+      
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      
+      if (currentPage < totalPages - 2) {
+        pages.push('ellipsis');
+      }
+      
+      pages.push(totalPages);
+    }
+    
+    return pages;
   };
 
   // Loading skeleton
@@ -140,6 +197,7 @@ const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
             <h2 className="text-2xl font-bold text-foreground">{getTitle()}</h2>
             <p className="text-muted-foreground mt-1">
               {filteredListings.length} listing{filteredListings.length !== 1 ? 's' : ''} available
+              {totalPages > 1 && ` • Page ${currentPage} of ${totalPages}`}
             </p>
           </div>
           
@@ -158,16 +216,57 @@ const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
         </div>
 
         {/* Listings Grid */}
-        {filteredListings.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredListings.map((listing) => (
-              <ListingCard 
-                key={listing.id} 
-                listing={listing} 
-                hostVerified={hostVerificationMap[listing.host_id] ?? false}
-              />
-            ))}
-          </div>
+        {paginatedListings.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {paginatedListings.map((listing) => (
+                <ListingCard 
+                  key={listing.id} 
+                  listing={listing} 
+                  hostVerified={hostVerificationMap[listing.host_id] ?? false}
+                />
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-10">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                        className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                    
+                    {getPageNumbers().map((page, index) => (
+                      <PaginationItem key={index}>
+                        {page === 'ellipsis' ? (
+                          <PaginationEllipsis />
+                        ) : (
+                          <PaginationLink
+                            onClick={() => handlePageChange(page)}
+                            isActive={currentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        )}
+                      </PaginationItem>
+                    ))}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                        className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-16 bg-secondary/30 rounded-2xl">
             <div className="text-4xl mb-4">🔍</div>
@@ -175,19 +274,6 @@ const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
             <p className="text-muted-foreground mb-6">
               Try adjusting your search or filters to find what you're looking for.
             </p>
-            <Button variant="outline" onClick={() => window.location.reload()}>
-              Clear Filters
-            </Button>
-          </div>
-        )}
-
-        {/* View All Button */}
-        {filteredListings.length > 8 && (
-          <div className="mt-10 text-center">
-            <Button variant="outline" size="lg" className="rounded-full gap-2">
-              View All Listings
-              <ArrowRight className="h-4 w-4" />
-            </Button>
           </div>
         )}
       </div>
