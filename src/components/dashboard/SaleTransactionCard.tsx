@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { CheckCircle2, Clock, DollarSign, ShieldCheck, AlertCircle, Loader2, Flag, MapPin, Truck } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { CheckCircle2, Clock, DollarSign, ShieldCheck, AlertCircle, Loader2, Flag, MapPin, Truck, Package, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -74,6 +75,18 @@ const SaleTransactionCard = ({
     }
   };
 
+  const showTrackingSection = role === 'buyer' && 
+    (transaction.fulfillment_type === 'delivery' || transaction.fulfillment_type === 'vendibook_freight');
+
+  const getShippingStatusLabel = () => {
+    const status = transaction.shipping_status;
+    if (status === 'delivered') return 'Delivered';
+    if (status === 'shipped' || status === 'in_transit') return 'In Transit';
+    if (status === 'out_for_delivery') return 'Out for Delivery';
+    if (status === 'processing') return 'Processing';
+    return 'Awaiting Shipment';
+  };
+
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <CardContent className="p-0">
@@ -135,7 +148,6 @@ const SaleTransactionCard = ({
                     <p className="text-muted-foreground">Platform Fee</p>
                     <p className="font-medium text-destructive">-${transaction.platform_fee.toLocaleString()}</p>
                   </div>
-                  {/* Show freight deduction for seller-paid Vendibook Freight */}
                   {transaction.freight_cost && transaction.freight_cost > 0 && (
                     <div>
                       <p className="text-muted-foreground">Freight (Seller-Paid)</p>
@@ -164,16 +176,17 @@ const SaleTransactionCard = ({
             {transaction.fulfillment_type && (
               <div className="bg-muted/50 rounded-lg p-3 mb-4">
                 <div className="flex items-start gap-2">
-                  {transaction.fulfillment_type === 'delivery' ? (
+                  {transaction.fulfillment_type === 'delivery' || transaction.fulfillment_type === 'vendibook_freight' ? (
                     <Truck className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                   ) : (
                     <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                   )}
                   <div className="flex-1">
                     <p className="text-sm font-medium text-foreground">
-                      {transaction.fulfillment_type === 'delivery' ? 'Delivery' : 'Pickup'}
+                      {transaction.fulfillment_type === 'vendibook_freight' ? 'VendiBook Freight' :
+                       transaction.fulfillment_type === 'delivery' ? 'Delivery' : 'Pickup'}
                     </p>
-                    {transaction.fulfillment_type === 'delivery' ? (
+                    {(transaction.fulfillment_type === 'delivery' || transaction.fulfillment_type === 'vendibook_freight') ? (
                       <>
                         {transaction.delivery_address && (
                           <p className="text-sm text-muted-foreground mt-1">
@@ -206,6 +219,38 @@ const SaleTransactionCard = ({
                       </>
                     )}
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tracking Status for Buyers */}
+            {showTrackingSection && (
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mb-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Package className="h-4 w-4 text-primary" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        {getShippingStatusLabel()}
+                      </p>
+                      {transaction.tracking_number && (
+                        <p className="text-xs text-muted-foreground">
+                          Tracking: {transaction.tracking_number}
+                        </p>
+                      )}
+                      {transaction.estimated_delivery_date && !transaction.delivered_at && (
+                        <p className="text-xs text-muted-foreground">
+                          Est. delivery: {format(new Date(transaction.estimated_delivery_date), 'MMM d, yyyy')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <Button asChild size="sm" variant="outline" className="gap-1.5">
+                    <Link to={`/order-tracking/${transaction.id}`}>
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Track
+                    </Link>
+                  </Button>
                 </div>
               </div>
             )}

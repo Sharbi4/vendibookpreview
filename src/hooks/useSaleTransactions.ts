@@ -26,6 +26,15 @@ export interface SaleTransaction {
   delivery_instructions: string | null;
   delivery_fee: number | null;
   freight_cost: number | null;
+  // Tracking fields
+  shipping_status: string | null;
+  tracking_number: string | null;
+  carrier: string | null;
+  tracking_url: string | null;
+  shipped_at: string | null;
+  estimated_delivery_date: string | null;
+  delivered_at: string | null;
+  shipping_notes: string | null;
   // Joined fields
   listing?: {
     id: string;

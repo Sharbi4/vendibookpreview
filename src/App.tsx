@@ -33,6 +33,7 @@ import HelpCenter from "./pages/HelpCenter";
 import HelpArticle from "./pages/HelpArticle";
 import CaliforniaPrivacy from "./pages/CaliforniaPrivacy";
 import AITools from "./pages/AITools";
+import OrderTracking from "./pages/OrderTracking";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -75,6 +76,7 @@ const App = () => (
             <Route path="/help/:slug" element={<HelpArticle />} />
             <Route path="/california-privacy" element={<CaliforniaPrivacy />} />
             <Route path="/ai-tools" element={<AITools />} />
+            <Route path="/order-tracking/:transactionId" element={<OrderTracking />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
