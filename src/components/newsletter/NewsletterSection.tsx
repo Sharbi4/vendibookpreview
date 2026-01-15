@@ -119,8 +119,13 @@ const NewsletterSection = ({ variant = 'default', source = 'section' }: Newslett
   }
 
   return (
-    <section className="py-16 bg-primary text-primary-foreground">
-      <div className="container">
+    <section className="py-16 md:py-20 bg-gradient-to-r from-primary via-primary to-primary/90 text-primary-foreground relative overflow-hidden">
+      {/* Decorative background pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-white rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
+      </div>
+      <div className="container relative z-10">
         <div className="max-w-2xl mx-auto text-center">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary-foreground/10 mb-6">
             <Mail className="h-7 w-7" />

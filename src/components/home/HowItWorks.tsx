@@ -26,8 +26,13 @@ const steps: Step[] = [
 
 const HowItWorks = () => {
   return (
-    <section className="py-16 bg-vendibook-cream">
-      <div className="container">
+    <section className="py-16 md:py-20 bg-gradient-to-br from-vendibook-cream via-vendibook-cream/80 to-primary/5 relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-0 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+      </div>
+      <div className="container relative z-10">
         <div className="text-center mb-12">
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
             How Vendibook Works
