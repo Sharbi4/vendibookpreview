@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,10 +8,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
-import { ShieldCheck, Loader2, MapPin, Truck } from 'lucide-react';
+import { ShieldCheck, Loader2, MapPin, Truck, Calculator, AlertCircle } from 'lucide-react';
 import { CheckoutOverlay } from '@/components/checkout';
 import { FreightInfoCard } from '@/components/freight';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import type { FulfillmentType } from '@/types/listing';
 
 interface InquiryFormProps {
@@ -23,6 +25,8 @@ interface InquiryFormProps {
   pickupLocation?: string | null;
   vendibookFreightEnabled?: boolean;
   freightPayer?: 'buyer' | 'seller';
+  // Origin address for freight calculation (listing location)
+  originAddress?: string | null;
 }
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
@@ -36,10 +40,12 @@ const InquiryForm = ({
   pickupLocation,
   vendibookFreightEnabled = false,
   freightPayer = 'buyer',
+  originAddress,
 }: InquiryFormProps) => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { estimate, isLoading: isEstimating, error: estimateError, getEstimate, clearEstimate } = useFreightEstimate();
   
   // Customer info
   const [name, setName] = useState(profile?.full_name || '');
@@ -59,10 +65,13 @@ const InquiryForm = ({
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showCheckoutOverlay, setShowCheckoutOverlay] = useState(false);
+  const [addressDebounceTimer, setAddressDebounceTimer] = useState<NodeJS.Timeout | null>(null);
 
-  // Estimated freight cost (placeholder - in production would be dynamically calculated)
-  const estimatedFreightCost = 500;
   const isFreightSellerPaid = vendibookFreightEnabled && freightPayer === 'seller';
+  
+  // Get freight cost - use estimate if available, otherwise fallback
+  const freightCost = estimate?.total_cost ?? 0;
+  const hasValidEstimate = estimate !== null && !estimateError;
 
   // Determine available fulfillment options
   const getAvailableFulfillmentOptions = (): FulfillmentSelection[] => {
@@ -87,11 +96,54 @@ const InquiryForm = ({
 
   const fulfillmentOptions = getAvailableFulfillmentOptions();
 
+  // Debounced freight estimation when address changes
+  const fetchFreightEstimate = useCallback(async (address: string) => {
+    if (!originAddress || !address.trim() || address.length < 10) {
+      clearEstimate();
+      return;
+    }
+    
+    await getEstimate({
+      origin_address: originAddress,
+      destination_address: address.trim(),
+      // Default item dimensions - could be customized per listing
+      weight_lbs: 100,
+      length_inches: 48,
+      width_inches: 40,
+      height_inches: 48,
+      item_category: 'standard',
+    });
+  }, [originAddress, getEstimate, clearEstimate]);
+
+  // Trigger freight estimate when address changes (with debounce)
+  useEffect(() => {
+    if (fulfillmentSelected !== 'vendibook_freight') {
+      clearEstimate();
+      return;
+    }
+    
+    if (addressDebounceTimer) {
+      clearTimeout(addressDebounceTimer);
+    }
+    
+    const timer = setTimeout(() => {
+      if (deliveryAddress.trim().length >= 10) {
+        fetchFreightEstimate(deliveryAddress);
+      }
+    }, 800);
+    
+    setAddressDebounceTimer(timer);
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [deliveryAddress, fulfillmentSelected]);
+
   // Calculate total price including delivery if applicable
   const getDeliveryFeeForSelection = (): number => {
     if (fulfillmentSelected === 'vendibook_freight') {
       // If seller pays freight, buyer sees $0
-      return isFreightSellerPaid ? 0 : estimatedFreightCost;
+      return isFreightSellerPaid ? 0 : freightCost;
     }
     if (fulfillmentSelected === 'delivery' && deliveryFee) {
       return deliveryFee;
@@ -151,7 +203,7 @@ const InquiryForm = ({
           // Vendibook freight fields (matching edge function interface)
           vendibook_freight_enabled: isVendibookFreight,
           freight_payer: isVendibookFreight ? freightPayer : 'buyer',
-          freight_cost: isVendibookFreight ? estimatedFreightCost : 0,
+          freight_cost: isVendibookFreight ? freightCost : 0,
         },
       });
 
@@ -207,8 +259,10 @@ const InquiryForm = ({
                   <span>Vendibook Freight</span>
                   {isFreightSellerPaid ? (
                     <span className="text-xs text-emerald-600 font-medium ml-auto">FREE</span>
+                  ) : hasValidEstimate ? (
+                    <span className="text-xs text-muted-foreground ml-auto">+${freightCost.toFixed(0)}</span>
                   ) : (
-                    <span className="text-xs text-muted-foreground ml-auto">+${estimatedFreightCost}</span>
+                    <span className="text-xs text-muted-foreground ml-auto">Enter address for quote</span>
                   )}
                 </Label>
               </div>
@@ -245,6 +299,103 @@ const InquiryForm = ({
         </div>
       )}
 
+      {/* Vendibook Freight Address & Estimate */}
+      {fulfillmentSelected === 'vendibook_freight' && (
+        <div className="mb-6 space-y-4">
+          <div>
+            <Label htmlFor="freightDeliveryAddress" className="text-sm font-medium mb-2 block">
+              Delivery Address *
+            </Label>
+            <Input
+              id="freightDeliveryAddress"
+              placeholder="Enter your full delivery address"
+              value={deliveryAddress}
+              onChange={(e) => setDeliveryAddress(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Enter your address to get a freight quote
+            </p>
+          </div>
+          
+          {/* Freight Estimate Display */}
+          {isEstimating && (
+            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-sm text-muted-foreground">Calculating freight estimate...</span>
+            </div>
+          )}
+          
+          {hasValidEstimate && !isEstimating && (
+            <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Calculator className="h-4 w-4 text-primary" />
+                  <span className="font-medium text-sm text-foreground">Freight Estimate</span>
+                </div>
+                <InfoTooltip content="This is an estimate only. Final freight cost will be confirmed after carrier pickup scheduling." />
+              </div>
+              
+              <div className="space-y-1.5 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Distance</span>
+                  <span className="text-foreground">{estimate?.distance_miles} miles</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Base freight</span>
+                  <span className="text-foreground">${estimate?.base_cost.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Fuel surcharge</span>
+                  <span className="text-foreground">${estimate?.fuel_surcharge.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Handling fee</span>
+                  <span className="text-foreground">${estimate?.handling_fee.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-semibold pt-2 border-t border-border">
+                  <span>{isFreightSellerPaid ? 'Freight (seller pays)' : 'Total Freight'}</span>
+                  <span className={isFreightSellerPaid ? 'text-emerald-600 line-through' : 'text-primary'}>
+                    ${estimate?.total_cost.toFixed(2)}
+                  </span>
+                </div>
+                {isFreightSellerPaid && (
+                  <div className="flex justify-between font-semibold">
+                    <span>You pay</span>
+                    <span className="text-emerald-600">$0.00</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-2">
+                <Truck className="h-3 w-3" />
+                <span>Est. {estimate?.estimated_transit_days.min}-{estimate?.estimated_transit_days.max} business days</span>
+              </div>
+            </div>
+          )}
+          
+          {estimateError && !isEstimating && (
+            <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <AlertCircle className="h-4 w-4 text-destructive" />
+              <span className="text-sm text-destructive">{estimateError}</span>
+            </div>
+          )}
+          
+          <div>
+            <Label htmlFor="freightDeliveryInstructions" className="text-sm font-medium mb-2 block">
+              Delivery Instructions (optional)
+            </Label>
+            <Textarea
+              id="freightDeliveryInstructions"
+              placeholder="Dock availability, forklift required, etc."
+              value={deliveryInstructions}
+              onChange={(e) => setDeliveryInstructions(e.target.value)}
+              rows={2}
+              className="resize-none"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Pickup Location Info */}
       {fulfillmentSelected === 'pickup' && pickupLocation && (
         <div className="mb-6 p-4 bg-muted/50 rounded-xl">
@@ -258,7 +409,7 @@ const InquiryForm = ({
         </div>
       )}
 
-      {/* Delivery Address Input */}
+      {/* Local Delivery Address Input */}
       {fulfillmentSelected === 'delivery' && (
         <div className="mb-6 space-y-4">
           <div>
