@@ -350,6 +350,8 @@ const ListingDetail = () => {
                   deliveryFee={listing.delivery_fee}
                   deliveryRadiusMiles={listing.delivery_radius_miles}
                   pickupLocation={listing.pickup_location_text || listing.address}
+                  vendibookFreightEnabled={(listing as any).vendibook_freight_enabled || false}
+                  freightPayer={((listing as any).freight_payer === 'seller' ? 'seller' : 'buyer') as 'buyer' | 'seller'}
                 />
               )}
 
