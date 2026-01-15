@@ -39,6 +39,10 @@ const handler = async (req: Request): Promise<Response> => {
       ? "As a Host, you can list your food trucks, trailers, ghost kitchens, and vendor lots for rent or sale."
       : "As a Shopper, you can browse and book amazing food trucks, trailers, ghost kitchens, and vendor lots.";
 
+    // Use the published app URL for the logo
+    const siteUrl = Deno.env.get("SITE_URL") || "https://vendibookpreview.lovable.app";
+    const logoUrl = `${siteUrl}/images/vendibook-email-logo.png`;
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -48,9 +52,9 @@ const handler = async (req: Request): Promise<Response> => {
         </head>
         <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
           <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-            <!-- Header -->
+            <!-- Header with Logo -->
             <div style="text-align: center; margin-bottom: 40px;">
-              <h1 style="color: #FF5124; font-size: 32px; margin: 0;">VendiBook</h1>
+              <img src="${logoUrl}" alt="VendiBook" style="max-width: 200px; height: auto; margin-bottom: 16px;" />
               <p style="color: #6b7280; font-size: 14px; margin-top: 8px;">Your Mobile Food Business Marketplace</p>
             </div>
             
