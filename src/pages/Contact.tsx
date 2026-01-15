@@ -97,13 +97,15 @@ const Contact = () => {
       <main className="flex-1">
         {/* Hero Section - Enhanced */}
         <section className="relative py-16 md:py-24 overflow-hidden">
-          {/* Background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-vendibook-cream via-background to-primary/5" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
+          {/* Vibrant gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-300/25 via-amber-200/30 to-rose-300/20" />
           
-          {/* Decorative elements */}
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-vendibook-cream/50 rounded-full blur-3xl" />
+          {/* Decorative orbs */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-20 right-20 w-96 h-96 bg-orange-400/30 rounded-full blur-3xl" />
+            <div className="absolute bottom-20 left-20 w-80 h-80 bg-rose-400/25 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-300/20 rounded-full blur-3xl" />
+          </div>
           
           <div className="container relative z-10">
             <div className="text-center mb-12">
