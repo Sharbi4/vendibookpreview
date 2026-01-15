@@ -8,7 +8,10 @@ import {
   Clock,
   CheckCircle2,
   Loader2,
-  Star
+  Star,
+  Scale,
+  Ruler,
+  Box
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/layout/Header';
@@ -281,6 +284,66 @@ const ListingDetail = () => {
                   )}
                 </div>
               </div>
+
+              {/* Item Dimensions (for sale listings with dimensions) */}
+              {!isRental && (listing.weight_lbs || listing.length_inches || listing.width_inches || listing.height_inches) && (
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground mb-3">
+                    Item Specifications
+                  </h2>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {listing.weight_lbs && (
+                      <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl">
+                        <Scale className="h-5 w-5 text-primary flex-shrink-0" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Weight</p>
+                          <p className="font-medium text-foreground">
+                            {listing.weight_lbs.toLocaleString()} lbs
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {listing.length_inches && (
+                      <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl">
+                        <Ruler className="h-5 w-5 text-primary flex-shrink-0" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Length</p>
+                          <p className="font-medium text-foreground">
+                            {listing.length_inches}" ({(listing.length_inches / 12).toFixed(1)} ft)
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {listing.width_inches && (
+                      <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl">
+                        <Box className="h-5 w-5 text-primary flex-shrink-0" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Width</p>
+                          <p className="font-medium text-foreground">
+                            {listing.width_inches}" ({(listing.width_inches / 12).toFixed(1)} ft)
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {listing.height_inches && (
+                      <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl">
+                        <Box className="h-5 w-5 text-primary flex-shrink-0" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Height</p>
+                          <p className="font-medium text-foreground">
+                            {listing.height_inches}" ({(listing.height_inches / 12).toFixed(1)} ft)
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {(listing as any).freight_category && (
+                    <p className="text-sm text-muted-foreground mt-3">
+                      Freight Category: <span className="capitalize">{(listing as any).freight_category.replace(/_/g, ' ')}</span>
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Delivery Radius Map */}
               {(listing.fulfillment_type === 'delivery' || listing.fulfillment_type === 'both') && 
