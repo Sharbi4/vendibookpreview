@@ -135,6 +135,7 @@ export const useHostBookings = () => {
   const stats = {
     pending: bookings.filter(b => b.status === 'pending').length,
     approved: bookings.filter(b => b.status === 'approved').length,
+    declined: bookings.filter(b => b.status === 'declined').length,
     total: bookings.length,
   };
 
