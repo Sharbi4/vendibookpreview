@@ -39,30 +39,16 @@ interface FreightEstimateResponse {
   error?: string;
 }
 
-// Rate structure for Vendibook Freight
+// Simple rate structure for Vendibook Freight: $4.50 per mile
 const FREIGHT_RATES = {
-  // Base rate per mile (tiered by distance)
-  perMile: {
-    under100: 3.50,    // Local: $3.50/mile
-    under500: 2.75,    // Regional: $2.75/mile
-    under1000: 2.25,   // Long haul: $2.25/mile
-    over1000: 1.95,    // Cross-country: $1.95/mile
-  },
-  // Minimum charges
-  minimumCharge: 150,
-  // Weight surcharge (per 100 lbs over 500 lbs)
-  weightSurcharge: 15,
-  // Dimensional weight divisor (standard industry: 139 for inches)
-  dimWeightDivisor: 139,
-  // Fuel surcharge percentage
-  fuelSurchargePercent: 12,
-  // Handling fees by category
-  handlingFees: {
-    standard: 50,
-    fragile: 125,
-    heavy_equipment: 200,
-    oversized: 175,
-  },
+  // Flat rate per mile
+  perMile: 4.50,
+  // Minimum charge
+  minimumCharge: 50,
+  // Fuel surcharge percentage (0 = disabled for simplicity)
+  fuelSurchargePercent: 0,
+  // Handling fee (0 = disabled for simplicity)
+  handlingFee: 0,
   // Transit time estimates (days per 500 miles)
   transitDaysBase: 1,
   transitDaysPer500Miles: 1,
@@ -107,11 +93,11 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 
 function calculateFreightCost(
   distanceMiles: number,
-  weightLbs: number,
-  lengthIn: number,
-  widthIn: number,
-  heightIn: number,
-  category: string
+  _weightLbs: number,
+  _lengthIn: number,
+  _widthIn: number,
+  _heightIn: number,
+  _category: string
 ): {
   baseCost: number;
   fuelSurcharge: number;
@@ -121,56 +107,30 @@ function calculateFreightCost(
   dimensionalWeight: number;
   billableWeight: number;
 } {
-  // Calculate dimensional weight
-  const cubicInches = lengthIn * widthIn * heightIn;
-  const dimensionalWeight = cubicInches / FREIGHT_RATES.dimWeightDivisor;
-  
-  // Billable weight is the greater of actual or dimensional
-  const billableWeight = Math.max(weightLbs, dimensionalWeight);
-  
-  // Determine rate per mile based on distance tier
-  let ratePerMile: number;
-  if (distanceMiles < 100) {
-    ratePerMile = FREIGHT_RATES.perMile.under100;
-  } else if (distanceMiles < 500) {
-    ratePerMile = FREIGHT_RATES.perMile.under500;
-  } else if (distanceMiles < 1000) {
-    ratePerMile = FREIGHT_RATES.perMile.under1000;
-  } else {
-    ratePerMile = FREIGHT_RATES.perMile.over1000;
-  }
+  // Simple calculation: $4.50 per mile
+  const ratePerMile = FREIGHT_RATES.perMile;
   
   // Base cost = distance × rate
   let baseCost = distanceMiles * ratePerMile;
   
-  // Weight surcharge for heavy items
-  if (billableWeight > 500) {
-    const extraWeight = billableWeight - 500;
-    const weightSurcharge = Math.ceil(extraWeight / 100) * FREIGHT_RATES.weightSurcharge;
-    baseCost += weightSurcharge;
-  }
-  
   // Apply minimum charge
   baseCost = Math.max(baseCost, FREIGHT_RATES.minimumCharge);
   
-  // Fuel surcharge
-  const fuelSurcharge = baseCost * (FREIGHT_RATES.fuelSurchargePercent / 100);
-  
-  // Handling fee based on category
-  const handlingFee = FREIGHT_RATES.handlingFees[category as keyof typeof FREIGHT_RATES.handlingFees] 
-    || FREIGHT_RATES.handlingFees.standard;
+  // No fuel surcharge or handling fee in simplified model
+  const fuelSurcharge = 0;
+  const handlingFee = 0;
   
   // Total
   const totalCost = baseCost + fuelSurcharge + handlingFee;
   
   return {
     baseCost: Math.round(baseCost * 100) / 100,
-    fuelSurcharge: Math.round(fuelSurcharge * 100) / 100,
-    handlingFee,
+    fuelSurcharge: 0,
+    handlingFee: 0,
     totalCost: Math.round(totalCost * 100) / 100,
-    ratePerMile: Math.round(ratePerMile * 100) / 100,
-    dimensionalWeight: Math.round(dimensionalWeight * 10) / 10,
-    billableWeight: Math.round(billableWeight * 10) / 10,
+    ratePerMile: ratePerMile,
+    dimensionalWeight: 0,
+    billableWeight: 0,
   };
 }
 

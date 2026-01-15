@@ -14,6 +14,7 @@ import { ShieldCheck, Loader2, MapPin, Truck, Calculator, AlertCircle } from 'lu
 import { CheckoutOverlay } from '@/components/checkout';
 import { FreightInfoCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { AddressAutocomplete } from './AddressAutocomplete';
 import type { FulfillmentType } from '@/types/listing';
 
 interface InquiryFormProps {
@@ -317,14 +318,17 @@ const InquiryForm = ({
             <Label htmlFor="freightDeliveryAddress" className="text-sm font-medium mb-2 block">
               Delivery Address *
             </Label>
-            <Input
+            <AddressAutocomplete
               id="freightDeliveryAddress"
-              placeholder="Enter your full delivery address"
               value={deliveryAddress}
-              onChange={(e) => setDeliveryAddress(e.target.value)}
+              onChange={setDeliveryAddress}
+              onAddressSelect={(address) => {
+                setDeliveryAddress(address.fullAddress);
+              }}
+              placeholder="Enter your full delivery address"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Enter your address to get a freight quote
+              Start typing and select your address to get a freight quote ($4.50/mile)
             </p>
           </div>
           
@@ -352,16 +356,8 @@ const InquiryForm = ({
                   <span className="text-foreground">{estimate?.distance_miles} miles</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Base freight</span>
-                  <span className="text-foreground">${estimate?.base_cost.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Fuel surcharge</span>
-                  <span className="text-foreground">${estimate?.fuel_surcharge.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Handling fee</span>
-                  <span className="text-foreground">${estimate?.handling_fee.toFixed(2)}</span>
+                  <span className="text-muted-foreground">Rate</span>
+                  <span className="text-foreground">${estimate?.rate_per_mile.toFixed(2)}/mile</span>
                 </div>
                 <div className="flex justify-between font-semibold pt-2 border-t border-border">
                   <span>{isFreightSellerPaid ? 'Freight (seller pays)' : 'Total Freight'}</span>
