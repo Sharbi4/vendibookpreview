@@ -363,6 +363,13 @@ const Header = () => {
 
         {/* Mobile Actions - hide when search is open */}
         <div className={`flex md:hidden items-center gap-1 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          <a
+            href="tel:+18778836342"
+            className="inline-flex items-center justify-center h-9 w-9 rounded-full text-primary hover:bg-primary/10 transition-colors"
+            aria-label="Call customer support"
+          >
+            <Phone className="h-5 w-5" />
+          </a>
           {user && <NotificationCenter />}
           <Button 
             variant="ghost" 
