@@ -21,6 +21,8 @@ interface ZendeskTicketRequest {
   priority?: 'low' | 'normal' | 'high' | 'urgent';
   type?: 'question' | 'incident' | 'problem' | 'task';
   tags?: string[];
+  // External ID for linking back (e.g., transaction_id)
+  external_id?: string;
   // Custom fields
   custom_fields?: Record<string, string | number | boolean>;
 }
@@ -31,6 +33,7 @@ interface ZendeskApiTicket {
     description: string;
     priority: string;
     type: string;
+    external_id?: string;
     requester: {
       name: string;
       email: string;
@@ -85,6 +88,11 @@ const handler = async (req: Request): Promise<Response> => {
         tags: data.tags || ['vendibook', 'web-form'],
       },
     };
+
+    // Add external_id for webhook linking (e.g., transaction_id)
+    if (data.external_id) {
+      ticketPayload.ticket.external_id = data.external_id;
+    }
 
     // Add phone if provided
     if (data.requester_phone) {

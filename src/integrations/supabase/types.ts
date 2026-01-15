@@ -973,6 +973,56 @@ export type Database = {
         }
         Relationships: []
       }
+      zendesk_ticket_comments: {
+        Row: {
+          author_email: string | null
+          author_name: string | null
+          author_role: string | null
+          body: string
+          created_at: string
+          id: string
+          is_public: boolean | null
+          transaction_id: string | null
+          zendesk_comment_id: string
+          zendesk_created_at: string | null
+          zendesk_ticket_id: string
+        }
+        Insert: {
+          author_email?: string | null
+          author_name?: string | null
+          author_role?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          transaction_id?: string | null
+          zendesk_comment_id: string
+          zendesk_created_at?: string | null
+          zendesk_ticket_id: string
+        }
+        Update: {
+          author_email?: string | null
+          author_name?: string | null
+          author_role?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          transaction_id?: string | null
+          zendesk_comment_id?: string
+          zendesk_created_at?: string | null
+          zendesk_ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zendesk_ticket_comments_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

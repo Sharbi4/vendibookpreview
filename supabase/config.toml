@@ -104,3 +104,6 @@ verify_jwt = false
 
 [functions.check-ticket-status]
 verify_jwt = false
+
+[functions.zendesk-webhook]
+verify_jwt = false
