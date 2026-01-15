@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, Phone, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,11 +14,22 @@ import {
 } from '@/components/ui/dropdown-menu';
 import vendibookLogo from '@/assets/vendibook-logo.jpg';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
+import { Input } from '@/components/ui/input';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [mobileSearchQuery, setMobileSearchQuery] = useState('');
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const { user, profile, signOut, isVerified } = useAuth();
   const navigate = useNavigate();
+
+  // Focus the input when mobile search opens
+  useEffect(() => {
+    if (isMobileSearchOpen && mobileSearchInputRef.current) {
+      mobileSearchInputRef.current.focus();
+    }
+  }, [isMobileSearchOpen]);
 
   // Check if user is admin
   const { data: isAdmin = false } = useQuery({
@@ -37,11 +48,28 @@ const Header = () => {
     navigate('/');
   };
 
+  const handleMobileSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (mobileSearchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(mobileSearchQuery.trim())}`);
+      setIsMobileSearchOpen(false);
+      setMobileSearchQuery('');
+    }
+  };
+
+  const closeMobileSearch = () => {
+    setIsMobileSearchOpen(false);
+    setMobileSearchQuery('');
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full bg-background border-b border-border shadow-sm">
       <div className="container flex h-16 items-center justify-between">
-        {/* Logo */}
-        <Link to="/" className="flex items-center">
+        {/* Logo - hide when mobile search is open */}
+        <Link 
+          to="/" 
+          className={`flex items-center transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'} md:opacity-100 md:pointer-events-auto md:relative`}
+        >
           <img 
             src={vendibookLogo} 
             alt="Vendibook" 
@@ -49,7 +77,50 @@ const Header = () => {
           />
         </Link>
 
-        {/* Centered Search */}
+        {/* Mobile Expandable Search */}
+        <div 
+          className={`md:hidden flex items-center transition-all duration-300 ease-in-out ${
+            isMobileSearchOpen 
+              ? 'flex-1 mx-0' 
+              : 'flex-none'
+          }`}
+        >
+          {isMobileSearchOpen ? (
+            <form onSubmit={handleMobileSearch} className="flex items-center gap-2 w-full">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  ref={mobileSearchInputRef}
+                  type="text"
+                  value={mobileSearchQuery}
+                  onChange={(e) => setMobileSearchQuery(e.target.value)}
+                  placeholder="Search food trucks, trailers..."
+                  className="pl-9 pr-4 py-2 w-full rounded-full border-border bg-muted/50 focus-visible:ring-primary"
+                />
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={closeMobileSearch}
+                className="shrink-0"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </form>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMobileSearchOpen(true)}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+          )}
+        </div>
+
+        {/* Centered Search - Desktop */}
         <div className="hidden md:flex flex-1 justify-center max-w-xl mx-6">
           <button
             onClick={() => navigate('/search')}
@@ -146,15 +217,17 @@ const Header = () => {
           )}
         </div>
 
-        {/* Mobile Menu Button */}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="md:hidden"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
-          {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </Button>
+        {/* Mobile Actions - hide when search is open */}
+        <div className={`flex md:hidden items-center gap-1 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          {user && <NotificationCenter />}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
       </div>
 
       {/* Mobile Menu */}
