@@ -374,14 +374,17 @@ export type Database = {
           delivery_instructions: string | null
           delivery_radius_miles: number | null
           description: string
+          freight_category: string | null
           freight_payer: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
+          height_inches: number | null
           highlights: string[] | null
           host_id: string
           hours_of_access: string | null
           id: string
           image_urls: string[] | null
           latitude: number | null
+          length_inches: number | null
           location_notes: string | null
           longitude: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
@@ -395,6 +398,8 @@ export type Database = {
           title: string
           updated_at: string
           vendibook_freight_enabled: boolean | null
+          weight_lbs: number | null
+          width_inches: number | null
         }
         Insert: {
           access_instructions?: string | null
@@ -409,14 +414,17 @@ export type Database = {
           delivery_instructions?: string | null
           delivery_radius_miles?: number | null
           description: string
+          freight_category?: string | null
           freight_payer?: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
+          height_inches?: number | null
           highlights?: string[] | null
           host_id: string
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
           latitude?: number | null
+          length_inches?: number | null
           location_notes?: string | null
           longitude?: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
@@ -430,6 +438,8 @@ export type Database = {
           title: string
           updated_at?: string
           vendibook_freight_enabled?: boolean | null
+          weight_lbs?: number | null
+          width_inches?: number | null
         }
         Update: {
           access_instructions?: string | null
@@ -444,14 +454,17 @@ export type Database = {
           delivery_instructions?: string | null
           delivery_radius_miles?: number | null
           description?: string
+          freight_category?: string | null
           freight_payer?: string | null
           fulfillment_type?: Database["public"]["Enums"]["fulfillment_type"]
+          height_inches?: number | null
           highlights?: string[] | null
           host_id?: string
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
           latitude?: number | null
+          length_inches?: number | null
           location_notes?: string | null
           longitude?: number | null
           mode?: Database["public"]["Enums"]["listing_mode"]
@@ -465,6 +478,8 @@ export type Database = {
           title?: string
           updated_at?: string
           vendibook_freight_enabled?: boolean | null
+          weight_lbs?: number | null
+          width_inches?: number | null
         }
         Relationships: []
       }
