@@ -257,10 +257,14 @@ const Header = () => {
         <div className="hidden md:flex flex-1 justify-center max-w-2xl mx-6">
           <button
             onClick={() => navigate('/search')}
-            className="search-bar-glow w-full flex items-center gap-4 px-6 py-3.5 rounded-full border border-border bg-white hover:bg-white text-muted-foreground text-base font-medium shadow-sm"
+            className="search-bar-glow w-full flex items-center gap-4 px-6 py-3.5 rounded-full border border-border bg-white hover:bg-white text-muted-foreground text-base font-medium shadow-sm group"
           >
-            <Search className="h-5 w-5 text-primary" />
-            <span className="text-muted-foreground/80">Search food trucks, trailers, ghost kitchens, or equipment</span>
+            <div className="relative">
+              <Search className="h-5 w-5 text-primary" />
+              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
+              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-primary animate-ping opacity-75" />
+            </div>
+            <span className="text-muted-foreground/80 group-hover:text-foreground transition-colors">Search food trucks, trailers, ghost kitchens, or equipment</span>
           </button>
         </div>
 
