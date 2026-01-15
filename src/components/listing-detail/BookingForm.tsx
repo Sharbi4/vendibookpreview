@@ -683,7 +683,8 @@ const BookingForm = ({
 
       {/* Submit Button */}
       <Button 
-        className="w-full bg-primary hover:bg-primary/90" 
+        variant="gradient"
+        className="w-full" 
         size="lg"
         onClick={handleSubmit}
         disabled={isSubmitting || rentalDays <= 0 || !isListingAvailable || !userInfo}

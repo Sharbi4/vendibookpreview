@@ -277,6 +277,7 @@ const Auth = () => {
 
             <Button 
               type="submit" 
+              variant="gradient"
               className="w-full rounded-xl"
               disabled={isSubmitting}
             >
