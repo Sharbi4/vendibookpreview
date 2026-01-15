@@ -3,13 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 // VAPID public key - this should match the private key in your edge function
-const VAPID_PUBLIC_KEY = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U';
+const VAPID_PUBLIC_KEY =
+  'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U';
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/-/g, '+')
-    .replace(/_/g, '/');
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
 
   const rawData = window.atob(base64);
   const outputArray = new Uint8Array(rawData.length);
@@ -27,11 +26,26 @@ export const usePushNotifications = (userId: string | undefined) => {
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const { toast } = useToast();
 
+  // Ensure we use the SAME service worker as the PWA (/sw.js)
+  const getServiceWorkerRegistration = useCallback(async () => {
+    if (!('serviceWorker' in navigator)) {
+      throw new Error('Service workers not supported');
+    }
+
+    // If already registered, reuse it (prevents conflicts / overwrites)
+    const existing = await navigator.serviceWorker.getRegistration('/');
+    if (existing) return existing;
+
+    // Fallback: register our PWA service worker explicitly
+    return await navigator.serviceWorker.register('/sw.js');
+  }, []);
+
   // Check if push notifications are supported
   useEffect(() => {
-    const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+    const supported =
+      'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
     setIsSupported(supported);
-    
+
     if (supported) {
       setPermission(Notification.permission);
     }
@@ -46,7 +60,12 @@ export const usePushNotifications = (userId: string | undefined) => {
       }
 
       try {
-        const registration = await navigator.serviceWorker.ready;
+        const registration = await navigator.serviceWorker.getRegistration('/');
+        if (!registration) {
+          setIsSubscribed(false);
+          return;
+        }
+
         const subscription = await registration.pushManager.getSubscription();
         setIsSubscribed(!!subscription);
       } catch (error) {
@@ -58,17 +77,6 @@ export const usePushNotifications = (userId: string | undefined) => {
 
     checkSubscription();
   }, [isSupported, userId]);
-
-  // Register service worker
-  const registerServiceWorker = useCallback(async () => {
-    if (!('serviceWorker' in navigator)) {
-      throw new Error('Service workers not supported');
-    }
-
-    const registration = await navigator.serviceWorker.register('/sw.js');
-    console.log('Service Worker registered:', registration);
-    return registration;
-  }, []);
 
   // Subscribe to push notifications
   const subscribe = useCallback(async () => {
@@ -97,9 +105,8 @@ export const usePushNotifications = (userId: string | undefined) => {
         return false;
       }
 
-      // Register service worker
-      const registration = await registerServiceWorker();
-      await navigator.serviceWorker.ready;
+      // Ensure we have the PWA service worker registered
+      const registration = await getServiceWorkerRegistration();
 
       // Subscribe to push
       const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
@@ -107,8 +114,6 @@ export const usePushNotifications = (userId: string | undefined) => {
         userVisibleOnly: true,
         applicationServerKey: applicationServerKey as BufferSource,
       });
-
-      console.log('Push subscription:', subscription);
 
       // Extract keys from subscription
       const subscriptionJson = subscription.toJSON();
@@ -149,7 +154,7 @@ export const usePushNotifications = (userId: string | undefined) => {
     } finally {
       setIsLoading(false);
     }
-  }, [userId, registerServiceWorker, toast]);
+  }, [getServiceWorkerRegistration, toast, userId]);
 
   // Unsubscribe from push notifications
   const unsubscribe = useCallback(async () => {
@@ -158,8 +163,8 @@ export const usePushNotifications = (userId: string | undefined) => {
     try {
       setIsLoading(true);
 
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
+      const registration = await navigator.serviceWorker.getRegistration('/');
+      const subscription = await registration?.pushManager.getSubscription();
 
       if (subscription) {
         // Unsubscribe from push
@@ -193,7 +198,7 @@ export const usePushNotifications = (userId: string | undefined) => {
     } finally {
       setIsLoading(false);
     }
-  }, [userId, toast]);
+  }, [toast, userId]);
 
   return {
     isSupported,

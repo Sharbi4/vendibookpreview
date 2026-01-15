@@ -16,10 +16,21 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.png", "favicon.svg", "images/vendibook-email-logo.png"],
+
+      // Use ONE service worker (/sw.js) for both PWA caching + push notifications
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
+      injectManifest: {
+        // Fix build failure when a JS chunk exceeds Workbox's default 2MiB limit
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+      },
+
       manifest: {
         name: "Vendibook - Food Truck & Mobile Vendor Marketplace",
         short_name: "Vendibook",
-        description: "Rent or buy food trucks, trailers, ghost kitchens, and vendor lots. Verified listings, secure payments, and 24/7 support.",
+        description:
+          "Rent or buy food trucks, trailers, ghost kitchens, and vendor lots. Verified listings, secure payments, and 24/7 support.",
         theme_color: "#FF5124",
         background_color: "#ffffff",
         display: "standalone",
@@ -70,32 +81,10 @@ export default defineConfig(({ mode }) => ({
           },
         ],
       },
+
+      // Used to generate the precache manifest injected into src/sw.ts
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "supabase-cache",
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60, // 1 hour
-              },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "google-fonts-cache",
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-              },
-            },
-          },
-        ],
       },
     }),
   ].filter(Boolean),
