@@ -20,7 +20,8 @@ import {
   Car,
   Package,
   UtensilsCrossed,
-  Info
+  Info,
+  Phone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -28,6 +29,7 @@ import { Link } from 'react-router-dom';
 export interface BookingUserInfo {
   firstName: string;
   lastName: string;
+  phoneNumber: string;
   address1: string;
   address2: string;
   city: string;
@@ -62,6 +64,7 @@ export function BookingInfoModal({
   const [formData, setFormData] = useState<BookingUserInfo>({
     firstName: initialData?.firstName || '',
     lastName: initialData?.lastName || '',
+    phoneNumber: initialData?.phoneNumber || '',
     address1: initialData?.address1 || '',
     address2: initialData?.address2 || '',
     city: initialData?.city || '',
@@ -95,6 +98,10 @@ export function BookingInfoModal({
     
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required';
+    else if (!/^[\d\s\-\(\)\+]{10,}$/.test(formData.phoneNumber.trim())) {
+      newErrors.phoneNumber = 'Please enter a valid phone number';
+    }
     if (!formData.address1.trim()) newErrors.address1 = 'Street address is required';
     if (!formData.city.trim()) newErrors.city = 'City is required';
     if (!formData.state.trim()) newErrors.state = 'State is required';
@@ -236,6 +243,29 @@ export function BookingInfoModal({
                     <p className="text-xs text-destructive mt-1">{errors.lastName}</p>
                   )}
                 </div>
+              </div>
+
+              <div className="flex items-center gap-2 mt-6 mb-2">
+                <Phone className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold">Contact</h3>
+              </div>
+
+              <div>
+                <Label htmlFor="phoneNumber">Phone Number *</Label>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  value={formData.phoneNumber}
+                  onChange={(e) => updateField('phoneNumber', e.target.value)}
+                  placeholder="(555) 123-4567"
+                  className={cn(errors.phoneNumber && 'border-destructive')}
+                />
+                {errors.phoneNumber && (
+                  <p className="text-xs text-destructive mt-1">{errors.phoneNumber}</p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  The host may use this to contact you about your booking
+                </p>
               </div>
 
               <div className="flex items-center gap-2 mt-6 mb-2">
