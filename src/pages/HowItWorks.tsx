@@ -38,16 +38,17 @@ const HowItWorks = () => {
       <Header />
 
       <main className="flex-1">
-        {/* Hero Section */}
+        {/* Hero Section - GRADIENT */}
         <section className="py-20 md:py-28 relative overflow-hidden">
-          {/* Vibrant gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-300/25 via-indigo-200/30 to-purple-300/20" />
+          {/* Orange-Yellow Gradient Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/30 via-amber-200/25 to-orange-300/20" />
           
-          {/* Decorative orbs */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-20 right-20 w-96 h-96 bg-blue-400/30 rounded-full blur-3xl" />
-            <div className="absolute bottom-20 left-20 w-80 h-80 bg-purple-400/25 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-300/20 rounded-full blur-3xl" />
+          {/* Decorative orbs - orange/yellow only */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-20 right-20 w-96 h-96 bg-yellow-400/30 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-20 left-20 w-80 h-80 bg-orange-400/25 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-300/20 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute top-40 left-1/4 w-64 h-64 bg-yellow-300/20 rounded-full blur-2xl" />
           </div>
           <div className="container relative">
             <div className="max-w-4xl mx-auto text-center">
@@ -86,8 +87,8 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        {/* Who Vendibook Is For */}
-        <section className="py-20 bg-muted/30">
+        {/* Who Vendibook Is For - NATURAL */}
+        <section className="py-20 bg-background">
           <div className="container">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -128,9 +129,15 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        {/* How Vendibook Works - Step by Step */}
-        <section className="py-20 bg-background">
-          <div className="container">
+        {/* How Vendibook Works - Step by Step - GRADIENT */}
+        <section className="py-20 relative overflow-hidden">
+          {/* Orange-Yellow Gradient Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-200/25 via-yellow-100/20 to-amber-200/15" />
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-20 left-20 w-80 h-80 bg-orange-300/20 rounded-full blur-3xl" />
+            <div className="absolute bottom-20 right-20 w-96 h-96 bg-yellow-300/25 rounded-full blur-3xl animate-pulse" />
+          </div>
+          <div className="container relative z-10">
             <div className="text-center mb-16">
               <Badge variant="outline" className="mb-4 px-4 py-1.5 bg-primary/5 border-primary/20 text-primary">
                 Step by Step
@@ -211,8 +218,8 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        {/* Rent vs Sale */}
-        <section className="py-20 bg-muted/30">
+        {/* Rent vs Sale - NATURAL */}
+        <section className="py-20 bg-background">
           <div className="container">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -254,9 +261,15 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        {/* Trust & Safety */}
-        <section className="py-20 bg-background">
-          <div className="container">
+        {/* Trust & Safety - GRADIENT */}
+        <section className="py-20 relative overflow-hidden">
+          {/* Orange-Yellow Gradient Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/30 via-amber-200/25 to-orange-300/20" />
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-yellow-400/25 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-orange-300/20 rounded-full blur-3xl" />
+          </div>
+          <div className="container relative z-10">
             <div className="text-center mb-12">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-6">
                 <Shield className="h-8 w-8" />
@@ -304,8 +317,8 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        {/* Booking, Compliance & Documents */}
-        <section className="py-20 bg-muted/30">
+        {/* Booking, Compliance & Documents - NATURAL */}
+        <section className="py-20 bg-background">
           <div className="container">
             <div className="text-center mb-12">
               <Badge variant="outline" className="mb-4 px-4 py-1.5 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
@@ -380,9 +393,15 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        {/* Why Vendibook Is Different */}
-        <section className="py-20 bg-background">
-          <div className="container">
+        {/* Why Vendibook Is Different - GRADIENT */}
+        <section className="py-20 relative overflow-hidden">
+          {/* Orange-Yellow Gradient Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-200/25 via-yellow-100/20 to-amber-200/15" />
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-20 right-20 w-80 h-80 bg-amber-300/25 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-20 left-20 w-72 h-72 bg-yellow-300/20 rounded-full blur-3xl" />
+          </div>
+          <div className="container relative z-10">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
                 Why Vendibook Is Different
@@ -442,8 +461,8 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        {/* Learning Center */}
-        <section className="py-20 bg-muted/30">
+        {/* Learning Center - NATURAL */}
+        <section className="py-20 bg-background">
           <div className="container">
             <div className="max-w-4xl mx-auto text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-6">
