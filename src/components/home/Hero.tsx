@@ -2,8 +2,31 @@ import vendibookLogo from '@/assets/vendibook-logo.png';
 
 const Hero = () => {
   return (
-    <section className="relative bg-gradient-to-b from-vendibook-cream to-background pt-4 pb-4">
-      <div className="container max-w-5xl mx-auto px-4">
+    <section className="relative overflow-hidden pt-4 pb-4">
+      {/* Animated gradient background */}
+      <div 
+        className="absolute inset-0 bg-gradient-to-br from-vendibook-cream via-vendibook-cream/80 to-primary/5"
+        style={{
+          backgroundSize: '400% 400%',
+          animation: 'gradient-shift 15s ease infinite',
+        }}
+      />
+      
+      {/* Subtle dot pattern overlay */}
+      <div 
+        className="absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage: `radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)`,
+          backgroundSize: '24px 24px',
+        }}
+      />
+      
+      {/* Floating orbs for depth */}
+      <div className="absolute top-10 left-[10%] w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
+      <div className="absolute bottom-0 right-[15%] w-48 h-48 bg-vendibook-orange/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '6s', animationDelay: '1s' }} />
+      <div className="absolute top-1/2 left-[60%] w-32 h-32 bg-vendibook-teal/10 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '5s', animationDelay: '2s' }} />
+      
+      <div className="container max-w-5xl mx-auto px-4 relative z-10">
         {/* Hero Content */}
         <div className="max-w-3xl mx-auto text-center animate-fade-in">
           {/* Logo */}
@@ -11,7 +34,7 @@ const Hero = () => {
             <img 
               src={vendibookLogo} 
               alt="Vendibook" 
-              className="h-64 md:h-80 w-auto mix-blend-multiply transition-transform duration-300 hover:scale-105"
+              className="h-64 md:h-80 w-auto mix-blend-multiply transition-transform duration-300 hover:scale-105 drop-shadow-sm"
             />
           </div>
           
@@ -24,6 +47,18 @@ const Hero = () => {
           </p>
         </div>
       </div>
+      
+      {/* CSS for gradient animation */}
+      <style>{`
+        @keyframes gradient-shift {
+          0%, 100% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+        }
+      `}</style>
     </section>
   );
 };
