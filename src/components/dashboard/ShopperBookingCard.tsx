@@ -40,6 +40,7 @@ import {
 import { MessageDialog } from '@/components/messaging/MessageDialog';
 import ReviewForm from '@/components/reviews/ReviewForm';
 import { DocumentUploadSection } from '@/components/documents/DocumentUploadSection';
+import { PriceBreakdownModal, CheckoutOverlay } from '@/components/checkout';
 import { useBookingReview } from '@/hooks/useReviews';
 import { useDocumentComplianceStatus } from '@/hooks/useRequiredDocuments';
 import { useToast } from '@/hooks/use-toast';
@@ -130,6 +131,8 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showDocuments, setShowDocuments] = useState(false);
+  const [showPriceBreakdown, setShowPriceBreakdown] = useState(false);
+  const [showCheckoutOverlay, setShowCheckoutOverlay] = useState(false);
   const { data: existingReview } = useBookingReview(booking.id);
   
   const listing = booking.listing;
@@ -159,6 +162,9 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
     if (!listing) return;
     
     setIsProcessingPayment(true);
+    setShowPriceBreakdown(false);
+    setShowCheckoutOverlay(true);
+    
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
@@ -174,16 +180,13 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
       if (data?.error) throw new Error(data.error);
 
       if (data?.url) {
-        // Open Stripe Checkout in new tab
-        window.open(data.url, '_blank');
-        toast({
-          title: 'Checkout opened',
-          description: 'Complete your payment in the new tab.',
-        });
+        // Redirect in same tab for smoother UX
         onPaymentInitiated?.();
+        window.location.href = data.url;
       }
     } catch (error) {
       console.error('Payment error:', error);
+      setShowCheckoutOverlay(false);
       toast({
         title: 'Payment Error',
         description: error instanceof Error ? error.message : 'Failed to initiate payment. Please try again.',
@@ -314,7 +317,7 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
               <Button
                 variant="default"
                 size="sm"
-                onClick={handlePayNow}
+                onClick={() => setShowPriceBreakdown(true)}
                 disabled={isProcessingPayment}
                 className="bg-primary hover:bg-primary/90"
               >
@@ -413,6 +416,20 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
         listingTitle={listing?.title || 'Booking'}
         otherPartyName="Host"
       />
+
+      {/* Price Breakdown Modal */}
+      <PriceBreakdownModal
+        open={showPriceBreakdown}
+        onOpenChange={setShowPriceBreakdown}
+        mode="rent"
+        basePrice={booking.total_price - (booking.delivery_fee_snapshot || 0)}
+        deliveryFee={booking.delivery_fee_snapshot || 0}
+        listingTitle={listing?.title}
+        onConfirm={handlePayNow}
+      />
+
+      {/* Checkout Overlay */}
+      <CheckoutOverlay isVisible={showCheckoutOverlay} />
     </div>
   );
 };

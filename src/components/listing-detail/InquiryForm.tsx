@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ShieldCheck, Loader2, MapPin, Truck } from 'lucide-react';
+import { CheckoutOverlay } from '@/components/checkout';
 import type { FulfillmentType } from '@/types/listing';
 
 interface InquiryFormProps {
@@ -49,6 +50,7 @@ const InquiryForm = ({
   
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [showCheckoutOverlay, setShowCheckoutOverlay] = useState(false);
 
   // Determine available fulfillment options
   const getAvailableFulfillmentOptions = (): FulfillmentSelection[] => {
@@ -92,6 +94,8 @@ const InquiryForm = ({
     }
 
     setIsPurchasing(true);
+    setShowCheckoutOverlay(true);
+    
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
@@ -111,9 +115,10 @@ const InquiryForm = ({
       if (error) throw error;
       if (data.error) throw new Error(data.error);
 
-      // Redirect to Stripe checkout
+      // Redirect to Stripe checkout in same tab
       window.location.href = data.url;
     } catch (error) {
+      setShowCheckoutOverlay(false);
       toast({
         title: 'Purchase Error',
         description: error instanceof Error ? error.message : 'Failed to start checkout',
@@ -327,6 +332,9 @@ const InquiryForm = ({
         <ShieldCheck className="h-4 w-4 text-emerald-500" />
         <span>Protected by escrow - funds released after confirmation</span>
       </div>
+
+      {/* Checkout Overlay */}
+      <CheckoutOverlay isVisible={showCheckoutOverlay} />
     </div>
   );
 };
