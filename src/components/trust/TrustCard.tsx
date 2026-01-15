@@ -12,7 +12,7 @@ const TrustCard = ({ tile, onClick }: TrustCardProps) => {
     <button
       onClick={onClick}
       className="group flex flex-col items-center text-center p-6 bg-card rounded-xl border border-border 
-                 transition-all duration-300 ease-out cursor-pointer
+                 transition-all duration-300 ease-out cursor-pointer card-glow
                  hover:shadow-card-hover hover:-translate-y-1 hover:border-primary
                  focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
       aria-label={`Learn more about ${tile.title}`}
