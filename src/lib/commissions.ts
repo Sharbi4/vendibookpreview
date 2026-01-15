@@ -38,20 +38,25 @@ export function calculateRentalFees(basePrice: number, deliveryFee: number = 0) 
 /**
  * Calculate sale fees (seller-side only)
  * Seller pays 15%, Buyer pays nothing extra
+ * Optional freight cost for seller-paid shipping
  */
-export function calculateSaleFees(salePrice: number) {
-  // Seller fee (deducted from their payout)
+export function calculateSaleFees(salePrice: number, freightCost: number = 0, isSellerPaidFreight: boolean = false) {
+  // Seller fee (deducted from their payout) - on sale price only, not freight
   const sellerFee = salePrice * (SALE_SELLER_FEE_PERCENT / 100);
   
-  // What the buyer pays (no additional fee)
-  const customerTotal = salePrice;
+  // What the buyer pays - if buyer pays freight, add it; if seller pays, no freight in total
+  const customerTotal = isSellerPaidFreight ? salePrice : salePrice + freightCost;
+  
+  // Freight deduction for seller-paid shipping
+  const freightDeduction = isSellerPaidFreight ? freightCost : 0;
   
   // What the seller receives
-  const sellerReceives = salePrice - sellerFee;
+  const sellerReceives = salePrice - sellerFee - freightDeduction;
   
   return {
     salePrice: Math.round(salePrice * 100) / 100,
     sellerFee: Math.round(sellerFee * 100) / 100,
+    freightDeduction: Math.round(freightDeduction * 100) / 100,
     customerTotal: Math.round(customerTotal * 100) / 100,
     sellerReceives: Math.round(sellerReceives * 100) / 100,
   };
