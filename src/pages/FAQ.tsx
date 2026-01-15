@@ -405,10 +405,14 @@ const FAQ = () => {
       <main className="flex-1">
         {/* Hero Section with Gradient */}
         <section className="relative py-16 md:py-24 overflow-hidden">
-          {/* Orange-Yellow Gradient Element */}
+          {/* Vibrant gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-300/25 via-fuchsia-200/30 to-amber-300/20" />
+          
+          {/* Decorative orbs */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-vendibook-orange via-amber-400 to-yellow-300 opacity-20 blur-3xl" />
-            <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-yellow-300 via-amber-400 to-vendibook-orange opacity-15 blur-3xl" />
+            <div className="absolute top-20 right-20 w-96 h-96 bg-purple-400/30 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-20 left-20 w-80 h-80 bg-fuchsia-400/25 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/3 w-[500px] h-[500px] bg-amber-300/20 rounded-full blur-3xl" />
           </div>
 
           <div className="container relative z-10 text-center">

@@ -40,7 +40,15 @@ const HowItWorks = () => {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="py-20 md:py-28 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-vendibook-cream via-background to-primary/5" />
+          {/* Vibrant gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-300/25 via-indigo-200/30 to-purple-300/20" />
+          
+          {/* Decorative orbs */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-20 right-20 w-96 h-96 bg-blue-400/30 rounded-full blur-3xl" />
+            <div className="absolute bottom-20 left-20 w-80 h-80 bg-purple-400/25 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-300/20 rounded-full blur-3xl" />
+          </div>
           <div className="container relative">
             <div className="max-w-4xl mx-auto text-center">
               <Badge variant="outline" className="mb-6 px-4 py-1.5 text-sm bg-primary/5 border-primary/20 text-primary animate-fade-in">
