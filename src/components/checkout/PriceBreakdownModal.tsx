@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, ShieldCheck, CreditCard, Info } from 'lucide-react';
+import { Loader2, ShieldCheck, Info, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,6 +14,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
+import { StripeLogo } from '@/components/ui/StripeLogo';
 
 // Commission rates (must match edge function)
 const RENTAL_RENTER_FEE_PERCENT = 12.9;
@@ -126,11 +127,12 @@ const PriceBreakdownModal = ({
           {/* Security Badge */}
           <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg">
             <ShieldCheck className="h-5 w-5 text-emerald-600" />
-            <div className="text-xs text-emerald-700 dark:text-emerald-400">
+            <div className="flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-400">
               {mode === 'sale' 
                 ? 'Protected by escrow - your payment is secure until you confirm receipt'
-                : 'Secure payment powered by Stripe - your information is encrypted'
+                : 'Secure payment powered by'
               }
+              {mode !== 'sale' && <StripeLogo size="sm" />}
             </div>
           </div>
         </div>

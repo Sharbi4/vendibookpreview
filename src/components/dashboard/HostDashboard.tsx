@@ -9,10 +9,12 @@ import BookingRequestsSection from './BookingRequestsSection';
 import SellerSalesSection from './SellerSalesSection';
 import { AIInsightsCard } from './AIInsightsCard';
 import { EnhancedAnalytics } from './EnhancedAnalytics';
+import { RevenueAnalyticsCard } from './RevenueAnalyticsCard';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { useListingAnalytics } from '@/hooks/useListingAnalytics';
+import { useRevenueAnalytics } from '@/hooks/useRevenueAnalytics';
 import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectModal';
 import { useState } from 'react';
 
@@ -21,6 +23,7 @@ const HostDashboard = () => {
   const { stats: bookingStats } = useHostBookings();
   const { isConnected, hasAccountStarted, isLoading: stripeLoading, connectStripe, isConnecting } = useStripeConnect();
   const { analytics, isLoading: analyticsLoading } = useListingAnalytics();
+  const { analytics: revenueAnalytics, isLoading: revenueLoading } = useRevenueAnalytics();
   const [showStripeModal, setShowStripeModal] = useState(false);
 
   const handleConnectStripe = async () => {
@@ -108,7 +111,7 @@ const HostDashboard = () => {
 
       {/* Main Tabs */}
       <Tabs defaultValue="listings" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6 bg-muted/50 p-1 rounded-xl">
+        <TabsList className="grid w-full grid-cols-4 mb-6 bg-muted/50 p-1 rounded-xl">
           <TabsTrigger value="listings" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
             My Listings
           </TabsTrigger>
@@ -123,6 +126,10 @@ const HostDashboard = () => {
           <TabsTrigger value="analytics" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <BarChart3 className="h-4 w-4 mr-1.5" />
             Analytics
+          </TabsTrigger>
+          <TabsTrigger value="revenue" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <DollarSign className="h-4 w-4 mr-1.5" />
+            Revenue
           </TabsTrigger>
         </TabsList>
 
@@ -202,6 +209,25 @@ const HostDashboard = () => {
               <h4 className="font-semibold text-foreground text-lg mb-2">No analytics yet</h4>
               <p className="text-muted-foreground max-w-sm mx-auto">
                 Analytics will appear once your listings start getting views.
+              </p>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="revenue" className="animate-fade-in">
+          {revenueLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : revenueAnalytics ? (
+            <RevenueAnalyticsCard analytics={revenueAnalytics} />
+          ) : (
+            <div className="relative overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl p-12 text-center border border-border/50">
+              <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+              <DollarSign className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h4 className="font-semibold text-foreground text-lg mb-2">No revenue yet</h4>
+              <p className="text-muted-foreground max-w-sm mx-auto">
+                Revenue analytics will appear once you start making sales.
               </p>
             </div>
           )}
