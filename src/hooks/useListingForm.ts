@@ -28,6 +28,12 @@ const initialFormData: ListingFormData = {
   existingImages: [],
   vendibook_freight_enabled: false,
   freight_payer: 'buyer',
+  // Item dimensions for freight estimates
+  weight_lbs: '',
+  length_inches: '',
+  width_inches: '',
+  height_inches: '',
+  freight_category: null,
   required_documents: [],
 };
 

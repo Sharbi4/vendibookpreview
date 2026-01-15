@@ -164,6 +164,12 @@ export const ListingWizard: React.FC = () => {
         // Vendibook freight fields (for sales)
         vendibook_freight_enabled: formData.mode === 'sale' ? formData.vendibook_freight_enabled : false,
         freight_payer: formData.mode === 'sale' && formData.vendibook_freight_enabled ? formData.freight_payer : 'buyer',
+        // Item dimensions for freight estimates
+        weight_lbs: formData.weight_lbs ? parseFloat(formData.weight_lbs) : null,
+        length_inches: formData.length_inches ? parseFloat(formData.length_inches) : null,
+        width_inches: formData.width_inches ? parseFloat(formData.width_inches) : null,
+        height_inches: formData.height_inches ? parseFloat(formData.height_inches) : null,
+        freight_category: formData.freight_category || null,
       };
 
       const { data: listing, error: insertError } = await supabase

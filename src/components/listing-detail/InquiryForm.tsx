@@ -27,6 +27,12 @@ interface InquiryFormProps {
   freightPayer?: 'buyer' | 'seller';
   // Origin address for freight calculation (listing location)
   originAddress?: string | null;
+  // Item dimensions for freight calculation
+  weightLbs?: number | null;
+  lengthInches?: number | null;
+  widthInches?: number | null;
+  heightInches?: number | null;
+  freightCategory?: string | null;
 }
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
@@ -41,6 +47,11 @@ const InquiryForm = ({
   vendibookFreightEnabled = false,
   freightPayer = 'buyer',
   originAddress,
+  weightLbs,
+  lengthInches,
+  widthInches,
+  heightInches,
+  freightCategory,
 }: InquiryFormProps) => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
@@ -106,14 +117,14 @@ const InquiryForm = ({
     await getEstimate({
       origin_address: originAddress,
       destination_address: address.trim(),
-      // Default item dimensions - could be customized per listing
-      weight_lbs: 100,
-      length_inches: 48,
-      width_inches: 40,
-      height_inches: 48,
-      item_category: 'standard',
+      // Use listing dimensions if available, otherwise use defaults
+      weight_lbs: weightLbs || 5000,
+      length_inches: lengthInches || 240,
+      width_inches: widthInches || 96,
+      height_inches: heightInches || 120,
+      item_category: (freightCategory as 'standard' | 'fragile' | 'heavy_equipment' | 'oversized') || 'standard',
     });
-  }, [originAddress, getEstimate, clearEstimate]);
+  }, [originAddress, weightLbs, lengthInches, widthInches, heightInches, freightCategory, getEstimate, clearEstimate]);
 
   // Trigger freight estimate when address changes (with debounce)
   useEffect(() => {
