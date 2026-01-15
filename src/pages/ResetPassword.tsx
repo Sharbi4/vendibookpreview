@@ -103,13 +103,19 @@ const ResetPassword = () => {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-vendibook-cream to-background flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
+      <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-orange-300/25 via-amber-200/30 to-purple-300/20 flex items-center justify-center p-4">
+        {/* Vibrant decorative orbs */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-20 right-20 w-96 h-96 bg-orange-400/30 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 left-20 w-80 h-80 bg-purple-400/25 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-300/20 rounded-full blur-3xl" />
+        </div>
+        <div className="w-full max-w-md relative z-10">
           <div className="text-center mb-8">
             <img 
               src={vendibookLogo} 
               alt="Vendibook" 
-              className="h-20 w-auto mx-auto mb-4 rounded-xl"
+              className="h-60 w-auto mx-auto mb-4 rounded-xl"
             />
           </div>
 
@@ -129,14 +135,21 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-vendibook-cream to-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-orange-300/25 via-amber-200/30 to-purple-300/20 flex items-center justify-center p-4">
+      {/* Vibrant decorative orbs */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 right-20 w-96 h-96 bg-orange-400/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 left-20 w-80 h-80 bg-purple-400/25 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-300/20 rounded-full blur-3xl" />
+        <div className="absolute top-10 left-1/3 w-64 h-64 bg-rose-300/20 rounded-full blur-3xl" />
+      </div>
+      <div className="w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
           <img 
             src={vendibookLogo} 
             alt="Vendibook" 
-            className="h-20 w-auto mx-auto mb-4 rounded-xl"
+            className="h-60 w-auto mx-auto mb-4 rounded-xl"
           />
         </div>
 
