@@ -3,7 +3,7 @@ import SearchBar from '@/components/search/SearchBar';
 import CategoryPills from '@/components/search/CategoryPills';
 import ModeToggle from '@/components/search/ModeToggle';
 import { ListingCategory, ListingMode } from '@/types/listing';
-import vendibookLogo from '@/assets/vendibook-logo.svg';
+import vendibookLogo from '@/assets/vendibook-logo.png';
 
 interface HeroProps {
   onSearch?: (filters: { query: string; category: ListingCategory | null; mode: ListingMode | null }) => void;
