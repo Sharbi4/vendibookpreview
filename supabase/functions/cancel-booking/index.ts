@@ -16,6 +16,7 @@ interface CancelRequest {
   booking_id: string;
   cancellation_reason?: string;
   process_refund?: boolean; // Default true if booking is paid
+  refund_amount?: number; // Partial refund amount in dollars (null = full refund)
 }
 
 serve(async (req) => {
@@ -51,9 +52,10 @@ serve(async (req) => {
       booking_id, 
       cancellation_reason,
       process_refund = true,
+      refund_amount,
     } = body;
     
-    logStep("Request received", { booking_id, cancellation_reason, process_refund });
+    logStep("Request received", { booking_id, cancellation_reason, process_refund, refund_amount });
 
     if (!booking_id) {
       throw new Error("Missing required field: booking_id");
@@ -116,20 +118,48 @@ serve(async (req) => {
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
       
       try {
-        const refund = await stripe.refunds.create({
+        // Calculate refund: partial or full
+        const isPartialRefund = typeof refund_amount === 'number' && refund_amount > 0 && refund_amount < booking.total_price;
+        const refundAmountCents = isPartialRefund 
+          ? Math.round(refund_amount * 100) 
+          : undefined; // undefined means full refund
+        
+        logStep("Refund calculation", { 
+          isPartialRefund, 
+          requestedAmount: refund_amount, 
+          totalPrice: booking.total_price,
+          refundAmountCents 
+        });
+        
+        // Validate partial refund amount
+        if (isPartialRefund && refund_amount > booking.total_price) {
+          throw new Error(`Refund amount ($${refund_amount}) cannot exceed booking total ($${booking.total_price})`);
+        }
+        
+        const refundParams: Stripe.RefundCreateParams = {
           payment_intent: booking.payment_intent_id,
           reason: 'requested_by_customer',
           metadata: {
             booking_id,
             initiated_by: initiatedBy,
             cancellation_reason: cancellation_reason || '',
+            is_partial: isPartialRefund ? 'true' : 'false',
           },
-        });
+        };
+        
+        // Add amount only for partial refunds
+        if (refundAmountCents) {
+          refundParams.amount = refundAmountCents;
+        }
+        
+        const refund = await stripe.refunds.create(refundParams);
         
         refundResult = {
           refund_id: refund.id,
           refund_status: refund.status,
           refund_amount: refund.amount / 100,
+          is_partial: isPartialRefund,
+          original_amount: booking.total_price,
         };
         
         logStep("Refund processed", refundResult);

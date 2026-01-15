@@ -132,12 +132,13 @@ export const useHostBookings = () => {
     }
   };
 
-  const cancelBooking = async (bookingId: string, reason?: string) => {
+  const cancelBooking = async (bookingId: string, reason?: string, refundAmount?: number) => {
     try {
       const { data, error } = await supabase.functions.invoke('cancel-booking', {
         body: { 
           booking_id: bookingId,
           cancellation_reason: reason,
+          refund_amount: refundAmount, // undefined = full refund
         },
       });
 
@@ -145,6 +146,7 @@ export const useHostBookings = () => {
       if (data?.error) throw new Error(data.error);
 
       const wasRefunded = data?.refund && !data.refund.error;
+      const isPartial = data?.refund?.is_partial;
 
       setBookings(prev =>
         prev.map(b =>
@@ -155,9 +157,15 @@ export const useHostBookings = () => {
       );
 
       toast({
-        title: wasRefunded ? 'Booking cancelled & refunded' : 'Booking cancelled',
+        title: wasRefunded 
+          ? isPartial 
+            ? 'Booking cancelled with partial refund' 
+            : 'Booking cancelled & refunded'
+          : 'Booking cancelled',
         description: wasRefunded 
-          ? `Refund of $${data.refund.refund_amount.toFixed(2)} has been processed.`
+          ? isPartial
+            ? `Partial refund of $${data.refund.refund_amount.toFixed(2)} (of $${data.refund.original_amount.toFixed(2)}) has been processed.`
+            : `Full refund of $${data.refund.refund_amount.toFixed(2)} has been processed.`
           : 'The booking has been cancelled.',
       });
 
