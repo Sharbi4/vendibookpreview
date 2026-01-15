@@ -1,19 +1,25 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { CheckCircle2, Calendar, ArrowRight, Loader2, Home, ShieldCheck, Clock, Sparkles, PartyPopper } from 'lucide-react';
+import { CheckCircle2, Calendar, ArrowRight, Loader2, Home, ShieldCheck, Clock, Sparkles, PartyPopper, Mail, ChevronDown, ChevronUp } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
 import { useCreateSaleTransaction } from '@/hooks/useSaleTransactions';
-
+import { EmailReceiptPreview } from '@/components/checkout';
+import { useAuth } from '@/contexts/AuthContext';
+import { calculateRentalFees } from '@/lib/commissions';
 interface BookingDetails {
   id: string;
   start_date: string;
   end_date: string;
   total_price: number;
+  delivery_fee_snapshot?: number;
+  address_snapshot?: string;
+  fulfillment_selected?: string;
   listing: {
     title: string;
     cover_image_url: string | null;
@@ -23,6 +29,10 @@ interface BookingDetails {
 interface SaleTransactionDetails {
   id: string;
   amount: number;
+  platform_fee: number;
+  delivery_fee?: number;
+  delivery_address?: string;
+  fulfillment_type?: string;
   listing: {
     title: string;
     cover_image_url: string | null;
@@ -33,12 +43,15 @@ const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
   const isEscrow = searchParams.get('escrow') === 'true';
+  const { user } = useAuth();
   
   const [booking, setBooking] = useState<BookingDetails | null>(null);
   const [saleTransaction, setSaleTransaction] = useState<SaleTransactionDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showContent, setShowContent] = useState(false);
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
+  const [userProfile, setUserProfile] = useState<{ full_name: string | null; email: string | null } | null>(null);
   const confettiFired = useRef(false);
   
   const createSaleTransaction = useCreateSaleTransaction();
@@ -95,6 +108,10 @@ const PaymentSuccess = () => {
               .select(`
                 id,
                 amount,
+                platform_fee,
+                delivery_fee,
+                delivery_address,
+                fulfillment_type,
                 listing:listings(title, cover_image_url)
               `)
               .eq('id', result.transaction_id)
@@ -112,6 +129,9 @@ const PaymentSuccess = () => {
               start_date,
               end_date,
               total_price,
+              delivery_fee_snapshot,
+              address_snapshot,
+              fulfillment_selected,
               listing:listings(title, cover_image_url)
             `)
             .eq('checkout_session_id', sessionId)
@@ -119,6 +139,19 @@ const PaymentSuccess = () => {
 
           if (!bookingError && data) {
             setBooking(data as unknown as BookingDetails);
+          }
+        }
+
+        // Fetch user profile for email preview
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, email')
+            .eq('id', user.id)
+            .maybeSingle();
+          
+          if (profile) {
+            setUserProfile(profile);
           }
         }
       } catch (err) {
@@ -135,14 +168,14 @@ const PaymentSuccess = () => {
     };
 
     processPayment();
-  }, [sessionId, isEscrow]);
+  }, [sessionId, isEscrow, user]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       
       <main className="flex-1 flex items-center justify-center py-16">
-        <div className="container max-w-lg">
+        <div className="container max-w-2xl">
           <Card className={`border-2 shadow-xl overflow-hidden transition-all duration-500 ${showContent && !isLoading && !error ? 'border-emerald-500' : 'border-foreground'}`}>
             <CardContent className="pt-8 pb-8 text-center">
               {isLoading ? (
@@ -259,7 +292,36 @@ const PaymentSuccess = () => {
                     </Button>
                   </div>
 
-                  <p className="text-xs text-muted-foreground mt-6">
+                  <Collapsible open={showEmailPreview} onOpenChange={setShowEmailPreview} className="mt-6">
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="w-full gap-2 text-muted-foreground hover:text-foreground">
+                        <Mail className="h-4 w-4" />
+                        {showEmailPreview ? 'Hide' : 'Preview'} Receipt Email
+                        {showEmailPreview ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-4">
+                      {saleTransaction && (
+                        <EmailReceiptPreview
+                          transactionId={saleTransaction.id}
+                          itemName={saleTransaction.listing?.title || 'Your Purchase'}
+                          amount={saleTransaction.amount}
+                          platformFee={saleTransaction.platform_fee}
+                          deliveryFee={saleTransaction.delivery_fee}
+                          isRental={false}
+                          address={saleTransaction.delivery_address}
+                          fulfillmentType={saleTransaction.fulfillment_type}
+                          isEscrow={true}
+                          paymentMethod="Card ending in ****"
+                          paymentDate={new Date().toISOString()}
+                          recipientName={userProfile?.full_name || 'Valued Customer'}
+                          recipientEmail={userProfile?.email || user?.email}
+                        />
+                      )}
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  <p className="text-xs text-muted-foreground mt-4">
                     You can track and confirm your purchase from your dashboard.
                   </p>
                 </div>
@@ -336,7 +398,44 @@ const PaymentSuccess = () => {
                     </Button>
                   </div>
 
-                  <p className="text-xs text-muted-foreground mt-6">
+                  <Collapsible open={showEmailPreview} onOpenChange={setShowEmailPreview} className="mt-6">
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="w-full gap-2 text-muted-foreground hover:text-foreground">
+                        <Mail className="h-4 w-4" />
+                        {showEmailPreview ? 'Hide' : 'Preview'} Receipt Email
+                        {showEmailPreview ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-4">
+                      {booking && (() => {
+                        const fees = calculateRentalFees(
+                          booking.total_price - (booking.delivery_fee_snapshot || 0),
+                          booking.delivery_fee_snapshot || 0
+                        );
+                        return (
+                          <EmailReceiptPreview
+                            transactionId={booking.id}
+                            itemName={booking.listing?.title || 'Your Booking'}
+                            amount={booking.total_price}
+                            platformFee={fees.renterFee}
+                            deliveryFee={booking.delivery_fee_snapshot}
+                            isRental={true}
+                            startDate={booking.start_date}
+                            endDate={booking.end_date}
+                            address={booking.address_snapshot}
+                            fulfillmentType={booking.fulfillment_selected}
+                            isEscrow={false}
+                            paymentMethod="Card ending in ****"
+                            paymentDate={new Date().toISOString()}
+                            recipientName={userProfile?.full_name || 'Valued Customer'}
+                            recipientEmail={userProfile?.email || user?.email}
+                          />
+                        );
+                      })()}
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  <p className="text-xs text-muted-foreground mt-4">
                     A confirmation email has been sent to your email address.
                   </p>
                 </div>
