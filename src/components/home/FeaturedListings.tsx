@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import ListingCard from '@/components/listing/ListingCard';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MapPin, Navigation } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Pagination,
   PaginationContent,
@@ -15,12 +17,67 @@ import {
 
 const ITEMS_PER_PAGE = 8;
 
-const FeaturedListings = () => {
-  const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high'>('newest');
-  const [currentPage, setCurrentPage] = useState(1);
+interface UserLocation {
+  latitude: number;
+  longitude: number;
+}
 
-  // Fetch real listings from the database
-  const { data: listings = [], isLoading } = useQuery({
+const FeaturedListings = () => {
+  const [sortBy, setSortBy] = useState<'nearest' | 'newest' | 'price-low' | 'price-high'>('nearest');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [isRequestingLocation, setIsRequestingLocation] = useState(false);
+
+  // Request user location on mount
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      setIsRequestingLocation(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+          setIsRequestingLocation(false);
+        },
+        (error) => {
+          console.log('Geolocation error:', error.message);
+          setLocationError(error.message);
+          setIsRequestingLocation(false);
+          // Default sort to newest if location unavailable
+          setSortBy('newest');
+        },
+        { timeout: 10000, maximumAge: 300000 } // 5 min cache
+      );
+    } else {
+      setSortBy('newest');
+    }
+  }, []);
+
+  // Fetch nearby listings from edge function when we have location
+  const { data: nearbyData, isLoading: isLoadingNearby } = useQuery({
+    queryKey: ['nearby-listings', userLocation?.latitude, userLocation?.longitude],
+    queryFn: async () => {
+      if (!userLocation) return null;
+      
+      const { data, error } = await supabase.functions.invoke('get-nearby-listings', {
+        body: {
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+          radius_miles: 500, // Wide radius to get more results
+          limit: 100
+        }
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userLocation,
+  });
+
+  // Fallback: Fetch all listings if no location
+  const { data: allListings = [], isLoading: isLoadingAll } = useQuery({
     queryKey: ['featured-listings'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -32,12 +89,24 @@ const FeaturedListings = () => {
       if (error) throw error;
       return data;
     },
+    enabled: !userLocation, // Only fetch when no location
   });
 
-  // Extract unique host IDs from real listings
-  const hostIds = useMemo(() => [...new Set(listings.map(l => l.host_id))], [listings]);
+  // Use nearby listings if available, otherwise fall back to all listings
+  const listings = useMemo(() => {
+    if (nearbyData?.listings) {
+      return nearbyData.listings;
+    }
+    return allListings;
+  }, [nearbyData, allListings]);
 
-  // Fetch host verification status
+  // Extract unique host IDs
+  const hostIds = useMemo(() => {
+    const ids = listings.map(l => l.host_id).filter(Boolean);
+    return [...new Set(ids)] as string[];
+  }, [listings]);
+
+  // Use host verification from nearby API or fetch separately
   const { data: hostProfiles = [] } = useQuery({
     queryKey: ['featured-host-profiles', hostIds],
     queryFn: async () => {
@@ -49,23 +118,28 @@ const FeaturedListings = () => {
       if (error) throw error;
       return data;
     },
-    enabled: hostIds.length > 0,
+    enabled: hostIds.length > 0 && !nearbyData?.hostVerificationMap,
   });
 
-  // Create a map of host_id -> identity_verified
+  // Create verification map
   const hostVerificationMap = useMemo(() => {
+    if (nearbyData?.hostVerificationMap) {
+      return nearbyData.hostVerificationMap;
+    }
     const map: Record<string, boolean> = {};
     hostProfiles.forEach(profile => {
       map[profile.id] = profile.identity_verified ?? false;
     });
     return map;
-  }, [hostProfiles]);
+  }, [nearbyData?.hostVerificationMap, hostProfiles]);
 
   const sortedListings = useMemo(() => {
     let result = [...listings];
 
-    // Sort
-    if (sortBy === 'newest') {
+    if (sortBy === 'nearest' && userLocation) {
+      // Already sorted by distance from API
+      return result;
+    } else if (sortBy === 'newest') {
       result.sort((a, b) => new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime());
     } else if (sortBy === 'price-low') {
       result.sort((a, b) => {
@@ -82,7 +156,7 @@ const FeaturedListings = () => {
     }
 
     return result;
-  }, [listings, sortBy]);
+  }, [listings, sortBy, userLocation]);
 
   // Reset to page 1 when sort changes
   useEffect(() => {
@@ -97,6 +171,28 @@ const FeaturedListings = () => {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleRequestLocation = () => {
+    if ('geolocation' in navigator) {
+      setIsRequestingLocation(true);
+      setLocationError(null);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+          setIsRequestingLocation(false);
+          setSortBy('nearest');
+        },
+        (error) => {
+          setLocationError(error.message);
+          setIsRequestingLocation(false);
+        },
+        { timeout: 10000 }
+      );
+    }
   };
 
   // Generate page numbers to display
@@ -131,6 +227,8 @@ const FeaturedListings = () => {
     return pages;
   };
 
+  const isLoading = isLoadingNearby || isLoadingAll || isRequestingLocation;
+
   // Loading skeleton
   if (isLoading) {
     return (
@@ -163,25 +261,56 @@ const FeaturedListings = () => {
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Featured Listings</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-foreground">
+                {userLocation ? 'Listings Near You' : 'Featured Listings'}
+              </h2>
+              {userLocation && (
+                <span className="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                  <Navigation className="h-3 w-3" />
+                  Location enabled
+                </span>
+              )}
+            </div>
             <p className="text-muted-foreground mt-1">
               {sortedListings.length} listing{sortedListings.length !== 1 ? 's' : ''} available
               {totalPages > 1 && ` • Page ${currentPage} of ${totalPages}`}
+              {userLocation && nearbyData?.listings?.[0]?.distance_miles && (
+                <span className="ml-2">
+                  • Closest: {nearbyData.listings[0].distance_miles.toFixed(1)} miles away
+                </span>
+              )}
             </p>
           </div>
           
-          {/* Sort Options */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Sort by:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as 'newest' | 'price-low' | 'price-high')}
-              className="text-sm border border-border rounded-lg px-3 py-2 bg-background"
-            >
-              <option value="newest">Newest</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-            </select>
+          <div className="flex items-center gap-3">
+            {/* Location button if not enabled */}
+            {!userLocation && !locationError && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRequestLocation}
+                className="flex items-center gap-2"
+              >
+                <MapPin className="h-4 w-4" />
+                Find nearby
+              </Button>
+            )}
+            
+            {/* Sort Options */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Sort by:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className="text-sm border border-border rounded-lg px-3 py-2 bg-background"
+              >
+                {userLocation && <option value="nearest">Nearest</option>}
+                <option value="newest">Newest</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -194,6 +323,7 @@ const FeaturedListings = () => {
                   key={listing.id} 
                   listing={listing} 
                   hostVerified={hostVerificationMap[listing.host_id] ?? false}
+                  distanceMiles={listing.distance_miles}
                 />
               ))}
             </div>

@@ -14,6 +14,7 @@ interface ListingCardProps {
   showQuickBook?: boolean;
   onQuickBook?: (listing: Listing) => void;
   canDeliverToUser?: boolean;
+  distanceMiles?: number;
 }
 
 // Map of popular amenities to icons (subset for compact display)
@@ -37,7 +38,7 @@ const popularAmenityIcons: Record<string, { icon: React.ElementType; label: stri
   three_compartment_sink: { icon: Droplet, label: '3 Compartment Sink' },
 };
 
-const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook, canDeliverToUser }: ListingCardProps) => {
+const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook, canDeliverToUser, distanceMiles }: ListingCardProps) => {
   const price = listing.mode === 'rent' 
     ? `$${listing.price_daily}/day`
     : `$${listing.price_sale?.toLocaleString()}`;
@@ -177,6 +178,11 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           <span className="text-sm text-muted-foreground flex items-center gap-1">
             <MapPin className="h-3 w-3" />
             {location}
+            {distanceMiles !== undefined && (
+              <span className="text-xs text-primary font-medium ml-1">
+                ({distanceMiles < 1 ? '<1' : distanceMiles.toFixed(0)} mi)
+              </span>
+            )}
           </span>
           <span className="text-xs px-2 py-1 bg-secondary rounded-full text-muted-foreground">
             {CATEGORY_LABELS[listing.category]}
