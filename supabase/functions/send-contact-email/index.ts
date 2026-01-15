@@ -249,6 +249,40 @@ const handler = async (req: Request): Promise<Response> => {
     );
     logStep("Customer confirmation email sent");
 
+    // Create Zendesk ticket in background
+    try {
+      const zendeskResponse = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/create-zendesk-ticket`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+          },
+          body: JSON.stringify({
+            requester_name: name,
+            requester_email: email,
+            requester_phone: phone,
+            subject: `[Contact Form] ${subject}`,
+            description: `Contact form submission from ${name}\n\nPhone: ${phone}\nEmail: ${email}\n\nMessage:\n${message}\n\nSubmitted at: ${currentTime} EST`,
+            priority: 'high',
+            type: 'question',
+            tags: ['vendibook', 'contact-form', 'callback-requested'],
+          }),
+        }
+      );
+      
+      if (zendeskResponse.ok) {
+        const zendeskResult = await zendeskResponse.json();
+        logStep("Zendesk ticket created", { ticketId: zendeskResult.ticket_id });
+      } else {
+        const errorData = await zendeskResponse.json();
+        logStep("Zendesk ticket creation failed", { error: errorData });
+      }
+    } catch (zendeskError: any) {
+      logStep("Zendesk integration error (non-blocking)", { error: zendeskError.message });
+    }
+
     logStep("Function completed successfully");
 
     return new Response(
