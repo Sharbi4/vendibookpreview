@@ -460,16 +460,16 @@ const AITools = () => {
         <main className="flex-1">
           {/* Hero Section - GRADIENT with enhanced animations */}
           <section className="relative py-20 md:py-28 overflow-hidden">
-            {/* Orange Gradient Background - #FF5124 based */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/25 via-[#FF5124]/15 to-amber-200/12" />
+            {/* Orange Gradient Background - #FF5124 based, subtle */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/10 via-[#FF5124]/6 to-amber-200/5" />
             
-            {/* Animated decorative orbs */}
+            {/* Animated decorative orbs - subtle */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-10 right-10 w-[400px] h-[400px] bg-gradient-to-br from-[#FF5124]/35 to-[#FF5124]/25 rounded-full blur-3xl animate-pulse" />
-              <div className="absolute bottom-10 left-10 w-[350px] h-[350px] bg-gradient-to-tr from-[#FF5124]/30 to-[#FF6B3D]/25 rounded-full blur-3xl" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-[#FF5124]/20 via-[#FF6B3D]/15 to-amber-200/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-              <div className="absolute top-20 left-1/4 w-64 h-64 bg-[#FF5124]/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '0.5s' }} />
-              <div className="absolute bottom-20 right-1/4 w-72 h-72 bg-[#FF5124]/25 rounded-full blur-2xl" />
+              <div className="absolute top-10 right-10 w-[400px] h-[400px] bg-gradient-to-br from-[#FF5124]/8 to-[#FF5124]/6 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute bottom-10 left-10 w-[350px] h-[350px] bg-gradient-to-tr from-[#FF5124]/7 to-[#FF6B3D]/5 rounded-full blur-3xl" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-[#FF5124]/6 via-[#FF6B3D]/4 to-amber-200/4 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+              <div className="absolute top-20 left-1/4 w-64 h-64 bg-[#FF5124]/6 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '0.5s' }} />
+              <div className="absolute bottom-20 right-1/4 w-72 h-72 bg-[#FF5124]/5 rounded-full blur-2xl" />
             </div>
             
             <div className="container relative z-10">
