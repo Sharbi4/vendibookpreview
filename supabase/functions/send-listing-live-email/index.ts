@@ -124,7 +124,7 @@ const handler = async (req: Request): Promise<Response> => {
                 You're receiving this email because you published a listing on VendiBook.
               </p>
               <p style="color: #9ca3af; font-size: 12px; margin: 12px 0 0 0;">
-                Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1877-8VENDI2</a> or email <a href="mailto:support@vendibook.com" style="color: #FF5124; text-decoration: none;">support@vendibook.com</a>
+                Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a> or email <a href="mailto:support@vendibook.com" style="color: #FF5124; text-decoration: none;">support@vendibook.com</a>
               </p>
               <p style="color: #9ca3af; font-size: 12px; margin: 8px 0 0 0;">
                 © ${new Date().getFullYear()} VendiBook. All rights reserved.

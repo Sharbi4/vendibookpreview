@@ -57,7 +57,7 @@ const knowledgeBase = `
 - Commercial auto insurance needed for food trucks
 
 ## Contact Support
-- Phone: 1877-8VENDI2 (1-877-883-6342)
+- Phone: 1-877-8-VENDI-2 (1-877-883-6342)
 - Email: support@vendibook.com
 - Live chat available on website
 - Response within 2 minutes during business hours (Mon-Fri 9am-6pm, Sat 10am-4pm EST)
@@ -144,7 +144,7 @@ ${knowledgeBase}
 
 Guidelines:
 - Be concise and helpful (2-4 sentences max)
-- If unsure, suggest contacting support at support@vendibook.com or 1877-8VENDI2
+- If unsure, suggest contacting support at support@vendibook.com or 1-877-8-VENDI-2
 - Be friendly and professional
 - For complex issues, recommend scheduling a callback or using live chat
 - Don't make up information not in the knowledge base`
