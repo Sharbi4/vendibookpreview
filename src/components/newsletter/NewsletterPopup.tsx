@@ -136,7 +136,7 @@ const NewsletterPopup = () => {
                 />
                 <Button
                   type="submit"
-                  className="w-full h-12"
+                  className="w-full h-12 bg-gradient-to-r from-yellow-400 via-vendibook-orange to-orange-500 hover:from-yellow-500 hover:via-orange-500 hover:to-orange-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
