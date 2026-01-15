@@ -95,16 +95,17 @@ const Contact = () => {
       <Header />
       
       <main className="flex-1">
-        {/* Hero Section - Enhanced */}
+        {/* Hero Section - GRADIENT */}
         <section className="relative py-16 md:py-24 overflow-hidden">
-          {/* Vibrant gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-300/25 via-amber-200/30 to-rose-300/20" />
+          {/* Orange-Yellow Gradient Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/30 via-amber-200/25 to-orange-300/20" />
           
-          {/* Decorative orbs */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-20 right-20 w-96 h-96 bg-orange-400/30 rounded-full blur-3xl" />
-            <div className="absolute bottom-20 left-20 w-80 h-80 bg-rose-400/25 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-300/20 rounded-full blur-3xl" />
+          {/* Decorative orbs - orange/yellow only */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-20 right-20 w-96 h-96 bg-yellow-400/30 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-20 left-20 w-80 h-80 bg-orange-400/25 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-300/20 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute top-40 left-1/4 w-64 h-64 bg-yellow-300/20 rounded-full blur-2xl" />
           </div>
           
           <div className="container relative z-10">
@@ -156,8 +157,8 @@ const Contact = () => {
           </div>
         </section>
 
-        {/* Main Content - Enhanced Tabs */}
-        <section className="py-16 md:py-20 bg-muted/30">
+        {/* Main Content - NATURAL */}
+        <section className="py-16 md:py-20 bg-background">
           <div className="container">
             <div className="max-w-6xl mx-auto">
               {/* Section Header */}
