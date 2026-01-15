@@ -93,7 +93,10 @@ Deno.serve(async (req) => {
               <p style="margin: 8px 0 0 0;">
                 <a href="${siteUrl}/notification-preferences" style="color: #FF5124; font-size: 12px; text-decoration: none;">Manage preferences</a>
               </p>
-              <p style="color: #9ca3af; font-size: 12px; margin: 16px 0 0 0;">
+              <p style="color: #9ca3af; font-size: 12px; margin: 12px 0 0 0;">
+                Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a>
+              </p>
+              <p style="color: #9ca3af; font-size: 12px; margin: 8px 0 0 0;">
                 © ${new Date().getFullYear()} VendiBook. All rights reserved.
               </p>
             </div>

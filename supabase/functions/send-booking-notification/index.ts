@@ -124,7 +124,8 @@ serve(async (req) => {
                 Please log in to your dashboard to approve or decline this request.
               </p>
               <p style="color: #888; font-size: 14px; margin-top: 30px;">
-                — The VendiBook Team
+                — The VendiBook Team<br>
+                <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a>
               </p>
             </div>
           `,
@@ -162,7 +163,8 @@ serve(async (req) => {
                 The host will review your request and respond soon. We'll notify you once they respond.
               </p>
               <p style="color: #888; font-size: 14px; margin-top: 30px;">
-                — The VendiBook Team
+                — The VendiBook Team<br>
+                <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a>
               </p>
             </div>
           `,
@@ -197,7 +199,8 @@ serve(async (req) => {
                 You can message the host through your dashboard if you have any questions.
               </p>
               <p style="color: #888; font-size: 14px; margin-top: 30px;">
-                — The VendiBook Team
+                — The VendiBook Team<br>
+                <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a>
               </p>
             </div>
           `,
@@ -237,7 +240,8 @@ serve(async (req) => {
                 Don't worry! There are plenty of other great options available. Browse our marketplace to find your perfect match.
               </p>
               <p style="color: #888; font-size: 14px; margin-top: 30px;">
-                — The VendiBook Team
+                — The VendiBook Team<br>
+                <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a>
               </p>
             </div>
           `,
