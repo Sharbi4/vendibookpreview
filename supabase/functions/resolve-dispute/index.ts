@@ -6,11 +6,113 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const logStep = (step: string, details?: Record<string, unknown>) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[RESOLVE-DISPUTE] ${step}${detailsStr}`);
+};
+
 interface ResolveDisputeRequest {
   transaction_id: string;
   resolution: "refund_buyer" | "release_to_seller";
   admin_notes?: string;
 }
+
+// Helper to update Zendesk ticket when dispute is resolved
+const updateZendeskTicket = async (
+  transactionId: string,
+  resolution: string,
+  adminNotes: string | undefined,
+  listingTitle: string,
+  buyerName: string,
+  sellerName: string
+) => {
+  const ZENDESK_API_KEY = Deno.env.get("ZENDESK_API_KEY");
+  const ZENDESK_SUBDOMAIN = Deno.env.get("ZENDESK_SUBDOMAIN") || "vendibook1";
+  const ZENDESK_EMAIL = Deno.env.get("ZENDESK_EMAIL") || "support@vendibook1.zendesk.com";
+
+  if (!ZENDESK_API_KEY) {
+    logStep("Zendesk not configured, skipping ticket update");
+    return;
+  }
+
+  try {
+    const auth = btoa(`${ZENDESK_EMAIL}/token:${ZENDESK_API_KEY}`);
+    
+    // Search for the dispute ticket by transaction ID
+    const searchQuery = encodeURIComponent(`type:ticket subject:"${transactionId.slice(0, 8)}"`);
+    const searchResponse = await fetch(
+      `https://${ZENDESK_SUBDOMAIN}.zendesk.com/api/v2/search.json?query=${searchQuery}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${auth}`,
+        },
+      }
+    );
+
+    if (!searchResponse.ok) {
+      logStep("Zendesk search failed", { status: searchResponse.status });
+      return;
+    }
+
+    const searchData = await searchResponse.json();
+    const disputeTickets = searchData.results?.filter((r: any) => 
+      r.result_type === 'ticket' && 
+      r.subject?.includes('[DISPUTE]') &&
+      r.subject?.includes(transactionId.slice(0, 8))
+    );
+
+    if (!disputeTickets || disputeTickets.length === 0) {
+      logStep("No matching Zendesk ticket found for dispute");
+      return;
+    }
+
+    const ticketId = disputeTickets[0].id;
+    const resolutionText = resolution === "refund_buyer" 
+      ? "REFUND ISSUED TO BUYER - Full refund has been processed."
+      : "PAYMENT RELEASED TO SELLER - Funds have been transferred to seller.";
+
+    // Update the ticket with resolution
+    const updatePayload = {
+      ticket: {
+        status: "solved",
+        comment: {
+          body: `DISPUTE RESOLVED\n\n` +
+            `Resolution: ${resolutionText}\n\n` +
+            `Transaction: ${transactionId}\n` +
+            `Listing: ${listingTitle}\n` +
+            `Buyer: ${buyerName}\n` +
+            `Seller: ${sellerName}\n\n` +
+            (adminNotes ? `Admin Notes: ${adminNotes}\n\n` : '') +
+            `This ticket has been automatically resolved by the VendiBook dispute resolution system.`,
+          public: false,
+        },
+        tags: ['dispute-resolved', resolution.replace('_', '-')],
+      },
+    };
+
+    const updateResponse = await fetch(
+      `https://${ZENDESK_SUBDOMAIN}.zendesk.com/api/v2/tickets/${ticketId}.json`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${auth}`,
+        },
+        body: JSON.stringify(updatePayload),
+      }
+    );
+
+    if (updateResponse.ok) {
+      logStep("Zendesk ticket resolved", { ticketId, resolution });
+    } else {
+      const errorText = await updateResponse.text();
+      logStep("Zendesk ticket update failed", { status: updateResponse.status, error: errorText });
+    }
+  } catch (error) {
+    logStep("Zendesk integration error", { error: String(error) });
+  }
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -18,6 +120,8 @@ Deno.serve(async (req) => {
   }
 
   try {
+    logStep("Function started");
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY")!;
@@ -39,7 +143,7 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
-      console.error("Auth error:", authError);
+      logStep("Auth error", { error: authError?.message });
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -50,7 +154,7 @@ Deno.serve(async (req) => {
     const { data: isAdmin } = await supabase.rpc("is_admin", { user_id: user.id });
     
     if (!isAdmin) {
-      console.error("User is not admin:", user.id);
+      logStep("User is not admin", { userId: user.id });
       return new Response(
         JSON.stringify({ error: "Forbidden: Admin access required" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -58,7 +162,7 @@ Deno.serve(async (req) => {
     }
 
     const { transaction_id, resolution, admin_notes } = await req.json() as ResolveDisputeRequest;
-    console.log("Resolving dispute:", { transaction_id, resolution, admin_notes, admin_id: user.id });
+    logStep("Resolving dispute", { transaction_id, resolution, admin_notes, admin_id: user.id });
 
     if (!transaction_id || !resolution) {
       return new Response(
@@ -74,15 +178,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get the transaction
+    // Get the transaction with listing info
     const { data: transaction, error: txError } = await supabase
       .from("sale_transactions")
-      .select("*, buyer:profiles!sale_transactions_buyer_id_fkey(email, full_name), seller:profiles!sale_transactions_seller_id_fkey(email, full_name, stripe_account_id)")
+      .select("*, buyer:profiles!sale_transactions_buyer_id_fkey(email, full_name), seller:profiles!sale_transactions_seller_id_fkey(email, full_name, stripe_account_id), listing:listings!sale_transactions_listing_id_fkey(title)")
       .eq("id", transaction_id)
       .single();
 
     if (txError || !transaction) {
-      console.error("Transaction not found:", txError);
+      logStep("Transaction not found", { error: txError?.message });
       return new Response(
         JSON.stringify({ error: "Transaction not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -108,7 +212,7 @@ Deno.serve(async (req) => {
 
     if (resolution === "refund_buyer") {
       // Refund the payment intent
-      console.log("Refunding payment intent:", transaction.payment_intent_id);
+      logStep("Refunding payment intent", { paymentIntentId: transaction.payment_intent_id });
       
       try {
         await stripe.refunds.create({
@@ -117,9 +221,9 @@ Deno.serve(async (req) => {
         
         newStatus = "refunded";
         resultMessage = "Dispute resolved: Full refund issued to buyer";
-        console.log("Refund successful");
+        logStep("Refund successful");
       } catch (refundError: any) {
-        console.error("Refund error:", refundError);
+        logStep("Refund error", { error: refundError.message });
         return new Response(
           JSON.stringify({ error: `Refund failed: ${refundError.message}` }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -134,7 +238,7 @@ Deno.serve(async (req) => {
         );
       }
 
-      console.log("Creating transfer to seller:", transaction.seller.stripe_account_id);
+      logStep("Creating transfer to seller", { stripeAccountId: transaction.seller.stripe_account_id });
       
       try {
         const transfer = await stripe.transfers.create({
@@ -150,7 +254,7 @@ Deno.serve(async (req) => {
 
         newStatus = "completed";
         resultMessage = "Dispute resolved: Payment released to seller";
-        console.log("Transfer successful:", transfer.id);
+        logStep("Transfer successful", { transferId: transfer.id });
 
         // Update with transfer info
         await supabase
@@ -161,7 +265,7 @@ Deno.serve(async (req) => {
           })
           .eq("id", transaction_id);
       } catch (transferError: any) {
-        console.error("Transfer error:", transferError);
+        logStep("Transfer error", { error: transferError.message });
         return new Response(
           JSON.stringify({ error: `Transfer failed: ${transferError.message}` }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -184,12 +288,26 @@ Deno.serve(async (req) => {
       .eq("id", transaction_id);
 
     if (updateError) {
-      console.error("Failed to update transaction:", updateError);
+      logStep("Failed to update transaction", { error: updateError.message });
       return new Response(
         JSON.stringify({ error: "Failed to update transaction status" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const listingTitle = transaction.listing?.title || 'Unknown Item';
+    const buyerName = transaction.buyer?.full_name || transaction.buyer_name || 'Unknown Buyer';
+    const sellerName = transaction.seller?.full_name || 'Unknown Seller';
+
+    // Update Zendesk ticket (fire and forget)
+    updateZendeskTicket(
+      transaction_id,
+      resolution,
+      admin_notes,
+      listingTitle,
+      buyerName,
+      sellerName
+    ).catch(err => logStep("Zendesk update failed", { error: String(err) }));
 
     // Send notification emails
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
@@ -234,14 +352,37 @@ Deno.serve(async (req) => {
           `,
         });
 
-        console.log("Notification emails sent");
+        logStep("Notification emails sent");
       } catch (emailError) {
-        console.error("Failed to send notification emails:", emailError);
+        logStep("Failed to send notification emails", { error: String(emailError) });
         // Don't fail the request if emails fail
       }
     }
 
-    console.log("Dispute resolved successfully:", { transaction_id, resolution, newStatus });
+    // Create in-app notifications for both parties
+    await supabase.from("notifications").insert([
+      {
+        user_id: transaction.buyer_id,
+        type: "dispute",
+        title: "Dispute Resolved",
+        message: resolution === "refund_buyer" 
+          ? `Your dispute for "${listingTitle}" has been resolved. A full refund has been issued.`
+          : `Your dispute for "${listingTitle}" has been resolved. Payment was released to the seller.`,
+        link: "/dashboard",
+      },
+      {
+        user_id: transaction.seller_id,
+        type: "dispute",
+        title: "Dispute Resolved",
+        message: resolution === "refund_buyer" 
+          ? `The dispute for "${listingTitle}" has been resolved. A refund was issued to the buyer.`
+          : `The dispute for "${listingTitle}" has been resolved. Payment has been released to you.`,
+        link: "/dashboard",
+      },
+    ]);
+    logStep("In-app notifications created");
+
+    logStep("Dispute resolved successfully", { transaction_id, resolution, newStatus });
 
     return new Response(
       JSON.stringify({ 
@@ -252,7 +393,7 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
-    console.error("Error resolving dispute:", error);
+    logStep("ERROR", { message: error.message || String(error) });
     return new Response(
       JSON.stringify({ error: error.message || "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
