@@ -126,7 +126,7 @@ const SaleTransactionCard = ({
             {/* Price breakdown */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-4">
               <div>
-                <p className="text-muted-foreground">Amount</p>
+                <p className="text-muted-foreground">Sale Price</p>
                 <p className="font-semibold">${transaction.amount.toLocaleString()}</p>
               </div>
               {role === 'seller' && (
@@ -135,11 +135,24 @@ const SaleTransactionCard = ({
                     <p className="text-muted-foreground">Platform Fee</p>
                     <p className="font-medium text-destructive">-${transaction.platform_fee.toLocaleString()}</p>
                   </div>
+                  {/* Show freight deduction for seller-paid Vendibook Freight */}
+                  {transaction.freight_cost && transaction.freight_cost > 0 && (
+                    <div>
+                      <p className="text-muted-foreground">Freight (Seller-Paid)</p>
+                      <p className="font-medium text-destructive">-${transaction.freight_cost.toLocaleString()}</p>
+                    </div>
+                  )}
                   <div>
                     <p className="text-muted-foreground">You Receive</p>
                     <p className="font-semibold text-primary">${transaction.seller_payout.toLocaleString()}</p>
                   </div>
                 </>
+              )}
+              {role === 'buyer' && transaction.freight_cost && transaction.freight_cost > 0 && (
+                <div>
+                  <p className="text-muted-foreground">Freight Included</p>
+                  <p className="font-medium text-emerald-600">Free Shipping</p>
+                </div>
               )}
               <div>
                 <p className="text-muted-foreground">Date</p>
