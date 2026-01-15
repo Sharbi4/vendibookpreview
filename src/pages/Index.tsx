@@ -7,13 +7,13 @@ import FeaturedListings from '@/components/home/FeaturedListings';
 import HowItWorks from '@/components/home/HowItWorks';
 import NewsletterSection from '@/components/newsletter/NewsletterSection';
 import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
+import { TrustSafetySection } from '@/components/trust';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
   const { user, isVerified, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Check if user needs to verify identity (first time login)
   useEffect(() => {
     if (!isLoading && user && !isVerified) {
       const hasSeenVerificationPrompt = localStorage.getItem(`verification_prompted_${user.id}`);
@@ -31,6 +31,7 @@ const Index = () => {
       <main className="flex-1">
         <Hero />
         <FeaturedListings />
+        <TrustSafetySection />
         <HowItWorks />
         <NewsletterSection />
       </main>
