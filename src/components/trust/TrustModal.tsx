@@ -5,7 +5,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Accordion,
@@ -16,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { TrustTile, documentChecklist } from './trustContent';
 import { Check, FileText } from 'lucide-react';
+import { trackModalCtaClick, trackFaqExpand } from '@/lib/analytics';
 
 interface TrustModalProps {
   tile: TrustTile | null;
@@ -33,8 +33,17 @@ const TrustModal = ({ tile, open, onOpenChange }: TrustModalProps) => {
   const isDocumentsModal = tile.id === 'required-documents';
   
   const handlePrimaryCta = () => {
-    onOpenChange(false);
     const cta = tile.modal.primaryCta;
+    const label = getPrimaryCtaLabel();
+    
+    trackModalCtaClick({
+      tileId: tile.id,
+      tileTitle: tile.title,
+      ctaType: 'primary',
+      ctaLabel: label,
+    });
+    
+    onOpenChange(false);
     if (cta.requiresAuth && user) {
       navigate(cta.authHref || cta.href);
     } else {
@@ -43,8 +52,23 @@ const TrustModal = ({ tile, open, onOpenChange }: TrustModalProps) => {
   };
   
   const handleSecondaryCta = () => {
+    trackModalCtaClick({
+      tileId: tile.id,
+      tileTitle: tile.title,
+      ctaType: 'secondary',
+      ctaLabel: tile.modal.secondaryCta.label,
+    });
+    
     onOpenChange(false);
     navigate(tile.modal.secondaryCta.href);
+  };
+  
+  const handleFaqExpand = (question: string) => {
+    trackFaqExpand({
+      tileId: tile.id,
+      tileTitle: tile.title,
+      question,
+    });
   };
   
   const getPrimaryCtaLabel = () => {
@@ -125,7 +149,10 @@ const TrustModal = ({ tile, open, onOpenChange }: TrustModalProps) => {
             <Accordion type="single" collapsible className="w-full">
               {tile.modal.faqs.map((faq, index) => (
                 <AccordionItem key={index} value={`faq-${index}`} className="border-border">
-                  <AccordionTrigger className="text-left text-sm font-medium hover:text-primary">
+                  <AccordionTrigger 
+                    className="text-left text-sm font-medium hover:text-primary"
+                    onClick={() => handleFaqExpand(faq.question)}
+                  >
                     {faq.question}
                   </AccordionTrigger>
                   <AccordionContent className="text-sm text-muted-foreground">
