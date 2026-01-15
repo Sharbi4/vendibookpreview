@@ -17,9 +17,11 @@ const TrustCard = ({ tile, onClick }: TrustCardProps) => {
                  focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
       aria-label={`Learn more about ${tile.title}`}
     >
-      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 
-                      group-hover:bg-primary/20 transition-colors duration-300">
-        <Icon className="w-6 h-6 text-primary" strokeWidth={1.5} />
+      <div className="w-12 h-12 rounded-full icon-gradient-container icon-shimmer mb-4 
+                      transition-transform duration-300 group-hover:scale-110">
+        <div className="icon-gradient">
+          <Icon className="w-6 h-6 text-primary" strokeWidth={1.5} />
+        </div>
       </div>
       <h3 className="text-base font-semibold text-foreground mb-2">
         {tile.title}

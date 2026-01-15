@@ -74,8 +74,10 @@ const AIToolsSection = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
           <div className="flex items-start gap-3">
-            <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
-              <Sparkles className="w-6 h-6" />
+            <div className="p-2.5 rounded-xl icon-gradient-container icon-shimmer">
+              <div className="icon-gradient">
+                <Sparkles className="w-6 h-6 text-primary" />
+              </div>
             </div>
             <div>
               <h2 
@@ -117,9 +119,11 @@ const AIToolsSection = () => {
                 
                 <div className="relative z-10">
                   {/* Icon */}
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4
-                                  group-hover:bg-primary/20 transition-colors">
-                    <Icon className="w-6 h-6 text-primary" />
+                  <div className="w-12 h-12 rounded-xl icon-gradient-container icon-shimmer mb-4
+                                  transition-transform duration-300 group-hover:scale-110">
+                    <div className="icon-gradient">
+                      <Icon className="w-6 h-6 text-primary" />
+                    </div>
                   </div>
                   
                   {/* Content */}
