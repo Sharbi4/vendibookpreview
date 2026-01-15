@@ -33,7 +33,6 @@ const FeaturedListings = () => {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
-  const [locationTimedOut, setLocationTimedOut] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'map' | 'split'>('list');
   const [selectedListing, setSelectedListing] = useState<(Listing & { distance_miles?: number }) | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -41,59 +40,33 @@ const FeaturedListings = () => {
   const navigate = useNavigate();
   const { token: mapToken, isLoading: isMapLoading, error: mapError } = useMapboxToken();
 
-  // Request user location on mount with 20s fallback timeout
+  // Request user location 10 seconds after page load (after listings are shown)
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    let hasResolved = false;
-
-    // Set a 20 second timeout to load listings without location
-    timeoutId = setTimeout(() => {
-      if (!hasResolved && !userLocation) {
-        console.log('Location request timed out after 20s, loading listings without location');
-        setLocationTimedOut(true);
-        setIsRequestingLocation(false);
-        setSortBy('newest');
-      }
-    }, 20000);
-
-    if ('geolocation' in navigator) {
-      setIsRequestingLocation(true);
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          if (!hasResolved) {
-            hasResolved = true;
-            clearTimeout(timeoutId);
+    const timeoutId = setTimeout(() => {
+      if ('geolocation' in navigator && !userLocation && !locationError) {
+        setIsRequestingLocation(true);
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
             setUserLocation({
               latitude: position.coords.latitude,
               longitude: position.coords.longitude
             });
             setIsRequestingLocation(false);
-            setLocationTimedOut(false);
-            setViewMode('map'); // Default to map view when location is available
-          }
-        },
-        (error) => {
-          if (!hasResolved) {
-            hasResolved = true;
-            clearTimeout(timeoutId);
+            setSortBy('nearest');
+            setViewMode('map'); // Switch to map view when location is available
+          },
+          (error) => {
             console.log('Geolocation error:', error.message);
             setLocationError(error.message);
             setIsRequestingLocation(false);
-            // Default sort to newest if location unavailable
-            setSortBy('newest');
-          }
-        },
-        { timeout: 10000, maximumAge: 300000 } // 5 min cache
-      );
-    } else {
-      clearTimeout(timeoutId);
-      setSortBy('newest');
-    }
+          },
+          { timeout: 10000, maximumAge: 300000 } // 5 min cache
+        );
+      }
+    }, 10000); // Wait 10 seconds before asking for location
 
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, []);
+    return () => clearTimeout(timeoutId);
+  }, [userLocation, locationError]);
 
   // Fetch nearby listings from edge function when we have location
   const { data: nearbyData, isLoading: isLoadingNearby } = useQuery({
@@ -116,7 +89,7 @@ const FeaturedListings = () => {
     enabled: !!userLocation,
   });
 
-  // Fallback: Fetch all listings if no location or location timed out
+  // Always fetch all listings immediately on page load
   const { data: allListings = [], isLoading: isLoadingAll } = useQuery({
     queryKey: ['featured-listings'],
     queryFn: async () => {
@@ -129,20 +102,16 @@ const FeaturedListings = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !userLocation || locationTimedOut, // Fetch when no location OR when timed out
+    enabled: true, // Always fetch immediately
   });
 
-  // Use nearby listings if available and not timed out, otherwise fall back to all listings
+  // Use nearby listings if available, otherwise fall back to all listings
   const listings = useMemo(() => {
-    // If location timed out, prefer all listings to reduce wait time
-    if (locationTimedOut && allListings.length > 0) {
-      return allListings;
-    }
-    if (nearbyData?.listings) {
+    if (nearbyData?.listings && nearbyData.listings.length > 0) {
       return nearbyData.listings;
     }
     return allListings;
-  }, [nearbyData, allListings, locationTimedOut]);
+  }, [nearbyData, allListings]);
 
   // Extract unique host IDs
   const hostIds = useMemo(() => {
@@ -281,8 +250,8 @@ const FeaturedListings = () => {
     return pages;
   };
 
-  // Don't show loading if location timed out and we have fallback listings loading
-  const isLoading = (isLoadingNearby || isLoadingAll) && !locationTimedOut || (isRequestingLocation && !locationTimedOut);
+  // Only show loading for initial listings fetch, not for location request
+  const isLoading = isLoadingAll;
 
   // Loading skeleton
   if (isLoading) {
