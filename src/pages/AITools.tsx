@@ -460,16 +460,16 @@ const AITools = () => {
         <main className="flex-1">
           {/* Hero Section - GRADIENT with enhanced animations */}
           <section className="relative py-20 md:py-28 overflow-hidden">
-            {/* Orange-Yellow Gradient Background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/35 via-amber-200/30 to-orange-300/25" />
+            {/* Orange Gradient Background - #FF5124 based */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/25 via-[#FF5124]/15 to-amber-200/12" />
             
             {/* Animated decorative orbs */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-10 right-10 w-[400px] h-[400px] bg-gradient-to-br from-yellow-300/50 to-amber-400/40 rounded-full blur-3xl animate-pulse" />
-              <div className="absolute bottom-10 left-10 w-[350px] h-[350px] bg-gradient-to-tr from-orange-400/45 to-amber-500/40 rounded-full blur-3xl" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-amber-300/30 via-yellow-400/25 to-orange-300/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-              <div className="absolute top-20 left-1/4 w-64 h-64 bg-yellow-300/35 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '0.5s' }} />
-              <div className="absolute bottom-20 right-1/4 w-72 h-72 bg-orange-300/40 rounded-full blur-2xl" />
+              <div className="absolute top-10 right-10 w-[400px] h-[400px] bg-gradient-to-br from-[#FF5124]/35 to-[#FF5124]/25 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute bottom-10 left-10 w-[350px] h-[350px] bg-gradient-to-tr from-[#FF5124]/30 to-[#FF6B3D]/25 rounded-full blur-3xl" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-[#FF5124]/20 via-[#FF6B3D]/15 to-amber-200/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+              <div className="absolute top-20 left-1/4 w-64 h-64 bg-[#FF5124]/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '0.5s' }} />
+              <div className="absolute bottom-20 right-1/4 w-72 h-72 bg-[#FF5124]/25 rounded-full blur-2xl" />
             </div>
             
             <div className="container relative z-10">
@@ -490,7 +490,7 @@ const AITools = () => {
                 
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight animate-slide-up">
                   AI Business Tools for{' '}
-                  <span className="text-gradient bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 bg-clip-text text-transparent">
+                  <span className="text-gradient bg-gradient-to-r from-[#FF5124] via-[#FF6B3D] to-[#FF7D4D] bg-clip-text text-transparent">
                     Food Entrepreneurs
                   </span>
                 </h1>
