@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Heart, MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, ShieldCheck } from 'lucide-react';
+import { Heart, MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, ShieldCheck, Truck } from 'lucide-react';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -162,6 +162,17 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
             {CATEGORY_LABELS[listing.category]}
           </span>
         </div>
+
+        {/* Delivery Radius Badge */}
+        {(listing.fulfillment_type === 'delivery' || listing.fulfillment_type === 'both') && listing.delivery_radius_miles && (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Truck className="h-3 w-3" />
+            <span>Delivers within {listing.delivery_radius_miles} mi</span>
+            {listing.delivery_fee && (
+              <span className="text-foreground font-medium">· ${listing.delivery_fee} fee</span>
+            )}
+          </div>
+        )}
 
         {/* Title & Rating */}
         <div className="flex items-center justify-between gap-2">
