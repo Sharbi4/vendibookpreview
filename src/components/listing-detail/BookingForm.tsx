@@ -693,7 +693,7 @@ const BookingForm = ({
       </Button>
 
       <p className="text-xs text-muted-foreground text-center mt-4">
-        You won't be charged yet
+        You won't be charged yet. After your request is approved, you'll proceed to payment.
       </p>
 
       {/* Booking Info Modal */}
