@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
-import { Heart, MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, ShieldCheck, Truck } from 'lucide-react';
+import { Heart, MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck } from 'lucide-react';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import RatingBadge from '@/components/reviews/RatingBadge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import VerificationBadge from '@/components/verification/VerificationBadge';
 
 interface ListingCardProps {
   listing: Listing;
@@ -97,18 +98,12 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         <div className="absolute top-3 right-3 flex items-center gap-2">
           {/* Verified Badge */}
           {hostVerified && (
-            <TooltipProvider delayDuration={200}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="p-2 rounded-full bg-emerald-500 shadow-sm">
-                    <ShieldCheck className="h-4 w-4 text-white" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">
-                  Host identity verified
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <VerificationBadge 
+              isVerified={true} 
+              variant="starburst" 
+              size="md"
+              showLabel={false}
+            />
           )}
           
           {/* Favorite Button */}
