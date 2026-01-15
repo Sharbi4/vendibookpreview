@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { playNotificationSound } from '@/lib/notificationSound';
 
 export interface Notification {
   id: string;
@@ -36,6 +37,20 @@ export const useNotifications = (userId: string | undefined) => {
 
   const unreadCount = notifications.filter(n => !n.read_at).length;
 
+  // Track if initial load is complete to avoid sound on page load
+  const initialLoadComplete = useRef(false);
+
+  // Mark initial load as complete after first successful fetch
+  useEffect(() => {
+    if (!isLoading && notifications.length >= 0) {
+      // Small delay to ensure we don't play sound for existing notifications
+      const timer = setTimeout(() => {
+        initialLoadComplete.current = true;
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, notifications.length]);
+
   // Subscribe to realtime notifications
   useEffect(() => {
     if (!userId) return;
@@ -53,6 +68,11 @@ export const useNotifications = (userId: string | undefined) => {
         (payload) => {
           console.log('New notification received:', payload);
           queryClient.invalidateQueries({ queryKey: ['notifications', userId] });
+          
+          // Play notification sound only after initial load
+          if (initialLoadComplete.current) {
+            playNotificationSound();
+          }
         }
       )
       .subscribe();

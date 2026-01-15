@@ -9,9 +9,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Bell, Mail, Loader2, Smartphone, Send } from 'lucide-react';
+import { ArrowLeft, Bell, Mail, Loader2, Smartphone, Send, Volume2, VolumeX } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { 
+  getStoredSoundPreference, 
+  setStoredSoundPreference, 
+  playNotificationSound 
+} from '@/lib/notificationSound';
 
 interface PreferenceRowProps {
   label: string;
@@ -113,6 +118,7 @@ const NotificationPreferences = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const { preferences, isLoading, updatePreferences, isUpdating } = useNotificationPreferences(user?.id);
+  const [soundEnabled, setSoundEnabled] = useState(() => getStoredSoundPreference());
   const { 
     isSupported: isPushSupported, 
     isSubscribed: isPushSubscribed, 
@@ -121,6 +127,16 @@ const NotificationPreferences = () => {
     subscribe: subscribeToPush,
     unsubscribe: unsubscribeFromPush,
   } = usePushNotifications(user?.id);
+
+  const handleSoundToggle = (enabled: boolean) => {
+    setSoundEnabled(enabled);
+    setStoredSoundPreference(enabled);
+    if (enabled) {
+      // Play a preview of the sound
+      playNotificationSound();
+    }
+    toast.success(enabled ? 'Notification sound enabled' : 'Notification sound disabled');
+  };
 
   React.useEffect(() => {
     if (!authLoading && !user) {
@@ -177,7 +193,39 @@ const NotificationPreferences = () => {
             </p>
           </div>
 
-          {/* Push Notifications Card */}
+          {/* Sound Preferences Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {soundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+                Notification Sound
+              </CardTitle>
+              <CardDescription>
+                Play a sound when new notifications arrive
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-foreground">
+                    {soundEnabled ? 'Sound is enabled' : 'Sound is disabled'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {soundEnabled 
+                      ? 'You will hear a chime when new notifications arrive'
+                      : 'Notifications will be silent'
+                    }
+                  </p>
+                </div>
+                <Switch
+                  checked={soundEnabled}
+                  onCheckedChange={handleSoundToggle}
+                  aria-label="Notification sound"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           {isPushSupported && (
             <Card>
               <CardHeader>
