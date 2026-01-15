@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      availability_alerts: {
+        Row: {
+          category: string | null
+          created_at: string
+          email: string
+          id: string
+          mode: string | null
+          notified_at: string | null
+          radius_miles: number | null
+          unsubscribed_at: string | null
+          zip_code: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          mode?: string | null
+          notified_at?: string | null
+          radius_miles?: number | null
+          unsubscribed_at?: string | null
+          zip_code: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          mode?: string | null
+          notified_at?: string | null
+          radius_miles?: number | null
+          unsubscribed_at?: string | null
+          zip_code?: string
+        }
+        Relationships: []
+      }
       booking_documents: {
         Row: {
           booking_id: string
