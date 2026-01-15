@@ -95,3 +95,12 @@ verify_jwt = false
 
 [functions.get-nearby-listings]
 verify_jwt = false
+
+[functions.faq-chatbot]
+verify_jwt = false
+
+[functions.schedule-callback]
+verify_jwt = false
+
+[functions.check-ticket-status]
+verify_jwt = false
