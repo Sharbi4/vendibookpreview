@@ -581,46 +581,64 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address1: string | null
+          address2: string | null
           avatar_url: string | null
+          city: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
           identity_verified: boolean | null
           identity_verified_at: string | null
+          phone_number: string | null
+          state: string | null
           stripe_account_id: string | null
           stripe_identity_session_id: string | null
           stripe_onboarding_complete: boolean | null
           stripe_onboarding_started_at: string | null
           updated_at: string
+          zip_code: string | null
         }
         Insert: {
+          address1?: string | null
+          address2?: string | null
           avatar_url?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
           identity_verified?: boolean | null
           identity_verified_at?: string | null
+          phone_number?: string | null
+          state?: string | null
           stripe_account_id?: string | null
           stripe_identity_session_id?: string | null
           stripe_onboarding_complete?: boolean | null
           stripe_onboarding_started_at?: string | null
           updated_at?: string
+          zip_code?: string | null
         }
         Update: {
+          address1?: string | null
+          address2?: string | null
           avatar_url?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
           identity_verified?: boolean | null
           identity_verified_at?: string | null
+          phone_number?: string | null
+          state?: string | null
           stripe_account_id?: string | null
           stripe_identity_session_id?: string | null
           stripe_onboarding_complete?: boolean | null
           stripe_onboarding_started_at?: string | null
           updated_at?: string
+          zip_code?: string | null
         }
         Relationships: []
       }

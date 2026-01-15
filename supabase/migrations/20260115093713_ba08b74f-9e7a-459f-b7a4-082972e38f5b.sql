@@ -1,0 +1,8 @@
+-- Add booking info fields to profiles table
+ALTER TABLE public.profiles
+ADD COLUMN IF NOT EXISTS phone_number TEXT,
+ADD COLUMN IF NOT EXISTS address1 TEXT,
+ADD COLUMN IF NOT EXISTS address2 TEXT,
+ADD COLUMN IF NOT EXISTS city TEXT,
+ADD COLUMN IF NOT EXISTS state TEXT,
+ADD COLUMN IF NOT EXISTS zip_code TEXT;
