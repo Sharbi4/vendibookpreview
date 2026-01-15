@@ -369,10 +369,18 @@ serve(async (req) => {
           : charge.payment_intent?.id;
 
         if (paymentIntentId) {
+          // Find the booking
+          const { data: booking } = await supabaseClient
+            .from("booking_requests")
+            .select("id, shopper_id, host_id, total_price, listing_id")
+            .eq("payment_intent_id", paymentIntentId)
+            .single();
+
           const { error: updateError } = await supabaseClient
             .from("booking_requests")
             .update({
               payment_status: "refunded",
+              status: "cancelled",
             })
             .eq("payment_intent_id", paymentIntentId);
 
@@ -380,6 +388,64 @@ serve(async (req) => {
             logStep("ERROR: Failed to update refunded booking", { error: updateError.message });
           } else {
             logStep("Booking marked as refunded", { paymentIntentId });
+
+            // Send refund notification emails if booking found
+            if (booking) {
+              const refundAmount = charge.amount_refunded / 100;
+
+              // Get listing title
+              const { data: listing } = await supabaseClient
+                .from("listings")
+                .select("title")
+                .eq("id", booking.listing_id)
+                .single();
+
+              const listingTitle = listing?.title || "Booking";
+
+              // Get shopper profile
+              const { data: shopperProfile } = await supabaseClient
+                .from("profiles")
+                .select("email, full_name")
+                .eq("id", booking.shopper_id)
+                .single();
+
+              // Send refund notification to shopper
+              if (shopperProfile?.email) {
+                try {
+                  await fetch(
+                    `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-refund-notification`,
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+                      },
+                      body: JSON.stringify({
+                        email: shopperProfile.email,
+                        fullName: shopperProfile.full_name || "Valued Customer",
+                        bookingId: booking.id,
+                        listingTitle,
+                        refundAmount,
+                        reason: "Booking cancelled",
+                        recipientType: 'shopper',
+                      }),
+                    }
+                  );
+                  logStep("Refund notification sent to shopper via webhook", { email: shopperProfile.email });
+                } catch (emailError) {
+                  logStep("WARNING: Failed to send refund notification", { error: String(emailError) });
+                }
+              }
+
+              // Create in-app notification
+              await supabaseClient.from('notifications').insert({
+                user_id: booking.shopper_id,
+                type: 'refund',
+                title: 'Refund Processed',
+                message: `Your refund of $${refundAmount.toFixed(2)} for "${listingTitle}" has been processed.`,
+                link: '/dashboard',
+              });
+            }
           }
         }
         break;

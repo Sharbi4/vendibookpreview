@@ -50,7 +50,7 @@ import type { ShopperBooking } from '@/hooks/useShopperBookings';
 
 interface ShopperBookingCardProps {
   booking: ShopperBooking;
-  onCancel: (id: string) => void;
+  onCancel: (id: string, reason?: string) => Promise<unknown>;
   onPaymentInitiated?: () => void;
 }
 
@@ -133,6 +133,7 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
   const [showDocuments, setShowDocuments] = useState(false);
   const [showPriceBreakdown, setShowPriceBreakdown] = useState(false);
   const [showCheckoutOverlay, setShowCheckoutOverlay] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const { data: existingReview } = useBookingReview(booking.id);
   
   const listing = booking.listing;
@@ -285,27 +286,48 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
               </Button>
             )}
             
-            {isPending && (
+            {/* Cancel button - show for pending OR approved with paid status */}
+            {(isPending || (isApproved && isPaid)) && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
-                    Cancel Request
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    disabled={isCancelling}
+                  >
+                    {isCancelling ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : null}
+                    {isPaid ? 'Cancel & Refund' : 'Cancel Request'}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Cancel Booking Request?</AlertDialogTitle>
+                    <AlertDialogTitle>
+                      {isPaid ? 'Cancel Booking & Request Refund?' : 'Cancel Booking Request?'}
+                    </AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to cancel this booking request? This action cannot be undone.
+                      {isPaid 
+                        ? `Are you sure you want to cancel this booking? A refund of $${booking.total_price} will be processed and returned to your original payment method within 5-10 business days.`
+                        : 'Are you sure you want to cancel this booking request? This action cannot be undone.'
+                      }
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Keep Request</AlertDialogCancel>
+                    <AlertDialogCancel>Keep Booking</AlertDialogCancel>
                     <AlertDialogAction
-                      onClick={() => onCancel(booking.id)}
+                      onClick={async () => {
+                        setIsCancelling(true);
+                        try {
+                          await onCancel(booking.id, 'Cancelled by guest');
+                        } finally {
+                          setIsCancelling(false);
+                        }
+                      }}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
-                      Cancel Request
+                      {isPaid ? 'Cancel & Refund' : 'Cancel Request'}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
