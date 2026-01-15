@@ -1,9 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Loader2, X, CheckCircle2, AlertCircle } from 'lucide-react';
+import { MapPin, Loader2, X, CheckCircle2, AlertCircle, Home, Building2, Star, Plus, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { useSavedAddresses, SavedAddress, CreateAddressInput } from '@/hooks/useSavedAddresses';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 interface GeocodeResult {
   id: string;
@@ -42,6 +61,7 @@ interface AddressAutocompleteProps {
   className?: string;
   disabled?: boolean;
   requireComplete?: boolean;
+  showSavedAddresses?: boolean;
 }
 
 // Parse address components from Mapbox result
@@ -152,12 +172,24 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   className,
   disabled,
   requireComplete = true,
+  showSavedAddresses = true,
 }) => {
+  const { user } = useAuth();
+  const { addresses: savedAddresses, isLoading: isLoadingAddresses, saveAddress } = useSavedAddresses();
+  
   const [suggestions, setSuggestions] = useState<GeocodeResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [validation, setValidation] = useState<AddressValidation | null>(null);
   const [hasSelectedAddress, setHasSelectedAddress] = useState(false);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [pendingAddressToSave, setPendingAddressToSave] = useState<{
+    fullAddress: string;
+    parsed: ParsedAddress;
+    coordinates: [number, number];
+  } | null>(null);
+  const [saveLabel, setSaveLabel] = useState('Home');
+  
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
@@ -247,8 +279,66 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       validation: addressValidation,
     });
     
+    // Store for potential save
+    if (addressValidation.isComplete) {
+      setPendingAddressToSave({
+        fullAddress,
+        parsed,
+        coordinates: suggestion.center,
+      });
+    }
+    
     setIsOpen(false);
     setSuggestions([]);
+  };
+
+  const handleSavedAddressSelect = (savedAddress: SavedAddress) => {
+    onChange(savedAddress.full_address);
+    setHasSelectedAddress(true);
+    
+    const parsed: ParsedAddress = {
+      street: savedAddress.street,
+      city: savedAddress.city,
+      state: savedAddress.state,
+      zipCode: savedAddress.zip_code,
+      country: savedAddress.country,
+    };
+    
+    const addressValidation = validateAddress(parsed);
+    setValidation(addressValidation);
+    onValidationChange?.(addressValidation);
+    
+    const coordinates: [number, number] = [
+      savedAddress.longitude || 0,
+      savedAddress.latitude || 0,
+    ];
+    
+    onAddressSelect?.({
+      fullAddress: savedAddress.full_address,
+      coordinates,
+      validation: addressValidation,
+    });
+  };
+
+  const handleSaveAddress = async () => {
+    if (!pendingAddressToSave) return;
+    
+    const input: CreateAddressInput = {
+      label: saveLabel,
+      full_address: pendingAddressToSave.fullAddress,
+      street: pendingAddressToSave.parsed.street,
+      city: pendingAddressToSave.parsed.city,
+      state: pendingAddressToSave.parsed.state,
+      zip_code: pendingAddressToSave.parsed.zipCode,
+      country: pendingAddressToSave.parsed.country,
+      latitude: pendingAddressToSave.coordinates[1],
+      longitude: pendingAddressToSave.coordinates[0],
+    };
+    
+    await saveAddress(input);
+    setShowSaveDialog(false);
+    setSaveLabel('Home');
+    setPendingAddressToSave(null);
   };
 
   const handleClear = () => {
@@ -257,15 +347,51 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     setIsOpen(false);
     setValidation(null);
     setHasSelectedAddress(false);
+    setPendingAddressToSave(null);
     onValidationChange?.(null as unknown as AddressValidation);
     inputRef.current?.focus();
   };
 
   const showValidationStatus = hasSelectedAddress && validation;
   const isAddressValid = validation?.isComplete;
+  const hasSavedAddresses = showSavedAddresses && user && savedAddresses.length > 0;
+
+  const getLabelIcon = (label: string) => {
+    const lowerLabel = label.toLowerCase();
+    if (lowerLabel.includes('home')) return <Home className="h-4 w-4" />;
+    if (lowerLabel.includes('work') || lowerLabel.includes('office')) return <Building2 className="h-4 w-4" />;
+    return <MapPin className="h-4 w-4" />;
+  };
+
 
   return (
     <div ref={containerRef} className={cn("relative", className)}>
+      {/* Saved Addresses Quick Select */}
+      {hasSavedAddresses && !value && (
+        <div className="mb-2">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1.5">
+            <Star className="h-3 w-3" />
+            <span>Saved addresses</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {savedAddresses.slice(0, 3).map((addr) => (
+              <Button
+                key={addr.id}
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5"
+                onClick={() => handleSavedAddressSelect(addr)}
+              >
+                {getLabelIcon(addr.label)}
+                {addr.label}
+                {addr.is_default && <Star className="h-3 w-3 fill-primary text-primary" />}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="relative">
         <MapPin className={cn(
           "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4",
@@ -280,7 +406,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           onChange={handleInputChange}
           onFocus={() => suggestions.length > 0 && setIsOpen(true)}
           className={cn(
-            "pl-10 pr-10",
+            "pl-10 pr-20",
             showValidationStatus && isAddressValid && "border-emerald-500 focus-visible:ring-emerald-500",
             showValidationStatus && !isAddressValid && requireComplete && "border-amber-500 focus-visible:ring-amber-500"
           )}
@@ -294,6 +420,19 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           )}
           {showValidationStatus && !isAddressValid && requireComplete && !isLoading && (
             <AlertCircle className="h-4 w-4 text-amber-500" />
+          )}
+          {/* Save address button */}
+          {user && pendingAddressToSave && !savedAddresses.some(a => a.full_address === pendingAddressToSave.fullAddress) && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => setShowSaveDialog(true)}
+              title="Save this address"
+            >
+              <Plus className="h-3 w-3" />
+            </Button>
           )}
           {value && !isLoading && (
             <Button
@@ -349,6 +488,60 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           ))}
         </div>
       )}
+
+      {/* Save Address Dialog */}
+      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Save address</DialogTitle>
+            <DialogDescription>
+              Give this address a label for quick access later.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="addressLabel">Label</Label>
+              <div className="flex gap-2">
+                {['Home', 'Work', 'Other'].map((label) => (
+                  <Button
+                    key={label}
+                    type="button"
+                    variant={saveLabel === label ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSaveLabel(label)}
+                    className="gap-1.5"
+                  >
+                    {getLabelIcon(label)}
+                    {label}
+                  </Button>
+                ))}
+              </div>
+              <Input
+                id="addressLabel"
+                value={saveLabel}
+                onChange={(e) => setSaveLabel(e.target.value)}
+                placeholder="Custom label..."
+                className="mt-2"
+              />
+            </div>
+            {pendingAddressToSave && (
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  {pendingAddressToSave.fullAddress}
+                </p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSaveDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveAddress} disabled={!saveLabel.trim()}>
+              Save address
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
