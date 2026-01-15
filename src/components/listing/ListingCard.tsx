@@ -13,6 +13,7 @@ interface ListingCardProps {
   hostVerified?: boolean;
   showQuickBook?: boolean;
   onQuickBook?: (listing: Listing) => void;
+  canDeliverToUser?: boolean;
 }
 
 // Map of popular amenities to icons (subset for compact display)
@@ -36,7 +37,7 @@ const popularAmenityIcons: Record<string, { icon: React.ElementType; label: stri
   three_compartment_sink: { icon: Droplet, label: '3 Compartment Sink' },
 };
 
-const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook }: ListingCardProps) => {
+const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook, canDeliverToUser }: ListingCardProps) => {
   const price = listing.mode === 'rent' 
     ? `$${listing.price_daily}/day`
     : `$${listing.price_sale?.toLocaleString()}`;
@@ -63,14 +64,33 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         />
         
         {/* Mode Badge */}
-        <Badge 
-          className={cn(
-            "absolute top-3 left-3 text-xs font-medium text-white border-0",
-            modeColor
+        <div className="absolute top-3 left-3 flex items-center gap-2">
+          <Badge 
+            className={cn(
+              "text-xs font-medium text-white border-0",
+              modeColor
+            )}
+          >
+            {modeLabel}
+          </Badge>
+          
+          {/* Can Deliver To User Badge */}
+          {canDeliverToUser && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge className="text-xs font-medium bg-emerald-500 text-white border-0 flex items-center gap-1">
+                    <Truck className="h-3 w-3" />
+                    Delivers to you
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  This listing can deliver to your selected location
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
-        >
-          {modeLabel}
-        </Badge>
+        </div>
 
         {/* Top Right Badges */}
         <div className="absolute top-3 right-3 flex items-center gap-2">

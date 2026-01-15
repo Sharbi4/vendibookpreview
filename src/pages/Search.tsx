@@ -236,10 +236,17 @@ const Search = () => {
     return distance <= searchRadius;
   };
 
-  // Check if a listing can deliver to the user's location
+  // Check if a listing can deliver to the user's location (for filtering)
   const canListingDeliverToLocation = (listing: ListingWithCoords): boolean => {
     if (!locationCoords) return true;
     if (!deliveryFilterEnabled) return true;
+    
+    return checkListingDeliveryCapability(listing);
+  };
+
+  // Check delivery capability for badge display (always checks, not dependent on filter)
+  const checkListingDeliveryCapability = (listing: ListingWithCoords): boolean => {
+    if (!locationCoords) return false;
     
     // Listing must support delivery
     if (listing.fulfillment_type !== 'delivery' && listing.fulfillment_type !== 'both') {
@@ -791,6 +798,7 @@ const Search = () => {
                   {filteredListings.map((listing) => {
                     const distance = getListingDistance(listing);
                     const isHostVerified = hostVerificationMap[listing.host_id] ?? false;
+                    const canDeliverToUser = checkListingDeliveryCapability(listing);
                     return (
                       <div key={listing.id} className="relative">
                         <ListingCard 
@@ -798,6 +806,7 @@ const Search = () => {
                           hostVerified={isHostVerified}
                           showQuickBook
                           onQuickBook={handleQuickBook}
+                          canDeliverToUser={canDeliverToUser}
                         />
                         {distance !== null && (
                           <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 z-10">
