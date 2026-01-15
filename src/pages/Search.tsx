@@ -12,6 +12,7 @@ import DateRangeFilter from '@/components/search/DateRangeFilter';
 import { LocationSearchInput } from '@/components/search/LocationSearchInput';
 import { RadiusFilter } from '@/components/search/RadiusFilter';
 import SearchResultsMap from '@/components/search/SearchResultsMap';
+import NoResultsAlert from '@/components/search/NoResultsAlert';
 import NewsletterSection from '@/components/newsletter/NewsletterSection';
 import AIFeaturesPopup from '@/components/search/AIFeaturesPopup';
 import { Button } from '@/components/ui/button';
@@ -860,16 +861,11 @@ const Search = () => {
                       })}
                     </div>
                   ) : (
-                    <div className="text-center py-16">
-                      <SearchIcon className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-foreground mb-2">No results found</h3>
-                      <p className="text-muted-foreground mb-6">
-                        Try adjusting your search or filters to find what you're looking for.
-                      </p>
-                      <Button onClick={clearFilters} variant="outline">
-                        Clear all filters
-                      </Button>
-                    </div>
+                    <NoResultsAlert 
+                      onClearFilters={clearFilters}
+                      category={category}
+                      mode={mode}
+                    />
                   )}
                 </>
               )}
