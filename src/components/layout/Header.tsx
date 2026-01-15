@@ -254,13 +254,13 @@ const Header = () => {
         </div>
 
         {/* Centered Search - Desktop */}
-        <div className="hidden md:flex flex-1 justify-center max-w-xl mx-6">
+        <div className="hidden md:flex flex-1 justify-center max-w-2xl mx-6">
           <button
             onClick={() => navigate('/search')}
-            className="w-full flex items-center gap-3 px-4 py-2 rounded-full border border-border bg-muted/50 hover:bg-muted transition-colors text-muted-foreground text-sm"
+            className="search-bar-glow w-full flex items-center gap-4 px-6 py-3.5 rounded-full border border-border bg-white hover:bg-white text-muted-foreground text-base font-medium shadow-sm"
           >
-            <Search className="h-4 w-4" />
-            <span>Search food trucks, trailers, ghost kitchens, or equipment</span>
+            <Search className="h-5 w-5 text-primary" />
+            <span className="text-muted-foreground/80">Search food trucks, trailers, ghost kitchens, or equipment</span>
           </button>
         </div>
 

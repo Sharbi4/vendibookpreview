@@ -160,6 +160,55 @@
   .search-input {
     @apply w-full px-4 py-3 rounded-xl border border-border bg-white text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200;
   }
+
+  .search-bar-glow {
+    @apply relative overflow-hidden;
+    box-shadow: 0 0 0 1px hsl(var(--border)), 
+                0 4px 12px -2px hsl(var(--primary) / 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .search-bar-glow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(
+      90deg, 
+      hsl(var(--primary) / 0.3), 
+      hsl(var(--primary) / 0.1), 
+      hsl(var(--primary) / 0.3)
+    );
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .search-bar-glow:hover::before {
+    opacity: 1;
+  }
+
+  .search-bar-glow:hover {
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.3), 
+                0 8px 24px -4px hsl(var(--primary) / 0.2),
+                0 0 20px -4px hsl(var(--primary) / 0.15);
+    transform: scale(1.02);
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
 }
 
 @layer utilities {
