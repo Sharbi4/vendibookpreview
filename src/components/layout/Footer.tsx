@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import vendibookLogo from '@/assets/vendibook-logo.svg';
+import vendibookLogo from '@/assets/vendibook-logo.png';
 
 const Footer = () => {
   return (

@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Truck, Store, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { z } from 'zod';
-import vendibookLogo from '@/assets/vendibook-logo.svg';
+import vendibookLogo from '@/assets/vendibook-logo.png';
 import Header from '@/components/layout/Header';
 
 const authSchema = z.object({
