@@ -34,6 +34,42 @@
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Vendibook",
+      "url": "https://vendibook.com",
+      "logo": "https://vendibook.com/images/vendibook-logo.png",
+      "description": "Rent or buy food trucks, food trailers, ghost kitchens, and vendor lots. The trusted marketplace for mobile food vendors.",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "availableLanguage": "English"
+      },
+      "sameAs": [
+        "https://twitter.com/vendibook",
+        "https://facebook.com/vendibook",
+        "https://instagram.com/vendibook"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Vendibook",
+      "url": "https://vendibook.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://vendibook.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
 
   <!-- Start of vendibook1 Zendesk Widget script -->
   <script id="ze-snippet" src="https://static.zdassets.com/ekr/snippet.js?key=82e7546d-7577-442e-8df3-8a03ac801f21"></script>

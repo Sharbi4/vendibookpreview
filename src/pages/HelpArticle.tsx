@@ -1,6 +1,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import SEO, { generateArticleSchema, generateBreadcrumbSchema } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +19,12 @@ const HelpArticle = () => {
   if (!article) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
+        <SEO
+          title="Article Not Found"
+          description="The help article you're looking for doesn't exist."
+          canonical="/help"
+          noindex={true}
+        />
         <Header />
         <main className="flex-1 container py-16 text-center">
           <h1 className="text-2xl font-bold mb-4">Article Not Found</h1>
@@ -33,21 +40,81 @@ const HelpArticle = () => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Generate structured data
+  const articleSchema = generateArticleSchema({
+    title: article.title,
+    description: article.description,
+    slug: article.slug,
+    category: article.category,
+  });
+
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: 'Home', url: '/' },
+    { name: 'Help Center', url: '/help' },
+    { name: article.title, url: `/help/${article.slug}` },
+  ]);
+
+  // Generate keywords from title and category
+  const keywords = [
+    article.category.toLowerCase(),
+    'food truck',
+    'mobile kitchen',
+    'food trailer',
+    'ghost kitchen',
+    ...article.title.toLowerCase().split(' ').filter(w => w.length > 4),
+  ].join(', ');
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO
+        title={article.title}
+        description={article.description}
+        canonical={`/help/${article.slug}`}
+        type="article"
+        article={{
+          section: article.category,
+          tags: article.relatedArticles,
+        }}
+      />
+      
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+
       <Header />
 
       <main className="flex-1">
         {/* Breadcrumb */}
-        <div className="border-b bg-muted/30">
+        <nav className="border-b bg-muted/30" aria-label="Breadcrumb">
           <div className="container py-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Link to="/help" className="hover:text-foreground">Help Center</Link>
+            <ol className="flex items-center gap-2 text-sm text-muted-foreground" itemScope itemType="https://schema.org/BreadcrumbList">
+              <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                <Link to="/" className="hover:text-foreground" itemProp="item">
+                  <span itemProp="name">Home</span>
+                </Link>
+                <meta itemProp="position" content="1" />
+              </li>
               <ChevronRight className="h-4 w-4" />
-              <span className="text-foreground">{article.category}</span>
-            </div>
+              <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                <Link to="/help" className="hover:text-foreground" itemProp="item">
+                  <span itemProp="name">Help Center</span>
+                </Link>
+                <meta itemProp="position" content="2" />
+              </li>
+              <ChevronRight className="h-4 w-4" />
+              <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                <span className="text-foreground" itemProp="name">{article.category}</span>
+                <meta itemProp="position" content="3" />
+              </li>
+            </ol>
           </div>
-        </div>
+        </nav>
 
         <div className="container py-8">
           <div className="flex flex-col lg:flex-row gap-8">
@@ -67,7 +134,7 @@ const HelpArticle = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <nav className="space-y-1">
+                    <nav className="space-y-1" aria-label="Table of contents">
                       {article.sections.map((section) => (
                         <button
                           key={section.id}
@@ -84,13 +151,18 @@ const HelpArticle = () => {
             </aside>
 
             {/* Main Content */}
-            <article className="flex-1 min-w-0">
+            <article className="flex-1 min-w-0" itemScope itemType="https://schema.org/Article">
+              <meta itemProp="keywords" content={keywords} />
               <Badge variant="secondary" className="mb-4">{article.category}</Badge>
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">{article.title}</h1>
-              <p className="text-lg text-muted-foreground mb-8">{article.description}</p>
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4" itemProp="headline">
+                {article.title}
+              </h1>
+              <p className="text-lg text-muted-foreground mb-8" itemProp="description">
+                {article.description}
+              </p>
 
               {/* Article Sections */}
-              <div className="prose prose-slate dark:prose-invert max-w-none">
+              <div className="prose prose-slate dark:prose-invert max-w-none" itemProp="articleBody">
                 {article.sections.map((section) => (
                   <section key={section.id} id={section.id} className="mb-10 scroll-mt-8">
                     <h2 className="text-2xl font-semibold text-foreground mb-4 pb-2 border-b">{section.title}</h2>
@@ -118,7 +190,7 @@ const HelpArticle = () => {
 
               {/* Related Articles */}
               {relatedArticles.length > 0 && (
-                <div className="mt-12 pt-8 border-t">
+                <aside className="mt-12 pt-8 border-t">
                   <h3 className="text-xl font-semibold mb-4">Related Articles</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {relatedArticles.map((related) => (
@@ -132,11 +204,11 @@ const HelpArticle = () => {
                       </Link>
                     ))}
                   </div>
-                </div>
+                </aside>
               )}
 
               {/* Prev/Next Navigation */}
-              <div className="mt-12 pt-8 border-t flex justify-between gap-4">
+              <nav className="mt-12 pt-8 border-t flex justify-between gap-4" aria-label="Article navigation">
                 {prev ? (
                   <Link to={`/help/${prev.slug}`} className="flex-1 p-4 border rounded-lg hover:border-primary transition-colors">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
@@ -154,7 +226,7 @@ const HelpArticle = () => {
                     <div className="font-medium text-foreground">{next.title}</div>
                   </Link>
                 ) : <div className="flex-1" />}
-              </div>
+              </nav>
             </article>
           </div>
         </div>
