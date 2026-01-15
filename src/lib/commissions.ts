@@ -1,7 +1,7 @@
 // Platform commission rates
 export const RENTAL_HOST_FEE_PERCENT = 12.9; // 12.9% from host
 export const RENTAL_RENTER_FEE_PERCENT = 12.9; // 12.9% platform fee from renter
-export const SALE_SELLER_FEE_PERCENT = 15; // 15% from seller on sales
+export const SALE_SELLER_FEE_PERCENT = 12.9; // 12.9% from seller on sales
 
 /**
  * Calculate rental fees (dual-sided commission)
