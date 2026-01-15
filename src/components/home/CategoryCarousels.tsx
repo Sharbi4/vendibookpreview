@@ -212,8 +212,14 @@ const CategoryCarousels = () => {
   }
 
   return (
-    <section className="py-12 bg-gradient-to-b from-muted/40 via-background to-background">
-      <div className="container">
+    <section className="py-12 relative overflow-hidden bg-gradient-to-br from-blue-500/5 via-background to-purple-500/5">
+      {/* Vibrant decorative orbs */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-10 left-10 w-72 h-72 bg-blue-500/15 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
+      </div>
+      <div className="container relative z-10">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-foreground mb-2">Browse by Category</h2>
           <p className="text-muted-foreground">

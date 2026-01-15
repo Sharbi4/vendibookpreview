@@ -26,11 +26,12 @@ const steps: Step[] = [
 
 const HowItWorks = () => {
   return (
-    <section className="py-16 md:py-20 bg-gradient-to-br from-vendibook-cream via-vendibook-cream/80 to-primary/5 relative overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-0 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+    <section className="py-16 md:py-20 relative overflow-hidden bg-gradient-to-br from-amber-500/10 via-vendibook-cream to-primary/10">
+      {/* Vibrant decorative elements */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-primary/15 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-0 w-64 h-64 bg-orange-400/10 rounded-full blur-3xl" />
       </div>
       <div className="container relative z-10">
         <div className="text-center mb-12">
