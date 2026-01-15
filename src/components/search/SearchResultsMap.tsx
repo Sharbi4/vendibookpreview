@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Listing } from '@/types/listing';
-import { Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ListingWithCoords extends Listing {
   latitude?: number | null;
@@ -201,10 +201,10 @@ const SearchResultsMap = ({
     }
   }, [userLocation, searchRadius, mapLoaded]);
 
-  if (isLoading) {
+  if (isLoading || !mapToken) {
     return (
-      <div className="h-full flex items-center justify-center bg-muted rounded-xl">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="h-full w-full rounded-xl overflow-hidden">
+        <Skeleton className="h-full w-full" />
       </div>
     );
   }
