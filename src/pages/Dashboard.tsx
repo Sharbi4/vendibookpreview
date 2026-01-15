@@ -6,13 +6,14 @@ import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import HostDashboard from '@/components/dashboard/HostDashboard';
 import ShopperDashboard from '@/components/dashboard/ShopperDashboard';
+import VerificationProgress from '@/components/verification/VerificationProgress';
 import { 
   Loader2, 
-  Shield, 
-  ShieldCheck,
   Settings,
   User,
-  Bell
+  Bell,
+  Shield,
+  ShieldCheck
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -81,49 +82,10 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Verification Banner */}
-        {!isVerified && (
-          <div className="relative overflow-hidden bg-gradient-to-r from-amber-50 to-amber-50/50 border border-amber-200 rounded-xl p-5 mb-8 group hover:shadow-md transition-all">
-            <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-            <div className="relative flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
-                  <Shield className="h-6 w-6 text-amber-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-amber-800">Complete Identity Verification</p>
-                  <p className="text-sm text-amber-700">
-                    Verify your identity to unlock all features and build trust with other users.
-                  </p>
-                </div>
-              </div>
-              <Button 
-                onClick={() => navigate('/verify-identity')}
-                className="bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-500/25"
-              >
-                Verify Now
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Verified Badge */}
-        {isVerified && (
-          <div className="relative overflow-hidden bg-gradient-to-r from-emerald-50 to-emerald-50/50 border border-emerald-200 rounded-xl p-5 mb-8">
-            <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-            <div className="relative flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
-                <ShieldCheck className="h-6 w-6 text-emerald-600" />
-              </div>
-              <div>
-                <p className="font-semibold text-emerald-800">Identity Verified ✓</p>
-                <p className="text-sm text-emerald-700">
-                  Your identity has been verified. You have full access to all features.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Verification Progress Section */}
+        <div className="mb-8">
+          <VerificationProgress />
+        </div>
 
         {/* Host Dashboard */}
         {isHost && <HostDashboard />}
