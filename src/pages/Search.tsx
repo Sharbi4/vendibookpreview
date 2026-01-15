@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Fuse from 'fuse.js';
-import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet, Truck } from 'lucide-react';
+import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet, Truck, LayoutGrid, Map } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format, parseISO, eachDayOfInterval } from 'date-fns';
 import Header from '@/components/layout/Header';
@@ -11,12 +11,14 @@ import QuickBookingModal from '@/components/search/QuickBookingModal';
 import DateRangeFilter from '@/components/search/DateRangeFilter';
 import { LocationSearchInput } from '@/components/search/LocationSearchInput';
 import { RadiusFilter } from '@/components/search/RadiusFilter';
+import SearchResultsMap from '@/components/search/SearchResultsMap';
 import NewsletterSection from '@/components/newsletter/NewsletterSection';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Sheet,
   SheetContent,
@@ -38,6 +40,7 @@ import { Listing, CATEGORY_LABELS, ListingCategory, ListingMode, AMENITIES_BY_CA
 import { calculateDistance } from '@/lib/geolocation';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 
 // Fetch all blocked dates and bookings for availability filtering
 interface UnavailableDates {
@@ -96,7 +99,12 @@ const Search = () => {
   const [deliveryFilterEnabled, setDeliveryFilterEnabled] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
-  
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
+
+  // Mapbox token for map view
+  const { token: mapToken, isLoading: isMapTokenLoading, error: mapTokenError } = useMapboxToken();
+
+
   // Quick booking modal state
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
@@ -723,19 +731,31 @@ const Search = () => {
                     </>
                   )}
                 </p>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Sort by:</span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => handleSortChange(e.target.value)}
-                    className="text-sm border border-border rounded-lg px-3 py-2 bg-background"
-                  >
-                    <option value="newest">Newest</option>
-                    {searchQuery.trim() && <option value="relevance">Relevance</option>}
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                    {locationCoords && <option value="distance">Distance</option>}
-                  </select>
+                <div className="flex items-center gap-4">
+                  {/* View Toggle */}
+                  <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'map')}>
+                    <ToggleGroupItem value="grid" aria-label="Grid view" className="px-3">
+                      <LayoutGrid className="h-4 w-4" />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="map" aria-label="Map view" className="px-3">
+                      <Map className="h-4 w-4" />
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Sort by:</span>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => handleSortChange(e.target.value)}
+                      className="text-sm border border-border rounded-lg px-3 py-2 bg-background"
+                    >
+                      <option value="newest">Newest</option>
+                      {searchQuery.trim() && <option value="relevance">Relevance</option>}
+                      <option value="price-low">Price: Low to High</option>
+                      <option value="price-high">Price: High to Low</option>
+                      {locationCoords && <option value="distance">Distance</option>}
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -792,43 +812,64 @@ const Search = () => {
                 </div>
               )}
 
+              {/* Map View */}
+              {viewMode === 'map' && (
+                <div className="h-[600px] rounded-xl overflow-hidden border border-border">
+                  <SearchResultsMap
+                    listings={filteredListings}
+                    mapToken={mapToken}
+                    isLoading={isMapTokenLoading}
+                    error={mapTokenError}
+                    userLocation={locationCoords}
+                    searchRadius={searchRadius}
+                    onListingClick={(listing) => {
+                      window.location.href = `/listing/${listing.id}`;
+                    }}
+                  />
+                </div>
+              )}
+
               {/* Listings Grid */}
-              {filteredListings.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredListings.map((listing) => {
-                    const distance = getListingDistance(listing);
-                    const isHostVerified = hostVerificationMap[listing.host_id] ?? false;
-                    const canDeliverToUser = checkListingDeliveryCapability(listing);
-                    return (
-                      <div key={listing.id} className="relative">
-                        <ListingCard 
-                          listing={listing} 
-                          hostVerified={isHostVerified}
-                          showQuickBook
-                          onQuickBook={handleQuickBook}
-                          canDeliverToUser={canDeliverToUser}
-                        />
-                        {distance !== null && (
-                          <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 z-10">
-                            <Navigation className="h-3 w-3" />
-                            {distance < 1 ? '< 1' : Math.round(distance)} mi
+              {viewMode === 'grid' && (
+                <>
+                  {filteredListings.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredListings.map((listing) => {
+                        const distance = getListingDistance(listing);
+                        const isHostVerified = hostVerificationMap[listing.host_id] ?? false;
+                        const canDeliverToUser = checkListingDeliveryCapability(listing);
+                        return (
+                          <div key={listing.id} className="relative">
+                            <ListingCard 
+                              listing={listing} 
+                              hostVerified={isHostVerified}
+                              showQuickBook
+                              onQuickBook={handleQuickBook}
+                              canDeliverToUser={canDeliverToUser}
+                            />
+                            {distance !== null && (
+                              <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 z-10">
+                                <Navigation className="h-3 w-3" />
+                                {distance < 1 ? '< 1' : Math.round(distance)} mi
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-16">
-                  <SearchIcon className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-foreground mb-2">No results found</h3>
-                  <p className="text-muted-foreground mb-6">
-                    Try adjusting your search or filters to find what you're looking for.
-                  </p>
-                  <Button onClick={clearFilters} variant="outline">
-                    Clear all filters
-                  </Button>
-                </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-16">
+                      <SearchIcon className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-foreground mb-2">No results found</h3>
+                      <p className="text-muted-foreground mb-6">
+                        Try adjusting your search or filters to find what you're looking for.
+                      </p>
+                      <Button onClick={clearFilters} variant="outline">
+                        Clear all filters
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
