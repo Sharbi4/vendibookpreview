@@ -26,11 +26,12 @@ const featuredArticles = [
 
 const HelpCenterPreview = () => {
   return (
-    <section className="py-16 md:py-20 relative overflow-hidden bg-gradient-to-br from-cyan-500/5 via-muted/30 to-teal-500/5" aria-labelledby="help-center-heading">
+    <section className="py-16 md:py-20 relative overflow-hidden bg-gradient-to-br from-sky-300/25 via-cyan-200/40 to-teal-300/25" aria-labelledby="help-center-heading">
       {/* Vibrant decorative orbs */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-10 left-1/4 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-1/4 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-10 left-1/4 w-72 h-72 bg-sky-400/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-1/4 w-80 h-80 bg-teal-400/25 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/2 right-10 w-64 h-64 bg-cyan-400/25 rounded-full blur-3xl" />
       </div>
       <div className="container max-w-7xl mx-auto px-4 relative z-10">
         {/* Header */}

@@ -69,12 +69,13 @@ const AIToolsSection = () => {
   };
 
   return (
-    <section className="py-16 md:py-20 relative overflow-hidden bg-gradient-to-br from-purple-500/10 via-primary/5 to-amber-500/10" aria-labelledby="ai-tools-heading">
+    <section className="py-16 md:py-20 relative overflow-hidden bg-gradient-to-br from-violet-400/25 via-fuchsia-200/40 to-amber-300/25" aria-labelledby="ai-tools-heading">
       {/* Vibrant AI-themed decorative elements */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-500/20 to-transparent rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-primary/20 to-transparent rounded-full blur-3xl" />
-        <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-amber-500/15 rounded-full blur-3xl" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-400/35 to-fuchsia-400/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-pink-400/30 to-violet-400/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-amber-400/30 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/3 w-72 h-72 bg-fuchsia-300/25 rounded-full blur-3xl" />
       </div>
       <div className="container max-w-7xl mx-auto px-4 relative z-10">
         {/* Header */}
