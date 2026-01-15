@@ -44,26 +44,49 @@ const SocialContactOptions = () => {
 
   return (
     <div className="flex justify-center">
-      {/* Live Chat */}
       <Button
         onClick={openZendeskChat}
-        variant="outline"
-        className="h-auto py-4 px-8 flex flex-col items-center gap-2 hover:bg-primary/5 hover:border-primary/50 relative"
+        size="lg"
+        className={`
+          h-auto py-5 px-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 
+          flex items-center gap-4 group
+          ${isOnline 
+            ? 'bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary' 
+            : 'bg-gradient-to-r from-muted-foreground to-muted-foreground/90'
+          }
+        `}
       >
-        <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center relative">
-          <MessageCircle className="h-6 w-6" />
-          {/* Online/Offline indicator */}
+        <div className="relative">
+          <div className={`
+            w-14 h-14 rounded-xl flex items-center justify-center
+            ${isOnline ? 'bg-white/20' : 'bg-white/10'}
+            group-hover:scale-105 transition-transform
+          `}>
+            <MessageCircle className="h-7 w-7 text-white" />
+          </div>
+          {/* Online/Offline pulse indicator */}
           <span 
-            className={`absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-background ${
-              isOnline ? 'bg-green-500' : 'bg-muted-foreground'
-            }`}
-            title={isOnline ? 'Online' : 'Offline'}
-          />
+            className={`
+              absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white
+              ${isOnline ? 'bg-green-400' : 'bg-gray-400'}
+            `}
+          >
+            {isOnline && (
+              <span className="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-75" />
+            )}
+          </span>
         </div>
-        <div className="text-center">
-          <p className="font-medium text-foreground">Live Chat</p>
-          <p className={`text-xs ${isOnline ? 'text-green-600' : 'text-muted-foreground'}`}>
-            {isOnline ? 'Online now' : 'Leave a message'}
+        <div className="text-left">
+          <p className="font-bold text-white text-lg">Start Live Chat</p>
+          <p className={`text-sm ${isOnline ? 'text-white/80' : 'text-white/60'}`}>
+            {isOnline ? (
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+                Online now • Avg. 2 min wait
+              </span>
+            ) : (
+              'Leave a message • We\'ll reply soon'
+            )}
           </p>
         </div>
       </Button>
