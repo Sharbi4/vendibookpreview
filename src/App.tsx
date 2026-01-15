@@ -36,6 +36,7 @@ import AITools from "./pages/AITools";
 import OrderTracking from "./pages/OrderTracking";
 import HostOnboarding from "./pages/HostOnboarding";
 import Install from "./pages/Install";
+import VendorLots from "./pages/VendorLots";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -81,6 +82,7 @@ const App = () => (
             <Route path="/order-tracking/:transactionId" element={<OrderTracking />} />
             <Route path="/host" element={<HostOnboarding />} />
             <Route path="/install" element={<Install />} />
+            <Route path="/vendor-lots" element={<VendorLots />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
