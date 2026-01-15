@@ -209,12 +209,20 @@ const PaymentSuccess = () => {
   }, [sessionId, isEscrow, user]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-emerald-200/30 via-teal-100/25 to-cyan-200/20">
+      {/* Decorative orbs */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 right-20 w-96 h-96 bg-emerald-400/25 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 left-20 w-80 h-80 bg-teal-400/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-300/15 rounded-full blur-3xl" />
+        <div className="absolute top-10 left-1/4 w-64 h-64 bg-emerald-300/20 rounded-full blur-2xl" />
+      </div>
+      
       <Header />
       
-      <main className="flex-1 flex items-center justify-center py-16">
+      <main className="flex-1 flex items-center justify-center py-16 relative z-10">
         <div className="container max-w-2xl">
-          <Card className={`border-2 shadow-xl overflow-hidden transition-all duration-500 ${showContent && !isLoading && !error ? 'border-emerald-500' : 'border-foreground'}`}>
+          <Card className={`border-2 shadow-xl overflow-hidden transition-all duration-500 backdrop-blur-sm bg-background/95 ${showContent && !isLoading && !error ? 'border-emerald-500' : 'border-foreground/20'}`}>
             <CardContent className="pt-8 pb-8 text-center">
               {isLoading ? (
                 <div className="flex flex-col items-center gap-4 py-8">
