@@ -116,7 +116,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "VendiBook <onboarding@resend.dev>",
+        from: "VendiBook <noreply@updates.vendibook.com>",
         to: [email],
         subject: `Welcome to VendiBook, ${fullName || 'Friend'}! 🚀`,
         html,
