@@ -4,6 +4,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import Hero from '@/components/home/Hero';
 import FeaturedListings from '@/components/home/FeaturedListings';
+import CategoryCarousels from '@/components/home/CategoryCarousels';
 import HowItWorks from '@/components/home/HowItWorks';
 import NewsletterSection from '@/components/newsletter/NewsletterSection';
 import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
@@ -33,6 +34,7 @@ const Index = () => {
       <main className="flex-1">
         <Hero />
         <FeaturedListings />
+        <CategoryCarousels />
         <TrustSafetySection />
         <AIToolsSection />
         <HelpCenterPreview />
