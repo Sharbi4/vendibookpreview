@@ -119,49 +119,55 @@ const NewsletterSection = ({ variant = 'default', source = 'section' }: Newslett
   }
 
   return (
-    <section className="py-16 md:py-20 relative overflow-hidden bg-gradient-to-r from-orange-500 via-rose-500 to-pink-500 text-white">
-      {/* Vibrant decorative glow effects */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/25 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-300/30 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-rose-400/30 rounded-full blur-3xl animate-pulse" />
+    <section className="py-16 md:py-20 relative overflow-hidden">
+      {/* Solid vibrant orange-red gradient background like reference */}
+      <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500" />
+      
+      {/* Decorative curved lines - inspired by reference */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Large curved decorative lines */}
+        <svg className="absolute right-0 top-0 h-full w-1/2 opacity-30" viewBox="0 0 400 400" fill="none">
+          <circle cx="400" cy="200" r="300" stroke="white" strokeWidth="2" fill="none" />
+          <circle cx="400" cy="200" r="250" stroke="white" strokeWidth="1.5" fill="none" />
+          <circle cx="400" cy="200" r="200" stroke="white" strokeWidth="1" fill="none" />
+          <circle cx="400" cy="200" r="150" stroke="white" strokeWidth="0.5" fill="none" />
+        </svg>
+        {/* Additional glow effects */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-400/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-red-500/20 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3" />
       </div>
+      
       <div className="container relative z-10">
         <div className="max-w-2xl mx-auto text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary-foreground/10 mb-6">
-            <Mail className="h-7 w-7" />
-          </div>
-          
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">
-            Join Our Newsletter
+          <h2 className="text-2xl md:text-4xl font-bold mb-3 text-white">
+            Subscribe to our email
           </h2>
-          <p className="text-primary-foreground/80 mb-8 max-w-lg mx-auto">
-            Get the latest listings, exclusive deals, and tips for running a successful mobile food business delivered straight to your inbox.
-          </p>
+          <h3 className="text-xl md:text-2xl font-bold mb-8 text-white">
+            newsletter for food entrepreneurs!
+          </h3>
 
           {isSuccess ? (
             <div className="flex items-center justify-center gap-3 py-4">
-              <CheckCircle className="h-6 w-6" />
-              <span className="text-lg font-medium">Thanks for subscribing!</span>
+              <CheckCircle className="h-6 w-6 text-white" />
+              <span className="text-lg font-medium text-white">Thanks for subscribing!</span>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-0 max-w-lg mx-auto">
               <div className="flex-1">
                 <Input
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder="Email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 bg-primary-foreground text-foreground border-0"
+                  className="h-14 bg-white text-foreground border-0 rounded-l-full rounded-r-none sm:rounded-r-none px-6 text-base placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
                   disabled={isSubmitting}
                   maxLength={255}
                 />
               </div>
               <Button
                 type="submit"
-                variant="secondary"
                 disabled={isSubmitting}
-                className="h-12 px-8"
+                className="h-14 px-8 rounded-r-full rounded-l-none sm:rounded-l-none bg-red-500 hover:bg-red-600 text-white font-semibold text-base shadow-lg"
               >
                 {isSubmitting ? (
                   <>
@@ -175,9 +181,9 @@ const NewsletterSection = ({ variant = 'default', source = 'section' }: Newslett
             </form>
           )}
 
-          <p className="text-xs text-primary-foreground/60 mt-4">
+          <p className="text-xs text-white/70 mt-6">
             No spam, unsubscribe anytime.{' '}
-            <a href="/privacy" className="underline hover:text-primary-foreground">
+            <a href="/privacy" className="underline hover:text-white">
               Privacy Policy
             </a>
           </p>
