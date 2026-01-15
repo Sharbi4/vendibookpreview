@@ -40,11 +40,13 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Sending listing live email to:", hostEmail);
     console.log("Listing:", listingTitle, listingId);
 
-    const listingUrl = `${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '.lovable.app')}/listing/${listingId}`;
-    const dashboardUrl = `${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '.lovable.app')}/dashboard`;
+    const siteUrl = Deno.env.get("SITE_URL") || "https://vendibookpreview.lovable.app";
+    const logoUrl = `${siteUrl}/images/vendibook-email-logo.png`;
+    const listingUrl = `${siteUrl}/listing/${listingId}`;
+    const dashboardUrl = `${siteUrl}/dashboard`;
 
     const emailResponse = await resend.emails.send({
-      from: "Vendibook <updates@vendibook.com>",
+      from: "VendiBook <noreply@updates.vendibook.com>",
       to: [hostEmail],
       subject: `🎉 Your listing "${listingTitle}" is now live!`,
       html: `
@@ -54,62 +56,77 @@ const handler = async (req: Request): Promise<Response> => {
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
         </head>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Congratulations!</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Your listing is now live on Vendibook</p>
-          </div>
-          
-          <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none;">
-            <p style="margin: 0 0 20px 0;">Hi ${hostName || 'there'},</p>
-            
-            <p style="margin: 0 0 20px 0;">Great news! Your listing <strong>"${listingTitle}"</strong> is now published and visible to potential renters and buyers on Vendibook.</p>
-            
-            ${listingImageUrl ? `
-            <div style="margin: 20px 0; text-align: center;">
-              <img src="${listingImageUrl}" alt="${listingTitle}" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
-            </div>
-            ` : ''}
-            
-            <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin: 20px 0;">
-              <h3 style="margin: 0 0 15px 0; color: #1f2937;">Listing Details</h3>
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 8px 0; color: #6b7280;">Title:</td>
-                  <td style="padding: 8px 0; font-weight: 600;">${listingTitle}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; color: #6b7280;">Category:</td>
-                  <td style="padding: 8px 0;">${category}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; color: #6b7280;">Price:</td>
-                  <td style="padding: 8px 0; font-weight: 600; color: #059669;">${listingPrice}</td>
-                </tr>
-              </table>
+        <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+            <!-- Header with Logo -->
+            <div style="text-align: center; margin-bottom: 40px;">
+              <img src="${logoUrl}" alt="VendiBook" style="max-width: 200px; height: auto; margin-bottom: 16px;" />
+              <p style="color: #6b7280; font-size: 14px; margin-top: 8px;">Your Mobile Food Business Marketplace</p>
             </div>
             
-            <div style="margin: 25px 0;">
-              <h3 style="margin: 0 0 15px 0; color: #1f2937;">What's Next?</h3>
-              <ul style="margin: 0; padding-left: 20px; color: #4b5563;">
-                <li style="margin-bottom: 8px;">Share your listing on social media to reach more customers</li>
-                <li style="margin-bottom: 8px;">Keep your calendar updated to avoid booking conflicts</li>
-                <li style="margin-bottom: 8px;">Respond quickly to booking requests to improve your ranking</li>
-                <li style="margin-bottom: 8px;">Consider adding more photos to attract more interest</li>
-              </ul>
+            <!-- Main Content -->
+            <div style="background: #ffffff; padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                  <span style="font-size: 28px;">🎉</span>
+                </div>
+                <h1 style="color: #1f2937; font-size: 24px; margin: 0;">Congratulations!</h1>
+                <p style="color: #6b7280; font-size: 16px; margin: 8px 0 0 0;">Your listing is now live</p>
+              </div>
+              
+              <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+                Hi ${hostName || 'there'}, great news! Your listing <strong style="color: #1f2937;">"${listingTitle}"</strong> is now published and visible to potential renters and buyers on VendiBook.
+              </p>
+              
+              ${listingImageUrl ? `
+              <div style="margin: 24px 0; text-align: center;">
+                <img src="${listingImageUrl}" alt="${listingTitle}" style="max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+              </div>
+              ` : ''}
+              
+              <div style="background: #f9fafb; padding: 24px; border-radius: 12px; margin: 24px 0;">
+                <h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px;">Listing Details</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Title:</td>
+                    <td style="padding: 8px 0; font-weight: 600; color: #1f2937; font-size: 14px;">${listingTitle}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Category:</td>
+                    <td style="padding: 8px 0; color: #1f2937; font-size: 14px;">${category}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Price:</td>
+                    <td style="padding: 8px 0; font-weight: 600; color: #22c55e; font-size: 14px;">${listingPrice}</td>
+                  </tr>
+                </table>
+              </div>
+              
+              <div style="margin: 24px 0;">
+                <h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px;">What's Next?</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #4b5563; font-size: 14px; line-height: 1.8;">
+                  <li>Share your listing on social media to reach more customers</li>
+                  <li>Keep your calendar updated to avoid booking conflicts</li>
+                  <li>Respond quickly to booking requests to improve your ranking</li>
+                  <li>Consider adding more photos to attract more interest</li>
+                </ul>
+              </div>
+              
+              <div style="text-align: center; margin: 32px 0 0 0;">
+                <a href="${listingUrl}" style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; margin-right: 12px;">View Your Listing</a>
+                <a href="${dashboardUrl}" style="display: inline-block; background: #f3f4f6; color: #374151; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">Go to Dashboard</a>
+              </div>
             </div>
             
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${listingUrl}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin-right: 10px;">View Your Listing</a>
-              <a href="${dashboardUrl}" style="display: inline-block; background: #f3f4f6; color: #374151; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">Go to Dashboard</a>
+            <!-- Footer -->
+            <div style="text-align: center; margin-top: 40px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
+              <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                You're receiving this email because you published a listing on VendiBook.
+              </p>
+              <p style="color: #9ca3af; font-size: 12px; margin: 16px 0 0 0;">
+                © ${new Date().getFullYear()} VendiBook. All rights reserved.
+              </p>
             </div>
-            
-            <p style="margin: 20px 0 0 0; color: #6b7280; font-size: 14px;">Thank you for choosing Vendibook. We're excited to help you connect with customers!</p>
-          </div>
-          
-          <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
-            <p style="margin: 0;">© ${new Date().getFullYear()} Vendibook. All rights reserved.</p>
-            <p style="margin: 5px 0 0 0;">You're receiving this email because you published a listing on Vendibook.</p>
           </div>
         </body>
         </html>
