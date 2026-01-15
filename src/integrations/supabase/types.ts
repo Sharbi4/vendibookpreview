@@ -752,11 +752,14 @@ export type Database = {
           buyer_id: string
           buyer_name: string | null
           buyer_phone: string | null
+          carrier: string | null
           checkout_session_id: string | null
           created_at: string
+          delivered_at: string | null
           delivery_address: string | null
           delivery_fee: number | null
           delivery_instructions: string | null
+          estimated_delivery_date: string | null
           freight_cost: number | null
           fulfillment_type: string | null
           id: string
@@ -768,7 +771,12 @@ export type Database = {
           seller_confirmed_at: string | null
           seller_id: string
           seller_payout: number
+          shipped_at: string | null
+          shipping_notes: string | null
+          shipping_status: string | null
           status: string
+          tracking_number: string | null
+          tracking_url: string | null
           transfer_id: string | null
           updated_at: string
         }
@@ -779,11 +787,14 @@ export type Database = {
           buyer_id: string
           buyer_name?: string | null
           buyer_phone?: string | null
+          carrier?: string | null
           checkout_session_id?: string | null
           created_at?: string
+          delivered_at?: string | null
           delivery_address?: string | null
           delivery_fee?: number | null
           delivery_instructions?: string | null
+          estimated_delivery_date?: string | null
           freight_cost?: number | null
           fulfillment_type?: string | null
           id?: string
@@ -795,7 +806,12 @@ export type Database = {
           seller_confirmed_at?: string | null
           seller_id: string
           seller_payout: number
+          shipped_at?: string | null
+          shipping_notes?: string | null
+          shipping_status?: string | null
           status?: string
+          tracking_number?: string | null
+          tracking_url?: string | null
           transfer_id?: string | null
           updated_at?: string
         }
@@ -806,11 +822,14 @@ export type Database = {
           buyer_id?: string
           buyer_name?: string | null
           buyer_phone?: string | null
+          carrier?: string | null
           checkout_session_id?: string | null
           created_at?: string
+          delivered_at?: string | null
           delivery_address?: string | null
           delivery_fee?: number | null
           delivery_instructions?: string | null
+          estimated_delivery_date?: string | null
           freight_cost?: number | null
           fulfillment_type?: string | null
           id?: string
@@ -822,7 +841,12 @@ export type Database = {
           seller_confirmed_at?: string | null
           seller_id?: string
           seller_payout?: number
+          shipped_at?: string | null
+          shipping_notes?: string | null
+          shipping_status?: string | null
           status?: string
+          tracking_number?: string | null
+          tracking_url?: string | null
           transfer_id?: string | null
           updated_at?: string
         }
