@@ -57,9 +57,9 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Help */}
           <div>
-            <h4 className="font-semibold mb-4 text-background">Support</h4>
+            <h4 className="font-semibold mb-4 text-background">Help</h4>
             <ul className="space-y-2 text-sm text-background/80">
               <li><a href="tel:+18778836342" className="hover:text-background transition-colors">1877-8VENDI2</a></li>
               <li><Link to="/help" className="hover:text-background transition-colors">Help Center</Link></li>
