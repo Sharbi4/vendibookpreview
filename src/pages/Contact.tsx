@@ -113,9 +113,15 @@ const Contact = () => {
                       <Phone className="h-6 w-6" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground mb-1">Quick Response</h3>
-                      <p className="text-sm text-muted-foreground">
-                        We will call you within 2 minutes during business hours
+                      <h3 className="font-semibold text-foreground mb-1">Call Us</h3>
+                      <a 
+                        href="tel:+18778836342" 
+                        className="text-sm text-primary hover:underline font-medium"
+                      >
+                        1 (877) 883-6342
+                      </a>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        We will call you back within 2 minutes during business hours
                       </p>
                     </div>
                   </div>
