@@ -1,5 +1,6 @@
 import { Check, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { StripeLogo } from '@/components/ui/StripeLogo';
 
 interface StripeStatusCardProps {
   isConnected: boolean;
@@ -22,15 +23,21 @@ const StripeStatusCard = ({ isConnected, hasAccountStarted, isLoading, onConnect
 
   if (isConnected) {
     return (
-      <div className="bg-emerald-50 border border-foreground rounded-xl p-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-            <Check className="h-5 w-5 text-emerald-600" />
+      <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
+              <Check className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <StripeLogo size="sm" />
+                <p className="font-semibold text-emerald-800 dark:text-emerald-200">Connected</p>
+              </div>
+              <p className="text-sm text-emerald-700 dark:text-emerald-300">You can receive payments and payouts</p>
+            </div>
           </div>
-          <div>
-            <p className="font-semibold text-emerald-800">Stripe Connected</p>
-            <p className="text-sm text-emerald-700">You can receive payments and payouts</p>
-          </div>
+          <StripeLogo size="md" />
         </div>
       </div>
     );
@@ -39,20 +46,24 @@ const StripeStatusCard = ({ isConnected, hasAccountStarted, isLoading, onConnect
   // User started onboarding but didn't complete it
   if (hasAccountStarted) {
     return (
-      <div className="bg-blue-50 border border-foreground rounded-xl p-6">
+      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-              <ArrowRight className="h-5 w-5 text-blue-600" />
+            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+              <StripeLogo size="sm" />
             </div>
             <div>
-              <p className="font-semibold text-blue-800">Complete Your Stripe Setup</p>
-              <p className="text-sm text-blue-700">You're almost there! Finish setup to start accepting payments.</p>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-blue-800 dark:text-blue-200">Complete Your</p>
+                <StripeLogo size="sm" />
+                <p className="font-semibold text-blue-800 dark:text-blue-200">Setup</p>
+              </div>
+              <p className="text-sm text-blue-700 dark:text-blue-300">You're almost there! Finish setup to start accepting payments.</p>
             </div>
           </div>
           <Button 
             onClick={onConnect}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-[#635bff] hover:bg-[#635bff]/90"
           >
             Continue Setup
             <ArrowRight className="h-4 w-4 ml-2" />
@@ -63,20 +74,24 @@ const StripeStatusCard = ({ isConnected, hasAccountStarted, isLoading, onConnect
   }
 
   return (
-    <div className="bg-amber-50 border border-foreground rounded-xl p-6">
+    <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-            <AlertCircle className="h-5 w-5 text-amber-600" />
+          <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
+            <StripeLogo size="sm" />
           </div>
           <div>
-            <p className="font-semibold text-amber-800">Connect Stripe to Publish</p>
-            <p className="text-sm text-amber-700">Set up payouts to start accepting bookings</p>
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-amber-800 dark:text-amber-200">Connect</p>
+              <StripeLogo size="sm" />
+              <p className="font-semibold text-amber-800 dark:text-amber-200">to Publish</p>
+            </div>
+            <p className="text-sm text-amber-700 dark:text-amber-300">Set up payouts to start accepting bookings</p>
           </div>
         </div>
         <Button 
           onClick={onConnect}
-          className="bg-primary hover:bg-primary/90"
+          className="bg-[#635bff] hover:bg-[#635bff]/90"
         >
           Connect Stripe
         </Button>
