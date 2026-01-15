@@ -192,6 +192,10 @@ serve(async (req) => {
         mode: 'payment',
         customer: customerId,
         customer_email: customerId ? undefined : user.email,
+        // Enable automatic tax calculation based on customer location
+        automatic_tax: { enabled: true },
+        // Collect billing address for accurate tax calculation
+        billing_address_collection: 'required',
         line_items: [
           {
             price_data: {
@@ -201,6 +205,8 @@ serve(async (req) => {
                 description: `Rental booking${delivery_fee > 0 ? ' (includes delivery)' : ''}`,
               },
               unit_amount: customerTotal,
+              // Mark as taxable - Stripe will calculate based on customer location
+              tax_behavior: 'exclusive',
             },
             quantity: 1,
           },
@@ -241,6 +247,10 @@ serve(async (req) => {
         mode: 'payment',
         customer: customerId,
         customer_email: customerId ? undefined : user.email,
+        // Enable automatic tax calculation based on customer location
+        automatic_tax: { enabled: true },
+        // Collect billing address for accurate tax calculation
+        billing_address_collection: 'required',
         line_items: [
           {
             price_data: {
@@ -250,6 +260,8 @@ serve(async (req) => {
                 description: productDescription,
               },
               unit_amount: customerTotal,
+              // Mark as taxable - Stripe will calculate based on customer location
+              tax_behavior: 'exclusive',
             },
             quantity: 1,
           },
