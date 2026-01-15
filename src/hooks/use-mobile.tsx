@@ -7,12 +7,21 @@ export function useIsMobile() {
 
   React.useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+
     const onChange = () => {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
     };
-    mql.addEventListener("change", onChange);
+
+    // Safari < 14 uses addListener/removeListener instead of addEventListener/removeEventListener
+    const add = (mql as any).addEventListener ? 'addEventListener' : 'addListener';
+    const remove = (mql as any).removeEventListener ? 'removeEventListener' : 'removeListener';
+
+    (mql as any)[add]('change', onChange);
     setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    return () => mql.removeEventListener("change", onChange);
+
+    return () => {
+      (mql as any)[remove]('change', onChange);
+    };
   }, []);
 
   return !!isMobile;
