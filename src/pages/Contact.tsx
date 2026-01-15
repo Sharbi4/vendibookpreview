@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { z } from 'zod';
-import { Phone, Mail, Clock, Send, Loader2, CheckCircle, MessageSquare, Headphones, CalendarClock } from 'lucide-react';
+import { Phone, Mail, Clock, Send, Loader2, CheckCircle, Ticket, Headphones, CalendarClock } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import FAQChatbot from '@/components/support/FAQChatbot';
+import ZendeskTicketForm from '@/components/support/ZendeskTicketForm';
 import CallbackScheduler from '@/components/support/CallbackScheduler';
 import TicketStatusTracker from '@/components/support/TicketStatusTracker';
 import SocialContactOptions from '@/components/support/SocialContactOptions';
@@ -113,11 +113,11 @@ const Contact = () => {
         {/* Main Content */}
         <section className="py-12 md:py-16">
           <div className="container">
-            <Tabs defaultValue="chat" className="max-w-6xl mx-auto">
+            <Tabs defaultValue="ticket" className="max-w-6xl mx-auto">
               <TabsList className="grid w-full grid-cols-4 mb-8">
-                <TabsTrigger value="chat" className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  <span className="hidden sm:inline">Quick Help</span>
+                <TabsTrigger value="ticket" className="flex items-center gap-2">
+                  <Ticket className="h-4 w-4" />
+                  <span className="hidden sm:inline">New Ticket</span>
                 </TabsTrigger>
                 <TabsTrigger value="form" className="flex items-center gap-2">
                   <Send className="h-4 w-4" />
@@ -133,15 +133,15 @@ const Contact = () => {
                 </TabsTrigger>
               </TabsList>
 
-              {/* Quick Help / FAQ Chatbot */}
-              <TabsContent value="chat">
+              {/* Zendesk Ticket Form */}
+              <TabsContent value="ticket">
                 <div className="grid lg:grid-cols-2 gap-8">
                   <div>
-                    <h2 className="text-2xl font-bold text-foreground mb-2">Get Instant Answers</h2>
+                    <h2 className="text-2xl font-bold text-foreground mb-2">Create a Support Ticket</h2>
                     <p className="text-muted-foreground mb-6">
-                      Ask VendiBot any question about rentals, payments, or how Vendibook works. Get answers instantly, 24/7.
+                      Submit a ticket and our team will respond via email. You can track your ticket status in the "Track Tickets" tab.
                     </p>
-                    <FAQChatbot />
+                    <ZendeskTicketForm />
                   </div>
                   <div className="space-y-6">
                     <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
