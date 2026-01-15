@@ -40,15 +40,15 @@ const HowItWorks = () => {
       <main className="flex-1">
         {/* Hero Section - GRADIENT */}
         <section className="py-20 md:py-28 relative overflow-hidden">
-          {/* Orange Gradient Background - #FF5124 based */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/20 via-[#FF5124]/12 to-amber-200/10" />
+          {/* Orange Gradient Background - #FF5124 based, subtle */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/8 via-[#FF5124]/5 to-amber-200/4" />
           
-          {/* Decorative orbs - orange focused */}
+          {/* Decorative orbs - subtle orange hints */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-20 right-20 w-96 h-96 bg-[#FF5124]/20 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#FF5124]/15 rounded-full blur-3xl" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#FF5124]/10 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute top-40 left-1/4 w-64 h-64 bg-amber-300/15 rounded-full blur-2xl" />
+            <div className="absolute top-20 right-20 w-96 h-96 bg-[#FF5124]/6 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#FF5124]/5 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#FF5124]/4 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute top-40 left-1/4 w-64 h-64 bg-amber-300/5 rounded-full blur-2xl" />
           </div>
           <div className="container relative">
             <div className="max-w-4xl mx-auto text-center">
@@ -131,11 +131,11 @@ const HowItWorks = () => {
 
         {/* How Vendibook Works - Step by Step - GRADIENT */}
         <section className="py-20 relative overflow-hidden">
-          {/* Orange Gradient Background - #FF5124 based */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/15 via-[#FF5124]/08 to-amber-100/10" />
+          {/* Orange Gradient Background - #FF5124 based, subtle */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/6 via-[#FF5124]/4 to-amber-100/3" />
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-20 left-20 w-80 h-80 bg-[#FF5124]/15 rounded-full blur-3xl" />
-            <div className="absolute bottom-20 right-20 w-96 h-96 bg-[#FF5124]/12 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute top-20 left-20 w-80 h-80 bg-[#FF5124]/5 rounded-full blur-3xl" />
+            <div className="absolute bottom-20 right-20 w-96 h-96 bg-[#FF5124]/4 rounded-full blur-3xl animate-pulse" />
           </div>
           <div className="container relative z-10">
             <div className="text-center mb-16">
@@ -263,11 +263,11 @@ const HowItWorks = () => {
 
         {/* Trust & Safety - GRADIENT */}
         <section className="py-20 relative overflow-hidden">
-          {/* Orange Gradient Background - #FF5124 based */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/18 via-[#FF5124]/10 to-amber-200/08" />
+          {/* Orange Gradient Background - #FF5124 based, subtle */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/7 via-[#FF5124]/4 to-amber-200/3" />
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-[#FF5124]/15 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-[#FF5124]/12 rounded-full blur-3xl" />
+            <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-[#FF5124]/5 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-[#FF5124]/4 rounded-full blur-3xl" />
           </div>
           <div className="container relative z-10">
             <div className="text-center mb-12">

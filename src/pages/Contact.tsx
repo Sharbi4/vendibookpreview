@@ -97,15 +97,15 @@ const Contact = () => {
       <main className="flex-1">
         {/* Hero Section - GRADIENT */}
         <section className="relative py-16 md:py-24 overflow-hidden">
-          {/* Orange Gradient Background - #FF5124 based */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/20 via-[#FF5124]/12 to-amber-200/10" />
+          {/* Orange Gradient Background - #FF5124 based, subtle */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/8 via-[#FF5124]/5 to-amber-200/4" />
           
-          {/* Decorative orbs - orange focused */}
+          {/* Decorative orbs - subtle orange hints */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-20 right-20 w-96 h-96 bg-[#FF5124]/20 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#FF5124]/15 rounded-full blur-3xl" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#FF5124]/10 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute top-40 left-1/4 w-64 h-64 bg-amber-300/15 rounded-full blur-2xl" />
+            <div className="absolute top-20 right-20 w-96 h-96 bg-[#FF5124]/6 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#FF5124]/5 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#FF5124]/4 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute top-40 left-1/4 w-64 h-64 bg-amber-300/5 rounded-full blur-2xl" />
           </div>
           
           <div className="container relative z-10">

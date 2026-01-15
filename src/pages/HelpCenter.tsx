@@ -163,12 +163,12 @@ const HelpCenter = () => {
       <main className="flex-1">
         {/* Hero Section with Search - GRADIENT */}
         <section className="relative py-16 md:py-24 overflow-hidden">
-          {/* Orange Gradient - #FF5124 based */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/20 via-[#FF5124]/12 to-amber-200/10" />
+          {/* Orange Gradient - #FF5124 based, subtle */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/8 via-[#FF5124]/5 to-amber-200/4" />
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-20 right-20 w-96 h-96 bg-[#FF5124]/20 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#FF5124]/15 rounded-full blur-3xl" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#FF5124]/10 rounded-full blur-3xl" />
+            <div className="absolute top-20 right-20 w-96 h-96 bg-[#FF5124]/6 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#FF5124]/5 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#FF5124]/4 rounded-full blur-3xl" />
           </div>
 
           <div className="container relative z-10 text-center">
@@ -255,11 +255,11 @@ const HelpCenter = () => {
 
         {/* Featured Articles - GRADIENT */}
         <section className="relative py-12 md:py-16 overflow-hidden">
-          {/* Orange-Yellow Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-200/25 via-yellow-100/20 to-amber-200/15" />
+          {/* Orange Gradient - subtle */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/6 via-[#FF5124]/4 to-amber-200/3" />
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-10 left-20 w-72 h-72 bg-orange-300/20 rounded-full blur-3xl" />
-            <div className="absolute bottom-10 right-20 w-80 h-80 bg-yellow-300/25 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute top-10 left-20 w-72 h-72 bg-[#FF5124]/5 rounded-full blur-3xl" />
+            <div className="absolute bottom-10 right-20 w-80 h-80 bg-[#FF5124]/4 rounded-full blur-3xl animate-pulse" />
           </div>
           <div className="container relative z-10">
             <div className="flex items-center gap-2 mb-8">
@@ -340,11 +340,11 @@ const HelpCenter = () => {
 
         {/* Become a Host CTA - GRADIENT */}
         <section className="relative py-12 md:py-16 overflow-hidden">
-          {/* Orange-Yellow Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-yellow-200/30 via-amber-100/20 to-orange-200/25" />
+          {/* Orange Gradient - subtle */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/6 via-[#FF5124]/4 to-amber-100/3" />
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-amber-300/25 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-yellow-400/20 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-[#FF5124]/5 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-amber-300/4 rounded-full blur-3xl" />
           </div>
           <div className="container relative z-10">
             <div className="max-w-3xl mx-auto text-center">
