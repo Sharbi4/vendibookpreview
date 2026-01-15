@@ -1,6 +1,23 @@
+import { useState, useEffect } from 'react';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 
 const Hero = () => {
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Parallax multipliers for different orbs (slower = more subtle)
+  const parallax1 = scrollY * 0.15;
+  const parallax2 = scrollY * 0.1;
+  const parallax3 = scrollY * 0.2;
+
   return (
     <section className="relative overflow-hidden pt-4 pb-4">
       {/* Animated gradient background */}
@@ -21,10 +38,54 @@ const Hero = () => {
         }}
       />
       
-      {/* Floating orbs for depth */}
-      <div className="absolute top-10 left-[10%] w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
-      <div className="absolute bottom-0 right-[15%] w-48 h-48 bg-vendibook-orange/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '6s', animationDelay: '1s' }} />
-      <div className="absolute top-1/2 left-[60%] w-32 h-32 bg-vendibook-teal/10 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '5s', animationDelay: '2s' }} />
+      {/* Floating orbs with parallax effect */}
+      <div 
+        className="absolute w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse transition-transform duration-100 ease-out"
+        style={{ 
+          top: 40,
+          left: '10%',
+          animationDuration: '4s',
+          transform: `translateY(${parallax1}px) translateX(${parallax1 * 0.3}px)`,
+        }} 
+      />
+      <div 
+        className="absolute w-48 h-48 bg-vendibook-orange/10 rounded-full blur-3xl animate-pulse transition-transform duration-100 ease-out"
+        style={{ 
+          bottom: 0,
+          right: '15%',
+          animationDuration: '6s', 
+          animationDelay: '1s',
+          transform: `translateY(${-parallax2}px) translateX(${-parallax2 * 0.5}px)`,
+        }} 
+      />
+      <div 
+        className="absolute w-32 h-32 bg-vendibook-teal/10 rounded-full blur-2xl animate-pulse transition-transform duration-100 ease-out"
+        style={{ 
+          top: '50%',
+          left: '60%',
+          animationDuration: '5s', 
+          animationDelay: '2s',
+          transform: `translateY(${parallax3}px) rotate(${scrollY * 0.02}deg)`,
+        }} 
+      />
+      
+      {/* Additional decorative orbs */}
+      <div 
+        className="absolute w-24 h-24 bg-primary/5 rounded-full blur-2xl transition-transform duration-100 ease-out"
+        style={{ 
+          top: '20%',
+          right: '5%',
+          transform: `translateY(${parallax2 * 1.2}px)`,
+        }} 
+      />
+      <div 
+        className="absolute w-40 h-40 bg-vendibook-orange/5 rounded-full blur-3xl transition-transform duration-100 ease-out"
+        style={{ 
+          bottom: '30%',
+          left: '5%',
+          transform: `translateY(${-parallax1 * 0.8}px)`,
+        }} 
+      />
       
       <div className="container max-w-5xl mx-auto px-4 relative z-10">
         {/* Hero Content */}
