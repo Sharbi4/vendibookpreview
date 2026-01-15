@@ -161,12 +161,14 @@ const HelpCenter = () => {
       <Header />
 
       <main className="flex-1">
-        {/* Hero Section with Search */}
+        {/* Hero Section with Search - GRADIENT */}
         <section className="relative py-16 md:py-24 overflow-hidden">
-          {/* Orange-Yellow Gradient Element */}
+          {/* Orange-Yellow Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/30 via-amber-200/25 to-orange-300/20" />
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-vendibook-orange via-amber-400 to-yellow-300 opacity-20 blur-3xl" />
-            <div className="absolute -bottom-40 -left-40 w-[400px] h-[400px] rounded-full bg-gradient-to-tr from-yellow-300 via-amber-400 to-vendibook-orange opacity-15 blur-3xl" />
+            <div className="absolute top-20 right-20 w-96 h-96 bg-yellow-400/30 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-20 left-20 w-80 h-80 bg-orange-400/25 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-300/20 rounded-full blur-3xl" />
           </div>
 
           <div className="container relative z-10 text-center">
@@ -197,8 +199,8 @@ const HelpCenter = () => {
           </div>
         </section>
 
-        {/* AI Assistant Section */}
-        <section className="py-12 md:py-16 bg-muted/30">
+        {/* AI Assistant Section - NATURAL */}
+        <section className="py-12 md:py-16 bg-background">
           <div className="container">
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center gap-2 mb-6">
@@ -251,9 +253,15 @@ const HelpCenter = () => {
           </div>
         </section>
 
-        {/* Featured Articles */}
-        <section className="py-12 md:py-16">
-          <div className="container">
+        {/* Featured Articles - GRADIENT */}
+        <section className="relative py-12 md:py-16 overflow-hidden">
+          {/* Orange-Yellow Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-200/25 via-yellow-100/20 to-amber-200/15" />
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-10 left-20 w-72 h-72 bg-orange-300/20 rounded-full blur-3xl" />
+            <div className="absolute bottom-10 right-20 w-80 h-80 bg-yellow-300/25 rounded-full blur-3xl animate-pulse" />
+          </div>
+          <div className="container relative z-10">
             <div className="flex items-center gap-2 mb-8">
               <Star className="h-5 w-5 text-primary" />
               <h2 className="text-2xl font-bold text-foreground">Featured Articles</h2>
@@ -290,8 +298,8 @@ const HelpCenter = () => {
           </div>
         </section>
 
-        {/* Browse by Category */}
-        <section className="py-12 md:py-16 bg-muted/30">
+        {/* Browse by Category - NATURAL */}
+        <section className="py-12 md:py-16 bg-background">
           <div className="container">
             <h2 className="text-2xl font-bold text-foreground mb-8">Browse by Category</h2>
 
@@ -330,9 +338,15 @@ const HelpCenter = () => {
           </div>
         </section>
 
-        {/* Become a Host CTA */}
-        <section className="py-12 md:py-16 bg-gradient-to-br from-primary/10 via-background to-vendibook-cream">
-          <div className="container">
+        {/* Become a Host CTA - GRADIENT */}
+        <section className="relative py-12 md:py-16 overflow-hidden">
+          {/* Orange-Yellow Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-200/30 via-amber-100/20 to-orange-200/25" />
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-amber-300/25 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-yellow-400/20 rounded-full blur-3xl" />
+          </div>
+          <div className="container relative z-10">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
                 Interested in becoming a host?
@@ -350,8 +364,8 @@ const HelpCenter = () => {
           </div>
         </section>
 
-        {/* Community & Support */}
-        <section className="py-12 md:py-16">
+        {/* Community & Support - NATURAL */}
+        <section className="py-12 md:py-16 bg-background">
           <div className="container">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Community Card */}
