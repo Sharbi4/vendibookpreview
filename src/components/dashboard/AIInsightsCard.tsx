@@ -1,151 +1,12 @@
-import { useMemo } from 'react';
-import { Sparkles, TrendingUp, TrendingDown, Lightbulb, Target, AlertCircle } from 'lucide-react';
+import { Sparkles, TrendingUp, Lightbulb, Target, AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAIInsights, AIInsight } from '@/hooks/useAIInsights';
+import { formatDistanceToNow } from 'date-fns';
 
-interface AIInsight {
-  type: 'success' | 'warning' | 'tip' | 'opportunity';
-  title: string;
-  description: string;
-  action?: string;
-}
-
-interface AIInsightsCardProps {
-  analytics: {
-    totalViews: number;
-    viewsToday: number;
-    viewsThisWeek: number;
-    viewsThisMonth: number;
-    viewsTrend: number;
-    topListings: {
-      listingId: string;
-      title: string;
-      totalViews: number;
-      viewsTrend: number;
-    }[];
-  } | null;
-  stats: {
-    total: number;
-    published: number;
-    drafts: number;
-    rentals: number;
-    sales: number;
-  };
-  bookingStats: {
-    total: number;
-    pending: number;
-    approved: number;
-    declined: number;
-  };
-}
-
-export const AIInsightsCard = ({ analytics, stats, bookingStats }: AIInsightsCardProps) => {
-  const insights = useMemo<AIInsight[]>(() => {
-    const result: AIInsight[] = [];
-
-    // Analyze view trends
-    if (analytics) {
-      if (analytics.viewsTrend > 20) {
-        result.push({
-          type: 'success',
-          title: 'Views are surging! 🚀',
-          description: `Your listings are getting ${analytics.viewsTrend}% more views than last month. This is a great time to raise prices or add new listings.`,
-          action: 'Consider adjusting pricing',
-        });
-      } else if (analytics.viewsTrend < -20) {
-        result.push({
-          type: 'warning',
-          title: 'Views declining',
-          description: `Views are down ${Math.abs(analytics.viewsTrend)}% from last month. Consider refreshing your listing photos or descriptions.`,
-          action: 'Update listing content',
-        });
-      }
-
-      // Top performer insight
-      if (analytics.topListings.length > 0) {
-        const topListing = analytics.topListings[0];
-        if (topListing.totalViews > 50) {
-          result.push({
-            type: 'tip',
-            title: 'Star performer identified',
-            description: `"${topListing.title}" is your top listing with ${topListing.totalViews} views. Consider highlighting what makes it successful in other listings.`,
-          });
-        }
-      }
-
-      // Low views opportunity
-      if (analytics.totalViews < 10 && stats.published > 0) {
-        result.push({
-          type: 'opportunity',
-          title: 'Boost your visibility',
-          description: 'Add more photos and detailed descriptions to increase your listing views. Listings with 5+ photos get 3x more bookings.',
-          action: 'Enhance listings',
-        });
-      }
-    }
-
-    // Booking conversion analysis
-    if (analytics && analytics.totalViews > 0 && bookingStats.total > 0) {
-      const conversionRate = (bookingStats.total / analytics.totalViews) * 100;
-      if (conversionRate > 5) {
-        result.push({
-          type: 'success',
-          title: 'High conversion rate!',
-          description: `${conversionRate.toFixed(1)}% of views convert to bookings. You're above the marketplace average of 3%.`,
-        });
-      } else if (conversionRate < 1 && analytics.totalViews > 50) {
-        result.push({
-          type: 'tip',
-          title: 'Improve conversions',
-          description: 'Consider adding more details about pricing, amenities, or availability to help visitors make booking decisions faster.',
-        });
-      }
-    }
-
-    // Pending bookings reminder
-    if (bookingStats.pending > 0) {
-      result.push({
-        type: 'warning',
-        title: `${bookingStats.pending} pending request${bookingStats.pending > 1 ? 's' : ''}`,
-        description: 'Respond quickly to booking requests. Hosts who respond within 24 hours get 40% more bookings.',
-        action: 'Review requests',
-      });
-    }
-
-    // Draft listings reminder
-    if (stats.drafts > 0) {
-      result.push({
-        type: 'opportunity',
-        title: `${stats.drafts} draft${stats.drafts > 1 ? 's' : ''} waiting`,
-        description: 'You have unpublished listings. Complete and publish them to start earning.',
-        action: 'Finish drafts',
-      });
-    }
-
-    // Success insight for high approval rate
-    if (bookingStats.total > 5) {
-      const approvalRate = (bookingStats.approved / bookingStats.total) * 100;
-      if (approvalRate > 80) {
-        result.push({
-          type: 'success',
-          title: 'Excellent approval rate',
-          description: `You've approved ${approvalRate.toFixed(0)}% of bookings. Great job building trust with renters!`,
-        });
-      }
-    }
-
-    // If no insights, add a default one
-    if (result.length === 0) {
-      result.push({
-        type: 'tip',
-        title: 'Get started',
-        description: 'Create your first listing to start receiving bookings and building your analytics dashboard.',
-        action: 'Create listing',
-      });
-    }
-
-    return result.slice(0, 3); // Max 3 insights
-  }, [analytics, stats, bookingStats]);
+export const AIInsightsCard = () => {
+  const { insights, dataSnapshot, isLoading, error, refresh, lastUpdated } = useAIInsights();
 
   const getIcon = (type: AIInsight['type']) => {
     switch (type) {
@@ -196,65 +57,132 @@ export const AIInsightsCard = ({ analytics, stats, bookingStats }: AIInsightsCar
   return (
     <Card className="border-0 shadow-lg bg-gradient-to-br from-card via-card to-primary/5 overflow-hidden">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary to-purple-500 rounded-full blur-md opacity-50 animate-pulse" />
-            <div className="relative icon-gradient-container">
-              <Sparkles className="h-5 w-5 text-primary icon-gradient" />
-            </div>
-          </div>
-          AI Insights
-          <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full ml-2">
-            Powered by AI
-          </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {insights.map((insight, index) => {
-          const styles = getStyles(insight.type);
-          return (
-            <div
-              key={index}
-              className={cn(
-                "relative overflow-hidden rounded-xl p-4 border transition-all duration-300 hover:scale-[1.01] hover:shadow-md",
-                styles.bg,
-                styles.border
-              )}
-              style={{
-                animationDelay: `${index * 100}ms`,
-              }}
-            >
-              {/* Glow effect */}
-              <div className={cn(
-                "absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 opacity-50",
-                styles.glow
-              )} />
-              
-              <div className="relative flex gap-3">
-                <div className={cn(
-                  "flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center",
-                  styles.bg,
-                  styles.icon
-                )}>
-                  {getIcon(insight.type)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-foreground text-sm">
-                    {insight.title}
-                  </h4>
-                  <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">
-                    {insight.description}
-                  </p>
-                  {insight.action && (
-                    <span className="inline-block mt-2 text-xs font-medium text-primary hover:underline cursor-pointer">
-                      {insight.action} →
-                    </span>
-                  )}
-                </div>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary to-purple-500 rounded-full blur-md opacity-50 animate-pulse" />
+              <div className="relative icon-gradient-container">
+                <Sparkles className="h-5 w-5 text-primary icon-gradient" />
               </div>
             </div>
-          );
-        })}
+            AI Insights
+            <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full ml-2">
+              Powered by AI
+            </span>
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            {lastUpdated && (
+              <span className="text-xs text-muted-foreground">
+                Updated {formatDistanceToNow(lastUpdated, { addSuffix: true })}
+              </span>
+            )}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={refresh}
+              disabled={isLoading}
+              className="h-8 w-8 p-0"
+            >
+              <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            </Button>
+          </div>
+        </div>
+        
+        {/* Data Snapshot Pills */}
+        {dataSnapshot && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {dataSnapshot.totalEarnings > 0 && (
+              <div className="text-xs bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                💰 ${dataSnapshot.totalEarnings.toLocaleString()} earned
+              </div>
+            )}
+            {dataSnapshot.totalViews > 0 && (
+              <div className="text-xs bg-blue-500/10 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-full border border-blue-500/20">
+                👁 {dataSnapshot.totalViews.toLocaleString()} views
+              </div>
+            )}
+            {dataSnapshot.avgRating > 0 && (
+              <div className="text-xs bg-amber-500/10 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full border border-amber-500/20">
+                ⭐ {dataSnapshot.avgRating.toFixed(1)} rating
+              </div>
+            )}
+            {dataSnapshot.stripeBalance > 0 && (
+              <div className="text-xs bg-purple-500/10 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-full border border-purple-500/20">
+                💳 ${dataSnapshot.stripeBalance.toFixed(2)} available
+              </div>
+            )}
+          </div>
+        )}
+      </CardHeader>
+      
+      <CardContent className="space-y-3">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-8 gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Analyzing your data with AI...</p>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-6 gap-3">
+            <AlertCircle className="h-8 w-8 text-destructive" />
+            <p className="text-sm text-muted-foreground text-center">{error}</p>
+            <Button variant="outline" size="sm" onClick={refresh}>
+              Try Again
+            </Button>
+          </div>
+        ) : insights.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-6 gap-3">
+            <Sparkles className="h-8 w-8 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground text-center">
+              No insights available yet. Create listings to start receiving AI-powered recommendations.
+            </p>
+          </div>
+        ) : (
+          insights.map((insight, index) => {
+            const styles = getStyles(insight.type);
+            return (
+              <div
+                key={index}
+                className={cn(
+                  "relative overflow-hidden rounded-xl p-4 border transition-all duration-300 hover:scale-[1.01] hover:shadow-md animate-fade-in",
+                  styles.bg,
+                  styles.border
+                )}
+                style={{
+                  animationDelay: `${index * 100}ms`,
+                }}
+              >
+                {/* Glow effect */}
+                <div className={cn(
+                  "absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 opacity-50",
+                  styles.glow
+                )} />
+                
+                <div className="relative flex gap-3">
+                  <div className={cn(
+                    "flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center",
+                    styles.bg,
+                    styles.icon
+                  )}>
+                    {getIcon(insight.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-foreground text-sm">
+                      {insight.title}
+                    </h4>
+                    <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">
+                      {insight.description}
+                    </p>
+                    {insight.action && (
+                      <span className="inline-block mt-2 text-xs font-medium text-primary hover:underline cursor-pointer">
+                        {insight.action} →
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
       </CardContent>
     </Card>
   );

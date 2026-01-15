@@ -72,12 +72,8 @@ const HostDashboard = () => {
         onOpenDashboard={openStripeDashboard}
       />
 
-      {/* AI Insights Section */}
-      <AIInsightsCard 
-        analytics={analytics}
-        stats={stats}
-        bookingStats={bookingStats}
-      />
+      {/* AI Insights Section - Now powered by real AI */}
+      <AIInsightsCard />
 
       {/* Enhanced Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
