@@ -25,6 +25,7 @@ export interface SaleTransaction {
   delivery_address: string | null;
   delivery_instructions: string | null;
   delivery_fee: number | null;
+  freight_cost: number | null;
   // Joined fields
   listing?: {
     id: string;
