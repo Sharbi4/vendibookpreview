@@ -55,7 +55,7 @@ serve(async (req) => {
     // Fetch listing details
     const { data: listing, error: listingError } = await supabaseClient
       .from("listings")
-      .select("title, cover_image_url")
+      .select("title, cover_image_url, address, fulfillment_type")
       .eq("id", booking.listing_id)
       .single();
 
@@ -171,40 +171,75 @@ serve(async (req) => {
         });
       }
     } else if (event_type === "approved") {
-      // Email to shopper about approval
+      // Send branded booking confirmation email to shopper
       if (shopper?.email) {
-        emails.push({
-          to: shopper.email,
-          subject: `🎉 Booking Approved - ${listingTitle}`,
-          html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h1 style="color: #16a34a; font-size: 24px; margin-bottom: 20px;">Booking Approved! 🎉</h1>
-              <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
-                Great news, ${shopper.full_name || "there"}!
-              </p>
-              <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
-                Your booking for <strong>${listingTitle}</strong> has been approved by the host.
-              </p>
-              <div style="background: #dcfce7; border-radius: 12px; padding: 20px; margin: 20px 0;">
-                <p style="margin: 0 0 10px 0;"><strong>Confirmed Dates:</strong> ${startDate} - ${endDate}</p>
-                <p style="margin: 0;"><strong>Total:</strong> $${booking.total_price}</p>
-              </div>
-              ${host_response ? `
-                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
-                  <p style="margin: 0 0 10px 0; font-weight: bold;">Message from host:</p>
-                  <p style="margin: 0; color: #4a4a4a;">${host_response}</p>
+        try {
+          const confirmationResponse = await fetch(
+            `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-booking-confirmation`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+              },
+              body: JSON.stringify({
+                email: shopper.email,
+                fullName: shopper.full_name || "",
+                listingTitle: listingTitle,
+                startDate: booking.start_date,
+                endDate: booking.end_date,
+                totalPrice: booking.total_price,
+                hostName: host?.full_name || "Your host",
+                fulfillmentType: booking.fulfillment_selected || listing?.fulfillment_type || "pickup",
+                address: listing?.address || booking.address_snapshot,
+                deliveryAddress: booking.delivery_address,
+                bookingId: booking.id,
+              }),
+            }
+          );
+          
+          if (confirmationResponse.ok) {
+            logStep("Branded booking confirmation email sent", { to: shopper.email });
+          } else {
+            const errorData = await confirmationResponse.json();
+            logStep("Failed to send branded confirmation, falling back", { error: errorData });
+            // Fallback to basic email
+            emails.push({
+              to: shopper.email,
+              subject: `🎉 Booking Approved - ${listingTitle}`,
+              html: `
+                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <h1 style="color: #16a34a; font-size: 24px; margin-bottom: 20px;">Booking Approved! 🎉</h1>
+                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+                    Great news, ${shopper.full_name || "there"}!
+                  </p>
+                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+                    Your booking for <strong>${listingTitle}</strong> has been approved by the host.
+                  </p>
+                  <div style="background: #dcfce7; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                    <p style="margin: 0 0 10px 0;"><strong>Confirmed Dates:</strong> ${startDate} - ${endDate}</p>
+                    <p style="margin: 0;"><strong>Total:</strong> $${booking.total_price}</p>
+                  </div>
+                  ${host_response ? `
+                    <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                      <p style="margin: 0 0 10px 0; font-weight: bold;">Message from host:</p>
+                      <p style="margin: 0; color: #4a4a4a;">${host_response}</p>
+                    </div>
+                  ` : ""}
+                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+                    You can message the host through your dashboard if you have any questions.
+                  </p>
+                  <p style="color: #888; font-size: 14px; margin-top: 30px;">
+                    — The VendiBook Team<br>
+                    <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a>
+                  </p>
                 </div>
-              ` : ""}
-              <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
-                You can message the host through your dashboard if you have any questions.
-              </p>
-              <p style="color: #888; font-size: 14px; margin-top: 30px;">
-                — The VendiBook Team<br>
-                <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a>
-              </p>
-            </div>
-          `,
-        });
+              `,
+            });
+          }
+        } catch (confirmError: any) {
+          logStep("Error calling booking confirmation function", { error: confirmError.message });
+        }
       }
       
       // In-app notification to shopper
