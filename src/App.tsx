@@ -35,6 +35,7 @@ import CaliforniaPrivacy from "./pages/CaliforniaPrivacy";
 import AITools from "./pages/AITools";
 import OrderTracking from "./pages/OrderTracking";
 import HostOnboarding from "./pages/HostOnboarding";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -79,6 +80,7 @@ const App = () => (
             <Route path="/ai-tools" element={<AITools />} />
             <Route path="/order-tracking/:transactionId" element={<OrderTracking />} />
             <Route path="/host" element={<HostOnboarding />} />
+            <Route path="/install" element={<Install />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
