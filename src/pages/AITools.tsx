@@ -458,87 +458,98 @@ const AITools = () => {
         <Header />
 
         <main className="flex-1">
-          {/* Hero Section - Extra Vibrant */}
-          <section className="relative py-16 md:py-20 overflow-hidden">
-            {/* Vibrant gradient background matching newsletter popup */}
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/40 via-vendibook-orange/30 to-orange-500/35" />
+          {/* Hero Section - GRADIENT with enhanced animations */}
+          <section className="relative py-20 md:py-28 overflow-hidden">
+            {/* Orange-Yellow Gradient Background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/35 via-amber-200/30 to-orange-300/25" />
             
             {/* Animated decorative orbs */}
-            <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
               <div className="absolute top-10 right-10 w-[400px] h-[400px] bg-gradient-to-br from-yellow-300/50 to-amber-400/40 rounded-full blur-3xl animate-pulse" />
-              <div className="absolute bottom-10 left-10 w-[350px] h-[350px] bg-gradient-to-tr from-orange-400/45 to-vendibook-orange/40 rounded-full blur-3xl" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-amber-300/30 via-yellow-400/25 to-orange-300/30 rounded-full blur-3xl" />
-              <div className="absolute top-20 left-1/4 w-64 h-64 bg-yellow-300/35 rounded-full blur-2xl animate-pulse" />
+              <div className="absolute bottom-10 left-10 w-[350px] h-[350px] bg-gradient-to-tr from-orange-400/45 to-amber-500/40 rounded-full blur-3xl" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-amber-300/30 via-yellow-400/25 to-orange-300/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+              <div className="absolute top-20 left-1/4 w-64 h-64 bg-yellow-300/35 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '0.5s' }} />
               <div className="absolute bottom-20 right-1/4 w-72 h-72 bg-orange-300/40 rounded-full blur-2xl" />
             </div>
             
             <div className="container relative z-10">
               <Link
                 to="/"
-                className="inline-flex items-center gap-2 text-foreground/70 hover:text-foreground mb-6 transition-colors"
+                className="inline-flex items-center gap-2 text-foreground/70 hover:text-foreground mb-8 transition-colors animate-fade-in"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back to Home
               </Link>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-gradient-to-br from-yellow-400 via-vendibook-orange to-orange-500 rounded-xl shadow-lg shadow-orange-500/30">
-                  <Sparkles className="h-8 w-8 text-white" />
+              
+              <div className="max-w-4xl">
+                {/* Animated badge */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-card/80 backdrop-blur-sm text-primary text-sm font-medium mb-6 animate-fade-in shadow-lg">
+                  <Sparkles className="h-4 w-4 animate-pulse" />
+                  Free AI-Powered Tools
                 </div>
-                <h1 className="text-4xl md:text-5xl font-bold text-foreground">
-                  AI Business Tools
+                
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight animate-slide-up">
+                  AI Business Tools for{' '}
+                  <span className="text-gradient bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 bg-clip-text text-transparent">
+                    Food Entrepreneurs
+                  </span>
                 </h1>
-              </div>
-              <p className="text-xl text-foreground/80 max-w-3xl mb-6">
-                Free AI-powered tools to help you price listings, find licenses & permits, 
-                maintain equipment, write descriptions, and research the mobile food industry.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Badge className="text-sm bg-gradient-to-r from-yellow-400 to-amber-500 text-white border-0 shadow-md">
-                  <DollarSign className="h-3 w-3 mr-1" /> Pricing Generator
-                </Badge>
-                <Badge className="text-sm bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-md">
-                  <FileCheck className="h-3 w-3 mr-1" /> License Finder
-                </Badge>
-                <Badge className="text-sm bg-gradient-to-r from-orange-500 to-vendibook-orange text-white border-0 shadow-md">
-                  <Wrench className="h-3 w-3 mr-1" /> Equipment Guides
-                </Badge>
-                <Badge className="text-sm bg-gradient-to-r from-vendibook-orange to-yellow-500 text-white border-0 shadow-md">
-                  <Search className="h-3 w-3 mr-1" /> AI Research
-                </Badge>
+                
+                <p className="text-lg md:text-xl text-foreground/80 max-w-3xl mb-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                  Price your listings, find licenses & permits, maintain equipment, 
+                  write compelling descriptions, and research the mobile food industry — all powered by AI.
+                </p>
+                
+                {/* Tool badges with staggered animation */}
+                <div className="flex flex-wrap gap-3 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                  {[
+                    { icon: DollarSign, label: 'Pricing Generator', color: 'from-yellow-400 to-amber-500' },
+                    { icon: FileCheck, label: 'License Finder', color: 'from-amber-500 to-orange-500' },
+                    { icon: Wrench, label: 'Equipment Guides', color: 'from-orange-500 to-red-500' },
+                    { icon: FileText, label: 'Description Writer', color: 'from-red-500 to-orange-500' },
+                    { icon: Lightbulb, label: 'Business Ideas', color: 'from-orange-500 to-amber-500' },
+                    { icon: Search, label: 'AI Research', color: 'from-amber-500 to-yellow-500' },
+                  ].map((tool, i) => (
+                    <Badge 
+                      key={tool.label}
+                      className={`text-sm bg-gradient-to-r ${tool.color} text-white border-0 shadow-lg px-4 py-2 hover:scale-105 transition-transform cursor-pointer`}
+                      onClick={() => setActiveTab(['pricing', 'licenses', 'equipment', 'description', 'ideas', 'research'][i])}
+                    >
+                      <tool.icon className="h-4 w-4 mr-2" />
+                      {tool.label}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             </div>
           </section>
 
-          {/* Tools Section */}
-          <section className="py-12">
-            <div className="container max-w-5xl">
+          {/* Tools Section - NATURAL */}
+          <section className="py-16 md:py-20 bg-background">
+            <div className="container max-w-6xl">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-8 h-auto gap-1">
-                  <TabsTrigger value="pricing" className="flex items-center gap-2 py-3">
-                    <DollarSign className="h-4 w-4" />
-                    <span className="hidden sm:inline">Pricing</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="description" className="flex items-center gap-2 py-3">
-                    <FileText className="h-4 w-4" />
-                    <span className="hidden sm:inline">Description</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="ideas" className="flex items-center gap-2 py-3">
-                    <Lightbulb className="h-4 w-4" />
-                    <span className="hidden sm:inline">Ideas</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="equipment" className="flex items-center gap-2 py-3">
-                    <Wrench className="h-4 w-4" />
-                    <span className="hidden sm:inline">Equipment</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="licenses" className="flex items-center gap-2 py-3">
-                    <FileCheck className="h-4 w-4" />
-                    <span className="hidden sm:inline">Licenses</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="research" className="flex items-center gap-2 py-3">
-                    <Search className="h-4 w-4" />
-                    <span className="hidden sm:inline">Research</span>
-                  </TabsTrigger>
-                </TabsList>
+                {/* Enhanced Tab List with better styling */}
+                <div className="mb-10">
+                  <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 p-2 h-auto gap-2 bg-muted/50 rounded-2xl border border-border/50">
+                    {[
+                      { value: 'pricing', icon: DollarSign, label: 'Pricing' },
+                      { value: 'description', icon: FileText, label: 'Description' },
+                      { value: 'ideas', icon: Lightbulb, label: 'Ideas' },
+                      { value: 'equipment', icon: Wrench, label: 'Equipment' },
+                      { value: 'licenses', icon: FileCheck, label: 'Licenses' },
+                      { value: 'research', icon: Search, label: 'Research' },
+                    ].map((tab) => (
+                      <TabsTrigger 
+                        key={tab.value}
+                        value={tab.value} 
+                        className="flex items-center justify-center gap-2 py-4 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-amber-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300"
+                      >
+                        <tab.icon className="h-5 w-5" />
+                        <span className="hidden sm:inline font-medium">{tab.label}</span>
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </div>
 
                 {/* Pricing Generator */}
                 <TabsContent value="pricing">
@@ -1684,42 +1695,54 @@ const AITools = () => {
             </div>
           </section>
 
-          {/* SEO Content Section */}
-          <section className="py-12 bg-muted/30">
-            <div className="container max-w-4xl">
-              <h2 className="text-2xl font-bold mb-6">Free AI Tools for Food Truck Operators</h2>
-              <div className="prose prose-sm max-w-none text-muted-foreground">
-                <p className="mb-4">
+          {/* SEO Content Section - GRADIENT */}
+          <section className="py-16 md:py-20 relative overflow-hidden">
+            {/* Orange-Yellow Gradient Background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-200/25 via-yellow-100/20 to-amber-200/15" />
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-20 left-20 w-80 h-80 bg-orange-300/20 rounded-full blur-3xl" />
+              <div className="absolute bottom-20 right-20 w-96 h-96 bg-yellow-300/25 rounded-full blur-3xl animate-pulse" />
+            </div>
+            
+            <div className="container max-w-5xl relative z-10">
+              <div className="text-center mb-12">
+                <Badge className="mb-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  All Tools Free
+                </Badge>
+                <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                  Everything You Need to Succeed
+                </h2>
+                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                   Vendibook's AI-powered business tools help food truck owners, mobile vendors, and commercial kitchen operators 
-                  make smarter decisions. Whether you're starting a new food truck business or optimizing an existing operation, 
-                  our free tools provide the insights you need.
+                  make smarter decisions.
                 </p>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-6">
-                  <div className="p-4 bg-background rounded-lg border">
-                    <h3 className="font-semibold text-foreground mb-2">Pricing Calculator</h3>
-                    <p className="text-sm">Get market-based pricing suggestions for food trucks, trailers, and ghost kitchens.</p>
+              </div>
+              
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {[
+                  { icon: DollarSign, title: 'Pricing Calculator', desc: 'Get market-based pricing suggestions for food trucks, trailers, and ghost kitchens.', color: 'from-yellow-400 to-amber-500' },
+                  { icon: FileCheck, title: 'License Finder', desc: 'Find all permits and licenses required in your state and city to legally operate.', color: 'from-amber-500 to-orange-500' },
+                  { icon: Wrench, title: 'Equipment Guides', desc: 'Detailed maintenance guides for commercial fryers, griddles, refrigeration, and more.', color: 'from-orange-500 to-red-500' },
+                  { icon: FileText, title: 'Description Writer', desc: 'Generate compelling listing descriptions that convert browsers into customers.', color: 'from-red-500 to-orange-500' },
+                  { icon: Lightbulb, title: 'Business Ideas', desc: 'Discover unique food truck concepts tailored to your interests and budget.', color: 'from-orange-500 to-amber-500' },
+                  { icon: Search, title: 'Industry Research', desc: 'Get AI-powered answers to any food service business question.', color: 'from-amber-500 to-yellow-500' },
+                ].map((tool, i) => (
+                  <div 
+                    key={tool.title}
+                    className="group p-6 bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                    onClick={() => {
+                      setActiveTab(['pricing', 'licenses', 'equipment', 'description', 'ideas', 'research'][i]);
+                      window.scrollTo({ top: 500, behavior: 'smooth' });
+                    }}
+                  >
+                    <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${tool.color} text-white mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
+                      <tool.icon className="h-7 w-7" />
+                    </div>
+                    <h3 className="font-bold text-foreground text-lg mb-2 group-hover:text-primary transition-colors">{tool.title}</h3>
+                    <p className="text-sm text-muted-foreground">{tool.desc}</p>
                   </div>
-                  <div className="p-4 bg-background rounded-lg border">
-                    <h3 className="font-semibold text-foreground mb-2">License Finder</h3>
-                    <p className="text-sm">Find all permits and licenses required in your state and city to legally operate.</p>
-                  </div>
-                  <div className="p-4 bg-background rounded-lg border">
-                    <h3 className="font-semibold text-foreground mb-2">Equipment Guides</h3>
-                    <p className="text-sm">Detailed maintenance guides for commercial fryers, griddles, refrigeration, and more.</p>
-                  </div>
-                  <div className="p-4 bg-background rounded-lg border">
-                    <h3 className="font-semibold text-foreground mb-2">Description Writer</h3>
-                    <p className="text-sm">Generate compelling listing descriptions that convert browsers into customers.</p>
-                  </div>
-                  <div className="p-4 bg-background rounded-lg border">
-                    <h3 className="font-semibold text-foreground mb-2">Business Ideas</h3>
-                    <p className="text-sm">Discover unique food truck concepts tailored to your interests and budget.</p>
-                  </div>
-                  <div className="p-4 bg-background rounded-lg border">
-                    <h3 className="font-semibold text-foreground mb-2">Industry Research</h3>
-                    <p className="text-sm">Get AI-powered answers to any food service business question.</p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </section>
