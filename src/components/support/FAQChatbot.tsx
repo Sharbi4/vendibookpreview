@@ -34,8 +34,19 @@ const FAQChatbot = () => {
   }, [messages]);
 
   const handleSend = async (question?: string) => {
-    const messageText = question || input.trim();
+    const messageText = (question || input).trim();
     if (!messageText || isLoading) return;
+    
+    // Validate message length
+    if (messageText.length > 2000) {
+      setMessages(prev => [...prev, {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: 'Your question is too long. Please keep it under 2000 characters.',
+        timestamp: new Date(),
+      }]);
+      return;
+    }
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -192,6 +203,7 @@ const FAQChatbot = () => {
             placeholder="Ask a question..."
             disabled={isLoading}
             className="flex-1"
+            maxLength={2000}
           />
           <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
             {isLoading ? (

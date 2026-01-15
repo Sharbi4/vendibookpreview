@@ -42,10 +42,35 @@ const CallbackScheduler = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name || !phone || !selectedDate || !selectedTime) {
+    const trimmedName = name.trim();
+    const trimmedPhone = phone.trim();
+    
+    // Validate all fields present
+    if (!trimmedName || !trimmedPhone || !selectedDate || !selectedTime) {
       toast({
         title: 'Missing information',
         description: 'Please fill out all fields to schedule a callback.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Validate name length
+    if (trimmedName.length < 2 || trimmedName.length > 100) {
+      toast({
+        title: 'Invalid name',
+        description: 'Name must be between 2 and 100 characters.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Validate phone format (US phone numbers)
+    const phoneRegex = /^[\d\s\-\(\)\+]{10,20}$/;
+    if (!phoneRegex.test(trimmedPhone)) {
+      toast({
+        title: 'Invalid phone number',
+        description: 'Please enter a valid phone number (10-20 digits).',
         variant: 'destructive',
       });
       return;
@@ -56,8 +81,8 @@ const CallbackScheduler = () => {
     try {
       const { error } = await supabase.functions.invoke('schedule-callback', {
         body: {
-          name,
-          phone,
+          name: trimmedName,
+          phone: trimmedPhone,
           scheduledDate: selectedDate,
           scheduledTime: selectedTime,
         },
@@ -129,6 +154,7 @@ const CallbackScheduler = () => {
               onChange={(e) => setName(e.target.value)}
               placeholder="John Doe"
               disabled={isSubmitting}
+              maxLength={100}
             />
           </div>
           <div className="space-y-2">
@@ -140,6 +166,7 @@ const CallbackScheduler = () => {
               onChange={(e) => setPhone(e.target.value)}
               placeholder="(555) 123-4567"
               disabled={isSubmitting}
+              maxLength={20}
             />
           </div>
         </div>

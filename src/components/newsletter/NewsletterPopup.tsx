@@ -35,10 +35,24 @@ const NewsletterPopup = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !email.includes('@')) {
+    const trimmedEmail = email.trim().toLowerCase();
+    
+    // Comprehensive email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
       toast({
         title: 'Invalid email',
         description: 'Please enter a valid email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Length validation
+    if (trimmedEmail.length > 255) {
+      toast({
+        title: 'Email too long',
+        description: 'Email address must be less than 255 characters.',
         variant: 'destructive',
       });
       return;
@@ -49,7 +63,7 @@ const NewsletterPopup = () => {
     try {
       const { error } = await supabase
         .from('newsletter_subscribers')
-        .insert({ email, source: 'popup' });
+        .insert({ email: trimmedEmail, source: 'popup' });
 
       if (error) {
         if (error.code === '23505') {
@@ -133,6 +147,7 @@ const NewsletterPopup = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="h-12"
                   disabled={isSubmitting}
+                  maxLength={255}
                 />
                 <Button
                   type="submit"

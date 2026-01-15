@@ -94,7 +94,45 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const { question, conversationHistory = [] }: ChatRequest = await req.json();
-    logStep("Question received", { question: question.substring(0, 100) });
+    
+    // Validate question input
+    if (!question || typeof question !== 'string') {
+      return new Response(
+        JSON.stringify({ error: "Question is required and must be a string" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    const trimmedQuestion = question.trim();
+    if (trimmedQuestion.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "Question cannot be empty" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    if (trimmedQuestion.length > 2000) {
+      return new Response(
+        JSON.stringify({ error: "Question must be less than 2000 characters" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // Validate conversation history
+    if (!Array.isArray(conversationHistory)) {
+      return new Response(
+        JSON.stringify({ error: "Conversation history must be an array" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // Limit conversation history to prevent abuse
+    const safeHistory = conversationHistory.slice(-10).filter(msg => 
+      msg && typeof msg.role === 'string' && typeof msg.content === 'string' &&
+      msg.content.length <= 2000
+    );
+    
+    logStep("Question received", { questionLength: trimmedQuestion.length, historySize: safeHistory.length });
 
     const messages = [
       {
@@ -111,13 +149,13 @@ Guidelines:
 - For complex issues, recommend scheduling a callback or using live chat
 - Don't make up information not in the knowledge base`
       },
-      ...conversationHistory.map(msg => ({
+      ...safeHistory.map(msg => ({
         role: msg.role as "user" | "assistant",
-        content: msg.content
+        content: msg.content.substring(0, 2000) // Ensure content length limit
       })),
       {
         role: "user",
-        content: question
+        content: trimmedQuestion
       }
     ];
 
