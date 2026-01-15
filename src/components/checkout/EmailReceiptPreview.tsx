@@ -1,9 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Mail, CheckCircle, Calendar, MapPin, Truck, Package, Shield, CreditCard, Clock, ExternalLink } from "lucide-react";
+import { Mail, CheckCircle, Calendar, MapPin, Truck, Package, Shield, CreditCard, Clock, ExternalLink, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/commissions";
+import { generateReceiptPdf } from "@/lib/generateReceiptPdf";
 
 interface EmailReceiptPreviewProps {
   transactionId: string;
@@ -61,17 +62,48 @@ export function EmailReceiptPreview({
   const basePrice = amount - platformFee - deliveryFee;
   const formattedPaymentDate = paymentDate ? formatDateTime(paymentDate) : formatDateTime(new Date().toISOString());
 
+  const handleDownloadPdf = () => {
+    generateReceiptPdf({
+      transactionId,
+      itemName,
+      amount,
+      platformFee,
+      deliveryFee,
+      isRental,
+      startDate,
+      endDate,
+      address,
+      fulfillmentType,
+      isEscrow,
+      paymentMethod,
+      paymentDate,
+      recipientName,
+      recipientEmail,
+    });
+  };
+
   return (
     <Card className="overflow-hidden border-2 border-dashed border-muted-foreground/20">
       {/* Email Preview Header */}
       <div className="bg-muted/50 px-4 py-3 flex items-center gap-2 border-b">
         <Mail className="h-4 w-4 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">Email Preview</span>
-        {recipientEmail && (
-          <span className="text-sm text-muted-foreground ml-auto">
-            To: {recipientEmail}
-          </span>
-        )}
+        <div className="ml-auto flex items-center gap-2">
+          {recipientEmail && (
+            <span className="text-sm text-muted-foreground">
+              To: {recipientEmail}
+            </span>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadPdf}
+            className="gap-1.5"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Download PDF
+          </Button>
+        </div>
       </div>
 
       {/* Email Content */}
