@@ -22,7 +22,7 @@ const CATEGORIES: CategoryConfig[] = [
     category: 'vendor_lot',
     title: 'Vendor Lots',
     icon: <MapPin className="h-5 w-5" />,
-    description: 'Prime locations for your mobile food business',
+    description: 'Parking lots & prime spots available hourly, daily, or monthly for your food business',
   },
   {
     category: 'ghost_kitchen',
