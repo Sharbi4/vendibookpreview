@@ -69,8 +69,13 @@ const AIToolsSection = () => {
   };
 
   return (
-    <section className="py-16 md:py-20 bg-gradient-to-b from-background to-muted/30" aria-labelledby="ai-tools-heading">
-      <div className="container max-w-7xl mx-auto px-4">
+    <section className="py-16 md:py-20 bg-gradient-to-br from-background via-primary/5 to-accent/10 relative overflow-hidden" aria-labelledby="ai-tools-heading">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 right-10 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 left-10 w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
+      </div>
+      <div className="container max-w-7xl mx-auto px-4 relative z-10">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
           <div className="flex items-start gap-3">

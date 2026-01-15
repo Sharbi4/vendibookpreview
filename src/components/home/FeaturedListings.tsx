@@ -280,7 +280,7 @@ const FeaturedListings = () => {
   }
 
   return (
-    <section className="py-6 bg-background">
+    <section className="py-8 bg-background">
       <div className="container">
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">

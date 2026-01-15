@@ -212,7 +212,7 @@ const CategoryCarousels = () => {
   }
 
   return (
-    <section className="py-8 bg-background">
+    <section className="py-12 bg-gradient-to-b from-muted/40 via-background to-background">
       <div className="container">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-foreground mb-2">Browse by Category</h2>

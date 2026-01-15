@@ -26,7 +26,7 @@ const featuredArticles = [
 
 const HelpCenterPreview = () => {
   return (
-    <section className="py-16 md:py-20 bg-muted/30" aria-labelledby="help-center-heading">
+    <section className="py-16 md:py-20 bg-gradient-to-b from-background via-muted/50 to-muted/30" aria-labelledby="help-center-heading">
       <div className="container max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">

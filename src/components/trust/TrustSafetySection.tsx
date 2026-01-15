@@ -52,7 +52,7 @@ const TrustSafetySection = () => {
   return (
     <section 
       ref={sectionRef}
-      className="py-16 md:py-20 bg-background" 
+      className="py-16 md:py-20 bg-gradient-to-br from-primary/5 via-background to-accent/5" 
       aria-labelledby="trust-safety-heading"
     >
       <div className="container max-w-7xl mx-auto px-4">
