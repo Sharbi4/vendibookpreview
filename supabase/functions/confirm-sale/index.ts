@@ -183,6 +183,28 @@ serve(async (req) => {
           })
           .eq('id', transaction_id);
 
+        // Send payout completed notification to seller
+        const supabaseUrlForPayout = Deno.env.get("SUPABASE_URL") ?? "";
+        const supabaseAnonKeyForPayout = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+        
+        EdgeRuntime.waitUntil(
+          fetch(`${supabaseUrlForPayout}/functions/v1/send-sale-notification`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseAnonKeyForPayout}`,
+            },
+            body: JSON.stringify({
+              transaction_id: transaction_id,
+              notification_type: 'payout_completed',
+            }),
+          }).then(res => {
+            logStep("Payout notification sent", { status: res.status });
+          }).catch(err => {
+            logStep("Payout notification failed", { error: err.message });
+          })
+        );
+
       } catch (stripeError) {
         const errorMessage = stripeError instanceof Error ? stripeError.message : String(stripeError);
         logStep("Transfer failed", { error: errorMessage });
