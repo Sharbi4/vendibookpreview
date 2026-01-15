@@ -132,6 +132,47 @@ export const useHostBookings = () => {
     }
   };
 
+  const cancelBooking = async (bookingId: string, reason?: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('cancel-booking', {
+        body: { 
+          booking_id: bookingId,
+          cancellation_reason: reason,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const wasRefunded = data?.refund && !data.refund.error;
+
+      setBookings(prev =>
+        prev.map(b =>
+          b.id === bookingId
+            ? { ...b, status: 'cancelled' as const }
+            : b
+        )
+      );
+
+      toast({
+        title: wasRefunded ? 'Booking cancelled & refunded' : 'Booking cancelled',
+        description: wasRefunded 
+          ? `Refund of $${data.refund.refund_amount.toFixed(2)} has been processed.`
+          : 'The booking has been cancelled.',
+      });
+
+      return data;
+    } catch (error) {
+      console.error('Error cancelling booking:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to cancel booking. Please try again.',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
   const stats = {
     pending: bookings.filter(b => b.status === 'pending').length,
     approved: bookings.filter(b => b.status === 'approved').length,
@@ -146,5 +187,6 @@ export const useHostBookings = () => {
     refetch: fetchBookings,
     approveBooking: (id: string, response?: string) => respondToBooking(id, 'approved', response),
     declineBooking: (id: string, response?: string) => respondToBooking(id, 'declined', response),
+    cancelBooking,
   };
 };

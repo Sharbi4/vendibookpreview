@@ -49,30 +49,38 @@ export const useShopperBookings = () => {
     fetchBookings();
   }, [fetchBookings]);
 
-  const cancelBooking = async (bookingId: string) => {
+  const cancelBooking = async (bookingId: string, reason?: string) => {
     try {
-      const { error } = await supabase
-        .from('booking_requests')
-        .update({ status: 'cancelled' })
-        .eq('id', bookingId)
-        .eq('shopper_id', user?.id)
-        .eq('status', 'pending');
+      // Use cancel-booking edge function for proper handling with refunds
+      const { data, error } = await supabase.functions.invoke('cancel-booking', {
+        body: { 
+          booking_id: bookingId,
+          cancellation_reason: reason,
+        },
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const wasRefunded = data?.refund && !data.refund.error;
 
       toast({
-        title: 'Booking cancelled',
-        description: 'Your booking request has been cancelled.',
+        title: wasRefunded ? 'Booking cancelled & refunded' : 'Booking cancelled',
+        description: wasRefunded 
+          ? `Your refund of $${data.refund.refund_amount.toFixed(2)} is being processed.`
+          : 'Your booking request has been cancelled.',
       });
 
       fetchBookings();
+      return data;
     } catch (error) {
       console.error('Error cancelling booking:', error);
       toast({
         title: 'Error',
-        description: 'Failed to cancel booking. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to cancel booking. Please try again.',
         variant: 'destructive',
       });
+      throw error;
     }
   };
 
