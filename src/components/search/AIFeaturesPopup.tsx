@@ -46,25 +46,56 @@ export const AIFeaturesPopup = ({ triggerAfterResults = 3 }: AIFeaturesPopupProp
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Don't show if user is logged in or has already seen popup this session
-    if (user || hasShown) return;
-
-    // Check if popup was dismissed recently (within 24 hours)
+  // Check if popup should be suppressed
+  const shouldSuppressPopup = () => {
+    if (user || hasShown) return true;
+    
     const dismissedAt = localStorage.getItem('ai_popup_dismissed');
     if (dismissedAt) {
       const dismissedTime = parseInt(dismissedAt, 10);
       const twentyFourHours = 24 * 60 * 60 * 1000;
       if (Date.now() - dismissedTime < twentyFourHours) {
-        return;
+        return true;
       }
     }
+    return false;
+  };
 
-    // Show popup after a delay when user has been browsing
+  const showPopup = () => {
+    if (shouldSuppressPopup()) return;
+    setIsOpen(true);
+    setHasShown(true);
+  };
+
+  // Exit intent detection
+  useEffect(() => {
+    if (shouldSuppressPopup()) return;
+
+    const handleMouseLeave = (e: MouseEvent) => {
+      // Detect when mouse moves to top of viewport (exit intent)
+      if (e.clientY <= 5 && e.relatedTarget === null) {
+        showPopup();
+      }
+    };
+
+    // Add listener after a short delay to avoid triggering immediately
+    const setupTimer = setTimeout(() => {
+      document.addEventListener('mouseleave', handleMouseLeave);
+    }, 2000);
+
+    return () => {
+      clearTimeout(setupTimer);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, [user, hasShown]);
+
+  // Fallback: Show popup after browsing time
+  useEffect(() => {
+    if (shouldSuppressPopup()) return;
+
     const timer = setTimeout(() => {
-      setIsOpen(true);
-      setHasShown(true);
-    }, 8000); // Show after 8 seconds of browsing
+      showPopup();
+    }, 12000); // Increased to 12 seconds as fallback
 
     return () => clearTimeout(timer);
   }, [user, hasShown]);
