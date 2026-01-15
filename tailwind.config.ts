@@ -101,12 +101,23 @@ export default {
           "0%": { left: "-100%" },
           "100%": { left: "100%" },
         },
+        "premium-shimmer": {
+          "0%": { left: "-150%", opacity: "0" },
+          "50%": { opacity: "1" },
+          "100%": { left: "150%", opacity: "0" },
+        },
+        "premium-glow": {
+          "0%, 100%": { boxShadow: "0 0 20px rgba(255, 81, 36, 0.4), 0 0 40px rgba(255, 81, 36, 0.2)" },
+          "50%": { boxShadow: "0 0 30px rgba(255, 81, 36, 0.6), 0 0 60px rgba(255, 81, 36, 0.3)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shimmer: "shimmer 1.5s infinite",
         "btn-shimmer": "btn-shimmer 1.5s ease-in-out",
+        "premium-shimmer": "premium-shimmer 2s ease-in-out infinite",
+        "premium-glow": "premium-glow 2s ease-in-out infinite",
       },
     },
   },
