@@ -55,11 +55,43 @@ const handler = async (req: Request): Promise<Response> => {
     const data: CallbackRequest = await req.json();
     const { name, phone, scheduledDate, scheduledTime } = data;
 
-    logStep("Callback request received", { name, phone, scheduledDate, scheduledTime });
+    logStep("Callback request received", { name: name?.substring(0, 20), scheduledDate, scheduledTime });
 
-    // Validate inputs
+    // Validate required fields
     if (!name || !phone || !scheduledDate || !scheduledTime) {
-      throw new Error("Missing required fields");
+      return new Response(
+        JSON.stringify({ error: "Missing required fields: name, phone, scheduledDate, scheduledTime" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // Validate and sanitize inputs
+    const trimmedName = String(name).trim();
+    const trimmedPhone = String(phone).trim();
+    
+    if (trimmedName.length < 2 || trimmedName.length > 100) {
+      return new Response(
+        JSON.stringify({ error: "Name must be between 2 and 100 characters" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // Validate phone format (10-20 digits with optional formatting characters)
+    const phoneRegex = /^[\d\s\-\(\)\+]{10,20}$/;
+    if (!phoneRegex.test(trimmedPhone)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid phone number format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]+)?$/;
+    if (!dateRegex.test(scheduledDate)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid date format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const scheduledDateObj = new Date(scheduledDate);
@@ -70,11 +102,21 @@ const handler = async (req: Request): Promise<Response> => {
       day: 'numeric'
     });
 
+    // Escape HTML in name and phone to prevent XSS in email
+    const escapedName = trimmedName.replace(/[<>&"']/g, (c) => {
+      const entities: Record<string, string> = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' };
+      return entities[c] || c;
+    });
+    const escapedPhone = trimmedPhone.replace(/[<>&"']/g, (c) => {
+      const entities: Record<string, string> = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' };
+      return entities[c] || c;
+    });
+
     // Send notification to support team
     await sendEmail(RESEND_API_KEY, {
       from: "Vendibook <noreply@vendibook.com>",
       to: ["support@vendibook.com"],
-      subject: `📞 Scheduled Callback: ${name} - ${formattedDate} at ${scheduledTime} EST`,
+      subject: `📞 Scheduled Callback: ${escapedName} - ${formattedDate} at ${scheduledTime} EST`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); padding: 20px; border-radius: 12px 12px 0 0;">
@@ -84,12 +126,12 @@ const handler = async (req: Request): Promise<Response> => {
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="padding: 10px 0; border-bottom: 1px solid #eee; font-weight: bold; width: 120px;">Name:</td>
-                <td style="padding: 10px 0; border-bottom: 1px solid #eee;">${name}</td>
+                <td style="padding: 10px 0; border-bottom: 1px solid #eee;">${escapedName}</td>
               </tr>
               <tr>
                 <td style="padding: 10px 0; border-bottom: 1px solid #eee; font-weight: bold;">Phone:</td>
                 <td style="padding: 10px 0; border-bottom: 1px solid #eee;">
-                  <a href="tel:${phone}" style="color: #FF5124;">${phone}</a>
+                  <a href="tel:${encodeURIComponent(trimmedPhone)}" style="color: #FF5124;">${escapedPhone}</a>
                 </td>
               </tr>
               <tr>
@@ -102,7 +144,7 @@ const handler = async (req: Request): Promise<Response> => {
               </tr>
             </table>
             <div style="margin-top: 20px; padding: 15px; background: #fff3e0; border-radius: 8px; border-left: 4px solid #FF5124;">
-              <strong>⏰ Reminder:</strong> Call ${name} at <a href="tel:${phone}" style="color: #FF5124; font-weight: bold;">${phone}</a> on ${formattedDate} at ${scheduledTime} EST.
+              <strong>⏰ Reminder:</strong> Call ${escapedName} at <a href="tel:${encodeURIComponent(trimmedPhone)}" style="color: #FF5124; font-weight: bold;">${escapedPhone}</a> on ${formattedDate} at ${scheduledTime} EST.
             </div>
           </div>
         </div>
@@ -125,13 +167,13 @@ const handler = async (req: Request): Promise<Response> => {
             },
             body: JSON.stringify({
               ticket: {
-                subject: `[Scheduled Callback] ${name} - ${formattedDate} at ${scheduledTime}`,
-                description: `Callback request from ${name}\n\nPhone: ${phone}\nScheduled Date: ${formattedDate}\nScheduled Time: ${scheduledTime} EST\n\nPlease call this customer at the scheduled time.`,
+                subject: `[Scheduled Callback] ${escapedName} - ${formattedDate} at ${scheduledTime}`,
+                description: `Callback request from ${escapedName}\n\nPhone: ${trimmedPhone}\nScheduled Date: ${formattedDate}\nScheduled Time: ${scheduledTime} EST\n\nPlease call this customer at the scheduled time.`,
                 priority: 'high',
                 type: 'task',
                 requester: {
-                  name: name,
-                  phone: phone,
+                  name: trimmedName,
+                  phone: trimmedPhone,
                 },
                 tags: ['vendibook', 'scheduled-callback', 'callback-request'],
               },

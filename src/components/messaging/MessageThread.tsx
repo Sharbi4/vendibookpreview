@@ -92,8 +92,21 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
   };
 
   const handleSend = async () => {
-    if (!newMessage.trim() && !selectedFile) return;
-    await sendMessage(newMessage, selectedFile || undefined);
+    const trimmedMessage = newMessage.trim();
+    
+    // Validate message length
+    if (!trimmedMessage && !selectedFile) return;
+    
+    if (trimmedMessage.length > 5000) {
+      toast({
+        title: 'Message too long',
+        description: 'Messages must be less than 5000 characters.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    await sendMessage(trimmedMessage, selectedFile || undefined);
     setNewMessage('');
     clearSelectedFile();
   };

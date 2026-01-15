@@ -19,10 +19,24 @@ const NewsletterSection = ({ variant = 'default', source = 'section' }: Newslett
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !email.includes('@')) {
+    const trimmedEmail = email.trim().toLowerCase();
+    
+    // Comprehensive email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
       toast({
         title: 'Invalid email',
         description: 'Please enter a valid email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Length validation
+    if (trimmedEmail.length > 255) {
+      toast({
+        title: 'Email too long',
+        description: 'Email address must be less than 255 characters.',
         variant: 'destructive',
       });
       return;
@@ -33,7 +47,7 @@ const NewsletterSection = ({ variant = 'default', source = 'section' }: Newslett
     try {
       const { error } = await supabase
         .from('newsletter_subscribers')
-        .insert({ email, source });
+        .insert({ email: trimmedEmail, source });
 
       if (error) {
         if (error.code === '23505') {
@@ -88,6 +102,7 @@ const NewsletterSection = ({ variant = 'default', source = 'section' }: Newslett
                 onChange={(e) => setEmail(e.target.value)}
                 className="h-11"
                 disabled={isSubmitting}
+                maxLength={255}
               />
             </div>
             <Button type="submit" variant="gradient" disabled={isSubmitting} className="h-11">
@@ -133,6 +148,7 @@ const NewsletterSection = ({ variant = 'default', source = 'section' }: Newslett
                   onChange={(e) => setEmail(e.target.value)}
                   className="h-12 bg-primary-foreground text-foreground border-0"
                   disabled={isSubmitting}
+                  maxLength={255}
                 />
               </div>
               <Button
