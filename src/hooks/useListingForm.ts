@@ -26,6 +26,8 @@ const initialFormData: ListingFormData = {
   available_to: '',
   images: [],
   existingImages: [],
+  vendibook_freight_enabled: false,
+  freight_payer: 'buyer',
   required_documents: [],
 };
 

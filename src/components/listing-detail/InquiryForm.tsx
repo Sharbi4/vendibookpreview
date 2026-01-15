@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ShieldCheck, Loader2, MapPin, Truck } from 'lucide-react';
 import { CheckoutOverlay } from '@/components/checkout';
+import { FreightInfoCard } from '@/components/freight';
 import type { FulfillmentType } from '@/types/listing';
 
 interface InquiryFormProps {
@@ -20,9 +21,11 @@ interface InquiryFormProps {
   deliveryFee?: number | null;
   deliveryRadiusMiles?: number | null;
   pickupLocation?: string | null;
+  vendibookFreightEnabled?: boolean;
+  freightPayer?: 'buyer' | 'seller';
 }
 
-type FulfillmentSelection = 'pickup' | 'delivery';
+type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 
 const InquiryForm = ({ 
   listingId, 
@@ -31,6 +34,8 @@ const InquiryForm = ({
   deliveryFee,
   deliveryRadiusMiles,
   pickupLocation,
+  vendibookFreightEnabled = false,
+  freightPayer = 'buyer',
 }: InquiryFormProps) => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
@@ -42,9 +47,12 @@ const InquiryForm = ({
   const [phone, setPhone] = useState('');
   
   // Fulfillment
-  const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>(
-    fulfillmentType === 'delivery' ? 'delivery' : 'pickup'
-  );
+  const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>(() => {
+    // Default to Vendibook freight if enabled
+    if (vendibookFreightEnabled) return 'vendibook_freight';
+    if (fulfillmentType === 'delivery') return 'delivery';
+    return 'pickup';
+  });
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
   
@@ -52,23 +60,52 @@ const InquiryForm = ({
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showCheckoutOverlay, setShowCheckoutOverlay] = useState(false);
 
+  // Estimated freight cost (placeholder - in production would be dynamically calculated)
+  const estimatedFreightCost = 500;
+  const isFreightSellerPaid = vendibookFreightEnabled && freightPayer === 'seller';
+
   // Determine available fulfillment options
   const getAvailableFulfillmentOptions = (): FulfillmentSelection[] => {
-    if (fulfillmentType === 'both') return ['pickup', 'delivery'];
-    if (fulfillmentType === 'delivery') return ['delivery'];
-    return ['pickup'];
+    const options: FulfillmentSelection[] = [];
+    
+    // If Vendibook freight is enabled, add it as an option
+    if (vendibookFreightEnabled) {
+      options.push('vendibook_freight');
+    }
+    
+    // Add local pickup/delivery options based on fulfillment type
+    if (fulfillmentType === 'both') {
+      options.push('pickup', 'delivery');
+    } else if (fulfillmentType === 'delivery') {
+      options.push('delivery');
+    } else if (fulfillmentType === 'pickup') {
+      options.push('pickup');
+    }
+    
+    return options;
   };
 
   const fulfillmentOptions = getAvailableFulfillmentOptions();
 
   // Calculate total price including delivery if applicable
-  const currentDeliveryFee = fulfillmentSelected === 'delivery' && deliveryFee ? deliveryFee : 0;
+  const getDeliveryFeeForSelection = (): number => {
+    if (fulfillmentSelected === 'vendibook_freight') {
+      // If seller pays freight, buyer sees $0
+      return isFreightSellerPaid ? 0 : estimatedFreightCost;
+    }
+    if (fulfillmentSelected === 'delivery' && deliveryFee) {
+      return deliveryFee;
+    }
+    return 0;
+  };
+  
+  const currentDeliveryFee = getDeliveryFeeForSelection();
   const totalPrice = (priceSale || 0) + currentDeliveryFee;
 
   const validateForm = (): string | null => {
     if (!name.trim()) return 'Please enter your name';
     if (!email.trim()) return 'Please enter your email';
-    if (fulfillmentSelected === 'delivery' && !deliveryAddress.trim()) {
+    if ((fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight') && !deliveryAddress.trim()) {
       return 'Please enter a delivery address';
     }
     if (!agreedToTerms) return 'Please agree to the Terms of Service';
@@ -97,18 +134,23 @@ const InquiryForm = ({
     setShowCheckoutOverlay(true);
     
     try {
+      const isVendibookFreight = fulfillmentSelected === 'vendibook_freight';
+      
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           listing_id: listingId,
           mode: 'sale',
           amount: priceSale,
           delivery_fee: currentDeliveryFee,
-          fulfillment_type: fulfillmentSelected,
-          delivery_address: fulfillmentSelected === 'delivery' ? deliveryAddress.trim() : null,
-          delivery_instructions: fulfillmentSelected === 'delivery' ? deliveryInstructions.trim() : null,
+          fulfillment_type: isVendibookFreight ? 'vendibook_freight' : fulfillmentSelected,
+          delivery_address: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryAddress.trim() : null,
+          delivery_instructions: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryInstructions.trim() : null,
           buyer_name: name.trim(),
           buyer_email: email.trim(),
           buyer_phone: phone.trim() || null,
+          vendibook_freight: isVendibookFreight,
+          freight_payer: isVendibookFreight ? freightPayer : null,
+          freight_cost: isVendibookFreight ? estimatedFreightCost : null,
         },
       });
 
@@ -154,6 +196,22 @@ const InquiryForm = ({
             onValueChange={(val) => setFulfillmentSelected(val as FulfillmentSelection)}
             className="space-y-3"
           >
+            {fulfillmentOptions.includes('vendibook_freight') && (
+              <div className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${
+                fulfillmentSelected === 'vendibook_freight' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+              }`}>
+                <RadioGroupItem value="vendibook_freight" id="sale-vendibook-freight" />
+                <Label htmlFor="sale-vendibook-freight" className="flex items-center gap-2 cursor-pointer flex-1">
+                  <Truck className="h-4 w-4 text-primary" />
+                  <span>Vendibook Freight</span>
+                  {isFreightSellerPaid ? (
+                    <span className="text-xs text-emerald-600 font-medium ml-auto">FREE</span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground ml-auto">+${estimatedFreightCost}</span>
+                  )}
+                </Label>
+              </div>
+            )}
             {fulfillmentOptions.includes('pickup') && (
               <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary/50 transition-colors cursor-pointer">
                 <RadioGroupItem value="pickup" id="sale-pickup" />
@@ -168,16 +226,21 @@ const InquiryForm = ({
                 <RadioGroupItem value="delivery" id="sale-delivery" />
                 <Label htmlFor="sale-delivery" className="flex items-center gap-2 cursor-pointer flex-1">
                   <Truck className="h-4 w-4 text-primary" />
-                  <span>Delivery</span>
+                  <span>Local Delivery</span>
                   {deliveryFee && (
-                    <span className="text-xs text-muted-foreground ml-auto">
-                      +${deliveryFee}
-                    </span>
+                    <span className="text-xs text-muted-foreground ml-auto">+${deliveryFee}</span>
                   )}
                 </Label>
               </div>
             )}
           </RadioGroup>
+        </div>
+      )}
+
+      {/* Vendibook Freight Info Card (Pod 2 or Pod 3) */}
+      {fulfillmentSelected === 'vendibook_freight' && (
+        <div className="mb-6">
+          <FreightInfoCard isSellerPaid={isFreightSellerPaid} />
         </div>
       )}
 

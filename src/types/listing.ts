@@ -186,6 +186,8 @@ export const AMENITIES_BY_CATEGORY: Record<ListingCategory, { label: string; ite
   ],
 };
 
+export type FreightPayer = 'buyer' | 'seller';
+
 export interface ListingFormData {
   mode: ListingMode | null;
   category: ListingCategory | null;
@@ -211,6 +213,9 @@ export interface ListingFormData {
   available_to: string;
   images: File[];
   existingImages: string[];
+  // Vendibook Freight settings (for sales)
+  vendibook_freight_enabled: boolean;
+  freight_payer: FreightPayer;
   // Required documents for rentals
   required_documents?: {
     document_type: string;

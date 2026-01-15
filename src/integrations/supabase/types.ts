@@ -374,6 +374,7 @@ export type Database = {
           delivery_instructions: string | null
           delivery_radius_miles: number | null
           description: string
+          freight_payer: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
           highlights: string[] | null
           host_id: string
@@ -393,6 +394,7 @@ export type Database = {
           status: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at: string
+          vendibook_freight_enabled: boolean | null
         }
         Insert: {
           access_instructions?: string | null
@@ -407,6 +409,7 @@ export type Database = {
           delivery_instructions?: string | null
           delivery_radius_miles?: number | null
           description: string
+          freight_payer?: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
           highlights?: string[] | null
           host_id: string
@@ -426,6 +429,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at?: string
+          vendibook_freight_enabled?: boolean | null
         }
         Update: {
           access_instructions?: string | null
@@ -440,6 +444,7 @@ export type Database = {
           delivery_instructions?: string | null
           delivery_radius_miles?: number | null
           description?: string
+          freight_payer?: string | null
           fulfillment_type?: Database["public"]["Enums"]["fulfillment_type"]
           highlights?: string[] | null
           host_id?: string
@@ -459,6 +464,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["listing_status"]
           title?: string
           updated_at?: string
+          vendibook_freight_enabled?: boolean | null
         }
         Relationships: []
       }
@@ -736,6 +742,7 @@ export type Database = {
           delivery_address: string | null
           delivery_fee: number | null
           delivery_instructions: string | null
+          freight_cost: number | null
           fulfillment_type: string | null
           id: string
           listing_id: string
@@ -762,6 +769,7 @@ export type Database = {
           delivery_address?: string | null
           delivery_fee?: number | null
           delivery_instructions?: string | null
+          freight_cost?: number | null
           fulfillment_type?: string | null
           id?: string
           listing_id: string
@@ -788,6 +796,7 @@ export type Database = {
           delivery_address?: string | null
           delivery_fee?: number | null
           delivery_instructions?: string | null
+          freight_cost?: number | null
           fulfillment_type?: string | null
           id?: string
           listing_id?: string
