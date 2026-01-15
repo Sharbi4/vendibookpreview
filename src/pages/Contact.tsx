@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { z } from 'zod';
-import { Phone, Mail, Clock, Send, Loader2, CheckCircle, Ticket, Headphones, CalendarClock } from 'lucide-react';
+import { Phone, Mail, Clock, Send, Loader2, CheckCircle, Ticket, Headphones, CalendarClock, Sparkles, ArrowRight } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import ZendeskTicketForm from '@/components/support/ZendeskTicketForm';
@@ -90,356 +91,452 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
       
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="py-12 md:py-16 bg-gradient-to-b from-vendibook-cream to-background">
-          <div className="container">
-            <div className="text-center mb-10">
-              <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
-                Contact Us
+        {/* Hero Section - Enhanced */}
+        <section className="relative py-16 md:py-24 overflow-hidden">
+          {/* Background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-vendibook-cream via-background to-primary/5" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
+          
+          {/* Decorative elements */}
+          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-vendibook-cream/50 rounded-full blur-3xl" />
+          
+          <div className="container relative z-10">
+            <div className="text-center mb-12">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+                <Sparkles className="h-4 w-4" />
+                We're here to help
+              </div>
+              
+              <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 tracking-tight">
+                Get in Touch
               </h1>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-                Have questions? We would love to hear from you. Choose your preferred way to reach us.
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+                Have questions about renting, selling, or listing your mobile kitchen? 
+                Our support team is ready to assist you.
               </p>
               
-              {/* Quick Contact Options */}
-              <div className="max-w-2xl mx-auto">
+              {/* Live Chat Button - Enhanced */}
+              <div className="max-w-md mx-auto">
                 <SocialContactOptions />
               </div>
             </div>
 
-            {/* Featured Articles */}
-            <div className="max-w-3xl mx-auto mt-10 pt-8 border-t border-border/50">
-              <FeaturedArticles />
+            {/* Quick Stats */}
+            <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto mb-12">
+              <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50">
+                <div className="text-2xl md:text-3xl font-bold text-primary mb-1">&lt;2hr</div>
+                <div className="text-xs md:text-sm text-muted-foreground">Avg Response</div>
+              </div>
+              <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50">
+                <div className="text-2xl md:text-3xl font-bold text-primary mb-1">98%</div>
+                <div className="text-xs md:text-sm text-muted-foreground">Satisfaction</div>
+              </div>
+              <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50">
+                <div className="text-2xl md:text-3xl font-bold text-primary mb-1">24/7</div>
+                <div className="text-xs md:text-sm text-muted-foreground">Ticket Support</div>
+              </div>
+            </div>
+
+            {/* Featured Articles - Enhanced */}
+            <div className="max-w-4xl mx-auto">
+              <Card className="border-0 shadow-xl bg-card/80 backdrop-blur-sm">
+                <CardContent className="p-6 md:p-8">
+                  <FeaturedArticles />
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
 
-        {/* Main Content */}
-        <section className="py-12 md:py-16">
+        {/* Main Content - Enhanced Tabs */}
+        <section className="py-16 md:py-20 bg-muted/30">
           <div className="container">
-            <Tabs defaultValue="ticket" className="max-w-6xl mx-auto">
-              <TabsList className="grid w-full grid-cols-4 mb-8">
-                <TabsTrigger value="ticket" className="flex items-center gap-2">
-                  <Ticket className="h-4 w-4" />
-                  <span className="hidden sm:inline">New Ticket</span>
-                </TabsTrigger>
-                <TabsTrigger value="form" className="flex items-center gap-2">
-                  <Send className="h-4 w-4" />
-                  <span className="hidden sm:inline">Message</span>
-                </TabsTrigger>
-                <TabsTrigger value="schedule" className="flex items-center gap-2">
-                  <CalendarClock className="h-4 w-4" />
-                  <span className="hidden sm:inline">Schedule</span>
-                </TabsTrigger>
-                <TabsTrigger value="tickets" className="flex items-center gap-2">
-                  <Headphones className="h-4 w-4" />
-                  <span className="hidden sm:inline">Tickets</span>
-                </TabsTrigger>
-              </TabsList>
+            <div className="max-w-6xl mx-auto">
+              {/* Section Header */}
+              <div className="text-center mb-10">
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+                  How Can We Help?
+                </h2>
+                <p className="text-muted-foreground">
+                  Choose your preferred method of contact
+                </p>
+              </div>
 
-              {/* Zendesk Ticket Form */}
-              <TabsContent value="ticket">
-                <div className="grid lg:grid-cols-2 gap-8">
-                  <div>
-                    <h2 className="text-2xl font-bold text-foreground mb-2">Create a Support Ticket</h2>
-                    <p className="text-muted-foreground mb-6">
-                      Submit a ticket and our team will respond via email. You can track your ticket status in the "Track Tickets" tab.
-                    </p>
-                    <ZendeskTicketForm />
+              <Tabs defaultValue="ticket" className="w-full">
+                {/* Enhanced Tab List */}
+                <TabsList className="grid w-full grid-cols-4 mb-10 p-1.5 h-auto bg-card border border-border rounded-2xl shadow-sm">
+                  <TabsTrigger 
+                    value="ticket" 
+                    className="flex items-center justify-center gap-2 py-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200"
+                  >
+                    <Ticket className="h-5 w-5" />
+                    <span className="hidden sm:inline font-medium">New Ticket</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="form" 
+                    className="flex items-center justify-center gap-2 py-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200"
+                  >
+                    <Send className="h-5 w-5" />
+                    <span className="hidden sm:inline font-medium">Message</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="schedule" 
+                    className="flex items-center justify-center gap-2 py-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200"
+                  >
+                    <CalendarClock className="h-5 w-5" />
+                    <span className="hidden sm:inline font-medium">Schedule</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="tickets" 
+                    className="flex items-center justify-center gap-2 py-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200"
+                  >
+                    <Headphones className="h-5 w-5" />
+                    <span className="hidden sm:inline font-medium">My Tickets</span>
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* Zendesk Ticket Form - Enhanced */}
+                <TabsContent value="ticket" className="mt-0">
+                  <div className="grid lg:grid-cols-5 gap-8">
+                    <div className="lg:col-span-3">
+                      <Card className="border-0 shadow-xl">
+                        <CardContent className="p-6 md:p-8">
+                          <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-lg">
+                              <Ticket className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <h2 className="text-xl font-bold text-foreground">Create a Support Ticket</h2>
+                              <p className="text-sm text-muted-foreground">We'll respond within 2 hours</p>
+                            </div>
+                          </div>
+                          <ZendeskTicketForm />
+                        </CardContent>
+                      </Card>
+                    </div>
+                    
+                    <div className="lg:col-span-2 space-y-4">
+                      {/* Contact Cards - Enhanced */}
+                      <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow group cursor-pointer">
+                        <CardContent className="p-5">
+                          <a href="tel:+18778836342" className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                              <Phone className="h-6 w-6" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-foreground mb-0.5">Call Us</h3>
+                              <p className="text-primary font-medium">1877-8VENDI2</p>
+                            </div>
+                            <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                          </a>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow group cursor-pointer">
+                        <CardContent className="p-5">
+                          <a href="mailto:support@vendibook.com" className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 text-white flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                              <Mail className="h-6 w-6" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-foreground mb-0.5">Email Us</h3>
+                              <p className="text-primary font-medium text-sm">support@vendibook.com</p>
+                            </div>
+                            <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                          </a>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="border-0 shadow-lg bg-gradient-to-br from-primary/5 to-primary/10">
+                        <CardContent className="p-5">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-lg">
+                              <Clock className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-foreground mb-1">Business Hours</h3>
+                              <p className="text-sm text-muted-foreground leading-relaxed">
+                                Mon-Fri: 9am - 6pm EST<br />
+                                Saturday: 10am - 4pm EST
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
                   </div>
-                  <div className="space-y-6">
-                    <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-                          <Phone className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-foreground mb-1">Call Us</h3>
-                          <a 
-                            href="tel:+18778836342" 
-                            className="text-sm text-primary hover:underline font-medium"
-                          >
-                            1877-8VENDI2
-                          </a>
-                        </div>
-                      </div>
-                    </div>
+                </TabsContent>
 
-                    <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-                          <Mail className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-foreground mb-1">Email Us</h3>
-                          <a 
-                            href="mailto:support@vendibook.com" 
-                            className="text-sm text-primary hover:underline"
-                          >
-                            support@vendibook.com
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-                          <Clock className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-foreground mb-1">Business Hours</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Monday - Friday: 9am - 6pm EST<br />
-                            Saturday: 10am - 4pm EST
+                {/* Contact Form - Enhanced */}
+                <TabsContent value="form" className="mt-0">
+                  <div className="max-w-3xl mx-auto">
+                    {isSuccess ? (
+                      <Card className="border-0 shadow-xl">
+                        <CardContent className="p-12 text-center">
+                          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-green-500 to-green-600 text-white mb-8 shadow-xl">
+                            <CheckCircle className="h-12 w-12" />
+                          </div>
+                          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+                            Thank you for reaching out!
+                          </h2>
+                          <p className="text-muted-foreground mb-2 text-lg">
+                            We have received your message and will get back to you as soon as possible.
                           </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
+                          <p className="text-sm text-muted-foreground mb-8">
+                            If you do not hear from us, please check your phone or email us directly at{' '}
+                            <a href="mailto:support@vendibook.com" className="text-primary hover:underline font-medium">
+                              support@vendibook.com
+                            </a>
+                          </p>
+                          <Button onClick={() => setIsSuccess(false)} variant="outline" size="lg" className="rounded-xl">
+                            Send Another Message
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <Card className="border-0 shadow-xl">
+                        <CardContent className="p-6 md:p-10">
+                          <div className="flex items-center gap-3 mb-8">
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-lg">
+                              <Send className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <h2 className="text-xl font-bold text-foreground">Send us a Message</h2>
+                              <p className="text-sm text-muted-foreground">We'd love to hear from you</p>
+                            </div>
+                          </div>
+                          
+                          <form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="grid md:grid-cols-2 gap-5">
+                              <div className="space-y-2">
+                                <Label htmlFor="name" className="text-sm font-medium">Full Name *</Label>
+                                <Input
+                                  id="name"
+                                  name="name"
+                                  value={formData.name}
+                                  onChange={handleChange}
+                                  placeholder="John Doe"
+                                  className={`h-12 rounded-xl border-border/60 focus:border-primary ${errors.name ? 'border-destructive' : ''}`}
+                                  disabled={isSubmitting}
+                                />
+                                {errors.name && (
+                                  <p className="text-sm text-destructive">{errors.name}</p>
+                                )}
+                              </div>
 
-              {/* Contact Form */}
-              <TabsContent value="form">
-                <div className="max-w-3xl mx-auto">
-                  {isSuccess ? (
-                    <div className="bg-card border border-border rounded-xl p-12 text-center">
-                      <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 text-primary mb-6">
-                        <CheckCircle className="h-10 w-10" />
-                      </div>
-                      <h2 className="text-2xl font-bold text-foreground mb-4">
-                        Thank you for reaching out!
-                      </h2>
-                      <p className="text-muted-foreground mb-2">
-                        We have received your message and will get back to you as soon as possible.
-                      </p>
-                      <p className="text-sm text-muted-foreground mb-8">
-                        If you do not hear from us, please check your phone or email us directly at{' '}
-                        <a href="mailto:support@vendibook.com" className="text-primary hover:underline">
-                          support@vendibook.com
-                        </a>
-                      </p>
-                      <Button onClick={() => setIsSuccess(false)} variant="outline">
-                        Send Another Message
-                      </Button>
+                              <div className="space-y-2">
+                                <Label htmlFor="email" className="text-sm font-medium">Email Address *</Label>
+                                <Input
+                                  id="email"
+                                  name="email"
+                                  type="email"
+                                  value={formData.email}
+                                  onChange={handleChange}
+                                  placeholder="john@example.com"
+                                  className={`h-12 rounded-xl border-border/60 focus:border-primary ${errors.email ? 'border-destructive' : ''}`}
+                                  disabled={isSubmitting}
+                                />
+                                {errors.email && (
+                                  <p className="text-sm text-destructive">{errors.email}</p>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-5">
+                              <div className="space-y-2">
+                                <Label htmlFor="phone" className="text-sm font-medium">Phone Number *</Label>
+                                <Input
+                                  id="phone"
+                                  name="phone"
+                                  type="tel"
+                                  value={formData.phone}
+                                  onChange={handleChange}
+                                  placeholder="(555) 123-4567"
+                                  className={`h-12 rounded-xl border-border/60 focus:border-primary ${errors.phone ? 'border-destructive' : ''}`}
+                                  disabled={isSubmitting}
+                                />
+                                {errors.phone && (
+                                  <p className="text-sm text-destructive">{errors.phone}</p>
+                                )}
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label htmlFor="subject" className="text-sm font-medium">Subject *</Label>
+                                <Input
+                                  id="subject"
+                                  name="subject"
+                                  value={formData.subject}
+                                  onChange={handleChange}
+                                  placeholder="How can we help?"
+                                  className={`h-12 rounded-xl border-border/60 focus:border-primary ${errors.subject ? 'border-destructive' : ''}`}
+                                  disabled={isSubmitting}
+                                />
+                                {errors.subject && (
+                                  <p className="text-sm text-destructive">{errors.subject}</p>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="message" className="text-sm font-medium">Message *</Label>
+                              <Textarea
+                                id="message"
+                                name="message"
+                                value={formData.message}
+                                onChange={handleChange}
+                                placeholder="Tell us more about your inquiry..."
+                                rows={6}
+                                className={`rounded-xl border-border/60 focus:border-primary resize-none ${errors.message ? 'border-destructive' : ''}`}
+                                disabled={isSubmitting}
+                              />
+                              {errors.message && (
+                                <p className="text-sm text-destructive">{errors.message}</p>
+                              )}
+                            </div>
+
+                            <Button 
+                              type="submit" 
+                              size="lg" 
+                              className="w-full h-14 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-shadow" 
+                              disabled={isSubmitting}
+                            >
+                              {isSubmitting ? (
+                                <>
+                                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                  Sending...
+                                </>
+                              ) : (
+                                <>
+                                  <Send className="h-5 w-5 mr-2" />
+                                  Send Message
+                                </>
+                              )}
+                            </Button>
+                          </form>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                </TabsContent>
+
+                {/* Schedule Callback - Enhanced */}
+                <TabsContent value="schedule" className="mt-0">
+                  <div className="grid lg:grid-cols-5 gap-8">
+                    <div className="lg:col-span-3">
+                      <Card className="border-0 shadow-xl">
+                        <CardContent className="p-6 md:p-8">
+                          <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-lg">
+                              <CalendarClock className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <h2 className="text-xl font-bold text-foreground">Schedule a Callback</h2>
+                              <p className="text-sm text-muted-foreground">We'll call you at your preferred time</p>
+                            </div>
+                          </div>
+                          <CallbackScheduler />
+                        </CardContent>
+                      </Card>
                     </div>
-                  ) : (
-                    <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
-                      <h2 className="text-xl font-semibold text-foreground mb-6">
-                        Send us a message
-                      </h2>
+                    
+                    <div className="lg:col-span-2 space-y-4">
+                      <Card className="border-0 shadow-lg bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5">
+                        <CardContent className="p-6">
+                          <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
+                            <Sparkles className="h-5 w-5 text-primary" />
+                            Why Schedule a Callback?
+                          </h3>
+                          <ul className="space-y-3">
+                            {[
+                              'No waiting on hold – we call you',
+                              'Speak with a real person, not a chatbot',
+                              'Get personalized help for your situation',
+                              'Available Mon-Sat during business hours'
+                            ].map((item, i) => (
+                              <li key={i} className="flex items-start gap-3 text-sm">
+                                <div className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <CheckCircle className="h-3 w-3" />
+                                </div>
+                                <span className="text-muted-foreground">{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                      </Card>
                       
-                      <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="grid md:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                            <Label htmlFor="name">Full Name *</Label>
-                            <Input
-                              id="name"
-                              name="name"
-                              value={formData.name}
-                              onChange={handleChange}
-                              placeholder="John Doe"
-                              className={errors.name ? 'border-destructive' : ''}
-                              disabled={isSubmitting}
-                            />
-                            {errors.name && (
-                              <p className="text-sm text-destructive">{errors.name}</p>
-                            )}
+                      <Card className="border-0 shadow-lg">
+                        <CardContent className="p-5">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-lg">
+                              <Clock className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-foreground mb-1">Business Hours</h3>
+                              <p className="text-sm text-muted-foreground leading-relaxed">
+                                Mon-Fri: 9am - 6pm EST<br />
+                                Saturday: 10am - 4pm EST
+                              </p>
+                            </div>
                           </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="email">Email Address *</Label>
-                            <Input
-                              id="email"
-                              name="email"
-                              type="email"
-                              value={formData.email}
-                              onChange={handleChange}
-                              placeholder="john@example.com"
-                              className={errors.email ? 'border-destructive' : ''}
-                              disabled={isSubmitting}
-                            />
-                            {errors.email && (
-                              <p className="text-sm text-destructive">{errors.email}</p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                            <Label htmlFor="phone">Phone Number *</Label>
-                            <Input
-                              id="phone"
-                              name="phone"
-                              type="tel"
-                              value={formData.phone}
-                              onChange={handleChange}
-                              placeholder="(555) 123-4567"
-                              className={errors.phone ? 'border-destructive' : ''}
-                              disabled={isSubmitting}
-                            />
-                            {errors.phone && (
-                              <p className="text-sm text-destructive">{errors.phone}</p>
-                            )}
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="subject">Subject *</Label>
-                            <Input
-                              id="subject"
-                              name="subject"
-                              value={formData.subject}
-                              onChange={handleChange}
-                              placeholder="How can we help?"
-                              className={errors.subject ? 'border-destructive' : ''}
-                              disabled={isSubmitting}
-                            />
-                            {errors.subject && (
-                              <p className="text-sm text-destructive">{errors.subject}</p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="message">Message *</Label>
-                          <Textarea
-                            id="message"
-                            name="message"
-                            value={formData.message}
-                            onChange={handleChange}
-                            placeholder="Tell us more about your inquiry..."
-                            rows={6}
-                            className={errors.message ? 'border-destructive' : ''}
-                            disabled={isSubmitting}
-                          />
-                          {errors.message && (
-                            <p className="text-sm text-destructive">{errors.message}</p>
-                          )}
-                        </div>
-
-
-                        <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
-                          {isSubmitting ? (
-                            <>
-                              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                              Sending...
-                            </>
-                          ) : (
-                            <>
-                              <Send className="h-5 w-5 mr-2" />
-                              Send Message
-                            </>
-                          )}
-                        </Button>
-                      </form>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-
-              {/* Schedule Callback */}
-              <TabsContent value="schedule">
-                <div className="grid lg:grid-cols-2 gap-8">
-                  <div>
-                    <h2 className="text-2xl font-bold text-foreground mb-2">Schedule a Callback</h2>
-                    <p className="text-muted-foreground mb-6">
-                      Pick a date and time that works for you, and we'll call you at that exact time. No waiting on hold.
-                    </p>
-                    <CallbackScheduler />
-                  </div>
-                  <div className="space-y-6">
-                    <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
-                      <h3 className="font-semibold text-foreground mb-3">Why Schedule a Callback?</h3>
-                      <ul className="space-y-2 text-sm text-muted-foreground">
-                        <li className="flex items-start gap-2">
-                          <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                          No waiting on hold – we call you at your chosen time
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                          Speak with a real person, not a chatbot
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                          Get personalized help with your specific situation
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                          Available Monday-Saturday during business hours
-                        </li>
-                      </ul>
-                    </div>
-                    <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-                          <Clock className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-foreground mb-1">Business Hours</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Monday - Friday: 9am - 6pm EST<br />
-                            Saturday: 10am - 4pm EST
-                          </p>
-                        </div>
-                      </div>
+                        </CardContent>
+                      </Card>
                     </div>
                   </div>
-                </div>
-              </TabsContent>
+                </TabsContent>
 
-              {/* Ticket Status */}
-              <TabsContent value="tickets">
-                <div className="grid lg:grid-cols-2 gap-8">
-                  <div>
-                    <h2 className="text-2xl font-bold text-foreground mb-2">Check Ticket Status</h2>
-                    <p className="text-muted-foreground mb-6">
-                      Already submitted a support request? Track the status of your tickets here.
-                    </p>
-                    <TicketStatusTracker />
-                  </div>
-                  <div className="space-y-6">
-                    <div className="bg-muted/50 border border-border rounded-xl p-6">
-                      <h3 className="font-semibold text-foreground mb-3">Understanding Ticket Statuses</h3>
-                      <ul className="space-y-3 text-sm">
-                        <li className="flex items-start gap-3">
-                          <span className="w-3 h-3 rounded-full bg-blue-500 mt-1 flex-shrink-0"></span>
-                          <div>
-                            <span className="font-medium text-foreground">New</span>
-                            <p className="text-muted-foreground">Your request has been received and is awaiting review</p>
+                {/* Ticket Status - Enhanced */}
+                <TabsContent value="tickets" className="mt-0">
+                  <div className="grid lg:grid-cols-5 gap-8">
+                    <div className="lg:col-span-3">
+                      <Card className="border-0 shadow-xl">
+                        <CardContent className="p-6 md:p-8">
+                          <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-lg">
+                              <Headphones className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <h2 className="text-xl font-bold text-foreground">Check Ticket Status</h2>
+                              <p className="text-sm text-muted-foreground">Track your support requests</p>
+                            </div>
                           </div>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="w-3 h-3 rounded-full bg-yellow-500 mt-1 flex-shrink-0"></span>
-                          <div>
-                            <span className="font-medium text-foreground">Open</span>
-                            <p className="text-muted-foreground">An agent is actively working on your request</p>
-                          </div>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="w-3 h-3 rounded-full bg-orange-500 mt-1 flex-shrink-0"></span>
-                          <div>
-                            <span className="font-medium text-foreground">Pending</span>
-                            <p className="text-muted-foreground">Waiting for additional information from you</p>
-                          </div>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="w-3 h-3 rounded-full bg-green-500 mt-1 flex-shrink-0"></span>
-                          <div>
-                            <span className="font-medium text-foreground">Solved</span>
-                            <p className="text-muted-foreground">Your request has been resolved</p>
-                          </div>
-                        </li>
-                      </ul>
+                          <TicketStatusTracker />
+                        </CardContent>
+                      </Card>
+                    </div>
+                    
+                    <div className="lg:col-span-2">
+                      <Card className="border-0 shadow-lg bg-gradient-to-br from-muted/50 to-muted/30">
+                        <CardContent className="p-6">
+                          <h3 className="font-bold text-foreground mb-5">Understanding Ticket Statuses</h3>
+                          <ul className="space-y-4">
+                            {[
+                              { color: 'bg-blue-500', label: 'New', desc: 'Received and awaiting review' },
+                              { color: 'bg-yellow-500', label: 'Open', desc: 'Agent actively working on it' },
+                              { color: 'bg-orange-500', label: 'Pending', desc: 'Waiting for your response' },
+                              { color: 'bg-green-500', label: 'Solved', desc: 'Request has been resolved' },
+                            ].map((status, i) => (
+                              <li key={i} className="flex items-start gap-4">
+                                <span className={`w-4 h-4 rounded-full ${status.color} mt-0.5 flex-shrink-0 shadow-sm`} />
+                                <div>
+                                  <span className="font-semibold text-foreground text-sm">{status.label}</span>
+                                  <p className="text-muted-foreground text-sm">{status.desc}</p>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                      </Card>
                     </div>
                   </div>
-                </div>
-              </TabsContent>
-            </Tabs>
+                </TabsContent>
+              </Tabs>
+            </div>
           </div>
         </section>
       </main>
