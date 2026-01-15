@@ -32,6 +32,7 @@ import {
   Check,
   X as XIcon
 } from 'lucide-react';
+import PricingCalculator from '@/components/pricing/PricingCalculator';
 
 interface FAQSection {
   id: string;
@@ -635,8 +636,11 @@ const FAQ = () => {
                                 </div>
                               </div>
                             </div>
-                          </CardContent>
+                        </CardContent>
                         </Card>
+
+                        {/* Interactive Pricing Calculator */}
+                        <PricingCalculator />
 
                         {/* Example Calculations */}
                         <div className="grid md:grid-cols-2 gap-4">
