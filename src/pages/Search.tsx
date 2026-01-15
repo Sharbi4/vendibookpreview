@@ -76,7 +76,7 @@ const Search = () => {
   const initialLat = searchParams.get('lat');
   const initialLng = searchParams.get('lng');
   const initialRadius = searchParams.get('radius');
-  const initialSort = searchParams.get('sort') as 'newest' | 'price-low' | 'price-high' | 'distance' || 'newest';
+  const initialSort = searchParams.get('sort') as 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance' || 'newest';
   
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [mode, setMode] = useState<ListingMode | 'all'>(initialMode);
@@ -94,7 +94,7 @@ const Search = () => {
   );
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance'>(initialSort);
+  const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
   
   // Quick booking modal state
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
@@ -251,12 +251,19 @@ const Search = () => {
 
   // Apply all filters
   const filteredListings = useMemo(() => {
-    let results = listings;
+    let results: ListingWithCoords[] = [];
+    let scoreMap: Record<string, number> = {};
 
     // Apply fuzzy search if query exists
     if (searchQuery.trim()) {
       const fuseResults = fuse.search(searchQuery);
       results = fuseResults.map(result => result.item);
+      // Store scores for relevance sorting (lower score = better match)
+      fuseResults.forEach(result => {
+        scoreMap[result.item.id] = result.score ?? 1;
+      });
+    } else {
+      results = [...listings];
     }
 
     // Filter by mode
@@ -298,7 +305,14 @@ const Search = () => {
     }
 
     // Apply sorting
-    if (sortBy === 'distance' && locationCoords) {
+    if (sortBy === 'relevance' && searchQuery.trim()) {
+      // Sort by Fuse.js score (lower = better match)
+      results = results.sort((a, b) => {
+        const scoreA = scoreMap[a.id] ?? 1;
+        const scoreB = scoreMap[b.id] ?? 1;
+        return scoreA - scoreB;
+      });
+    } else if (sortBy === 'distance' && locationCoords) {
       results = results.sort((a, b) => {
         const distA = getListingDistance(a);
         const distB = getListingDistance(b);
@@ -419,7 +433,7 @@ const Search = () => {
   };
 
   const handleSortChange = (value: string) => {
-    const newSort = value as 'newest' | 'price-low' | 'price-high' | 'distance';
+    const newSort = value as 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance';
     setSortBy(newSort);
     const params = new URLSearchParams(searchParams);
     if (newSort !== 'newest') {
@@ -661,6 +675,7 @@ const Search = () => {
                     className="text-sm border border-border rounded-lg px-3 py-2 bg-background"
                   >
                     <option value="newest">Newest</option>
+                    {searchQuery.trim() && <option value="relevance">Relevance</option>}
                     <option value="price-low">Price: Low to High</option>
                     <option value="price-high">Price: High to Low</option>
                     {locationCoords && <option value="distance">Distance</option>}
