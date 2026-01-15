@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, Phone, ShieldCheck, Clock, TrendingUp } from 'lucide-react';
+import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, Phone, ShieldCheck, Clock, TrendingUp, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -271,6 +271,13 @@ const Header = () => {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
           <Link 
+            to="/ai-tools" 
+            className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Sparkles className="h-4 w-4 text-primary" />
+            AI Tools
+          </Link>
+          <Link 
             to="/create-listing" 
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -377,6 +384,14 @@ const Header = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               Search
+            </Link>
+            <Link 
+              to="/ai-tools" 
+              className="flex items-center gap-2 text-sm font-medium py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Sparkles className="h-4 w-4 text-primary" />
+              AI Tools
             </Link>
             <Link 
               to="/create-listing" 
