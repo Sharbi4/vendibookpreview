@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Check, X, Calendar, User, MessageSquare, Loader2, MessageCircle, FileText } from 'lucide-react';
+import { Check, X, Calendar, User, MessageSquare, Loader2, MessageCircle, FileText, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +29,7 @@ interface BookingRequestCardProps {
     total_price: number;
     created_at: string;
     listing_id: string;
+    payment_status?: string | null;
     listing?: {
       id?: string;
       title: string;
@@ -40,6 +44,7 @@ interface BookingRequestCardProps {
   };
   onApprove: (id: string, response?: string) => void;
   onDecline: (id: string, response?: string) => void;
+  onCancel?: (id: string, reason?: string, refundAmount?: number) => Promise<unknown>;
 }
 
 const StatusPill = ({ status }: { status: string }) => {
@@ -66,12 +71,17 @@ const StatusPill = ({ status }: { status: string }) => {
   );
 };
 
-const BookingRequestCard = ({ booking, onApprove, onDecline }: BookingRequestCardProps) => {
+const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel }: BookingRequestCardProps) => {
   const [showResponseDialog, setShowResponseDialog] = useState(false);
   const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [responseAction, setResponseAction] = useState<'approve' | 'decline'>('approve');
   const [responseMessage, setResponseMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [usePartialRefund, setUsePartialRefund] = useState(false);
+  const [partialRefundAmount, setPartialRefundAmount] = useState('');
 
   // Get listing ID for document check
   const listingId = booking.listing_id || booking.listing?.id;
@@ -103,7 +113,36 @@ const BookingRequestCard = ({ booking, onApprove, onDecline }: BookingRequestCar
   };
 
   const isPending = booking.status === 'pending';
+  const isApproved = booking.status === 'approved';
+  const isPaid = booking.payment_status === 'paid';
+  const canCancel = isApproved && isPaid && onCancel;
   const canMessage = booking.status !== 'cancelled' && booking.status !== 'declined';
+
+  const handleCancelBooking = async () => {
+    if (!onCancel) return;
+    
+    setIsCancelling(true);
+    try {
+      const refundAmount = usePartialRefund && partialRefundAmount 
+        ? parseFloat(partialRefundAmount) 
+        : undefined;
+      
+      await onCancel(booking.id, cancelReason || 'Cancelled by host', refundAmount);
+      setShowCancelDialog(false);
+      setCancelReason('');
+      setUsePartialRefund(false);
+      setPartialRefundAmount('');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const openCancelDialog = () => {
+    setCancelReason('');
+    setUsePartialRefund(false);
+    setPartialRefundAmount('');
+    setShowCancelDialog(true);
+  };
 
   return (
     <>
@@ -199,12 +238,24 @@ const BookingRequestCard = ({ booking, onApprove, onDecline }: BookingRequestCar
                   </Button>
                 </>
               )}
+              {/* Cancel & Refund button for paid approved bookings */}
+              {canCancel && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                  onClick={openCancelDialog}
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Cancel & Refund
+                </Button>
+              )}
               {canMessage && (
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => setShowMessageDialog(true)}
-                  className={isPending ? '' : 'ml-0'}
+                  className={isPending || canCancel ? '' : 'ml-0'}
                 >
                   <MessageCircle className="h-4 w-4 mr-1" />
                   Message
@@ -252,6 +303,88 @@ const BookingRequestCard = ({ booking, onApprove, onDecline }: BookingRequestCar
             >
               {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {responseAction === 'approve' ? 'Approve' : 'Decline'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel & Refund Dialog */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel Booking & Process Refund</DialogTitle>
+            <DialogDescription>
+              This booking has been paid (${booking.total_price}). You can issue a full or partial refund.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="cancelReason">Reason for cancellation</Label>
+              <Textarea
+                id="cancelReason"
+                placeholder="Explain why you're cancelling this booking..."
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                rows={2}
+                className="mt-1.5"
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="space-y-0.5">
+                <Label htmlFor="partialRefund" className="text-sm font-medium">
+                  Partial Refund
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Issue a custom refund amount instead of full refund
+                </p>
+              </div>
+              <Switch
+                id="partialRefund"
+                checked={usePartialRefund}
+                onCheckedChange={setUsePartialRefund}
+              />
+            </div>
+
+            {usePartialRefund && (
+              <div>
+                <Label htmlFor="refundAmount">Refund Amount</Label>
+                <div className="relative mt-1.5">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="refundAmount"
+                    type="number"
+                    min="0.01"
+                    max={booking.total_price}
+                    step="0.01"
+                    placeholder={`Max: ${booking.total_price}`}
+                    value={partialRefundAmount}
+                    onChange={(e) => setPartialRefundAmount(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Full booking amount: ${booking.total_price}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
+              Keep Booking
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelBooking}
+              disabled={isCancelling || (usePartialRefund && (!partialRefundAmount || parseFloat(partialRefundAmount) <= 0 || parseFloat(partialRefundAmount) > booking.total_price))}
+            >
+              {isCancelling && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {usePartialRefund && partialRefundAmount 
+                ? `Refund $${parseFloat(partialRefundAmount).toFixed(2)}`
+                : `Full Refund $${booking.total_price}`
+              }
             </Button>
           </DialogFooter>
         </DialogContent>

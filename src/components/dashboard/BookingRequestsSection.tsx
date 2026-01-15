@@ -5,7 +5,7 @@ import StatCard from './StatCard';
 import { useHostBookings } from '@/hooks/useHostBookings';
 
 const BookingRequestsSection = () => {
-  const { bookings, isLoading, stats, approveBooking, declineBooking } = useHostBookings();
+  const { bookings, isLoading, stats, approveBooking, declineBooking, cancelBooking } = useHostBookings();
 
   const pendingBookings = bookings.filter(b => b.status === 'pending');
   const approvedBookings = bookings.filter(b => b.status === 'approved');
@@ -87,6 +87,7 @@ const BookingRequestsSection = () => {
                   booking={booking}
                   onApprove={approveBooking}
                   onDecline={declineBooking}
+                  onCancel={cancelBooking}
                 />
               ))}
             </div>
