@@ -102,6 +102,7 @@ const HowItWorks = () => {
                   'Get paid securely via Stripe',
                 ]}
                 accentColor="primary"
+                learnMoreLink="/host"
               />
               <AudienceCard
                 title="For Renters & Buyers"
@@ -518,9 +519,10 @@ interface AudienceCardProps {
   users: string[];
   benefits: string[];
   accentColor: 'primary' | 'emerald';
+  learnMoreLink?: string;
 }
 
-const AudienceCard = ({ title, icon, users, benefits, accentColor }: AudienceCardProps) => {
+const AudienceCard = ({ title, icon, users, benefits, accentColor, learnMoreLink }: AudienceCardProps) => {
   const colorClasses = {
     primary: 'bg-primary/10 text-primary border-primary/20',
     emerald: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
@@ -544,7 +546,7 @@ const AudienceCard = ({ title, icon, users, benefits, accentColor }: AudienceCar
         </div>
       </div>
 
-      <div>
+      <div className="mb-4">
         <p className="text-sm font-medium text-muted-foreground mb-2">Benefits:</p>
         <ul className="space-y-2">
           {benefits.map((benefit, i) => (
@@ -555,6 +557,16 @@ const AudienceCard = ({ title, icon, users, benefits, accentColor }: AudienceCar
           ))}
         </ul>
       </div>
+
+      {learnMoreLink && (
+        <Link 
+          to={learnMoreLink} 
+          className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+        >
+          Learn more
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      )}
     </div>
   );
 };

@@ -254,6 +254,26 @@ const HelpCenter = () => {
           </div>
         </section>
 
+        {/* Become a Host CTA */}
+        <section className="py-12 md:py-16 bg-gradient-to-br from-primary/10 via-background to-vendibook-cream">
+          <div className="container">
+            <div className="max-w-3xl mx-auto text-center">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+                Interested in becoming a host?
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Turn your food truck, trailer, kitchen, or lot into a revenue-generating asset with Vendibook.
+              </p>
+              <Button asChild size="lg">
+                <Link to="/host">
+                  Learn More About Hosting
+                  <ArrowRight className="h-5 w-5 ml-2" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
         {/* Community & Support */}
         <section className="py-12 md:py-16">
           <div className="container">
@@ -266,7 +286,7 @@ const HelpCenter = () => {
                   </div>
                   <CardTitle className="text-xl">Join the Community</CardTitle>
                   <CardDescription>
-                    Connect with fellow hosts, share tips, and learn from the community
+                    Connect with fellow <Link to="/host" className="text-primary hover:underline">hosts</Link>, share tips, and learn from the community
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
