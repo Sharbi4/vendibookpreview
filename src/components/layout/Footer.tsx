@@ -46,6 +46,7 @@ const Footer = () => {
             <h4 className="font-semibold mb-4 text-white">Support</h4>
             <ul className="space-y-2 text-sm text-white/80">
               <li><a href="tel:+18778836342" className="hover:text-white transition-colors">1 (877) 883-6342</a></li>
+              <li><Link to="/help" className="hover:text-white transition-colors">Help Center</Link></li>
               <li><Link to="/how-it-works" className="hover:text-white transition-colors">How Vendibook Works</Link></li>
               <li><Link to="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
               <li><Link to="/insurance" className="hover:text-white transition-colors">Insurance Information</Link></li>
