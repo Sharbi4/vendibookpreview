@@ -40,7 +40,7 @@ const Hero = () => {
       
       {/* Floating orbs with parallax effect */}
       <div 
-        className="absolute w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse transition-transform duration-100 ease-out"
+        className="absolute w-64 h-64 bg-primary/20 rounded-full blur-3xl animate-pulse transition-transform duration-100 ease-out"
         style={{ 
           top: 40,
           left: '10%',
@@ -49,7 +49,7 @@ const Hero = () => {
         }} 
       />
       <div 
-        className="absolute w-48 h-48 bg-vendibook-orange/10 rounded-full blur-3xl animate-pulse transition-transform duration-100 ease-out"
+        className="absolute w-48 h-48 bg-vendibook-orange/20 rounded-full blur-3xl animate-pulse transition-transform duration-100 ease-out"
         style={{ 
           bottom: 0,
           right: '15%',
@@ -59,7 +59,7 @@ const Hero = () => {
         }} 
       />
       <div 
-        className="absolute w-32 h-32 bg-vendibook-teal/10 rounded-full blur-2xl animate-pulse transition-transform duration-100 ease-out"
+        className="absolute w-32 h-32 bg-vendibook-teal/20 rounded-full blur-2xl animate-pulse transition-transform duration-100 ease-out"
         style={{ 
           top: '50%',
           left: '60%',
@@ -71,7 +71,7 @@ const Hero = () => {
       
       {/* Additional decorative orbs */}
       <div 
-        className="absolute w-24 h-24 bg-primary/5 rounded-full blur-2xl transition-transform duration-100 ease-out"
+        className="absolute w-24 h-24 bg-primary/15 rounded-full blur-2xl transition-transform duration-100 ease-out"
         style={{ 
           top: '20%',
           right: '5%',
@@ -79,7 +79,7 @@ const Hero = () => {
         }} 
       />
       <div 
-        className="absolute w-40 h-40 bg-vendibook-orange/5 rounded-full blur-3xl transition-transform duration-100 ease-out"
+        className="absolute w-40 h-40 bg-vendibook-orange/15 rounded-full blur-3xl transition-transform duration-100 ease-out"
         style={{ 
           bottom: '30%',
           left: '5%',
