@@ -92,3 +92,6 @@ verify_jwt = false
 
 [functions.estimate-freight]
 verify_jwt = false
+
+[functions.get-nearby-listings]
+verify_jwt = false
