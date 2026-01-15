@@ -458,39 +458,51 @@ const AITools = () => {
         <Header />
 
         <main className="flex-1">
-          {/* Hero Section */}
-          <section className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-16">
-            <div className="container">
+          {/* Hero Section - Extra Vibrant */}
+          <section className="relative py-16 md:py-20 overflow-hidden">
+            {/* Vibrant gradient background matching newsletter popup */}
+            <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/40 via-vendibook-orange/30 to-orange-500/35" />
+            
+            {/* Animated decorative orbs */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-10 right-10 w-[400px] h-[400px] bg-gradient-to-br from-yellow-300/50 to-amber-400/40 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute bottom-10 left-10 w-[350px] h-[350px] bg-gradient-to-tr from-orange-400/45 to-vendibook-orange/40 rounded-full blur-3xl" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-amber-300/30 via-yellow-400/25 to-orange-300/30 rounded-full blur-3xl" />
+              <div className="absolute top-20 left-1/4 w-64 h-64 bg-yellow-300/35 rounded-full blur-2xl animate-pulse" />
+              <div className="absolute bottom-20 right-1/4 w-72 h-72 bg-orange-300/40 rounded-full blur-2xl" />
+            </div>
+            
+            <div className="container relative z-10">
               <Link
                 to="/"
-                className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+                className="inline-flex items-center gap-2 text-foreground/70 hover:text-foreground mb-6 transition-colors"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back to Home
               </Link>
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-primary/10 rounded-xl">
-                  <Sparkles className="h-8 w-8 text-primary" />
+                <div className="p-3 bg-gradient-to-br from-yellow-400 via-vendibook-orange to-orange-500 rounded-xl shadow-lg shadow-orange-500/30">
+                  <Sparkles className="h-8 w-8 text-white" />
                 </div>
                 <h1 className="text-4xl md:text-5xl font-bold text-foreground">
                   AI Business Tools
                 </h1>
               </div>
-              <p className="text-xl text-muted-foreground max-w-3xl mb-6">
+              <p className="text-xl text-foreground/80 max-w-3xl mb-6">
                 Free AI-powered tools to help you price listings, find licenses & permits, 
                 maintain equipment, write descriptions, and research the mobile food industry.
               </p>
               <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary" className="text-sm">
+                <Badge className="text-sm bg-gradient-to-r from-yellow-400 to-amber-500 text-white border-0 shadow-md">
                   <DollarSign className="h-3 w-3 mr-1" /> Pricing Generator
                 </Badge>
-                <Badge variant="secondary" className="text-sm">
+                <Badge className="text-sm bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-md">
                   <FileCheck className="h-3 w-3 mr-1" /> License Finder
                 </Badge>
-                <Badge variant="secondary" className="text-sm">
+                <Badge className="text-sm bg-gradient-to-r from-orange-500 to-vendibook-orange text-white border-0 shadow-md">
                   <Wrench className="h-3 w-3 mr-1" /> Equipment Guides
                 </Badge>
-                <Badge variant="secondary" className="text-sm">
+                <Badge className="text-sm bg-gradient-to-r from-vendibook-orange to-yellow-500 text-white border-0 shadow-md">
                   <Search className="h-3 w-3 mr-1" /> AI Research
                 </Badge>
               </div>
