@@ -23,6 +23,7 @@ import HostCard from '@/components/listing-detail/HostCard';
 import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
 import DeliveryRadiusMap from '@/components/listing-detail/DeliveryRadiusMap';
 import ReviewsSection from '@/components/reviews/ReviewsSection';
+import BookingFAQ from '@/components/listing-detail/BookingFAQ';
 import { RequiredDocumentsSection } from '@/components/documents';
 import { useListing } from '@/hooks/useListing';
 import { useListingAverageRating } from '@/hooks/useReviews';
@@ -383,6 +384,9 @@ const ListingDetail = () => {
                   memberSince={host?.created_at}
                 />
               </div>
+
+              {/* FAQ Section */}
+              <BookingFAQ isRental={isRental} />
 
               {/* Reviews Section */}
               <div>
