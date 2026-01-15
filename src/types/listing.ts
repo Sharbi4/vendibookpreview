@@ -36,6 +36,11 @@ export interface Listing {
   created_at: string;
   updated_at: string;
   published_at: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  // Vendibook freight fields
+  vendibook_freight_enabled?: boolean;
+  freight_payer?: FreightPayer | string;
 }
 
 // Category-specific amenities

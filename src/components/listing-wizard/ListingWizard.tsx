@@ -161,6 +161,9 @@ export const ListingWizard: React.FC = () => {
         published_at: publish ? new Date().toISOString() : null,
         latitude,
         longitude,
+        // Vendibook freight fields (for sales)
+        vendibook_freight_enabled: formData.mode === 'sale' ? formData.vendibook_freight_enabled : false,
+        freight_payer: formData.mode === 'sale' && formData.vendibook_freight_enabled ? formData.freight_payer : 'buyer',
       };
 
       const { data: listing, error: insertError } = await supabase
