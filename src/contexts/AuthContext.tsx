@@ -164,6 +164,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           console.error('Error adding role:', roleError);
         }
 
+        // Send welcome email to the new user
+        try {
+          await supabase.functions.invoke('send-welcome-email', {
+            body: {
+              email,
+              fullName,
+              role,
+            },
+          });
+          console.log('Welcome email sent successfully');
+        } catch (welcomeError) {
+          console.error('Failed to send welcome email:', welcomeError);
+        }
+
         // Send admin notification for new user signup
         try {
           await supabase.functions.invoke('send-admin-notification', {
