@@ -1,21 +1,60 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { trustTiles, TrustTile } from './trustContent';
 import TrustCard from './TrustCard';
 import TrustModal from './TrustModal';
+import { trackTrustSectionImpression, trackTileClick, trackModalOpen, trackModalClose } from '@/lib/analytics';
 
 const TrustSafetySection = () => {
   const [selectedTile, setSelectedTile] = useState<TrustTile | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  const hasTrackedImpression = useRef(false);
+  
+  // Track section impression when it enters viewport
+  useEffect(() => {
+    if (!sectionRef.current || hasTrackedImpression.current) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !hasTrackedImpression.current) {
+            trackTrustSectionImpression();
+            hasTrackedImpression.current = true;
+            observer.disconnect();
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+    
+    observer.observe(sectionRef.current);
+    
+    return () => observer.disconnect();
+  }, []);
   
   const handleTileClick = (tile: TrustTile) => {
+    trackTileClick({ tileId: tile.id, tileTitle: tile.title });
     setSelectedTile(tile);
     setModalOpen(true);
   };
   
+  const handleModalOpenChange = (open: boolean) => {
+    if (open && selectedTile) {
+      trackModalOpen({ tileId: selectedTile.id, tileTitle: selectedTile.title });
+    } else if (!open && selectedTile) {
+      trackModalClose({ tileId: selectedTile.id, tileTitle: selectedTile.title });
+    }
+    setModalOpen(open);
+  };
+  
   return (
-    <section className="py-16 md:py-20 bg-background" aria-labelledby="trust-safety-heading">
+    <section 
+      ref={sectionRef}
+      className="py-16 md:py-20 bg-background" 
+      aria-labelledby="trust-safety-heading"
+    >
       <div className="container max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
@@ -71,7 +110,7 @@ const TrustSafetySection = () => {
       <TrustModal 
         tile={selectedTile} 
         open={modalOpen} 
-        onOpenChange={setModalOpen} 
+        onOpenChange={handleModalOpenChange} 
       />
     </section>
   );
