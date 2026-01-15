@@ -150,7 +150,7 @@ const Auth = () => {
           <img 
             src={vendibookLogo} 
             alt="Vendibook" 
-            className="h-20 w-auto mx-auto mb-4 rounded-xl"
+            className="h-60 w-auto mx-auto mb-4 rounded-xl"
           />
         </div>
 
