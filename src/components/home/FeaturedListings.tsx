@@ -53,7 +53,7 @@ const FeaturedListings = () => {
             });
             setIsRequestingLocation(false);
             setSortBy('nearest');
-            setViewMode('map'); // Switch to map view when location is available
+            setViewMode('split'); // Switch to split view when location is available
           },
           (error) => {
             console.log('Geolocation error:', error.message);
