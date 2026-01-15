@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, Phone, ShieldCheck, Clock, TrendingUp, Sparkles } from 'lucide-react';
+import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, Phone, ShieldCheck, Clock, TrendingUp, Sparkles, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -16,6 +16,35 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
+
+// Type declarations for Web Speech API
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+}
+
+interface SpeechRecognitionInstance extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognitionInstance;
+    webkitSpeechRecognition: new () => SpeechRecognitionInstance;
+  }
+}
 
 const POPULAR_SEARCHES = [
   'Food truck',
@@ -56,10 +85,92 @@ const Header = () => {
   const [mobileSearchQuery, setMobileSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [isListening, setIsListening] = useState(false);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const { user, profile, signOut, isVerified } = useAuth();
   const navigate = useNavigate();
+
+  // Check if speech recognition is supported
+  const isSpeechSupported = typeof window !== 'undefined' && 
+    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if (!isSpeechSupported) return;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map(result => result[0].transcript)
+        .join('');
+      setMobileSearchQuery(transcript);
+      
+      // If this is a final result, execute the search
+      if (event.results[0].isFinal) {
+        setIsListening(false);
+        if (transcript.trim()) {
+          executeSearch(transcript.trim());
+        }
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+      if (event.error === 'not-allowed') {
+        toast.error('Microphone access denied. Please enable it in your browser settings.');
+      } else if (event.error !== 'aborted') {
+        toast.error('Voice search error. Please try again.');
+      }
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      recognition.abort();
+    };
+  }, [isSpeechSupported]);
+
+  const startVoiceSearch = useCallback(() => {
+    if (!recognitionRef.current) {
+      toast.error('Voice search is not supported in your browser.');
+      return;
+    }
+
+    // Open search bar if not already open
+    if (!isMobileSearchOpen) {
+      setIsMobileSearchOpen(true);
+    }
+
+    setIsListening(true);
+    setShowSuggestions(false);
+    
+    try {
+      recognitionRef.current.start();
+      toast.info('Listening... Speak your search query.');
+    } catch (error) {
+      // Recognition might already be running
+      setIsListening(false);
+    }
+  }, [isMobileSearchOpen]);
+
+  const stopVoiceSearch = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    setIsListening(false);
+  }, []);
 
   // Load recent searches on mount
   useEffect(() => {
@@ -173,7 +284,7 @@ const Header = () => {
           }`}
         >
           {isMobileSearchOpen ? (
-            <div className="relative flex items-center gap-2 w-full">
+            <div className="relative flex items-center gap-1 w-full">
               <form onSubmit={handleMobileSearch} className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -185,11 +296,26 @@ const Header = () => {
                     setShowSuggestions(true);
                   }}
                   onFocus={() => setShowSuggestions(true)}
-                  placeholder="Search food trucks, trailers..."
-                  className="pl-9 pr-4 py-2 w-full rounded-full border-border bg-muted/50 focus-visible:ring-primary"
+                  placeholder={isListening ? "Listening..." : "Search food trucks, trailers..."}
+                  className={`pl-9 pr-4 py-2 w-full rounded-full border-border bg-muted/50 focus-visible:ring-primary ${isListening ? 'border-primary ring-2 ring-primary/20' : ''}`}
                   autoComplete="off"
                 />
               </form>
+              
+              {/* Voice Search Button */}
+              {isSpeechSupported && (
+                <Button
+                  type="button"
+                  variant={isListening ? "default" : "ghost"}
+                  size="icon"
+                  onClick={isListening ? stopVoiceSearch : startVoiceSearch}
+                  className={`shrink-0 ${isListening ? 'bg-primary text-primary-foreground animate-pulse' : ''}`}
+                  aria-label={isListening ? "Stop voice search" : "Start voice search"}
+                >
+                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
+              )}
+              
               <Button
                 type="button"
                 variant="ghost"
