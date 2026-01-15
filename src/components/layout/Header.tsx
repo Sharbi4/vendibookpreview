@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { Input } from '@/components/ui/input';
@@ -291,8 +292,13 @@ const Header = () => {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="rounded-full gap-2">
-                  <User className="h-4 w-4" />
+                <Button variant="outline" className="rounded-full gap-2 pl-1.5">
+                  <Avatar className="h-7 w-7">
+                    <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || 'User'} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                      {(profile?.full_name || user.email || 'U').charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
                   <span className="max-w-[100px] truncate">
                     {profile?.full_name || user.email?.split('@')[0]}
                   </span>
