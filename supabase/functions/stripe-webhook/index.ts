@@ -78,11 +78,18 @@ serve(async (req) => {
 
         // Handle rental bookings
         if (bookingId && session.payment_status === "paid") {
-          // Get booking details for admin notification
+          // Get booking details for admin notification and receipt
           const { data: bookingData } = await supabaseClient
             .from("booking_requests")
-            .select("*, listings(title)")
+            .select("*, listings(title, address)")
             .eq("id", bookingId)
+            .single();
+
+          // Get shopper profile for receipt email
+          const { data: shopperProfile } = await supabaseClient
+            .from("profiles")
+            .select("email, full_name")
+            .eq("id", bookingData?.shopper_id)
             .single();
 
           // Update booking with payment info
@@ -102,6 +109,47 @@ serve(async (req) => {
             logStep("ERROR: Failed to update booking", { error: updateError.message, bookingId });
           } else {
             logStep("Booking marked as paid", { bookingId });
+
+            // Send payment receipt email to shopper
+            if (shopperProfile?.email && bookingData) {
+              try {
+                const paymentIntentId = typeof session.payment_intent === 'string' 
+                  ? session.payment_intent 
+                  : session.payment_intent?.id;
+                
+                const receiptResponse = await fetch(
+                  `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-payment-receipt`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+                    },
+                    body: JSON.stringify({
+                      email: shopperProfile.email,
+                      fullName: shopperProfile.full_name || "Valued Customer",
+                      transactionId: paymentIntentId || bookingId,
+                      itemName: bookingData.listings?.title || "Booking",
+                      amount: bookingData.total_price,
+                      paymentMethod: "Card",
+                      transactionType: "rental",
+                      startDate: bookingData.start_date,
+                      endDate: bookingData.end_date,
+                      address: bookingData.listings?.address || bookingData.address_snapshot,
+                    }),
+                  }
+                );
+                
+                if (receiptResponse.ok) {
+                  logStep("Payment receipt email sent", { to: shopperProfile.email });
+                } else {
+                  const errorData = await receiptResponse.json();
+                  logStep("WARNING: Failed to send payment receipt", { error: errorData });
+                }
+              } catch (receiptError: any) {
+                logStep("WARNING: Error sending payment receipt", { error: receiptError.message });
+              }
+            }
 
             // Send payment confirmation notification to host
             try {
@@ -138,13 +186,77 @@ serve(async (req) => {
             }
           }
         } else if (isEscrow && listingId && session.payment_status === "paid") {
-          // Handle escrow sale payments - the sale_transaction is created on the success page
-          // Just log for now, the actual transaction creation happens client-side via create-sale-transaction
+          // Handle escrow sale payments
           logStep("Escrow sale payment completed", { 
             listingId, 
             sessionId: session.id,
             paymentIntent: session.payment_intent 
           });
+
+          // Get listing and buyer info for receipt email
+          const { data: listing } = await supabaseClient
+            .from("listings")
+            .select("title, address")
+            .eq("id", listingId)
+            .single();
+
+          const buyerId = session.metadata?.buyer_id;
+          const buyerEmail = session.customer_email || session.customer_details?.email;
+          
+          // Get buyer profile for name
+          let buyerName = "Valued Customer";
+          if (buyerId) {
+            const { data: buyerProfile } = await supabaseClient
+              .from("profiles")
+              .select("full_name")
+              .eq("id", buyerId)
+              .single();
+            if (buyerProfile?.full_name) {
+              buyerName = buyerProfile.full_name;
+            }
+          }
+
+          // Send payment receipt email for escrow sale
+          if (buyerEmail) {
+            try {
+              const paymentIntentId = typeof session.payment_intent === 'string' 
+                ? session.payment_intent 
+                : session.payment_intent?.id;
+              const amount = session.amount_total ? session.amount_total / 100 : 0;
+              
+              const receiptResponse = await fetch(
+                `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-payment-receipt`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+                  },
+                  body: JSON.stringify({
+                    email: buyerEmail,
+                    fullName: buyerName,
+                    transactionId: paymentIntentId || session.id,
+                    itemName: listing?.title || "Purchase",
+                    amount: amount,
+                    paymentMethod: "Card",
+                    transactionType: "purchase",
+                    address: listing?.address,
+                    fulfillmentType: session.metadata?.fulfillment_type || "pickup",
+                    isEscrow: true,
+                  }),
+                }
+              );
+              
+              if (receiptResponse.ok) {
+                logStep("Payment receipt email sent for escrow sale", { to: buyerEmail });
+              } else {
+                const errorData = await receiptResponse.json();
+                logStep("WARNING: Failed to send escrow payment receipt", { error: errorData });
+              }
+            } catch (receiptError: any) {
+              logStep("WARNING: Error sending escrow payment receipt", { error: receiptError.message });
+            }
+          }
 
           // Send admin notification for sale payment
           try {

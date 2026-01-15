@@ -10,16 +10,23 @@ const corsHeaders = {
 interface PaymentReceiptRequest {
   email: string;
   fullName: string;
-  listingTitle: string;
-  amount: number;
-  platformFee: number;
-  deliveryFee?: number;
-  paymentDate: string;
+  // New flexible interface
   transactionId: string;
+  itemName: string;
+  amount: number;
   paymentMethod?: string;
-  isRental: boolean;
+  transactionType?: 'rental' | 'purchase';
   startDate?: string;
   endDate?: string;
+  address?: string;
+  fulfillmentType?: string;
+  isEscrow?: boolean;
+  // Legacy interface (still supported)
+  listingTitle?: string;
+  platformFee?: number;
+  deliveryFee?: number;
+  paymentDate?: string;
+  isRental?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -31,22 +38,26 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { 
-      email, 
-      fullName, 
-      listingTitle,
-      amount,
-      platformFee,
-      deliveryFee,
-      paymentDate,
-      transactionId,
-      paymentMethod,
-      isRental,
-      startDate,
-      endDate
-    }: PaymentReceiptRequest = await req.json();
+    const data: PaymentReceiptRequest = await req.json();
+    
+    // Support both new and legacy interfaces
+    const email = data.email;
+    const fullName = data.fullName || 'Valued Customer';
+    const transactionId = data.transactionId;
+    const itemName = data.itemName || data.listingTitle || 'Item';
+    const amount = data.amount;
+    const paymentMethod = data.paymentMethod || 'Card';
+    const isRental = data.transactionType === 'rental' || data.isRental === true;
+    const startDate = data.startDate;
+    const endDate = data.endDate;
+    const address = data.address;
+    const fulfillmentType = data.fulfillmentType || 'pickup';
+    const isEscrow = data.isEscrow === true;
+    const deliveryFee = data.deliveryFee || 0;
+    const platformFee = data.platformFee || 0;
+    const paymentDate = data.paymentDate || new Date().toISOString();
 
-    console.log(`Sending payment receipt to: ${email}, transaction: ${transactionId}`);
+    console.log(`Sending payment receipt to: ${email}, transaction: ${transactionId}, type: ${isRental ? 'rental' : 'purchase'}, escrow: ${isEscrow}`);
 
     if (!email) {
       console.error("No email provided");
@@ -77,7 +88,6 @@ const handler = async (req: Request): Promise<Response> => {
       });
     };
 
-    const subtotal = amount - (platformFee || 0) - (deliveryFee || 0);
     const totalAmount = amount;
 
     const html = `
@@ -121,10 +131,25 @@ const handler = async (req: Request): Promise<Response> => {
                 </h3>
                 
                 <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;">
-                  <p style="color: #1f2937; font-size: 16px; margin: 0 0 4px 0; font-weight: 600;">${listingTitle}</p>
+                  <p style="color: #1f2937; font-size: 16px; margin: 0 0 4px 0; font-weight: 600;">${itemName}</p>
                   ${isRental && startDate && endDate ? `
                     <p style="color: #6b7280; font-size: 14px; margin: 0;">
                       ${formatDate(startDate)} — ${formatDate(endDate)}
+                    </p>
+                  ` : ''}
+                  ${address ? `
+                    <p style="color: #6b7280; font-size: 14px; margin: 4px 0 0 0;">
+                      📍 ${address}
+                    </p>
+                  ` : ''}
+                  ${!isRental && fulfillmentType ? `
+                    <p style="color: #6b7280; font-size: 14px; margin: 4px 0 0 0;">
+                      ${fulfillmentType === 'delivery' ? '🚚 Delivery' : '📦 Pickup'}
+                    </p>
+                  ` : ''}
+                  ${isEscrow ? `
+                    <p style="color: #FF9800; font-size: 12px; margin: 8px 0 0 0; font-weight: 500;">
+                      🔒 Escrow Protected - Funds released after confirmation
                     </p>
                   ` : ''}
                 </div>
@@ -133,7 +158,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <table style="width: 100%; border-collapse: collapse;">
                   <tr>
                     <td style="color: #4b5563; font-size: 14px; padding: 8px 0;">${isRental ? 'Rental Fee' : 'Item Price'}</td>
-                    <td style="color: #1f2937; font-size: 14px; padding: 8px 0; text-align: right;">$${subtotal.toFixed(2)}</td>
+                    <td style="color: #1f2937; font-size: 14px; padding: 8px 0; text-align: right;">$${(amount - platformFee - deliveryFee).toFixed(2)}</td>
                   </tr>
                   ${deliveryFee && deliveryFee > 0 ? `
                   <tr>
@@ -141,10 +166,12 @@ const handler = async (req: Request): Promise<Response> => {
                     <td style="color: #1f2937; font-size: 14px; padding: 8px 0; text-align: right;">$${deliveryFee.toFixed(2)}</td>
                   </tr>
                   ` : ''}
+                  ${platformFee > 0 ? `
                   <tr>
                     <td style="color: #4b5563; font-size: 14px; padding: 8px 0;">Service Fee</td>
                     <td style="color: #1f2937; font-size: 14px; padding: 8px 0; text-align: right;">$${platformFee.toFixed(2)}</td>
                   </tr>
+                  ` : ''}
                   <tr style="border-top: 2px solid #e5e7eb;">
                     <td style="color: #1f2937; font-size: 18px; padding: 16px 0 0 0; font-weight: 700;">Total Paid</td>
                     <td style="color: #FF5124; font-size: 24px; padding: 16px 0 0 0; text-align: right; font-weight: 700;">$${totalAmount.toFixed(2)}</td>
@@ -204,7 +231,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "VendiBook <noreply@updates.vendibook.com>",
         to: [email],
-        subject: `Payment Receipt: $${totalAmount.toFixed(2)} - ${listingTitle}`,
+        subject: `Payment Receipt: $${totalAmount.toFixed(2)} - ${itemName}`,
         html,
       }),
     });
