@@ -52,10 +52,15 @@ const TrustSafetySection = () => {
   return (
     <section 
       ref={sectionRef}
-      className="py-16 md:py-20 bg-gradient-to-br from-primary/5 via-background to-accent/5" 
+      className="py-16 md:py-20 relative overflow-hidden bg-gradient-to-br from-emerald-500/5 via-background to-blue-500/5" 
       aria-labelledby="trust-safety-heading"
     >
-      <div className="container max-w-7xl mx-auto px-4">
+      {/* Vibrant decorative elements */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 right-20 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 left-10 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
+      </div>
+      <div className="container max-w-7xl mx-auto px-4 relative z-10">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
           <div>

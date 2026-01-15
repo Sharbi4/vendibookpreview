@@ -119,11 +119,12 @@ const NewsletterSection = ({ variant = 'default', source = 'section' }: Newslett
   }
 
   return (
-    <section className="py-16 md:py-20 bg-gradient-to-r from-primary via-primary to-primary/90 text-primary-foreground relative overflow-hidden">
-      {/* Decorative background pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-white rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
+    <section className="py-16 md:py-20 relative overflow-hidden bg-gradient-to-r from-primary via-orange-500 to-amber-500 text-primary-foreground">
+      {/* Vibrant decorative glow effects */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-white/15 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-400/20 rounded-full blur-3xl animate-pulse" />
       </div>
       <div className="container relative z-10">
         <div className="max-w-2xl mx-auto text-center">
