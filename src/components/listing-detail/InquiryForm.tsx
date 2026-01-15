@@ -73,6 +73,8 @@ const InquiryForm = ({
   });
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
+  const [isAddressComplete, setIsAddressComplete] = useState(false);
+  const [addressValidationMessage, setAddressValidationMessage] = useState<string | null>(null);
   
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -83,7 +85,7 @@ const InquiryForm = ({
   
   // Get freight cost - use estimate if available, otherwise fallback
   const freightCost = estimate?.total_cost ?? 0;
-  const hasValidEstimate = estimate !== null && !estimateError;
+  const hasValidEstimate = estimate !== null && !estimateError && isAddressComplete;
 
   // Determine available fulfillment options
   const getAvailableFulfillmentOptions = (): FulfillmentSelection[] => {
@@ -171,6 +173,9 @@ const InquiryForm = ({
     if (!email.trim()) return 'Please enter your email';
     if ((fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight') && !deliveryAddress.trim()) {
       return 'Please enter a delivery address';
+    }
+    if (fulfillmentSelected === 'vendibook_freight' && !isAddressComplete) {
+      return 'Please select a complete address with street, city, state, and ZIP code';
     }
     if (!agreedToTerms) return 'Please agree to the Terms of Service';
     return null;
@@ -321,15 +326,34 @@ const InquiryForm = ({
             <AddressAutocomplete
               id="freightDeliveryAddress"
               value={deliveryAddress}
-              onChange={setDeliveryAddress}
+              onChange={(value) => {
+                setDeliveryAddress(value);
+                // Reset validation when user types manually
+                setIsAddressComplete(false);
+                clearEstimate();
+              }}
               onAddressSelect={(address) => {
                 setDeliveryAddress(address.fullAddress);
+                setIsAddressComplete(address.validation.isComplete);
+                if (address.validation.isComplete) {
+                  setAddressValidationMessage(null);
+                  // Trigger freight estimate for complete addresses
+                  fetchFreightEstimate(address.fullAddress);
+                } else {
+                  setAddressValidationMessage(`Missing: ${address.validation.missingFields.join(', ')}`);
+                  clearEstimate();
+                }
+              }}
+              onValidationChange={(validation) => {
+                if (validation) {
+                  setIsAddressComplete(validation.isComplete);
+                } else {
+                  setIsAddressComplete(false);
+                }
               }}
               placeholder="Enter your full delivery address"
+              requireComplete={true}
             />
-            <p className="text-xs text-muted-foreground mt-1">
-              Start typing and select your address to get a freight quote ($4.50/mile)
-            </p>
           </div>
           
           {/* Freight Estimate Display */}
