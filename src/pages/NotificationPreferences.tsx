@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
@@ -9,7 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Bell, Mail, Loader2, Smartphone } from 'lucide-react';
+import { ArrowLeft, Bell, Mail, Loader2, Smartphone, Send } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface PreferenceRowProps {
   label: string;
@@ -57,6 +59,55 @@ const PreferenceRow = ({
     </div>
   </div>
 );
+
+const TestPushButton = ({ userId }: { userId: string }) => {
+  const [isSending, setIsSending] = useState(false);
+
+  const sendTestNotification = async () => {
+    setIsSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-push-notification', {
+        body: {
+          user_id: userId,
+          title: 'Test Notification 🎉',
+          body: 'Push notifications are working! You\'ll receive alerts even when the browser is minimized.',
+          url: '/notification-preferences',
+          tag: 'test-notification',
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.sent > 0) {
+        toast.success('Test notification sent!');
+      } else {
+        toast.info('No push subscriptions found for this device');
+      }
+    } catch (error: any) {
+      console.error('Error sending test notification:', error);
+      toast.error('Failed to send test notification');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={sendTestNotification}
+      disabled={isSending}
+      className="w-full sm:w-auto"
+    >
+      {isSending ? (
+        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+      ) : (
+        <Send className="h-4 w-4 mr-2" />
+      )}
+      Send Test Notification
+    </Button>
+  );
+};
 
 const NotificationPreferences = () => {
   const navigate = useNavigate();
@@ -138,7 +189,7 @@ const NotificationPreferences = () => {
                   Receive notifications even when your browser is minimized or closed
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-foreground">
@@ -160,6 +211,7 @@ const NotificationPreferences = () => {
                     aria-label="Push notifications"
                   />
                 </div>
+                {isPushSubscribed && <TestPushButton userId={user.id} />}
               </CardContent>
             </Card>
           )}
