@@ -119,3 +119,12 @@ verify_jwt = false
 
 [functions.send-availability-alerts]
 verify_jwt = false
+
+[functions.ai-equipment-guide]
+verify_jwt = false
+
+[functions.ai-license-finder]
+verify_jwt = false
+
+[functions.ai-web-research]
+verify_jwt = false
