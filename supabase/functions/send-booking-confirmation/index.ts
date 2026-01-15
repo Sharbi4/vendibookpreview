@@ -172,7 +172,7 @@ const handler = async (req: Request): Promise<Response> => {
             <!-- Footer -->
             <div style="text-align: center; margin-top: 40px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
               <p style="color: #9ca3af; font-size: 12px; margin: 0 0 8px 0;">
-                Need help? Call us at <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1 (877) 883-6342</a> or email <a href="mailto:support@vendibook.com" style="color: #FF5124; text-decoration: none;">support@vendibook.com</a>
+                Need help? Call us at <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1877-8VENDI2</a> or email <a href="mailto:support@vendibook.com" style="color: #FF5124; text-decoration: none;">support@vendibook.com</a>
               </p>
               <p style="color: #9ca3af; font-size: 12px; margin: 0;">
                 © ${new Date().getFullYear()} VendiBook. All rights reserved.

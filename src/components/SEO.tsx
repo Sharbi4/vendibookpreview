@@ -129,7 +129,7 @@ export const generateOrganizationSchema = () => ({
   description: 'Rent or buy food trucks, food trailers, ghost kitchens, and vendor lots.',
   contactPoint: {
     '@type': 'ContactPoint',
-    telephone: '+1-800-VENDIBOOK',
+    telephone: '+1-877-8VENDI2',
     contactType: 'customer service',
     availableLanguage: 'English',
   },
