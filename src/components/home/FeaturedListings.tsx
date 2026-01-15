@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import ListingCard from '@/components/listing/ListingCard';
+import ListingPreviewDrawer from '@/components/listing/ListingPreviewDrawer';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MapPin, Navigation, Map, List, Columns } from 'lucide-react';
@@ -17,6 +18,7 @@ import {
 } from '@/components/ui/pagination';
 import SearchResultsMap from '@/components/search/SearchResultsMap';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { Listing } from '@/types/listing';
 
 const ITEMS_PER_PAGE = 8;
 
@@ -32,6 +34,8 @@ const FeaturedListings = () => {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'map' | 'split'>('list');
+  const [selectedListing, setSelectedListing] = useState<(Listing & { distance_miles?: number }) | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   
   const navigate = useNavigate();
   const { token: mapToken, isLoading: isMapLoading, error: mapError } = useMapboxToken();
@@ -204,7 +208,13 @@ const FeaturedListings = () => {
   };
 
   const handleListingClick = (listing: typeof sortedListings[0]) => {
-    navigate(`/listing/${listing.id}`);
+    // Open drawer for map/split view, navigate directly for list view
+    if (viewMode === 'map' || viewMode === 'split') {
+      setSelectedListing(listing);
+      setDrawerOpen(true);
+    } else {
+      navigate(`/listing/${listing.id}`);
+    }
   };
 
   // Generate page numbers to display
@@ -509,6 +519,14 @@ const FeaturedListings = () => {
           )
         )}
       </div>
+
+      {/* Listing Preview Drawer */}
+      <ListingPreviewDrawer
+        listing={selectedListing}
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        hostVerified={selectedListing ? hostVerificationMap[selectedListing.host_id] ?? false : false}
+      />
     </section>
   );
 };
