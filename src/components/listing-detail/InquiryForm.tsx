@@ -141,16 +141,17 @@ const InquiryForm = ({
           listing_id: listingId,
           mode: 'sale',
           amount: priceSale,
-          delivery_fee: currentDeliveryFee,
+          delivery_fee: fulfillmentSelected === 'delivery' ? (deliveryFee || 0) : 0,
           fulfillment_type: isVendibookFreight ? 'vendibook_freight' : fulfillmentSelected,
           delivery_address: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryAddress.trim() : null,
           delivery_instructions: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryInstructions.trim() : null,
           buyer_name: name.trim(),
           buyer_email: email.trim(),
           buyer_phone: phone.trim() || null,
-          vendibook_freight: isVendibookFreight,
-          freight_payer: isVendibookFreight ? freightPayer : null,
-          freight_cost: isVendibookFreight ? estimatedFreightCost : null,
+          // Vendibook freight fields (matching edge function interface)
+          vendibook_freight_enabled: isVendibookFreight,
+          freight_payer: isVendibookFreight ? freightPayer : 'buyer',
+          freight_cost: isVendibookFreight ? estimatedFreightCost : 0,
         },
       });
 
