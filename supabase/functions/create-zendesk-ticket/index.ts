@@ -51,7 +51,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const ZENDESK_API_KEY = Deno.env.get("ZENDESK_API_KEY");
     const ZENDESK_SUBDOMAIN = Deno.env.get("ZENDESK_SUBDOMAIN") || "vendibook";
-    const ZENDESK_EMAIL = Deno.env.get("ZENDESK_EMAIL") || "support@vendibook.com";
+    const ZENDESK_EMAIL = Deno.env.get("ZENDESK_EMAIL") || "support@vendibook1.zendesk.com";
 
     if (!ZENDESK_API_KEY) {
       throw new Error("ZENDESK_API_KEY is not configured");
