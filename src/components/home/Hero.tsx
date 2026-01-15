@@ -27,7 +27,7 @@ const Hero = ({ onSearch }: HeroProps) => {
             <img 
               src={vendibookLogo} 
               alt="Vendibook" 
-              className="h-32 md:h-40 w-auto mix-blend-multiply mb-4 transition-transform duration-300 hover:scale-105"
+              className="h-64 md:h-80 w-auto mix-blend-multiply mb-4 transition-transform duration-300 hover:scale-105"
             />
           </div>
           
