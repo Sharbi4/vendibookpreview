@@ -16,8 +16,11 @@ import {
   MessageCircle,
   HelpCircle,
   ArrowRight,
-  Star
+  Star,
+  Sparkles
 } from 'lucide-react';
+import HelpCenterSearch from '@/components/support/HelpCenterSearch';
+import FAQChatbot from '@/components/support/FAQChatbot';
 
 // Featured articles data
 const featuredArticles = [
@@ -158,7 +161,7 @@ const HelpCenter = () => {
       <Header />
 
       <main className="flex-1">
-        {/* Hero Section */}
+        {/* Hero Section with Search */}
         <section className="bg-gradient-to-br from-primary/10 via-background to-secondary/20 py-16 md:py-24">
           <div className="container text-center">
             <Badge variant="secondary" className="mb-4">
@@ -166,12 +169,68 @@ const HelpCenter = () => {
               Help Center
             </Badge>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Vendibook Help Center
+              How can we help?
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-              Practical, operator-grade guidance for renting, buying, and maintaining mobile kitchens, 
-              trailers, and commercial kitchen equipment—plus step-by-step resources for launching a ghost kitchen.
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+              Search our guides or get instant answers from VendiBot
             </p>
+            
+            {/* Search Bar */}
+            <HelpCenterSearch />
+          </div>
+        </section>
+
+        {/* AI Assistant Section */}
+        <section className="py-12 md:py-16 bg-muted/30">
+          <div className="container">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-center gap-2 mb-6">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-bold text-foreground">Ask VendiBot</h2>
+                <Badge variant="secondary" className="text-xs">AI-Powered</Badge>
+              </div>
+              <div className="grid md:grid-cols-2 gap-6">
+                <FAQChatbot />
+                <div className="space-y-4">
+                  <Card className="bg-card">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base">Popular Topics</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {[
+                        'How do rentals work?',
+                        'What documents do I need?',
+                        'How is payment handled?',
+                        'What\'s the cancellation policy?',
+                        'How do I become a host?',
+                      ].map((topic) => (
+                        <Link
+                          key={topic}
+                          to="/contact"
+                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          <ArrowRight className="h-3 w-3" />
+                          {topic}
+                        </Link>
+                      ))}
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-primary/5 border-primary/20">
+                    <CardContent className="pt-6">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Can't find what you're looking for?
+                      </p>
+                      <Button asChild variant="outline" size="sm">
+                        <Link to="/contact">
+                          Contact Support
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
