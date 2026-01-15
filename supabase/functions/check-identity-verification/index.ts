@@ -30,20 +30,42 @@ serve(async (req) => {
     );
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ 
+        verified: false, 
+        status: "not_authenticated",
+        error: "No authorization header provided" 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
+    }
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
-    if (!user) throw new Error("User not authenticated");
-    logStep("User authenticated", { userId: user.id });
+    
+    // Use getClaims to verify the token properly
+    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+    
+    if (claimsError || !claimsData?.claims?.sub) {
+      logStep("Token validation failed - user not authenticated");
+      return new Response(JSON.stringify({ 
+        verified: false, 
+        status: "not_authenticated",
+        error: "Please log in to check verification status" 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
+    }
+    
+    const userId = claimsData.claims.sub;
+    logStep("User authenticated", { userId });
 
     // Get user's profile to check verification status
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
       .select("identity_verified, stripe_identity_session_id, identity_verified_at")
-      .eq("id", user.id)
+      .eq("id", userId)
       .single();
 
     if (profileError) {
@@ -99,7 +121,7 @@ serve(async (req) => {
           identity_verified: true,
           identity_verified_at: new Date().toISOString()
         })
-        .eq("id", user.id);
+        .eq("id", userId);
 
       if (updateError) {
         logStep("Error updating profile", { error: updateError.message });
