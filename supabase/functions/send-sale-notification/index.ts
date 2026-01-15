@@ -14,7 +14,7 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[SALE-NOTIFICATION] ${step}${detailsStr}`);
 };
 
-type NotificationType = 'payment_received' | 'buyer_confirmed' | 'seller_confirmed' | 'completed' | 'payout_failed';
+type NotificationType = 'payment_received' | 'buyer_confirmed' | 'seller_confirmed' | 'completed' | 'payout_failed' | 'payout_completed';
 
 interface NotificationRequest {
   transaction_id: string;
@@ -243,6 +243,56 @@ const getEmailContent = (
             <div style="background: #fef2f2; border-radius: 12px; padding: 20px; margin: 24px 0;">
               <p style="color: #991b1b; margin: 0;">
                 Please ensure your Stripe account is properly set up. Our team will retry the transfer and contact you if needed.
+              </p>
+            </div>
+            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong><br><a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1877-8VENDI2</a></p>
+          </div>
+        `,
+      },
+    },
+    payout_completed: {
+      buyer: {
+        subject: `Sale Complete - ${listingTitle}`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Transaction Complete! 🎉</h1>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+              Your purchase of <strong>${listingTitle}</strong> is now fully complete. The seller has been paid.
+            </p>
+            <div style="background: #dcfce7; border-radius: 12px; padding: 20px; margin: 24px 0; text-align: center;">
+              <p style="color: #166534; margin: 0; font-size: 18px; font-weight: 600;">
+                ✓ Transaction Finalized
+              </p>
+            </div>
+            <p style="color: #4a4a4a; font-size: 16px;">
+              Thank you for using Vendibook! We hope you enjoy your purchase.
+            </p>
+            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong><br><a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1877-8VENDI2</a></p>
+          </div>
+        `,
+      },
+      seller: {
+        subject: `💰 Payout Sent - $${sellerPayout.toLocaleString()} on the way!`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h1 style="color: #16a34a; font-size: 24px; margin-bottom: 24px;">Your Payout is On Its Way! 💰</h1>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+              Great news! Your payment for <strong>${listingTitle}</strong> has been successfully transferred to your bank account.
+            </p>
+            <div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-radius: 16px; padding: 24px; margin: 24px 0; text-align: center; border: 1px solid #86efac;">
+              <p style="color: #166534; margin: 0 0 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Payout Amount</p>
+              <p style="color: #15803d; margin: 0; font-size: 40px; font-weight: 700;">$${sellerPayout.toLocaleString()}</p>
+              <p style="color: #166534; margin: 8px 0 0; font-size: 14px;">✓ Transfer initiated</p>
+            </div>
+            <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin: 24px 0;">
+              <h3 style="color: #1a1a1a; margin: 0 0 12px; font-size: 16px;">📅 When will I receive my funds?</h3>
+              <p style="color: #4a4a4a; margin: 0; font-size: 14px; line-height: 1.6;">
+                Funds typically arrive in your bank account within <strong>2-3 business days</strong>, depending on your bank's processing times.
+              </p>
+            </div>
+            <div style="background: #fef3c7; border-radius: 12px; padding: 16px; margin: 24px 0;">
+              <p style="color: #92400e; margin: 0; font-size: 14px;">
+                💡 <strong>Tip:</strong> You can view all your payouts and account activity in your Stripe dashboard.
               </p>
             </div>
             <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong><br><a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1877-8VENDI2</a></p>
