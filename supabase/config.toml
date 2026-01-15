@@ -74,3 +74,12 @@ verify_jwt = false
 
 [functions.send-password-reset-email]
 verify_jwt = false
+
+[functions.send-booking-confirmation]
+verify_jwt = false
+
+[functions.send-payment-receipt]
+verify_jwt = false
+
+[functions.get-mapbox-token]
+verify_jwt = false
