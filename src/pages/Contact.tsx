@@ -14,6 +14,7 @@ import ZendeskTicketForm from '@/components/support/ZendeskTicketForm';
 import CallbackScheduler from '@/components/support/CallbackScheduler';
 import TicketStatusTracker from '@/components/support/TicketStatusTracker';
 import SocialContactOptions from '@/components/support/SocialContactOptions';
+import FeaturedArticles from '@/components/support/FeaturedArticles';
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
@@ -95,17 +96,24 @@ const Contact = () => {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="py-12 md:py-16 bg-gradient-to-b from-vendibook-cream to-background">
-          <div className="container text-center">
-            <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
-              Contact Us
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-              Have questions? We would love to hear from you. Choose your preferred way to reach us.
-            </p>
-            
-            {/* Quick Contact Options */}
-            <div className="max-w-2xl mx-auto">
-              <SocialContactOptions />
+          <div className="container">
+            <div className="text-center mb-10">
+              <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
+                Contact Us
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+                Have questions? We would love to hear from you. Choose your preferred way to reach us.
+              </p>
+              
+              {/* Quick Contact Options */}
+              <div className="max-w-2xl mx-auto">
+                <SocialContactOptions />
+              </div>
+            </div>
+
+            {/* Featured Articles */}
+            <div className="max-w-3xl mx-auto mt-10 pt-8 border-t border-border/50">
+              <FeaturedArticles />
             </div>
           </div>
         </section>
