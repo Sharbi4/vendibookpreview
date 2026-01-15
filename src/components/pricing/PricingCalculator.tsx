@@ -16,11 +16,10 @@ import {
 
 // Competitor data for comparison
 const competitors = [
-  { name: 'Vendibook', sellerFee: 12.9, buyerFee: 0, color: 'bg-vendibook-orange' },
-  { name: 'eBay', sellerFee: 13.25, buyerFee: 0, color: 'bg-blue-500' },
-  { name: 'Facebook Marketplace', sellerFee: 5, buyerFee: 0, color: 'bg-indigo-500', note: 'Limited buyer protection' },
-  { name: 'Craigslist', sellerFee: 0, buyerFee: 0, color: 'bg-purple-500', note: 'No protection, high risk' },
-  { name: 'Traditional Broker', sellerFee: 20, buyerFee: 0, color: 'bg-gray-500' },
+  { name: 'Vendibook', sellerFee: 12.9, note: 'Full buyer & seller protection' },
+  { name: 'eBay', sellerFee: 13.25, note: 'Additional payment fees apply' },
+  { name: 'Facebook Marketplace', sellerFee: 5, note: 'Limited buyer protection' },
+  { name: 'Traditional Broker', sellerFee: 20, note: 'Slow process, high overhead' },
 ];
 
 const PricingCalculator = () => {
@@ -227,61 +226,63 @@ const PricingCalculator = () => {
             </div>
           </div>
 
-          {/* Comparison Bars */}
-          <div className="space-y-3">
-            {competitors.map((competitor, index) => {
-              const fee = compareAmount * (competitor.sellerFee / 100);
-              const payout = compareAmount - fee;
-              const savingsVsThis = payout - vendibookPayout;
-              const isVendibook = competitor.name === 'Vendibook';
-              const payoutPercent = (payout / compareAmount) * 100;
+          {/* Price Comparison Table */}
+          <div className="rounded-xl border border-border overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-muted/50">
+                  <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-4 py-3">Platform</th>
+                  <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-4 py-3">Fee</th>
+                  <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide px-4 py-3">You Keep</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {competitors.map((competitor) => {
+                  const fee = compareAmount * (competitor.sellerFee / 100);
+                  const payout = compareAmount - fee;
+                  const savingsVsThis = payout - vendibookPayout;
+                  const isVendibook = competitor.name === 'Vendibook';
 
-              return (
-                <div key={competitor.name} className="space-y-1.5">
-                  <div className="flex justify-between items-center text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className={`font-medium ${isVendibook ? 'text-vendibook-orange' : 'text-foreground'}`}>
-                        {competitor.name}
-                      </span>
-                      {isVendibook && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-vendibook-orange/20 text-vendibook-orange rounded">
-                          YOU'RE HERE
+                  return (
+                    <tr 
+                      key={competitor.name} 
+                      className={`${isVendibook ? 'bg-vendibook-orange/5' : 'bg-background'} transition-colors`}
+                    >
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className={`font-medium ${isVendibook ? 'text-vendibook-orange' : 'text-foreground'}`}>
+                            {competitor.name}
+                          </span>
+                          {isVendibook && (
+                            <span className="px-2 py-0.5 text-[10px] font-bold bg-vendibook-orange text-white rounded-full">
+                              BEST
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">{competitor.note}</p>
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <span className={`text-sm font-semibold ${isVendibook ? 'text-vendibook-orange' : 'text-foreground'}`}>
+                          {competitor.sellerFee}%
                         </span>
-                      )}
-                      {competitor.note && (
-                        <span className="text-[10px] text-muted-foreground italic">
-                          ({competitor.note})
+                        <p className="text-xs text-muted-foreground">{formatCurrency(fee)}</p>
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <span className={`text-lg font-bold ${isVendibook ? 'text-vendibook-orange' : 'text-foreground'}`}>
+                          {formatCurrency(payout)}
                         </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        {competitor.sellerFee}% fee
-                      </span>
-                      <span className={`font-semibold ${isVendibook ? 'text-vendibook-orange' : 'text-foreground'}`}>
-                        {formatCurrency(payout)}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="relative h-3 bg-muted rounded-full overflow-hidden">
-                    <div 
-                      className={`absolute left-0 top-0 h-full rounded-full transition-all duration-500 ${
-                        isVendibook ? 'bg-gradient-to-r from-vendibook-orange to-amber-400' : competitor.color
-                      }`}
-                      style={{ width: `${payoutPercent}%` }}
-                    />
-                  </div>
-
-                  {!isVendibook && savingsVsThis < 0 && (
-                    <div className="flex items-center gap-1 text-xs text-green-600">
-                      <Check className="h-3 w-3" />
-                      <span>Save {formatCurrency(Math.abs(savingsVsThis))} with Vendibook</span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                        {!isVendibook && savingsVsThis < 0 && (
+                          <p className="text-xs text-green-600 flex items-center justify-end gap-1 mt-0.5">
+                            <Check className="h-3 w-3" />
+                            Save {formatCurrency(Math.abs(savingsVsThis))}
+                          </p>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
 
           {/* Summary Card */}
