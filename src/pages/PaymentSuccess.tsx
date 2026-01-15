@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { CheckCircle2, Calendar, ArrowRight, Loader2, Home, ShieldCheck, Clock, Sparkles, PartyPopper, Mail, ChevronDown, ChevronUp, Receipt } from 'lucide-react';
+import { CheckCircle2, Calendar, ArrowRight, Loader2, Home, ShieldCheck, Clock, Sparkles, PartyPopper, Mail, ChevronDown, ChevronUp, Receipt, Download, FileText, Printer } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { useCreateSaleTransaction } from '@/hooks/useSaleTransactions';
 import { EmailReceiptPreview } from '@/components/checkout';
 import { useAuth } from '@/contexts/AuthContext';
 import { calculateRentalFees } from '@/lib/commissions';
+import { generateReceiptPdf } from '@/lib/generateReceiptPdf';
 
 interface BookingDetails {
   id: string;
@@ -364,6 +365,44 @@ const PaymentSuccess = () => {
                     </div>
                   </div>
 
+                  {/* Quick Actions */}
+                  <div className="flex items-center justify-center gap-3 mb-6">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => {
+                        if (saleTransaction) {
+                          generateReceiptPdf({
+                            transactionId: saleTransaction.id,
+                            itemName: saleTransaction.listing?.title || 'Your Purchase',
+                            amount: saleTransaction.amount,
+                            platformFee: saleTransaction.platform_fee,
+                            deliveryFee: saleTransaction.delivery_fee,
+                            isRental: false,
+                            isEscrow: true,
+                            fulfillmentType: saleTransaction.fulfillment_type,
+                            address: saleTransaction.delivery_address,
+                            paymentDate: new Date().toISOString(),
+                            recipientName: userProfile?.full_name || 'Valued Customer',
+                          });
+                        }
+                      }}
+                    >
+                      <Download className="h-4 w-4" />
+                      Download Receipt
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => window.print()}
+                    >
+                      <Printer className="h-4 w-4" />
+                      Print
+                    </Button>
+                  </div>
+
                   <div className="space-y-3">
                     <Button asChild className="w-full bg-primary hover:bg-primary/90" size="lg">
                       <Link to="/dashboard">
@@ -520,6 +559,49 @@ const PaymentSuccess = () => {
                       </div>
                     </Collapsible>
                   )}
+
+                  {/* Quick Actions for Rentals */}
+                  <div className="flex items-center justify-center gap-3 mb-6">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => {
+                        if (booking) {
+                          const fees = calculateRentalFees(
+                            booking.total_price - (booking.delivery_fee_snapshot || 0),
+                            booking.delivery_fee_snapshot || 0
+                          );
+                          generateReceiptPdf({
+                            transactionId: booking.id,
+                            itemName: booking.listing?.title || 'Your Booking',
+                            amount: booking.total_price,
+                            platformFee: fees.renterFee,
+                            deliveryFee: booking.delivery_fee_snapshot,
+                            isRental: true,
+                            startDate: booking.start_date,
+                            endDate: booking.end_date,
+                            address: booking.address_snapshot,
+                            fulfillmentType: booking.fulfillment_selected,
+                            paymentDate: new Date().toISOString(),
+                            recipientName: userProfile?.full_name || 'Valued Customer',
+                          });
+                        }
+                      }}
+                    >
+                      <Download className="h-4 w-4" />
+                      Download Receipt
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => window.print()}
+                    >
+                      <Printer className="h-4 w-4" />
+                      Print
+                    </Button>
+                  </div>
 
                   <div className="space-y-3">
                     <Button asChild className="w-full bg-primary hover:bg-primary/90" size="lg">
