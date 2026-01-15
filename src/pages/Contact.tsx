@@ -74,7 +74,7 @@ const Contact = () => {
       setIsSuccess(true);
       toast({
         title: 'Message sent!',
-        description: 'We will call you within 2 minutes during business hours.',
+        description: 'We have received your message and will get back to you soon.',
       });
     } catch (error) {
       console.error('Contact form error:', error);
@@ -157,9 +157,6 @@ const Contact = () => {
                           >
                             1877-8VENDI2
                           </a>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            We will call you back within 2 minutes during business hours
-                          </p>
                         </div>
                       </div>
                     </div>
@@ -211,7 +208,7 @@ const Contact = () => {
                         Thank you for reaching out!
                       </h2>
                       <p className="text-muted-foreground mb-2">
-                        We have received your message and will call you within 2 minutes during business hours.
+                        We have received your message and will get back to you as soon as possible.
                       </p>
                       <p className="text-sm text-muted-foreground mb-8">
                         If you do not hear from us, please check your phone or email us directly at{' '}
@@ -317,12 +314,6 @@ const Contact = () => {
                           )}
                         </div>
 
-                        <div className="bg-muted/50 rounded-lg p-4">
-                          <p className="text-sm text-muted-foreground flex items-center gap-2">
-                            <Phone className="h-4 w-4 text-primary" />
-                            We will call you within 2 minutes during business hours after you submit this form.
-                          </p>
-                        </div>
 
                         <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
                           {isSubmitting ? (
