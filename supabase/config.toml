@@ -89,3 +89,6 @@ verify_jwt = false
 
 [functions.get-checkout-session]
 verify_jwt = false
+
+[functions.estimate-freight]
+verify_jwt = false
