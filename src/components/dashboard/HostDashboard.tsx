@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Plus, Truck, FileText, Eye, Loader2, Calendar } from 'lucide-react';
+import { Plus, Truck, FileText, Eye, Loader2, Calendar, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StatCard from './StatCard';
@@ -7,9 +7,11 @@ import StripeStatusCard from './StripeStatusCard';
 import HostListingCard from './HostListingCard';
 import BookingRequestsSection from './BookingRequestsSection';
 import SellerSalesSection from './SellerSalesSection';
+import { AnalyticsCard } from './AnalyticsCard';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
+import { useListingAnalytics } from '@/hooks/useListingAnalytics';
 import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectModal';
 import { useState } from 'react';
 
@@ -17,6 +19,7 @@ const HostDashboard = () => {
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing } = useHostListings();
   const { stats: bookingStats } = useHostBookings();
   const { isConnected, hasAccountStarted, isLoading: stripeLoading, connectStripe, isConnecting } = useStripeConnect();
+  const { analytics, isLoading: analyticsLoading } = useListingAnalytics();
   const [showStripeModal, setShowStripeModal] = useState(false);
 
   const handleConnectStripe = async () => {
@@ -89,9 +92,14 @@ const HostDashboard = () => {
         />
       </div>
 
+      {/* Analytics Section */}
+      {!analyticsLoading && analytics && analytics.totalViews > 0 && (
+        <AnalyticsCard analytics={analytics} />
+      )}
+
       {/* Main Tabs */}
       <Tabs defaultValue="listings" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
           <TabsTrigger value="listings">My Listings</TabsTrigger>
           <TabsTrigger value="bookings" className="relative">
             Booking Requests
@@ -100,6 +108,10 @@ const HostDashboard = () => {
                 {bookingStats.pending}
               </span>
             )}
+          </TabsTrigger>
+          <TabsTrigger value="analytics">
+            <BarChart3 className="h-4 w-4 mr-1.5" />
+            Analytics
           </TabsTrigger>
         </TabsList>
 
@@ -153,6 +165,24 @@ const HostDashboard = () => {
 
         <TabsContent value="bookings">
           <BookingRequestsSection />
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          {analyticsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : analytics ? (
+            <AnalyticsCard analytics={analytics} />
+          ) : (
+            <div className="bg-muted/50 rounded-xl p-12 text-center">
+              <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h4 className="font-semibold text-foreground mb-2">No analytics yet</h4>
+              <p className="text-muted-foreground">
+                Analytics will appear once your listings start getting views.
+              </p>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 

@@ -26,13 +26,23 @@ import ReviewsSection from '@/components/reviews/ReviewsSection';
 import { RequiredDocumentsSection } from '@/components/documents';
 import { useListing } from '@/hooks/useListing';
 import { useListingAverageRating } from '@/hooks/useReviews';
+import { useTrackListingView } from '@/hooks/useListingAnalytics';
 import { CATEGORY_LABELS, FULFILLMENT_LABELS } from '@/types/listing';
 import MessageHostButton from '@/components/messaging/MessageHostButton';
+import { useEffect } from 'react';
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { listing, host, isLoading, error } = useListing(id);
   const { data: ratingData } = useListingAverageRating(id);
+  const { trackView } = useTrackListingView();
+
+  // Track page view when listing loads
+  useEffect(() => {
+    if (id && listing && !isLoading) {
+      trackView(id);
+    }
+  }, [id, listing, isLoading, trackView]);
 
   if (isLoading) {
     return (

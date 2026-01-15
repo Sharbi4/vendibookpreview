@@ -360,6 +360,44 @@ export type Database = {
           },
         ]
       }
+      listing_views: {
+        Row: {
+          id: string
+          listing_id: string
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+          viewed_at: string
+          viewer_id: string | null
+        }
+        Insert: {
+          id?: string
+          listing_id: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          viewed_at?: string
+          viewer_id?: string | null
+        }
+        Update: {
+          id?: string
+          listing_id?: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          viewed_at?: string
+          viewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_views_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           access_instructions: string | null
@@ -398,6 +436,7 @@ export type Database = {
           title: string
           updated_at: string
           vendibook_freight_enabled: boolean | null
+          view_count: number | null
           weight_lbs: number | null
           width_inches: number | null
         }
@@ -438,6 +477,7 @@ export type Database = {
           title: string
           updated_at?: string
           vendibook_freight_enabled?: boolean | null
+          view_count?: number | null
           weight_lbs?: number | null
           width_inches?: number | null
         }
@@ -478,6 +518,7 @@ export type Database = {
           title?: string
           updated_at?: string
           vendibook_freight_enabled?: boolean | null
+          view_count?: number | null
           weight_lbs?: number | null
           width_inches?: number | null
         }
