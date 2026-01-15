@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Fuse from 'fuse.js';
-import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet } from 'lucide-react';
+import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet, Truck } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format, parseISO, eachDayOfInterval } from 'date-fns';
 import Header from '@/components/layout/Header';
@@ -93,6 +93,7 @@ const Search = () => {
       : undefined
   );
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [deliveryFilterEnabled, setDeliveryFilterEnabled] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
   
@@ -235,6 +236,33 @@ const Search = () => {
     return distance <= searchRadius;
   };
 
+  // Check if a listing can deliver to the user's location
+  const canListingDeliverToLocation = (listing: ListingWithCoords): boolean => {
+    if (!locationCoords) return true;
+    if (!deliveryFilterEnabled) return true;
+    
+    // Listing must support delivery
+    if (listing.fulfillment_type !== 'delivery' && listing.fulfillment_type !== 'both') {
+      return false;
+    }
+    
+    // Listing must have delivery radius set
+    if (!listing.delivery_radius_miles) return false;
+    
+    // Listing must have coordinates
+    if (listing.latitude == null || listing.longitude == null) return false;
+    
+    // Calculate distance from listing to user's location
+    const distance = calculateDistance(
+      listing.latitude,
+      listing.longitude,
+      locationCoords[1], // user lat
+      locationCoords[0]  // user lng
+    );
+    
+    return distance <= listing.delivery_radius_miles;
+  };
+
   // Get distance for display
   const getListingDistance = (listing: ListingWithCoords): number | null => {
     if (!locationCoords) return null;
@@ -304,6 +332,11 @@ const Search = () => {
       });
     }
 
+    // Filter by delivery to user's location
+    if (deliveryFilterEnabled && locationCoords) {
+      results = results.filter(listing => canListingDeliverToLocation(listing));
+    }
+
     // Apply sorting
     if (sortBy === 'relevance' && searchQuery.trim()) {
       // Sort by Fuse.js score (lower = better match)
@@ -340,7 +373,7 @@ const Search = () => {
     }
 
     return results;
-  }, [listings, searchQuery, mode, category, locationCoords, searchRadius, priceRange, dateRange, selectedAmenities, fuse, unavailableDates, sortBy]);
+  }, [listings, searchQuery, mode, category, locationCoords, searchRadius, priceRange, dateRange, selectedAmenities, deliveryFilterEnabled, fuse, unavailableDates, sortBy]);
 
   // Update URL params
   const handleSearch = (value: string) => {
@@ -438,6 +471,7 @@ const Search = () => {
     setPriceRange([0, Infinity]);
     setDateRange(undefined);
     setSelectedAmenities([]);
+    setDeliveryFilterEnabled(false);
     setSortBy('newest');
     setSearchParams({});
   };
@@ -484,6 +518,7 @@ const Search = () => {
     priceRange[0] > 0 || priceRange[1] !== Infinity,
     dateRange?.from && dateRange?.to,
     selectedAmenities.length > 0,
+    deliveryFilterEnabled,
   ].filter(Boolean).length;
 
   return (
@@ -545,6 +580,7 @@ const Search = () => {
                       priceRange={priceRange}
                       dateRange={dateRange}
                       selectedAmenities={selectedAmenities}
+                      deliveryFilterEnabled={deliveryFilterEnabled}
                       onModeChange={handleModeChange}
                       onCategoryChange={handleCategoryChange}
                       onLocationTextChange={setLocationText}
@@ -553,6 +589,7 @@ const Search = () => {
                       onPriceRangeChange={setPriceRange}
                       onDateRangeChange={handleDateRangeChange}
                       onAmenityToggle={toggleAmenity}
+                      onDeliveryFilterChange={setDeliveryFilterEnabled}
                       onClear={clearFilters}
                     />
                   </div>
@@ -644,6 +681,7 @@ const Search = () => {
                   priceRange={priceRange}
                   dateRange={dateRange}
                   selectedAmenities={selectedAmenities}
+                  deliveryFilterEnabled={deliveryFilterEnabled}
                   onModeChange={handleModeChange}
                   onCategoryChange={handleCategoryChange}
                   onLocationTextChange={setLocationText}
@@ -652,6 +690,7 @@ const Search = () => {
                   onPriceRangeChange={setPriceRange}
                   onDateRangeChange={handleDateRangeChange}
                   onAmenityToggle={toggleAmenity}
+                  onDeliveryFilterChange={setDeliveryFilterEnabled}
                   onClear={clearFilters}
                 />
               </div>
@@ -814,6 +853,7 @@ interface FilterContentProps {
   priceRange: [number, number];
   dateRange: DateRange | undefined;
   selectedAmenities: string[];
+  deliveryFilterEnabled: boolean;
   onModeChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onLocationTextChange: (value: string) => void;
@@ -822,6 +862,7 @@ interface FilterContentProps {
   onPriceRangeChange: (value: [number, number]) => void;
   onDateRangeChange: (range: DateRange | undefined) => void;
   onAmenityToggle: (amenityId: string) => void;
+  onDeliveryFilterChange: (enabled: boolean) => void;
   onClear: () => void;
 }
 
@@ -834,6 +875,7 @@ const FilterContent = ({
   priceRange,
   dateRange,
   selectedAmenities,
+  deliveryFilterEnabled,
   onModeChange,
   onCategoryChange,
   onLocationTextChange,
@@ -842,6 +884,7 @@ const FilterContent = ({
   onPriceRangeChange,
   onDateRangeChange,
   onAmenityToggle,
+  onDeliveryFilterChange,
 }: FilterContentProps) => {
   // Get amenities to show based on selected category
   const getAvailableAmenities = () => {
@@ -882,6 +925,30 @@ const FilterContent = ({
         onChange={onRadiusChange}
         disabled={!locationCoords}
       />
+
+      {/* Delivery to My Location Filter */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium flex items-center gap-2">
+          <Truck className="h-4 w-4" />
+          Delivery Options
+        </Label>
+        <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+          <Checkbox
+            checked={deliveryFilterEnabled}
+            onCheckedChange={(checked) => onDeliveryFilterChange(checked === true)}
+            disabled={!locationCoords}
+          />
+          <div className="space-y-1">
+            <span className="text-sm font-medium">Delivers to my location</span>
+            <p className="text-xs text-muted-foreground">
+              {locationCoords 
+                ? "Show only listings that can deliver to your selected location"
+                : "Select a location above to enable this filter"
+              }
+            </p>
+          </div>
+        </label>
+      </div>
 
       {/* Type Filter */}
       <div className="space-y-3">
