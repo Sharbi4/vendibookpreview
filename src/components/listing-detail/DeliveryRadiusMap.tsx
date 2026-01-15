@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { MapPin, Truck, Loader2 } from 'lucide-react';
+import { MapPin, Truck, Loader2, CheckCircle2, XCircle, MousePointer } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface DeliveryRadiusMapProps {
@@ -10,6 +10,13 @@ interface DeliveryRadiusMapProps {
   radiusMiles: number;
   address?: string;
   deliveryFee?: number | null;
+}
+
+interface ClickedLocation {
+  lng: number;
+  lat: number;
+  isWithinRadius: boolean;
+  distance: number;
 }
 
 const DeliveryRadiusMap = ({ 
@@ -21,9 +28,11 @@ const DeliveryRadiusMap = ({
 }: DeliveryRadiusMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const clickMarker = useRef<mapboxgl.Marker | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapToken, setMapToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [clickedLocation, setClickedLocation] = useState<ClickedLocation | null>(null);
 
   // Fetch Mapbox token from edge function
   useEffect(() => {
@@ -110,6 +119,49 @@ const DeliveryRadiusMap = ({
           )
         )
         .addTo(map.current);
+
+      // Add click handler for checking delivery zone
+      map.current.on('click', (e) => {
+        const clickedLng = e.lngLat.lng;
+        const clickedLat = e.lngLat.lat;
+        
+        // Calculate distance using Haversine formula
+        const distance = calculateDistance(latitude, longitude, clickedLat, clickedLng);
+        const isWithinRadius = distance <= radiusMiles;
+
+        // Remove existing click marker
+        if (clickMarker.current) {
+          clickMarker.current.remove();
+        }
+
+        // Add new marker at clicked location
+        const markerColor = isWithinRadius ? '#22c55e' : '#ef4444';
+        clickMarker.current = new mapboxgl.Marker({ color: markerColor })
+          .setLngLat([clickedLng, clickedLat])
+          .setPopup(
+            new mapboxgl.Popup({ offset: 25, closeOnClick: false }).setHTML(
+              `<div class="p-2">
+                <p class="font-semibold text-sm ${isWithinRadius ? 'text-green-600' : 'text-red-600'}">
+                  ${isWithinRadius ? '✓ Within Delivery Zone' : '✗ Outside Delivery Zone'}
+                </p>
+                <p class="text-xs text-gray-600">${distance.toFixed(1)} miles from pickup</p>
+              </div>`
+            )
+          )
+          .addTo(map.current!);
+
+        clickMarker.current.togglePopup();
+
+        setClickedLocation({
+          lng: clickedLng,
+          lat: clickedLat,
+          isWithinRadius,
+          distance
+        });
+      });
+
+      // Change cursor to pointer on hover
+      map.current.getCanvas().style.cursor = 'pointer';
     });
 
     return () => {
@@ -124,6 +176,19 @@ const DeliveryRadiusMap = ({
     if (miles <= 50) return 8;
     if (miles <= 100) return 7;
     return 6;
+  }
+
+  // Calculate distance between two points using Haversine formula
+  function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 3959; // Earth's radius in miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
   }
 
   // Create a GeoJSON circle from center point and radius
@@ -194,6 +259,43 @@ const DeliveryRadiusMap = ({
             </p>
           )}
         </div>
+
+        {/* Click result indicator */}
+        {clickedLocation && (
+          <div className={`absolute top-3 left-3 backdrop-blur-sm rounded-lg p-3 shadow-md border ${
+            clickedLocation.isWithinRadius 
+              ? 'bg-green-50/95 border-green-200' 
+              : 'bg-red-50/95 border-red-200'
+          }`}>
+            <div className="flex items-center gap-2">
+              {clickedLocation.isWithinRadius ? (
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
+              ) : (
+                <XCircle className="h-5 w-5 text-red-600" />
+              )}
+              <div>
+                <p className={`text-sm font-medium ${
+                  clickedLocation.isWithinRadius ? 'text-green-700' : 'text-red-700'
+                }`}>
+                  {clickedLocation.isWithinRadius ? 'Delivery Available!' : 'Outside Delivery Zone'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {clickedLocation.distance.toFixed(1)} miles from pickup
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Instruction hint */}
+        {!clickedLocation && (
+          <div className="absolute top-3 left-3 bg-background/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-md border border-border">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <MousePointer className="h-3.5 w-3.5" />
+              <span>Click anywhere to check delivery availability</span>
+            </div>
+          </div>
+        )}
       </div>
       
       <p className="text-sm text-muted-foreground">
