@@ -134,7 +134,7 @@ const FeaturedListings = () => {
   // Loading skeleton
   if (isLoading) {
     return (
-      <section className="py-12 bg-background">
+      <section className="py-6 bg-background">
         <div className="container">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
@@ -158,7 +158,7 @@ const FeaturedListings = () => {
   }
 
   return (
-    <section className="py-12 bg-background">
+    <section className="py-6 bg-background">
       <div className="container">
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
