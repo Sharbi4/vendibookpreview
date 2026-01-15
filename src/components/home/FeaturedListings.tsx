@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import ListingCard from '@/components/listing/ListingCard';
-import { mockListings } from '@/data/mockListings';
 import { ListingCategory, ListingMode } from '@/types/listing';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface FeaturedListingsProps {
   filters?: {
@@ -18,8 +18,23 @@ interface FeaturedListingsProps {
 const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
   const [sortBy, setSortBy] = useState<'newest' | 'price-low'>('newest');
 
-  // Extract unique host IDs from mock listings
-  const hostIds = useMemo(() => [...new Set(mockListings.map(l => l.host_id))], []);
+  // Fetch real listings from the database
+  const { data: listings = [], isLoading } = useQuery({
+    queryKey: ['featured-listings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Extract unique host IDs from real listings
+  const hostIds = useMemo(() => [...new Set(listings.map(l => l.host_id))], [listings]);
 
   // Fetch host verification status
   const { data: hostProfiles = [] } = useQuery({
@@ -46,40 +61,42 @@ const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
   }, [hostProfiles]);
 
   const filteredListings = useMemo(() => {
-    let listings = [...mockListings];
+    let result = [...listings];
 
     // Filter by mode
     if (filters?.mode) {
-      listings = listings.filter(l => l.mode === filters.mode);
+      result = result.filter(l => l.mode === filters.mode);
     }
 
     // Filter by category
     if (filters?.category) {
-      listings = listings.filter(l => l.category === filters.category);
+      result = result.filter(l => l.category === filters.category);
     }
 
     // Filter by query (location text or address)
     if (filters?.query) {
       const q = filters.query.toLowerCase();
-      listings = listings.filter(
+      result = result.filter(
         l => (l.pickup_location_text?.toLowerCase().includes(q)) || 
-             (l.address?.toLowerCase().includes(q))
+             (l.address?.toLowerCase().includes(q)) ||
+             (l.title?.toLowerCase().includes(q)) ||
+             (l.description?.toLowerCase().includes(q))
       );
     }
 
     // Sort
     if (sortBy === 'newest') {
-      listings.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      result.sort((a, b) => new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime());
     } else if (sortBy === 'price-low') {
-      listings.sort((a, b) => {
+      result.sort((a, b) => {
         const priceA = a.mode === 'rent' ? (a.price_daily || 0) : (a.price_sale || 0);
         const priceB = b.mode === 'rent' ? (b.price_daily || 0) : (b.price_sale || 0);
         return priceA - priceB;
       });
     }
 
-    return listings;
-  }, [filters, sortBy]);
+    return result;
+  }, [listings, filters, sortBy]);
 
   const getTitle = () => {
     if (filters?.category || filters?.mode || filters?.query) {
@@ -87,6 +104,32 @@ const FeaturedListings = ({ filters }: FeaturedListingsProps) => {
     }
     return 'Featured Listings';
   };
+
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <section className="py-12 bg-background">
+        <div className="container">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+              <Skeleton className="h-8 w-48 mb-2" />
+              <Skeleton className="h-5 w-32" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="space-y-3">
+                <Skeleton className="h-48 w-full rounded-xl" />
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-4 w-1/4" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-12 bg-background">
