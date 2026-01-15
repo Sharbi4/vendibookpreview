@@ -334,21 +334,26 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
               </AlertDialog>
             )}
 
-            {/* Pay Now Button for approved unpaid bookings */}
+            {/* Pay Now / Retry Payment Button for approved unpaid or failed bookings */}
             {needsPayment && (
               <Button
                 variant="default"
                 size="sm"
                 onClick={() => setShowPriceBreakdown(true)}
                 disabled={isProcessingPayment}
-                className="bg-primary hover:bg-primary/90"
+                className={paymentStatus === 'failed' 
+                  ? "bg-destructive hover:bg-destructive/90" 
+                  : "bg-primary hover:bg-primary/90"
+                }
               >
                 {isProcessingPayment ? (
                   <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : paymentStatus === 'failed' ? (
+                  <AlertCircle className="h-4 w-4 mr-1" />
                 ) : (
                   <CreditCard className="h-4 w-4 mr-1" />
                 )}
-                Pay Now · ${booking.total_price}
+                {paymentStatus === 'failed' ? 'Retry Payment' : 'Pay Now'} · ${booking.total_price}
               </Button>
             )}
 
