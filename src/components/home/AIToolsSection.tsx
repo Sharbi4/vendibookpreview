@@ -214,6 +214,11 @@ const AIToolsSection = () => {
                     {tool.cta}
                     <ArrowRight className="w-5 h-5" />
                   </span>
+                  
+                  {/* Disclaimer */}
+                  <p className="text-xs text-muted-foreground mt-3 italic">
+                    *AI-generated results are for informational purposes only. Requirements vary by jurisdiction—always verify with your local government agencies before applying.
+                  </p>
                 </div>
               </div>
             </button>
@@ -293,6 +298,11 @@ const AIToolsSection = () => {
                 </div>
                 <DialogDescription className="text-base">
                   {selectedTool.description}
+                  {selectedTool.id === 'license-finder' && (
+                    <span className="block mt-2 text-xs text-muted-foreground italic">
+                      *Results are AI-generated and for informational purposes only. Licensing requirements change frequently—always confirm with your local city, county, and state agencies.
+                    </span>
+                  )}
                 </DialogDescription>
               </DialogHeader>
               
