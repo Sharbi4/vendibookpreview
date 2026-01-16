@@ -435,7 +435,7 @@ const Header = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">PricePilot</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">Data-backed pricing that helps you book faster</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">Find out what to charge</p>
                   </div>
                 </DropdownMenuItem>
                 
@@ -448,7 +448,7 @@ const Header = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">PermitPath</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">Permits & licenses mapped to your city</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">See what permits you need</p>
                   </div>
                 </DropdownMenuItem>
                 
@@ -461,7 +461,7 @@ const Header = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">BuildKit</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">Equipment for your menu, volume, and budget</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">Get equipment tips & guides</p>
                   </div>
                 </DropdownMenuItem>
                 
@@ -474,7 +474,7 @@ const Header = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">Listing Studio</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">Turn specs into high-converting listings</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">Write a great listing fast</p>
                   </div>
                 </DropdownMenuItem>
                 
@@ -487,7 +487,7 @@ const Header = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">Concept Lab</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">Sellable concepts for your market</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">Get food truck business ideas</p>
                   </div>
                 </DropdownMenuItem>
                 
@@ -500,7 +500,7 @@ const Header = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">Market Radar</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">Location intel & competitor snapshots</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">Research your market</p>
                   </div>
                 </DropdownMenuItem>
               </div>
@@ -675,7 +675,7 @@ const Header = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground">PricePilot</p>
-                        <p className="text-xs text-muted-foreground">Data-backed pricing that helps you book faster</p>
+                        <p className="text-xs text-muted-foreground">Find out what to charge</p>
                       </div>
                     </Link>
                     
@@ -689,7 +689,7 @@ const Header = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground">PermitPath</p>
-                        <p className="text-xs text-muted-foreground">Permits & licenses mapped to your city</p>
+                        <p className="text-xs text-muted-foreground">See what permits you need</p>
                       </div>
                     </Link>
                     
@@ -703,7 +703,7 @@ const Header = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground">BuildKit</p>
-                        <p className="text-xs text-muted-foreground">Equipment for your menu, volume, and budget</p>
+                        <p className="text-xs text-muted-foreground">Get equipment tips & guides</p>
                       </div>
                     </Link>
                     
@@ -717,7 +717,7 @@ const Header = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground">Listing Studio</p>
-                        <p className="text-xs text-muted-foreground">Turn specs into high-converting listings</p>
+                        <p className="text-xs text-muted-foreground">Write a great listing fast</p>
                       </div>
                     </Link>
                     
@@ -731,7 +731,7 @@ const Header = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground">Concept Lab</p>
-                        <p className="text-xs text-muted-foreground">Sellable concepts for your market</p>
+                        <p className="text-xs text-muted-foreground">Get food truck business ideas</p>
                       </div>
                     </Link>
                     
@@ -745,7 +745,7 @@ const Header = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground">Market Radar</p>
-                        <p className="text-xs text-muted-foreground">Location intel & competitor snapshots</p>
+                        <p className="text-xs text-muted-foreground">Research your market</p>
                       </div>
                     </Link>
                   </div>
