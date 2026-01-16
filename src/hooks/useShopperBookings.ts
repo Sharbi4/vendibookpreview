@@ -49,6 +49,33 @@ export const useShopperBookings = () => {
     fetchBookings();
   }, [fetchBookings]);
 
+  // Real-time subscription for instant updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('shopper-bookings-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'booking_requests',
+          filter: `shopper_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('[Realtime] Shopper booking update:', payload.eventType);
+          // Refetch to get the complete data with joins
+          fetchBookings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchBookings]);
+
   const cancelBooking = async (bookingId: string, reason?: string) => {
     try {
       // Use cancel-booking edge function for proper handling with refunds
