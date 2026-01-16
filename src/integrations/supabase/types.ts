@@ -155,6 +155,7 @@ export type Database = {
           host_id: string
           host_response: string | null
           id: string
+          is_instant_book: boolean | null
           listing_id: string
           message: string | null
           paid_at: string | null
@@ -180,6 +181,7 @@ export type Database = {
           host_id: string
           host_response?: string | null
           id?: string
+          is_instant_book?: boolean | null
           listing_id: string
           message?: string | null
           paid_at?: string | null
@@ -205,6 +207,7 @@ export type Database = {
           host_id?: string
           host_response?: string | null
           id?: string
+          is_instant_book?: boolean | null
           listing_id?: string
           message?: string | null
           paid_at?: string | null
@@ -457,6 +460,7 @@ export type Database = {
           hours_of_access: string | null
           id: string
           image_urls: string[] | null
+          instant_book: boolean | null
           latitude: number | null
           length_inches: number | null
           location_notes: string | null
@@ -498,6 +502,7 @@ export type Database = {
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
+          instant_book?: boolean | null
           latitude?: number | null
           length_inches?: number | null
           location_notes?: string | null
@@ -539,6 +544,7 @@ export type Database = {
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
+          instant_book?: boolean | null
           latitude?: number | null
           length_inches?: number | null
           location_notes?: string | null

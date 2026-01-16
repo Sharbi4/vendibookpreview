@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -13,7 +14,7 @@ interface DocumentNotificationRequest {
   document_type: string;
   event_type: "uploaded" | "approved" | "rejected" | "all_approved";
   rejection_reason?: string;
-  check_all_approved?: boolean; // If true, check if all docs are approved and notify host
+  check_all_approved?: boolean;
 }
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
@@ -33,6 +34,81 @@ const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[DOCUMENT-NOTIFICATION] ${step}${detailsStr}`);
 };
+
+// Helper to process refund for instant book bookings
+async function processInstantBookRefund(
+  supabaseClient: any,
+  booking: any,
+  listingTitle: string,
+  rejectionReason: string
+): Promise<{ success: boolean; refundId?: string; error?: string }> {
+  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+  if (!stripeKey) {
+    logStep("Cannot process refund - STRIPE_SECRET_KEY not set");
+    return { success: false, error: "Stripe key not configured" };
+  }
+
+  if (!booking.payment_intent_id) {
+    logStep("Cannot process refund - no payment intent found");
+    return { success: false, error: "No payment intent found" };
+  }
+
+  try {
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    
+    // Create full refund
+    const refund = await stripe.refunds.create({
+      payment_intent: booking.payment_intent_id,
+      reason: 'requested_by_customer',
+      metadata: {
+        booking_id: booking.id,
+        reason: 'instant_book_document_rejected',
+        rejection_reason: rejectionReason,
+      },
+    });
+
+    logStep("Instant Book refund created", { refundId: refund.id, amount: refund.amount });
+
+    // Update booking status
+    await supabaseClient
+      .from('booking_requests')
+      .update({
+        status: 'cancelled',
+        payment_status: 'refunded',
+      })
+      .eq('id', booking.id);
+
+    logStep("Booking cancelled and marked as refunded");
+
+    return { success: true, refundId: refund.id };
+  } catch (error: any) {
+    logStep("Refund failed", { error: error.message });
+    return { success: false, error: error.message };
+  }
+}
+
+// Helper to confirm instant book booking when all docs approved
+async function confirmInstantBookBooking(
+  supabaseClient: any,
+  booking: any
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Update booking status to approved (payment is already done)
+    await supabaseClient
+      .from('booking_requests')
+      .update({
+        status: 'approved',
+        responded_at: new Date().toISOString(),
+      })
+      .eq('id', booking.id);
+
+    logStep("Instant Book booking auto-confirmed");
+    return { success: true };
+  } catch (error: any) {
+    logStep("Failed to confirm booking", { error: error.message });
+    return { success: false, error: error.message };
+  }
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -55,7 +131,7 @@ serve(async (req) => {
       throw new Error("Missing required fields: booking_id and event_type");
     }
 
-    // Fetch booking details
+    // Fetch booking details with is_instant_book flag
     const { data: booking, error: bookingError } = await supabaseClient
       .from("booking_requests")
       .select("*")
@@ -65,12 +141,12 @@ serve(async (req) => {
     if (bookingError || !booking) {
       throw new Error(`Failed to fetch booking: ${bookingError?.message}`);
     }
-    logStep("Booking fetched", { booking_id: booking.id });
+    logStep("Booking fetched", { booking_id: booking.id, is_instant_book: booking.is_instant_book });
 
-    // Fetch listing details
+    // Fetch listing details including instant_book flag
     const { data: listing, error: listingError } = await supabaseClient
       .from("listings")
-      .select("title, cover_image_url")
+      .select("title, cover_image_url, instant_book")
       .eq("id", booking.listing_id)
       .single();
 
@@ -101,7 +177,8 @@ serve(async (req) => {
     }
 
     const listingTitle = listing?.title || "your listing";
-    const documentLabel = DOCUMENT_TYPE_LABELS[document_type] || document_type.replace(/_/g, ' ');
+    const isInstantBook = booking.is_instant_book === true;
+    const documentLabel = DOCUMENT_TYPE_LABELS[document_type] || document_type?.replace(/_/g, ' ') || 'Document';
     const startDate = new Date(booking.start_date).toLocaleDateString("en-US", {
       weekday: "short",
       year: "numeric",
@@ -134,8 +211,16 @@ serve(async (req) => {
                   Hi ${host.full_name || 'there'},
                 </p>
                 <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                  <strong>${renter?.full_name || 'A renter'}</strong> has uploaded a document for their booking of <strong>${listingTitle}</strong>.
+                  <strong>${renter?.full_name || 'A renter'}</strong> has uploaded a document for their ${isInstantBook ? '<strong>Instant Book</strong>' : ''} booking of <strong>${listingTitle}</strong>.
                 </p>
+                
+                ${isInstantBook ? `
+                <div style="background: #fef3c7; border-radius: 8px; padding: 12px; border: 1px solid #fcd34d; margin: 0 0 16px 0;">
+                  <p style="margin: 0; color: #92400e; font-size: 14px;">
+                    ⚡ <strong>Instant Book:</strong> Payment has been collected. If documents are approved, booking will be auto-confirmed. If rejected, payment will be refunded.
+                  </p>
+                </div>
+                ` : ''}
                 
                 <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e5e7eb; margin: 0 0 20px 0;">
                   <table style="width: 100%; border-collapse: collapse;">
@@ -190,7 +275,7 @@ serve(async (req) => {
                   Hi ${renter.full_name || 'there'},
                 </p>
                 <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                  Great news! Your document has been approved by the host for your booking of <strong>${listingTitle}</strong>.
+                  Great news! Your document has been approved for your booking of <strong>${listingTitle}</strong>.
                 </p>
                 
                 <div style="background: #dcfce7; border-radius: 8px; padding: 16px; border: 1px solid #bbf7d0; margin: 0 0 20px 0;">
@@ -226,66 +311,205 @@ serve(async (req) => {
         });
       }
     } else if (event_type === "rejected") {
-      // Notify renter that their document was rejected
-      if (renter?.email) {
-        emails.push({
-          to: renter.email,
-          subject: `⚠️ Document Needs Attention - ${listingTitle}`,
-          html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 22px;">Document Needs Attention ⚠️</h1>
-              </div>
-              
-              <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
-                  Hi ${renter.full_name || 'there'},
-                </p>
-                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                  The host has requested a new version of a document for your booking of <strong>${listingTitle}</strong>.
-                </p>
-                
-                <div style="background: #fef3c7; border-radius: 8px; padding: 16px; border: 1px solid #fcd34d; margin: 0 0 20px 0;">
-                  <table style="width: 100%; border-collapse: collapse;">
-                    <tr>
-                      <td style="padding: 8px 0; color: #92400e;">Document:</td>
-                      <td style="padding: 8px 0; font-weight: 600; color: #92400e;">${documentLabel}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 8px 0; color: #92400e;">Status:</td>
-                      <td style="padding: 8px 0;">
-                        <span style="background: #ef4444; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 14px; font-weight: 500;">Needs Revision</span>
-                      </td>
-                    </tr>
-                    ${rejection_reason ? `
-                    <tr>
-                      <td colspan="2" style="padding: 12px 0 0 0;">
-                        <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #fcd34d;">
-                          <p style="margin: 0 0 4px 0; color: #92400e; font-weight: 600; font-size: 14px;">Reason:</p>
-                          <p style="margin: 0; color: #78350f;">${rejection_reason}</p>
-                        </div>
-                      </td>
-                    </tr>
-                    ` : ''}
-                  </table>
+      // For Instant Book: if document is rejected, cancel booking and refund payment
+      if (isInstantBook && booking.payment_status === 'paid') {
+        logStep("Instant Book document rejected - initiating refund");
+        
+        const refundResult = await processInstantBookRefund(
+          supabaseClient,
+          booking,
+          listingTitle,
+          rejection_reason || 'Document rejected'
+        );
+
+        if (refundResult.success) {
+          // Send refund notification to renter
+          if (renter?.email) {
+            emails.push({
+              to: renter.email,
+              subject: `❌ Booking Cancelled & Refunded - ${listingTitle}`,
+              html: `
+                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+                    <h1 style="color: white; margin: 0; font-size: 22px;">Booking Cancelled & Refunded</h1>
+                  </div>
+                  
+                  <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+                    <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
+                      Hi ${renter.full_name || 'there'},
+                    </p>
+                    <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                      Unfortunately, your Instant Book booking for <strong>${listingTitle}</strong> has been cancelled because your document was not approved.
+                    </p>
+                    
+                    <div style="background: #fee2e2; border-radius: 8px; padding: 16px; border: 1px solid #fecaca; margin: 0 0 20px 0;">
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                          <td style="padding: 8px 0; color: #991b1b;">Document:</td>
+                          <td style="padding: 8px 0; font-weight: 600; color: #991b1b;">${documentLabel}</td>
+                        </tr>
+                        ${rejection_reason ? `
+                        <tr>
+                          <td style="padding: 8px 0; color: #991b1b;">Reason:</td>
+                          <td style="padding: 8px 0; color: #991b1b;">${rejection_reason}</td>
+                        </tr>
+                        ` : ''}
+                      </table>
+                    </div>
+                    
+                    <div style="background: #dcfce7; border-radius: 8px; padding: 16px; border: 1px solid #bbf7d0; margin: 0 0 20px 0; text-align: center;">
+                      <p style="margin: 0 0 4px 0; font-weight: 600; color: #166534; font-size: 18px;">💳 Full Refund Issued</p>
+                      <p style="margin: 0; color: #15803d; font-size: 14px;">Your payment of $${booking.total_price.toFixed(2)} will be refunded to your original payment method within 5-10 business days.</p>
+                    </div>
+                    
+                    <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                      You're welcome to book again with the correct documents. We're here to help if you have questions!
+                    </p>
+                    
+                    <div style="text-align: center;">
+                      <a href="${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '.lovable.app')}/listing/${booking.listing_id}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">Book Again</a>
+                    </div>
+                  </div>
+                  
+                  <div style="padding: 16px; text-align: center; color: #9ca3af; font-size: 12px;">
+                    <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a></p>
+                    <p style="margin: 0;">© ${new Date().getFullYear()} Vendibook. All rights reserved.</p>
+                  </div>
+                </div>
+              `,
+            });
+          }
+
+          // Notify host about the cancellation
+          if (host?.email) {
+            emails.push({
+              to: host.email,
+              subject: `ℹ️ Instant Book Cancelled - ${listingTitle}`,
+              html: `
+                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <div style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+                    <h1 style="color: white; margin: 0; font-size: 22px;">Instant Book Cancelled</h1>
+                  </div>
+                  
+                  <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+                    <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
+                      Hi ${host.full_name || 'there'},
+                    </p>
+                    <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                      An Instant Book booking for <strong>${listingTitle}</strong> has been automatically cancelled because the renter's documents did not pass review.
+                    </p>
+                    
+                    <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e5e7eb; margin: 0 0 20px 0;">
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                          <td style="padding: 8px 0; color: #6b7280;">Renter:</td>
+                          <td style="padding: 8px 0; font-weight: 600; color: #1f2937;">${renter?.full_name || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: #6b7280;">Rejected Document:</td>
+                          <td style="padding: 8px 0; color: #1f2937;">${documentLabel}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: #6b7280;">Booking Dates:</td>
+                          <td style="padding: 8px 0; color: #1f2937;">${startDate} - ${endDate}</td>
+                        </tr>
+                      </table>
+                    </div>
+                    
+                    <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                      The renter has been refunded. Your listing is now available for other bookings.
+                    </p>
+                  </div>
+                  
+                  <div style="padding: 16px; text-align: center; color: #9ca3af; font-size: 12px;">
+                    <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a></p>
+                    <p style="margin: 0;">© ${new Date().getFullYear()} Vendibook. All rights reserved.</p>
+                  </div>
+                </div>
+              `,
+            });
+          }
+
+          // Create notifications
+          await supabaseClient.from("notifications").insert([
+            {
+              user_id: booking.shopper_id,
+              type: "refund",
+              title: "Booking Cancelled & Refunded",
+              message: `Your Instant Book for "${listingTitle}" was cancelled due to document rejection. Full refund issued.`,
+              link: "/dashboard",
+            },
+            {
+              user_id: booking.host_id,
+              type: "booking",
+              title: "Instant Book Cancelled",
+              message: `An Instant Book for "${listingTitle}" was cancelled due to document rejection.`,
+              link: "/dashboard",
+            },
+          ]);
+        }
+      } else {
+        // Regular rejection flow (non-instant book)
+        if (renter?.email) {
+          emails.push({
+            to: renter.email,
+            subject: `⚠️ Document Needs Attention - ${listingTitle}`,
+            html: `
+              <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+                  <h1 style="color: white; margin: 0; font-size: 22px;">Document Needs Attention ⚠️</h1>
                 </div>
                 
-                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                  Please upload a new version of this document in your dashboard to proceed with your booking.
-                </p>
+                <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+                  <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
+                    Hi ${renter.full_name || 'there'},
+                  </p>
+                  <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                    The host has requested a new version of a document for your booking of <strong>${listingTitle}</strong>.
+                  </p>
+                  
+                  <div style="background: #fef3c7; border-radius: 8px; padding: 16px; border: 1px solid #fcd34d; margin: 0 0 20px 0;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <tr>
+                        <td style="padding: 8px 0; color: #92400e;">Document:</td>
+                        <td style="padding: 8px 0; font-weight: 600; color: #92400e;">${documentLabel}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #92400e;">Status:</td>
+                        <td style="padding: 8px 0;">
+                          <span style="background: #ef4444; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 14px; font-weight: 500;">Needs Revision</span>
+                        </td>
+                      </tr>
+                      ${rejection_reason ? `
+                      <tr>
+                        <td colspan="2" style="padding: 12px 0 0 0;">
+                          <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #fcd34d;">
+                            <p style="margin: 0 0 4px 0; color: #92400e; font-weight: 600; font-size: 14px;">Reason:</p>
+                            <p style="margin: 0; color: #78350f;">${rejection_reason}</p>
+                          </div>
+                        </td>
+                      </tr>
+                      ` : ''}
+                    </table>
+                  </div>
+                  
+                  <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                    Please upload a new version of this document in your dashboard to proceed with your booking.
+                  </p>
+                  
+                  <div style="text-align: center;">
+                    <a href="${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '.lovable.app')}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">Upload New Document</a>
+                  </div>
+                </div>
                 
-                <div style="text-align: center;">
-                  <a href="${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '.lovable.app')}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">Upload New Document</a>
+                <div style="padding: 16px; text-align: center; color: #9ca3af; font-size: 12px;">
+                  <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a></p>
+                  <p style="margin: 0;">© ${new Date().getFullYear()} Vendibook. All rights reserved.</p>
                 </div>
               </div>
-              
-              <div style="padding: 16px; text-align: center; color: #9ca3af; font-size: 12px;">
-                <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a></p>
-                <p style="margin: 0;">© ${new Date().getFullYear()} Vendibook. All rights reserved.</p>
-              </div>
-            </div>
-          `,
-        });
+            `,
+          });
+        }
       }
     } else if (event_type === "all_approved") {
       // Notify host that all required documents have been approved
@@ -306,6 +530,14 @@ serve(async (req) => {
                 <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                   Great news! All required documents for <strong>${renter?.full_name || 'your renter'}</strong>'s booking of <strong>${listingTitle}</strong> have been verified and approved.
                 </p>
+                
+                ${isInstantBook ? `
+                <div style="background: #dbeafe; border-radius: 8px; padding: 12px; border: 1px solid #93c5fd; margin: 0 0 16px 0;">
+                  <p style="margin: 0; color: #1e40af; font-size: 14px;">
+                    ⚡ <strong>Instant Book:</strong> This booking has been automatically confirmed. Payment has already been collected.
+                  </p>
+                </div>
+                ` : ''}
                 
                 <div style="background: #dcfce7; border-radius: 8px; padding: 16px; border: 1px solid #bbf7d0; margin: 0 0 20px 0;">
                   <div style="display: flex; align-items: center; gap: 12px;">
@@ -401,10 +633,84 @@ serve(async (req) => {
           logStep("Document compliance check", { 
             required: requiredDocs.length, 
             uploaded: uploadedDocs.length,
-            allApproved 
+            allApproved,
+            isInstantBook
           });
           
           if (allApproved) {
+            // For Instant Book: auto-confirm the booking
+            if (isInstantBook && booking.status === 'pending') {
+              logStep("All documents approved for Instant Book - auto-confirming booking");
+              
+              const confirmResult = await confirmInstantBookBooking(supabaseClient, booking);
+              
+              if (confirmResult.success) {
+                // Send confirmation email to renter
+                if (renter?.email) {
+                  emails.push({
+                    to: renter.email,
+                    subject: `🎉 Booking Confirmed! - ${listingTitle}`,
+                    html: `
+                      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+                          <h1 style="color: white; margin: 0; font-size: 22px;">Booking Confirmed! 🎉</h1>
+                        </div>
+                        
+                        <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+                          <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
+                            Hi ${renter.full_name || 'there'},
+                          </p>
+                          <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                            Great news! All your documents have been approved and your Instant Book for <strong>${listingTitle}</strong> is now confirmed!
+                          </p>
+                          
+                          <div style="background: #dcfce7; border-radius: 8px; padding: 16px; border: 1px solid #bbf7d0; margin: 0 0 20px 0; text-align: center;">
+                            <p style="margin: 0 0 4px 0; font-weight: 600; color: #166534; font-size: 18px;">✓ Booking Confirmed</p>
+                            <p style="margin: 0; color: #15803d; font-size: 14px;">Your reservation is all set!</p>
+                          </div>
+                          
+                          <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e5e7eb; margin: 0 0 20px 0;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                              <tr>
+                                <td style="padding: 8px 0; color: #6b7280;">Listing:</td>
+                                <td style="padding: 8px 0; font-weight: 600; color: #1f2937;">${listingTitle}</td>
+                              </tr>
+                              <tr>
+                                <td style="padding: 8px 0; color: #6b7280;">Dates:</td>
+                                <td style="padding: 8px 0; color: #1f2937;">${startDate} - ${endDate}</td>
+                              </tr>
+                              <tr>
+                                <td style="padding: 8px 0; color: #6b7280;">Total Paid:</td>
+                                <td style="padding: 8px 0; font-weight: 600; color: #1f2937;">$${booking.total_price.toFixed(2)}</td>
+                              </tr>
+                            </table>
+                          </div>
+                          
+                          <div style="text-align: center;">
+                            <a href="${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '.lovable.app')}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Booking Details</a>
+                          </div>
+                        </div>
+                        
+                        <div style="padding: 16px; text-align: center; color: #9ca3af; font-size: 12px;">
+                          <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a></p>
+                          <p style="margin: 0;">© ${new Date().getFullYear()} Vendibook. All rights reserved.</p>
+                        </div>
+                      </div>
+                    `,
+                  });
+                }
+
+                // Create notification for renter
+                await supabaseClient.from("notifications").insert({
+                  user_id: booking.shopper_id,
+                  type: "booking",
+                  title: "Booking Confirmed! 🎉",
+                  message: `Your Instant Book for "${listingTitle}" is confirmed! All documents approved.`,
+                  link: "/dashboard",
+                });
+              }
+            }
+            
             logStep("All documents approved - sending host notification");
             
             // Send the "all_approved" notification to host
@@ -425,6 +731,14 @@ serve(async (req) => {
                       <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                         Great news! All required documents for <strong>${renter?.full_name || 'your renter'}</strong>'s booking of <strong>${listingTitle}</strong> have been verified and approved.
                       </p>
+                      
+                      ${isInstantBook ? `
+                      <div style="background: #dbeafe; border-radius: 8px; padding: 12px; border: 1px solid #93c5fd; margin: 0 0 16px 0;">
+                        <p style="margin: 0; color: #1e40af; font-size: 14px;">
+                          ⚡ <strong>Instant Book:</strong> This booking has been automatically confirmed.
+                        </p>
+                      </div>
+                      ` : ''}
                       
                       <div style="background: #dcfce7; border-radius: 8px; padding: 16px; border: 1px solid #bbf7d0; margin: 0 0 20px 0; text-align: center;">
                         <p style="margin: 0 0 4px 0; font-weight: 600; color: #166534; font-size: 18px;">✓ Documents Complete</p>
