@@ -29,6 +29,7 @@ import { format } from 'date-fns';
 interface HostDocumentReviewCardProps {
   document: BookingDocument;
   bookingId: string;
+  isInstantBook?: boolean;
 }
 
 const StatusBadge = ({ status }: { status: DocumentStatus }) => {
@@ -60,7 +61,7 @@ const StatusBadge = ({ status }: { status: DocumentStatus }) => {
   );
 };
 
-export const HostDocumentReviewCard = ({ document, bookingId }: HostDocumentReviewCardProps) => {
+export const HostDocumentReviewCard = ({ document, bookingId, isInstantBook = false }: HostDocumentReviewCardProps) => {
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const reviewMutation = useReviewBookingDocument();
@@ -179,6 +180,18 @@ export const HostDocumentReviewCard = ({ document, bookingId }: HostDocumentRevi
             </DialogDescription>
           </DialogHeader>
 
+          {isInstantBook && (
+            <div className="flex items-start gap-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-destructive">Instant Book Warning</p>
+                <p className="text-destructive/80 mt-1">
+                  Rejecting this document will <strong>automatically cancel the booking</strong> and issue a <strong>full refund</strong> to the renter.
+                </p>
+              </div>
+            </div>
+          )}
+
           <Textarea
             placeholder="e.g., Document is expired, image is blurry, wrong document type..."
             value={rejectionReason}
@@ -196,7 +209,7 @@ export const HostDocumentReviewCard = ({ document, bookingId }: HostDocumentRevi
               disabled={reviewMutation.isPending}
             >
               {reviewMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Reject Document
+              {isInstantBook ? 'Reject & Cancel Booking' : 'Reject Document'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -30,12 +30,14 @@ interface HostDocumentReviewSectionProps {
   listingId: string;
   bookingId: string;
   defaultOpen?: boolean;
+  isInstantBook?: boolean;
 }
 
 export const HostDocumentReviewSection = ({
   listingId,
   bookingId,
   defaultOpen = false,
+  isInstantBook = false,
 }: HostDocumentReviewSectionProps) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   
@@ -165,7 +167,6 @@ export const HostDocumentReviewSection = ({
               </div>
             )}
 
-            {/* Document list */}
             <div className="space-y-2">
               {uploadedDocs && uploadedDocs.length > 0 ? (
                 uploadedDocs.map((doc) => (
@@ -173,6 +174,7 @@ export const HostDocumentReviewSection = ({
                     key={doc.id}
                     document={doc}
                     bookingId={bookingId}
+                    isInstantBook={isInstantBook}
                   />
                 ))
               ) : (
