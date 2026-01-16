@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck } from 'lucide-react';
+import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminTransactions } from '@/hooks/useAdminTransactions';
 import { useAdminPendingDocuments, useAdminDocumentStats } from '@/hooks/useAdminDocumentReview';
@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import DisputeResolutionCard from '@/components/admin/DisputeResolutionCard';
 import TrackingManagementCard from '@/components/admin/TrackingManagementCard';
 import AdminDocumentReviewCard from '@/components/admin/AdminDocumentReviewCard';
+import AdminDocumentHistorySection from '@/components/admin/AdminDocumentHistorySection';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -180,6 +181,10 @@ const AdminDashboard = () => {
                 </Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="doc-history" className="relative">
+              <History className="h-4 w-4 mr-1" />
+              Doc History
+            </TabsTrigger>
             <TabsTrigger value="all">All Transactions</TabsTrigger>
           </TabsList>
 
@@ -206,6 +211,11 @@ const AdminDashboard = () => {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* Document History Tab */}
+          <TabsContent value="doc-history" className="space-y-4">
+            <AdminDocumentHistorySection />
           </TabsContent>
 
           <TabsContent value="disputes" className="space-y-4">
