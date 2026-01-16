@@ -1269,6 +1269,23 @@ const AITools = () => {
                 {/* License Finder */}
                 <TabsContent value="licenses">
                   <div className="space-y-6">
+                    {/* Important Disclaimer Banner */}
+                    <div className="p-4 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg">
+                      <div className="flex gap-3">
+                        <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="font-semibold text-amber-800 dark:text-amber-400 mb-1">
+                            Important Disclaimer
+                          </h4>
+                          <p className="text-sm text-amber-700 dark:text-amber-300">
+                            This AI tool provides general guidance only and cannot guarantee that the licenses listed will fulfill all your legal requirements. 
+                            Licensing requirements vary by jurisdiction and change frequently. <strong>Always verify requirements directly with your local city, county, 
+                            and state government agencies</strong> before starting your business. Vendibook is not responsible for any licensing decisions made based on this information.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
