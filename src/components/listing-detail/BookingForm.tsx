@@ -21,6 +21,7 @@ import { BookingInfoModal, type BookingUserInfo } from '@/components/booking';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { calculateRentalFees, RENTAL_RENTER_FEE_PERCENT } from '@/lib/commissions';
+import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 
 interface BookingFormProps {
   listingId: string;
@@ -292,6 +293,9 @@ const BookingForm = ({
         if (checkoutError) throw checkoutError;
         if (!checkoutData?.url) throw new Error('Failed to create checkout session');
 
+        // Track conversion before redirect
+        trackFormSubmitConversion({ form_type: 'instant_book', listing_id: listingId });
+
         // Redirect to Stripe Checkout
         window.location.href = checkoutData.url;
         return;
@@ -301,6 +305,9 @@ const BookingForm = ({
       supabase.functions.invoke('send-booking-notification', {
         body: { booking_id: bookingResult.id, event_type: 'submitted' },
       }).catch(console.error);
+
+      // Track conversion for booking request
+      trackFormSubmitConversion({ form_type: 'booking_request', listing_id: listingId });
 
       setShowConfirmation(true);
 
