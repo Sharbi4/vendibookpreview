@@ -127,9 +127,14 @@ const PermitPath = () => {
               </Link>
               
               <div className="max-w-3xl">
-                <Badge className="mb-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
-                  <FileCheck className="h-3 w-3 mr-1" />PermitPath
-                </Badge>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg">
+                    <FileCheck className="h-6 w-6 text-white" />
+                  </div>
+                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
+                    PermitPath
+                  </Badge>
+                </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 leading-tight">
                   Navigate permits in minutes, not weeks.
                 </h1>

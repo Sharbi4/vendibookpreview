@@ -90,9 +90,14 @@ const ConceptLab = () => {
               </Link>
               
               <div className="max-w-3xl">
-                <Badge className="mb-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0">
-                  <Lightbulb className="h-3 w-3 mr-1" />Concept Lab
-                </Badge>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-yellow-300 to-amber-500 flex items-center justify-center shadow-lg">
+                    <Lightbulb className="h-6 w-6 text-white" />
+                  </div>
+                  <Badge className="bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0">
+                    Concept Lab
+                  </Badge>
+                </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 leading-tight">
                   Discover your next big idea.
                 </h1>
