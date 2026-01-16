@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History } from 'lucide-react';
+import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History, Zap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminTransactions } from '@/hooks/useAdminTransactions';
 import { useAdminPendingDocuments, useAdminDocumentStats } from '@/hooks/useAdminDocumentReview';
+import { useAdminInstantBookings, useAdminInstantBookStats } from '@/hooks/useAdminInstantBookings';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +16,7 @@ import TrackingManagementCard from '@/components/admin/TrackingManagementCard';
 import AdminDocumentReviewCard from '@/components/admin/AdminDocumentReviewCard';
 import AdminDocumentHistorySection from '@/components/admin/AdminDocumentHistorySection';
 import AdminBulkDocumentActions from '@/components/admin/AdminBulkDocumentActions';
+import InstantBookMonitorCard from '@/components/admin/InstantBookMonitorCard';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -36,6 +38,8 @@ const AdminDashboard = () => {
 
   const { data: pendingDocuments, isLoading: docsLoading } = useAdminPendingDocuments();
   const documentStats = useAdminDocumentStats();
+  const { data: instantBookings, isLoading: instantBookLoading } = useAdminInstantBookings();
+  const instantBookStats = useAdminInstantBookStats();
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -90,7 +94,17 @@ const AdminDashboard = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-amber-500" />
+                <span className="text-sm text-muted-foreground">Instant Books</span>
+              </div>
+              <p className="text-2xl font-bold text-amber-600">{instantBookStats.pendingDocs}</p>
+              <p className="text-xs text-muted-foreground">docs pending</p>
+            </CardContent>
+          </Card>
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
@@ -158,7 +172,16 @@ const AdminDashboard = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="disputes" className="space-y-6">
-          <TabsList>
+          <TabsList className="flex-wrap h-auto">
+            <TabsTrigger value="instant-book" className="relative">
+              <Zap className="h-4 w-4 mr-1" />
+              Instant Book
+              {instantBookStats.pendingDocs > 0 && (
+                <Badge className="ml-2 h-5 px-1.5 bg-amber-500">
+                  {instantBookStats.pendingDocs}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="disputes" className="relative">
               Disputes
               {stats.disputed > 0 && (
@@ -189,6 +212,60 @@ const AdminDashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="all">All Transactions</TabsTrigger>
           </TabsList>
+
+          {/* Instant Book Tab */}
+          <TabsContent value="instant-book" className="space-y-4">
+            {instantBookLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-32" />
+                ))}
+              </div>
+            ) : !instantBookings || instantBookings.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Zap className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground">No Instant Bookings</h3>
+                  <p className="text-muted-foreground">No instant book bookings have been made yet.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {/* Summary Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Card>
+                    <CardContent className="pt-4 pb-4">
+                      <p className="text-sm text-muted-foreground">Total Instant Books</p>
+                      <p className="text-2xl font-bold">{instantBookStats.total}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-4">
+                      <p className="text-sm text-muted-foreground">Docs Pending Review</p>
+                      <p className="text-2xl font-bold text-amber-600">{instantBookStats.pendingDocs}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-4">
+                      <p className="text-sm text-muted-foreground">Fully Approved</p>
+                      <p className="text-2xl font-bold text-emerald-600">{instantBookStats.approved}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-4">
+                      <p className="text-sm text-muted-foreground">Docs Rejected</p>
+                      <p className="text-2xl font-bold text-red-600">{instantBookStats.rejected}</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Booking Cards */}
+                {instantBookings.map((booking) => (
+                  <InstantBookMonitorCard key={booking.id} booking={booking} />
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
           {/* Documents Tab */}
           <TabsContent value="documents" className="space-y-4">
