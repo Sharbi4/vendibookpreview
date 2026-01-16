@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Check, X, Calendar, User, MessageSquare, Loader2, MessageCircle, FileText, DollarSign, FileCheck, FileClock, FileWarning } from 'lucide-react';
+import { Check, X, Calendar, User, MessageSquare, Loader2, MessageCircle, FileText, DollarSign, FileCheck, FileClock, FileWarning, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
@@ -230,6 +230,12 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel }: Booking
                 </div>
                 </div>
               <div className="flex flex-col items-end gap-1.5">
+                {booking.is_instant_book && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                    <Zap className="h-3 w-3" />
+                    Instant Book
+                  </span>
+                )}
                 <StatusPill status={booking.status} />
                 <DocumentCompliancePill compliance={compliance} />
               </div>
