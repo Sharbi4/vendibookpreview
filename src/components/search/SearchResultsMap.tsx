@@ -37,89 +37,109 @@ const SearchResultsMap = ({
   useEffect(() => {
     if (!mapContainer.current || !mapToken) return;
 
-    // Clean up existing map if any
-    if (map.current) {
-      markersRef.current.forEach((marker) => marker.remove());
-      markersRef.current = [];
-      map.current.remove();
-      map.current = null;
-      setMapLoaded(false);
-    }
-
-    mapboxgl.accessToken = mapToken;
-
-    // Get initial center and zoom
-    const listingsWithCoords = listings.filter(
-      (l) => l.latitude != null && l.longitude != null
-    );
-    
-    let center: [number, number] = userLocation || [-98.5795, 39.8283]; // Center of US
-    let zoom = 4;
-
-    if (userLocation) {
-      center = userLocation;
-      zoom = searchRadius ? Math.max(6, 12 - Math.log2(searchRadius)) : 10;
-    } else if (listingsWithCoords.length > 0) {
-      const lngs = listingsWithCoords.map((l) => l.longitude!);
-      const lats = listingsWithCoords.map((l) => l.latitude!);
-      center = [
-        (Math.min(...lngs) + Math.max(...lngs)) / 2,
-        (Math.min(...lats) + Math.max(...lats)) / 2,
-      ];
-      zoom = 5;
-    }
-
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center,
-      zoom,
-    });
-
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
-    map.current.on('load', () => {
-      setMapLoaded(true);
+    // Wait for container to have dimensions before initializing
+    const initializeMap = () => {
+      if (!mapContainer.current) return;
       
-      // Trigger resize to ensure proper rendering
-      map.current?.resize();
-
-      // Add user location circle if available
-      if (userLocation && searchRadius && map.current) {
-        map.current.addSource('user-radius', {
-          type: 'geojson',
-          data: createCircleGeoJSON(userLocation, searchRadius),
-        });
-
-        map.current.addLayer({
-          id: 'user-radius-fill',
-          type: 'fill',
-          source: 'user-radius',
-          paint: {
-            'fill-color': '#3b82f6',
-            'fill-opacity': 0.1,
-          },
-        });
-
-        map.current.addLayer({
-          id: 'user-radius-outline',
-          type: 'line',
-          source: 'user-radius',
-          paint: {
-            'line-color': '#3b82f6',
-            'line-width': 2,
-            'line-dasharray': [2, 2],
-          },
-        });
-
-        // Add user location marker
-        new mapboxgl.Marker({ color: '#3b82f6' })
-          .setLngLat(userLocation)
-          .addTo(map.current);
+      const { offsetWidth, offsetHeight } = mapContainer.current;
+      if (offsetWidth === 0 || offsetHeight === 0) {
+        // Container not ready yet, retry after a short delay
+        const retryTimeout = setTimeout(initializeMap, 100);
+        return () => clearTimeout(retryTimeout);
       }
+
+      // Clean up existing map if any
+      if (map.current) {
+        markersRef.current.forEach((marker) => marker.remove());
+        markersRef.current = [];
+        map.current.remove();
+        map.current = null;
+        setMapLoaded(false);
+      }
+
+      mapboxgl.accessToken = mapToken;
+
+      // Get initial center and zoom
+      const listingsWithCoords = listings.filter(
+        (l) => l.latitude != null && l.longitude != null
+      );
+      
+      let center: [number, number] = userLocation || [-98.5795, 39.8283]; // Center of US
+      let zoom = 4;
+
+      if (userLocation) {
+        center = userLocation;
+        zoom = searchRadius ? Math.max(6, 12 - Math.log2(searchRadius)) : 10;
+      } else if (listingsWithCoords.length > 0) {
+        const lngs = listingsWithCoords.map((l) => l.longitude!);
+        const lats = listingsWithCoords.map((l) => l.latitude!);
+        center = [
+          (Math.min(...lngs) + Math.max(...lngs)) / 2,
+          (Math.min(...lats) + Math.max(...lats)) / 2,
+        ];
+        zoom = 5;
+      }
+
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/light-v11',
+        center,
+        zoom,
+      });
+
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      map.current.on('load', () => {
+        setMapLoaded(true);
+        
+        // Trigger resize to ensure proper rendering
+        setTimeout(() => {
+          map.current?.resize();
+        }, 100);
+
+        // Add user location circle if available
+        if (userLocation && searchRadius && map.current) {
+          map.current.addSource('user-radius', {
+            type: 'geojson',
+            data: createCircleGeoJSON(userLocation, searchRadius),
+          });
+
+          map.current.addLayer({
+            id: 'user-radius-fill',
+            type: 'fill',
+            source: 'user-radius',
+            paint: {
+              'fill-color': '#3b82f6',
+              'fill-opacity': 0.1,
+            },
+          });
+
+          map.current.addLayer({
+            id: 'user-radius-outline',
+            type: 'line',
+            source: 'user-radius',
+            paint: {
+              'line-color': '#3b82f6',
+              'line-width': 2,
+              'line-dasharray': [2, 2],
+            },
+          });
+
+          // Add user location marker
+          new mapboxgl.Marker({ color: '#3b82f6' })
+            .setLngLat(userLocation)
+            .addTo(map.current);
+        }
+      });
+    };
+
+    // Use requestAnimationFrame to wait for layout
+    const rafId = requestAnimationFrame(() => {
+      initializeMap();
     });
 
     return () => {
+      cancelAnimationFrame(rafId);
       markersRef.current.forEach((marker) => marker.remove());
       markersRef.current = [];
       map.current?.remove();
