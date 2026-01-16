@@ -65,6 +65,29 @@ export const useShopperBookings = () => {
         },
         (payload) => {
           console.log('[Realtime] Shopper booking update:', payload.eventType);
+          
+          // Show toast based on event type
+          if (payload.eventType === 'UPDATE') {
+            const newData = payload.new as BookingRequest;
+            if (newData.status === 'approved') {
+              toast({
+                title: '🎉 Booking Approved!',
+                description: 'The host has approved your booking. You can now proceed with payment.',
+              });
+            } else if (newData.status === 'declined') {
+              toast({
+                title: 'Booking Declined',
+                description: 'Unfortunately, the host has declined your booking request.',
+                variant: 'destructive',
+              });
+            } else if (newData.payment_status === 'paid') {
+              toast({
+                title: '✅ Payment Confirmed',
+                description: 'Your payment has been processed successfully!',
+              });
+            }
+          }
+          
           // Refetch to get the complete data with joins
           fetchBookings();
         }
@@ -74,7 +97,7 @@ export const useShopperBookings = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, fetchBookings]);
+  }, [user, fetchBookings, toast]);
 
   const cancelBooking = async (bookingId: string, reason?: string) => {
     try {
