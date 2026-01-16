@@ -21,6 +21,8 @@ const BASE_URL = "https://vendibookpreview.lovable.app";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const LOGO_STORAGE_PATH = "vendibook-logo-official.png";
 const LOGO_CID = "vendibook-logo";
+const HERO_STORAGE_PATH = "taco-truck-hero.png";
+const HERO_CID = "taco-truck-hero";
 
 // Vendibook Brand Colors (matching the website)
 const COLORS = {
@@ -34,7 +36,7 @@ const COLORS = {
   border: "#E5E5E5",
 };
 
-const generateEmailHtml = (unsubscribeToken: string, userEmail: string, hasLogo: boolean) => `
+const generateEmailHtml = (unsubscribeToken: string, userEmail: string, hasLogo: boolean, hasHero: boolean) => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -58,9 +60,18 @@ const generateEmailHtml = (unsubscribeToken: string, userEmail: string, hasLogo:
             </td>
           </tr>
           
+          <!-- Hero Image -->
+          ${hasHero ? `
+          <tr>
+            <td style="padding: 0;">
+              <img src="cid:${HERO_CID}" alt="Food Truck" style="width: 100%; height: auto; display: block;" />
+            </td>
+          </tr>
+          ` : ''}
+          
           <!-- Main Announcement Banner -->
           <tr>
-            <td style="padding: 0 40px;">
+            <td style="padding: 20px 40px 0;">
               <div style="background: linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%); border-radius: 16px; padding: 40px 30px; text-align: center;">
                 <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: ${COLORS.white}; letter-spacing: -0.5px;">
                   🚀 We're LIVE!
@@ -380,7 +391,6 @@ const handler = async (req: Request): Promise<Response> => {
       
       if (logoResponse.ok && contentType.toLowerCase().includes("image/")) {
         const bytes = new Uint8Array(await logoResponse.arrayBuffer());
-        // Convert to base64 in chunks to avoid stack overflow
         let binary = "";
         const chunkSize = 0x8000;
         for (let i = 0; i < bytes.length; i += chunkSize) {
@@ -396,17 +406,55 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("Failed to fetch logo, using text fallback:", err);
     }
 
-    // Prepare attachments if logo is available
-    const attachments = hasLogo && logoBase64
-      ? [
-          {
-            filename: "vendibook-logo.png",
-            content: logoBase64,
-            content_type: "image/png",
-            cid: LOGO_CID,
-          },
-        ]
-      : undefined;
+    // Try to fetch hero image from Supabase Storage
+    console.log("Attempting to fetch hero image from Supabase Storage...");
+    let heroBase64: string | null = null;
+    let hasHero = false;
+    
+    try {
+      const heroUrl = `${SUPABASE_URL}/storage/v1/object/public/email-assets/${HERO_STORAGE_PATH}`;
+      console.log(`Fetching hero from: ${heroUrl}`);
+      
+      const heroResponse = await fetch(heroUrl);
+      const contentType = heroResponse.headers.get("content-type") || "";
+      
+      if (heroResponse.ok && contentType.toLowerCase().includes("image/")) {
+        const bytes = new Uint8Array(await heroResponse.arrayBuffer());
+        let binary = "";
+        const chunkSize = 0x8000;
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+          binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+        }
+        heroBase64 = btoa(binary);
+        hasHero = true;
+        console.log(`Hero image fetched successfully (${bytes.length} bytes)`);
+      } else {
+        console.log(`Hero image not found or invalid (status: ${heroResponse.status}, type: ${contentType})`);
+      }
+    } catch (err) {
+      console.log("Failed to fetch hero image:", err);
+    }
+
+    // Prepare attachments
+    const attachments: Array<{ filename: string; content: string; content_type: string; cid: string }> = [];
+    
+    if (hasLogo && logoBase64) {
+      attachments.push({
+        filename: "vendibook-logo.png",
+        content: logoBase64,
+        content_type: "image/png",
+        cid: LOGO_CID,
+      });
+    }
+    
+    if (hasHero && heroBase64) {
+      attachments.push({
+        filename: "taco-truck-hero.png",
+        content: heroBase64,
+        content_type: "image/png",
+        cid: HERO_CID,
+      });
+    }
 
     for (const recipient of recipients) {
       try {
@@ -417,8 +465,8 @@ const handler = async (req: Request): Promise<Response> => {
           from: "VendiBook <noreply@updates.vendibook.com>",
           to: [recipient.email],
           subject: "🚀 Vendibook is LIVE! Start Your Food Business Journey Today",
-          html: generateEmailHtml(unsubscribeToken, recipient.email, hasLogo),
-          ...(attachments ? { attachments } : {}),
+          html: generateEmailHtml(unsubscribeToken, recipient.email, hasLogo, hasHero),
+          ...(attachments.length > 0 ? { attachments } : {}),
         });
 
         const maybeError = (emailData as unknown as { error?: { message?: string } })
