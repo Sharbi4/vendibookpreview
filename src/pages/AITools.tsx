@@ -4,7 +4,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import FounderPricingOverlay from '@/components/ai-tools/FounderPricingOverlay';
-import AIToolsOnboarding from '@/components/tools/AIToolsOnboarding';
+import AIToolsOnboarding, { useAIToolsOnboarding } from '@/components/tools/AIToolsOnboarding';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -233,6 +233,7 @@ const US_STATES = [
 const AITools = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { resetOnboarding } = useAIToolsOnboarding();
   const [activeTab, setActiveTab] = useState('pricing');
   const [isLoading, setIsLoading] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -1926,6 +1927,19 @@ const AITools = () => {
                     <p className="text-sm text-muted-foreground">{tool.desc}</p>
                   </div>
                 ))}
+              </div>
+              
+              {/* Restart Tour Button */}
+              <div className="mt-12 text-center">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={resetOnboarding}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Restart Tour
+                </Button>
               </div>
             </div>
           </section>
