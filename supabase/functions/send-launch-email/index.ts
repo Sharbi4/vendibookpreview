@@ -14,8 +14,21 @@ interface LaunchEmailRequest {
   sendToAll?: boolean;
 }
 
-const LOGO_URL = "https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/vendibook-logo.png";
+// Using the publicly accessible logo from the project
+const LOGO_URL = "https://vendibookpreview.lovable.app/images/vendibook-email-logo.png";
 const BASE_URL = "https://vendibookpreview.lovable.app";
+
+// Vendibook Brand Colors (matching the website)
+const COLORS = {
+  primary: "#FF6D1F",        // Vendibook Orange
+  primaryDark: "#E55A0D",    // Darker orange for hover
+  charcoal: "#333333",       // Text color
+  gray: "#737373",           // Muted text
+  lightGray: "#F5F5F5",      // Light background
+  cream: "#FAF7F2",          // Cream accent
+  white: "#FFFFFF",
+  border: "#E5E5E5",
+};
 
 const generateEmailHtml = (unsubscribeToken: string, userEmail: string) => `
 <!DOCTYPE html>
@@ -25,35 +38,46 @@ const generateEmailHtml = (unsubscribeToken: string, userEmail: string) => `
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vendibook is LIVE! 🎉</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc;">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: ${COLORS.cream};">
   <table role="presentation" style="width: 100%; border-collapse: collapse;">
     <tr>
       <td align="center" style="padding: 40px 20px;">
-        <table role="presentation" style="max-width: 600px; width: 100%; background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+        <table role="presentation" style="max-width: 600px; width: 100%; background-color: ${COLORS.white}; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);">
           
           <!-- Header with Logo -->
           <tr>
-            <td align="center" style="padding: 40px 40px 20px;">
-              <img src="${LOGO_URL}" alt="Vendibook" style="max-width: 200px; height: auto;" />
+            <td align="center" style="padding: 40px 40px 30px; background-color: ${COLORS.white};">
+              <img src="${LOGO_URL}" alt="Vendibook" style="max-width: 180px; height: auto;" />
             </td>
           </tr>
           
-          <!-- Main Announcement -->
+          <!-- Main Announcement Banner -->
           <tr>
-            <td align="center" style="padding: 20px 40px;">
-              <h1 style="margin: 0; font-size: 36px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 2px;">
-                🚀 WE'RE LIVE!
-              </h1>
-              <p style="margin: 20px 0 0; font-size: 18px; color: #94a3b8; line-height: 1.6;">
-                The marketplace for food trucks, trailers, ghost kitchens & vendor lots is officially open for business!
+            <td style="padding: 0 40px;">
+              <div style="background: linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%); border-radius: 16px; padding: 40px 30px; text-align: center;">
+                <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: ${COLORS.white}; letter-spacing: -0.5px;">
+                  🚀 We're LIVE!
+                </h1>
+                <p style="margin: 16px 0 0; font-size: 16px; color: rgba(255,255,255,0.9); line-height: 1.6;">
+                  The marketplace for food trucks, trailers, ghost kitchens & vendor lots is officially open!
+                </p>
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Welcome Message -->
+          <tr>
+            <td style="padding: 40px 40px 20px;">
+              <p style="margin: 0; font-size: 16px; color: ${COLORS.charcoal}; line-height: 1.7;">
+                We're thrilled to announce that <strong>Vendibook</strong> is now live! Whether you're looking to rent equipment, sell your food truck, or find the perfect vendor spot, we've got you covered.
               </p>
             </td>
           </tr>
           
           <!-- Hero CTA -->
           <tr>
-            <td align="center" style="padding: 30px 40px;">
-              <a href="${BASE_URL}" style="display: inline-block; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: #ffffff; text-decoration: none; padding: 16px 48px; border-radius: 50px; font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 10px 30px rgba(249, 115, 22, 0.4);">
+            <td align="center" style="padding: 10px 40px 40px;">
+              <a href="${BASE_URL}" style="display: inline-block; background-color: ${COLORS.primary}; color: ${COLORS.white}; text-decoration: none; padding: 16px 40px; border-radius: 50px; font-size: 16px; font-weight: 600;">
                 Explore Vendibook →
               </a>
             </td>
@@ -62,34 +86,32 @@ const generateEmailHtml = (unsubscribeToken: string, userEmail: string) => `
           <!-- Divider -->
           <tr>
             <td style="padding: 0 40px;">
-              <div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);"></div>
+              <div style="height: 1px; background-color: ${COLORS.border};"></div>
             </td>
           </tr>
           
-          <!-- Features Grid -->
+          <!-- Section: Discover -->
           <tr>
-            <td style="padding: 40px;">
-              <h2 style="margin: 0 0 30px; font-size: 24px; color: #ffffff; text-align: center;">
-                What's Waiting For You
+            <td style="padding: 40px 40px 20px;">
+              <h2 style="margin: 0 0 24px; font-size: 22px; color: ${COLORS.charcoal}; font-weight: 600;">
+                🔍 Discover What's Available
               </h2>
               
-              <!-- Feature 1: AI Tools -->
-              <table role="presentation" style="width: 100%; margin-bottom: 20px;">
+              <!-- Feature Cards -->
+              <table role="presentation" style="width: 100%;">
+                <!-- AI Tools -->
                 <tr>
-                  <td style="background: rgba(255,255,255,0.05); border-radius: 16px; padding: 24px;">
-                    <table role="presentation" style="width: 100%;">
+                  <td style="padding-bottom: 16px;">
+                    <table role="presentation" style="width: 100%; background-color: ${COLORS.lightGray}; border-radius: 12px;">
                       <tr>
-                        <td style="width: 60px; vertical-align: top;">
-                          <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #8b5cf6, #6366f1); border-radius: 12px; text-align: center; line-height: 50px; font-size: 24px;">
-                            🤖
-                          </div>
-                        </td>
-                        <td style="vertical-align: top; padding-left: 16px;">
-                          <h3 style="margin: 0 0 8px; color: #ffffff; font-size: 18px;">AI-Powered Tools</h3>
-                          <p style="margin: 0 0 12px; color: #94a3b8; font-size: 14px; line-height: 1.5;">
-                            Smart equipment guides, license finders, and market research at your fingertips.
+                        <td style="padding: 20px;">
+                          <h3 style="margin: 0 0 8px; color: ${COLORS.charcoal}; font-size: 16px; font-weight: 600;">
+                            🤖 AI-Powered Tools
+                          </h3>
+                          <p style="margin: 0 0 12px; color: ${COLORS.gray}; font-size: 14px; line-height: 1.5;">
+                            Get smart recommendations with our AI equipment guide, license finder, and market research tools.
                           </p>
-                          <a href="${BASE_URL}/ai-tools" style="color: #f97316; text-decoration: none; font-size: 14px; font-weight: 600;">
+                          <a href="${BASE_URL}/ai-tools" style="color: ${COLORS.primary}; text-decoration: none; font-size: 14px; font-weight: 600;">
                             Try AI Tools →
                           </a>
                         </td>
@@ -97,25 +119,20 @@ const generateEmailHtml = (unsubscribeToken: string, userEmail: string) => `
                     </table>
                   </td>
                 </tr>
-              </table>
-              
-              <!-- Feature 2: Browse & Discover -->
-              <table role="presentation" style="width: 100%; margin-bottom: 20px;">
+                
+                <!-- Browse Listings -->
                 <tr>
-                  <td style="background: rgba(255,255,255,0.05); border-radius: 16px; padding: 24px;">
-                    <table role="presentation" style="width: 100%;">
+                  <td style="padding-bottom: 16px;">
+                    <table role="presentation" style="width: 100%; background-color: ${COLORS.lightGray}; border-radius: 12px;">
                       <tr>
-                        <td style="width: 60px; vertical-align: top;">
-                          <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 12px; text-align: center; line-height: 50px; font-size: 24px;">
-                            🔍
-                          </div>
-                        </td>
-                        <td style="vertical-align: top; padding-left: 16px;">
-                          <h3 style="margin: 0 0 8px; color: #ffffff; font-size: 18px;">Browse & Discover</h3>
-                          <p style="margin: 0 0 12px; color: #94a3b8; font-size: 14px; line-height: 1.5;">
+                        <td style="padding: 20px;">
+                          <h3 style="margin: 0 0 8px; color: ${COLORS.charcoal}; font-size: 16px; font-weight: 600;">
+                            🍔 Browse Listings
+                          </h3>
+                          <p style="margin: 0 0 12px; color: ${COLORS.gray}; font-size: 14px; line-height: 1.5;">
                             Find food trucks, trailers, and ghost kitchens near you. Filter by category, price, and availability.
                           </p>
-                          <a href="${BASE_URL}/search" style="color: #f97316; text-decoration: none; font-size: 14px; font-weight: 600;">
+                          <a href="${BASE_URL}/search" style="color: ${COLORS.primary}; text-decoration: none; font-size: 14px; font-weight: 600;">
                             Start Browsing →
                           </a>
                         </td>
@@ -124,51 +141,59 @@ const generateEmailHtml = (unsubscribeToken: string, userEmail: string) => `
                   </td>
                 </tr>
               </table>
+            </td>
+          </tr>
+          
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <div style="height: 1px; background-color: ${COLORS.border};"></div>
+            </td>
+          </tr>
+          
+          <!-- Section: Make Money -->
+          <tr>
+            <td style="padding: 40px 40px 20px;">
+              <h2 style="margin: 0 0 24px; font-size: 22px; color: ${COLORS.charcoal}; font-weight: 600;">
+                💰 Start Making Money
+              </h2>
               
-              <!-- Feature 3: List & Earn -->
-              <table role="presentation" style="width: 100%; margin-bottom: 20px;">
+              <table role="presentation" style="width: 100%;">
+                <!-- Create Listing -->
                 <tr>
-                  <td style="background: rgba(255,255,255,0.05); border-radius: 16px; padding: 24px;">
-                    <table role="presentation" style="width: 100%;">
+                  <td style="padding-bottom: 16px;">
+                    <table role="presentation" style="width: 100%; background-color: ${COLORS.lightGray}; border-radius: 12px;">
                       <tr>
-                        <td style="width: 60px; vertical-align: top;">
-                          <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #f97316, #ea580c); border-radius: 12px; text-align: center; line-height: 50px; font-size: 24px;">
-                            💰
-                          </div>
-                        </td>
-                        <td style="vertical-align: top; padding-left: 16px;">
-                          <h3 style="margin: 0 0 8px; color: #ffffff; font-size: 18px;">List & Start Earning</h3>
-                          <p style="margin: 0 0 12px; color: #94a3b8; font-size: 14px; line-height: 1.5;">
-                            Got equipment sitting idle? List it and start earning today. Secure payments via Stripe.
+                        <td style="padding: 20px;">
+                          <h3 style="margin: 0 0 8px; color: ${COLORS.charcoal}; font-size: 16px; font-weight: 600;">
+                            📝 List Your Equipment
+                          </h3>
+                          <p style="margin: 0 0 12px; color: ${COLORS.gray}; font-size: 14px; line-height: 1.5;">
+                            Got a food truck, trailer, or kitchen sitting idle? List it and start earning today with secure Stripe payments.
                           </p>
-                          <a href="${BASE_URL}/create-listing" style="color: #f97316; text-decoration: none; font-size: 14px; font-weight: 600;">
-                            Create Your Listing →
+                          <a href="${BASE_URL}/create-listing" style="color: ${COLORS.primary}; text-decoration: none; font-size: 14px; font-weight: 600;">
+                            Create Listing →
                           </a>
                         </td>
                       </tr>
                     </table>
                   </td>
                 </tr>
-              </table>
-              
-              <!-- Feature 4: Vendor Lots -->
-              <table role="presentation" style="width: 100%;">
+                
+                <!-- Vendor Lots -->
                 <tr>
-                  <td style="background: rgba(255,255,255,0.05); border-radius: 16px; padding: 24px;">
-                    <table role="presentation" style="width: 100%;">
+                  <td style="padding-bottom: 16px;">
+                    <table role="presentation" style="width: 100%; background-color: ${COLORS.lightGray}; border-radius: 12px;">
                       <tr>
-                        <td style="width: 60px; vertical-align: top;">
-                          <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 12px; text-align: center; line-height: 50px; font-size: 24px;">
-                            📍
-                          </div>
-                        </td>
-                        <td style="vertical-align: top; padding-left: 16px;">
-                          <h3 style="margin: 0 0 8px; color: #ffffff; font-size: 18px;">Got a Lot? List It!</h3>
-                          <p style="margin: 0 0 12px; color: #94a3b8; font-size: 14px; line-height: 1.5;">
-                            Own property perfect for food vendors? Turn unused space into recurring revenue.
+                        <td style="padding: 20px;">
+                          <h3 style="margin: 0 0 8px; color: ${COLORS.charcoal}; font-size: 16px; font-weight: 600;">
+                            📍 Got a Vendor Lot?
+                          </h3>
+                          <p style="margin: 0 0 12px; color: ${COLORS.gray}; font-size: 14px; line-height: 1.5;">
+                            Own property perfect for food vendors? Turn your unused space into recurring revenue.
                           </p>
-                          <a href="${BASE_URL}/vendor-lots" style="color: #f97316; text-decoration: none; font-size: 14px; font-weight: 600;">
-                            Explore Vendor Lots →
+                          <a href="${BASE_URL}/vendor-lots" style="color: ${COLORS.primary}; text-decoration: none; font-size: 14px; font-weight: 600;">
+                            List Your Lot →
                           </a>
                         </td>
                       </tr>
@@ -179,37 +204,44 @@ const generateEmailHtml = (unsubscribeToken: string, userEmail: string) => `
             </td>
           </tr>
           
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <div style="height: 1px; background-color: ${COLORS.border};"></div>
+            </td>
+          </tr>
+          
           <!-- Benefits Section -->
           <tr>
-            <td style="padding: 0 40px 40px;">
-              <div style="background: linear-gradient(135deg, rgba(249,115,22,0.2), rgba(234,88,12,0.1)); border-radius: 16px; padding: 30px; border: 1px solid rgba(249,115,22,0.3);">
-                <h3 style="margin: 0 0 20px; color: #ffffff; font-size: 20px; text-align: center;">
-                  ✨ Why Vendibook?
+            <td style="padding: 40px;">
+              <div style="background-color: ${COLORS.cream}; border-radius: 12px; padding: 24px; border: 1px solid ${COLORS.border};">
+                <h3 style="margin: 0 0 16px; color: ${COLORS.charcoal}; font-size: 18px; font-weight: 600; text-align: center;">
+                  ✨ Why Choose Vendibook?
                 </h3>
                 <table role="presentation" style="width: 100%;">
                   <tr>
-                    <td style="padding: 8px 0; color: #e2e8f0; font-size: 14px;">
-                      ✅ Secure escrow payments – funds held until booking completes
+                    <td style="padding: 6px 0; color: ${COLORS.charcoal}; font-size: 14px;">
+                      ✅ <strong>Secure Payments</strong> – Funds held safely until booking completes
                     </td>
                   </tr>
                   <tr>
-                    <td style="padding: 8px 0; color: #e2e8f0; font-size: 14px;">
-                      ✅ Identity verification for hosts – book with confidence
+                    <td style="padding: 6px 0; color: ${COLORS.charcoal}; font-size: 14px;">
+                      ✅ <strong>Verified Hosts</strong> – Identity verification for peace of mind
                     </td>
                   </tr>
                   <tr>
-                    <td style="padding: 8px 0; color: #e2e8f0; font-size: 14px;">
-                      ✅ 24/7 support – we've got your back
+                    <td style="padding: 6px 0; color: ${COLORS.charcoal}; font-size: 14px;">
+                      ✅ <strong>24/7 Support</strong> – We're here when you need us
                     </td>
                   </tr>
                   <tr>
-                    <td style="padding: 8px 0; color: #e2e8f0; font-size: 14px;">
-                      ✅ AI-powered tools – find licenses, equipment & more
+                    <td style="padding: 6px 0; color: ${COLORS.charcoal}; font-size: 14px;">
+                      ✅ <strong>AI-Powered</strong> – Smart tools to help you succeed
                     </td>
                   </tr>
                   <tr>
-                    <td style="padding: 8px 0; color: #e2e8f0; font-size: 14px;">
-                      ✅ Built for entrepreneurs – not the gig economy
+                    <td style="padding: 6px 0; color: ${COLORS.charcoal}; font-size: 14px;">
+                      ✅ <strong>Built for Entrepreneurs</strong> – Made for the food business community
                     </td>
                   </tr>
                 </table>
@@ -217,25 +249,30 @@ const generateEmailHtml = (unsubscribeToken: string, userEmail: string) => `
             </td>
           </tr>
           
+          <!-- Final CTA -->
+          <tr>
+            <td align="center" style="padding: 0 40px 40px;">
+              <a href="${BASE_URL}" style="display: inline-block; background-color: ${COLORS.primary}; color: ${COLORS.white}; text-decoration: none; padding: 16px 48px; border-radius: 50px; font-size: 16px; font-weight: 600;">
+                Get Started Today →
+              </a>
+            </td>
+          </tr>
+          
           <!-- Footer -->
           <tr>
-            <td style="background: rgba(0,0,0,0.3); padding: 30px 40px;">
+            <td style="background-color: ${COLORS.lightGray}; padding: 30px 40px;">
               <table role="presentation" style="width: 100%;">
                 <tr>
                   <td align="center">
-                    <p style="margin: 0 0 16px; color: #64748b; font-size: 14px;">
-                      Follow us for updates and tips
+                    <img src="${LOGO_URL}" alt="Vendibook" style="max-width: 100px; height: auto; margin-bottom: 16px;" />
+                    <p style="margin: 0 0 12px; color: ${COLORS.gray}; font-size: 13px;">
+                      The marketplace for food trucks, trailers & more.
                     </p>
-                    <p style="margin: 0 0 24px;">
-                      <a href="https://twitter.com/vendibook" style="color: #94a3b8; text-decoration: none; margin: 0 12px;">Twitter</a>
-                      <a href="https://instagram.com/vendibook" style="color: #94a3b8; text-decoration: none; margin: 0 12px;">Instagram</a>
-                      <a href="https://facebook.com/vendibook" style="color: #94a3b8; text-decoration: none; margin: 0 12px;">Facebook</a>
-                    </p>
-                    <p style="margin: 0 0 16px; color: #475569; font-size: 12px;">
+                    <p style="margin: 0 0 16px; color: ${COLORS.gray}; font-size: 12px;">
                       © 2026 Vendibook. All rights reserved.
                     </p>
-                    <p style="margin: 0; color: #475569; font-size: 12px;">
-                      <a href="${BASE_URL}/unsubscribe?token=${unsubscribeToken}&email=${encodeURIComponent(userEmail)}" style="color: #64748b; text-decoration: underline;">
+                    <p style="margin: 0; font-size: 12px;">
+                      <a href="${BASE_URL}/unsubscribe?token=${unsubscribeToken}&email=${encodeURIComponent(userEmail)}" style="color: ${COLORS.gray}; text-decoration: underline;">
                         Unsubscribe from these emails
                       </a>
                     </p>
