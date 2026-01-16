@@ -38,6 +38,8 @@ export interface Listing {
   published_at: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  // Instant Book (for rentals)
+  instant_book?: boolean;
   // Vendibook freight fields
   vendibook_freight_enabled?: boolean;
   freight_payer?: FreightPayer | string;

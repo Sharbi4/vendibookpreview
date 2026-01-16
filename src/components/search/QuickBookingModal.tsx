@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Calendar, Loader2, MapPin, Truck, Building, Info, CreditCard, CheckCircle2 } from 'lucide-react';
+import { Calendar, Loader2, MapPin, Truck, Building, Info, CreditCard, CheckCircle2, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -164,6 +164,8 @@ const QuickBookingModal = ({
     setIsSubmitting(true);
 
     try {
+      const isInstantBook = listing.instant_book === true;
+      
       const bookingData: TablesInsert<'booking_requests'> = {
         listing_id: listing.id,
         host_id: listing.host_id,
@@ -173,6 +175,7 @@ const QuickBookingModal = ({
         message: message.trim() || null,
         total_price: fees.customerTotal,
         fulfillment_selected: fulfillmentSelected,
+        is_instant_book: isInstantBook,
       };
 
       if (fulfillmentSelected === 'delivery') {
@@ -192,7 +195,27 @@ const QuickBookingModal = ({
 
       if (error) throw error;
 
-      // Send email notification
+      // For Instant Book listings, redirect to checkout immediately
+      if (isInstantBook) {
+        const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout', {
+          body: {
+            booking_id: bookingResult.id,
+            listing_id: listing.id,
+            mode: 'rent',
+            amount: fees.subtotal,
+            delivery_fee: currentDeliveryFee,
+          },
+        });
+
+        if (checkoutError) throw checkoutError;
+
+        if (checkoutData?.url) {
+          window.location.href = checkoutData.url;
+          return;
+        }
+      }
+
+      // For regular bookings, send notification and show confirmation
       supabase.functions
         .invoke('send-booking-notification', {
           body: { booking_id: bookingResult.id, event_type: 'submitted' },
@@ -256,14 +279,22 @@ const QuickBookingModal = ({
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Price */}
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-foreground">${listing.price_daily}</span>
-              <span className="text-muted-foreground">/ day</span>
-              {listing.price_weekly && (
-                <span className="text-sm text-muted-foreground ml-2">
-                  · ${listing.price_weekly} / week
-                </span>
+            {/* Price + Instant Book Badge */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-foreground">${listing.price_daily}</span>
+                <span className="text-muted-foreground">/ day</span>
+                {listing.price_weekly && (
+                  <span className="text-sm text-muted-foreground ml-2">
+                    · ${listing.price_weekly} / week
+                  </span>
+                )}
+              </div>
+              {listing.instant_book && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/10 text-amber-700 rounded-full text-xs font-medium">
+                  <Zap className="h-3 w-3" />
+                  Instant Book
+                </div>
               )}
             </div>
 
@@ -507,17 +538,27 @@ const QuickBookingModal = ({
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
+                  {listing.instant_book ? 'Processing...' : 'Submitting...'}
                 </>
               ) : user ? (
-                `Request to Book · $${fees.customerTotal.toFixed(2)}`
+                listing.instant_book ? (
+                  <>
+                    <Zap className="mr-2 h-4 w-4" />
+                    Book Now · ${fees.customerTotal.toFixed(2)}
+                  </>
+                ) : (
+                  `Request to Book · $${fees.customerTotal.toFixed(2)}`
+                )
               ) : (
                 'Sign in to Book'
               )}
             </Button>
 
             <p className="text-xs text-center text-muted-foreground">
-              You won't be charged until the host confirms your booking
+              {listing.instant_book 
+                ? "You'll be charged immediately. Booking confirms once documents are approved."
+                : "You won't be charged until the host confirms your booking"
+              }
             </p>
           </div>
         )}
