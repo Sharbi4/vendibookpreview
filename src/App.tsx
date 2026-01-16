@@ -43,6 +43,7 @@ const HostOnboarding = lazy(() => import("./pages/HostOnboarding"));
 const Install = lazy(() => import("./pages/Install"));
 const VendorLots = lazy(() => import("./pages/VendorLots"));
 const FAQ = lazy(() => import("./pages/FAQ"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -94,6 +95,7 @@ const AnimatedRoutes = () => {
           <Route path="/install" element={<PageTransition><Install /></PageTransition>} />
           <Route path="/vendor-lots" element={<PageTransition><VendorLots /></PageTransition>} />
           <Route path="/faq" element={<PageTransition><FAQ /></PageTransition>} />
+          <Route path="/unsubscribe" element={<PageTransition><Unsubscribe /></PageTransition>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>

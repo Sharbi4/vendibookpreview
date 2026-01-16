@@ -258,12 +258,13 @@ const SearchResultsMap = forwardRef<HTMLDivElement, SearchResultsMapProps>((
   }
 
   return (
-    <div className="relative h-full w-full rounded-xl overflow-hidden">
+    <div ref={setWrapperNode} className="relative h-full w-full rounded-xl overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
     </div>
   );
-};
+});
 
+SearchResultsMap.displayName = 'SearchResultsMap';
 // Helper function to create a GeoJSON circle
 function createCircleGeoJSON(
   center: [number, number],
