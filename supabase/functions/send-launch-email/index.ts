@@ -1,7 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -338,18 +339,24 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       // Check newsletter_subscribers for unsubscribed users
-      const { data: unsubscribed, error: unsubError } = await supabase
+      const { data: unsubscribed, error: _unsubError } = await supabase
         .from("newsletter_subscribers")
         .select("email")
         .not("unsubscribed_at", "is", null);
 
       const unsubscribedEmails = new Set(
-        (unsubscribed || []).map((u) => u.email.toLowerCase())
+        (unsubscribed || []).map((u: { email: string }) => u.email.toLowerCase())
       );
 
       recipients = (profiles || [])
-        .filter((p) => p.email && !unsubscribedEmails.has(p.email.toLowerCase()))
-        .map((p) => ({ email: p.email!, id: p.id }));
+        .filter(
+          (p: { id: string; email: string | null }) =>
+            p.email && !unsubscribedEmails.has(p.email.toLowerCase())
+        )
+        .map((p: { id: string; email: string | null }) => ({
+          email: p.email!,
+          id: p.id,
+        }));
 
       console.log(`Sending launch email to ${recipients.length} users`);
     } else {
@@ -378,13 +385,28 @@ const handler = async (req: Request): Promise<Response> => {
 
     const fetchImageAsBase64 = async (url: string) => {
       const response = await fetch(`${url}?v=${Date.now()}`);
+      const contentType = response.headers.get("content-type") || "";
+
       if (!response.ok) {
         const text = await response.text().catch(() => "");
         throw new Error(
           `Failed to fetch image (${response.status}) ${url} ${text}`
         );
       }
+
+      // If we accidentally fetched HTML (e.g., an app shell / error page), the CID image will render as broken.
+      if (!contentType.toLowerCase().includes("image/")) {
+        const text = await response.text().catch(() => "");
+        throw new Error(
+          `Expected image/* but got '${contentType}' from ${url}. First 200 chars: ${text.slice(
+            0,
+            200
+          )}`
+        );
+      }
+
       const bytes = new Uint8Array(await response.arrayBuffer());
+      console.log(`Fetched inline image ${url} (${contentType}) bytes=${bytes.length}`);
       return bytesToBase64(bytes);
     };
 
@@ -397,20 +419,14 @@ const handler = async (req: Request): Promise<Response> => {
       {
         filename: "vendibook-email-logo.png",
         content: logoBase64,
-        // Support both naming conventions
-        content_id: LOGO_CID,
-        contentId: LOGO_CID,
-        content_type: "image/png",
         contentType: "image/png",
+        contentId: LOGO_CID,
       },
       {
         filename: "taco-truck-hero.png",
         content: heroBase64,
-        // Support both naming conventions
-        content_id: HERO_CID,
-        contentId: HERO_CID,
-        content_type: "image/png",
         contentType: "image/png",
+        contentId: HERO_CID,
       },
     ];
 
@@ -419,35 +435,29 @@ const handler = async (req: Request): Promise<Response> => {
         // Generate a simple unsubscribe token (base64 of email + timestamp)
         const unsubscribeToken = btoa(`${recipient.email}:${Date.now()}`);
 
-        const emailResponse = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${RESEND_API_KEY}`,
-          },
-          body: JSON.stringify({
-            from: "VendiBook <noreply@updates.vendibook.com>",
-            to: [recipient.email],
-            subject: "🚀 Vendibook is LIVE! Start Your Food Business Journey Today",
-            html: generateEmailHtml(unsubscribeToken, recipient.email),
-            attachments: inlineAttachments,
-          }),
+        const emailData = await resend.emails.send({
+          from: "VendiBook <noreply@updates.vendibook.com>",
+          to: [recipient.email],
+          subject: "🚀 Vendibook is LIVE! Start Your Food Business Journey Today",
+          html: generateEmailHtml(unsubscribeToken, recipient.email),
+          attachments: inlineAttachments,
         });
 
-        const emailData = await emailResponse.json();
-
-        if (!emailResponse.ok) {
-          throw new Error(emailData.message || "Failed to send email");
+        const maybeError = (emailData as unknown as { error?: { message?: string } })
+          .error;
+        if (maybeError) {
+          throw new Error(maybeError.message || "Failed to send email");
         }
 
         console.log(`Email sent to ${recipient.email}:`, emailData);
         results.push({ email: recipient.email, success: true });
-      } catch (error: any) {
-        console.error(`Failed to send to ${recipient.email}:`, error);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(`Failed to send to ${recipient.email}:`, message);
         results.push({
           email: recipient.email,
           success: false,
-          error: error.message,
+          error: message,
         });
       }
     }
@@ -465,9 +475,10 @@ const handler = async (req: Request): Promise<Response> => {
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
-  } catch (error: any) {
-    console.error("Error in send-launch-email function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Error in send-launch-email function:", message);
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
