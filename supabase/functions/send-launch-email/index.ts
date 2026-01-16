@@ -14,10 +14,15 @@ interface LaunchEmailRequest {
   sendToAll?: boolean;
 }
 
-// Using the preview URL which has the latest images
+// Using the preview URL which has the latest images (we embed them inline in the email)
 const PREVIEW_URL = "https://id-preview--f4d8586e-de66-4307-b052-b071b734f592.lovable.app";
 const LOGO_URL = `${PREVIEW_URL}/images/vendibook-email-logo.png`;
 const HERO_IMAGE_URL = `${PREVIEW_URL}/images/taco-truck-hero.png`;
+
+// CID ids for inline-embedded images
+const LOGO_CID = "vendibook-logo";
+const HERO_CID = "taco-truck-hero";
+
 const BASE_URL = "https://vendibookpreview.lovable.app";
 
 // Vendibook Brand Colors (matching the website)
@@ -49,7 +54,7 @@ const generateEmailHtml = (unsubscribeToken: string, userEmail: string) => `
           <!-- Header with Logo -->
           <tr>
             <td align="center" style="padding: 40px 40px 30px; background-color: ${COLORS.white};">
-              <img src="${LOGO_URL}" alt="Vendibook" style="max-width: 180px; height: auto;" />
+              <img src="cid:${LOGO_CID}" alt="Vendibook" style="max-width: 180px; height: auto;" />
             </td>
           </tr>
           
@@ -70,7 +75,7 @@ const generateEmailHtml = (unsubscribeToken: string, userEmail: string) => `
           <!-- Hero Image - Taco Truck -->
           <tr>
             <td style="padding: 30px 40px 20px;">
-              <img src="${HERO_IMAGE_URL}" alt="Beautiful taco truck ready for business" style="width: 100%; max-width: 520px; height: auto; border-radius: 12px; display: block; margin: 0 auto;" />
+              <img src="cid:${HERO_CID}" alt="Beautiful taco truck ready for business" style="width: 100%; max-width: 520px; height: auto; border-radius: 12px; display: block; margin: 0 auto;" />
             </td>
           </tr>
           
@@ -273,7 +278,7 @@ const generateEmailHtml = (unsubscribeToken: string, userEmail: string) => `
               <table role="presentation" style="width: 100%;">
                 <tr>
                   <td align="center">
-                    <img src="${LOGO_URL}" alt="Vendibook" style="max-width: 100px; height: auto; margin-bottom: 16px;" />
+                    <img src="cid:${LOGO_CID}" alt="Vendibook" style="max-width: 100px; height: auto; margin-bottom: 16px;" />
                     <p style="margin: 0 0 12px; color: ${COLORS.gray}; font-size: 13px;">
                       The marketplace for food trucks, trailers & more.
                     </p>
@@ -359,6 +364,56 @@ const handler = async (req: Request): Promise<Response> => {
 
     const results: { email: string; success: boolean; error?: string }[] = [];
 
+    console.log("Preparing inline email images...");
+
+    const bytesToBase64 = (bytes: Uint8Array) => {
+      // Avoid call stack limits for large arrays by chunking
+      let binary = "";
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+      }
+      return btoa(binary);
+    };
+
+    const fetchImageAsBase64 = async (url: string) => {
+      const response = await fetch(`${url}?v=${Date.now()}`);
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        throw new Error(
+          `Failed to fetch image (${response.status}) ${url} ${text}`
+        );
+      }
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      return bytesToBase64(bytes);
+    };
+
+    const [logoBase64, heroBase64] = await Promise.all([
+      fetchImageAsBase64(LOGO_URL),
+      fetchImageAsBase64(HERO_IMAGE_URL),
+    ]);
+
+    const inlineAttachments = [
+      {
+        filename: "vendibook-email-logo.png",
+        content: logoBase64,
+        // Support both naming conventions
+        content_id: LOGO_CID,
+        contentId: LOGO_CID,
+        content_type: "image/png",
+        contentType: "image/png",
+      },
+      {
+        filename: "taco-truck-hero.png",
+        content: heroBase64,
+        // Support both naming conventions
+        content_id: HERO_CID,
+        contentId: HERO_CID,
+        content_type: "image/png",
+        contentType: "image/png",
+      },
+    ];
+
     for (const recipient of recipients) {
       try {
         // Generate a simple unsubscribe token (base64 of email + timestamp)
@@ -375,6 +430,7 @@ const handler = async (req: Request): Promise<Response> => {
             to: [recipient.email],
             subject: "🚀 Vendibook is LIVE! Start Your Food Business Journey Today",
             html: generateEmailHtml(unsubscribeToken, recipient.email),
+            attachments: inlineAttachments,
           }),
         });
 
