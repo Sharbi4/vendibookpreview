@@ -19,7 +19,7 @@ const BASE_URL = "https://vendibookpreview.lovable.app";
 
 // Supabase Storage URL for email assets
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
-const LOGO_STORAGE_PATH = "vendibook-email-logo.png";
+const LOGO_STORAGE_PATH = "vendibook-logo-official.png";
 const LOGO_CID = "vendibook-logo";
 
 // Vendibook Brand Colors (matching the website)
@@ -52,8 +52,8 @@ const generateEmailHtml = (unsubscribeToken: string, userEmail: string, hasLogo:
           <tr>
             <td align="center" style="padding: 40px 40px 30px; background-color: ${COLORS.white};">
               ${hasLogo 
-                ? `<img src="cid:${LOGO_CID}" alt="Vendibook" style="max-width: 180px; height: auto;" />`
-                : `<h1 style="margin: 0; font-size: 36px; font-weight: 800; color: ${COLORS.primary}; letter-spacing: -1px;">🍔 Vendibook</h1>`
+                ? `<img src="cid:${LOGO_CID}" alt="Vendibook" style="max-width: 200px; height: auto;" />`
+                : `<h1 style="margin: 0; font-size: 36px; font-weight: 800; color: ${COLORS.primary}; letter-spacing: -1px;">Vendibook</h1>`
               }
             </td>
           </tr>
@@ -272,8 +272,8 @@ const generateEmailHtml = (unsubscribeToken: string, userEmail: string, hasLogo:
                 <tr>
                   <td align="center">
                     ${hasLogo 
-                      ? `<img src="cid:${LOGO_CID}" alt="Vendibook" style="max-width: 100px; height: auto; margin-bottom: 16px;" />`
-                      : `<p style="margin: 0 0 8px; font-size: 20px; font-weight: 700; color: ${COLORS.primary};">🍔 Vendibook</p>`
+                      ? `<img src="cid:${LOGO_CID}" alt="Vendibook" style="max-width: 120px; height: auto; margin-bottom: 16px;" />`
+                      : `<p style="margin: 0 0 8px; font-size: 20px; font-weight: 700; color: ${COLORS.primary};">Vendibook</p>`
                     }
                     <p style="margin: 0 0 12px; color: ${COLORS.gray}; font-size: 13px;">
                       The marketplace for food trucks, trailers & more.
