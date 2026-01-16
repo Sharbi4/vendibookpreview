@@ -23,12 +23,14 @@ interface VerificationStep {
 
 const VerificationProgress = () => {
   const navigate = useNavigate();
-  const { isVerified } = useAuth();
+  const { isVerified, hasRole } = useAuth();
   const { isConnected, isOnboardingComplete, isLoading: stripeLoading, connectStripe, isConnecting } = useStripeConnect();
   const [isStartingVerification, setIsStartingVerification] = useState(false);
 
-  // Define verification steps
-  const steps: VerificationStep[] = [
+  const isHost = hasRole('host');
+
+  // Define verification steps - hosts don't need to submit documents (they receive them from shoppers)
+  const allSteps: (VerificationStep & { hostOnly?: boolean; shopperOnly?: boolean })[] = [
     {
       id: 'stripe-connect',
       title: 'Connect Stripe Account',
@@ -59,15 +61,22 @@ const VerificationProgress = () => {
     {
       id: 'documents',
       title: 'Submit Required Documents',
-      description: 'Upload business licenses, certifications, or permits for your listings',
+      description: 'Upload business licenses, certifications, or permits for your bookings',
       icon: FileCheck,
       isComplete: false, // This would need a hook to check document status
       action: () => navigate('/dashboard'),
       actionLabel: 'View Documents',
       badgeLabel: 'Document Verified',
       badgeColor: 'from-emerald-500 to-teal-500',
+      shopperOnly: true, // Only show for shoppers, not hosts
     },
   ];
+
+  // Filter steps based on user role - hosts don't need to submit documents
+  const steps = allSteps.filter(step => {
+    if (step.shopperOnly && isHost) return false;
+    return true;
+  });
 
   const completedSteps = steps.filter(s => s.isComplete).length;
   const progressPercentage = (completedSteps / steps.length) * 100;
