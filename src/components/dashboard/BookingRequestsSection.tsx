@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Loader2, Inbox, FileText, Filter } from 'lucide-react';
+import { Calendar, Loader2, Inbox, FileText, Filter, Zap } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,7 +15,7 @@ import StatCard from './StatCard';
 import { useHostBookings } from '@/hooks/useHostBookings';
 import { useDocumentComplianceStatus } from '@/hooks/useRequiredDocuments';
 
-type DocFilterType = 'all' | 'pending-docs' | 'incomplete-docs' | 'complete-docs';
+type DocFilterType = 'all' | 'instant-book' | 'pending-docs' | 'incomplete-docs' | 'complete-docs';
 
 // Wrapper component to get compliance for filtering
 const BookingWithCompliance = ({ 
@@ -42,14 +42,16 @@ const BookingWithCompliance = ({
   }
 
   // Apply filter
-  if (docFilter !== 'all' && !compliance.isLoading && compliance.hasRequirements) {
+  if (docFilter === 'instant-book') {
+    if (!booking.is_instant_book) return null;
+  } else if (docFilter !== 'all' && !compliance.isLoading && compliance.hasRequirements) {
     if (docFilter === 'pending-docs' && compliance.pendingCount === 0) return null;
     if (docFilter === 'incomplete-docs' && compliance.allApproved) return null;
     if (docFilter === 'complete-docs' && !compliance.allApproved) return null;
   }
 
   // If filtering for docs but booking has no requirements, hide it for doc-specific filters
-  if (docFilter !== 'all' && !compliance.hasRequirements) return null;
+  if (docFilter !== 'all' && docFilter !== 'instant-book' && !compliance.hasRequirements) return null;
 
   return (
     <BookingRequestCard
@@ -76,6 +78,7 @@ const BookingRequestsSection = () => {
   const pendingBookings = bookings.filter(b => b.status === 'pending');
   const approvedBookings = bookings.filter(b => b.status === 'approved');
   const declinedBookings = bookings.filter(b => b.status === 'declined');
+  const instantBookCount = bookings.filter(b => b.is_instant_book).length;
 
   // Calculate doc stats from cache
   const docStats = Object.values(complianceCache).reduce((acc, c) => {
@@ -90,6 +93,7 @@ const BookingRequestsSection = () => {
 
   const filterLabel = {
     'all': 'All Bookings',
+    'instant-book': `Instant Book (${instantBookCount})`,
     'pending-docs': `Pending Review (${docStats.pendingDocs})`,
     'incomplete-docs': `Incomplete Docs (${docStats.incompleteDocs})`,
     'complete-docs': `Complete Docs (${docStats.completeDocs})`,
@@ -119,6 +123,7 @@ const BookingRequestsSection = () => {
     // Check if any items rendered when filter is active
     const isDocFilter = docFilter !== 'all';
     const hasVisibleItems = !isDocFilter || bookingList.some(b => {
+      if (docFilter === 'instant-book') return b.is_instant_book;
       const c = complianceCache[b.id];
       if (!c || !c.hasRequirements) return false;
       if (docFilter === 'pending-docs') return c.pendingCount > 0;
@@ -137,7 +142,7 @@ const BookingRequestsSection = () => {
   return (
     <div className="space-y-6">
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard 
           icon={Calendar} 
           label="Pending" 
@@ -153,11 +158,18 @@ const BookingRequestsSection = () => {
           iconClass="text-emerald-600"
         />
         <StatCard 
+          icon={Zap} 
+          label="Instant Book" 
+          value={instantBookCount}
+          iconBgClass="bg-amber-100"
+          iconClass="text-amber-600"
+        />
+        <StatCard 
           icon={FileText} 
           label="Docs Pending" 
           value={docStats.pendingDocs}
-          iconBgClass="bg-amber-100"
-          iconClass="text-amber-600"
+          iconBgClass="bg-blue-100"
+          iconClass="text-blue-600"
         />
       </div>
 
@@ -185,6 +197,17 @@ const BookingRequestsSection = () => {
             >
               All Bookings
             </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={docFilter === 'instant-book'}
+              onCheckedChange={() => setDocFilter('instant-book')}
+            >
+              <Zap className="h-3.5 w-3.5 mr-1.5 text-amber-500" />
+              Instant Book
+              {instantBookCount > 0 && (
+                <span className="ml-auto text-xs text-amber-600">{instantBookCount}</span>
+              )}
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuSeparator />
             <DropdownMenuCheckboxItem
               checked={docFilter === 'pending-docs'}
               onCheckedChange={() => setDocFilter('pending-docs')}
