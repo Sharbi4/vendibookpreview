@@ -402,8 +402,8 @@ const handler = async (req: Request): Promise<Response> => {
           {
             filename: "vendibook-logo.png",
             content: logoBase64,
-            contentType: "image/png",
-            contentId: LOGO_CID,
+            content_type: "image/png",
+            cid: LOGO_CID,
           },
         ]
       : undefined;
