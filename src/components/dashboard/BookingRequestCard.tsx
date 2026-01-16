@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Check, X, Calendar, User, MessageSquare, Loader2, MessageCircle, FileText, DollarSign } from 'lucide-react';
+import { Check, X, Calendar, User, MessageSquare, Loader2, MessageCircle, FileText, DollarSign, FileCheck, FileClock, FileWarning } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
@@ -69,6 +69,63 @@ const StatusPill = ({ status }: { status: string }) => {
       {labels[status] || status}
     </span>
   );
+};
+
+const DocumentCompliancePill = ({ compliance }: { 
+  compliance: { 
+    allApproved: boolean; 
+    hasRequirements: boolean; 
+    missingCount: number; 
+    pendingCount: number; 
+    rejectedCount: number;
+    documentStatuses: Array<{ status: string }>;
+  } 
+}) => {
+  if (!compliance.hasRequirements) return null;
+
+  const approvedCount = compliance.documentStatuses.filter(d => d.status === 'approved').length;
+
+  // All documents approved
+  if (compliance.allApproved && approvedCount > 0) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+        <FileCheck className="h-3 w-3" />
+        Docs Complete
+      </span>
+    );
+  }
+
+  // Has rejected documents
+  if (compliance.rejectedCount > 0) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-destructive/10 text-destructive">
+        <FileWarning className="h-3 w-3" />
+        {compliance.rejectedCount} Rejected
+      </span>
+    );
+  }
+
+  // Has pending documents awaiting review
+  if (compliance.pendingCount > 0) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+        <FileClock className="h-3 w-3" />
+        {compliance.pendingCount} Pending Review
+      </span>
+    );
+  }
+
+  // Missing documents (not uploaded yet)
+  if (compliance.missingCount > 0) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+        <FileText className="h-3 w-3" />
+        {compliance.missingCount} Missing
+      </span>
+    );
+  }
+
+  return null;
 };
 
 const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel }: BookingRequestCardProps) => {
@@ -170,8 +227,11 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel }: Booking
                     {format(new Date(booking.start_date), 'MMM d')} - {format(new Date(booking.end_date), 'MMM d, yyyy')}
                   </span>
                 </div>
+                </div>
+              <div className="flex flex-col items-end gap-1.5">
+                <StatusPill status={booking.status} />
+                <DocumentCompliancePill compliance={compliance} />
               </div>
-              <StatusPill status={booking.status} />
             </div>
 
             {/* Shopper Info */}
