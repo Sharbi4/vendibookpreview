@@ -6,7 +6,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ListingCard from '@/components/listing/ListingCard';
 import SearchResultsMap from '@/components/search/SearchResultsMap';
-import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -96,8 +96,8 @@ const VendorLots = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState<string | null>(null);
 
-  // Get Mapbox token
-  const { token: mapToken, isLoading: mapLoading, error: mapError } = useMapboxToken();
+  // Get Google Maps API key
+  const { apiKey: mapToken, isLoading: mapLoading, error: mapError } = useGoogleMapsToken();
 
   // Fetch vendor lot listings
   const { data: listings = [], isLoading } = useQuery({

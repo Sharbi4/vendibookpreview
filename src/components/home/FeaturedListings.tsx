@@ -17,7 +17,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import SearchResultsMap from '@/components/search/SearchResultsMap';
-import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
 import { Listing } from '@/types/listing';
 
 const ITEMS_PER_PAGE = 8;
@@ -38,7 +38,7 @@ const FeaturedListings = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   
   const navigate = useNavigate();
-  const { token: mapToken, isLoading: isMapLoading, error: mapError } = useMapboxToken();
+  const { apiKey: mapToken, isLoading: isMapLoading, error: mapError } = useGoogleMapsToken();
 
   // Request user location 10 seconds after page load (after listings are shown)
   useEffect(() => {

@@ -5,59 +5,46 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const logStep = (step: string, details?: Record<string, unknown>) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[ESTIMATE-FREIGHT] ${step}${detailsStr}`);
+const logStep = (step: string, details?: any) => {
+  console.log(`[FREIGHT] ${step}`, details ? JSON.stringify(details) : "");
 };
 
 interface FreightEstimateRequest {
-  origin_address: string;
-  destination_address: string;
-  // Item dimensions
-  weight_lbs?: number;
-  length_inches?: number;
-  width_inches?: number;
-  height_inches?: number;
-  // Optional: item category for specialized pricing
-  item_category?: 'standard' | 'fragile' | 'heavy_equipment' | 'oversized';
+  originAddress: string;
+  destinationAddress: string;
+  lengthInches?: number;
+  widthInches?: number;
+  heightInches?: number;
+  weightLbs?: number;
 }
 
 interface FreightEstimateResponse {
   success: boolean;
   estimate?: {
-    base_cost: number;
-    fuel_surcharge: number;
-    handling_fee: number;
-    total_cost: number;
-    distance_miles: number;
-    estimated_transit_days: { min: number; max: number };
-    rate_per_mile: number;
-    dimensional_weight: number;
-    billable_weight: number;
+    distanceMiles: number;
+    baseCost: number;
+    fuelSurcharge: number;
+    handlingFee: number;
+    totalCost: number;
+    transitDaysMin: number;
+    transitDaysMax: number;
   };
-  disclaimer: string;
   error?: string;
 }
 
-// Simple rate structure for Vendibook Freight: $4.50 per mile
+// Freight rate calculations (simplified)
 const FREIGHT_RATES = {
-  // Flat rate per mile
-  perMile: 4.50,
-  // Minimum charge
-  minimumCharge: 50,
-  // Fuel surcharge percentage (0 = disabled for simplicity)
-  fuelSurchargePercent: 0,
-  // Handling fee (0 = disabled for simplicity)
-  handlingFee: 0,
-  // Transit time estimates (days per 500 miles)
-  transitDaysBase: 1,
-  transitDaysPer500Miles: 1,
+  baseRatePerMile: 2.50,
+  minimumCharge: 150,
+  fuelSurchargePercent: 0.15,
+  handlingFee: 75,
+  maxMilesForStandard: 500,
 };
 
-async function geocodeAddress(address: string, mapboxToken: string): Promise<{ lat: number; lng: number } | null> {
+async function geocodeAddress(address: string, apiKey: string): Promise<{ lat: number; lng: number } | null> {
   try {
     const encodedAddress = encodeURIComponent(address);
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedAddress}.json?access_token=${mapboxToken}&country=US&limit=1`;
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}&components=country:US`;
     
     const response = await fetch(url);
     if (!response.ok) {
@@ -66,9 +53,9 @@ async function geocodeAddress(address: string, mapboxToken: string): Promise<{ l
     }
     
     const data = await response.json();
-    if (data.features && data.features.length > 0) {
-      const [lng, lat] = data.features[0].center;
-      return { lat, lng };
+    if (data.status === "OK" && data.results && data.results.length > 0) {
+      const location = data.results[0].geometry.location;
+      return { lat: location.lat, lng: location.lng };
     }
     
     return null;
@@ -79,11 +66,10 @@ async function geocodeAddress(address: string, mapboxToken: string): Promise<{ l
 }
 
 function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  // Haversine formula for distance between two points
   const R = 3959; // Earth's radius in miles
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = 
+  const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
     Math.sin(dLng / 2) * Math.sin(dLng / 2);
@@ -93,173 +79,142 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 
 function calculateFreightCost(
   distanceMiles: number,
-  _weightLbs: number,
-  _lengthIn: number,
-  _widthIn: number,
-  _heightIn: number,
-  _category: string
-): {
-  baseCost: number;
-  fuelSurcharge: number;
-  handlingFee: number;
-  totalCost: number;
-  ratePerMile: number;
-  dimensionalWeight: number;
-  billableWeight: number;
-} {
-  // Simple calculation: $4.50 per mile
-  const ratePerMile = FREIGHT_RATES.perMile;
-  
-  // Base cost = distance × rate
-  let baseCost = distanceMiles * ratePerMile;
-  
-  // Apply minimum charge
-  baseCost = Math.max(baseCost, FREIGHT_RATES.minimumCharge);
-  
-  // No fuel surcharge or handling fee in simplified model
-  const fuelSurcharge = 0;
-  const handlingFee = 0;
-  
-  // Total
+  lengthInches?: number,
+  widthInches?: number,
+  heightInches?: number,
+  weightLbs?: number
+): { baseCost: number; fuelSurcharge: number; handlingFee: number; totalCost: number } {
+  // Base cost calculation
+  let baseCost = Math.max(
+    FREIGHT_RATES.minimumCharge,
+    distanceMiles * FREIGHT_RATES.baseRatePerMile
+  );
+
+  // Add size/weight surcharge if applicable
+  if (weightLbs && weightLbs > 500) {
+    baseCost *= 1.25;
+  }
+  if (lengthInches && lengthInches > 120) {
+    baseCost *= 1.15;
+  }
+
+  const fuelSurcharge = baseCost * FREIGHT_RATES.fuelSurchargePercent;
+  const handlingFee = FREIGHT_RATES.handlingFee;
   const totalCost = baseCost + fuelSurcharge + handlingFee;
-  
+
   return {
     baseCost: Math.round(baseCost * 100) / 100,
-    fuelSurcharge: 0,
-    handlingFee: 0,
+    fuelSurcharge: Math.round(fuelSurcharge * 100) / 100,
+    handlingFee,
     totalCost: Math.round(totalCost * 100) / 100,
-    ratePerMile: ratePerMile,
-    dimensionalWeight: 0,
-    billableWeight: 0,
   };
 }
 
 function estimateTransitDays(distanceMiles: number): { min: number; max: number } {
-  const baseDays = FREIGHT_RATES.transitDaysBase;
-  const additionalDays = Math.ceil(distanceMiles / 500) * FREIGHT_RATES.transitDaysPer500Miles;
-  const totalDays = baseDays + additionalDays;
-  
-  // Add buffer for scheduling and carrier availability
-  return {
-    min: Math.max(3, totalDays), // Minimum 3 days (72 hours)
-    max: Math.min(10, totalDays + 3), // Maximum 10 days as per Pod 2/3
-  };
+  if (distanceMiles <= 250) {
+    return { min: 1, max: 3 };
+  } else if (distanceMiles <= 500) {
+    return { min: 2, max: 5 };
+  } else if (distanceMiles <= 1000) {
+    return { min: 3, max: 7 };
+  } else if (distanceMiles <= 1500) {
+    return { min: 5, max: 10 };
+  } else {
+    return { min: 7, max: 14 };
+  }
 }
 
-serve(async (req) => {
+const handler = async (req: Request): Promise<Response> => {
+  logStep("Freight estimate function called");
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    logStep("Function started");
-
-    const mapboxToken = Deno.env.get("MAPBOX_ACCESS_TOKEN") || Deno.env.get("MAPBOX_PUBLIC_TOKEN");
-    if (!mapboxToken) {
-      throw new Error("MAPBOX_ACCESS_TOKEN or MAPBOX_PUBLIC_TOKEN is not configured");
+    const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
+    
+    if (!GOOGLE_MAPS_API_KEY) {
+      logStep("Google Maps API key not configured");
+      return new Response(
+        JSON.stringify({ success: false, error: "Geocoding service not configured" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     const body: FreightEstimateRequest = await req.json();
-    const {
-      origin_address,
-      destination_address,
-      weight_lbs = 100,
-      length_inches = 48,
-      width_inches = 40,
-      height_inches = 48,
-      item_category = 'standard',
-    } = body;
+    logStep("Request body", body);
 
-    logStep("Request received", {
-      origin: origin_address,
-      destination: destination_address,
-      weight: weight_lbs,
-      dimensions: `${length_inches}x${width_inches}x${height_inches}`,
-      category: item_category,
-    });
+    const { originAddress, destinationAddress, lengthInches, widthInches, heightInches, weightLbs } = body;
 
-    if (!origin_address || !destination_address) {
-      throw new Error("Both origin_address and destination_address are required");
+    if (!originAddress || !destinationAddress) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Origin and destination addresses are required" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     // Geocode both addresses
-    const [originCoords, destCoords] = await Promise.all([
-      geocodeAddress(origin_address, mapboxToken),
-      geocodeAddress(destination_address, mapboxToken),
-    ]);
-
+    logStep("Geocoding origin address", { originAddress });
+    const originCoords = await geocodeAddress(originAddress, GOOGLE_MAPS_API_KEY);
+    
     if (!originCoords) {
-      throw new Error("Could not geocode origin address");
+      return new Response(
+        JSON.stringify({ success: false, error: "Could not geocode origin address" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
-    if (!destCoords) {
-      throw new Error("Could not geocode destination address");
-    }
+    logStep("Origin coordinates", originCoords);
 
-    logStep("Addresses geocoded", {
-      origin: originCoords,
-      destination: destCoords,
-    });
+    logStep("Geocoding destination address", { destinationAddress });
+    const destCoords = await geocodeAddress(destinationAddress, GOOGLE_MAPS_API_KEY);
+    
+    if (!destCoords) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Could not geocode destination address" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    logStep("Destination coordinates", destCoords);
 
     // Calculate distance
     const distanceMiles = calculateDistance(
-      originCoords.lat, originCoords.lng,
-      destCoords.lat, destCoords.lng
+      originCoords.lat,
+      originCoords.lng,
+      destCoords.lat,
+      destCoords.lng
     );
-
-    logStep("Distance calculated", { distanceMiles: Math.round(distanceMiles) });
+    logStep("Calculated distance", { distanceMiles });
 
     // Calculate freight cost
-    const costs = calculateFreightCost(
-      distanceMiles,
-      weight_lbs,
-      length_inches,
-      width_inches,
-      height_inches,
-      item_category
-    );
+    const costs = calculateFreightCost(distanceMiles, lengthInches, widthInches, heightInches, weightLbs);
+    logStep("Calculated costs", costs);
 
     // Estimate transit time
     const transitDays = estimateTransitDays(distanceMiles);
+    logStep("Estimated transit days", transitDays);
 
     const response: FreightEstimateResponse = {
       success: true,
       estimate: {
-        base_cost: costs.baseCost,
-        fuel_surcharge: costs.fuelSurcharge,
-        handling_fee: costs.handlingFee,
-        total_cost: costs.totalCost,
-        distance_miles: Math.round(distanceMiles),
-        estimated_transit_days: transitDays,
-        rate_per_mile: costs.ratePerMile,
-        dimensional_weight: costs.dimensionalWeight,
-        billable_weight: costs.billableWeight,
+        distanceMiles: Math.round(distanceMiles),
+        ...costs,
+        transitDaysMin: transitDays.min,
+        transitDaysMax: transitDays.max,
       },
-      disclaimer: "This is an estimate only. Final freight cost will be confirmed after carrier pickup scheduling. Vendibook coordinates freight through a third-party carrier.",
     };
 
-    logStep("Estimate calculated", {
-      totalCost: costs.totalCost,
-      distance: Math.round(distanceMiles),
-      transitDays,
-    });
-
-    return new Response(JSON.stringify(response), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: errorMessage });
-    
-    const response: FreightEstimateResponse = {
-      success: false,
-      error: errorMessage,
-      disclaimer: "Unable to calculate estimate at this time.",
-    };
-    
-    return new Response(JSON.stringify(response), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
-    });
+    return new Response(
+      JSON.stringify(response),
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+    );
+  } catch (error: any) {
+    logStep("Error in freight estimate", { error: error.message });
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+    );
   }
-});
+};
+
+serve(handler);

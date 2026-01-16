@@ -42,7 +42,7 @@ import { Listing, CATEGORY_LABELS, ListingCategory, ListingMode, AMENITIES_BY_CA
 import { calculateDistance } from '@/lib/geolocation';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
 
 // Fetch all blocked dates and bookings for availability filtering
 interface UnavailableDates {
@@ -103,8 +103,8 @@ const Search = () => {
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
 
-  // Mapbox token for map view
-  const { token: mapToken, isLoading: isMapTokenLoading, error: mapTokenError } = useMapboxToken();
+  // Google Maps API key for map view
+  const { apiKey: mapToken, isLoading: isMapTokenLoading, error: mapTokenError } = useGoogleMapsToken();
 
 
   // Quick booking modal state

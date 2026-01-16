@@ -1,4 +1,4 @@
-@import 'mapbox-gl/dist/mapbox-gl.css';
+/* Google Maps doesn't require CSS imports */
 
 @tailwind base;
 @tailwind components;
