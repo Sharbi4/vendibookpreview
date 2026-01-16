@@ -16,6 +16,7 @@ import { FreightInfoCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import type { FulfillmentType } from '@/types/listing';
+import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 
 interface InquiryFormProps {
   listingId: string;
@@ -226,6 +227,9 @@ const InquiryForm = ({
 
       if (error) throw error;
       if (data.error) throw new Error(data.error);
+
+      // Track conversion before redirect
+      trackFormSubmitConversion({ form_type: 'purchase', listing_id: listingId });
 
       // Redirect to Stripe checkout in same tab
       window.location.href = data.url;
