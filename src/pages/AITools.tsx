@@ -556,8 +556,10 @@ const AITools = () => {
                   <div className="grid gap-6 md:grid-cols-2">
                     <Card>
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <DollarSign className="h-5 w-5 text-primary" />
+                        <CardTitle className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-sm">
+                            <DollarSign className="h-5 w-5 text-white" />
+                          </div>
                           PricePilot
                         </CardTitle>
                         <CardDescription>
@@ -732,8 +734,10 @@ const AITools = () => {
                   <div className="grid gap-6 md:grid-cols-2">
                     <Card>
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <FileText className="h-5 w-5 text-primary" />
+                        <CardTitle className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-rose-400 to-pink-600 flex items-center justify-center shadow-sm">
+                            <FileText className="h-5 w-5 text-white" />
+                          </div>
                           Listing Studio
                         </CardTitle>
                         <CardDescription>
@@ -889,8 +893,10 @@ const AITools = () => {
                   <div className="space-y-6">
                     <Card>
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Lightbulb className="h-5 w-5 text-primary" />
+                        <CardTitle className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-yellow-300 to-amber-500 flex items-center justify-center shadow-sm">
+                            <Lightbulb className="h-5 w-5 text-white" />
+                          </div>
                           Concept Lab
                         </CardTitle>
                         <CardDescription>
@@ -1048,9 +1054,11 @@ const AITools = () => {
                   <div className="space-y-6">
                     <Card>
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Wrench className="h-5 w-5 text-primary" />
-                          Equipment Maintenance Guide
+                        <CardTitle className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-sm">
+                            <Wrench className="h-5 w-5 text-white" />
+                          </div>
+                          BuildKit
                         </CardTitle>
                         <CardDescription>
                           Get detailed maintenance guides, troubleshooting tips, and care instructions for commercial kitchen equipment.
@@ -1288,9 +1296,11 @@ const AITools = () => {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <FileCheck className="h-5 w-5 text-primary" />
-                          License & Permit Finder
+                        <CardTitle className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-sm">
+                            <FileCheck className="h-5 w-5 text-white" />
+                          </div>
+                          PermitPath
                         </CardTitle>
                         <CardDescription>
                           Find all the licenses, permits, and requirements needed to operate your mobile food business in any state.
@@ -1646,9 +1656,11 @@ const AITools = () => {
                   <div className="space-y-6">
                     <Card>
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Search className="h-5 w-5 text-primary" />
-                          AI Industry Research
+                        <CardTitle className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center shadow-sm">
+                            <Search className="h-5 w-5 text-white" />
+                          </div>
+                          Market Radar
                         </CardTitle>
                         <CardDescription>
                           Get comprehensive, AI-powered research on any food truck or commercial kitchen topic.
