@@ -417,8 +417,8 @@ const Header = () => {
                     <Sparkles className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Vendi AI Tools</p>
-                    <p className="text-xs text-muted-foreground">AI-powered business helpers</p>
+                    <p className="text-sm font-semibold text-foreground">Vendi AI Suite</p>
+                    <p className="text-xs text-muted-foreground">Your AI co-pilot for mobile food business</p>
                   </div>
                 </div>
               </div>
@@ -434,8 +434,8 @@ const Header = () => {
                     <DollarSign className="h-5 w-5 text-yellow-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">Vendi Pricing</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">Get smart pricing suggestions for your listing</p>
+                    <p className="text-sm font-medium text-foreground">PricePilot</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">Data-backed pricing that helps you book faster</p>
                   </div>
                 </DropdownMenuItem>
                 
@@ -447,8 +447,8 @@ const Header = () => {
                     <FileText className="h-5 w-5 text-amber-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">Vendi Licenses</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">Find required permits & licenses by state</p>
+                    <p className="text-sm font-medium text-foreground">PermitPath</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">Permits & licenses mapped to your city</p>
                   </div>
                 </DropdownMenuItem>
                 
@@ -460,8 +460,8 @@ const Header = () => {
                     <Wrench className="h-5 w-5 text-orange-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">Vendi Equipment</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">Get equipment recommendations for your cuisine</p>
+                    <p className="text-sm font-medium text-foreground">BuildKit</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">Equipment for your menu, volume, and budget</p>
                   </div>
                 </DropdownMenuItem>
                 
@@ -473,8 +473,8 @@ const Header = () => {
                     <Brain className="h-5 w-5 text-rose-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">Vendi Insight</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">AI-optimized listing descriptions that convert</p>
+                    <p className="text-sm font-medium text-foreground">Listing Studio</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">Turn specs into high-converting listings</p>
                   </div>
                 </DropdownMenuItem>
                 
@@ -486,8 +486,8 @@ const Header = () => {
                     <Lightbulb className="h-5 w-5 text-yellow-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">Vendi Ideas</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">Generate unique food business concepts</p>
+                    <p className="text-sm font-medium text-foreground">Concept Lab</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">Sellable concepts for your market</p>
                   </div>
                 </DropdownMenuItem>
                 
@@ -499,8 +499,8 @@ const Header = () => {
                     <Globe className="h-5 w-5 text-blue-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">Vendi Research</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">Market research & competitor analysis</p>
+                    <p className="text-sm font-medium text-foreground">Market Radar</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">Location intel & competitor snapshots</p>
                   </div>
                 </DropdownMenuItem>
               </div>
@@ -513,7 +513,7 @@ const Header = () => {
                 className="cursor-pointer flex items-center justify-center gap-2 p-2 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors"
               >
                 <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium text-primary">Explore All AI Tools</span>
+                <span className="text-sm font-medium text-primary">Open Command Center</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -658,8 +658,8 @@ const Header = () => {
                       <Sparkles className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-foreground">Vendi AI Tools</p>
-                      <p className="text-xs text-muted-foreground">AI-powered business helpers</p>
+                      <p className="text-sm font-semibold text-foreground">Vendi AI Suite</p>
+                      <p className="text-xs text-muted-foreground">Your AI co-pilot for mobile food business</p>
                     </div>
                   </div>
                   
@@ -674,8 +674,8 @@ const Header = () => {
                         <DollarSign className="h-5 w-5 text-yellow-500" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">Vendi Pricing</p>
-                        <p className="text-xs text-muted-foreground">Smart pricing suggestions for your listing</p>
+                        <p className="text-sm font-medium text-foreground">PricePilot</p>
+                        <p className="text-xs text-muted-foreground">Data-backed pricing that helps you book faster</p>
                       </div>
                     </Link>
                     
@@ -688,8 +688,8 @@ const Header = () => {
                         <FileText className="h-5 w-5 text-amber-500" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">Vendi Licenses</p>
-                        <p className="text-xs text-muted-foreground">Find required permits & licenses by state</p>
+                        <p className="text-sm font-medium text-foreground">PermitPath</p>
+                        <p className="text-xs text-muted-foreground">Permits & licenses mapped to your city</p>
                       </div>
                     </Link>
                     
@@ -702,8 +702,8 @@ const Header = () => {
                         <Wrench className="h-5 w-5 text-orange-500" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">Vendi Equipment</p>
-                        <p className="text-xs text-muted-foreground">Equipment recommendations for your cuisine</p>
+                        <p className="text-sm font-medium text-foreground">BuildKit</p>
+                        <p className="text-xs text-muted-foreground">Equipment for your menu, volume, and budget</p>
                       </div>
                     </Link>
                     
@@ -716,8 +716,8 @@ const Header = () => {
                         <Brain className="h-5 w-5 text-rose-500" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">Vendi Insight</p>
-                        <p className="text-xs text-muted-foreground">AI-optimized listing descriptions</p>
+                        <p className="text-sm font-medium text-foreground">Listing Studio</p>
+                        <p className="text-xs text-muted-foreground">Turn specs into high-converting listings</p>
                       </div>
                     </Link>
                     
@@ -730,8 +730,8 @@ const Header = () => {
                         <Lightbulb className="h-5 w-5 text-yellow-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">Vendi Ideas</p>
-                        <p className="text-xs text-muted-foreground">Generate unique food business concepts</p>
+                        <p className="text-sm font-medium text-foreground">Concept Lab</p>
+                        <p className="text-xs text-muted-foreground">Sellable concepts for your market</p>
                       </div>
                     </Link>
                     
@@ -744,8 +744,8 @@ const Header = () => {
                         <Globe className="h-5 w-5 text-blue-500" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">Vendi Research</p>
-                        <p className="text-xs text-muted-foreground">Market research & competitor analysis</p>
+                        <p className="text-sm font-medium text-foreground">Market Radar</p>
+                        <p className="text-xs text-muted-foreground">Location intel & competitor snapshots</p>
                       </div>
                     </Link>
                   </div>
@@ -757,7 +757,7 @@ const Header = () => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <Sparkles className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium text-primary">Explore All AI Tools</span>
+                    <span className="text-sm font-medium text-primary">Open Command Center</span>
                   </Link>
                 </div>
               )}
