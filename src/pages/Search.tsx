@@ -99,6 +99,7 @@ const Search = () => {
   );
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [deliveryFilterEnabled, setDeliveryFilterEnabled] = useState(false);
+  const [instantBookOnly, setInstantBookOnly] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
@@ -354,6 +355,11 @@ const Search = () => {
       results = results.filter(listing => canListingDeliverToLocation(listing));
     }
 
+    // Filter by Instant Book
+    if (instantBookOnly) {
+      results = results.filter(listing => listing.mode === 'rent' && listing.instant_book === true);
+    }
+
     // Apply sorting
     if (sortBy === 'relevance' && searchQuery.trim()) {
       // Sort by Fuse.js score (lower = better match)
@@ -489,6 +495,7 @@ const Search = () => {
     setDateRange(undefined);
     setSelectedAmenities([]);
     setDeliveryFilterEnabled(false);
+    setInstantBookOnly(false);
     setSortBy('newest');
     setSearchParams({});
   };
@@ -536,6 +543,7 @@ const Search = () => {
     dateRange?.from && dateRange?.to,
     selectedAmenities.length > 0,
     deliveryFilterEnabled,
+    instantBookOnly,
   ].filter(Boolean).length;
 
   return (
@@ -599,6 +607,7 @@ const Search = () => {
                       dateRange={dateRange}
                       selectedAmenities={selectedAmenities}
                       deliveryFilterEnabled={deliveryFilterEnabled}
+                      instantBookOnly={instantBookOnly}
                       onModeChange={handleModeChange}
                       onCategoryChange={handleCategoryChange}
                       onLocationTextChange={setLocationText}
@@ -608,6 +617,7 @@ const Search = () => {
                       onDateRangeChange={handleDateRangeChange}
                       onAmenityToggle={toggleAmenity}
                       onDeliveryFilterChange={setDeliveryFilterEnabled}
+                      onInstantBookChange={setInstantBookOnly}
                       onClear={clearFilters}
                     />
                   </div>
@@ -700,6 +710,7 @@ const Search = () => {
                   dateRange={dateRange}
                   selectedAmenities={selectedAmenities}
                   deliveryFilterEnabled={deliveryFilterEnabled}
+                  instantBookOnly={instantBookOnly}
                   onModeChange={handleModeChange}
                   onCategoryChange={handleCategoryChange}
                   onLocationTextChange={setLocationText}
@@ -709,6 +720,7 @@ const Search = () => {
                   onDateRangeChange={handleDateRangeChange}
                   onAmenityToggle={toggleAmenity}
                   onDeliveryFilterChange={setDeliveryFilterEnabled}
+                  onInstantBookChange={setInstantBookOnly}
                   onClear={clearFilters}
                 />
               </div>
@@ -763,7 +775,7 @@ const Search = () => {
               </div>
 
               {/* Active Filters Badges */}
-              {(mode !== 'all' || category !== 'all' || locationCoords || dateRange?.from || selectedAmenities.length > 0) && (
+              {(mode !== 'all' || category !== 'all' || locationCoords || dateRange?.from || selectedAmenities.length > 0 || instantBookOnly) && (
                 <div className="flex flex-wrap gap-2 mb-6">
                   {mode !== 'all' && (
                     <Badge variant="secondary" className="gap-1">
@@ -778,6 +790,15 @@ const Search = () => {
                     <Badge variant="secondary" className="gap-1">
                       {CATEGORY_LABELS[category]}
                       <button onClick={() => handleCategoryChange('all')}>
+                        <X className="h-3 w-3 ml-1" />
+                      </button>
+                    </Badge>
+                  )}
+                  {instantBookOnly && (
+                    <Badge variant="secondary" className="gap-1 bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                      <Zap className="h-3 w-3" />
+                      Instant Book
+                      <button onClick={() => setInstantBookOnly(false)}>
                         <X className="h-3 w-3 ml-1" />
                       </button>
                     </Badge>
@@ -902,6 +923,7 @@ interface FilterContentProps {
   dateRange: DateRange | undefined;
   selectedAmenities: string[];
   deliveryFilterEnabled: boolean;
+  instantBookOnly: boolean;
   onModeChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onLocationTextChange: (value: string) => void;
@@ -911,6 +933,7 @@ interface FilterContentProps {
   onDateRangeChange: (range: DateRange | undefined) => void;
   onAmenityToggle: (amenityId: string) => void;
   onDeliveryFilterChange: (enabled: boolean) => void;
+  onInstantBookChange: (enabled: boolean) => void;
   onClear: () => void;
 }
 
@@ -924,6 +947,7 @@ const FilterContent = ({
   dateRange,
   selectedAmenities,
   deliveryFilterEnabled,
+  instantBookOnly,
   onModeChange,
   onCategoryChange,
   onLocationTextChange,
@@ -933,6 +957,7 @@ const FilterContent = ({
   onDateRangeChange,
   onAmenityToggle,
   onDeliveryFilterChange,
+  onInstantBookChange,
 }: FilterContentProps) => {
   // Get amenities to show based on selected category
   const getAvailableAmenities = () => {
@@ -993,6 +1018,29 @@ const FilterContent = ({
                 ? "Show only listings that can deliver to your selected location"
                 : "Select a location above to enable this filter"
               }
+            </p>
+          </div>
+        </label>
+      </div>
+
+      {/* Instant Book Filter */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium flex items-center gap-2">
+          <Zap className="h-4 w-4" />
+          Booking Options
+        </Label>
+        <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+          <Checkbox
+            checked={instantBookOnly}
+            onCheckedChange={(checked) => onInstantBookChange(checked === true)}
+          />
+          <div className="space-y-1">
+            <span className="text-sm font-medium flex items-center gap-1.5">
+              <Zap className="h-3.5 w-3.5 text-amber-500" />
+              Instant Book only
+            </span>
+            <p className="text-xs text-muted-foreground">
+              Show only rentals you can book and pay for immediately
             </p>
           </div>
         </label>
