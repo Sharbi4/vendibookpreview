@@ -47,41 +47,59 @@ function calculateZoomLevel(miles: number): number {
   return 6;
 }
 
-const DeliveryRadiusMap = ({
+const GOOGLE_MAP_LIBRARIES: (
+  | 'places'
+  | 'geometry'
+  | 'drawing'
+  | 'visualization'
+)[] = ['places'];
+
+type DeliveryRadiusMapLoadedProps = DeliveryRadiusMapProps & { apiKey: string };
+
+const DeliveryRadiusMapLoaded = ({
+  apiKey,
   latitude,
   longitude,
   radiusMiles,
   address,
-  deliveryFee
-}: DeliveryRadiusMapProps) => {
-  const { apiKey, isLoading: tokenLoading, error: tokenError } = useGoogleMapsToken();
+  deliveryFee,
+}: DeliveryRadiusMapLoadedProps) => {
   const [clickedLocation, setClickedLocation] = useState<ClickedLocation | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [showPickupInfo, setShowPickupInfo] = useState(false);
 
+  // IMPORTANT: Keep loader options identical everywhere in the app.
+  // - Same `id`
+  // - Same `libraries`
+  // - Only instantiate loader after we have a real apiKey
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: apiKey || '',
+    googleMapsApiKey: apiKey,
+    id: 'google-map-script',
+    libraries: GOOGLE_MAP_LIBRARIES,
   });
 
   const center = { lat: latitude, lng: longitude };
 
-  const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
-    if (!e.latLng) return;
-    
-    const clickedLat = e.latLng.lat();
-    const clickedLng = e.latLng.lng();
-    
-    const distance = calculateDistance(latitude, longitude, clickedLat, clickedLng);
-    const isWithinRadius = distance <= radiusMiles;
+  const handleMapClick = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      if (!e.latLng) return;
 
-    setClickedLocation({
-      lng: clickedLng,
-      lat: clickedLat,
-      isWithinRadius,
-      distance
-    });
-  }, [latitude, longitude, radiusMiles]);
+      const clickedLat = e.latLng.lat();
+      const clickedLng = e.latLng.lng();
+
+      const distance = calculateDistance(latitude, longitude, clickedLat, clickedLng);
+      const isWithinRadius = distance <= radiusMiles;
+
+      setClickedLocation({
+        lng: clickedLng,
+        lat: clickedLat,
+        isWithinRadius,
+        distance,
+      });
+    },
+    [latitude, longitude, radiusMiles]
+  );
 
   const handleUseMyLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -105,7 +123,7 @@ const DeliveryRadiusMap = ({
           lat: userLat,
           isWithinRadius,
           distance,
-          isUserLocation: true
+          isUserLocation: true,
         });
         setIsLocating(false);
       },
@@ -128,20 +146,20 @@ const DeliveryRadiusMap = ({
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 0
+        maximumAge: 0,
       }
     );
   }, [latitude, longitude, radiusMiles]);
 
-  if (tokenError || loadError) {
+  if (loadError) {
     return (
       <div className="p-4 bg-muted/50 rounded-xl text-center">
-        <p className="text-sm text-muted-foreground">{tokenError || 'Failed to load map'}</p>
+        <p className="text-sm text-muted-foreground">Failed to load map</p>
       </div>
     );
   }
 
-  if (tokenLoading || !apiKey || !isLoaded) {
+  if (!isLoaded) {
     return (
       <div className="p-8 bg-muted/50 rounded-xl flex items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -254,10 +272,20 @@ const DeliveryRadiusMap = ({
                   onCloseClick={() => setClickedLocation(null)}
                 >
                   <div className="p-2">
-                    <p className={`font-semibold text-sm ${clickedLocation.isWithinRadius ? 'text-green-600' : 'text-red-600'}`}>
-                      {clickedLocation.isWithinRadius ? '✓ Within Delivery Zone' : '✗ Outside Delivery Zone'}
+                    <p
+                      className={`font-semibold text-sm ${
+                        clickedLocation.isWithinRadius
+                          ? 'text-green-600'
+                          : 'text-red-600'
+                      }`}
+                    >
+                      {clickedLocation.isWithinRadius
+                        ? '✓ Within Delivery Zone'
+                        : '✗ Outside Delivery Zone'}
                     </p>
-                    <p className="text-xs text-gray-600">{clickedLocation.distance.toFixed(1)} miles from pickup</p>
+                    <p className="text-xs text-gray-600">
+                      {clickedLocation.distance.toFixed(1)} miles from pickup
+                    </p>
                     {clickedLocation.isUserLocation && (
                       <p className="text-xs text-blue-600 mt-1">📍 Your location</p>
                     )}
@@ -272,24 +300,22 @@ const DeliveryRadiusMap = ({
         <div className="absolute bottom-3 left-3 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-md border border-border">
           <div className="flex items-center gap-2 text-sm">
             <div className="w-4 h-4 rounded-full bg-primary/20 border-2 border-primary border-dashed" />
-            <span className="text-foreground font-medium">
-              {radiusMiles} mile radius
-            </span>
+            <span className="text-foreground font-medium">{radiusMiles} mile radius</span>
           </div>
           {deliveryFee && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Delivery fee: ${deliveryFee}
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Delivery fee: ${deliveryFee}</p>
           )}
         </div>
 
         {/* Click result indicator */}
         {clickedLocation && (
-          <div className={`absolute top-3 left-3 backdrop-blur-sm rounded-lg p-3 shadow-md border ${
-            clickedLocation.isWithinRadius
-              ? 'bg-green-50/95 border-green-200'
-              : 'bg-red-50/95 border-red-200'
-          }`}>
+          <div
+            className={`absolute top-3 left-3 backdrop-blur-sm rounded-lg p-3 shadow-md border ${
+              clickedLocation.isWithinRadius
+                ? 'bg-green-50/95 border-green-200'
+                : 'bg-red-50/95 border-red-200'
+            }`}
+          >
             <div className="flex items-center gap-2">
               {clickedLocation.isWithinRadius ? (
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
@@ -297,10 +323,14 @@ const DeliveryRadiusMap = ({
                 <XCircle className="h-5 w-5 text-red-600" />
               )}
               <div>
-                <p className={`text-sm font-medium ${
-                  clickedLocation.isWithinRadius ? 'text-green-700' : 'text-red-700'
-                }`}>
-                  {clickedLocation.isWithinRadius ? 'Delivery Available!' : 'Outside Delivery Zone'}
+                <p
+                  className={`text-sm font-medium ${
+                    clickedLocation.isWithinRadius ? 'text-green-700' : 'text-red-700'
+                  }`}
+                >
+                  {clickedLocation.isWithinRadius
+                    ? 'Delivery Available!'
+                    : 'Outside Delivery Zone'}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {clickedLocation.distance.toFixed(1)} miles from pickup
@@ -330,4 +360,42 @@ const DeliveryRadiusMap = ({
   );
 };
 
+const DeliveryRadiusMap = ({
+  latitude,
+  longitude,
+  radiusMiles,
+  address,
+  deliveryFee,
+}: DeliveryRadiusMapProps) => {
+  const { apiKey, isLoading: tokenLoading, error: tokenError } = useGoogleMapsToken();
+
+  if (tokenError) {
+    return (
+      <div className="p-4 bg-muted/50 rounded-xl text-center">
+        <p className="text-sm text-muted-foreground">{tokenError}</p>
+      </div>
+    );
+  }
+
+  if (tokenLoading || !apiKey) {
+    return (
+      <div className="p-8 bg-muted/50 rounded-xl flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <DeliveryRadiusMapLoaded
+      apiKey={apiKey}
+      latitude={latitude}
+      longitude={longitude}
+      radiusMiles={radiusMiles}
+      address={address}
+      deliveryFee={deliveryFee}
+    />
+  );
+};
+
 export default DeliveryRadiusMap;
+
