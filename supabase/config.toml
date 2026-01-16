@@ -137,3 +137,6 @@ verify_jwt = false
 
 [functions.complete-ended-bookings]
 verify_jwt = false
+
+[functions.send-document-reminder]
+verify_jwt = false

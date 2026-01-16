@@ -150,6 +150,7 @@ export type Database = {
           delivery_address: string | null
           delivery_fee_snapshot: number | null
           delivery_instructions: string | null
+          document_reminder_sent_at: string | null
           end_date: string
           fulfillment_selected: string | null
           host_id: string
@@ -176,6 +177,7 @@ export type Database = {
           delivery_address?: string | null
           delivery_fee_snapshot?: number | null
           delivery_instructions?: string | null
+          document_reminder_sent_at?: string | null
           end_date: string
           fulfillment_selected?: string | null
           host_id: string
@@ -202,6 +204,7 @@ export type Database = {
           delivery_address?: string | null
           delivery_fee_snapshot?: number | null
           delivery_instructions?: string | null
+          document_reminder_sent_at?: string | null
           end_date?: string
           fulfillment_selected?: string | null
           host_id?: string
