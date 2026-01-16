@@ -76,6 +76,23 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
             {modeLabel}
           </Badge>
           
+          {/* Instant Book Badge */}
+          {listing.mode === 'rent' && listing.instant_book && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge className="text-xs font-medium bg-amber-500 text-white border-0 flex items-center gap-1">
+                    <Zap className="h-3 w-3" />
+                    Instant
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  Book and pay immediately – no waiting for approval
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          
           {/* Can Deliver To User Badge */}
           {canDeliverToUser && (
             <TooltipProvider delayDuration={200}>
