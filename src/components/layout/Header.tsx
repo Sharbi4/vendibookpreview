@@ -404,11 +404,8 @@ const Header = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group">
-                <div className="relative">
-                  <Sparkles className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
-                  <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                </div>
-                Vendi AI
+                <span>Vendi</span>
+                <span className="bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold">AI</span>
                 <ChevronDown className="h-3.5 w-3.5 opacity-70 group-hover:opacity-100 transition-opacity" />
               </button>
             </DropdownMenuTrigger>
@@ -647,12 +644,9 @@ const Header = () => {
                 onClick={() => setIsMobileAIExpanded(!isMobileAIExpanded)}
                 className="flex items-center justify-between w-full text-sm font-semibold text-foreground py-2"
               >
-                <span className="flex items-center gap-2">
-                  <div className="relative">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                  </div>
-                  Vendi AI
+                <span className="flex items-center gap-1">
+                  <span>Vendi</span>
+                  <span className="bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent font-bold">AI</span>
                 </span>
                 <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isMobileAIExpanded ? 'rotate-180' : ''}`} />
               </button>
