@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package } from 'lucide-react';
+import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminTransactions } from '@/hooks/useAdminTransactions';
+import { useAdminPendingDocuments, useAdminDocumentStats } from '@/hooks/useAdminDocumentReview';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import DisputeResolutionCard from '@/components/admin/DisputeResolutionCard';
 import TrackingManagementCard from '@/components/admin/TrackingManagementCard';
+import AdminDocumentReviewCard from '@/components/admin/AdminDocumentReviewCard';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -29,6 +31,9 @@ const AdminDashboard = () => {
     stats,
     shippingStats,
   } = useAdminTransactions(user?.id);
+
+  const { data: pendingDocuments, isLoading: docsLoading } = useAdminPendingDocuments();
+  const documentStats = useAdminDocumentStats();
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -77,12 +82,21 @@ const AdminDashboard = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage disputes, shipping, and transactions</p>
+            <p className="text-muted-foreground">Manage disputes, documents, shipping, and transactions</p>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-2">
+                <FileCheck className="h-4 w-4 text-amber-500" />
+                <span className="text-sm text-muted-foreground">Docs Pending</span>
+              </div>
+              <p className="text-2xl font-bold text-amber-600">{documentStats.pending}</p>
+            </CardContent>
+          </Card>
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
@@ -158,8 +172,41 @@ const AdminDashboard = () => {
                 </Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="documents" className="relative">
+              Documents
+              {documentStats.pending > 0 && (
+                <Badge variant="secondary" className="ml-2 h-5 px-1.5 bg-amber-100 text-amber-700">
+                  {documentStats.pending}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="all">All Transactions</TabsTrigger>
           </TabsList>
+
+          {/* Documents Tab */}
+          <TabsContent value="documents" className="space-y-4">
+            {docsLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-32" />
+                ))}
+              </div>
+            ) : !pendingDocuments || pendingDocuments.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground">No Pending Documents</h3>
+                  <p className="text-muted-foreground">All document submissions have been reviewed.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {pendingDocuments.map((doc) => (
+                  <AdminDocumentReviewCard key={doc.id} document={doc} />
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
           <TabsContent value="disputes" className="space-y-4">
             {isLoading ? (
