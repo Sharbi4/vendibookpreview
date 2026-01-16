@@ -235,7 +235,7 @@ const AITools = () => {
   const [activeTab, setActiveTab] = useState('pricing');
   const [isLoading, setIsLoading] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const [showFounderPricing, setShowFounderPricing] = useState(true);
+  const [showFounderPricing, setShowFounderPricing] = useState(false); // Hidden for now
 
   // Check if user has previously dismissed the overlay
   useEffect(() => {
