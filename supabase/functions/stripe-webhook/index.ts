@@ -110,6 +110,36 @@ serve(async (req) => {
           } else {
             logStep("Booking marked as paid", { bookingId });
 
+            const listingTitle = bookingData?.listings?.title || "your booking";
+
+            // Create in-app notification for shopper
+            try {
+              await supabaseClient.from("notifications").insert({
+                user_id: bookingData?.shopper_id,
+                type: "payment",
+                title: "Payment Confirmed",
+                message: `Your payment of $${bookingData?.total_price} for "${listingTitle}" has been confirmed. View your booking in your dashboard.`,
+                link: "/dashboard",
+              });
+              logStep("In-app notification created for shopper", { shopperId: bookingData?.shopper_id });
+            } catch (notifError) {
+              logStep("WARNING: Failed to create shopper notification", { error: String(notifError) });
+            }
+
+            // Create in-app notification for host
+            try {
+              await supabaseClient.from("notifications").insert({
+                user_id: bookingData?.host_id,
+                type: "booking",
+                title: "Payment Received",
+                message: `A renter has paid $${bookingData?.total_price} for "${listingTitle}". The booking is now confirmed.`,
+                link: "/dashboard",
+              });
+              logStep("In-app notification created for host", { hostId: bookingData?.host_id });
+            } catch (notifError) {
+              logStep("WARNING: Failed to create host notification", { error: String(notifError) });
+            }
+
             // Send payment receipt email to shopper
             if (shopperProfile?.email && bookingData) {
               try {
@@ -129,7 +159,7 @@ serve(async (req) => {
                       email: shopperProfile.email,
                       fullName: shopperProfile.full_name || "Valued Customer",
                       transactionId: paymentIntentId || bookingId,
-                      itemName: bookingData.listings?.title || "Booking",
+                      itemName: listingTitle,
                       amount: bookingData.total_price,
                       paymentMethod: "Card",
                       transactionType: "rental",
@@ -168,7 +198,7 @@ serve(async (req) => {
                   type: "booking_paid",
                   data: {
                     booking_id: bookingId,
-                    listing_title: bookingData?.listings?.title || "Unknown listing",
+                    listing_title: listingTitle,
                     total_price: bookingData?.total_price,
                     payment_intent_id: typeof session.payment_intent === 'string' 
                       ? session.payment_intent 
