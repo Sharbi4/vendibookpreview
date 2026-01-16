@@ -227,6 +227,8 @@ export interface ListingFormData {
   available_to: string;
   images: File[];
   existingImages: string[];
+  // Instant Book (for rentals)
+  instant_book: boolean;
   // Vendibook Freight settings (for sales)
   vendibook_freight_enabled: boolean;
   freight_payer: FreightPayer;

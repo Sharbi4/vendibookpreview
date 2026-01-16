@@ -26,6 +26,7 @@ const initialFormData: ListingFormData = {
   available_to: '',
   images: [],
   existingImages: [],
+  instant_book: false,
   vendibook_freight_enabled: false,
   freight_payer: 'buyer',
   // Item dimensions for freight estimates

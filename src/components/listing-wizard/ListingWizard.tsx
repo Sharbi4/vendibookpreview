@@ -161,6 +161,8 @@ export const ListingWizard: React.FC = () => {
         published_at: publish ? new Date().toISOString() : null,
         latitude,
         longitude,
+        // Instant Book (for rentals)
+        instant_book: formData.mode === 'rent' ? formData.instant_book : false,
         // Vendibook freight fields (for sales)
         vendibook_freight_enabled: formData.mode === 'sale' ? formData.vendibook_freight_enabled : false,
         freight_payer: formData.mode === 'sale' && formData.vendibook_freight_enabled ? formData.freight_payer : 'buyer',
