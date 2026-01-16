@@ -17,7 +17,8 @@ async function sendDocumentNotification(
   bookingId: string,
   documentType: string,
   eventType: 'uploaded' | 'approved' | 'rejected',
-  rejectionReason?: string
+  rejectionReason?: string,
+  checkAllApproved?: boolean
 ) {
   try {
     const { error } = await supabase.functions.invoke('send-document-notification', {
@@ -26,6 +27,7 @@ async function sendDocumentNotification(
         document_type: documentType,
         event_type: eventType,
         rejection_reason: rejectionReason,
+        check_all_approved: checkAllApproved,
       },
     });
     if (error) {
@@ -69,12 +71,13 @@ export function useReviewBookingDocument() {
           : 'The renter has been notified to upload a new document.',
       });
       
-      // Send email notification to renter
+// Send email notification to renter (with check_all_approved for approved docs)
       sendDocumentNotification(
         result.bookingId, 
         result.documentType, 
         result.status, 
-        result.rejectionReason
+        result.rejectionReason,
+        result.status === 'approved' // Check all approved when a doc is approved
       );
     },
     onError: (error) => {
