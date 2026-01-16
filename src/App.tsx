@@ -44,6 +44,7 @@ const BuildKit = lazy(() => import("./pages/tools/BuildKit"));
 const ListingStudio = lazy(() => import("./pages/tools/ListingStudio"));
 const ConceptLab = lazy(() => import("./pages/tools/ConceptLab"));
 const MarketRadar = lazy(() => import("./pages/tools/MarketRadar"));
+const ToolsIndex = lazy(() => import("./pages/tools/Index"));
 const OrderTracking = lazy(() => import("./pages/OrderTracking"));
 const HostOnboarding = lazy(() => import("./pages/HostOnboarding"));
 const Install = lazy(() => import("./pages/Install"));
@@ -96,6 +97,7 @@ const AnimatedRoutes = () => {
           <Route path="/help/:slug" element={<PageTransition><HelpArticle /></PageTransition>} />
           <Route path="/california-privacy" element={<PageTransition><CaliforniaPrivacy /></PageTransition>} />
           <Route path="/ai-tools" element={<PageTransition><AITools /></PageTransition>} />
+          <Route path="/tools" element={<PageTransition><ToolsIndex /></PageTransition>} />
           <Route path="/tools/pricepilot" element={<PageTransition><PricePilot /></PageTransition>} />
           <Route path="/tools/permitpath" element={<PageTransition><PermitPath /></PageTransition>} />
           <Route path="/tools/buildkit" element={<PageTransition><BuildKit /></PageTransition>} />
