@@ -15,6 +15,8 @@ const NewsletterPopup = lazy(() => import('@/components/newsletter/NewsletterPop
 const TrustSafetySection = lazy(() => import('@/components/trust/TrustSafetySection'));
 const AIToolsSection = lazy(() => import('@/components/home/AIToolsSection'));
 const HelpCenterPreview = lazy(() => import('@/components/home/HelpCenterPreview'));
+const ReviewsSection = lazy(() => import('@/components/home/ReviewsSection'));
+const PaymentsSection = lazy(() => import('@/components/home/PaymentsSection'));
 
 // Minimal loading fallback for lazy sections
 const SectionSkeleton = () => (
@@ -51,7 +53,9 @@ const Index = () => {
         <Suspense fallback={<SectionSkeleton />}>
           <FeaturedListings />
           <CategoryCarousels />
+          <ReviewsSection />
           <TrustSafetySection />
+          <PaymentsSection />
           <AIToolsSection />
           <HelpCenterPreview />
           <HowItWorks />
