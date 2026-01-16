@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
@@ -25,9 +26,14 @@ import {
   CheckCircle,
   ArrowRight,
   ExternalLink,
-  DollarSign
+  DollarSign,
+  Calendar,
+  Building,
+  Flame,
+  Heart
 } from 'lucide-react';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
+import { OutputCard, OutputMetric, OutputList, OutputSection } from '@/components/tools/OutputCard';
 
 // JSON-LD structured data
 const pageJsonLd = {
@@ -290,37 +296,52 @@ const PermitPath = () => {
 
               {/* Results */}
               {licenseResult && (
-                <div className="mt-8 space-y-6">
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mt-8 space-y-6"
+                >
                   {/* Overview */}
-                  <Card>
-                    <CardHeader>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-5 w-5 text-primary" />
-                        <CardTitle>{licenseResult.location.city ? `${licenseResult.location.city}, ` : ''}{licenseResult.location.state}</CardTitle>
-                      </div>
-                      <CardDescription>{licenseResult.overview}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="p-4 bg-muted rounded-lg">
-                          <p className="text-sm text-muted-foreground">Estimated Total Cost</p>
-                          <p className="text-xl font-bold text-primary">{licenseResult.estimatedTotalCost}</p>
-                        </div>
-                        <div className="p-4 bg-muted rounded-lg">
-                          <p className="text-sm text-muted-foreground">Estimated Timeline</p>
-                          <p className="text-xl font-bold">{licenseResult.estimatedTimeline}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <OutputCard
+                    title={`${licenseResult.location.city ? `${licenseResult.location.city}, ` : ''}${licenseResult.location.state}`}
+                    subtitle={licenseResult.overview}
+                    icon={<MapPin className="h-5 w-5" />}
+                    gradient="from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30"
+                  >
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <OutputMetric
+                        label="Estimated Total Cost"
+                        value={licenseResult.estimatedTotalCost}
+                        variant="highlight"
+                        icon={<DollarSign className="h-4 w-4" />}
+                      />
+                      <OutputMetric
+                        label="Estimated Timeline"
+                        value={licenseResult.estimatedTimeline}
+                        variant="default"
+                        icon={<Calendar className="h-4 w-4" />}
+                      />
+                    </div>
+                  </OutputCard>
 
                   {/* Licenses List */}
-                  <Card>
-                    <CardHeader><CardTitle>Required Licenses & Permits</CardTitle></CardHeader>
+                  <Card className="border-0 shadow-lg">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <FileCheck className="h-5 w-5 text-primary" />
+                        Required Licenses & Permits
+                      </CardTitle>
+                    </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
                         {licenseResult.licenses.map((license, i) => (
-                          <div key={i} className="p-4 border rounded-lg">
+                          <motion.div 
+                            key={i} 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.05 }}
+                            className="p-4 border rounded-xl hover:shadow-md transition-shadow bg-gradient-to-r from-background to-muted/20"
+                          >
                             <div className="flex items-start justify-between gap-4 mb-2">
                               <div>
                                 <h4 className="font-semibold">{license.name}</h4>
@@ -330,18 +351,27 @@ const PermitPath = () => {
                             </div>
                             <p className="text-sm mb-3">{license.description}</p>
                             <div className="grid gap-2 sm:grid-cols-3 text-sm">
-                              <div><span className="text-muted-foreground">Cost:</span> {license.estimatedCost}</div>
-                              <div><span className="text-muted-foreground">Processing:</span> {license.processingTime}</div>
-                              <div><span className="text-muted-foreground">Renewal:</span> {license.renewalPeriod}</div>
+                              <div className="flex items-center gap-1.5">
+                                <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+                                <span className="text-muted-foreground">Cost:</span> {license.estimatedCost}
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                                <span className="text-muted-foreground">Processing:</span> {license.processingTime}
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                                <span className="text-muted-foreground">Renewal:</span> {license.renewalPeriod}
+                              </div>
                             </div>
-                          </div>
+                          </motion.div>
                         ))}
                       </div>
                     </CardContent>
                   </Card>
 
                   {/* Government Resources */}
-                  <Card className="border-primary/20 bg-primary/5">
+                  <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2"><ExternalLink className="h-5 w-5 text-primary" />Official Government Resources</CardTitle>
                     </CardHeader>
@@ -362,7 +392,7 @@ const PermitPath = () => {
                       </div>
                     </CardContent>
                   </Card>
-                </div>
+                </motion.div>
               )}
             </div>
           </section>
