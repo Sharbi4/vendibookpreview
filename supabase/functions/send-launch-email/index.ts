@@ -14,9 +14,10 @@ interface LaunchEmailRequest {
   sendToAll?: boolean;
 }
 
-// Using the publicly accessible logo from the project
-const LOGO_URL = "https://vendibookpreview.lovable.app/images/vendibook-email-logo.png";
-const HERO_IMAGE_URL = "https://vendibookpreview.lovable.app/images/taco-truck-hero.png";
+// Using the preview URL which has the latest images
+const PREVIEW_URL = "https://id-preview--f4d8586e-de66-4307-b052-b071b734f592.lovable.app";
+const LOGO_URL = `${PREVIEW_URL}/images/vendibook-email-logo.png`;
+const HERO_IMAGE_URL = `${PREVIEW_URL}/images/taco-truck-hero.png`;
 const BASE_URL = "https://vendibookpreview.lovable.app";
 
 // Vendibook Brand Colors (matching the website)
