@@ -30,6 +30,7 @@ interface BookingRequestCardProps {
     created_at: string;
     listing_id: string;
     payment_status?: string | null;
+    is_instant_book?: boolean | null;
     listing?: {
       id?: string;
       title: string;
@@ -271,6 +272,7 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel }: Booking
                   listingId={listingId}
                   bookingId={booking.id}
                   defaultOpen={hasPendingDocReviews}
+                  isInstantBook={booking.is_instant_book === true}
                 />
               </div>
             )}
