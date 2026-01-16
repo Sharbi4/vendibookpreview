@@ -128,3 +128,9 @@ verify_jwt = false
 
 [functions.ai-web-research]
 verify_jwt = false
+
+[functions.upload-email-assets]
+verify_jwt = false
+
+[functions.send-launch-email]
+verify_jwt = false

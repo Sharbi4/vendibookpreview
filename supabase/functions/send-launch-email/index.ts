@@ -17,6 +17,11 @@ interface LaunchEmailRequest {
 
 const BASE_URL = "https://vendibookpreview.lovable.app";
 
+// Supabase Storage URL for email assets
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const LOGO_STORAGE_PATH = "vendibook-email-logo.png";
+const LOGO_CID = "vendibook-logo";
+
 // Vendibook Brand Colors (matching the website)
 const COLORS = {
   primary: "#FF6D1F",        // Vendibook Orange
@@ -29,7 +34,7 @@ const COLORS = {
   border: "#E5E5E5",
 };
 
-const generateEmailHtml = (unsubscribeToken: string, userEmail: string) => `
+const generateEmailHtml = (unsubscribeToken: string, userEmail: string, hasLogo: boolean) => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,12 +48,13 @@ const generateEmailHtml = (unsubscribeToken: string, userEmail: string) => `
       <td align="center" style="padding: 40px 20px;">
         <table role="presentation" style="max-width: 600px; width: 100%; background-color: ${COLORS.white}; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);">
           
-          <!-- Header with Text Logo -->
+          <!-- Header with Logo -->
           <tr>
             <td align="center" style="padding: 40px 40px 30px; background-color: ${COLORS.white};">
-              <h1 style="margin: 0; font-size: 36px; font-weight: 800; color: ${COLORS.primary}; letter-spacing: -1px;">
-                🍔 Vendibook
-              </h1>
+              ${hasLogo 
+                ? `<img src="cid:${LOGO_CID}" alt="Vendibook" style="max-width: 180px; height: auto;" />`
+                : `<h1 style="margin: 0; font-size: 36px; font-weight: 800; color: ${COLORS.primary}; letter-spacing: -1px;">🍔 Vendibook</h1>`
+              }
             </td>
           </tr>
           
@@ -265,9 +271,10 @@ const generateEmailHtml = (unsubscribeToken: string, userEmail: string) => `
               <table role="presentation" style="width: 100%;">
                 <tr>
                   <td align="center">
-                    <p style="margin: 0 0 8px; font-size: 20px; font-weight: 700; color: ${COLORS.primary};">
-                      🍔 Vendibook
-                    </p>
+                    ${hasLogo 
+                      ? `<img src="cid:${LOGO_CID}" alt="Vendibook" style="max-width: 100px; height: auto; margin-bottom: 16px;" />`
+                      : `<p style="margin: 0 0 8px; font-size: 20px; font-weight: 700; color: ${COLORS.primary};">🍔 Vendibook</p>`
+                    }
                     <p style="margin: 0 0 12px; color: ${COLORS.gray}; font-size: 13px;">
                       The marketplace for food trucks, trailers & more.
                     </p>
@@ -359,6 +366,48 @@ const handler = async (req: Request): Promise<Response> => {
 
     const results: { email: string; success: boolean; error?: string }[] = [];
 
+    // Try to fetch logo from Supabase Storage
+    console.log("Attempting to fetch logo from Supabase Storage...");
+    let logoBase64: string | null = null;
+    let hasLogo = false;
+    
+    try {
+      const logoUrl = `${SUPABASE_URL}/storage/v1/object/public/email-assets/${LOGO_STORAGE_PATH}`;
+      console.log(`Fetching logo from: ${logoUrl}`);
+      
+      const logoResponse = await fetch(logoUrl);
+      const contentType = logoResponse.headers.get("content-type") || "";
+      
+      if (logoResponse.ok && contentType.toLowerCase().includes("image/")) {
+        const bytes = new Uint8Array(await logoResponse.arrayBuffer());
+        // Convert to base64 in chunks to avoid stack overflow
+        let binary = "";
+        const chunkSize = 0x8000;
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+          binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+        }
+        logoBase64 = btoa(binary);
+        hasLogo = true;
+        console.log(`Logo fetched successfully (${bytes.length} bytes)`);
+      } else {
+        console.log(`Logo not found or invalid (status: ${logoResponse.status}, type: ${contentType})`);
+      }
+    } catch (err) {
+      console.log("Failed to fetch logo, using text fallback:", err);
+    }
+
+    // Prepare attachments if logo is available
+    const attachments = hasLogo && logoBase64
+      ? [
+          {
+            filename: "vendibook-logo.png",
+            content: logoBase64,
+            contentType: "image/png",
+            contentId: LOGO_CID,
+          },
+        ]
+      : undefined;
+
     for (const recipient of recipients) {
       try {
         // Generate a simple unsubscribe token (base64 of email + timestamp)
@@ -368,7 +417,8 @@ const handler = async (req: Request): Promise<Response> => {
           from: "VendiBook <noreply@updates.vendibook.com>",
           to: [recipient.email],
           subject: "🚀 Vendibook is LIVE! Start Your Food Business Journey Today",
-          html: generateEmailHtml(unsubscribeToken, recipient.email),
+          html: generateEmailHtml(unsubscribeToken, recipient.email, hasLogo),
+          ...(attachments ? { attachments } : {}),
         });
 
         const maybeError = (emailData as unknown as { error?: { message?: string } })
