@@ -1,6 +1,16 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles, DollarSign, FileText, Lightbulb, X } from 'lucide-react';
+import { 
+  ArrowRight, 
+  Sparkles, 
+  DollarSign, 
+  FileText, 
+  Lightbulb, 
+  Scale, 
+  Wrench, 
+  TrendingUp,
+  Star
+} from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
@@ -12,9 +22,27 @@ interface AITool {
   description: string;
   features: string[];
   cta: string;
+  featured?: boolean;
 }
 
 const aiTools: AITool[] = [
+  {
+    id: 'license-finder',
+    icon: Scale,
+    title: 'License & Permit Finder',
+    tagline: 'Know exactly what permits you need',
+    description: 'Navigate the complex world of food truck licenses, mobile vendor permits, health department certifications, and business registrations. Our AI instantly identifies every license, permit, and insurance requirement for your specific city and state—saving you weeks of research and preventing costly compliance mistakes.',
+    features: [
+      'State-by-state food truck license requirements',
+      'City-specific mobile vendor permit lookup',
+      'Health department permit checklist',
+      'Commercial liability insurance requirements',
+      'Timeline & cost estimates for each permit',
+      'Direct links to official application portals'
+    ],
+    cta: 'Find My Licenses',
+    featured: true
+  },
   {
     id: 'pricing',
     icon: DollarSign,
@@ -44,6 +72,34 @@ const aiTools: AITool[] = [
     cta: 'Write Description'
   },
   {
+    id: 'equipment-guide',
+    icon: Wrench,
+    title: 'Equipment Maintenance Guide',
+    tagline: 'Keep your equipment running smoothly',
+    description: 'Get step-by-step maintenance guides, troubleshooting tips, and care schedules for commercial kitchen equipment. From fryers to refrigeration units, keep your food truck or trailer in peak condition.',
+    features: [
+      'Daily, weekly, monthly maintenance schedules',
+      'Step-by-step repair & cleaning guides',
+      'Troubleshooting common issues',
+      'Safety tips & professional service recommendations'
+    ],
+    cta: 'Get Equipment Guide'
+  },
+  {
+    id: 'market-research',
+    icon: TrendingUp,
+    title: 'Market Research Tool',
+    tagline: 'Understand your local food market',
+    description: 'Discover market trends, competitor analysis, and industry insights for the mobile food industry. Make data-driven decisions about locations, menu offerings, and pricing strategies.',
+    features: [
+      'Local food truck market analysis',
+      'Competitor & trend research',
+      'Industry growth insights',
+      'Location demand forecasting'
+    ],
+    cta: 'Research Market'
+  },
+  {
     id: 'business-idea',
     icon: Lightbulb,
     title: 'Business Idea Generator',
@@ -70,7 +126,20 @@ const AIToolsSection = () => {
 
   return (
     <section className="py-16 md:py-20 bg-background" aria-labelledby="ai-tools-heading">
-      {/* NATURAL Section - Clean background */}
+      {/* SEO-rich hidden content for search engines */}
+      <div className="sr-only">
+        <h1>Free AI Tools for Food Truck Owners and Mobile Vendors</h1>
+        <p>Vendibook offers free AI-powered tools to help food truck entrepreneurs succeed: license finder, permit lookup, pricing calculator, equipment maintenance guides, and business planning tools.</p>
+        <ul>
+          <li>Food truck license requirements by state - California, Texas, Florida, New York, and all 50 states</li>
+          <li>Mobile vendor permit lookup - city-specific requirements for street vending</li>
+          <li>Health department permit checklist for food trucks and food trailers</li>
+          <li>Commercial kitchen equipment maintenance schedules</li>
+          <li>Food truck business startup cost calculator</li>
+          <li>Ghost kitchen licensing requirements</li>
+        </ul>
+      </div>
+
       <div className="container max-w-7xl mx-auto px-4 relative z-10">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
@@ -85,10 +154,10 @@ const AIToolsSection = () => {
                 id="ai-tools-heading" 
                 className="text-2xl md:text-3xl font-semibold text-foreground mb-2"
               >
-                AI-Powered Tools
+                AI-Powered Tools for Food Entrepreneurs
               </h2>
               <p className="text-muted-foreground max-w-xl">
-                Launch smarter. Price competitively. Write listings that convert.
+                Find licenses & permits, set competitive pricing, research your market, and launch your food business smarter—all powered by AI.
               </p>
             </div>
           </div>
@@ -102,15 +171,64 @@ const AIToolsSection = () => {
           </Link>
         </div>
 
-        {/* AI Tools Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {aiTools.map((tool) => {
+        {/* Featured Tool - License Finder */}
+        {aiTools.filter(t => t.featured).map((tool) => {
+          const Icon = tool.icon;
+          return (
+            <button
+              key={tool.id}
+              onClick={() => handleToolClick(tool)}
+              className="group relative w-full p-6 md:p-8 rounded-2xl bg-gradient-to-br from-primary/10 via-card to-card 
+                         border-2 border-primary/20 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10
+                         transition-all duration-300 text-left mb-8"
+            >
+              {/* Star badge */}
+              <div className="absolute -top-3 left-6 px-3 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full flex items-center gap-1">
+                <Star className="w-3 h-3 fill-current" />
+                Most Popular
+              </div>
+              
+              <div className="flex flex-col md:flex-row md:items-center gap-6">
+                {/* Icon */}
+                <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center flex-shrink-0
+                                transition-transform duration-300 group-hover:scale-110">
+                  <Icon className="w-8 h-8 text-primary" />
+                </div>
+                
+                {/* Content */}
+                <div className="flex-1">
+                  <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">
+                    {tool.title}
+                  </h3>
+                  <p className="text-muted-foreground mb-3 max-w-2xl">
+                    {tool.tagline} — Instantly discover food truck permits, mobile vendor licenses, health department certifications, and insurance requirements for any city or state.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {['Food Truck Permits', 'Mobile Vendor Licenses', 'Health Dept. Certs', 'Insurance Requirements'].map((tag) => (
+                      <span key={tag} className="px-2.5 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <span className="inline-flex items-center gap-2 text-primary font-semibold group-hover:gap-3 transition-all">
+                    {tool.cta}
+                    <ArrowRight className="w-5 h-5" />
+                  </span>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+
+        {/* AI Tools Grid - Other tools */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {aiTools.filter(t => !t.featured).map((tool) => {
             const Icon = tool.icon;
             return (
               <button
                 key={tool.id}
                 onClick={() => handleToolClick(tool)}
-                className="group relative p-6 rounded-2xl bg-card border border-border 
+                className="group relative p-5 rounded-2xl bg-card border border-border 
                            hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5
                            transition-all duration-300 text-left"
               >
@@ -120,18 +238,18 @@ const AIToolsSection = () => {
                 
                 <div className="relative z-10">
                   {/* Icon */}
-                  <div className="w-12 h-12 rounded-xl icon-gradient-container icon-shimmer mb-4
+                  <div className="w-11 h-11 rounded-xl icon-gradient-container icon-shimmer mb-3
                                   transition-transform duration-300 group-hover:scale-110">
                     <div className="icon-gradient">
-                      <Icon className="w-6 h-6 text-primary" />
+                      <Icon className="w-5 h-5 text-primary" />
                     </div>
                   </div>
                   
                   {/* Content */}
-                  <h3 className="text-lg font-semibold text-foreground mb-1">
+                  <h3 className="text-base font-semibold text-foreground mb-1">
                     {tool.title}
                   </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                     {tool.tagline}
                   </p>
                   
