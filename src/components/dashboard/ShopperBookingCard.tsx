@@ -17,9 +17,11 @@ import {
   DollarSign,
   FileText,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import InstantBookTimeline from './InstantBookTimeline';
 import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
@@ -158,6 +160,11 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
   const hasDocumentRequirements = compliance.hasRequirements;
   const needsDocuments = hasDocumentRequirements && !compliance.allSubmitted;
   const hasRejectedDocs = compliance.rejectedCount > 0;
+  
+  // Instant Book state
+  const isInstantBook = (booking as any).is_instant_book === true;
+  const bookingCancelled = booking.status === 'cancelled';
+  const bookingConfirmed = isApproved && isPaid;
 
   const handlePayNow = async () => {
     if (!listing) return;
@@ -225,10 +232,30 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
               </div>
             </div>
             <div className="flex flex-col items-end gap-1">
+              {isInstantBook && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                  <Zap className="h-3 w-3" />
+                  Instant Book
+                </span>
+              )}
               <StatusBadge status={booking.status} />
               <PaymentStatusBadge status={paymentStatus} />
             </div>
           </div>
+
+          {/* Instant Book Timeline */}
+          {isInstantBook && hasDocumentRequirements && (
+            <div className="mb-3 bg-muted/30 rounded-lg px-3">
+              <InstantBookTimeline
+                isPaid={isPaid}
+                documentsSubmitted={compliance.allSubmitted}
+                documentsApproved={compliance.allApproved}
+                documentsRejected={hasRejectedDocs}
+                bookingConfirmed={bookingConfirmed}
+                bookingCancelled={bookingCancelled}
+              />
+            </div>
+          )}
 
           {/* Booking Details */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm mb-3">

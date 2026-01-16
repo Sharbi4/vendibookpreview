@@ -18,6 +18,7 @@ import {
 import { MessageDialog } from '@/components/messaging/MessageDialog';
 import { HostDocumentReviewSection } from '@/components/documents/HostDocumentReviewSection';
 import { useDocumentComplianceStatus } from '@/hooks/useRequiredDocuments';
+import InstantBookTimeline from './InstantBookTimeline';
 
 interface BookingRequestCardProps {
   booking: {
@@ -175,6 +176,9 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel }: Booking
   const isPaid = booking.payment_status === 'paid';
   const canCancel = isApproved && isPaid && onCancel;
   const canMessage = booking.status !== 'cancelled' && booking.status !== 'declined';
+  const isInstantBook = booking.is_instant_book === true;
+  const bookingCancelled = booking.status === 'cancelled';
+  const bookingConfirmed = isApproved && (!hasDocumentRequirements || compliance.allApproved);
 
   const handleCancelBooking = async () => {
     if (!onCancel) return;
@@ -241,7 +245,19 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel }: Booking
               </div>
             </div>
 
-            {/* Shopper Info */}
+            {/* Instant Book Timeline for hosts */}
+            {isInstantBook && hasDocumentRequirements && (
+              <div className="mb-3 bg-muted/30 rounded-lg px-3">
+                <InstantBookTimeline
+                  isPaid={isPaid}
+                  documentsSubmitted={compliance.allSubmitted}
+                  documentsApproved={compliance.allApproved}
+                  documentsRejected={compliance.rejectedCount > 0}
+                  bookingConfirmed={bookingConfirmed}
+                  bookingCancelled={bookingCancelled}
+                />
+              </div>
+            )}
             <div className="flex items-center gap-3 mb-3 p-3 bg-muted/50 rounded-lg">
               <Avatar className="h-10 w-10">
                 <AvatarImage src={booking.shopper?.avatar_url || undefined} />
