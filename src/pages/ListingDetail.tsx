@@ -418,6 +418,7 @@ const ListingDetail = () => {
                   accessInstructions={listing.access_instructions}
                   hoursOfAccess={listing.hours_of_access}
                   status={listing.status}
+                  instantBook={listing.instant_book || false}
                 />
               ) : (
               <InquiryForm
