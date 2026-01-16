@@ -1,5 +1,6 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import Stripe from "https://esm.sh/stripe@14.21.0";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -114,7 +115,7 @@ const updateZendeskTicket = async (
   }
 };
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -122,12 +123,14 @@ Deno.serve(async (req) => {
   try {
     logStep("Function started");
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY")!;
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
 
     // Get auth token
     const authHeader = req.headers.get("Authorization");
@@ -140,7 +143,7 @@ Deno.serve(async (req) => {
 
     // Verify user and check if admin
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
     
     if (authError || !user) {
       logStep("Auth error", { error: authError?.message });
@@ -149,9 +152,10 @@ Deno.serve(async (req) => {
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    logStep("User authenticated", { userId: user.id });
 
     // Check if user is admin
-    const { data: isAdmin } = await supabase.rpc("is_admin", { user_id: user.id });
+    const { data: isAdmin } = await supabaseClient.rpc("is_admin", { user_id: user.id });
     
     if (!isAdmin) {
       logStep("User is not admin", { userId: user.id });
@@ -179,7 +183,7 @@ Deno.serve(async (req) => {
     }
 
     // Get the transaction with listing info
-    const { data: transaction, error: txError } = await supabase
+    const { data: transaction, error: txError } = await supabaseClient
       .from("sale_transactions")
       .select("*, buyer:profiles!sale_transactions_buyer_id_fkey(email, full_name), seller:profiles!sale_transactions_seller_id_fkey(email, full_name, stripe_account_id), listing:listings!sale_transactions_listing_id_fkey(title)")
       .eq("id", transaction_id)
@@ -206,6 +210,8 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     let newStatus: string;
     let resultMessage: string;
@@ -257,7 +263,7 @@ Deno.serve(async (req) => {
         logStep("Transfer successful", { transferId: transfer.id });
 
         // Update with transfer info
-        await supabase
+        await supabaseClient
           .from("sale_transactions")
           .update({
             transfer_id: transfer.id,
@@ -278,7 +284,7 @@ Deno.serve(async (req) => {
       ? `Dispute resolved by admin: ${resolution}. Notes: ${admin_notes}`
       : `Dispute resolved by admin: ${resolution}`;
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseClient
       .from("sale_transactions")
       .update({
         status: newStatus,
@@ -322,7 +328,7 @@ Deno.serve(async (req) => {
 
         // Email buyer
         await resend.emails.send({
-          from: "VendiBook <noreply@vendibook.com>",
+          from: "VendiBook <updates@vendibook.com>",
           to: transaction.buyer.email,
           subject: "Dispute Resolved - VendiBook",
           html: `
@@ -338,7 +344,7 @@ Deno.serve(async (req) => {
 
         // Email seller
         await resend.emails.send({
-          from: "VendiBook <noreply@vendibook.com>",
+          from: "VendiBook <updates@vendibook.com>",
           to: transaction.seller.email,
           subject: "Dispute Resolved - VendiBook",
           html: `
@@ -360,7 +366,7 @@ Deno.serve(async (req) => {
     }
 
     // Create in-app notifications for both parties
-    await supabase.from("notifications").insert([
+    await supabaseClient.from("notifications").insert([
       {
         user_id: transaction.buyer_id,
         type: "dispute",
