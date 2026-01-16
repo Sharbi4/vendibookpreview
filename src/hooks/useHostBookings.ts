@@ -97,6 +97,28 @@ export const useHostBookings = () => {
         },
         (payload) => {
           console.log('[Realtime] Host booking update:', payload.eventType);
+          
+          // Show toast based on event type
+          if (payload.eventType === 'INSERT') {
+            toast({
+              title: '📬 New Booking Request!',
+              description: 'You have a new booking request. Review it in your dashboard.',
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            const newData = payload.new as BookingRequest;
+            if (newData.payment_status === 'paid') {
+              toast({
+                title: '💰 Payment Received!',
+                description: 'A renter has completed payment for their booking.',
+              });
+            } else if (newData.status === 'cancelled') {
+              toast({
+                title: 'Booking Cancelled',
+                description: 'A booking has been cancelled.',
+              });
+            }
+          }
+          
           // Refetch to get the complete data with joins
           fetchBookings();
         }
@@ -106,7 +128,7 @@ export const useHostBookings = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, toast]);
 
   const respondToBooking = async (
     bookingId: string, 
