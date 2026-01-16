@@ -70,6 +70,10 @@ export const useStripeConnect = () => {
   const openStripeDashboard = async () => {
     if (!session?.access_token) return;
 
+    // Open window immediately to avoid popup blocker
+    // The browser blocks window.open calls that happen after async operations
+    const newWindow = window.open('about:blank', '_blank');
+
     setIsOpeningDashboard(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-stripe-dashboard-link', {
@@ -80,11 +84,17 @@ export const useStripeConnect = () => {
 
       if (error) throw error;
       
-      if (data?.url) {
-        window.open(data.url, '_blank');
+      if (data?.url && newWindow) {
+        newWindow.location.href = data.url;
+      } else if (data?.url) {
+        // Fallback if window was blocked
+        window.location.href = data.url;
+      } else if (newWindow) {
+        newWindow.close();
       }
     } catch (error) {
       console.error('Error opening Stripe dashboard:', error);
+      if (newWindow) newWindow.close();
       throw error;
     } finally {
       setIsOpeningDashboard(false);
