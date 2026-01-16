@@ -1513,6 +1513,122 @@ const AITools = () => {
                             </CardContent>
                           </Card>
                         </div>
+
+                        {/* Official Government Resources */}
+                        <Card className="border-primary/20 bg-primary/5">
+                          <CardHeader>
+                            <CardTitle className="text-lg flex items-center gap-2">
+                              <ExternalLink className="h-5 w-5 text-primary" />
+                              Official Government Resources
+                            </CardTitle>
+                            <CardDescription>
+                              Always verify requirements with these official sources before applying for licenses.
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                              <a 
+                                href="https://www.sba.gov/business-guide/launch-your-business/apply-licenses-permits" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-start gap-3 p-3 border rounded-lg hover:bg-background transition-colors group"
+                              >
+                                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-lg">🏛️</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm group-hover:text-primary transition-colors">U.S. Small Business Administration</p>
+                                  <p className="text-xs text-muted-foreground">Federal licenses & permits guide</p>
+                                </div>
+                                <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary flex-shrink-0" />
+                              </a>
+                              
+                              <a 
+                                href="https://www.fda.gov/food/food-industry/retail-food-protection" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-start gap-3 p-3 border rounded-lg hover:bg-background transition-colors group"
+                              >
+                                <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-lg">🍽️</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm group-hover:text-primary transition-colors">FDA Food Safety</p>
+                                  <p className="text-xs text-muted-foreground">Retail food protection guidelines</p>
+                                </div>
+                                <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary flex-shrink-0" />
+                              </a>
+                              
+                              <a 
+                                href="https://www.cdc.gov/food-safety/about/index.html" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-start gap-3 p-3 border rounded-lg hover:bg-background transition-colors group"
+                              >
+                                <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-lg">🦠</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm group-hover:text-primary transition-colors">CDC Food Safety</p>
+                                  <p className="text-xs text-muted-foreground">Food safety regulations & training</p>
+                                </div>
+                                <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary flex-shrink-0" />
+                              </a>
+                              
+                              <a 
+                                href="https://www.usa.gov/state-health" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-start gap-3 p-3 border rounded-lg hover:bg-background transition-colors group"
+                              >
+                                <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-lg">🏥</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm group-hover:text-primary transition-colors">State Health Departments</p>
+                                  <p className="text-xs text-muted-foreground">Find your state health agency</p>
+                                </div>
+                                <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary flex-shrink-0" />
+                              </a>
+                              
+                              <a 
+                                href="https://www.servsafe.com/" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-start gap-3 p-3 border rounded-lg hover:bg-background transition-colors group"
+                              >
+                                <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-lg">📋</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm group-hover:text-primary transition-colors">ServSafe Certification</p>
+                                  <p className="text-xs text-muted-foreground">Food handler training & certification</p>
+                                </div>
+                                <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary flex-shrink-0" />
+                              </a>
+                              
+                              <a 
+                                href="https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-start gap-3 p-3 border rounded-lg hover:bg-background transition-colors group"
+                              >
+                                <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-lg">📝</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm group-hover:text-primary transition-colors">IRS EIN Application</p>
+                                  <p className="text-xs text-muted-foreground">Get your Employer ID Number</p>
+                                </div>
+                                <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary flex-shrink-0" />
+                              </a>
+                            </div>
+                            
+                            <p className="text-xs text-muted-foreground mt-4 text-center">
+                              * These are federal resources. For city and county requirements, contact your local government offices directly.
+                            </p>
+                          </CardContent>
+                        </Card>
                       </div>
                     ) : (
                       <Card className="flex items-center justify-center p-12">
