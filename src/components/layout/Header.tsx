@@ -427,7 +427,7 @@ const Header = () => {
               {/* AI Tools Grid */}
               <div className="space-y-1">
                 <DropdownMenuItem 
-                  onClick={() => navigate('/ai-tools?tab=pricing')} 
+                  onClick={() => navigate('/tools/pricepilot')} 
                   className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
                 >
                   <div className="h-9 w-9 rounded-lg bg-yellow-500/10 flex items-center justify-center shrink-0">
@@ -440,7 +440,7 @@ const Header = () => {
                 </DropdownMenuItem>
                 
                 <DropdownMenuItem 
-                  onClick={() => navigate('/ai-tools?tab=licenses')} 
+                  onClick={() => navigate('/tools/permitpath')} 
                   className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
                 >
                   <div className="h-9 w-9 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
@@ -453,7 +453,7 @@ const Header = () => {
                 </DropdownMenuItem>
                 
                 <DropdownMenuItem 
-                  onClick={() => navigate('/ai-tools?tab=equipment')} 
+                  onClick={() => navigate('/tools/buildkit')} 
                   className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
                 >
                   <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
@@ -466,7 +466,7 @@ const Header = () => {
                 </DropdownMenuItem>
                 
                 <DropdownMenuItem 
-                  onClick={() => navigate('/ai-tools?tab=description')} 
+                  onClick={() => navigate('/tools/listing-studio')} 
                   className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
                 >
                   <div className="h-9 w-9 rounded-lg bg-rose-500/10 flex items-center justify-center shrink-0">
@@ -479,7 +479,7 @@ const Header = () => {
                 </DropdownMenuItem>
                 
                 <DropdownMenuItem 
-                  onClick={() => navigate('/ai-tools?tab=ideas')} 
+                  onClick={() => navigate('/tools/concept-lab')} 
                   className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
                 >
                   <div className="h-9 w-9 rounded-lg bg-yellow-400/10 flex items-center justify-center shrink-0">
@@ -492,7 +492,7 @@ const Header = () => {
                 </DropdownMenuItem>
                 
                 <DropdownMenuItem 
-                  onClick={() => navigate('/ai-tools?tab=research')} 
+                  onClick={() => navigate('/tools/market-radar')} 
                   className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
                 >
                   <div className="h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
@@ -666,7 +666,7 @@ const Header = () => {
                   {/* AI Tools List */}
                   <div className="space-y-1">
                     <Link 
-                      to="/ai-tools?tab=pricing" 
+                      to="/tools/pricepilot" 
                       className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
@@ -680,7 +680,7 @@ const Header = () => {
                     </Link>
                     
                     <Link 
-                      to="/ai-tools?tab=licenses" 
+                      to="/tools/permitpath" 
                       className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
@@ -694,7 +694,7 @@ const Header = () => {
                     </Link>
                     
                     <Link 
-                      to="/ai-tools?tab=equipment" 
+                      to="/tools/buildkit" 
                       className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
@@ -708,7 +708,7 @@ const Header = () => {
                     </Link>
                     
                     <Link 
-                      to="/ai-tools?tab=description" 
+                      to="/tools/listing-studio" 
                       className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
@@ -722,7 +722,7 @@ const Header = () => {
                     </Link>
                     
                     <Link 
-                      to="/ai-tools?tab=ideas" 
+                      to="/tools/concept-lab" 
                       className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
@@ -736,7 +736,7 @@ const Header = () => {
                     </Link>
                     
                     <Link 
-                      to="/ai-tools?tab=research" 
+                      to="/tools/market-radar" 
                       className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
