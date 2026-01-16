@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
+import FounderPricingOverlay from '@/components/ai-tools/FounderPricingOverlay';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -230,9 +231,34 @@ const US_STATES = [
 
 const AITools = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('pricing');
   const [isLoading, setIsLoading] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [showFounderPricing, setShowFounderPricing] = useState(true);
+
+  // Check if user has previously dismissed the overlay
+  useEffect(() => {
+    const dismissed = sessionStorage.getItem('founderPricingDismissed');
+    if (dismissed) {
+      setShowFounderPricing(false);
+    }
+  }, []);
+
+  const handleDismissFounderPricing = () => {
+    setShowFounderPricing(false);
+    sessionStorage.setItem('founderPricingDismissed', 'true');
+  };
+
+  const handleClaimFounderPricing = () => {
+    // Navigate to signup or pricing page
+    toast({
+      title: "🎉 Great choice!",
+      description: "Redirecting you to secure your founder spot...",
+    });
+    // In production, this would go to a Stripe checkout or signup flow
+    navigate('/auth?plan=founder');
+  };
 
   // Pricing form state
   const [pricingForm, setPricingForm] = useState({
@@ -456,6 +482,14 @@ const AITools = () => {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(toolsJsonLd) }} />
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
+
+        {/* Founder Pricing FOMO Overlay */}
+        {showFounderPricing && (
+          <FounderPricingOverlay 
+            onDismiss={handleDismissFounderPricing}
+            onClaim={handleClaimFounderPricing}
+          />
+        )}
 
         <main className="flex-1">
           {/* Hero Section - GRADIENT with enhanced animations */}
