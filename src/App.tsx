@@ -44,6 +44,7 @@ const BuildKit = lazy(() => import("./pages/tools/BuildKit"));
 const ListingStudio = lazy(() => import("./pages/tools/ListingStudio"));
 const ConceptLab = lazy(() => import("./pages/tools/ConceptLab"));
 const MarketRadar = lazy(() => import("./pages/tools/MarketRadar"));
+const MarketingStudio = lazy(() => import("./pages/tools/MarketingStudio"));
 const ToolsIndex = lazy(() => import("./pages/tools/Index"));
 const OrderTracking = lazy(() => import("./pages/OrderTracking"));
 const HostOnboarding = lazy(() => import("./pages/HostOnboarding"));
@@ -104,6 +105,7 @@ const AnimatedRoutes = () => {
           <Route path="/tools/listing-studio" element={<PageTransition><ListingStudio /></PageTransition>} />
           <Route path="/tools/concept-lab" element={<PageTransition><ConceptLab /></PageTransition>} />
           <Route path="/tools/market-radar" element={<PageTransition><MarketRadar /></PageTransition>} />
+          <Route path="/tools/marketing-studio" element={<PageTransition><MarketingStudio /></PageTransition>} />
           <Route path="/order-tracking/:transactionId" element={<PageTransition><OrderTracking /></PageTransition>} />
           <Route path="/host" element={<PageTransition><HostOnboarding /></PageTransition>} />
           <Route path="/install" element={<PageTransition><Install /></PageTransition>} />
