@@ -1,16 +1,19 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ListingCard from '@/components/listing/ListingCard';
+import SearchResultsMap from '@/components/search/SearchResultsMap';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { Card, CardContent } from '@/components/ui/card';
 import SEO from '@/components/SEO';
 import {
   Select,
@@ -37,11 +40,17 @@ import {
   X,
   Truck,
   Calendar,
-  Star,
+  Map,
+  Users,
+  Shield,
+  Zap,
+  CheckCircle,
+  ArrowRight,
 } from 'lucide-react';
 
 type RentalDuration = 'all' | 'hourly' | 'daily' | 'weekly' | 'monthly';
 type SortOption = 'newest' | 'price-low' | 'price-high' | 'rating';
+type ViewMode = 'grid' | 'list' | 'map' | 'split';
 
 const RENTAL_DURATIONS = [
   { value: 'all', label: 'All Durations', icon: Clock },
@@ -51,9 +60,33 @@ const RENTAL_DURATIONS = [
   { value: 'monthly', label: 'Monthly', icon: Calendar },
 ];
 
+const BENEFITS = [
+  {
+    icon: Shield,
+    title: "Verified Lot Owners",
+    description: "Every lot owner is verified for your safety and peace of mind."
+  },
+  {
+    icon: Zap,
+    title: "Instant Booking",
+    description: "Book your spot instantly with real-time availability."
+  },
+  {
+    icon: Users,
+    title: "High-Traffic Locations",
+    description: "Access prime spots in busy areas to maximize your sales."
+  },
+  {
+    icon: DollarSign,
+    title: "Flexible Pricing",
+    description: "Hourly, daily, weekly, or monthly options to fit your budget."
+  }
+];
+
 const VendorLots = () => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<ViewMode>('split');
   const [rentalDuration, setRentalDuration] = useState<RentalDuration>(
     (searchParams.get('duration') as RentalDuration) || 'all'
   );
@@ -61,6 +94,10 @@ const VendorLots = () => {
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [locationFilter, setLocationFilter] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<string | null>(null);
+
+  // Get Mapbox token
+  const { token: mapToken, isLoading: mapLoading, error: mapError } = useMapboxToken();
 
   // Fetch vendor lot listings
   const { data: listings = [], isLoading } = useQuery({
@@ -135,11 +172,10 @@ const VendorLots = () => {
   const filteredListings = useMemo(() => {
     let result = [...listings];
 
-    // Filter by rental duration (based on pricing availability)
+    // Filter by rental duration
     if (rentalDuration !== 'all') {
       result = result.filter((listing) => {
         if (rentalDuration === 'hourly') {
-          // Hourly would typically have low daily rates or specific hourly indicator
           return listing.price_daily && listing.price_daily <= 100;
         }
         if (rentalDuration === 'daily') {
@@ -149,7 +185,6 @@ const VendorLots = () => {
           return listing.price_weekly != null;
         }
         if (rentalDuration === 'monthly') {
-          // Monthly would be indicated by weekly price or longer availability
           return listing.price_weekly != null;
         }
         return true;
@@ -202,6 +237,11 @@ const VendorLots = () => {
     setRentalDuration('all');
     setPriceRange([0, 1000]);
     setLocationFilter('');
+  };
+
+  const handleListingClick = (listing: any) => {
+    setSelectedListing(listing.id);
+    navigate(`/listing/${listing.id}`);
   };
 
   const FilterContent = () => (
@@ -272,51 +312,128 @@ const VendorLots = () => {
     </div>
   );
 
+  const ListingsGrid = ({ className = "" }: { className?: string }) => (
+    <div className={className}>
+      {isLoading ? (
+        <div className={`grid gap-6 ${viewMode === 'list' || viewMode === 'split' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'}`}>
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="space-y-3">
+              <Skeleton className="h-48 w-full rounded-xl" />
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          ))}
+        </div>
+      ) : filteredListings.length > 0 ? (
+        <div className={`grid gap-4 ${viewMode === 'list' || viewMode === 'split' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'}`}>
+          {filteredListings.map((listing) => (
+            <div 
+              key={listing.id}
+              className={selectedListing === listing.id ? 'ring-2 ring-primary rounded-xl' : ''}
+            >
+              <ListingCard
+                listing={listing}
+                hostVerified={hostVerificationMap[listing.host_id] ?? false}
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-16 bg-secondary/30 rounded-2xl">
+          <div className="text-5xl mb-4">🏞️</div>
+          <h3 className="text-xl font-semibold text-foreground mb-2">
+            No Vendor Lots Found
+          </h3>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            No vendor lots match your current filters. Try adjusting your criteria or check back later for new listings.
+          </p>
+          <Button onClick={clearFilters} variant="outline">
+            Clear All Filters
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <>
       <SEO
-        title="Vendor Lots for Rent | Vendibook"
-        description="Find parking lots and prime spots available hourly, daily, or monthly for your food truck or vendor business. Secure your perfect location today."
+        title="Vendor Lots for Rent | Find Parking for Food Trucks & Mobile Businesses"
+        description="Discover prime parking lots and vendor spots available hourly, daily, or monthly for your food truck, food trailer, or mobile business. Secure your perfect location today with VendiBook."
       />
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
 
         <main className="flex-1">
           {/* Hero Section */}
-          <section className="bg-gradient-to-br from-primary/10 via-background to-secondary/20 py-12 md:py-16">
+          <section className="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-12 md:py-16">
             <div className="container">
-              <div className="max-w-3xl">
-                <Badge className="mb-4 bg-primary/20 text-primary border-primary/30">
-                  <MapPin className="h-3 w-3 mr-1" />
-                  Vendor Lots
-                </Badge>
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-                  Find Your Perfect Spot
-                </h1>
-                <p className="text-lg text-muted-foreground mb-6">
-                  Parking lots & prime spots available hourly, daily, or monthly for your food business. 
-                  Connect with property owners and secure high-traffic locations.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4 text-primary" />
-                    Flexible Duration
+              <div className="grid lg:grid-cols-2 gap-8 items-center">
+                <div>
+                  <Badge className="mb-4 bg-primary/20 text-primary border-primary/30">
+                    <MapPin className="h-3 w-3 mr-1" />
+                    Vendor Lots
+                  </Badge>
+                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+                    Find Your Perfect Spot
+                  </h1>
+                  <p className="text-lg text-muted-foreground mb-6">
+                    Parking lots & prime spots available hourly, daily, or monthly for your food business. 
+                    Connect with property owners and secure high-traffic locations.
+                  </p>
+                  <div className="flex flex-wrap gap-4 mb-8">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Clock className="h-4 w-4 text-primary" />
+                      Flexible Duration
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Truck className="h-4 w-4 text-primary" />
+                      Perfect for Food Trucks
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <DollarSign className="h-4 w-4 text-primary" />
+                      Competitive Rates
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Truck className="h-4 w-4 text-primary" />
-                    Perfect for Food Trucks
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button 
+                      variant="gradient-premium" 
+                      size="lg"
+                      onClick={() => document.getElementById('listings-section')?.scrollIntoView({ behavior: 'smooth' })}
+                    >
+                      Browse Available Lots
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="lg"
+                      onClick={() => navigate('/create-listing')}
+                    >
+                      List Your Lot
+                    </Button>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <DollarSign className="h-4 w-4 text-primary" />
-                    Competitive Rates
-                  </div>
+                </div>
+
+                {/* Benefits Cards */}
+                <div className="grid grid-cols-2 gap-4">
+                  {BENEFITS.map((benefit, index) => (
+                    <Card key={index} className="bg-card/50 backdrop-blur border-border/50">
+                      <CardContent className="p-4">
+                        <div className="p-2 bg-primary/10 rounded-lg w-fit mb-3">
+                          <benefit.icon className="h-5 w-5 text-primary" />
+                        </div>
+                        <h3 className="font-semibold text-foreground text-sm mb-1">{benefit.title}</h3>
+                        <p className="text-xs text-muted-foreground">{benefit.description}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Filters & Listings */}
-          <section className="py-8">
+          {/* Listings Section */}
+          <section id="listings-section" className="py-8">
             <div className="container">
               {/* Toolbar */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
@@ -379,6 +496,7 @@ const VendorLots = () => {
                       size="sm"
                       onClick={() => setViewMode('grid')}
                       className="rounded-none"
+                      title="Grid View"
                     >
                       <LayoutGrid className="h-4 w-4" />
                     </Button>
@@ -387,8 +505,18 @@ const VendorLots = () => {
                       size="sm"
                       onClick={() => setViewMode('list')}
                       className="rounded-none"
+                      title="List View"
                     >
                       <List className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'split' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setViewMode('split')}
+                      className="rounded-none"
+                      title="Split View"
+                    >
+                      <Map className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -407,59 +535,106 @@ const VendorLots = () => {
                   </div>
                 </aside>
 
-                {/* Listings Grid */}
+                {/* Content Area */}
                 <div className="flex-1">
-                  {isLoading ? (
-                    <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
-                      {[...Array(6)].map((_, i) => (
-                        <div key={i} className="space-y-3">
-                          <Skeleton className="h-48 w-full rounded-xl" />
-                          <Skeleton className="h-5 w-3/4" />
-                          <Skeleton className="h-4 w-1/2" />
-                        </div>
-                      ))}
-                    </div>
-                  ) : filteredListings.length > 0 ? (
-                    <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
-                      {filteredListings.map((listing) => (
-                        <ListingCard
-                          key={listing.id}
-                          listing={listing}
-                          hostVerified={hostVerificationMap[listing.host_id] ?? false}
+                  {viewMode === 'split' ? (
+                    <div className="grid lg:grid-cols-2 gap-6">
+                      {/* Listings Column */}
+                      <div className="max-h-[800px] overflow-y-auto pr-2 space-y-4">
+                        <ListingsGrid />
+                      </div>
+                      
+                      {/* Map Column */}
+                      <div className="h-[800px] sticky top-24 rounded-xl overflow-hidden border border-border">
+                        <SearchResultsMap
+                          listings={filteredListings}
+                          mapToken={mapToken}
+                          isLoading={mapLoading}
+                          error={mapError}
+                          onListingClick={handleListingClick}
                         />
-                      ))}
+                      </div>
+                    </div>
+                  ) : viewMode === 'map' ? (
+                    <div className="h-[600px] rounded-xl overflow-hidden border border-border">
+                      <SearchResultsMap
+                        listings={filteredListings}
+                        mapToken={mapToken}
+                        isLoading={mapLoading}
+                        error={mapError}
+                        onListingClick={handleListingClick}
+                      />
                     </div>
                   ) : (
-                    <div className="text-center py-16 bg-secondary/30 rounded-2xl">
-                      <div className="text-5xl mb-4">🏞️</div>
-                      <h3 className="text-xl font-semibold text-foreground mb-2">
-                        No Vendor Lots Found
-                      </h3>
-                      <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                        No vendor lots match your current filters. Try adjusting your criteria or check back later for new listings.
-                      </p>
-                      <Button onClick={clearFilters} variant="outline">
-                        Clear All Filters
-                      </Button>
-                    </div>
+                    <ListingsGrid />
                   )}
                 </div>
               </div>
             </div>
           </section>
 
+          {/* How It Works Section */}
+          <section className="py-16 bg-muted/30">
+            <div className="container">
+              <div className="text-center mb-12">
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+                  How Vendor Lots Work
+                </h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  Finding and booking a vendor lot is simple. Here's how to get started.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl font-bold text-primary">1</span>
+                  </div>
+                  <h3 className="font-semibold text-foreground mb-2">Browse & Filter</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Search for lots by location, price, and availability. Use the map to find spots in your desired area.
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl font-bold text-primary">2</span>
+                  </div>
+                  <h3 className="font-semibold text-foreground mb-2">Book Your Spot</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Select your dates, review the lot details, and complete your booking with secure payment.
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl font-bold text-primary">3</span>
+                  </div>
+                  <h3 className="font-semibold text-foreground mb-2">Start Selling</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Show up on your booked dates and start serving customers in your new high-traffic location.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* CTA Section */}
-          <section className="py-12 bg-primary/5">
+          <section className="py-12 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10">
             <div className="container">
               <div className="text-center max-w-2xl mx-auto">
-                <h2 className="text-2xl font-bold mb-4">Own a Lot?</h2>
+                <h2 className="text-2xl md:text-3xl font-bold mb-4">Own a Lot?</h2>
                 <p className="text-muted-foreground mb-6">
                   Turn your parking lot or unused space into a revenue stream. 
-                  List it on Vendibook and connect with food vendors looking for prime locations.
+                  List it on VendiBook and connect with food vendors looking for prime locations.
                 </p>
-                <Button size="lg" asChild>
-                  <a href="/create-listing">List Your Lot</a>
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button variant="gradient-premium" size="lg" onClick={() => navigate('/create-listing')}>
+                    List Your Lot
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                  <Button variant="outline" size="lg" onClick={() => navigate('/how-it-works')}>
+                    Learn More
+                  </Button>
+                </div>
               </div>
             </div>
           </section>
