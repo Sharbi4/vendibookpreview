@@ -81,6 +81,33 @@ export const useHostBookings = () => {
     fetchBookings();
   }, [user]);
 
+  // Real-time subscription for instant updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('host-bookings-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'booking_requests',
+          filter: `host_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('[Realtime] Host booking update:', payload.eventType);
+          // Refetch to get the complete data with joins
+          fetchBookings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   const respondToBooking = async (
     bookingId: string, 
     status: 'approved' | 'declined', 
