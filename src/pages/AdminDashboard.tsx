@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +14,7 @@ import DisputeResolutionCard from '@/components/admin/DisputeResolutionCard';
 import TrackingManagementCard from '@/components/admin/TrackingManagementCard';
 import AdminDocumentReviewCard from '@/components/admin/AdminDocumentReviewCard';
 import AdminDocumentHistorySection from '@/components/admin/AdminDocumentHistorySection';
+import AdminBulkDocumentActions from '@/components/admin/AdminBulkDocumentActions';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ const AdminDashboard = () => {
 
   const { data: pendingDocuments, isLoading: docsLoading } = useAdminPendingDocuments();
   const documentStats = useAdminDocumentStats();
+  const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -206,8 +208,32 @@ const AdminDashboard = () => {
               </Card>
             ) : (
               <div className="space-y-4">
+                {/* Bulk Actions */}
+                <AdminBulkDocumentActions
+                  documents={pendingDocuments}
+                  selectedIds={selectedDocIds}
+                  onSelectionChange={setSelectedDocIds}
+                />
+                
+                {/* Document Cards */}
                 {pendingDocuments.map((doc) => (
-                  <AdminDocumentReviewCard key={doc.id} document={doc} />
+                  <AdminDocumentReviewCard 
+                    key={doc.id} 
+                    document={doc}
+                    showCheckbox
+                    isSelected={selectedDocIds.has(doc.id)}
+                    onSelectionChange={(selected) => {
+                      setSelectedDocIds(prev => {
+                        const newSet = new Set(prev);
+                        if (selected) {
+                          newSet.add(doc.id);
+                        } else {
+                          newSet.delete(doc.id);
+                        }
+                        return newSet;
+                      });
+                    }}
+                  />
                 ))}
               </div>
             )}
