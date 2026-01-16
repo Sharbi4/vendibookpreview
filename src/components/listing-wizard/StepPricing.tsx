@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, DollarSign, Sparkles, Loader2, TrendingUp, TrendingDown, Target, Wallet, Info } from 'lucide-react';
+import { Calendar, DollarSign, Sparkles, Loader2, TrendingUp, TrendingDown, Target, Wallet, Info, Zap } from 'lucide-react';
 import { ListingFormData, FreightPayer } from '@/types/listing';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -364,6 +365,44 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                   min={formData.available_from || new Date().toISOString().split('T')[0]}
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Instant Book Toggle */}
+          <div className="pt-6 border-t">
+            <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-xl p-4 border border-amber-500/20">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3 flex-1">
+                  <div className="p-2 bg-amber-500/10 rounded-lg">
+                    <Zap className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium text-foreground">Instant Book</h4>
+                      <InfoTooltip 
+                        content="When enabled, renters can book and pay immediately. Documents are still reviewed - if rejected, the booking is cancelled and payment is fully refunded." 
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Allow renters to book immediately without waiting for approval. Booking is confirmed once documents are reviewed.
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={formData.instant_book}
+                  onCheckedChange={(checked) => updateField('instant_book', checked)}
+                />
+              </div>
+              
+              {formData.instant_book && (
+                <div className="mt-4 p-3 bg-amber-500/5 rounded-lg border border-amber-500/10">
+                  <p className="text-xs text-muted-foreground">
+                    <strong className="text-amber-700">How it works:</strong> Renters pay immediately when booking. 
+                    Your required documents will still be reviewed. If documents are approved, the booking is confirmed. 
+                    If not approved, the booking is automatically cancelled and the renter receives a full refund.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </>
