@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,9 @@ import { format } from 'date-fns';
 
 interface AdminDocumentReviewCardProps {
   document: AdminBookingDocument;
+  isSelected?: boolean;
+  onSelectionChange?: (selected: boolean) => void;
+  showCheckbox?: boolean;
 }
 
 const StatusBadge = ({ status }: { status: DocumentStatus }) => {
@@ -63,7 +67,12 @@ const StatusBadge = ({ status }: { status: DocumentStatus }) => {
   );
 };
 
-export const AdminDocumentReviewCard = ({ document }: AdminDocumentReviewCardProps) => {
+export const AdminDocumentReviewCard = ({ 
+  document, 
+  isSelected = false, 
+  onSelectionChange,
+  showCheckbox = false 
+}: AdminDocumentReviewCardProps) => {
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const reviewMutation = useAdminReviewDocument();
@@ -107,6 +116,13 @@ export const AdminDocumentReviewCard = ({ document }: AdminDocumentReviewCardPro
             <div className="flex-1 space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
+                  {showCheckbox && isPending && (
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={(checked) => onSelectionChange?.(!!checked)}
+                      className="data-[state=checked]:bg-primary"
+                    />
+                  )}
                   <FileText className="h-5 w-5 text-primary shrink-0" />
                   <div>
                     <span className="font-semibold text-foreground">

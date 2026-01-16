@@ -208,6 +208,60 @@ export function useAdminReviewDocument() {
   });
 }
 
+// Bulk approve documents mutation
+export function useAdminBulkApproveDocuments() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (documents: Array<{ id: string; bookingId: string; documentType: string }>) => {
+      const results = await Promise.allSettled(
+        documents.map(async (doc) => {
+          const { data, error } = await supabase
+            .from('booking_documents')
+            .update({
+              status: 'approved' as DocumentStatus,
+              rejection_reason: null,
+              reviewed_at: new Date().toISOString(),
+            })
+            .eq('id', doc.id)
+            .select()
+            .single();
+
+          if (error) throw error;
+          
+          // Send notification for each approved document
+          await sendDocumentNotification(doc.bookingId, doc.documentType, 'approved');
+          
+          return data;
+        })
+      );
+
+      const succeeded = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.filter(r => r.status === 'rejected').length;
+
+      return { succeeded, failed, total: documents.length };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-documents'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-documents'] });
+      queryClient.invalidateQueries({ queryKey: ['booking-documents'] });
+      
+      toast({
+        title: 'Bulk approval complete',
+        description: `Successfully approved ${result.succeeded} of ${result.total} documents.${result.failed > 0 ? ` ${result.failed} failed.` : ''}`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Bulk approval failed',
+        description: error instanceof Error ? error.message : 'Failed to approve documents',
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
 // Helper to send document notification emails (with check_all_approved for approvals)
 async function sendDocumentNotification(
   bookingId: string,
