@@ -16,6 +16,7 @@ interface LaunchEmailRequest {
 
 // Using the publicly accessible logo from the project
 const LOGO_URL = "https://vendibookpreview.lovable.app/images/vendibook-email-logo.png";
+const HERO_IMAGE_URL = "https://vendibookpreview.lovable.app/images/taco-truck-hero.png";
 const BASE_URL = "https://vendibookpreview.lovable.app";
 
 // Vendibook Brand Colors (matching the website)
@@ -62,6 +63,13 @@ const generateEmailHtml = (unsubscribeToken: string, userEmail: string) => `
                   The marketplace for food trucks, trailers, ghost kitchens & vendor lots is officially open!
                 </p>
               </div>
+            </td>
+          </tr>
+          
+          <!-- Hero Image - Taco Truck -->
+          <tr>
+            <td style="padding: 30px 40px 20px;">
+              <img src="${HERO_IMAGE_URL}" alt="Beautiful taco truck ready for business" style="width: 100%; max-width: 520px; height: auto; border-radius: 12px; display: block; margin: 0 auto;" />
             </td>
           </tr>
           
