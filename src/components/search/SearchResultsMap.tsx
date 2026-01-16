@@ -1,8 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, forwardRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Listing } from '@/types/listing';
 import { Skeleton } from '@/components/ui/skeleton';
+
+function getHslCssVar(varName: string, fallback: string) {
+  // varName should be like "--primary"
+  if (typeof window === 'undefined') return fallback;
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+  // Our design tokens are stored as "H S% L%" so we wrap in hsl(...)
+  return raw ? `hsl(${raw})` : fallback;
+}
 
 interface ListingWithCoords extends Listing {
   latitude?: number | null;
@@ -19,19 +27,31 @@ interface SearchResultsMapProps {
   onListingClick?: (listing: ListingWithCoords) => void;
 }
 
-const SearchResultsMap = ({
-  listings,
-  mapToken,
-  isLoading,
-  error,
-  userLocation,
-  searchRadius,
-  onListingClick,
-}: SearchResultsMapProps) => {
+const SearchResultsMap = forwardRef<HTMLDivElement, SearchResultsMapProps>((
+  {
+    listings,
+    mapToken,
+    isLoading,
+    error,
+    userLocation,
+    searchRadius,
+    onListingClick,
+  },
+  ref
+) => {
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const retryTimeoutRef = useRef<number | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+
+  // Merge forwarded ref (prevents "Function components cannot be given refs" warnings)
+  const setWrapperNode = (node: HTMLDivElement | null) => {
+    wrapperRef.current = node;
+    if (typeof ref === 'function') ref(node);
+    else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+  };
 
   // Initialize map
   useEffect(() => {
