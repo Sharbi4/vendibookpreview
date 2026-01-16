@@ -117,10 +117,14 @@ const PricePilot = () => {
               </Link>
               
               <div className="max-w-3xl">
-                <Badge className="mb-4 bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0">
-                  <DollarSign className="h-3 w-3 mr-1" />
-                  PricePilot
-                </Badge>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
+                    <DollarSign className="h-6 w-6 text-white" />
+                  </div>
+                  <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0">
+                    PricePilot
+                  </Badge>
+                </div>
                 
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 leading-tight">
                   Price smarter in minutes, not days.

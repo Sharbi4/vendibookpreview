@@ -97,9 +97,14 @@ const MarketRadar = () => {
               </Link>
               
               <div className="max-w-3xl">
-                <Badge className="mb-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-white border-0">
-                  <Search className="h-3 w-3 mr-1" />Market Radar
-                </Badge>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center shadow-lg">
+                    <Search className="h-6 w-6 text-white" />
+                  </div>
+                  <Badge className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white border-0">
+                    Market Radar
+                  </Badge>
+                </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 leading-tight">
                   Research smarter, decide faster.
                 </h1>
