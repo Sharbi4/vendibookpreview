@@ -10,12 +10,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Search, 
   Loader2, 
-  ArrowLeft,
+  Home,
   Sparkles,
   ArrowRight,
   TrendingUp,
@@ -92,9 +93,28 @@ const MarketRadar = () => {
             </div>
             
             <div className="container relative z-10">
-              <Link to="/ai-tools" className="inline-flex items-center gap-2 text-foreground/70 hover:text-foreground mb-6 transition-colors">
-                <ArrowLeft className="h-4 w-4" />Back to Command Center
-              </Link>
+              <Breadcrumb className="mb-6">
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to="/" className="flex items-center gap-1">
+                        <Home className="h-4 w-4" />
+                        Home
+                      </Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to="/tools">Vendi AI Suite</Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>Market Radar</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
               
               <div className="max-w-3xl">
                 <div className="flex items-center gap-3 mb-4">
