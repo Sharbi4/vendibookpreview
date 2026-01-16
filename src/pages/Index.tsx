@@ -17,6 +17,7 @@ const AIToolsSection = lazy(() => import('@/components/home/AIToolsSection'));
 const HelpCenterPreview = lazy(() => import('@/components/home/HelpCenterPreview'));
 const ReviewsSection = lazy(() => import('@/components/home/ReviewsSection'));
 const PaymentsSection = lazy(() => import('@/components/home/PaymentsSection'));
+const VendorLotsSection = lazy(() => import('@/components/home/VendorLotsSection'));
 
 // Minimal loading fallback for lazy sections
 const SectionSkeleton = () => (
@@ -57,6 +58,7 @@ const Index = () => {
           <TrustSafetySection />
           <PaymentsSection />
           <AIToolsSection />
+          <VendorLotsSection />
           <HelpCenterPreview />
           <HowItWorks />
           <NewsletterSection />
