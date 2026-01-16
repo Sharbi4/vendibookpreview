@@ -4,6 +4,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import FounderPricingOverlay from '@/components/ai-tools/FounderPricingOverlay';
+import AIToolsOnboarding from '@/components/tools/AIToolsOnboarding';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -490,6 +491,9 @@ const AITools = () => {
             onClaim={handleClaimFounderPricing}
           />
         )}
+
+        {/* AI Tools Onboarding for first-time visitors */}
+        <AIToolsOnboarding />
 
         <main className="flex-1">
           {/* Hero Section - GRADIENT with enhanced animations */}
