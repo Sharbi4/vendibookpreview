@@ -23,9 +23,10 @@ import {
   Clock,
   AlertTriangle,
   Zap,
-  Target,
-  Package
+  Package,
+  Target
 } from 'lucide-react';
+import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 
 const pageJsonLd = {
   "@context": "https://schema.org",
@@ -306,6 +307,13 @@ const BuildKit = () => {
               </Accordion>
             </div>
           </section>
+
+          {/* Cross-Links */}
+          <ToolCrossLinks 
+            currentTool="buildkit" 
+            title="Complete Your Setup"
+            subtitle="Got your equipment? Find the permits you need, set pricing, and write your listing."
+          />
 
           {/* Final CTA */}
           <section className="py-20 bg-gradient-to-r from-orange-500/10 via-red-500/10 to-amber-500/10">

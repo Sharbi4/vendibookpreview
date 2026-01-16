@@ -26,6 +26,7 @@ import {
   ExternalLink,
   DollarSign
 } from 'lucide-react';
+import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 
 // JSON-LD structured data
 const pageJsonLd = {
@@ -356,6 +357,13 @@ const PermitPath = () => {
               </Accordion>
             </div>
           </section>
+
+          {/* Cross-Links */}
+          <ToolCrossLinks 
+            currentTool="permitpath" 
+            title="Continue Building Your Business"
+            subtitle="Got your permits sorted? Next, get equipment recommendations, set pricing, and create your listing."
+          />
 
           {/* Final CTA */}
           <section className="py-20 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10">

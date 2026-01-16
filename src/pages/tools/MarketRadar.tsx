@@ -24,6 +24,7 @@ import {
   CheckCircle,
   Lightbulb
 } from 'lucide-react';
+import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 
 const pageJsonLd = {
   "@context": "https://schema.org",
@@ -329,6 +330,13 @@ const MarketRadar = () => {
               </Accordion>
             </div>
           </section>
+
+          {/* Cross-Links */}
+          <ToolCrossLinks 
+            currentTool="market-radar" 
+            title="Take Action on Your Research"
+            subtitle="Now that you understand your market, explore business concepts, set pricing, or find permits."
+          />
 
           {/* Final CTA */}
           <section className="py-20 bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-orange-500/10">

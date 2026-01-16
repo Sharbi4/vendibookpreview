@@ -20,9 +20,9 @@ import {
   ArrowRight,
   TrendingUp,
   Zap,
-  Target,
   DollarSign
 } from 'lucide-react';
+import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 
 const pageJsonLd = {
   "@context": "https://schema.org",
@@ -294,6 +294,13 @@ const ConceptLab = () => {
               </Accordion>
             </div>
           </section>
+
+          {/* Cross-Links */}
+          <ToolCrossLinks 
+            currentTool="concept-lab" 
+            title="Turn Your Concept Into Reality"
+            subtitle="Got an idea? Use these tools to build your equipment list, find permits, and set pricing."
+          />
 
           {/* Final CTA */}
           <section className="py-20 bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-yellow-500/10">

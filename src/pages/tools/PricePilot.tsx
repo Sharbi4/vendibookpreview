@@ -25,6 +25,7 @@ import {
   CheckCircle,
   ArrowRight
 } from 'lucide-react';
+import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 
 // JSON-LD structured data for SEO
 const pageJsonLd = {
@@ -362,6 +363,13 @@ const PricePilot = () => {
               </Accordion>
             </div>
           </section>
+
+          {/* Cross-Links */}
+          <ToolCrossLinks 
+            currentTool="pricepilot" 
+            title="Maximize Your Success"
+            subtitle="Got your pricing? Write compelling copy, research your market, or check permit requirements."
+          />
 
           {/* Final CTA */}
           <section className="py-20 bg-gradient-to-r from-yellow-500/10 via-amber-500/10 to-orange-500/10">
