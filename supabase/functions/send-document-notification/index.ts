@@ -11,8 +11,9 @@ const corsHeaders = {
 interface DocumentNotificationRequest {
   booking_id: string;
   document_type: string;
-  event_type: "uploaded" | "approved" | "rejected";
+  event_type: "uploaded" | "approved" | "rejected" | "all_approved";
   rejection_reason?: string;
+  check_all_approved?: boolean; // If true, check if all docs are approved and notify host
 }
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
@@ -47,11 +48,11 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const { booking_id, document_type, event_type, rejection_reason }: DocumentNotificationRequest = await req.json();
-    logStep("Request received", { booking_id, document_type, event_type });
+    const { booking_id, document_type, event_type, rejection_reason, check_all_approved }: DocumentNotificationRequest = await req.json();
+    logStep("Request received", { booking_id, document_type, event_type, check_all_approved });
 
-    if (!booking_id || !document_type || !event_type) {
-      throw new Error("Missing required fields: booking_id, document_type, and event_type");
+    if (!booking_id || !event_type) {
+      throw new Error("Missing required fields: booking_id and event_type");
     }
 
     // Fetch booking details
@@ -286,9 +287,202 @@ serve(async (req) => {
           `,
         });
       }
+    } else if (event_type === "all_approved") {
+      // Notify host that all required documents have been approved
+      if (host?.email) {
+        emails.push({
+          to: host.email,
+          subject: `✅ All Documents Approved - ${listingTitle}`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 22px;">All Documents Verified! 🎉</h1>
+              </div>
+              
+              <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
+                  Hi ${host.full_name || 'there'},
+                </p>
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                  Great news! All required documents for <strong>${renter?.full_name || 'your renter'}</strong>'s booking of <strong>${listingTitle}</strong> have been verified and approved.
+                </p>
+                
+                <div style="background: #dcfce7; border-radius: 8px; padding: 16px; border: 1px solid #bbf7d0; margin: 0 0 20px 0;">
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="background: #22c55e; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                      <span style="color: white; font-size: 24px;">✓</span>
+                    </div>
+                    <div>
+                      <p style="margin: 0 0 4px 0; font-weight: 600; color: #166534; font-size: 16px;">Documents Complete</p>
+                      <p style="margin: 0; color: #15803d; font-size: 14px;">All required documents have been submitted and approved</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e5e7eb; margin: 0 0 20px 0;">
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                      <td style="padding: 8px 0; color: #6b7280;">Renter:</td>
+                      <td style="padding: 8px 0; font-weight: 600; color: #1f2937;">${renter?.full_name || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px 0; color: #6b7280;">Booking Dates:</td>
+                      <td style="padding: 8px 0; color: #1f2937;">${startDate} - ${endDate}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px 0; color: #6b7280;">Listing:</td>
+                      <td style="padding: 8px 0; color: #1f2937;">${listingTitle}</td>
+                    </tr>
+                  </table>
+                </div>
+                
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                  The booking is now fully compliant with all documentation requirements. You can proceed with confidence!
+                </p>
+                
+                <div style="text-align: center;">
+                  <a href="${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '.lovable.app')}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Dashboard</a>
+                </div>
+              </div>
+              
+              <div style="padding: 16px; text-align: center; color: #9ca3af; font-size: 12px;">
+                <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a></p>
+                <p style="margin: 0;">© ${new Date().getFullYear()} Vendibook. All rights reserved.</p>
+              </div>
+            </div>
+          `,
+        });
+      }
+
+      // Also create an in-app notification for the host
+      try {
+        await supabaseClient.from("notifications").insert({
+          user_id: booking.host_id,
+          type: "document",
+          title: "All Documents Approved",
+          message: `All required documents for ${renter?.full_name || 'your renter'}'s booking of "${listingTitle}" have been verified and approved.`,
+          link: "/dashboard",
+        });
+        logStep("In-app notification created for host", { host_id: booking.host_id });
+      } catch (notifError: any) {
+        logStep("Failed to create in-app notification", { error: notifError.message });
+      }
     }
 
-    // Send all emails using Resend API
+    // Check if all documents are now approved (after approving a single doc)
+    if (check_all_approved && event_type === "approved") {
+      logStep("Checking if all documents are now approved");
+      
+      // Get required documents for the listing
+      const { data: requiredDocs, error: reqError } = await supabaseClient
+        .from("listing_required_documents")
+        .select("document_type")
+        .eq("listing_id", booking.listing_id)
+        .eq("is_required", true);
+      
+      if (reqError) {
+        logStep("Error fetching required docs", { error: reqError.message });
+      } else if (requiredDocs && requiredDocs.length > 0) {
+        // Get uploaded documents for this booking
+        const { data: uploadedDocs, error: uploadError } = await supabaseClient
+          .from("booking_documents")
+          .select("document_type, status")
+          .eq("booking_id", booking_id);
+        
+        if (uploadError) {
+          logStep("Error fetching uploaded docs", { error: uploadError.message });
+        } else if (uploadedDocs) {
+          // Check if all required docs are approved
+          const allApproved = requiredDocs.every(req => {
+            const uploaded = uploadedDocs.find(u => u.document_type === req.document_type);
+            return uploaded && uploaded.status === "approved";
+          });
+          
+          logStep("Document compliance check", { 
+            required: requiredDocs.length, 
+            uploaded: uploadedDocs.length,
+            allApproved 
+          });
+          
+          if (allApproved) {
+            logStep("All documents approved - sending host notification");
+            
+            // Send the "all_approved" notification to host
+            if (host?.email) {
+              emails.push({
+                to: host.email,
+                subject: `✅ All Documents Approved - ${listingTitle}`,
+                html: `
+                  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+                      <h1 style="color: white; margin: 0; font-size: 22px;">All Documents Verified! 🎉</h1>
+                    </div>
+                    
+                    <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+                      <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
+                        Hi ${host.full_name || 'there'},
+                      </p>
+                      <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                        Great news! All required documents for <strong>${renter?.full_name || 'your renter'}</strong>'s booking of <strong>${listingTitle}</strong> have been verified and approved.
+                      </p>
+                      
+                      <div style="background: #dcfce7; border-radius: 8px; padding: 16px; border: 1px solid #bbf7d0; margin: 0 0 20px 0; text-align: center;">
+                        <p style="margin: 0 0 4px 0; font-weight: 600; color: #166534; font-size: 18px;">✓ Documents Complete</p>
+                        <p style="margin: 0; color: #15803d; font-size: 14px;">All required documents have been submitted and approved</p>
+                      </div>
+                      
+                      <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e5e7eb; margin: 0 0 20px 0;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                          <tr>
+                            <td style="padding: 8px 0; color: #6b7280;">Renter:</td>
+                            <td style="padding: 8px 0; font-weight: 600; color: #1f2937;">${renter?.full_name || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #6b7280;">Booking Dates:</td>
+                            <td style="padding: 8px 0; color: #1f2937;">${startDate} - ${endDate}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #6b7280;">Listing:</td>
+                            <td style="padding: 8px 0; color: #1f2937;">${listingTitle}</td>
+                          </tr>
+                        </table>
+                      </div>
+                      
+                      <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                        The booking is now fully compliant with all documentation requirements.
+                      </p>
+                      
+                      <div style="text-align: center;">
+                        <a href="${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '.lovable.app')}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Dashboard</a>
+                      </div>
+                    </div>
+                    
+                    <div style="padding: 16px; text-align: center; color: #9ca3af; font-size: 12px;">
+                      <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a></p>
+                      <p style="margin: 0;">© ${new Date().getFullYear()} Vendibook. All rights reserved.</p>
+                    </div>
+                  </div>
+                `,
+              });
+            }
+            
+            // Create in-app notification for host
+            try {
+              await supabaseClient.from("notifications").insert({
+                user_id: booking.host_id,
+                type: "document",
+                title: "All Documents Approved",
+                message: `All required documents for ${renter?.full_name || 'your renter'}'s booking of "${listingTitle}" have been verified and approved.`,
+                link: "/dashboard",
+              });
+              logStep("In-app notification created for host");
+            } catch (notifError: any) {
+              logStep("Failed to create in-app notification", { error: notifError.message });
+            }
+          }
+        }
+      }
+    }
     const results = [];
     for (const email of emails) {
       try {
