@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
@@ -21,9 +22,13 @@ import {
   ArrowRight,
   TrendingUp,
   Zap,
-  DollarSign
+  DollarSign,
+  Users,
+  Utensils,
+  Star
 } from 'lucide-react';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
+import { OutputHighlightBadges } from '@/components/tools/OutputCard';
 
 const pageJsonLd = {
   "@context": "https://schema.org",
@@ -258,40 +263,72 @@ const ConceptLab = () => {
 
               {/* Results */}
               {ideaResult && ideaResult.ideas && (
-                <div className="mt-8 grid gap-4 md:grid-cols-2">
-                  {ideaResult.ideas.map((idea, i) => (
-                    <Card key={i} className="hover:shadow-lg transition-shadow">
-                      <CardHeader>
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <Badge variant="outline" className="mb-2">Concept {i + 1}</Badge>
-                            <CardTitle className="text-lg">{idea.name}</CardTitle>
-                          </div>
-                          <Badge variant={idea.estimatedStartup === 'Low' ? 'secondary' : idea.estimatedStartup === 'Medium' ? 'default' : 'destructive'}>
-                            {idea.estimatedStartup} Startup
-                          </Badge>
-                        </div>
-                        <CardDescription>{idea.concept}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div>
-                          <p className="text-sm font-medium mb-1">Target Market</p>
-                          <p className="text-sm text-muted-foreground">{idea.targetMarket}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium mb-2">Menu Highlights</p>
-                          <div className="flex flex-wrap gap-1">
-                            {idea.menuHighlights.map((item, j) => <Badge key={j} variant="outline" className="text-xs">{item}</Badge>)}
-                          </div>
-                        </div>
-                        <div className="p-3 bg-muted rounded-lg">
-                          <p className="text-xs font-medium mb-1">Unique Angle</p>
-                          <p className="text-xs text-muted-foreground">{idea.uniqueAngle}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mt-8"
+                >
+                  <div className="flex items-center gap-2 mb-6">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    <h3 className="font-semibold text-lg">Your Business Concepts</h3>
+                    <Badge variant="secondary" className="text-xs">AI Generated</Badge>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {ideaResult.ideas.map((idea, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                      >
+                        <Card className="h-full hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-background to-muted/30 overflow-hidden group">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                                    {i + 1}
+                                  </span>
+                                  <Badge 
+                                    variant={idea.estimatedStartup === 'Low' ? 'secondary' : idea.estimatedStartup === 'Medium' ? 'default' : 'destructive'}
+                                    className="text-xs"
+                                  >
+                                    {idea.estimatedStartup} Startup
+                                  </Badge>
+                                </div>
+                                <CardTitle className="text-lg group-hover:text-primary transition-colors">{idea.name}</CardTitle>
+                              </div>
+                            </div>
+                            <CardDescription className="text-sm">{idea.concept}</CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="flex items-start gap-2">
+                              <Users className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-xs font-medium text-muted-foreground mb-0.5">Target Market</p>
+                                <p className="text-sm">{idea.targetMarket}</p>
+                              </div>
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1 mb-2">
+                                <Utensils className="h-4 w-4 text-muted-foreground" />
+                                <p className="text-xs font-medium text-muted-foreground">Menu Highlights</p>
+                              </div>
+                              <OutputHighlightBadges items={idea.menuHighlights} variant="outline" />
+                            </div>
+                            <div className="p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg border border-primary/10">
+                              <div className="flex items-center gap-1 mb-1">
+                                <Star className="h-3.5 w-3.5 text-primary" />
+                                <p className="text-xs font-medium text-primary">Unique Angle</p>
+                              </div>
+                              <p className="text-xs text-muted-foreground">{idea.uniqueAngle}</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
               )}
 
               {ideaResult && (

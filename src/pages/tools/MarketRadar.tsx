@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
@@ -23,9 +24,12 @@ import {
   MapPin,
   BarChart3,
   CheckCircle,
-  Lightbulb
+  Lightbulb,
+  BookOpen,
+  ListChecks
 } from 'lucide-react';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
+import { OutputCard, OutputSection, OutputList, OutputHighlightBadges } from '@/components/tools/OutputCard';
 
 const pageJsonLd = {
   "@context": "https://schema.org",
@@ -251,20 +255,32 @@ const MarketRadar = () => {
 
               {/* Results */}
               {researchResult && (
-                <div className="mt-8 space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>{researchResult.title}</CardTitle>
-                      <CardDescription>{researchResult.summary}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mt-8 space-y-6"
+                >
+                  <OutputCard
+                    title={researchResult.title}
+                    subtitle={researchResult.summary}
+                    icon={<Search className="h-5 w-5" />}
+                    gradient="from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30"
+                  >
+                    <div className="space-y-6">
                       {/* Quick Facts */}
                       {researchResult.quickFacts.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-6">
+                        <div className="flex flex-wrap gap-2">
                           {researchResult.quickFacts.map((fact, i) => (
-                            <Badge key={i} variant="secondary" className="text-sm py-1">
-                              <strong>{fact.label}:</strong>&nbsp;{fact.value}
-                            </Badge>
+                            <motion.div
+                              key={i}
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: i * 0.05 }}
+                            >
+                              <Badge variant="secondary" className="text-sm py-1.5 px-3">
+                                <strong className="font-semibold">{fact.label}:</strong>&nbsp;{fact.value}
+                              </Badge>
+                            </motion.div>
                           ))}
                         </div>
                       )}
@@ -272,70 +288,116 @@ const MarketRadar = () => {
                       {/* Sections */}
                       <div className="space-y-6">
                         {researchResult.sections.map((section, i) => (
-                          <div key={i} className="border-l-2 border-primary pl-4">
-                            <h3 className="font-semibold mb-2">{section.heading}</h3>
-                            <p className="text-sm text-muted-foreground mb-3">{section.content}</p>
+                          <motion.div 
+                            key={i} 
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.1 }}
+                            className="border-l-2 border-primary/50 pl-4 hover:border-primary transition-colors"
+                          >
+                            <h3 className="font-semibold mb-2 flex items-center gap-2">
+                              <BookOpen className="h-4 w-4 text-primary" />
+                              {section.heading}
+                            </h3>
+                            <p className="text-sm text-muted-foreground mb-3 leading-relaxed">{section.content}</p>
                             {section.keyPoints.length > 0 && (
-                              <ul className="text-sm space-y-1">
-                                {section.keyPoints.map((point, j) => (
-                                  <li key={j} className="flex gap-2">
-                                    <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />{point}
-                                  </li>
-                                ))}
-                              </ul>
+                              <OutputList items={section.keyPoints} variant="check" />
                             )}
-                          </div>
+                          </motion.div>
                         ))}
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </OutputCard>
 
                   <div className="grid gap-4 md:grid-cols-2">
                     {/* Action Items */}
                     {researchResult.actionItems.length > 0 && (
-                      <Card>
-                        <CardHeader><CardTitle className="text-base">Action Items</CardTitle></CardHeader>
-                        <CardContent>
-                          <ul className="space-y-2 text-sm">
-                            {researchResult.actionItems.map((item, i) => (
-                              <li key={i} className="flex gap-2"><span className="font-bold text-primary">{i + 1}.</span>{item}</li>
-                            ))}
-                          </ul>
-                        </CardContent>
-                      </Card>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                      >
+                        <Card className="h-full border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-base flex items-center gap-2">
+                              <ListChecks className="h-4 w-4 text-blue-600" />
+                              Action Items
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <OutputList items={researchResult.actionItems} variant="number" />
+                          </CardContent>
+                        </Card>
+                      </motion.div>
                     )}
 
                     {/* Expert Tips */}
                     {researchResult.expertTips.length > 0 && (
-                      <Card>
-                        <CardHeader><CardTitle className="text-base">Expert Tips</CardTitle></CardHeader>
-                        <CardContent>
-                          <ul className="space-y-2 text-sm">
-                            {researchResult.expertTips.map((tip, i) => (
-                              <li key={i} className="flex gap-2"><Lightbulb className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />{tip}</li>
-                            ))}
-                          </ul>
-                        </CardContent>
-                      </Card>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                      >
+                        <Card className="h-full border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-base flex items-center gap-2">
+                              <Lightbulb className="h-4 w-4 text-yellow-600" />
+                              Expert Tips
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <ul className="space-y-2 text-sm">
+                              {researchResult.expertTips.map((tip, i) => (
+                                <motion.li 
+                                  key={i} 
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  transition={{ delay: 0.3 + i * 0.05 }}
+                                  className="flex gap-2"
+                                >
+                                  <Lightbulb className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
+                                  {tip}
+                                </motion.li>
+                              ))}
+                            </ul>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
                     )}
                   </div>
 
                   {/* Related Topics */}
                   {researchResult.relatedTopics.length > 0 && (
-                    <Card>
-                      <CardHeader><CardTitle className="text-base">Related Topics to Explore</CardTitle></CardHeader>
-                      <CardContent>
-                        <div className="flex flex-wrap gap-2">
-                          {researchResult.relatedTopics.map((topic, i) => (
-                            <Button key={i} variant="outline" size="sm" onClick={() => { setResearchForm({ ...researchForm, query: topic }); handleSubmit(); }}>
-                              {topic}
-                            </Button>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                    >
+                      <Card className="border-0 shadow-lg">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">Explore Related Topics</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex flex-wrap gap-2">
+                            {researchResult.relatedTopics.map((topic, i) => (
+                              <Button 
+                                key={i} 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => { 
+                                  setResearchForm({ ...researchForm, query: topic }); 
+                                }}
+                                className="hover:bg-primary hover:text-primary-foreground transition-colors"
+                              >
+                                {topic}
+                              </Button>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
                   )}
-                </div>
+                </motion.div>
               )}
             </div>
           </section>

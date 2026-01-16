@@ -24,9 +24,13 @@ import {
   Zap,
   BarChart3,
   CheckCircle,
-  ArrowRight
+  ArrowRight,
+  Calendar,
+  CalendarDays,
+  Tag
 } from 'lucide-react';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
+import { OutputCard, OutputMetric, OutputList, OutputSection, EmptyOutput } from '@/components/tools/OutputCard';
 
 // JSON-LD structured data for SEO
 const pageJsonLd = {
@@ -300,64 +304,81 @@ const PricePilot = () => {
                 </Card>
 
                 {/* Results */}
-                <Card className={pricingResult ? '' : 'flex items-center justify-center'}>
-                  {pricingResult ? (
-                    <>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <BarChart3 className="h-5 w-5 text-green-500" />
-                          Suggested Pricing
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="grid gap-3">
-                          {pricingResult.dailyRate && (
-                            <div className="p-4 bg-primary/5 rounded-lg">
-                              <p className="text-sm text-muted-foreground">Daily Rate</p>
-                              <p className="text-2xl font-bold text-primary">${pricingResult.dailyRate.toLocaleString()}/day</p>
-                            </div>
-                          )}
-                          {pricingResult.weeklyRate && (
-                            <div className="p-4 bg-primary/5 rounded-lg">
-                              <p className="text-sm text-muted-foreground">Weekly Rate</p>
-                              <p className="text-2xl font-bold text-primary">${pricingResult.weeklyRate.toLocaleString()}/week</p>
-                            </div>
-                          )}
-                          {pricingResult.salePrice && (
-                            <div className="p-4 bg-green-500/10 rounded-lg">
-                              <p className="text-sm text-muted-foreground">Sale Price</p>
-                              <p className="text-2xl font-bold text-green-600">${pricingResult.salePrice.toLocaleString()}</p>
-                            </div>
-                          )}
-                        </div>
-                        <div className="pt-4 border-t">
-                          <p className="text-sm text-muted-foreground mb-3">{pricingResult.reasoning}</p>
-                          {pricingResult.tips && pricingResult.tips.length > 0 && (
-                            <div className="space-y-2">
-                              <p className="text-sm font-medium">Tips to charge more:</p>
-                              <ul className="text-sm text-muted-foreground space-y-1">
-                                {pricingResult.tips.map((tip, i) => (
-                                  <li key={i} className="flex items-start gap-2">
-                                    <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                                    {tip}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                        <Button className="w-full" variant="outline" asChild>
-                          <Link to="/create-listing">Apply to New Listing</Link>
-                        </Button>
-                      </CardContent>
-                    </>
-                  ) : (
-                    <div className="text-center p-8 text-muted-foreground">
-                      <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                      <p>Fill in the details to get pricing suggestions</p>
+                {pricingResult ? (
+                  <OutputCard
+                    title="Suggested Pricing"
+                    subtitle="AI-optimized rates based on market analysis"
+                    icon={<BarChart3 className="h-5 w-5" />}
+                    gradient="from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30"
+                  >
+                    <div className="space-y-6">
+                      {/* Pricing Metrics Grid */}
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                        {pricingResult.dailyRate && (
+                          <OutputMetric
+                            label="Daily Rate"
+                            value={pricingResult.dailyRate}
+                            prefix="$"
+                            suffix="/day"
+                            variant="highlight"
+                            size="lg"
+                            icon={<Calendar className="h-4 w-4" />}
+                          />
+                        )}
+                        {pricingResult.weeklyRate && (
+                          <OutputMetric
+                            label="Weekly Rate"
+                            value={pricingResult.weeklyRate}
+                            prefix="$"
+                            suffix="/week"
+                            variant="highlight"
+                            size="lg"
+                            icon={<CalendarDays className="h-4 w-4" />}
+                          />
+                        )}
+                        {pricingResult.salePrice && (
+                          <OutputMetric
+                            label="Sale Price"
+                            value={pricingResult.salePrice}
+                            prefix="$"
+                            variant="success"
+                            size="lg"
+                            icon={<Tag className="h-4 w-4" />}
+                          />
+                        )}
+                      </div>
+
+                      {/* Reasoning */}
+                      <OutputSection title="Market Analysis">
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {pricingResult.reasoning}
+                        </p>
+                      </OutputSection>
+
+                      {/* Tips */}
+                      {pricingResult.tips && pricingResult.tips.length > 0 && (
+                        <OutputSection title="Tips to Charge More" description="Optimize your listing for higher rates">
+                          <OutputList items={pricingResult.tips} variant="check" />
+                        </OutputSection>
+                      )}
+
+                      <Button className="w-full" asChild>
+                        <Link to="/create-listing">
+                          Apply to New Listing
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Link>
+                      </Button>
                     </div>
-                  )}
-                </Card>
+                  </OutputCard>
+                ) : (
+                  <Card className="flex items-center justify-center min-h-[400px]">
+                    <EmptyOutput
+                      icon={<DollarSign className="h-16 w-16" />}
+                      title="Ready to analyze"
+                      description="Fill in the details to get AI-powered pricing suggestions"
+                    />
+                  </Card>
+                )}
               </div>
             </div>
           </section>

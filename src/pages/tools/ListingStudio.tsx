@@ -24,9 +24,12 @@ import {
   Check,
   TrendingUp,
   Zap,
-  Target
+  Target,
+  Type,
+  AlignLeft
 } from 'lucide-react';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
+import { OutputCard, CopyableText, OutputSection, OutputHighlightBadges, EmptyOutput } from '@/components/tools/OutputCard';
 
 const pageJsonLd = {
   "@context": "https://schema.org",
@@ -261,50 +264,45 @@ const ListingStudio = () => {
                 </Card>
 
                 {/* Results */}
-                <Card className={descriptionResult ? '' : 'flex items-center justify-center'}>
-                  {descriptionResult ? (
-                    <>
-                      <CardHeader>
-                        <CardTitle>Your Listing Copy</CardTitle>
-                        <CardDescription>Copy and use this on your listing</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label>Headline</Label>
-                            <Button size="sm" variant="ghost" onClick={() => copyToClipboard(descriptionResult.headline, 'headline')}>
-                              {copiedField === 'headline' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                            </Button>
-                          </div>
-                          <div className="p-3 bg-muted rounded-lg"><p className="font-semibold">{descriptionResult.headline}</p></div>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label>Description</Label>
-                            <Button size="sm" variant="ghost" onClick={() => copyToClipboard(descriptionResult.description, 'description')}>
-                              {copiedField === 'description' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                            </Button>
-                          </div>
-                          <div className="p-3 bg-muted rounded-lg"><p className="text-sm whitespace-pre-line">{descriptionResult.description}</p></div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Key Highlights</Label>
-                          <div className="flex flex-wrap gap-2">
-                            {descriptionResult.highlights.map((h, i) => <Badge key={i} variant="secondary">{h}</Badge>)}
-                          </div>
-                        </div>
-                        <Button className="w-full" variant="outline" asChild>
-                          <Link to="/create-listing">Create Listing Now</Link>
-                        </Button>
-                      </CardContent>
-                    </>
-                  ) : (
-                    <div className="text-center p-8 text-muted-foreground">
-                      <FileText className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                      <p>Fill in the details to generate listing copy</p>
+                {descriptionResult ? (
+                  <OutputCard
+                    title="Your Listing Copy"
+                    subtitle="Ready to copy and use on your listing"
+                    icon={<FileText className="h-5 w-5" />}
+                    gradient="from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30"
+                  >
+                    <div className="space-y-6">
+                      <CopyableText
+                        label="Headline"
+                        text={descriptionResult.headline}
+                      />
+                      
+                      <CopyableText
+                        label="Description"
+                        text={descriptionResult.description}
+                      />
+                      
+                      <OutputSection title="Key Highlights" description="Use these as bullet points or badges">
+                        <OutputHighlightBadges items={descriptionResult.highlights} />
+                      </OutputSection>
+
+                      <Button className="w-full" asChild>
+                        <Link to="/create-listing">
+                          Create Listing Now
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Link>
+                      </Button>
                     </div>
-                  )}
-                </Card>
+                  </OutputCard>
+                ) : (
+                  <Card className="flex items-center justify-center min-h-[400px]">
+                    <EmptyOutput
+                      icon={<FileText className="h-16 w-16" />}
+                      title="Ready to write"
+                      description="Fill in the details to generate compelling listing copy"
+                    />
+                  </Card>
+                )}
               </div>
             </div>
           </section>
