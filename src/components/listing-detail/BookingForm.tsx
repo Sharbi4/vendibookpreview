@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Loader2, MapPin, Truck, Building, Info, UserCheck } from 'lucide-react';
+import { Calendar, Loader2, MapPin, Truck, Building, Info, UserCheck, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -43,6 +43,8 @@ interface BookingFormProps {
   hoursOfAccess?: string | null;
   // Listing status
   status: 'draft' | 'published' | 'paused';
+  // Instant Book
+  instantBook?: boolean;
 }
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
@@ -65,6 +67,7 @@ const BookingForm = ({
   accessInstructions,
   hoursOfAccess,
   status,
+  instantBook = false,
 }: BookingFormProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -253,6 +256,7 @@ const BookingForm = ({
         message: message.trim() || null,
         total_price: fees.customerTotal,
         fulfillment_selected: fulfillmentSelected,
+        is_instant_book: instantBook,
       };
 
       // Add fulfillment-specific data
@@ -273,7 +277,27 @@ const BookingForm = ({
 
       if (error) throw error;
 
-      // Send email notification (fire and forget)
+      // For Instant Book: Immediately redirect to payment
+      if (instantBook) {
+        const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout', {
+          body: {
+            booking_id: bookingResult.id,
+            listing_id: listingId,
+            mode: 'rent',
+            amount: fees.subtotal,
+            delivery_fee: currentDeliveryFee,
+          },
+        });
+
+        if (checkoutError) throw checkoutError;
+        if (!checkoutData?.url) throw new Error('Failed to create checkout session');
+
+        // Redirect to Stripe Checkout
+        window.location.href = checkoutData.url;
+        return;
+      }
+
+      // Non-Instant Book: Send notification and show confirmation
       supabase.functions.invoke('send-booking-notification', {
         body: { booking_id: bookingResult.id, event_type: 'submitted' },
       }).catch(console.error);
@@ -681,6 +705,19 @@ const BookingForm = ({
         )}
       </div>
 
+      {/* Instant Book Badge */}
+      {instantBook && (
+        <div className="mb-4 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-primary">Instant Book</span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Book immediately and pay now. Your booking is confirmed once documents are approved.
+          </p>
+        </div>
+      )}
+
       {/* Submit Button */}
       <Button 
         variant="gradient"
@@ -690,11 +727,17 @@ const BookingForm = ({
         disabled={isSubmitting || rentalDays <= 0 || !isListingAvailable || !userInfo}
       >
         {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-        {!user ? 'Sign in to Book' : isListingAvailable ? `Request Booking · $${fees.customerTotal.toFixed(2)}` : 'Unavailable'}
+        {!user ? 'Sign in to Book' : isListingAvailable 
+          ? instantBook 
+            ? `Book Now · $${fees.customerTotal.toFixed(2)}` 
+            : `Request Booking · $${fees.customerTotal.toFixed(2)}` 
+          : 'Unavailable'}
       </Button>
 
       <p className="text-xs text-muted-foreground text-center mt-4">
-        You won't be charged yet. After your request is approved, you'll proceed to payment.
+        {instantBook 
+          ? 'You will be charged immediately. If documents are not approved, you will receive a full refund.'
+          : "You won't be charged yet. After your request is approved, you'll proceed to payment."}
       </p>
 
       {/* Booking Info Modal */}
