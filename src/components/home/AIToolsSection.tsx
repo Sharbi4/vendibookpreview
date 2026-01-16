@@ -29,8 +29,8 @@ const aiTools: AITool[] = [
   {
     id: 'license-finder',
     icon: Scale,
-    title: 'License & Permit Finder',
-    tagline: 'Know exactly what permits you need',
+    title: 'PermitPath',
+    tagline: 'Permits, licenses, and compliance—mapped to your city and setup',
     description: 'Navigate the complex world of food truck licenses, mobile vendor permits, health department certifications, and business registrations. Our AI instantly identifies every license, permit, and insurance requirement for your specific city and state—saving you weeks of research and preventing costly compliance mistakes.',
     features: [
       'State-by-state food truck license requirements',
@@ -40,14 +40,14 @@ const aiTools: AITool[] = [
       'Timeline & cost estimates for each permit',
       'Direct links to official application portals'
     ],
-    cta: 'Find My Licenses',
+    cta: 'Find My Permits',
     featured: true
   },
   {
     id: 'pricing',
     icon: DollarSign,
-    title: 'Smart Pricing Generator',
-    tagline: 'Set competitive rates instantly',
+    title: 'PricePilot',
+    tagline: 'Data-backed pricing that helps you book faster and earn more',
     description: 'Our AI analyzes market data, location, and your listing features to suggest optimal daily, weekly, and sale prices that maximize your earnings while staying competitive.',
     features: [
       'Market-based pricing recommendations',
@@ -60,8 +60,8 @@ const aiTools: AITool[] = [
   {
     id: 'description',
     icon: FileText,
-    title: 'Listing Description Writer',
-    tagline: 'Craft compelling listings in seconds',
+    title: 'Listing Studio',
+    tagline: 'Turn specs into a high-converting listing in minutes',
     description: 'Transform basic details into professional, engaging listing descriptions that highlight your unique selling points and attract more bookings.',
     features: [
       'SEO-optimized descriptions',
@@ -69,13 +69,13 @@ const aiTools: AITool[] = [
       'Professional tone matching',
       'Key feature emphasis'
     ],
-    cta: 'Write Description'
+    cta: 'Write Listing'
   },
   {
     id: 'equipment-guide',
     icon: Wrench,
-    title: 'Equipment Maintenance Guide',
-    tagline: 'Keep your equipment running smoothly',
+    title: 'BuildKit',
+    tagline: 'Equipment recommendations that match your menu, volume, and budget',
     description: 'Get step-by-step maintenance guides, troubleshooting tips, and care schedules for commercial kitchen equipment. From fryers to refrigeration units, keep your food truck or trailer in peak condition.',
     features: [
       'Daily, weekly, monthly maintenance schedules',
@@ -88,8 +88,8 @@ const aiTools: AITool[] = [
   {
     id: 'market-research',
     icon: TrendingUp,
-    title: 'Market Research Tool',
-    tagline: 'Understand your local food market',
+    title: 'Market Radar',
+    tagline: 'Location intel + competitor snapshots for smarter decisions',
     description: 'Discover market trends, competitor analysis, and industry insights for the mobile food industry. Make data-driven decisions about locations, menu offerings, and pricing strategies.',
     features: [
       'Local food truck market analysis',
@@ -102,8 +102,8 @@ const aiTools: AITool[] = [
   {
     id: 'business-idea',
     icon: Lightbulb,
-    title: 'Business Idea Generator',
-    tagline: 'Discover your next venture',
+    title: 'Concept Lab',
+    tagline: 'Generate sellable concepts designed for your market and margins',
     description: 'Get personalized food business concepts tailored to your interests, budget, and local market opportunities. From food trucks to ghost kitchens, find your perfect fit.',
     features: [
       'Budget-conscious suggestions',
@@ -111,7 +111,7 @@ const aiTools: AITool[] = [
       'Concept validation tips',
       'Revenue projections'
     ],
-    cta: 'Explore Ideas'
+    cta: 'Explore Concepts'
   }
 ];
 
@@ -154,10 +154,10 @@ const AIToolsSection = () => {
                 id="ai-tools-heading" 
                 className="text-2xl md:text-3xl font-semibold text-foreground mb-2"
               >
-                AI-Powered Tools for Food Entrepreneurs
+                Vendi AI Suite
               </h2>
               <p className="text-muted-foreground max-w-xl">
-                Find licenses & permits, set competitive pricing, research your market, and launch your food business smarter—all powered by AI.
+                Your AI co-pilot for running a mobile food business. Price smarter, find permits faster, and launch with confidence.
               </p>
             </div>
           </div>
@@ -166,7 +166,7 @@ const AIToolsSection = () => {
             className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 
                        transition-colors group whitespace-nowrap font-medium"
           >
-            Try all AI tools free
+            Open Command Center
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>

@@ -39,7 +39,7 @@ import {
 const toolsJsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "Vendibook AI Business Tools",
+  "name": "Vendi Command Center - AI Business Tools",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
   "offers": {
@@ -47,14 +47,14 @@ const toolsJsonLd = {
     "price": "0",
     "priceCurrency": "USD"
   },
-  "description": "Free AI-powered tools for food truck operators, mobile food vendors, and commercial kitchen owners. Includes pricing calculator, description generator, business idea generator, equipment maintenance guides, license finder, and industry research tools.",
+  "description": "Vendi AI Suite: Your AI co-pilot for running a mobile food business. Includes PricePilot, PermitPath, BuildKit, Listing Studio, Concept Lab, and Market Radar.",
   "featureList": [
-    "AI Pricing Generator for Food Trucks and Trailers",
-    "Listing Description Generator",
-    "Food Business Idea Generator",
-    "Commercial Kitchen Equipment Maintenance Guides",
-    "Food Truck License and Permit Finder by State",
-    "AI-Powered Industry Research"
+    "PricePilot - Data-backed pricing for faster bookings",
+    "PermitPath - Permits and licenses mapped to your city",
+    "BuildKit - Equipment recommendations for your menu",
+    "Listing Studio - Turn specs into high-converting listings",
+    "Concept Lab - Sellable concepts for your market",
+    "Market Radar - Location intel and competitor snapshots"
   ]
 };
 
@@ -449,8 +449,8 @@ const AITools = () => {
   return (
     <>
       <SEO
-        title="Free AI Tools for Food Truck Business | Pricing, Licenses, Maintenance | Vendibook"
-        description="Free AI-powered tools for food truck operators. Generate pricing, find permits & licenses by state, get equipment maintenance guides, write descriptions, and research the mobile food industry."
+        title="Vendi Command Center | AI Suite for Mobile Food Business | Vendibook"
+        description="Your AI co-pilot for running a mobile food business. PricePilot for pricing, PermitPath for licenses, BuildKit for equipment, Listing Studio, Concept Lab, and Market Radar."
         canonical="/ai-tools"
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(toolsJsonLd) }} />
@@ -485,30 +485,30 @@ const AITools = () => {
                 {/* Animated badge */}
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-card/80 backdrop-blur-sm text-primary text-sm font-medium mb-6 animate-fade-in shadow-lg">
                   <Sparkles className="h-4 w-4 animate-pulse" />
-                  Free AI-Powered Tools
+                  Vendi AI Suite
                 </div>
                 
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight animate-slide-up">
-                  AI Business Tools for{' '}
-                  <span className="text-gradient bg-gradient-to-r from-[#FF5124] via-[#FF6B3D] to-[#FF7D4D] bg-clip-text text-transparent">
-                    Food Entrepreneurs
-                  </span>
+                  Command Center
                 </h1>
+                <p className="text-xl md:text-2xl text-foreground/60 font-medium mb-4 animate-slide-up" style={{ animationDelay: '0.05s' }}>
+                  Your AI co-pilot for running a mobile food business.
+                </p>
                 
                 <p className="text-lg md:text-xl text-foreground/80 max-w-3xl mb-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                  Price your listings, find licenses & permits, maintain equipment, 
-                  write compelling descriptions, and research the mobile food industry — all powered by AI.
+                  Price smarter, find permits faster, build your kitchen, write listings that convert, 
+                  generate concepts, and research your market — all in one place.
                 </p>
                 
                 {/* Tool badges with staggered animation */}
                 <div className="flex flex-wrap gap-3 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                   {[
-                    { icon: DollarSign, label: 'Pricing Generator', color: 'from-yellow-400 to-amber-500' },
-                    { icon: FileCheck, label: 'License Finder', color: 'from-amber-500 to-orange-500' },
-                    { icon: Wrench, label: 'Equipment Guides', color: 'from-orange-500 to-red-500' },
-                    { icon: FileText, label: 'Description Writer', color: 'from-red-500 to-orange-500' },
-                    { icon: Lightbulb, label: 'Business Ideas', color: 'from-orange-500 to-amber-500' },
-                    { icon: Search, label: 'AI Research', color: 'from-amber-500 to-yellow-500' },
+                    { icon: DollarSign, label: 'PricePilot', color: 'from-yellow-400 to-amber-500' },
+                    { icon: FileCheck, label: 'PermitPath', color: 'from-amber-500 to-orange-500' },
+                    { icon: Wrench, label: 'BuildKit', color: 'from-orange-500 to-red-500' },
+                    { icon: FileText, label: 'Listing Studio', color: 'from-red-500 to-orange-500' },
+                    { icon: Lightbulb, label: 'Concept Lab', color: 'from-orange-500 to-amber-500' },
+                    { icon: Search, label: 'Market Radar', color: 'from-amber-500 to-yellow-500' },
                   ].map((tool, i) => (
                     <Badge 
                       key={tool.label}
@@ -532,12 +532,12 @@ const AITools = () => {
                 <div className="mb-10">
                   <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 p-2 h-auto gap-2 bg-muted/50 rounded-2xl border border-border/50">
                     {[
-                      { value: 'pricing', icon: DollarSign, label: 'Pricing' },
-                      { value: 'description', icon: FileText, label: 'Description' },
-                      { value: 'ideas', icon: Lightbulb, label: 'Ideas' },
-                      { value: 'equipment', icon: Wrench, label: 'Equipment' },
-                      { value: 'licenses', icon: FileCheck, label: 'Licenses' },
-                      { value: 'research', icon: Search, label: 'Research' },
+                      { value: 'pricing', icon: DollarSign, label: 'PricePilot' },
+                      { value: 'description', icon: FileText, label: 'Listing Studio' },
+                      { value: 'ideas', icon: Lightbulb, label: 'Concept Lab' },
+                      { value: 'equipment', icon: Wrench, label: 'BuildKit' },
+                      { value: 'licenses', icon: FileCheck, label: 'PermitPath' },
+                      { value: 'research', icon: Search, label: 'Market Radar' },
                     ].map((tab) => (
                       <TabsTrigger 
                         key={tab.value}
@@ -558,10 +558,10 @@ const AITools = () => {
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <DollarSign className="h-5 w-5 text-primary" />
-                          Pricing Generator
+                          PricePilot
                         </CardTitle>
                         <CardDescription>
-                          Get AI-suggested pricing based on your asset details and market conditions.
+                          Data-backed pricing that helps you book faster and earn more.
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
@@ -734,10 +734,10 @@ const AITools = () => {
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <FileText className="h-5 w-5 text-primary" />
-                          Description Generator
+                          Listing Studio
                         </CardTitle>
                         <CardDescription>
-                          Create compelling listing descriptions that convert browsers into bookers.
+                          Turn specs into a high-converting listing in minutes.
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
@@ -891,10 +891,10 @@ const AITools = () => {
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <Lightbulb className="h-5 w-5 text-primary" />
-                          Business Idea Generator
+                          Concept Lab
                         </CardTitle>
                         <CardDescription>
-                          Discover creative food business concepts tailored to your interests and market.
+                          Generate sellable concepts designed for your market and margins.
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
