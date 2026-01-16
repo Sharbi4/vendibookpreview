@@ -246,6 +246,35 @@ const AITools = () => {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [showFounderPricing, setShowFounderPricing] = useState(false); // Hidden for now
 
+  // Keyboard shortcuts for tab navigation (1-6 keys)
+  useEffect(() => {
+    const tabKeys: Record<string, string> = {
+      '1': 'pricing',
+      '2': 'description',
+      '3': 'ideas',
+      '4': 'equipment',
+      '5': 'licenses',
+      '6': 'research',
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input/textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+
+      const tab = tabKeys[e.key];
+      if (tab) {
+        e.preventDefault();
+        setActiveTab(tab);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Check if user has previously dismissed the overlay
   useEffect(() => {
     const dismissed = sessionStorage.getItem('founderPricingDismissed');
