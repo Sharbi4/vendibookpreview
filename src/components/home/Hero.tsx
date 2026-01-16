@@ -105,7 +105,7 @@ const Hero = () => {
           
           {/* Tagline */}
           <p 
-            className="text-lg md:text-xl text-muted-foreground font-medium mt-2 animate-fade-in"
+            className="text-lg md:text-xl text-muted-foreground font-medium -mt-6 md:-mt-8 animate-fade-in"
             style={{ animationDelay: '0.2s', animationFillMode: 'backwards' }}
           >
             The Marketplace for Mobile Food Businesses
