@@ -208,7 +208,7 @@ export function useAdminReviewDocument() {
   });
 }
 
-// Helper to send document notification emails
+// Helper to send document notification emails (with check_all_approved for approvals)
 async function sendDocumentNotification(
   bookingId: string,
   documentType: string,
@@ -222,6 +222,8 @@ async function sendDocumentNotification(
         document_type: documentType,
         event_type: eventType,
         rejection_reason: rejectionReason,
+        // When approving, check if all docs are now approved and notify host
+        check_all_approved: eventType === 'approved',
       },
     });
     if (error) {
