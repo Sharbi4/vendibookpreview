@@ -25,6 +25,7 @@ import {
   Zap,
   Target
 } from 'lucide-react';
+import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 
 const pageJsonLd = {
   "@context": "https://schema.org",
@@ -298,6 +299,13 @@ const ListingStudio = () => {
               </Accordion>
             </div>
           </section>
+
+          {/* Cross-Links */}
+          <ToolCrossLinks 
+            currentTool="listing-studio" 
+            title="Perfect Your Listing"
+            subtitle="Got your copy ready? Set competitive pricing, research your market, or explore new concepts."
+          />
 
           {/* Final CTA */}
           <section className="py-20 bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10">
