@@ -430,8 +430,8 @@ const Header = () => {
                   onClick={() => navigate('/tools/pricepilot')} 
                   className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
                 >
-                  <div className="h-9 w-9 rounded-lg bg-yellow-500/10 flex items-center justify-center shrink-0">
-                    <DollarSign className="h-5 w-5 text-yellow-500" />
+                  <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shrink-0 shadow-sm">
+                    <DollarSign className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">PricePilot</p>
@@ -443,8 +443,8 @@ const Header = () => {
                   onClick={() => navigate('/tools/permitpath')} 
                   className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
                 >
-                  <div className="h-9 w-9 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
-                    <FileText className="h-5 w-5 text-amber-500" />
+                  <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shrink-0 shadow-sm">
+                    <FileText className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">PermitPath</p>
@@ -456,8 +456,8 @@ const Header = () => {
                   onClick={() => navigate('/tools/buildkit')} 
                   className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
                 >
-                  <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
-                    <Wrench className="h-5 w-5 text-orange-500" />
+                  <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shrink-0 shadow-sm">
+                    <Wrench className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">BuildKit</p>
@@ -469,8 +469,8 @@ const Header = () => {
                   onClick={() => navigate('/tools/listing-studio')} 
                   className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
                 >
-                  <div className="h-9 w-9 rounded-lg bg-rose-500/10 flex items-center justify-center shrink-0">
-                    <Brain className="h-5 w-5 text-rose-500" />
+                  <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-rose-400 to-pink-600 flex items-center justify-center shrink-0 shadow-sm">
+                    <Brain className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">Listing Studio</p>
@@ -482,8 +482,8 @@ const Header = () => {
                   onClick={() => navigate('/tools/concept-lab')} 
                   className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
                 >
-                  <div className="h-9 w-9 rounded-lg bg-yellow-400/10 flex items-center justify-center shrink-0">
-                    <Lightbulb className="h-5 w-5 text-yellow-400" />
+                  <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-yellow-300 to-amber-500 flex items-center justify-center shrink-0 shadow-sm">
+                    <Lightbulb className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">Concept Lab</p>
@@ -495,8 +495,8 @@ const Header = () => {
                   onClick={() => navigate('/tools/market-radar')} 
                   className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
                 >
-                  <div className="h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                    <Globe className="h-5 w-5 text-blue-500" />
+                  <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center shrink-0 shadow-sm">
+                    <Globe className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">Market Radar</p>
@@ -670,8 +670,8 @@ const Header = () => {
                       className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <div className="h-9 w-9 rounded-lg bg-yellow-500/10 flex items-center justify-center shrink-0">
-                        <DollarSign className="h-5 w-5 text-yellow-500" />
+                      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shrink-0 shadow-sm">
+                        <DollarSign className="h-5 w-5 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground">PricePilot</p>
@@ -684,8 +684,8 @@ const Header = () => {
                       className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <div className="h-9 w-9 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
-                        <FileText className="h-5 w-5 text-amber-500" />
+                      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shrink-0 shadow-sm">
+                        <FileText className="h-5 w-5 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground">PermitPath</p>
@@ -698,8 +698,8 @@ const Header = () => {
                       className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
-                        <Wrench className="h-5 w-5 text-orange-500" />
+                      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shrink-0 shadow-sm">
+                        <Wrench className="h-5 w-5 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground">BuildKit</p>
@@ -712,8 +712,8 @@ const Header = () => {
                       className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <div className="h-9 w-9 rounded-lg bg-rose-500/10 flex items-center justify-center shrink-0">
-                        <Brain className="h-5 w-5 text-rose-500" />
+                      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-rose-400 to-pink-600 flex items-center justify-center shrink-0 shadow-sm">
+                        <Brain className="h-5 w-5 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground">Listing Studio</p>
@@ -726,8 +726,8 @@ const Header = () => {
                       className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <div className="h-9 w-9 rounded-lg bg-yellow-400/10 flex items-center justify-center shrink-0">
-                        <Lightbulb className="h-5 w-5 text-yellow-400" />
+                      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-yellow-300 to-amber-500 flex items-center justify-center shrink-0 shadow-sm">
+                        <Lightbulb className="h-5 w-5 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground">Concept Lab</p>
@@ -740,8 +740,8 @@ const Header = () => {
                       className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <div className="h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                        <Globe className="h-5 w-5 text-blue-500" />
+                      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center shrink-0 shadow-sm">
+                        <Globe className="h-5 w-5 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground">Market Radar</p>
