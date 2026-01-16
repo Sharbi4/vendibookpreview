@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowRight, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 
 const Hero = () => {
+  const navigate = useNavigate();
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -106,6 +110,31 @@ const Hero = () => {
           >
             The Marketplace for Mobile Food Businesses
           </p>
+
+          {/* CTA Buttons */}
+          <div 
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 animate-fade-in"
+            style={{ animationDelay: '0.4s', animationFillMode: 'backwards' }}
+          >
+            <Button
+              variant="gradient-premium"
+              size="lg"
+              onClick={() => navigate('/search')}
+              className="text-base px-8 py-6"
+            >
+              <Search className="mr-2 h-5 w-5" />
+              Browse Listings
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => navigate('/host')}
+              className="text-base px-8 py-6 border-2"
+            >
+              List Your Asset
+            </Button>
+          </div>
         </div>
       </div>
       
