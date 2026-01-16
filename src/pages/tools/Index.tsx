@@ -13,7 +13,8 @@ import {
   Wrench, 
   Search,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Megaphone
 } from 'lucide-react';
 
 const tools = [
@@ -64,6 +65,14 @@ const tools = [
     gradient: 'from-blue-400 to-indigo-600',
     href: '/tools/market-radar',
     tag: 'Research'
+  },
+  {
+    name: 'Marketing Studio',
+    description: 'Create social posts, flyers, emails, menu copy, taglines, and AI-generated images.',
+    icon: Megaphone,
+    gradient: 'from-pink-500 to-purple-600',
+    href: '/tools/marketing-studio',
+    tag: 'Marketing'
   }
 ];
 

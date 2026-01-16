@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, DollarSign, FileCheck, Wrench, FileText, Lightbulb, Search } from 'lucide-react';
+import { ArrowRight, DollarSign, FileCheck, Wrench, FileText, Lightbulb, Search, Megaphone } from 'lucide-react';
 
 interface Tool {
   id: string;
@@ -13,64 +13,23 @@ interface Tool {
 }
 
 const allTools: Tool[] = [
-  {
-    id: 'pricepilot',
-    name: 'PricePilot',
-    tagline: 'Set competitive pricing',
-    path: '/tools/pricepilot',
-    icon: <DollarSign className="h-5 w-5" />,
-    gradient: 'from-yellow-500 to-amber-500'
-  },
-  {
-    id: 'permitpath',
-    name: 'PermitPath',
-    tagline: 'Find permits & licenses',
-    path: '/tools/permitpath',
-    icon: <FileCheck className="h-5 w-5" />,
-    gradient: 'from-amber-500 to-orange-500'
-  },
-  {
-    id: 'buildkit',
-    name: 'BuildKit',
-    tagline: 'Get equipment guides',
-    path: '/tools/buildkit',
-    icon: <Wrench className="h-5 w-5" />,
-    gradient: 'from-orange-500 to-red-500'
-  },
-  {
-    id: 'listing-studio',
-    name: 'Listing Studio',
-    tagline: 'Write compelling listings',
-    path: '/tools/listing-studio',
-    icon: <FileText className="h-5 w-5" />,
-    gradient: 'from-red-500 to-orange-500'
-  },
-  {
-    id: 'concept-lab',
-    name: 'Concept Lab',
-    tagline: 'Generate business ideas',
-    path: '/tools/concept-lab',
-    icon: <Lightbulb className="h-5 w-5" />,
-    gradient: 'from-orange-500 to-amber-500'
-  },
-  {
-    id: 'market-radar',
-    name: 'Market Radar',
-    tagline: 'Research your market',
-    path: '/tools/market-radar',
-    icon: <Search className="h-5 w-5" />,
-    gradient: 'from-amber-500 to-yellow-500'
-  }
+  { id: 'pricepilot', name: 'PricePilot', tagline: 'Set competitive pricing', path: '/tools/pricepilot', icon: <DollarSign className="h-5 w-5" />, gradient: 'from-yellow-500 to-amber-500' },
+  { id: 'permitpath', name: 'PermitPath', tagline: 'Find permits & licenses', path: '/tools/permitpath', icon: <FileCheck className="h-5 w-5" />, gradient: 'from-amber-500 to-orange-500' },
+  { id: 'buildkit', name: 'BuildKit', tagline: 'Get equipment guides', path: '/tools/buildkit', icon: <Wrench className="h-5 w-5" />, gradient: 'from-orange-500 to-red-500' },
+  { id: 'listing-studio', name: 'Listing Studio', tagline: 'Write compelling listings', path: '/tools/listing-studio', icon: <FileText className="h-5 w-5" />, gradient: 'from-red-500 to-orange-500' },
+  { id: 'concept-lab', name: 'Concept Lab', tagline: 'Generate business ideas', path: '/tools/concept-lab', icon: <Lightbulb className="h-5 w-5" />, gradient: 'from-orange-500 to-amber-500' },
+  { id: 'market-radar', name: 'Market Radar', tagline: 'Research your market', path: '/tools/market-radar', icon: <Search className="h-5 w-5" />, gradient: 'from-amber-500 to-yellow-500' },
+  { id: 'marketing-studio', name: 'Marketing Studio', tagline: 'Create marketing materials', path: '/tools/marketing-studio', icon: <Megaphone className="h-5 w-5" />, gradient: 'from-pink-500 to-purple-600' }
 ];
 
-// Define logical workflow connections between tools
 const toolFlows: Record<string, string[]> = {
-  'concept-lab': ['buildkit', 'permitpath', 'pricepilot'],
+  'concept-lab': ['buildkit', 'permitpath', 'marketing-studio'],
   'buildkit': ['permitpath', 'pricepilot', 'listing-studio'],
   'permitpath': ['buildkit', 'pricepilot', 'listing-studio'],
-  'pricepilot': ['listing-studio', 'market-radar', 'permitpath'],
-  'listing-studio': ['pricepilot', 'market-radar', 'concept-lab'],
-  'market-radar': ['concept-lab', 'pricepilot', 'permitpath']
+  'pricepilot': ['listing-studio', 'market-radar', 'marketing-studio'],
+  'listing-studio': ['pricepilot', 'market-radar', 'marketing-studio'],
+  'market-radar': ['concept-lab', 'pricepilot', 'marketing-studio'],
+  'marketing-studio': ['listing-studio', 'concept-lab', 'market-radar']
 };
 
 interface ToolCrossLinksProps {
