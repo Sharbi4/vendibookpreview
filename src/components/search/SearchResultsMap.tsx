@@ -40,9 +40,20 @@ const SearchResultsMap = forwardRef<HTMLDivElement, SearchResultsMapProps>((
   const [selectedListing, setSelectedListing] = useState<ListingWithCoords | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
+  // Only load Google Maps when we have a valid API key
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: mapToken || '',
+    id: 'google-map-script', // Use consistent ID to prevent re-initialization
   });
+
+  // Early return if no token yet - prevents loader from being called with empty string first
+  if (!mapToken || propsLoading) {
+    return (
+      <div ref={ref} className="h-full w-full rounded-xl overflow-hidden">
+        <Skeleton className="h-full w-full" />
+      </div>
+    );
+  }
 
   // Calculate center based on listings or user location
   const getCenter = useCallback(() => {
@@ -104,7 +115,7 @@ const SearchResultsMap = forwardRef<HTMLDivElement, SearchResultsMapProps>((
     onListingClick?.(listing);
   };
 
-  if (propsLoading || !mapToken || !isLoaded) {
+  if (!isLoaded) {
     return (
       <div ref={ref} className="h-full w-full rounded-xl overflow-hidden">
         <Skeleton className="h-full w-full" />
