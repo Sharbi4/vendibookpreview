@@ -34,8 +34,15 @@ import {
   MapPin,
   Shield,
   CheckCircle,
-  ExternalLink
+  ExternalLink,
+  Info
 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 // JSON-LD structured data for SEO
 const toolsJsonLd = {
@@ -571,21 +578,38 @@ const AITools = () => {
                 <div className="mb-10">
                   <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 p-2 h-auto gap-2 bg-muted/50 rounded-2xl border border-border/50">
                     {[
-                      { value: 'pricing', icon: DollarSign, label: 'PricePilot' },
-                      { value: 'description', icon: FileText, label: 'Listing Studio' },
-                      { value: 'ideas', icon: Lightbulb, label: 'Concept Lab' },
-                      { value: 'equipment', icon: Wrench, label: 'BuildKit' },
-                      { value: 'licenses', icon: FileCheck, label: 'PermitPath' },
-                      { value: 'research', icon: Search, label: 'Market Radar' },
+                      { value: 'pricing', icon: DollarSign, label: 'PricePilot', tip: 'Get smart pricing suggestions based on your location, cuisine, and competition' },
+                      { value: 'description', icon: FileText, label: 'Listing Studio', tip: 'Write compelling listings that attract more customers' },
+                      { value: 'ideas', icon: Lightbulb, label: 'Concept Lab', tip: 'Generate unique food truck concepts and menu ideas' },
+                      { value: 'equipment', icon: Wrench, label: 'BuildKit', tip: 'Find out what equipment you need for your food business' },
+                      { value: 'licenses', icon: FileCheck, label: 'PermitPath', tip: 'Discover permits and licenses required in your area' },
+                      { value: 'research', icon: Search, label: 'Market Radar', tip: 'Research trends, competitors, and market opportunities' },
                     ].map((tab) => (
-                      <TabsTrigger 
-                        key={tab.value}
-                        value={tab.value} 
-                        className="flex items-center justify-center gap-2 py-4 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-amber-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300"
-                      >
-                        <tab.icon className="h-5 w-5" />
-                        <span className="hidden sm:inline font-medium">{tab.label}</span>
-                      </TabsTrigger>
+                      <div key={tab.value} className="relative flex items-center">
+                        <TabsTrigger 
+                          value={tab.value} 
+                          className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-amber-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300"
+                        >
+                          <tab.icon className="h-5 w-5" />
+                          <span className="hidden sm:inline font-medium">{tab.label}</span>
+                        </TabsTrigger>
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button 
+                                type="button"
+                                className="absolute -top-1 -right-1 p-0.5 rounded-full bg-background border border-border shadow-sm hover:bg-muted transition-colors z-10"
+                                aria-label={`Info about ${tab.label}`}
+                              >
+                                <Info className="h-3 w-3 text-muted-foreground" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-[200px] text-center">
+                              <p className="text-sm">{tab.tip}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                     ))}
                   </TabsList>
                 </div>
