@@ -82,6 +82,7 @@ const Search = () => {
   const initialLng = searchParams.get('lng');
   const initialRadius = searchParams.get('radius');
   const initialSort = searchParams.get('sort') as 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance' || 'newest';
+  const initialInstantBook = searchParams.get('instant') === 'true';
   
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [mode, setMode] = useState<ListingMode | 'all'>(initialMode);
@@ -99,7 +100,7 @@ const Search = () => {
   );
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [deliveryFilterEnabled, setDeliveryFilterEnabled] = useState(false);
-  const [instantBookOnly, setInstantBookOnly] = useState(false);
+  const [instantBookOnly, setInstantBookOnly] = useState(initialInstantBook);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
@@ -520,6 +521,17 @@ const Search = () => {
     );
   };
 
+  const handleInstantBookChange = (enabled: boolean) => {
+    setInstantBookOnly(enabled);
+    const params = new URLSearchParams(searchParams);
+    if (enabled) {
+      params.set('instant', 'true');
+    } else {
+      params.delete('instant');
+    }
+    setSearchParams(params);
+  };
+
   const getAmenityLabel = (amenityId: string): string => {
     for (const cat of Object.values(AMENITIES_BY_CATEGORY)) {
       for (const group of cat) {
@@ -617,7 +629,7 @@ const Search = () => {
                       onDateRangeChange={handleDateRangeChange}
                       onAmenityToggle={toggleAmenity}
                       onDeliveryFilterChange={setDeliveryFilterEnabled}
-                      onInstantBookChange={setInstantBookOnly}
+                      onInstantBookChange={handleInstantBookChange}
                       onClear={clearFilters}
                     />
                   </div>
@@ -720,7 +732,7 @@ const Search = () => {
                   onDateRangeChange={handleDateRangeChange}
                   onAmenityToggle={toggleAmenity}
                   onDeliveryFilterChange={setDeliveryFilterEnabled}
-                  onInstantBookChange={setInstantBookOnly}
+                  onInstantBookChange={handleInstantBookChange}
                   onClear={clearFilters}
                 />
               </div>
@@ -798,7 +810,7 @@ const Search = () => {
                     <Badge variant="secondary" className="gap-1 bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
                       <Zap className="h-3 w-3" />
                       Instant Book
-                      <button onClick={() => setInstantBookOnly(false)}>
+                      <button onClick={() => handleInstantBookChange(false)}>
                         <X className="h-3 w-3 ml-1" />
                       </button>
                     </Badge>
