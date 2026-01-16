@@ -648,68 +648,122 @@ const Header = () => {
                 className="flex items-center justify-between w-full text-sm font-semibold text-foreground py-2"
               >
                 <span className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
+                  <div className="relative">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                  </div>
                   Vendi AI
                 </span>
-                <ChevronRight className={`h-4 w-4 transition-transform duration-200 ${isMobileAIExpanded ? 'rotate-90' : ''}`} />
+                <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isMobileAIExpanded ? 'rotate-180' : ''}`} />
               </button>
               {isMobileAIExpanded && (
-                <div className="pl-6 flex flex-col gap-1 mt-1 border-l-2 border-border ml-2 animate-fade-in">
+                <div className="flex flex-col gap-2 mt-2 animate-fade-in">
+                  {/* Header Card */}
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/10">
+                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Vendi AI Tools</p>
+                      <p className="text-xs text-muted-foreground">AI-powered business helpers</p>
+                    </div>
+                  </div>
+                  
+                  {/* AI Tools List */}
+                  <div className="space-y-1">
+                    <Link 
+                      to="/ai-tools?tab=pricing" 
+                      className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <div className="h-9 w-9 rounded-lg bg-yellow-500/10 flex items-center justify-center shrink-0">
+                        <DollarSign className="h-5 w-5 text-yellow-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">Vendi Pricing</p>
+                        <p className="text-xs text-muted-foreground">Smart pricing suggestions for your listing</p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/ai-tools?tab=licenses" 
+                      className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <div className="h-9 w-9 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                        <FileText className="h-5 w-5 text-amber-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">Vendi Licenses</p>
+                        <p className="text-xs text-muted-foreground">Find required permits & licenses by state</p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/ai-tools?tab=equipment" 
+                      className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
+                        <Wrench className="h-5 w-5 text-orange-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">Vendi Equipment</p>
+                        <p className="text-xs text-muted-foreground">Equipment recommendations for your cuisine</p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/ai-tools?tab=description" 
+                      className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <div className="h-9 w-9 rounded-lg bg-rose-500/10 flex items-center justify-center shrink-0">
+                        <Brain className="h-5 w-5 text-rose-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">Vendi Insight</p>
+                        <p className="text-xs text-muted-foreground">AI-optimized listing descriptions</p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/ai-tools?tab=ideas" 
+                      className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <div className="h-9 w-9 rounded-lg bg-yellow-400/10 flex items-center justify-center shrink-0">
+                        <Lightbulb className="h-5 w-5 text-yellow-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">Vendi Ideas</p>
+                        <p className="text-xs text-muted-foreground">Generate unique food business concepts</p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/ai-tools?tab=research" 
+                      className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <div className="h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                        <Globe className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">Vendi Research</p>
+                        <p className="text-xs text-muted-foreground">Market research & competitor analysis</p>
+                      </div>
+                    </Link>
+                  </div>
+                  
+                  {/* View All Link */}
                   <Link 
                     to="/ai-tools" 
-                    className="flex items-center gap-2 text-sm font-medium py-1.5 text-muted-foreground hover:text-foreground"
+                    className="flex items-center justify-center gap-2 p-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    All Tools
-                  </Link>
-                  <Link 
-                    to="/ai-tools?tab=pricing" 
-                    className="flex items-center gap-2 text-sm font-medium py-1.5 text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <DollarSign className="h-3.5 w-3.5 text-yellow-500" />
-                    Vendi Pricing
-                  </Link>
-                  <Link 
-                    to="/ai-tools?tab=licenses" 
-                    className="flex items-center gap-2 text-sm font-medium py-1.5 text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <FileText className="h-3.5 w-3.5 text-amber-500" />
-                    Vendi Licenses
-                  </Link>
-                  <Link 
-                    to="/ai-tools?tab=equipment" 
-                    className="flex items-center gap-2 text-sm font-medium py-1.5 text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Wrench className="h-3.5 w-3.5 text-orange-500" />
-                    Vendi Equipment
-                  </Link>
-                  <Link 
-                    to="/ai-tools?tab=description" 
-                    className="flex items-center gap-2 text-sm font-medium py-1.5 text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Brain className="h-3.5 w-3.5 text-rose-500" />
-                    Vendi Insight
-                  </Link>
-                  <Link 
-                    to="/ai-tools?tab=ideas" 
-                    className="flex items-center gap-2 text-sm font-medium py-1.5 text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Lightbulb className="h-3.5 w-3.5 text-yellow-400" />
-                    Vendi Ideas
-                  </Link>
-                  <Link 
-                    to="/ai-tools?tab=research" 
-                    className="flex items-center gap-2 text-sm font-medium py-1.5 text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Globe className="h-3.5 w-3.5 text-blue-500" />
-                    Vendi Research
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">Explore All AI Tools</span>
                   </Link>
                 </div>
               )}
