@@ -23,7 +23,7 @@ const Hero = () => {
   const parallax3 = scrollY * 0.2;
 
   return (
-    <section className="relative overflow-hidden pt-4 pb-4">
+    <section className="relative overflow-hidden pt-2 pb-2">
       {/* Animated gradient background */}
       <div 
         className="absolute inset-0 bg-gradient-to-br from-vendibook-cream via-vendibook-cream/80 to-primary/5"
@@ -113,7 +113,7 @@ const Hero = () => {
 
           {/* CTA Buttons */}
           <div 
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 animate-fade-in"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4 animate-fade-in"
             style={{ animationDelay: '0.4s', animationFillMode: 'backwards' }}
           >
             <Button
