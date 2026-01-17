@@ -55,6 +55,7 @@ const footerSections: FooterSection[] = [
       { label: 'Terms of Service', href: '/terms' },
       { label: 'Privacy Policy', href: '/privacy' },
       { label: 'California Privacy', href: '/california-privacy' },
+      { label: 'Do Not Sell My Info', href: '/california-privacy#do-not-sell' },
     ],
   },
 ];
