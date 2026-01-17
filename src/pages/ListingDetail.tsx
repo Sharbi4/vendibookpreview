@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import PhotoGallery from '@/components/listing-detail/PhotoGallery';
-import BookingForm from '@/components/listing-detail/BookingForm';
+import BookingWizard from '@/components/listing-detail/BookingWizard';
 import InquiryForm from '@/components/listing-detail/InquiryForm';
 import HostCard from '@/components/listing-detail/HostCard';
 import ReviewsSection from '@/components/reviews/ReviewsSection';
@@ -215,7 +215,7 @@ const ListingDetail = () => {
             {/* Right Column - Booking/Inquiry Form (Desktop) */}
             <div className="hidden lg:block space-y-6">
               {isRental ? (
-                <BookingForm
+                <BookingWizard
                   listingId={listing.id}
                   hostId={listing.host_id}
                   category={listing.category}
@@ -225,15 +225,10 @@ const ListingDetail = () => {
                   availableFrom={listing.available_from}
                   availableTo={listing.available_to}
                   pickupLocation={listing.pickup_location_text}
-                  pickupInstructions={listing.pickup_instructions}
                   deliveryFee={listing.delivery_fee}
                   deliveryRadiusMiles={listing.delivery_radius_miles}
-                  deliveryInstructions={listing.delivery_instructions}
-                  address={listing.address}
-                  accessInstructions={listing.access_instructions}
-                  hoursOfAccess={listing.hours_of_access}
-                  status={listing.status}
                   instantBook={listing.instant_book || false}
+                  listingTitle={listing.title}
                 />
               ) : (
                 <InquiryForm
@@ -267,6 +262,15 @@ const ListingDetail = () => {
         priceSale={listing.price_sale}
         status={listing.status}
         instantBook={listing.instant_book || false}
+        category={listing.category}
+        fulfillmentType={listing.fulfillment_type}
+        priceWeekly={listing.price_weekly}
+        availableFrom={listing.available_from}
+        availableTo={listing.available_to}
+        pickupLocation={listing.pickup_location_text}
+        deliveryFee={listing.delivery_fee}
+        deliveryRadiusMiles={listing.delivery_radius_miles}
+        listingTitle={listing.title}
       />
 
       <Footer />
