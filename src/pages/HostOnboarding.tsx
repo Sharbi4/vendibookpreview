@@ -52,7 +52,7 @@ const HostOnboarding = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
                 <Button asChild size="lg" variant="gradient-premium" className="text-lg px-8 py-6">
-                  <Link to="/create-listing">
+                  <Link to="/list">
                     Start Listing
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
