@@ -221,6 +221,8 @@ serve(async (req) => {
         mode: 'payment',
         customer: customerId,
         customer_email: customerId ? undefined : user.email,
+        // Save billing address to customer for future tax calculations
+        customer_update: customerId ? { address: 'auto' } : undefined,
         // Enable automatic tax calculation based on customer location
         automatic_tax: { enabled: true },
         // Collect billing address for accurate tax calculation
@@ -291,6 +293,8 @@ serve(async (req) => {
         mode: 'payment',
         customer: customerId,
         customer_email: customerId ? undefined : user.email,
+        // Save billing address to customer for future tax calculations
+        customer_update: customerId ? { address: 'auto' } : undefined,
         // Enable automatic tax calculation based on customer location
         automatic_tax: { enabled: true },
         // Collect billing address for accurate tax calculation
