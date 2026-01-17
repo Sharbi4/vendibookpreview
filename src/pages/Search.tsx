@@ -14,7 +14,7 @@ import { RadiusFilter } from '@/components/search/RadiusFilter';
 import SearchResultsMap from '@/components/search/SearchResultsMap';
 import NoResultsAlert from '@/components/search/NoResultsAlert';
 import NewsletterSection from '@/components/newsletter/NewsletterSection';
-import AIFeaturesPopup from '@/components/search/AIFeaturesPopup';
+// AI Features popup removed - it interrupts demand journey (UX audit item #4)
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -561,7 +561,7 @@ const Search = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      <AIFeaturesPopup />
+      {/* AI Features popup removed - it interrupts demand journey (UX audit item #4) */}
       
       <main className="flex-1">
         {/* Search Header */}

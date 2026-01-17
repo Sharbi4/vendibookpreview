@@ -25,6 +25,7 @@ import DeliveryRadiusMap from '@/components/listing-detail/DeliveryRadiusMap';
 import ReviewsSection from '@/components/reviews/ReviewsSection';
 import BookingFAQ from '@/components/listing-detail/BookingFAQ';
 import { RequiredDocumentsSection } from '@/components/documents';
+import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
 import { useListing } from '@/hooks/useListing';
 import { useListingAverageRating } from '@/hooks/useReviews';
 import { useTrackListingView } from '@/hooks/useListingAnalytics';
@@ -144,18 +145,8 @@ const ListingDetail = () => {
                 </div>
               </div>
 
-              {/* Quick Info */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl">
-                  <Truck className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Category</p>
-                    <p className="font-medium text-foreground">
-                      {CATEGORY_LABELS[listing.category]}
-                    </p>
-                  </div>
-                </div>
-                
+              {/* Quick Info - Removed redundant category (already in badge above) */}
+              <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl">
                   <Package className="h-5 w-5 text-primary" />
                   <div>
@@ -454,6 +445,17 @@ const ListingDetail = () => {
           </div>
         </div>
       </main>
+
+      {/* Sticky Mobile CTA Bar */}
+      <StickyMobileCTA
+        listingId={listing.id}
+        hostId={listing.host_id}
+        isRental={isRental}
+        priceDaily={listing.price_daily}
+        priceSale={listing.price_sale}
+        status={listing.status}
+        instantBook={listing.instant_book || false}
+      />
 
       <Footer />
     </div>
