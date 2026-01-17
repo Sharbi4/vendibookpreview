@@ -52,6 +52,7 @@ const Install = lazy(() => import("./pages/Install"));
 const VendorLots = lazy(() => import("./pages/VendorLots"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
+const VendiAISuite = lazy(() => import("./pages/VendiAISuite"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -112,6 +113,7 @@ const AnimatedRoutes = () => {
           <Route path="/vendor-lots" element={<PageTransition><VendorLots /></PageTransition>} />
           <Route path="/faq" element={<PageTransition><FAQ /></PageTransition>} />
           <Route path="/unsubscribe" element={<PageTransition><Unsubscribe /></PageTransition>} />
+          <Route path="/vendi-ai-suite" element={<PageTransition><VendiAISuite /></PageTransition>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
