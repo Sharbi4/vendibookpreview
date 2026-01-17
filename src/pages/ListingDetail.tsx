@@ -15,12 +15,13 @@ import BookingWizard from '@/components/listing-detail/BookingWizard';
 import InquiryForm from '@/components/listing-detail/InquiryForm';
 import HostCard from '@/components/listing-detail/HostCard';
 import ReviewsSection from '@/components/reviews/ReviewsSection';
-import TrustBadgesRow from '@/components/listing-detail/TrustBadgesRow';
 import RequirementsModal from '@/components/listing-detail/RequirementsModal';
 import CollapsibleDescription from '@/components/listing-detail/CollapsibleDescription';
 import QuickHighlights from '@/components/listing-detail/QuickHighlights';
 import PricingSection from '@/components/listing-detail/PricingSection';
 import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
+import CompactTrustSection from '@/components/trust/CompactTrustSection';
+import CancellationPolicyCard from '@/components/trust/CancellationPolicyCard';
 import { useListing } from '@/hooks/useListing';
 import { useListingAverageRating } from '@/hooks/useReviews';
 import { useTrackListingView } from '@/hooks/useListingAnalytics';
@@ -208,10 +209,11 @@ const ListingDetail = () => {
                 <ReviewsSection listingId={listing.id} />
               </div>
 
-              {/* Trust Layer - Icon Row + Modals */}
-              <div className="pt-4 border-t">
-                <TrustBadgesRow />
-              </div>
+              {/* Section 7: Cancellation/Refund Policy (compact) */}
+              <CancellationPolicyCard isRental={isRental} />
+
+              {/* Section 8: Trust & Safety - Compact Grid with Modals */}
+              <CompactTrustSection />
             </div>
 
             {/* Right Column - Booking/Inquiry Form (Desktop) */}

@@ -103,15 +103,17 @@ export const useListingForm = () => {
       case 1:
         return !!formData.mode && !!formData.category;
       case 2:
-        return formData.title.trim().length > 0 && formData.description.trim().length > 0;
+        // Title required (minimum 5 chars)
+        return formData.title.trim().length >= 5 && formData.description.trim().length > 0;
       case 3:
-        // Check if this is a static location (either by category or user toggle)
+        // Location required
         const isStatic = isStaticLocation(formData.category) || formData.is_static_location;
         if (isStatic) {
           return formData.address.trim().length > 0 && formData.access_instructions.trim().length > 0;
         }
         return !!formData.fulfillment_type && formData.pickup_location_text.trim().length > 0;
       case 4:
+        // Price required
         if (formData.mode === 'sale') {
           return formData.price_sale.trim().length > 0 && parseFloat(formData.price_sale) > 0;
         }
@@ -120,7 +122,9 @@ export const useListingForm = () => {
         // Documents step - always valid (documents are optional)
         return true;
       case 6:
-        return formData.images.length > 0 || formData.existingImages.length > 0;
+        // Minimum 3 photos required for quality
+        const totalPhotos = formData.images.length + formData.existingImages.length;
+        return totalPhotos >= 3;
       case 7:
         return true;
       default:

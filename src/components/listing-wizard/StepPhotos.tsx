@@ -63,6 +63,9 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
   };
 
   const allImages = [...previews, ...formData.existingImages];
+  const totalPhotos = allImages.length;
+  const minPhotos = 3;
+  const photosNeeded = Math.max(0, minPhotos - totalPhotos);
 
   return (
     <div className="space-y-6">
@@ -70,9 +73,31 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
         <h3 className="text-lg font-semibold mb-2">Add Photos</h3>
         <p className="text-sm text-muted-foreground">
           Upload high-quality photos. The first image will be your cover photo.
-          Minimum 1 photo required to publish.
+          <span className="font-medium text-foreground"> Minimum {minPhotos} photos required.</span>
         </p>
       </div>
+
+      {/* Quality indicator */}
+      {totalPhotos > 0 && (
+        <div className={cn(
+          "flex items-center gap-2 p-3 rounded-lg text-sm",
+          totalPhotos >= minPhotos 
+            ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+            : "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
+        )}>
+          {totalPhotos >= minPhotos ? (
+            <>
+              <Star className="w-4 h-4" />
+              <span>{totalPhotos} photos added — looking great!</span>
+            </>
+          ) : (
+            <>
+              <Upload className="w-4 h-4" />
+              <span>Add {photosNeeded} more photo{photosNeeded > 1 ? 's' : ''} to continue</span>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Upload Area */}
       <div

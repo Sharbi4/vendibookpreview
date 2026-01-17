@@ -32,14 +32,18 @@ export const StepReview: React.FC<StepReviewProps> = ({
 
   const location = formData.address || formData.pickup_location_text || 'Location not set';
 
+  const totalPhotos = formData.images.length + formData.existingImages.length;
+  const minPhotos = 3;
+
   const issues: string[] = [];
   if (!formData.mode) issues.push('Listing mode not selected');
   if (!formData.category) issues.push('Category not selected');
-  if (!formData.title.trim()) issues.push('Title is required');
+  if (!formData.title.trim() || formData.title.trim().length < 5) issues.push('Title is required (min 5 characters)');
   if (!formData.description.trim()) issues.push('Description is required');
   if (formData.mode === 'rent' && !formData.price_daily) issues.push('Daily price is required');
   if (formData.mode === 'sale' && !formData.price_sale) issues.push('Sale price is required');
-  if (formData.images.length === 0 && formData.existingImages.length === 0) issues.push('At least one photo is required');
+  if (totalPhotos < minPhotos) issues.push(`Minimum ${minPhotos} photos required (${totalPhotos} added)`);
+  if (!formData.address && !formData.pickup_location_text) issues.push('Location is required');
   if (!isStripeConnected) issues.push('Stripe account not connected');
 
   return (

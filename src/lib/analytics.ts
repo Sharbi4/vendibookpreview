@@ -345,6 +345,49 @@ export const trackBadgeClicked = (badgeType: string): void => {
   });
 };
 
+// Listing Quality events
+export const trackQualityCheckViewed = (photoCount: number, hasTitle: boolean, hasPrice: boolean, hasLocation: boolean): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'quality_check_viewed',
+    metadata: { photoCount, hasTitle, hasPrice, hasLocation },
+  });
+};
+
+export const trackQualityCheckPassed = (): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'quality_check_passed',
+  });
+};
+
+// Cancellation Policy events
+export const trackCancellationPolicyViewed = (isRental: boolean): void => {
+  trackEvent({
+    category: 'Trust',
+    action: 'cancellation_policy_viewed',
+    label: isRental ? 'rental' : 'sale',
+  });
+};
+
+// Compact Trust Section events
+export const trackCompactTrustOpened = (itemId: string): void => {
+  trackEvent({
+    category: 'Trust',
+    action: 'compact_trust_opened',
+    label: itemId,
+  });
+};
+
+// Activation events
+export const trackActivationRouted = (path: 'supply' | 'demand'): void => {
+  trackEvent({
+    category: 'Activation',
+    action: 'activation_routed',
+    label: path,
+  });
+};
+
 // Generic analytics exports for other parts of the app
 export { trackEvent };
 export type { AnalyticsEvent };
