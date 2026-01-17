@@ -58,6 +58,9 @@ const VendiAISuite = lazy(() => import("./pages/VendiAISuite"));
 const Browse = lazy(() => import("./pages/Browse"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+// City landing pages
+const CityPages = lazy(() => import("./pages/city"));
+
 const queryClient = new QueryClient();
 
 // Minimal loading fallback
@@ -130,6 +133,23 @@ const AnimatedRoutes = () => {
           
           {/* SEO article page - separate purpose from tools hub */}
           <Route path="/vendi-ai-suite" element={<PageTransition><VendiAISuite /></PageTransition>} />
+          
+          {/* City landing pages */}
+          <Route path="/houston/list" element={<PageTransition><CityPages.HoustonList /></PageTransition>} />
+          <Route path="/houston/browse" element={<PageTransition><CityPages.HoustonBrowse /></PageTransition>} />
+          <Route path="/houston/list-food-truck" element={<PageTransition><CityPages.HoustonListFoodTruck /></PageTransition>} />
+          <Route path="/houston/list-food-trailer" element={<PageTransition><CityPages.HoustonListFoodTrailer /></PageTransition>} />
+          <Route path="/houston/list-vendor-lot" element={<PageTransition><CityPages.HoustonListVendorLot /></PageTransition>} />
+          <Route path="/los-angeles/list" element={<PageTransition><CityPages.LosAngelesList /></PageTransition>} />
+          <Route path="/los-angeles/browse" element={<PageTransition><CityPages.LosAngelesBrowse /></PageTransition>} />
+          <Route path="/los-angeles/list-food-truck" element={<PageTransition><CityPages.LosAngelesListFoodTruck /></PageTransition>} />
+          <Route path="/los-angeles/list-food-trailer" element={<PageTransition><CityPages.LosAngelesListFoodTrailer /></PageTransition>} />
+          <Route path="/los-angeles/list-vendor-lot" element={<PageTransition><CityPages.LosAngelesListVendorLot /></PageTransition>} />
+          <Route path="/dallas/list" element={<PageTransition><CityPages.DallasList /></PageTransition>} />
+          <Route path="/dallas/browse" element={<PageTransition><CityPages.DallasBrowse /></PageTransition>} />
+          <Route path="/dallas/list-food-truck" element={<PageTransition><CityPages.DallasListFoodTruck /></PageTransition>} />
+          <Route path="/dallas/list-food-trailer" element={<PageTransition><CityPages.DallasListFoodTrailer /></PageTransition>} />
+          <Route path="/dallas/list-vendor-lot" element={<PageTransition><CityPages.DallasListVendorLot /></PageTransition>} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
