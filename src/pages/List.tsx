@@ -112,20 +112,6 @@ const ListPage: React.FC = () => {
           </p>
         </motion.div>
 
-        {/* Stats row */}
-        <motion.div 
-          className="flex justify-center gap-8 py-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          {stats.map((stat, i) => (
-            <div key={i} className="text-center">
-              <p className="text-2xl font-bold text-primary">{stat.value}</p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
-            </div>
-          ))}
-        </motion.div>
 
         {/* Listing options */}
         <motion.div 
