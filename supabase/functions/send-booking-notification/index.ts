@@ -109,7 +109,7 @@ serve(async (req) => {
           to: host.email,
           subject: `New Booking Request for ${listingTitle}`,
           html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 20px;">New Booking Request 📩</h1>
               <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
                 You have received a new booking request for <strong>${listingTitle}</strong>.
@@ -147,7 +147,7 @@ serve(async (req) => {
           to: shopper.email,
           subject: `Booking Request Submitted - ${listingTitle}`,
           html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 20px;">Booking Request Submitted ✓</h1>
               <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
                 Hi ${shopper.full_name || "there"},
@@ -208,7 +208,7 @@ serve(async (req) => {
               to: shopper.email,
               subject: `🎉 Booking Approved - ${listingTitle}`,
               html: `
-                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                   <h1 style="color: #16a34a; font-size: 24px; margin-bottom: 20px;">Booking Approved! 🎉</h1>
                   <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
                     Great news, ${shopper.full_name || "there"}!
@@ -257,7 +257,7 @@ serve(async (req) => {
           to: shopper.email,
           subject: `Booking Update - ${listingTitle}`,
           html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 20px;">Booking Not Available</h1>
               <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
                 Hi ${shopper.full_name || "there"},
