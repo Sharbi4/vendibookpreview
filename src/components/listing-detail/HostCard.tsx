@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ShieldCheck, ExternalLink, Clock, Star } from 'lucide-react';
+import { ShieldCheck, ExternalLink, Clock, Star, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +28,8 @@ const HostCard = ({
     ? hostName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : 'H';
 
-  const profileLink = hostId ? `/u/${hostId}` : '#';
+  // Include listing context in profile link for messaging
+  const profileLink = hostId ? `/u/${hostId}?from_listing=${listingId}` : '#';
   const { data: responseTimeData } = useHostResponseTime(hostId);
   const { data: ratingData } = useListingAverageRating(listingId);
 
@@ -117,7 +118,7 @@ const HostCard = ({
           className="gap-1"
         >
           <Link to={profileLink}>
-            <ExternalLink className="h-4 w-4" />
+            <User className="h-4 w-4" />
             <span className="hidden sm:inline">View Host Profile</span>
           </Link>
         </Button>
