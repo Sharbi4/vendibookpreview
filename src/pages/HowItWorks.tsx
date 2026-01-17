@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import AIToolsSection from '@/components/home/AIToolsSection';
 import { cn } from '@/lib/utils';
 
 const HowItWorks = () => {
@@ -392,6 +393,9 @@ const HowItWorks = () => {
             </div>
           </div>
         </section>
+
+        {/* Vendi AI Suite Section */}
+        <AIToolsSection />
 
         {/* Why Vendibook Is Different - GRADIENT */}
         <section className="py-20 relative overflow-hidden">
