@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CATEGORY_LABELS } from '@/types/listing';
 
 import { WizardProgress } from './WizardProgress';
+import { StepHelpTips } from './StepHelpTips';
 import { StepListingType } from './StepListingType';
 import { StepDetails } from './StepDetails';
 import { StepLocation } from './StepLocation';
@@ -67,6 +68,7 @@ export const ListingWizard: React.FC = () => {
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [publishedListing, setPublishedListing] = useState<PublishedListing | null>(null);
+  const [dismissedTips, setDismissedTips] = useState<Set<number>>(new Set());
 
   const uploadImages = async (listingId: string): Promise<string[]> => {
     const urls: string[] = [];
@@ -409,6 +411,14 @@ export const ListingWizard: React.FC = () => {
 
       {/* Content */}
       <div className="container max-w-2xl mx-auto px-4 py-8">
+        {/* Contextual help tips */}
+        <StepHelpTips
+          currentStep={currentStep}
+          mode={formData.mode}
+          dismissed={dismissedTips.has(currentStep)}
+          onDismiss={() => setDismissedTips(prev => new Set([...prev, currentStep]))}
+        />
+        
         <div className="bg-card rounded-2xl shadow-sm border p-6 md:p-8">
           {renderStep()}
         </div>
