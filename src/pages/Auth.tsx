@@ -129,7 +129,8 @@ const Auth = () => {
             title: 'Welcome back!',
             description: 'You have signed in successfully.',
           });
-          navigate('/');
+          // Route to activation to choose path if needed
+          navigate('/activation');
         }
       }
     } finally {
