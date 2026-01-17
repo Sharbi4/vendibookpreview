@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { QuickStartWizard } from '@/components/listing-wizard/QuickStartWizard';
-import Header from '@/components/layout/Header';
+import { trackEvent } from '@/lib/analytics';
 
 const ListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -11,7 +11,10 @@ const ListPage: React.FC = () => {
 
   useEffect(() => {
     // Track page view
-    console.log('[ANALYTICS] Start listing page viewed');
+    trackEvent({
+      category: 'Supply',
+      action: 'start_listing_page_viewed',
+    });
   }, []);
 
   // Redirect to auth if not logged in

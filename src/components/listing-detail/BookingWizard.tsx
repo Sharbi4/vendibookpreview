@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
 import { calculateRentalFees } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
+import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { TablesInsert } from '@/integrations/supabase/types';
 
@@ -136,6 +137,10 @@ const BookingWizard = ({
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
+      // Track when user starts the booking flow (step 1 -> 2)
+      if (currentStep === 1) {
+        trackRequestStarted(listingId);
+      }
       setCurrentStep(currentStep + 1);
     }
   };
@@ -216,6 +221,7 @@ const BookingWizard = ({
       }).catch(console.error);
 
       trackFormSubmitConversion({ form_type: 'booking_request', listing_id: listingId });
+      trackRequestSubmitted(listingId, instantBook);
       setBookingComplete(true);
     } catch (error) {
       console.error('Error submitting booking:', error);
