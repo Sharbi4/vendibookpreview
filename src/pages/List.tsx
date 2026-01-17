@@ -13,7 +13,7 @@ type ListingMode = 'choose' | 'import' | 'scratch';
 
 const ListPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isLoading, hasRole } = useAuth();
+  const { user, isLoading } = useAuth();
   const [mode, setMode] = useState<ListingMode>('choose');
 
   useEffect(() => {
@@ -24,19 +24,8 @@ const ListPage: React.FC = () => {
     });
   }, []);
 
-  // Redirect to auth if not logged in
-  useEffect(() => {
-    if (!isLoading && !user) {
-      navigate('/auth?redirect=/list');
-    }
-  }, [user, isLoading, navigate]);
-
-  // Auto-assign host role if needed (handled by auth flow)
-  useEffect(() => {
-    if (user && !hasRole('host')) {
-      // The role will be assigned when the listing is created
-    }
-  }, [user, hasRole]);
+  // No auth redirect needed - allow anonymous users to start listings
+  // Auth will be gated at the Details step in the PublishWizard
 
   if (isLoading) {
     return (
@@ -44,10 +33,6 @@ const ListPage: React.FC = () => {
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
-  }
-
-  if (!user) {
-    return null;
   }
 
   const handleBack = () => {

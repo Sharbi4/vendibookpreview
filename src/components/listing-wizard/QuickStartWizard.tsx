@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ListingCategory, ListingMode, CATEGORY_LABELS } from '@/types/listing';
 import { cn } from '@/lib/utils';
 import { trackDraftCreated, trackEvent } from '@/lib/analytics';
+import { saveGuestDraft, generateDraftToken } from '@/lib/guestDraft';
 
 type QuickStartStep = 'category' | 'mode' | 'location' | 'created';
 
@@ -87,7 +88,7 @@ export const QuickStartWizard: React.FC = () => {
   };
 
   const handleCreateDraft = async () => {
-    if (!user || !data.category || !data.mode) return;
+    if (!data.category || !data.mode) return;
 
     setIsCreating(true);
 
@@ -111,11 +112,15 @@ export const QuickStartWizard: React.FC = () => {
         }
       }
 
-      // Create minimal draft listing
+      // Generate guest token for anonymous draft OR use user id
+      const guestToken = user ? null : generateDraftToken();
+
+      // Create minimal draft listing (anonymous or authenticated)
       const { data: listing, error } = await supabase
         .from('listings')
         .insert({
-          host_id: user.id,
+          host_id: user?.id || null, // null for guest drafts
+          guest_draft_token: guestToken, // token for guest claiming
           mode: data.mode,
           category: data.category,
           status: 'draft',
@@ -131,6 +136,11 @@ export const QuickStartWizard: React.FC = () => {
         .single();
 
       if (error) throw error;
+
+      // Save guest draft token in localStorage for later claiming
+      if (guestToken && listing) {
+        saveGuestDraft(listing.id, guestToken);
+      }
 
       setCreatedListingId(listing.id);
       setStep('created');
@@ -308,24 +318,32 @@ export const QuickStartWizard: React.FC = () => {
               Use my current location
             </button>
           </div>
-          <div className="flex items-center gap-3 pt-4">
-            <Button variant="ghost" onClick={() => setStep('mode')}>
-              ← Back
-            </Button>
-            <Button 
-              onClick={handleCreateDraft} 
-              disabled={isCreating}
-              className="flex-1"
-            >
-              {isCreating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                'Create draft'
-              )}
-            </Button>
+          <div className="flex flex-col gap-3 pt-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={() => setStep('mode')}>
+                ← Back
+              </Button>
+              <Button 
+                onClick={handleCreateDraft} 
+                disabled={isCreating}
+                className="flex-1"
+              >
+                {isCreating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Start Listing'
+                )}
+              </Button>
+            </div>
+            {/* Guest note */}
+            {!user && (
+              <p className="text-xs text-muted-foreground text-center">
+                You can finish as a guest. Sign-in required to publish.
+              </p>
+            )}
           </div>
         </div>
       )}

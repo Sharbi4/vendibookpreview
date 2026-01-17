@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { CATEGORY_LABELS, ListingCategory } from '@/types/listing';
 import { PublishChecklist, createChecklistItems } from './PublishChecklist';
 import { PublishSuccessModal } from './PublishSuccessModal';
+import { AuthGateModal } from './AuthGateModal';
+import { getGuestDraft, clearGuestDraft } from '@/lib/guestDraft';
 import { cn } from '@/lib/utils';
 
 type PublishStep = 'photos' | 'pricing' | 'details' | 'availability' | 'rules' | 'stripe' | 'review';
@@ -46,6 +48,8 @@ export const PublishWizard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isGuestDraft, setIsGuestDraft] = useState(false);
 
   // Form fields
   const [images, setImages] = useState<File[]>([]);
@@ -73,6 +77,12 @@ export const PublishWizard: React.FC = () => {
         return;
       }
 
+      // Check if this is a guest draft (no host_id but has guest_draft_token)
+      const guestDraft = getGuestDraft();
+      if (!data.host_id && guestDraft?.listingId === listingId) {
+        setIsGuestDraft(true);
+      }
+
       setListing(data as unknown as ListingData);
       setTitle(data.title || '');
       setDescription(data.description || '');
@@ -86,6 +96,56 @@ export const PublishWizard: React.FC = () => {
 
     fetchListing();
   }, [listingId, navigate, toast]);
+
+  // Claim guest draft when user signs in
+  const handleAuthSuccess = async (userId: string) => {
+    if (!listing || !listingId) return;
+
+    const guestDraft = getGuestDraft();
+    if (!guestDraft || guestDraft.listingId !== listingId) return;
+
+    try {
+      // Claim the draft by setting the host_id
+      const { error } = await supabase
+        .from('listings')
+        .update({ 
+          host_id: userId,
+          guest_draft_token: null, // Clear the token after claiming
+        })
+        .eq('id', listingId)
+        .eq('guest_draft_token', guestDraft.token);
+
+      if (error) throw error;
+
+      // Clear localStorage
+      clearGuestDraft();
+      setIsGuestDraft(false);
+      setShowAuthModal(false);
+
+      toast({
+        title: 'Draft claimed!',
+        description: 'Your listing is now saved to your account.',
+      });
+    } catch (error) {
+      console.error('Error claiming draft:', error);
+      toast({
+        title: 'Error claiming draft',
+        description: 'Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Gate check for Details step - require auth before saving
+  const handleDetailsSave = async () => {
+    if (!user && isGuestDraft) {
+      // Show auth modal instead of saving
+      setShowAuthModal(true);
+      return;
+    }
+    // Proceed with normal save
+    await saveStep();
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -439,13 +499,21 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setStep('pricing')}>Back</Button>
-                    <Button onClick={saveStep} disabled={isSaving || !title || !description}>
-                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                      Continue
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex gap-3">
+                      <Button variant="outline" onClick={() => setStep('pricing')}>Back</Button>
+                      <Button onClick={handleDetailsSave} disabled={isSaving || !title || !description}>
+                        {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                        {!user && isGuestDraft ? 'Save & Continue' : 'Continue'}
+                        <ChevronRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
+                    {/* Guest reminder */}
+                    {!user && isGuestDraft && (
+                      <p className="text-xs text-muted-foreground text-center">
+                        Sign-in required to save your details.
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -516,9 +584,36 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Stripe Connect Panel - Clear messaging */}
+                  {!isOnboardingComplete && (
+                    <div className="p-5 rounded-xl border-2 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
+                      <div className="flex items-start gap-3">
+                        <CreditCard className="w-6 h-6 text-amber-600 mt-0.5" />
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-amber-800 dark:text-amber-200 mb-1">
+                            Connect Stripe to get paid
+                          </h3>
+                          <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+                            To go live and receive payments, you need to connect your Stripe account. Takes about 2 minutes.
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            <Button size="sm" onClick={handleStripeConnect} disabled={isConnecting}>
+                              {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                              Connect Stripe (2 min)
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => navigate('/dashboard')}>
+                              <Save className="w-4 h-4 mr-1" />
+                              Save Draft
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex gap-3">
                     <Button variant="outline" onClick={() => setStep('stripe')}>Back</Button>
-                    <Button onClick={handlePublish} disabled={isSaving || !canPublish}>
+                    <Button onClick={handlePublish} disabled={isSaving || !canPublish || !isOnboardingComplete}>
                       {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
                       Publish
                     </Button>
@@ -548,6 +643,14 @@ export const PublishWizard: React.FC = () => {
           priceSale: parseFloat(priceSale) || null,
         } : null}
         onViewListing={() => navigate(`/listing/${listing?.id}`)}
+      />
+
+      {/* Auth Gate Modal */}
+      <AuthGateModal
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+        onAuthSuccess={handleAuthSuccess}
+        draftId={listingId}
       />
     </div>
   );

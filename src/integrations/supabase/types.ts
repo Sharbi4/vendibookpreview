@@ -597,9 +597,10 @@ export type Database = {
           freight_category: string | null
           freight_payer: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
+          guest_draft_token: string | null
           height_inches: number | null
           highlights: string[] | null
-          host_id: string
+          host_id: string | null
           hours_of_access: string | null
           id: string
           image_urls: string[] | null
@@ -639,9 +640,10 @@ export type Database = {
           freight_category?: string | null
           freight_payer?: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
+          guest_draft_token?: string | null
           height_inches?: number | null
           highlights?: string[] | null
-          host_id: string
+          host_id?: string | null
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
@@ -681,9 +683,10 @@ export type Database = {
           freight_category?: string | null
           freight_payer?: string | null
           fulfillment_type?: Database["public"]["Enums"]["fulfillment_type"]
+          guest_draft_token?: string | null
           height_inches?: number | null
           highlights?: string[] | null
-          host_id?: string
+          host_id?: string | null
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
