@@ -140,3 +140,9 @@ verify_jwt = false
 
 [functions.send-document-reminder]
 verify_jwt = false
+
+[functions.send-draft-reminder]
+verify_jwt = false
+
+[functions.send-pending-request-reminder]
+verify_jwt = false
