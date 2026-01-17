@@ -65,14 +65,26 @@ export const QuickStartWizard: React.FC = () => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           try {
-            const response = await fetch(
-              `https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?access_token=pk.eyJ1IjoidmVuZGlib29rIiwiYSI6ImNtNjU2aGxnazBpNDkya3NjdWp6dzl4dG8ifQ.example`
-            );
-            // Fallback to coordinates if geocoding fails
-            setData(prev => ({ 
-              ...prev, 
-              location: `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}` 
-            }));
+            // Use the geocode-location edge function for reverse geocoding
+            const { data: geocodeData } = await supabase.functions.invoke('geocode-location', {
+              body: { 
+                query: `${position.coords.latitude},${position.coords.longitude}`,
+                limit: 1 
+              }
+            });
+            
+            if (geocodeData?.results?.[0]?.placeName) {
+              setData(prev => ({ 
+                ...prev, 
+                location: geocodeData.results[0].placeName 
+              }));
+            } else {
+              // Fallback to coordinates if geocoding fails
+              setData(prev => ({ 
+                ...prev, 
+                location: `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}` 
+              }));
+            }
           } catch {
             setData(prev => ({ 
               ...prev, 
