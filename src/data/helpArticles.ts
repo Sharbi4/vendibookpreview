@@ -2213,6 +2213,1214 @@ If you disagree with findings:
       }
     ],
     relatedArticles: ['mobile-vending-permits', 'commissary-requirements']
+  },
+
+  // HOST ONBOARDING & WORKFLOWS
+  {
+    slug: 'host-onboarding',
+    title: 'Host Onboarding Checklist (10 Minutes)',
+    description: 'Complete step-by-step checklist to set up your Vendibook host account and start earning.',
+    category: 'Host Guides',
+    categorySlug: 'host-guides',
+    featured: true,
+    sections: [
+      {
+        id: 'overview',
+        title: 'Before You Start',
+        content: `This checklist walks you through everything you need to start hosting on Vendibook. Most hosts complete this in under 10 minutes.
+
+**What You'll Need**
+- Valid government-issued ID
+- Bank account for payouts (via Stripe)
+- Photos of your asset(s)
+- Any relevant permits or licenses (optional but recommended)`
+      },
+      {
+        id: 'step-1-account',
+        title: 'Step 1: Create Your Account',
+        content: `- [ ] Sign up at vendibook.com
+- [ ] Verify your email address
+- [ ] Complete your profile (name, phone, photo)
+- [ ] Add your business name (optional)
+
+**Pro tip:** A complete profile with a professional photo increases booking rates by 40%.`
+      },
+      {
+        id: 'step-2-stripe',
+        title: 'Step 2: Set Up Stripe Connect',
+        content: `- [ ] Click "Set Up Payouts" in your dashboard
+- [ ] Connect or create a Stripe account
+- [ ] Verify your identity (government ID required)
+- [ ] Add your bank account for payouts
+- [ ] Complete any additional Stripe requirements
+
+**Important:** You must complete Stripe setup before your listing can go live. Payouts are processed automatically after each completed booking.`
+      },
+      {
+        id: 'step-3-listing',
+        title: 'Step 3: Create Your First Listing',
+        content: `- [ ] Click "Create Listing"
+- [ ] Choose asset type (food truck, trailer, ghost kitchen, vendor lot)
+- [ ] Select mode (rent or sell)
+- [ ] Upload high-quality photos (minimum 5 recommended)
+- [ ] Write a compelling title and description
+- [ ] Set your pricing (daily/weekly rates)
+- [ ] Add amenities and equipment list
+- [ ] Set availability calendar
+- [ ] Configure pickup/delivery options
+
+**Pro tip:** Listings with 8+ photos get 3x more inquiries.`
+      },
+      {
+        id: 'step-4-documents',
+        title: 'Step 4: Upload Required Documents',
+        content: `- [ ] Review any document requirements for your listing
+- [ ] Upload relevant permits or licenses
+- [ ] Set document requirements for renters (if applicable)
+
+**Common documents:**
+- Business license
+- Health department permit
+- Commercial liability insurance
+- Vehicle registration (for trucks/trailers)`
+      },
+      {
+        id: 'step-5-publish',
+        title: 'Step 5: Review and Publish',
+        content: `- [ ] Preview your listing
+- [ ] Check all photos display correctly
+- [ ] Verify pricing and availability
+- [ ] Enable Instant Book (recommended)
+- [ ] Click "Publish"
+
+**You're live!** Your listing is now visible to thousands of potential renters and buyers.`
+      },
+      {
+        id: 'whats-next',
+        title: "What's Next?",
+        content: `**Respond quickly to inquiries**
+Fast response times improve your search ranking and booking rate.
+
+**Keep your calendar updated**
+Block dates when your asset is unavailable to avoid conflicts.
+
+**Review booking requests**
+You'll receive email and in-app notifications for new requests.
+
+**Get your first review**
+Great reviews build trust and increase future bookings.`
+      }
+    ],
+    relatedArticles: ['stripe-connect-setup', 'host-listing-checklist', 'payout-timing-fees']
+  },
+  {
+    slug: 'host-listing-checklist',
+    title: 'Create a Listing Checklist',
+    description: 'Everything you need to create a high-converting listing on Vendibook.',
+    category: 'Host Guides',
+    categorySlug: 'host-guides',
+    sections: [
+      {
+        id: 'before-photos',
+        title: 'Before You Take Photos',
+        content: `- [ ] Clean your asset thoroughly inside and out
+- [ ] Stage the space (remove clutter, add professional touches)
+- [ ] Ensure all equipment is visible and organized
+- [ ] Check lighting—natural light is best
+- [ ] Remove any personal items or branding you don't want shown`
+      },
+      {
+        id: 'photos',
+        title: 'Photo Checklist',
+        content: `**Exterior (minimum 4 photos)**
+- [ ] Front view (hero shot)
+- [ ] Both sides
+- [ ] Rear view with serving window open
+- [ ] Detail shots of unique features
+
+**Interior (minimum 4 photos)**
+- [ ] Wide shot of full kitchen
+- [ ] Cooking stations
+- [ ] Refrigeration/storage
+- [ ] Prep areas
+
+**Equipment (2-4 photos)**
+- [ ] Close-ups of key equipment
+- [ ] Brand/model visible when possible
+
+**Pro tips:**
+- Use landscape orientation
+- Shoot during golden hour for exterior
+- Clean lens before shooting
+- Take more photos than you need—you can select the best`
+      },
+      {
+        id: 'title-description',
+        title: 'Writing Your Title & Description',
+        content: `**Title Formula**
+[Year] [Type] [Size/Feature] - [Key Benefit]
+
+Examples:
+- "2021 Food Trailer 18ft - Full Kitchen, Event Ready"
+- "NSF Ghost Kitchen Space - Commissary Included"
+
+**Description Structure**
+1. Opening hook (why this asset stands out)
+2. Equipment highlights
+3. Ideal use cases
+4. What's included
+5. Location/access details
+6. Call to action`
+      },
+      {
+        id: 'pricing',
+        title: 'Setting Your Price',
+        content: `- [ ] Research comparable listings in your area
+- [ ] Set daily rate (for short rentals)
+- [ ] Set weekly rate (typically 15-20% discount)
+- [ ] Consider seasonal adjustments
+- [ ] Factor in your costs (insurance, maintenance, cleaning)
+
+**Pricing tips:**
+- New hosts often price 10-15% below market to get first reviews
+- Enable weekly discounts to attract longer bookings
+- Review and adjust pricing quarterly`
+      },
+      {
+        id: 'final-review',
+        title: 'Final Review',
+        content: `- [ ] All photos uploaded and in correct order
+- [ ] Title is clear and compelling
+- [ ] Description covers all key points
+- [ ] Pricing is competitive
+- [ ] Availability calendar is accurate
+- [ ] Pickup/delivery options set correctly
+- [ ] Required documents configured (if any)
+- [ ] Contact information is current`
+      }
+    ],
+    relatedArticles: ['host-onboarding', 'pricing-guidance']
+  },
+  {
+    slug: 'stripe-connect-setup',
+    title: 'Stripe Connect Setup Guide',
+    description: 'How to set up Stripe Connect to receive payouts from your Vendibook listings.',
+    category: 'Payments & Payouts',
+    categorySlug: 'payments-payouts',
+    sections: [
+      {
+        id: 'overview',
+        title: 'Why Stripe Connect?',
+        content: `Vendibook uses Stripe Connect to process payments securely. This ensures:
+- Fast, reliable payouts directly to your bank
+- Protection for both hosts and renters
+- Compliance with financial regulations
+- Support for multiple currencies
+
+**You must complete Stripe setup before publishing your first listing.**`
+      },
+      {
+        id: 'requirements',
+        title: 'What You'll Need',
+        content: `**For Individuals**
+- Valid government-issued ID (driver's license or passport)
+- Social Security Number (last 4 digits)
+- Bank account routing and account numbers
+- Home address
+
+**For Businesses**
+- EIN (Employer Identification Number)
+- Business address
+- Beneficial owner information
+- Business bank account details`
+      },
+      {
+        id: 'setup-steps',
+        title: 'Step-by-Step Setup',
+        content: `**1. Start the Process**
+- Log in to your Vendibook dashboard
+- Click "Set Up Payouts" or go to Account → Stripe Connect
+- Click "Connect with Stripe"
+
+**2. Choose Account Type**
+- Individual or Business
+- Select your country
+
+**3. Verify Your Identity**
+- Enter personal information
+- Upload ID document (takes 2-5 minutes to verify)
+- May require a selfie for verification
+
+**4. Add Bank Account**
+- Enter routing number
+- Enter account number
+- Verify with micro-deposits (if required)
+
+**5. Complete Setup**
+- Review all information
+- Accept Stripe's terms of service
+- Submit for verification`
+      },
+      {
+        id: 'verification',
+        title: 'Verification Timeline',
+        content: `**Instant Verification (most common)**
+Most hosts are verified within minutes.
+
+**Extended Review (rare)**
+Some accounts require additional review:
+- Allow 1-2 business days
+- You may be asked for additional documents
+- Check email for updates
+
+**While waiting:**
+- You can create listings
+- Listings won't go live until verification completes`
+      },
+      {
+        id: 'troubleshooting',
+        title: 'Common Issues',
+        content: `**Verification Failed**
+- Ensure ID photo is clear and all text is readable
+- Name must match exactly on ID and application
+- Try a different ID document if available
+
+**Bank Account Rejected**
+- Verify routing and account numbers
+- Must be a checking account (not savings)
+- Account must be in your name or business name
+
+**Need Help?**
+Contact our support team via Zendesk chat. We can help troubleshoot verification issues.`
+      }
+    ],
+    relatedArticles: ['payout-timing-fees', 'host-onboarding']
+  },
+  {
+    slug: 'payout-timing-fees',
+    title: 'Payout Timing & Fees',
+    description: 'Understand when you get paid and what fees apply to your Vendibook earnings.',
+    category: 'Payments & Payouts',
+    categorySlug: 'payments-payouts',
+    sections: [
+      {
+        id: 'payout-schedule',
+        title: 'When You Get Paid',
+        content: `**For Rentals**
+- Payment is captured when the booking starts
+- Payout initiated within 24 hours of rental start
+- Funds arrive in 2-5 business days (depends on your bank)
+
+**For Sales**
+- Payment captured when buyer confirms purchase
+- Payout initiated after buyer confirms receipt
+- Or automatically after 7 days if no disputes
+
+**Payout Methods**
+Payouts are sent directly to the bank account connected via Stripe.`
+      },
+      {
+        id: 'fee-breakdown',
+        title: 'Fee Breakdown',
+        content: `**Vendibook Service Fee**
+- 10% of the booking/sale total
+- Covers platform, support, and payment processing
+- Deducted automatically from your payout
+
+**What's Included in the Fee**
+- Stripe payment processing
+- Customer support for you and your renters
+- Dispute resolution services
+- Platform maintenance and features
+
+**Example**
+- Rental price: $500
+- Vendibook fee (10%): $50
+- Your payout: $450`
+      },
+      {
+        id: 'payout-tracking',
+        title: 'Tracking Your Payouts',
+        content: `**In Vendibook**
+- Dashboard → Earnings shows all payouts
+- View pending, processing, and completed payouts
+- Download reports for accounting
+
+**In Stripe**
+- Access your Stripe Express dashboard
+- View detailed transaction history
+- Download 1099 tax forms (US hosts)`
+      },
+      {
+        id: 'delays',
+        title: 'What Causes Delays?',
+        content: `**Common Delay Causes**
+- Bank holidays (payouts don't process on weekends)
+- First payout (may take extra 1-2 days)
+- Account verification issues
+- Disputes or holds on your account
+
+**If Your Payout is Late**
+1. Check Stripe dashboard for status
+2. Verify bank account details are correct
+3. Contact support if over 7 business days`
+      }
+    ],
+    relatedArticles: ['stripe-connect-setup', 'cancellations-refunds']
+  },
+  {
+    slug: 'deposits-protection',
+    title: 'Deposits & Damage Protection',
+    description: 'How security deposits work and what protection you have when renting on Vendibook.',
+    category: 'Rentals & Bookings',
+    categorySlug: 'rentals-bookings',
+    sections: [
+      {
+        id: 'how-deposits-work',
+        title: 'How Security Deposits Work',
+        content: `**Authorization Hold**
+When you book a rental, a security deposit may be authorized on your card:
+- The hold is temporary—not an immediate charge
+- Amount varies by listing (set by host)
+- Released within 48 hours after successful return
+
+**When You're Charged**
+You're only charged if:
+- Damage is documented with photos
+- Host files a claim within 48 hours of return
+- Claim is reviewed and approved by Vendibook
+
+**Typical Deposit Amounts**
+- Food trucks: $500-$2,000
+- Trailers: $300-$1,500
+- Ghost kitchens: $500-$1,000
+- Vendor lots: Usually no deposit`
+      },
+      {
+        id: 'pre-rental',
+        title: 'Before Your Rental',
+        content: `**Document Everything**
+- Take photos of all areas before accepting
+- Note any existing damage
+- Get host acknowledgment of pre-existing issues
+- Save photos with timestamps
+
+**What to Photograph**
+- All four exterior sides
+- Interior from multiple angles
+- Each piece of equipment
+- Any existing damage (scratches, dents, wear)
+- Odometer/hour meter readings`
+      },
+      {
+        id: 'during-rental',
+        title: 'During Your Rental',
+        content: `**If Something Breaks**
+1. Document with photos immediately
+2. Contact the host through Vendibook messaging
+3. Do not attempt major repairs without host approval
+4. Report the issue—don't hide it
+
+**Normal Wear vs. Damage**
+- Normal wear: Minor scuffs, expected equipment wear
+- Damage: Broken equipment, significant cosmetic damage, missing items`
+      },
+      {
+        id: 'after-rental',
+        title: 'After Your Rental',
+        content: `**Return Process**
+- Clean the asset before return
+- Document condition at return (photos/video)
+- Complete return inspection with host if possible
+- Get written confirmation of successful return
+
+**Deposit Release**
+- If no issues: Released within 48 hours
+- If claim filed: Held until resolution (usually 5-7 days)
+- Disputed claims: May take longer for investigation`
+      },
+      {
+        id: 'disputing-claims',
+        title: 'Disputing a Damage Claim',
+        content: `**If You Disagree**
+1. Respond to the claim within 48 hours
+2. Provide your documentation (photos, timestamps)
+3. Explain your position clearly
+4. Vendibook will review both sides
+
+**What We Look At**
+- Pre-rental and post-rental photos
+- Communication history
+- Nature of the damage
+- Whether damage is consistent with reported use`
+      }
+    ],
+    relatedArticles: ['pre-rental-inspection', 'dispute-evidence']
+  },
+  {
+    slug: 'pickup-delivery-checklist',
+    title: 'Pickup, Delivery & Return Checklist',
+    description: 'Complete checklist for smooth pickup, delivery, and return of rental equipment.',
+    category: 'Rentals & Bookings',
+    categorySlug: 'rentals-bookings',
+    sections: [
+      {
+        id: 'before-pickup',
+        title: 'Before Pickup or Delivery',
+        content: `**Confirm Details**
+- [ ] Verify pickup/delivery date and time with host
+- [ ] Confirm exact address and any access instructions
+- [ ] Ensure you have proper vehicle/tow capacity (if applicable)
+- [ ] Bring valid driver's license and booking confirmation
+- [ ] Have Vendibook app ready for communication
+
+**What to Bring**
+- [ ] Signed rental agreement (if required)
+- [ ] Payment confirmation
+- [ ] Phone with camera for documentation
+- [ ] Any required documents (permits, insurance proof)`
+      },
+      {
+        id: 'at-pickup',
+        title: 'At Pickup',
+        content: `**Walk-Through with Host**
+- [ ] Complete exterior inspection together
+- [ ] Test all equipment operation
+- [ ] Review controls and systems
+- [ ] Note any existing damage
+- [ ] Take photos/video of entire asset
+
+**Get Orientation**
+- [ ] How to operate each piece of equipment
+- [ ] Location of shutoffs (gas, water, electric)
+- [ ] Emergency procedures
+- [ ] Host contact for questions
+
+**Before Leaving**
+- [ ] Confirm you have all keys/access codes
+- [ ] Test that you can tow/drive safely
+- [ ] Know the return location and time`
+      },
+      {
+        id: 'at-delivery',
+        title: 'If Delivery',
+        content: `**When Asset Arrives**
+- [ ] Meet the delivery driver on time
+- [ ] Inspect immediately upon arrival
+- [ ] Document any transit damage
+- [ ] Test equipment before driver leaves
+- [ ] Get delivery confirmation
+
+**Site Preparation**
+- [ ] Level ground for setup
+- [ ] Access to power if needed
+- [ ] Water hookup if required
+- [ ] Proper clearance for operation`
+      },
+      {
+        id: 'during-rental',
+        title: 'During Your Rental',
+        content: `**Daily Care**
+- [ ] Clean equipment after each use
+- [ ] Monitor refrigeration temperatures
+- [ ] Check propane levels
+- [ ] Keep exterior clean
+- [ ] Report any issues promptly
+
+**Document Issues**
+- [ ] Photo any problems immediately
+- [ ] Message host through Vendibook
+- [ ] Keep records of all communications`
+      },
+      {
+        id: 'return',
+        title: 'Return Checklist',
+        content: `**Before Return**
+- [ ] Clean all cooking surfaces thoroughly
+- [ ] Empty grease traps and waste tanks
+- [ ] Refill propane if required
+- [ ] Remove all personal items
+- [ ] Take final condition photos
+
+**At Return**
+- [ ] Arrive on time
+- [ ] Walk through with host
+- [ ] Show your documentation
+- [ ] Get return confirmation
+- [ ] Return all keys/access items
+
+**After Return**
+- [ ] Leave a review for the host
+- [ ] Confirm deposit release
+- [ ] Save all documentation`
+      }
+    ],
+    relatedArticles: ['pre-rental-inspection', 'deposits-protection']
+  },
+  {
+    slug: 'shipping-freight',
+    title: 'Shipping & Freight Options',
+    description: 'Understanding your options for shipping purchased equipment through Vendibook.',
+    category: 'Buying & Selling',
+    categorySlug: 'buying-selling',
+    sections: [
+      {
+        id: 'overview',
+        title: 'Overview',
+        content: `When buying a food truck, trailer, or large equipment, shipping is often a significant consideration. Vendibook offers multiple options:
+
+**Self-Arrange**
+Handle your own pickup or hire your own transport.
+
+**Vendibook Freight (Coming Soon)**
+Request quotes from vetted freight carriers directly through the platform.
+
+**Seller Delivery**
+Some sellers offer delivery within a certain radius.`
+      },
+      {
+        id: 'cost-factors',
+        title: 'What Affects Shipping Cost',
+        content: `**Distance**
+Longer distances = higher costs. Cross-country moves can cost $2,000-$5,000+.
+
+**Size and Weight**
+- Food trucks: Require flatbed or specialized transport
+- Trailers: Can be towed or shipped on flatbed
+- Equipment: Standard freight or LTL shipping
+
+**Type of Transport**
+- Drive-away: Cheapest for driveable trucks
+- Flatbed: Most common for trailers
+- Enclosed transport: Most expensive, best protection
+
+**Timeline**
+- Standard: 5-14 days
+- Expedited: 3-5 days (premium pricing)`
+      },
+      {
+        id: 'getting-quotes',
+        title: 'Getting Freight Quotes',
+        content: `**Information You'll Need**
+- Pickup address (seller location)
+- Delivery address
+- Asset dimensions (L x W x H)
+- Weight
+- Is it driveable?
+- Preferred timeline
+
+**Getting Multiple Quotes**
+Always get 3+ quotes to compare. Prices can vary significantly between carriers.
+
+**Questions to Ask**
+- Is insurance included? What's covered?
+- What's the estimated delivery window?
+- Are there any additional fees (fuel surcharge, tolls)?
+- What if there's damage during transport?`
+      },
+      {
+        id: 'preparing-for-transport',
+        title: 'Preparing for Transport',
+        content: `**Before Pickup**
+- [ ] Remove all loose items from interior
+- [ ] Secure all doors, hatches, and compartments
+- [ ] Disconnect propane tanks
+- [ ] Drain water tanks
+- [ ] Document condition with photos/video
+- [ ] Provide keys to driver (if applicable)
+
+**Bill of Lading**
+- Get a signed copy from the driver
+- Note any pre-existing damage
+- Keep until delivery confirmed`
+      },
+      {
+        id: 'at-delivery',
+        title: 'At Delivery',
+        content: `**Inspect Immediately**
+- [ ] Check for any transport damage
+- [ ] Document new damage with photos
+- [ ] Note issues on delivery receipt BEFORE signing
+- [ ] Test that asset is driveable/functional
+
+**If Damage Occurred**
+1. Document extensively with photos
+2. Note on delivery receipt
+3. Contact carrier immediately
+4. File claim with carrier's insurance
+5. Notify Vendibook support`
+      }
+    ],
+    relatedArticles: ['buying-end-to-end', 'closing-shipping']
+  },
+  {
+    slug: 'selling-end-to-end',
+    title: 'Selling Your Asset on Vendibook (End-to-End)',
+    description: 'Complete guide to selling your food truck, trailer, or commercial kitchen on Vendibook.',
+    category: 'Buying & Selling',
+    categorySlug: 'buying-selling',
+    sections: [
+      {
+        id: 'overview',
+        title: 'Overview',
+        content: `Selling on Vendibook gives you access to thousands of serious buyers looking for mobile kitchens and commercial equipment. Our platform handles:
+
+- Secure payment processing
+- Escrow protection for both parties
+- Dispute resolution if needed
+- Support throughout the process`
+      },
+      {
+        id: 'before-listing',
+        title: 'Before You List',
+        content: `**Prepare Your Asset**
+- Deep clean inside and out
+- Complete any minor repairs
+- Gather all documentation (title, maintenance records)
+- Take professional-quality photos
+
+**Research Pricing**
+- Check comparable listings on Vendibook
+- Consider age, condition, and included equipment
+- Factor in any unique features
+- Be realistic about market value`
+      },
+      {
+        id: 'creating-listing',
+        title: 'Creating Your Listing',
+        content: `**Photos (Most Important)**
+- Minimum 10 high-quality images
+- All angles (exterior and interior)
+- Close-ups of equipment
+- Any areas of wear or damage (transparency builds trust)
+
+**Description**
+- Year, make, model, and specs
+- Complete equipment list
+- Recent maintenance or upgrades
+- Why you're selling (buyers appreciate honesty)
+- What's included vs. not included
+
+**Pricing**
+- Set a fair asking price
+- Consider room for negotiation
+- Enable "Make an Offer" for flexibility`
+      },
+      {
+        id: 'managing-inquiries',
+        title: 'Managing Inquiries',
+        content: `**Respond Quickly**
+Fast responses build buyer confidence and improve your listing ranking.
+
+**Be Transparent**
+Answer questions honestly. Disclose known issues upfront.
+
+**Schedule Inspections**
+Serious buyers may want to inspect in person. Be accommodating.
+
+**Negotiate Professionally**
+- Consider reasonable offers
+- Don't be offended by low offers—counter instead
+- Get everything in writing`
+      },
+      {
+        id: 'closing-sale',
+        title: 'Closing the Sale',
+        content: `**Accept an Offer**
+When you accept an offer, the buyer is prompted to complete payment.
+
+**Payment Processing**
+- Funds held in escrow until transaction completes
+- You'll receive confirmation when payment clears
+
+**Transfer of Ownership**
+- Meet buyer for pickup/inspection
+- Complete bill of sale
+- Transfer title
+- Provide all keys, manuals, and documentation
+
+**Release of Funds**
+Once buyer confirms receipt, funds are released to your account (minus platform fee).`
+      }
+    ],
+    relatedArticles: ['pricing-guidance', 'closing-shipping']
+  },
+  {
+    slug: 'pricing-guidance',
+    title: 'Pricing Your Asset for Sale',
+    description: 'How to price your food truck, trailer, or kitchen equipment competitively.',
+    category: 'Buying & Selling',
+    categorySlug: 'buying-selling',
+    sections: [
+      {
+        id: 'factors',
+        title: 'Pricing Factors',
+        content: `**Primary Factors**
+- Age of the asset
+- Overall condition
+- Equipment included
+- Mileage/hours (for trucks)
+- Brand/manufacturer reputation
+
+**Value Adds**
+- Recent major maintenance
+- Updated equipment
+- Compliant with current regulations
+- Established business/route (if selling as package)
+- Transferable permits`
+      },
+      {
+        id: 'research',
+        title: 'Research the Market',
+        content: `**Check Comparable Listings**
+- Search Vendibook for similar assets
+- Note price ranges for your category
+- Consider location differences
+
+**External Resources**
+- Used food truck dealer pricing
+- Industry forums and groups
+- Recent sold listings (if available)
+
+**Professional Appraisal**
+For high-value assets, consider getting a professional appraisal.`
+      },
+      {
+        id: 'strategies',
+        title: 'Pricing Strategies',
+        content: `**Market Price**
+Price at fair market value. Best for standard assets in good condition.
+
+**Slightly Below Market**
+Price 5-10% below comparable listings for faster sale. Good if you need to sell quickly.
+
+**Premium Pricing**
+Price above market if you have unique features, recent upgrades, or exceptional condition. Be prepared to wait longer.
+
+**Room for Negotiation**
+Most buyers expect to negotiate. Price 5-10% higher than your minimum acceptable price.`
+      },
+      {
+        id: 'common-mistakes',
+        title: 'Common Pricing Mistakes',
+        content: `**Overpricing**
+- Leads to stale listings
+- Buyers skip overpriced listings
+- Eventually requires larger price drops
+
+**Underpricing**
+- Leaves money on the table
+- May signal problems to buyers
+
+**Ignoring Condition**
+- Be honest about wear and issues
+- Adjust price accordingly
+- Transparency builds trust
+
+**Forgetting Fees**
+- Factor in Vendibook's 10% service fee
+- Consider any shipping costs you'll cover`
+      }
+    ],
+    relatedArticles: ['selling-end-to-end', 'host-listing-checklist']
+  },
+  {
+    slug: 'closing-shipping',
+    title: 'Closing a Sale: Shipping & Release of Funds',
+    description: 'What happens after you sell your asset—shipping coordination and getting paid.',
+    category: 'Buying & Selling',
+    categorySlug: 'buying-selling',
+    sections: [
+      {
+        id: 'after-accepted',
+        title: 'After Offer is Accepted',
+        content: `**Payment Confirmation**
+Once the buyer completes payment, funds are held in escrow.
+
+**Coordinate Handoff**
+- Agree on pickup date/time or shipping arrangements
+- Provide any necessary access instructions
+- Prepare all documentation for transfer`
+      },
+      {
+        id: 'pickup-scenario',
+        title: 'If Buyer Picks Up',
+        content: `**Prepare the Asset**
+- Final cleaning
+- Gather all keys, remotes, manuals
+- Complete any promised maintenance
+
+**At Pickup**
+- Walk through asset together
+- Point out controls and systems
+- Complete bill of sale
+- Transfer title
+- Get signed pickup confirmation
+
+**After Pickup**
+Once buyer confirms through Vendibook, funds are released.`
+      },
+      {
+        id: 'shipping-scenario',
+        title: 'If Shipping',
+        content: `**Coordinate with Buyer**
+- Confirm who arranges shipping
+- Get timeline and carrier information
+- Agree on preparation requirements
+
+**Prepare for Transport**
+- Remove loose items
+- Secure all doors and compartments
+- Disconnect propane
+- Document condition before transport
+
+**At Pickup by Carrier**
+- Get signed bill of lading
+- Note pre-existing damage
+- Keep copy until delivery confirmed`
+      },
+      {
+        id: 'funds-release',
+        title: 'Release of Funds',
+        content: `**Standard Timeline**
+- Buyer confirms receipt → Funds released within 24 hours
+- Auto-release if no issues reported after 7 days
+
+**Your Payout**
+- Sale price minus 10% Vendibook fee
+- Funds sent to your connected bank account
+- Typically arrives in 2-5 business days
+
+**If Issues Arise**
+- Buyer has 48 hours to report problems
+- Disputed funds held until resolution
+- Vendibook mediates if needed`
+      }
+    ],
+    relatedArticles: ['selling-end-to-end', 'shipping-freight']
+  },
+  {
+    slug: 'cancellations-refunds',
+    title: 'Cancellations & Partial Refunds',
+    description: 'How cancellation policies work and when you can get a refund on Vendibook.',
+    category: 'Cancellations & Refunds',
+    categorySlug: 'cancellations-refunds',
+    sections: [
+      {
+        id: 'policies',
+        title: 'Cancellation Policies',
+        content: `**Host-Set Policies**
+Each listing may have its own cancellation policy set by the host. Check the listing details before booking.
+
+**Standard Policies**
+
+**Flexible**
+- Full refund up to 24 hours before start
+- 50% refund within 24 hours
+
+**Moderate**
+- Full refund up to 7 days before start
+- 50% refund 2-7 days before
+- No refund within 48 hours
+
+**Strict**
+- Full refund up to 14 days before start
+- 50% refund 7-14 days before
+- No refund within 7 days`
+      },
+      {
+        id: 'how-to-cancel',
+        title: 'How to Cancel a Booking',
+        content: `**As a Renter**
+1. Go to Dashboard → My Bookings
+2. Find the booking you want to cancel
+3. Click "Cancel Booking"
+4. Confirm cancellation
+5. Refund processed based on policy
+
+**As a Host**
+Hosts should avoid cancelling confirmed bookings. Host cancellations:
+- May affect your search ranking
+- May result in penalties for repeat cancellations
+- Should be communicated immediately to the renter`
+      },
+      {
+        id: 'refund-timeline',
+        title: 'Refund Timeline',
+        content: `**Processing Time**
+- Refund initiated within 24 hours of cancellation
+- Credit card refunds: 5-10 business days to appear
+- Debit card refunds: 5-10 business days
+
+**Partial Refunds**
+If only partially refundable:
+- Refundable portion processed immediately
+- Non-refundable portion retained
+
+**Check Your Refund**
+View refund status in Dashboard → Transactions`
+      },
+      {
+        id: 'special-circumstances',
+        title: 'Special Circumstances',
+        content: `**Extenuating Circumstances**
+We may make exceptions for:
+- Serious illness or injury (with documentation)
+- Government travel restrictions
+- Natural disasters
+- Death of immediate family member
+
+**How to Request**
+1. Contact support via Zendesk
+2. Provide documentation
+3. We'll review on a case-by-case basis
+
+**Asset Issues**
+If the asset significantly differs from the listing or is unsafe:
+- Document with photos/video
+- Contact host immediately
+- Contact Vendibook support
+- Full refund may be granted`
+      },
+      {
+        id: 'disputes',
+        title: 'Disputing a Refund Decision',
+        content: `**If You Disagree**
+1. Contact support within 48 hours
+2. Explain your situation
+3. Provide any supporting documentation
+4. We'll review and respond
+
+**What We Consider**
+- Booking terms and cancellation policy
+- Communication history
+- Documentation provided
+- Circumstances of the situation`
+      }
+    ],
+    relatedArticles: ['deposits-protection', 'dispute-evidence']
+  },
+  {
+    slug: 'equipment-issues',
+    title: 'What to Do If Something Breaks During a Rental',
+    description: 'Step-by-step guide for handling equipment issues or breakdowns during your rental.',
+    category: 'Troubleshooting',
+    categorySlug: 'troubleshooting',
+    sections: [
+      {
+        id: 'immediate-steps',
+        title: 'Immediate Steps',
+        content: `**1. Ensure Safety First**
+- Turn off equipment if sparking, smoking, or leaking
+- Evacuate if there's a fire or gas leak
+- Call 911 for emergencies
+
+**2. Document the Issue**
+- Take photos and video immediately
+- Note the time and what happened
+- Don't try to fix before documenting
+
+**3. Contact the Host**
+- Message through Vendibook right away
+- Describe the issue clearly
+- Include your photos/video`
+      },
+      {
+        id: 'communication',
+        title: 'Communicating with Your Host',
+        content: `**What to Include**
+- What broke or malfunctioned
+- When it happened
+- What you were doing when it happened
+- Current impact on your operation
+
+**Stay Calm and Professional**
+- Issues happen—it's not necessarily anyone's fault
+- Focus on solutions, not blame
+- Keep all communication in Vendibook messaging`
+      },
+      {
+        id: 'minor-issues',
+        title: 'Handling Minor Issues',
+        content: `**What's "Minor"**
+- Blown fuse (if spares available)
+- Clogged drain
+- Equipment needs basic reset
+- Pilot light went out
+
+**Before DIY Fixes**
+- Get host permission first
+- Only attempt if you're comfortable
+- Document before and after
+- Save any receipts for supplies
+
+**What NOT to Do**
+- Don't attempt electrical repairs
+- Don't modify gas connections
+- Don't force stuck equipment
+- Don't exceed your skill level`
+      },
+      {
+        id: 'major-issues',
+        title: 'Handling Major Issues',
+        content: `**What's "Major"**
+- Refrigeration failure (food safety risk)
+- Gas leak
+- Generator failure
+- Fire suppression discharge
+- Significant water leak
+
+**Steps for Major Issues**
+1. Stop using the affected equipment
+2. Document extensively
+3. Contact host immediately
+4. Wait for host's direction on repairs
+5. Consider contacting Vendibook support
+
+**Emergency Contacts**
+- Gas leak: Evacuate and call gas company
+- Fire: Call 911
+- After-hours host emergency: Use emergency contact if provided`
+      },
+      {
+        id: 'compensation',
+        title: 'Seeking Compensation',
+        content: `**When You May Be Entitled**
+- Equipment failure prevents operation
+- Issue was not disclosed in listing
+- Safety hazard existed before rental
+
+**What to Request**
+- Partial refund for unusable time
+- Reimbursement for documented expenses
+- Early termination of rental
+
+**How to Request**
+1. Document everything
+2. Communicate with host first
+3. If unresolved, contact Vendibook support
+4. We'll mediate and determine fair resolution
+
+**Note:** Normal wear and user-caused issues don't qualify for compensation.`
+      }
+    ],
+    relatedArticles: ['dispute-evidence', 'deposits-protection']
+  },
+  {
+    slug: 'dispute-evidence',
+    title: 'Disputes: What Evidence to Upload',
+    description: 'Guide to documenting and submitting evidence for dispute resolution on Vendibook.',
+    category: 'Trust & Safety',
+    categorySlug: 'trust-safety',
+    sections: [
+      {
+        id: 'importance',
+        title: 'Why Documentation Matters',
+        content: `Strong documentation is the key to successful dispute resolution. When we review disputes, we rely on evidence from both parties to make fair decisions.
+
+**The Party with Better Documentation Usually Wins**
+- Timestamped photos > verbal claims
+- Written communication > verbal agreements  
+- Multiple photos > single photo
+- Video > still images`
+      },
+      {
+        id: 'photo-requirements',
+        title: 'Photo Requirements',
+        content: `**Technical Requirements**
+- Clear, in-focus images
+- Good lighting
+- Multiple angles of the same issue
+- Include context (wider shots + close-ups)
+
+**Timestamp Your Photos**
+- Use your phone's camera (automatically timestamps)
+- Include a newspaper/screen with date visible if possible
+- Email photos to yourself for additional timestamp proof
+
+**What to Photograph**
+- Overall condition (wide shots)
+- Specific damage (close-ups)
+- Equipment readings (temperatures, meters)
+- Any relevant signage or documentation`
+      },
+      {
+        id: 'video-guidance',
+        title: 'Video Evidence',
+        content: `**When Video Helps**
+- Equipment malfunction demonstrations
+- Walk-arounds showing condition
+- Issues that are hard to capture in photos
+- Time-sensitive situations
+
+**Video Best Practices**
+- Keep under 2 minutes
+- Narrate what you're showing
+- Hold camera steady
+- Include wide shot and close-ups
+- Ensure audio is clear`
+      },
+      {
+        id: 'written-evidence',
+        title: 'Written Documentation',
+        content: `**Preserve All Communication**
+- All Vendibook messages are automatically saved
+- Screenshot any off-platform communication
+- Email confirmations and receipts
+- Signed agreements or checklists
+
+**Create a Written Timeline**
+- Date and time of each event
+- Who was present
+- What was said/agreed
+- What actions were taken`
+      },
+      {
+        id: 'submission',
+        title: 'Submitting Your Evidence',
+        content: `**How to Submit**
+1. Go to the booking/transaction in question
+2. Click "Report Issue" or "Open Dispute"
+3. Describe the situation clearly
+4. Upload all relevant photos/videos
+5. Attach any documents
+6. Submit for review
+
+**What to Include in Description**
+- Clear summary of what happened
+- Specific dates and times
+- What resolution you're seeking
+- Reference to uploaded evidence
+
+**After Submission**
+- We'll review within 48 hours
+- May request additional information
+- Both parties get opportunity to respond
+- Decision typically within 5-7 business days`
+      },
+      {
+        id: 'tips',
+        title: 'Pro Tips',
+        content: `**Do**
+- Document immediately—don't wait
+- Over-document rather than under-document
+- Be factual and objective
+- Organize evidence clearly
+
+**Don't**
+- Delete original files
+- Edit or alter photos
+- Make exaggerated claims
+- Use profanity or personal attacks
+
+**If You're a Host**
+- Take check-in and check-out photos every time
+- Use a consistent checklist
+- Note condition on every rental
+- Address issues during rental, not after`
+      }
+    ],
+    relatedArticles: ['equipment-issues', 'deposits-protection', 'cancellations-refunds']
   }
 ];
 

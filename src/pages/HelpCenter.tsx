@@ -231,7 +231,7 @@ const HelpCenter = () => {
                   Find answers fast.
                 </h1>
                 <p className="text-muted-foreground text-sm mb-4">
-                  Guides for renting, buying, listing, and getting paid on Vendibook.
+                  Search guides or chat with Support (Zendesk) 24/7.
                 </p>
                 
                 {/* Search Bar */}
@@ -261,7 +261,7 @@ const HelpCenter = () => {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <p className="text-xs text-muted-foreground">
-                    Chat with our team or submit a request. We'll help you resolve bookings, payouts, documents, and disputes.
+                    Chat with our team 24/7 via Zendesk. For account, payouts, bookings, documents, and disputes.
                   </p>
                   <div className="flex flex-col gap-2">
                     <Button onClick={openZendeskChat} size="sm" className="w-full">
@@ -275,10 +275,27 @@ const HelpCenter = () => {
                       </Link>
                     </Button>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    <span>Average reply time: under 5 minutes</span>
+                  
+                  {/* Status indicators */}
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <CheckCircle2 className="h-3 w-3 text-green-600" />
+                      <span>Average reply time: under 5 minutes</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Shield className="h-3 w-3 text-green-600" />
+                      <span>Secure payments via Stripe</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <FileCheck className="h-3 w-3 text-green-600" />
+                      <span>Document & identity verification</span>
+                    </div>
                   </div>
+                  
+                  {/* Credibility line */}
+                  <p className="text-[10px] text-muted-foreground/70 pt-1 border-t border-border">
+                    Powered by Zendesk + Vendibook Support Desk APIs
+                  </p>
                 </CardContent>
               </Card>
             </div>
