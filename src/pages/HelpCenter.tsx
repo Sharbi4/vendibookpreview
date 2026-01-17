@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -6,119 +7,157 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  BookOpen, 
-  Wrench, 
-  ChefHat, 
-  Thermometer, 
-  Flame, 
-  Zap, 
-  FileCheck,
+  Search,
   MessageCircle,
-  HelpCircle,
   ArrowRight,
-  Star,
-  Sparkles
+  ShoppingCart,
+  Key,
+  Tag,
+  DollarSign,
+  Truck,
+  ClipboardCheck,
+  Shield,
+  FileText,
+  CreditCard,
+  RefreshCcw,
+  FileCheck,
+  MapPin,
+  Scale,
+  Clock,
+  ChevronDown,
+  ChevronUp,
+  BookOpen,
+  Users,
+  Send,
+  Banknote,
+  Package,
+  CheckCircle2
 } from 'lucide-react';
 import HelpCenterSearch from '@/components/support/HelpCenterSearch';
-import FAQChatbot from '@/components/support/FAQChatbot';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 
-// Featured articles data
-const featuredArticles = [
+// Popular search chips
+const popularSearches = [
+  { label: 'Payments & payouts', query: 'payments payouts' },
+  { label: 'Cancellation & refunds', query: 'cancellation refunds' },
+  { label: 'Required documents', query: 'documents required' },
+  { label: 'Delivery / pickup', query: 'delivery pickup' },
+  { label: 'Disputes & claims', query: 'disputes claims' },
+];
+
+// Intent-based lanes data
+const intentLanes = [
   {
-    id: 'starting-ghost-kitchen',
-    slug: 'ghost-kitchen-launch',
-    title: 'Starting a Ghost Kitchen: The Practical Launch Checklist',
-    description: 'A step-by-step ghost kitchen launch guide—facility selection, equipment setup, food safety basics, and operating systems to go live fast and safely.',
-    icon: ChefHat,
+    id: 'rent',
+    title: 'Rent / Book',
+    icon: Key,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+    tasks: [
+      { label: 'How rentals work (end-to-end)', slug: 'rentals-end-to-end' },
+      { label: 'Deposits & damage protection', slug: 'deposits-protection' },
+      { label: 'Pickup / delivery & return checklist', slug: 'pickup-delivery-checklist' },
+    ],
+    cta: { label: 'Browse rentals', href: '/search?mode=rent' },
   },
   {
-    id: 'preventive-maintenance',
-    slug: 'preventive-maintenance',
-    title: 'Preventive Maintenance for Food Trailers, Food Trucks, and Mobile Kitchens',
-    description: 'A practical preventive maintenance schedule for mobile kitchens—reduce breakdowns, improve safety, and protect rental and resale value.',
-    icon: Wrench,
+    id: 'buy',
+    title: 'Buy',
+    icon: ShoppingCart,
+    color: 'text-green-600',
+    bgColor: 'bg-green-50',
+    tasks: [
+      { label: 'How buying works (end-to-end)', slug: 'buying-end-to-end' },
+      { label: 'Shipping / freight options', slug: 'shipping-freight' },
+      { label: 'Inspections & what to verify', slug: 'pre-rental-inspection' },
+    ],
+    cta: { label: 'Browse for-sale', href: '/search?mode=sale' },
   },
   {
-    id: 'food-safety-temperatures',
-    slug: 'food-safety-temps',
-    title: 'Food Safety Temperatures: Hold, Cook, and Cool',
-    description: 'The most important food safety temperatures explained for operators—plus holding and cooling practices to reduce risk and stay compliant.',
-    icon: Thermometer,
+    id: 'list',
+    title: 'List / Rent Out',
+    icon: Tag,
+    color: 'text-primary',
+    bgColor: 'bg-primary/10',
+    tasks: [
+      { label: 'Create a listing checklist', slug: 'host-listing-checklist' },
+      { label: 'Stripe Connect setup (required)', slug: 'stripe-connect-setup' },
+      { label: 'Payout timing & fees', slug: 'payout-timing-fees' },
+    ],
+    cta: { label: 'Start a listing', href: '/list' },
+  },
+  {
+    id: 'sell',
+    title: 'Sell',
+    icon: DollarSign,
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-50',
+    tasks: [
+      { label: 'Selling workflow (end-to-end)', slug: 'selling-end-to-end' },
+      { label: 'Pricing guidance + comps', slug: 'pricing-guidance' },
+      { label: 'Closing, shipping & release of funds', slug: 'closing-shipping' },
+    ],
+    cta: { label: 'Set up payouts', href: '/host' },
   },
 ];
 
-// Category data
-const categories = [
-  {
-    title: 'Start Here',
-    description: 'How Vendibook rentals and sales work, what to check before you book, and what happens after checkout.',
-    icon: BookOpen,
-    articles: [
-      { title: 'How Vendibook Rentals Work (End-to-End)', slug: 'rentals-end-to-end' },
-      { title: 'How Buying Works on Vendibook (End-to-End)', slug: 'buying-end-to-end' },
-      { title: 'What to Inspect Before You Rent a Trailer or Food Truck', slug: 'pre-rental-inspection' },
-    ],
-  },
-  {
-    title: 'Care, Maintenance, and Checklists',
-    description: 'Preventive maintenance schedules, inspection guides, and operational best practices.',
-    icon: Wrench,
-    articles: [
-      { title: 'Refrigeration and Cold Holding: Keep Food Safe and Extend Equipment Life', slug: 'refrigeration-cold-holding' },
-      { title: 'Preventive Maintenance for Food Trailers, Food Trucks, and Mobile Kitchens', slug: 'preventive-maintenance' },
-      { title: 'Daily Open/Close Checklist for Mobile Kitchens', slug: 'daily-checklist' },
-    ],
-  },
-  {
-    title: 'Ghost Kitchens and Commercial Kitchens',
-    description: 'How to start, set up equipment, and run compliant operations.',
-    icon: ChefHat,
-    articles: [
-      { title: 'Starting a Ghost Kitchen: The Practical Launch Checklist', slug: 'ghost-kitchen-launch' },
-      { title: 'Commercial Kitchen Equipment Basics: NSF, ETL/UL, and What to Look For', slug: 'commercial-equipment-basics' },
-      { title: 'Ghost Kitchen Menu Design: What Delivers Well', slug: 'ghost-kitchen-menu' },
-    ],
-  },
-  {
-    title: 'Food Safety and Temperature Standards',
-    description: 'Holding temps, cooking temps, cooling, and contamination prevention.',
-    icon: Thermometer,
-    articles: [
-      { title: 'Food Safety Temperatures: Hold, Cook, and Cool', slug: 'food-safety-temps' },
-      { title: 'Cooling and Reheating: Safe Methods That Prevent Illness', slug: 'cooling-reheating' },
-      { title: 'Hot Holding and Transport: Catering and Events', slug: 'hot-holding-transport' },
-    ],
-  },
-  {
-    title: 'Fire Safety, Ventilation, and Grease',
-    description: 'Hood systems, grease management, and fire prevention basics.',
-    icon: Flame,
-    articles: [
-      { title: 'Ventilation, Grease, and Fire Prevention: NFPA 96 Explained Simply', slug: 'nfpa-96-explained' },
-      { title: 'Grease Trap and FOG Management', slug: 'grease-trap-fog' },
-      { title: 'Hood Filter Cleaning: Frequency and Best Practices', slug: 'hood-filter-cleaning' },
-    ],
-  },
-  {
-    title: 'Power, Propane, and Utilities',
-    description: 'Generator safety, propane safety, and operational essentials for mobile kitchens.',
-    icon: Zap,
-    articles: [
-      { title: 'Propane and Gas Safety for Mobile Food Operations', slug: 'propane-gas-safety' },
-      { title: 'Generator and Carbon Monoxide Safety (Mobile Kitchens)', slug: 'generator-co-safety' },
-      { title: 'Generator Sizing Guide for Food Trucks and Trailers', slug: 'generator-sizing' },
-    ],
-  },
-  {
-    title: 'Compliance and Permits',
-    description: 'Mobile vending, commissaries, and how requirements vary by location.',
-    icon: FileCheck,
-    articles: [
-      { title: 'Mobile Vending Permits: State and Local Requirements', slug: 'mobile-vending-permits' },
-      { title: 'Commissary Requirements Explained', slug: 'commissary-requirements' },
-      { title: 'Health Department Inspections: What to Expect', slug: 'health-inspections' },
-    ],
-  },
+// Guided checklists
+const guidedChecklists = [
+  { label: 'Host onboarding checklist (10 min)', slug: 'host-onboarding', icon: ClipboardCheck },
+  { label: 'Renter pre-trip inspection checklist', slug: 'pre-rental-inspection', icon: CheckCircle2 },
+  { label: 'What to do if something breaks during a rental', slug: 'equipment-issues', icon: Shield },
+  { label: 'How cancellations & partial refunds work', slug: 'cancellations-refunds', icon: RefreshCcw },
+  { label: 'Disputes: what evidence to upload', slug: 'dispute-evidence', icon: FileText },
+];
+
+// Collapsed topics
+const browseTopics = [
+  { title: 'Getting Started', icon: BookOpen, articles: [
+    { label: 'How Vendibook works', slug: 'how-vendibook-works' },
+    { label: 'Creating your account', slug: 'creating-account' },
+    { label: 'Verifying your identity', slug: 'identity-verification' },
+  ]},
+  { title: 'Rentals & Bookings', icon: Key, articles: [
+    { label: 'How rentals work (end-to-end)', slug: 'rentals-end-to-end' },
+    { label: 'Booking a listing', slug: 'booking-listing' },
+    { label: 'Extending a rental', slug: 'extending-rental' },
+  ]},
+  { title: 'Buying & Selling', icon: ShoppingCart, articles: [
+    { label: 'How buying works', slug: 'buying-end-to-end' },
+    { label: 'Selling your asset', slug: 'selling-end-to-end' },
+    { label: 'Freight & shipping', slug: 'shipping-freight' },
+  ]},
+  { title: 'Payments, Deposits & Payouts', icon: CreditCard, articles: [
+    { label: 'How payments work', slug: 'payments-overview' },
+    { label: 'Security deposits', slug: 'deposits-protection' },
+    { label: 'Payout timing & fees', slug: 'payout-timing-fees' },
+  ]},
+  { title: 'Cancellations & Refunds', icon: RefreshCcw, articles: [
+    { label: 'Cancellation policies', slug: 'cancellations-refunds' },
+    { label: 'Requesting a refund', slug: 'requesting-refund' },
+    { label: 'Partial refunds', slug: 'partial-refunds' },
+  ]},
+  { title: 'Insurance, Documents & Verification', icon: FileCheck, articles: [
+    { label: 'Required documents', slug: 'required-documents' },
+    { label: 'Insurance requirements', slug: 'insurance-requirements' },
+    { label: 'Identity verification', slug: 'identity-verification' },
+  ]},
+  { title: 'Delivery, Pickup & Returns', icon: Truck, articles: [
+    { label: 'Pickup & delivery options', slug: 'pickup-delivery-checklist' },
+    { label: 'Return process', slug: 'return-process' },
+    { label: 'Late returns', slug: 'late-returns' },
+  ]},
+  { title: 'Trust & Safety', icon: Shield, articles: [
+    { label: 'Disputes & claims', slug: 'disputes-claims' },
+    { label: 'Prohibited items', slug: 'prohibited-items' },
+    { label: 'Reporting issues', slug: 'reporting-issues' },
+  ]},
+  { title: 'Compliance & Permits', icon: Scale, articles: [
+    { label: 'Mobile vending permits', slug: 'mobile-vending-permits' },
+    { label: 'Health department inspections', slug: 'health-inspections' },
+    { label: 'Commissary requirements', slug: 'commissary-requirements' },
+  ]},
 ];
 
 // Generate FAQ schema data for structured data
@@ -129,6 +168,27 @@ const helpCenterFAQs = [
 ];
 
 const HelpCenter = () => {
+  const [openTopics, setOpenTopics] = useState<string[]>([]);
+
+  const toggleTopic = (title: string) => {
+    setOpenTopics(prev => 
+      prev.includes(title) 
+        ? prev.filter(t => t !== title)
+        : [...prev, title]
+    );
+  };
+
+  const openZendeskChat = () => {
+    trackEventToDb('help_chat_click', 'engagement', { source: 'help_center' });
+    if (window.zE) {
+      try {
+        window.zE('messenger', 'open');
+      } catch (error) {
+        console.debug('Zendesk messenger open:', error);
+      }
+    }
+  };
+
   // JSON-LD for FAQ Page
   const faqSchema = {
     '@context': 'https://schema.org',
@@ -147,7 +207,7 @@ const HelpCenter = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
         title="Help Center - Guides for Food Trucks, Trailers & Ghost Kitchens"
-        description="Practical guides for renting, buying, and maintaining food trucks, trailers, and mobile kitchens. Learn food safety, maintenance, permits, and how to start a ghost kitchen."
+        description="Find answers fast. Guides for renting, buying, listing, and getting paid on Vendibook."
         canonical="/help"
         type="website"
       />
@@ -161,176 +221,105 @@ const HelpCenter = () => {
       <Header />
 
       <main className="flex-1">
-        {/* Hero Section with Search - GRADIENT */}
-        <section className="relative py-16 md:py-24 overflow-hidden">
-          {/* Orange Gradient - #FF5124 based, subtle */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/8 via-[#FF5124]/5 to-amber-200/4" />
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-20 right-20 w-96 h-96 bg-[#FF5124]/6 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#FF5124]/5 rounded-full blur-3xl" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#FF5124]/4 rounded-full blur-3xl" />
-          </div>
+        {/* Section 1: Top Utility Hero */}
+        <section className="bg-muted/30 border-b border-border py-8 md:py-12">
+          <div className="container max-w-6xl">
+            <div className="grid md:grid-cols-[1fr,320px] gap-6 items-start">
+              {/* Left: Search */}
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
+                  Find answers fast.
+                </h1>
+                <p className="text-muted-foreground text-sm mb-4">
+                  Guides for renting, buying, listing, and getting paid on Vendibook.
+                </p>
+                
+                {/* Search Bar */}
+                <HelpCenterSearch />
 
-          <div className="container relative z-10 text-center">
-            <Badge variant="secondary" className="mb-4 bg-gradient-to-r from-vendibook-orange/20 to-amber-400/20 border-vendibook-orange/30">
-              <HelpCircle className="h-3 w-3 mr-1" />
-              Help Center
-            </Badge>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              How can we help?
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-              Search our guides or get instant answers from VendiBot
-            </p>
-            
-            {/* Search Bar */}
-            <HelpCenterSearch />
-
-            {/* Quick Link to FAQ */}
-            <div className="mt-6">
-              <Link 
-                to="/faq" 
-                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                <ArrowRight className="h-4 w-4" />
-                View Frequently Asked Questions
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* AI Assistant Section - NATURAL */}
-        <section className="py-12 md:py-16 bg-background">
-          <div className="container">
-            <div className="max-w-4xl mx-auto">
-              <div className="flex items-center gap-2 mb-6">
-                <Sparkles className="h-5 w-5 text-primary" />
-                <h2 className="text-xl font-bold text-foreground">Ask VendiBot</h2>
-                <Badge variant="secondary" className="text-xs">AI-Powered</Badge>
-              </div>
-              <div className="grid md:grid-cols-2 gap-6">
-                <FAQChatbot />
-                <div className="space-y-4">
-                  <Card className="bg-card">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">Popular Topics</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      {[
-                        'How do rentals work?',
-                        'What documents do I need?',
-                        'How is payment handled?',
-                        'What\'s the cancellation policy?',
-                        'How do I become a host?',
-                      ].map((topic) => (
-                        <Link
-                          key={topic}
-                          to="/contact"
-                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                        >
-                          <ArrowRight className="h-3 w-3" />
-                          {topic}
-                        </Link>
-                      ))}
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-primary/5 border-primary/20">
-                    <CardContent className="pt-6">
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Can't find what you're looking for?
-                      </p>
-                      <Button asChild variant="outline" size="sm">
-                        <Link to="/contact">
-                          Contact Support
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
+                {/* Popular search chips */}
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {popularSearches.map((chip) => (
+                    <Link
+                      key={chip.query}
+                      to={`/faq?q=${encodeURIComponent(chip.query)}`}
+                      className="text-xs px-3 py-1.5 rounded-full bg-background border border-border hover:border-primary hover:text-primary transition-colors"
+                    >
+                      {chip.label}
+                    </Link>
+                  ))}
                 </div>
               </div>
+
+              {/* Right: Support Card */}
+              <Card className="bg-background border-2 border-primary/20">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-base">Need help right now?</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    Chat with our team or submit a request. We'll help you resolve bookings, payouts, documents, and disputes.
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <Button onClick={openZendeskChat} size="sm" className="w-full">
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Chat with Support
+                    </Button>
+                    <Button asChild variant="outline" size="sm" className="w-full">
+                      <Link to="/contact">
+                        <Send className="h-4 w-4 mr-2" />
+                        Submit a Request
+                      </Link>
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    <span>Average reply time: under 5 minutes</span>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
 
-        {/* Featured Articles - GRADIENT */}
-        <section className="relative py-12 md:py-16 overflow-hidden">
-          {/* Orange Gradient - subtle */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/6 via-[#FF5124]/4 to-amber-200/3" />
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-10 left-20 w-72 h-72 bg-[#FF5124]/5 rounded-full blur-3xl" />
-            <div className="absolute bottom-10 right-20 w-80 h-80 bg-[#FF5124]/4 rounded-full blur-3xl animate-pulse" />
-          </div>
-          <div className="container relative z-10">
-            <div className="flex items-center gap-2 mb-8">
-              <Star className="h-5 w-5 text-primary" />
-              <h2 className="text-2xl font-bold text-foreground">Featured Articles</h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {featuredArticles.map((article) => (
-                <Link key={article.id} to={`/help/${article.slug}`}>
-                  <Card className="group h-full hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/50 cursor-pointer">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="p-3 rounded-xl bg-primary/10 text-primary mb-3">
-                          <article.icon className="h-6 w-6" />
-                        </div>
-                        <Badge variant="secondary" className="text-xs">Featured</Badge>
+        {/* Section 2: Intent-Based Start Here Lanes */}
+        <section className="py-8 md:py-10">
+          <div className="container max-w-6xl">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Start here</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {intentLanes.map((lane) => (
+                <Card key={lane.id} className="h-full hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`p-2 rounded-lg ${lane.bgColor}`}>
+                        <lane.icon className={`h-4 w-4 ${lane.color}`} />
                       </div>
-                      <CardTitle className="text-lg leading-tight group-hover:text-primary transition-colors">
-                        {article.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-sm leading-relaxed mb-4">
-                        {article.description}
-                      </CardDescription>
-                      <span className="inline-flex items-center text-sm font-medium text-primary group-hover:underline">
-                        Read article
-                        <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                      </span>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Browse by Category - NATURAL */}
-        <section className="py-12 md:py-16 bg-background">
-          <div className="container">
-            <h2 className="text-2xl font-bold text-foreground mb-8">Browse by Category</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categories.map((category) => (
-                <Card key={category.title} className="h-full">
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                        <category.icon className="h-5 w-5" />
-                      </div>
-                      <CardTitle className="text-lg">{category.title}</CardTitle>
+                      <CardTitle className="text-sm font-semibold">{lane.title}</CardTitle>
                     </div>
-                    <CardDescription className="text-sm mt-2">
-                      {category.description}
-                    </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {category.articles.map((article) => (
-                        <li key={article.slug}>
+                  <CardContent className="space-y-3">
+                    <ul className="space-y-1.5">
+                      {lane.tasks.map((task) => (
+                        <li key={task.slug}>
                           <Link 
-                            to={`/help/${article.slug}`}
-                            className="group flex items-start gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                            to={`/help/${task.slug}`}
+                            className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-start gap-1.5"
                           >
-                            <ArrowRight className="h-4 w-4 mt-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <span className="group-hover:underline">{article.title}</span>
+                            <ArrowRight className="h-3 w-3 mt-0.5 shrink-0" />
+                            <span>{task.label}</span>
                           </Link>
                         </li>
                       ))}
                     </ul>
+                    <Button asChild variant="outline" size="sm" className="w-full h-8 text-xs">
+                      <Link to={lane.cta.href}>
+                        {lane.cta.label}
+                        <ArrowRight className="h-3 w-3 ml-1" />
+                      </Link>
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
@@ -338,71 +327,136 @@ const HelpCenter = () => {
           </div>
         </section>
 
-        {/* Become a Host CTA - GRADIENT */}
-        <section className="relative py-12 md:py-16 overflow-hidden">
-          {/* Orange Gradient - subtle */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/6 via-[#FF5124]/4 to-amber-100/3" />
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-[#FF5124]/5 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-amber-300/4 rounded-full blur-3xl" />
-          </div>
-          <div className="container relative z-10">
-            <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-                Interested in becoming a host?
-              </h2>
-              <p className="text-muted-foreground mb-6">
-                Turn your food truck, trailer, kitchen, or lot into a revenue-generating asset with Vendibook.
-              </p>
-              <Button asChild size="lg">
-                <Link to="/host">
-                  Learn More About Hosting
-                  <ArrowRight className="h-5 w-5 ml-2" />
+        {/* Section 3: Guided Checklists */}
+        <section className="py-8 md:py-10 bg-muted/30">
+          <div className="container max-w-6xl">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Most-used guides</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {guidedChecklists.map((checklist) => (
+                <Link
+                  key={checklist.slug}
+                  to={`/help/${checklist.slug}`}
+                  className="flex items-center gap-3 p-3 bg-background rounded-lg border border-border hover:border-primary/50 hover:shadow-sm transition-all group"
+                >
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <checklist.icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors flex-1">
+                    {checklist.label}
+                  </span>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                 </Link>
-              </Button>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Community & Support - NATURAL */}
-        <section className="py-12 md:py-16 bg-background">
-          <div className="container">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Community Card */}
-              <Card className="bg-gradient-to-br from-secondary/50 to-secondary/20 border-secondary">
-                <CardHeader>
-                  <div className="p-3 rounded-xl bg-primary/10 text-primary w-fit mb-2">
-                    <MessageCircle className="h-6 w-6" />
+        {/* Section 4: Browse All Topics (Collapsed) */}
+        <section className="py-8 md:py-10">
+          <div className="container max-w-6xl">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Browse all topics</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {browseTopics.map((topic) => (
+                <Collapsible
+                  key={topic.title}
+                  open={openTopics.includes(topic.title)}
+                  onOpenChange={() => toggleTopic(topic.title)}
+                >
+                  <Card className="overflow-hidden">
+                    <CollapsibleTrigger className="w-full">
+                      <CardHeader className="py-3 px-4 hover:bg-muted/50 transition-colors cursor-pointer">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <topic.icon className="h-4 w-4 text-primary" />
+                            <CardTitle className="text-sm font-medium">{topic.title}</CardTitle>
+                          </div>
+                          {openTopics.includes(topic.title) ? (
+                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent className="py-2 px-4 border-t border-border">
+                        <ul className="space-y-1.5">
+                          {topic.articles.map((article) => (
+                            <li key={article.slug}>
+                              <Link
+                                to={`/help/${article.slug}`}
+                                className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5 py-1"
+                              >
+                                <ArrowRight className="h-3 w-3" />
+                                {article.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                        <Button
+                          onClick={openZendeskChat}
+                          variant="ghost"
+                          size="sm"
+                          className="w-full mt-2 h-7 text-xs text-muted-foreground hover:text-primary"
+                        >
+                          Still stuck? Chat with support
+                        </Button>
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Section 5: Bottom Conversion CTAs */}
+        <section className="py-8 md:py-10 bg-muted/30 border-t border-border">
+          <div className="container max-w-6xl">
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* For Hosts */}
+              <Card className="bg-background border-2 border-primary/20">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Banknote className="h-5 w-5 text-primary" />
+                    <Badge variant="secondary" className="text-xs">For Hosts</Badge>
                   </div>
-                  <CardTitle className="text-xl">Join the Community</CardTitle>
-                  <CardDescription>
-                    Connect with fellow <Link to="/host" className="text-primary hover:underline">hosts</Link>, share tips, and learn from the community
-                  </CardDescription>
+                  <CardTitle className="text-base">Turn your truck, trailer, kitchen, or lot into income.</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <Button variant="outline" className="w-full sm:w-auto">
-                    Visit Forum
-                    <ArrowRight className="h-4 w-4 ml-2" />
+                <CardContent className="flex flex-wrap gap-2">
+                  <Button asChild size="sm">
+                    <Link to="/list">
+                      List your asset
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/host">
+                      Host playbook
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>
 
-              {/* Support Card */}
-              <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-                <CardHeader>
-                  <div className="p-3 rounded-xl bg-primary/10 text-primary w-fit mb-2">
-                    <HelpCircle className="h-6 w-6" />
+              {/* For Renters/Buyers */}
+              <Card className="bg-background border-2 border-muted">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Package className="h-5 w-5 text-muted-foreground" />
+                    <Badge variant="secondary" className="text-xs">For Renters & Buyers</Badge>
                   </div>
-                  <CardTitle className="text-xl">Still Need Help?</CardTitle>
-                  <CardDescription>
-                    Our support team is here to help you 24/7
-                  </CardDescription>
+                  <CardTitle className="text-base">Ready to book or buy?</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <Button asChild className="w-full sm:w-auto">
-                    <Link to="/contact">
-                      Contact Support
-                      <ArrowRight className="h-4 w-4 ml-2" />
+                <CardContent className="flex flex-wrap gap-2">
+                  <Button asChild size="sm">
+                    <Link to="/search">
+                      Browse listings
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/how-it-works">
+                      How it works
                     </Link>
                   </Button>
                 </CardContent>
@@ -410,6 +464,17 @@ const HelpCenter = () => {
             </div>
           </div>
         </section>
+
+        {/* Sticky Chat Button (Mobile) */}
+        <div className="md:hidden fixed bottom-4 right-4 z-40">
+          <Button
+            onClick={openZendeskChat}
+            size="lg"
+            className="rounded-full h-14 w-14 shadow-lg"
+          >
+            <MessageCircle className="h-6 w-6" />
+          </Button>
+        </div>
       </main>
 
       <Footer />
