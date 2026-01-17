@@ -2,6 +2,12 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
+// Simple in-memory rate limiting (per-IP, resets on function cold start)
+// For production, consider using Upstash Redis for persistent rate limiting
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_MAX = 5; // Max 5 requests per hour per IP
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -13,6 +19,8 @@ interface ContactRequest {
   phone: string;
   subject: string;
   message: string;
+  // Honeypot field - should always be empty if submitted by a real user
+  website?: string;
 }
 
 const logStep = (step: string, details?: any) => {
@@ -33,6 +41,33 @@ const escapeHtml = (text: string): string => {
 // Sanitize phone number for tel: links (only allow digits, +, -, spaces, parentheses)
 const sanitizePhone = (phone: string): string => {
   return phone.replace(/[^\d+\-\s()]/g, '');
+};
+
+// Get client IP address from request headers
+const getClientIP = (req: Request): string => {
+  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+         req.headers.get("x-real-ip") ||
+         req.headers.get("cf-connecting-ip") ||
+         "anonymous";
+};
+
+// Check rate limit for the given IP
+const checkRateLimit = (ip: string): { allowed: boolean; remaining: number } => {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  
+  if (!record || now > record.resetTime) {
+    // New record or expired - reset
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return { allowed: true, remaining: RATE_LIMIT_MAX - 1 };
+  }
+  
+  if (record.count >= RATE_LIMIT_MAX) {
+    return { allowed: false, remaining: 0 };
+  }
+  
+  record.count++;
+  return { allowed: true, remaining: RATE_LIMIT_MAX - record.count };
 };
 
 const sendEmail = async (to: string[], subject: string, html: string) => {
@@ -66,8 +101,40 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     logStep("Function started");
+    
+    // Rate limiting check
+    const clientIP = getClientIP(req);
+    const { allowed, remaining } = checkRateLimit(clientIP);
+    
+    if (!allowed) {
+      logStep("Rate limit exceeded", { ip: clientIP });
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Please try again later." }),
+        { 
+          status: 429, 
+          headers: { 
+            "Content-Type": "application/json",
+            "X-RateLimit-Remaining": "0",
+            ...corsHeaders 
+          } 
+        }
+      );
+    }
+    
+    logStep("Rate limit check passed", { ip: clientIP, remaining });
 
-    const { name, email, phone, subject, message }: ContactRequest = await req.json();
+    const { name, email, phone, subject, message, website }: ContactRequest = await req.json();
+    
+    // Honeypot check - if the hidden "website" field is filled, it's likely a bot
+    if (website && website.trim().length > 0) {
+      logStep("Honeypot triggered - bot detected", { ip: clientIP });
+      // Return success to not alert the bot, but don't actually send anything
+      return new Response(
+        JSON.stringify({ success: true }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    
     logStep("Request received", { name, email, subject });
 
     // Validate required fields
@@ -287,7 +354,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     return new Response(
       JSON.stringify({ success: true }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      { 
+        status: 200, 
+        headers: { 
+          "Content-Type": "application/json",
+          "X-RateLimit-Remaining": String(remaining),
+          ...corsHeaders 
+        } 
+      }
     );
   } catch (error: any) {
     logStep("ERROR", { message: error.message });
