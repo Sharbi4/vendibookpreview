@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
-import { ShieldCheck, Loader2, MapPin, Truck, Calculator, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Loader2, MapPin, Truck, Calculator, AlertCircle, CreditCard, Banknote } from 'lucide-react';
 import { CheckoutOverlay } from '@/components/checkout';
 import { FreightInfoCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
@@ -20,6 +20,7 @@ import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 
 interface InquiryFormProps {
   listingId: string;
+  hostId: string;
   priceSale: number | null;
   fulfillmentType?: FulfillmentType;
   deliveryFee?: number | null;
@@ -35,12 +36,16 @@ interface InquiryFormProps {
   widthInches?: number | null;
   heightInches?: number | null;
   freightCategory?: string | null;
+  // Payment options
+  acceptCardPayment?: boolean;
+  acceptCashPayment?: boolean;
 }
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 
 const InquiryForm = ({ 
-  listingId, 
+  listingId,
+  hostId,
   priceSale,
   fulfillmentType = 'pickup',
   deliveryFee,
@@ -54,6 +59,8 @@ const InquiryForm = ({
   widthInches,
   heightInches,
   freightCategory,
+  acceptCardPayment = true,
+  acceptCashPayment = false,
 }: InquiryFormProps) => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
@@ -81,6 +88,20 @@ const InquiryForm = ({
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showCheckoutOverlay, setShowCheckoutOverlay] = useState(false);
   const [addressDebounceTimer, setAddressDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+
+  // Payment method selection
+  type PaymentMethod = 'card' | 'cash';
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(() => {
+    // Default to card if available, otherwise cash
+    if (acceptCardPayment) return 'card';
+    if (acceptCashPayment) return 'cash';
+    return 'card';
+  });
+
+  // Determine available payment options
+  const hasMultiplePaymentOptions = acceptCardPayment && acceptCashPayment;
+  const onlyCardPayment = acceptCardPayment && !acceptCashPayment;
+  const onlyCashPayment = acceptCashPayment && !acceptCardPayment;
 
   const isFreightSellerPaid = vendibookFreightEnabled && freightPayer === 'seller';
   
@@ -200,6 +221,60 @@ const InquiryForm = ({
       return;
     }
 
+    // Handle cash/in-person payment
+    if (paymentMethod === 'cash') {
+      setIsPurchasing(true);
+      try {
+        const isVendibookFreight = fulfillmentSelected === 'vendibook_freight';
+        
+        // Create a sale transaction with pending_cash status
+        const { data: txData, error: txError } = await supabase
+          .from('sale_transactions')
+          .insert({
+            listing_id: listingId,
+            buyer_id: user.id,
+            seller_id: hostId,
+            amount: priceSale,
+            delivery_fee: fulfillmentSelected === 'delivery' ? (deliveryFee || 0) : 0,
+            freight_cost: isVendibookFreight ? freightCost : 0,
+            fulfillment_type: isVendibookFreight ? 'vendibook_freight' : fulfillmentSelected,
+            delivery_address: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryAddress.trim() : null,
+            delivery_instructions: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryInstructions.trim() : null,
+            buyer_name: name.trim(),
+            buyer_email: email.trim(),
+            buyer_phone: phone.trim() || null,
+            status: 'pending_cash',
+            platform_fee: 0,
+            seller_payout: priceSale,
+          })
+          .select('id')
+          .single();
+
+        if (txError) throw txError;
+
+        trackFormSubmitConversion({ form_type: 'purchase_cash', listing_id: listingId });
+
+        toast({
+          title: 'Purchase request submitted!',
+          description: 'The seller will contact you to arrange payment and pickup/delivery.',
+        });
+
+        // Navigate to order tracking or dashboard
+        navigate(`/order-tracking/${txData.id}`);
+      } catch (error) {
+        console.error('Error creating cash purchase:', error);
+        toast({
+          title: 'Purchase Error',
+          description: error instanceof Error ? error.message : 'Failed to submit purchase request',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsPurchasing(false);
+      }
+      return;
+    }
+
+    // Handle card payment (existing flow)
     setIsPurchasing(true);
     setShowCheckoutOverlay(true);
     
@@ -524,6 +599,54 @@ const InquiryForm = ({
         </div>
       </div>
 
+      {/* Payment Method Selection */}
+      {hasMultiplePaymentOptions && (
+        <div className="mb-6">
+          <Label className="text-sm font-medium mb-3 block">
+            How would you like to pay?
+          </Label>
+          <RadioGroup
+            value={paymentMethod}
+            onValueChange={(val) => setPaymentMethod(val as PaymentMethod)}
+            className="space-y-3"
+          >
+            <div className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${
+              paymentMethod === 'card' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+            }`}>
+              <RadioGroupItem value="card" id="payment-card" />
+              <Label htmlFor="payment-card" className="flex items-center gap-2 cursor-pointer flex-1">
+                <CreditCard className="h-4 w-4 text-primary" />
+                <span>Pay with Card</span>
+                <span className="text-xs text-muted-foreground ml-auto">Secure checkout</span>
+              </Label>
+            </div>
+            <div className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${
+              paymentMethod === 'cash' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+            }`}>
+              <RadioGroupItem value="cash" id="payment-cash" />
+              <Label htmlFor="payment-cash" className="flex items-center gap-2 cursor-pointer flex-1">
+                <Banknote className="h-4 w-4 text-emerald-600" />
+                <span>Pay in Person</span>
+                <span className="text-xs text-muted-foreground ml-auto">Cash or check</span>
+              </Label>
+            </div>
+          </RadioGroup>
+        </div>
+      )}
+
+      {/* Cash-only notice */}
+      {onlyCashPayment && (
+        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+          <div className="flex items-center gap-2 mb-2">
+            <Banknote className="h-4 w-4 text-amber-600" />
+            <span className="font-medium text-sm text-amber-800 dark:text-amber-200">Pay in Person Only</span>
+          </div>
+          <p className="text-sm text-amber-700 dark:text-amber-300">
+            This seller only accepts in-person payment (cash or check). You'll arrange payment directly with the seller.
+          </p>
+        </div>
+      )}
+
       {/* Terms Agreement */}
       <div className="flex items-start gap-3 mb-6">
         <Checkbox
@@ -560,10 +683,12 @@ const InquiryForm = ({
       </div>
 
       {/* Trust Badge before submit */}
-      <div className="mb-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-        <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-        <span>Protected by Vendibook</span>
-      </div>
+      {paymentMethod === 'card' && (
+        <div className="mb-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+          <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+          <span>Protected by Vendibook</span>
+        </div>
+      )}
 
       {/* Buy Now Button */}
       <Button 
@@ -577,17 +702,28 @@ const InquiryForm = ({
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             Processing...
           </>
-        ) : user ? (
-          `Buy Now - $${totalPrice.toLocaleString()}`
-        ) : (
+        ) : !user ? (
           'Sign in to Purchase'
+        ) : paymentMethod === 'cash' ? (
+          `Request Purchase - $${totalPrice.toLocaleString()}`
+        ) : (
+          `Buy Now - $${totalPrice.toLocaleString()}`
         )}
       </Button>
 
-      <div className="flex items-center gap-2 justify-center mt-3 text-xs text-muted-foreground">
-        <ShieldCheck className="h-4 w-4 text-emerald-500" />
-        <span>Protected by escrow - funds released after confirmation</span>
-      </div>
+      {paymentMethod === 'card' && (
+        <div className="flex items-center gap-2 justify-center mt-3 text-xs text-muted-foreground">
+          <ShieldCheck className="h-4 w-4 text-emerald-500" />
+          <span>Protected by escrow - funds released after confirmation</span>
+        </div>
+      )}
+
+      {paymentMethod === 'cash' && (
+        <div className="flex items-center gap-2 justify-center mt-3 text-xs text-muted-foreground">
+          <Banknote className="h-4 w-4 text-amber-500" />
+          <span>Seller will contact you to arrange payment</span>
+        </div>
+      )}
 
       {/* Checkout Overlay */}
       <CheckoutOverlay isVisible={showCheckoutOverlay} />

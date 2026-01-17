@@ -240,19 +240,22 @@ const ListingDetail = () => {
               ) : (
                 <InquiryForm
                   listingId={listing.id}
+                  hostId={listing.host_id}
                   priceSale={listing.price_sale}
                   fulfillmentType={listing.fulfillment_type}
                   deliveryFee={listing.delivery_fee}
                   deliveryRadiusMiles={listing.delivery_radius_miles}
                   pickupLocation={listing.pickup_location_text || listing.address}
-                  vendibookFreightEnabled={(listing as any).vendibook_freight_enabled || false}
-                  freightPayer={((listing as any).freight_payer === 'seller' ? 'seller' : 'buyer') as 'buyer' | 'seller'}
+                  vendibookFreightEnabled={listing.vendibook_freight_enabled || false}
+                  freightPayer={(listing.freight_payer === 'seller' ? 'seller' : 'buyer') as 'buyer' | 'seller'}
                   originAddress={listing.address}
-                  weightLbs={(listing as any).weight_lbs}
-                  lengthInches={(listing as any).length_inches}
-                  widthInches={(listing as any).width_inches}
-                  heightInches={(listing as any).height_inches}
-                  freightCategory={(listing as any).freight_category}
+                  weightLbs={listing.weight_lbs}
+                  lengthInches={listing.length_inches}
+                  widthInches={listing.width_inches}
+                  heightInches={listing.height_inches}
+                  freightCategory={listing.freight_category}
+                  acceptCardPayment={listing.accept_card_payment ?? true}
+                  acceptCashPayment={listing.accept_cash_payment ?? false}
                 />
               )}
             </div>
