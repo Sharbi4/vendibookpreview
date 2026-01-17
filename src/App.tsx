@@ -75,6 +75,11 @@ import {
   DallasListFoodTruck,
   DallasListFoodTrailer,
   DallasListVendorLot,
+  PhoenixList,
+  PhoenixBrowse,
+  PhoenixListFoodTruck,
+  PhoenixListFoodTrailer,
+  PhoenixListVendorLot,
 } from "./pages/city";
 
 const queryClient = new QueryClient();
@@ -166,6 +171,11 @@ const AnimatedRoutes = () => {
           <Route path="/dallas/list-food-truck" element={<PageTransition><DallasListFoodTruck /></PageTransition>} />
           <Route path="/dallas/list-food-trailer" element={<PageTransition><DallasListFoodTrailer /></PageTransition>} />
           <Route path="/dallas/list-vendor-lot" element={<PageTransition><DallasListVendorLot /></PageTransition>} />
+          <Route path="/phoenix/list" element={<PageTransition><PhoenixList /></PageTransition>} />
+          <Route path="/phoenix/browse" element={<PageTransition><PhoenixBrowse /></PageTransition>} />
+          <Route path="/phoenix/list-food-truck" element={<PageTransition><PhoenixListFoodTruck /></PageTransition>} />
+          <Route path="/phoenix/list-food-trailer" element={<PageTransition><PhoenixListFoodTrailer /></PageTransition>} />
+          <Route path="/phoenix/list-vendor-lot" element={<PageTransition><PhoenixListVendorLot /></PageTransition>} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
