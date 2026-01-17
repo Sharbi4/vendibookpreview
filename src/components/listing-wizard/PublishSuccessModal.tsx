@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Check, ExternalLink, Share2, MapPin } from 'lucide-react';
+import { Check, ExternalLink, Share2, MapPin, Facebook, Twitter, Linkedin, Link2, MessageCircle } from 'lucide-react';
 import { CATEGORY_LABELS, MODE_LABELS } from '@/types/listing';
+import { useToast } from '@/hooks/use-toast';
 
 interface PublishSuccessModalProps {
   open: boolean;
@@ -29,6 +30,8 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
   onViewListing,
 }) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [showShareOptions, setShowShareOptions] = useState(false);
 
   if (!listing) return null;
   
@@ -43,6 +46,46 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
 
   const categoryLabel = CATEGORY_LABELS[listing.category as keyof typeof CATEGORY_LABELS] || listing.category;
   const modeLabel = MODE_LABELS[listing.mode as keyof typeof MODE_LABELS] || listing.mode;
+  
+  const listingUrl = `${window.location.origin}/listing/${listing.id}`;
+  const shareText = `Check out this ${categoryLabel.toLowerCase()} ${listing.mode === 'rent' ? 'for rent' : 'for sale'} on VendiBook: ${listing.title}`;
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(listingUrl);
+      toast({
+        title: 'Link copied!',
+        description: 'Listing link copied to clipboard.',
+      });
+    } catch {
+      toast({
+        title: 'Failed to copy',
+        description: 'Please copy the link manually.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const shareToSocial = (platform: string) => {
+    let url = '';
+    switch (platform) {
+      case 'facebook':
+        url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(listingUrl)}`;
+        break;
+      case 'twitter':
+        url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(listingUrl)}`;
+        break;
+      case 'linkedin':
+        url = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(listingUrl)}&title=${encodeURIComponent(listing.title)}`;
+        break;
+      case 'whatsapp':
+        url = `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + listingUrl)}`;
+        break;
+    }
+    if (url) {
+      window.open(url, '_blank', 'width=600,height=400');
+    }
+  };
 
   const handleShareKit = () => {
     onOpenChange(false);
@@ -102,30 +145,96 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col gap-2 mt-2">
-          <Button onClick={handleShareKit} className="w-full">
-            <Share2 className="w-4 h-4 mr-2" />
-            Share your listing
-          </Button>
-          <div className="flex gap-2">
+        {/* Social Share Buttons */}
+        {showShareOptions ? (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground text-center">Share on social media</p>
+            <div className="grid grid-cols-4 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => shareToSocial('facebook')}
+                className="flex flex-col items-center gap-1 h-auto py-3"
+              >
+                <Facebook className="w-5 h-5 text-[#1877F2]" />
+                <span className="text-xs">Facebook</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => shareToSocial('twitter')}
+                className="flex flex-col items-center gap-1 h-auto py-3"
+              >
+                <Twitter className="w-5 h-5 text-[#1DA1F2]" />
+                <span className="text-xs">Twitter</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => shareToSocial('linkedin')}
+                className="flex flex-col items-center gap-1 h-auto py-3"
+              >
+                <Linkedin className="w-5 h-5 text-[#0A66C2]" />
+                <span className="text-xs">LinkedIn</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => shareToSocial('whatsapp')}
+                className="flex flex-col items-center gap-1 h-auto py-3"
+              >
+                <MessageCircle className="w-5 h-5 text-[#25D366]" />
+                <span className="text-xs">WhatsApp</span>
+              </Button>
+            </div>
+            
+            {/* Copy Link */}
             <Button
-              variant="outline"
-              onClick={onViewListing}
-              className="flex-1"
+              variant="secondary"
+              onClick={handleCopyLink}
+              className="w-full"
             >
-              <ExternalLink className="w-4 h-4 mr-2" />
-              View Listing
+              <Link2 className="w-4 h-4 mr-2" />
+              Copy Link
             </Button>
+
             <Button
               variant="ghost"
-              onClick={handleDashboard}
-              className="flex-1 text-muted-foreground"
+              onClick={() => setShowShareOptions(false)}
+              className="w-full text-muted-foreground"
             >
-              Dashboard
+              Back
             </Button>
           </div>
-        </div>
+        ) : (
+          /* Action Buttons */
+          <div className="flex flex-col gap-2 mt-2">
+            <Button onClick={() => setShowShareOptions(true)} className="w-full">
+              <Share2 className="w-4 h-4 mr-2" />
+              Share to Social Media
+            </Button>
+            <Button onClick={handleShareKit} variant="secondary" className="w-full">
+              Get Full Share Kit
+            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={onViewListing}
+                className="flex-1"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                View Listing
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={handleDashboard}
+                className="flex-1 text-muted-foreground"
+              >
+                Dashboard
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
