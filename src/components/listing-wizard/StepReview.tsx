@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { MapPin, DollarSign, Tag, Calendar, Check, AlertCircle } from 'lucide-react';
+import { MapPin, DollarSign, Tag, Calendar, Check, AlertCircle, CreditCard } from 'lucide-react';
 import { ListingFormData, CATEGORY_LABELS, MODE_LABELS } from '@/types/listing';
 import { cn } from '@/lib/utils';
 
@@ -144,16 +144,38 @@ export const StepReview: React.FC<StepReviewProps> = ({
 
       {/* Issues */}
       {issues.length > 0 && (
-        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4">
-          <div className="flex items-center gap-2 text-destructive font-medium mb-2">
-            <AlertCircle className="w-5 h-5" />
-            Cannot Publish
-          </div>
-          <ul className="space-y-1 text-sm text-destructive/80">
-            {issues.map((issue, i) => (
-              <li key={i}>• {issue}</li>
-            ))}
-          </ul>
+        <div className="space-y-3">
+          {/* Stripe-specific messaging */}
+          {!isStripeConnected && (
+            <div className="p-4 rounded-xl border-2 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
+              <div className="flex items-start gap-3">
+                <CreditCard className="w-5 h-5 text-amber-600 mt-0.5" />
+                <div>
+                  <p className="font-medium text-amber-800 dark:text-amber-200">
+                    Connect Stripe to get paid
+                  </p>
+                  <p className="text-sm text-amber-700 dark:text-amber-300 mt-0.5">
+                    To go live and receive payments, connect your Stripe account.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Other issues */}
+          {issues.filter(i => i !== 'Stripe account not connected').length > 0 && (
+            <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4">
+              <div className="flex items-center gap-2 text-destructive font-medium mb-2">
+                <AlertCircle className="w-5 h-5" />
+                Cannot Publish
+              </div>
+              <ul className="space-y-1 text-sm text-destructive/80">
+                {issues.filter(i => i !== 'Stripe account not connected').map((issue, i) => (
+                  <li key={i}>• {issue}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 
