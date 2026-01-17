@@ -89,6 +89,16 @@ const InquiryForm = ({
   const [showCheckoutOverlay, setShowCheckoutOverlay] = useState(false);
   const [addressDebounceTimer, setAddressDebounceTimer] = useState<NodeJS.Timeout | null>(null);
 
+  // Inline validation errors
+  const [fieldErrors, setFieldErrors] = useState<{
+    name?: string;
+    email?: string;
+    phone?: string;
+    deliveryAddress?: string;
+    terms?: string;
+  }>({});
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
+
   // Payment method selection
   type PaymentMethod = 'card' | 'cash';
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(() => {
@@ -192,23 +202,102 @@ const InquiryForm = ({
 
   // RFC 5322 compliant email regex for strict validation
   const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+  const phoneRegex = /^[\d\s\-\(\)\+]{10,}$/;
+
+  // Individual field validators
+  const validateName = (value: string): string | undefined => {
+    if (!value.trim()) return 'Full name is required';
+    if (value.trim().length < 2) return 'Name must be at least 2 characters';
+    return undefined;
+  };
+
+  const validateEmail = (value: string): string | undefined => {
+    if (!value.trim()) return 'Email is required';
+    if (!emailRegex.test(value.trim())) return 'Please enter a valid email address';
+    return undefined;
+  };
+
+  const validatePhone = (value: string): string | undefined => {
+    if (!value.trim()) return 'Phone number is required';
+    if (!phoneRegex.test(value.trim())) return 'Please enter a valid phone number (at least 10 digits)';
+    return undefined;
+  };
+
+  const validateDeliveryAddress = (value: string): string | undefined => {
+    if (fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight') {
+      if (!value.trim()) return 'Delivery address is required';
+      if (fulfillmentSelected === 'vendibook_freight' && !isAddressComplete) {
+        return 'Please select a complete address with street, city, state, and ZIP code';
+      }
+    }
+    return undefined;
+  };
+
+  // Handle field blur to mark as touched and validate
+  const handleFieldBlur = (fieldName: string) => {
+    setTouchedFields(prev => new Set(prev).add(fieldName));
+    validateField(fieldName);
+  };
+
+  // Validate a single field and update errors
+  const validateField = (fieldName: string) => {
+    let error: string | undefined;
+    
+    switch (fieldName) {
+      case 'name':
+        error = validateName(name);
+        break;
+      case 'email':
+        error = validateEmail(email);
+        break;
+      case 'phone':
+        error = validatePhone(phone);
+        break;
+      case 'deliveryAddress':
+        error = validateDeliveryAddress(deliveryAddress);
+        break;
+    }
+    
+    setFieldErrors(prev => ({
+      ...prev,
+      [fieldName]: error
+    }));
+    
+    return error;
+  };
+
+  // Validate field on change if already touched
+  const handleFieldChange = (fieldName: string, value: string, setter: (val: string) => void) => {
+    setter(value);
+    if (touchedFields.has(fieldName)) {
+      // Delay validation slightly for better UX
+      setTimeout(() => validateField(fieldName), 100);
+    }
+  };
 
   const validateForm = (): string | null => {
-    if (!name.trim()) return 'Please enter your name';
-    if (!email.trim()) return 'Please enter your email';
-    if (!emailRegex.test(email.trim())) {
-      return 'Please enter a valid email address';
-    }
-    if (!phone.trim()) return 'Please enter your phone number';
-    if (!/^[\d\s\-\(\)\+]{10,}$/.test(phone.trim())) {
-      return 'Please enter a valid phone number (at least 10 digits)';
-    }
-    if ((fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight') && !deliveryAddress.trim()) {
-      return 'Please enter a delivery address';
-    }
-    if (fulfillmentSelected === 'vendibook_freight' && !isAddressComplete) {
-      return 'Please select a complete address with street, city, state, and ZIP code';
-    }
+    // Validate all fields and collect errors
+    const nameError = validateName(name);
+    const emailError = validateEmail(email);
+    const phoneError = validatePhone(phone);
+    const addressError = validateDeliveryAddress(deliveryAddress);
+    
+    // Update all field errors
+    setFieldErrors({
+      name: nameError,
+      email: emailError,
+      phone: phoneError,
+      deliveryAddress: addressError,
+      terms: !agreedToTerms ? 'You must agree to the Terms of Service' : undefined
+    });
+    
+    // Mark all fields as touched
+    setTouchedFields(new Set(['name', 'email', 'phone', 'deliveryAddress', 'terms']));
+    
+    if (nameError) return nameError;
+    if (emailError) return emailError;
+    if (phoneError) return phoneError;
+    if (addressError) return addressError;
     if (!agreedToTerms) return 'Please agree to the Terms of Service';
     return null;
   };
@@ -583,29 +672,45 @@ const InquiryForm = ({
         
         <div>
           <Label htmlFor="buyerName" className="text-sm text-muted-foreground mb-1 block">
-            Full Name *
+            Full Name <span className="text-destructive">*</span>
           </Label>
           <Input
             id="buyerName"
             placeholder="Your name"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => handleFieldChange('name', e.target.value, setName)}
+            onBlur={() => handleFieldBlur('name')}
+            className={touchedFields.has('name') && fieldErrors.name ? 'border-destructive focus-visible:ring-destructive' : ''}
             required
           />
+          {touchedFields.has('name') && fieldErrors.name && (
+            <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {fieldErrors.name}
+            </p>
+          )}
         </div>
         
         <div>
           <Label htmlFor="buyerEmail" className="text-sm text-muted-foreground mb-1 block">
-            Email *
+            Email <span className="text-destructive">*</span>
           </Label>
           <Input
             id="buyerEmail"
             type="email"
             placeholder="Your email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => handleFieldChange('email', e.target.value, setEmail)}
+            onBlur={() => handleFieldBlur('email')}
+            className={touchedFields.has('email') && fieldErrors.email ? 'border-destructive focus-visible:ring-destructive' : ''}
             required
           />
+          {touchedFields.has('email') && fieldErrors.email && (
+            <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {fieldErrors.email}
+            </p>
+          )}
         </div>
         
         <div>
@@ -617,9 +722,17 @@ const InquiryForm = ({
             type="tel"
             placeholder="(555) 123-4567"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => handleFieldChange('phone', e.target.value, setPhone)}
+            onBlur={() => handleFieldBlur('phone')}
+            className={touchedFields.has('phone') && fieldErrors.phone ? 'border-destructive focus-visible:ring-destructive' : ''}
             required
           />
+          {touchedFields.has('phone') && fieldErrors.phone && (
+            <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {fieldErrors.phone}
+            </p>
+          )}
         </div>
       </div>
 
