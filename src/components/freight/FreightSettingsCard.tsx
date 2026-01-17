@@ -109,6 +109,13 @@ export const FreightSettingsCard: React.FC<FreightSettingsCardProps> = ({
             </div>
           </RadioGroup>
 
+          {/* Pay in person note */}
+          <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+            <p className="text-xs text-emerald-700 dark:text-emerald-300">
+              <strong>Tip:</strong> Freight can be charged separately even if you only accept "Pay in Person" for the item. The buyer pays freight online, and you collect payment for the item in person.
+            </p>
+          </div>
+
           {/* Truth statement */}
           <p className="text-xs text-muted-foreground italic pt-2">
             Vendibook is the only freight facilitator. We coordinate delivery through a third-party carrier.
