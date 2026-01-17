@@ -388,6 +388,37 @@ export const trackActivationRouted = (path: 'supply' | 'demand'): void => {
   });
 };
 
+// Cities page events
+export const trackCitiesPageViewed = (): void => {
+  trackEvent({
+    category: 'Discovery',
+    action: 'cities_page_viewed',
+  });
+};
+
+export const trackCityCardBrowseClicked = (city: string): void => {
+  trackEvent({
+    category: 'Discovery',
+    action: 'city_card_browse_clicked',
+    label: city,
+  });
+};
+
+export const trackCityCardListClicked = (city: string): void => {
+  trackEvent({
+    category: 'Discovery',
+    action: 'city_card_list_clicked',
+    label: city,
+  });
+};
+
+export const trackFooterCitiesClicked = (): void => {
+  trackEvent({
+    category: 'Discovery',
+    action: 'footer_cities_clicked',
+  });
+};
+
 // Generic analytics exports for other parts of the app
 export { trackEvent };
 export type { AnalyticsEvent };

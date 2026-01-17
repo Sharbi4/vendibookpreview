@@ -1,9 +1,10 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { ChevronDown, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import { StripeLogo } from '@/components/ui/StripeLogo';
 import { cn } from '@/lib/utils';
+import { trackFooterCitiesClicked } from '@/lib/analytics';
 
 interface FooterSection {
   title: string;
@@ -23,6 +24,7 @@ const footerSections: FooterSection[] = [
     title: 'Browse',
     links: [
       { label: 'All Listings', href: '/search' },
+      { label: 'Browse by City', href: '/cities' },
       { label: 'Food Trucks', href: '/search?category=food_truck' },
       { label: 'Food Trailers', href: '/search?category=food_trailer' },
       { label: 'Ghost Kitchens', href: '/search?category=ghost_kitchen' },
@@ -106,6 +108,11 @@ const FooterAccordion = ({ section }: { section: FooterSection }) => {
               <Link
                 to={link.href}
                 className="hover:text-background transition-colors inline-block py-1 md:py-0"
+                onClick={() => {
+                  if (link.href === '/cities') {
+                    trackFooterCitiesClicked();
+                  }
+                }}
               >
                 {link.label}
               </Link>

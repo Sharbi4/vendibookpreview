@@ -57,6 +57,7 @@ const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const VendiAISuite = lazy(() => import("./pages/VendiAISuite"));
 const Browse = lazy(() => import("./pages/Browse"));
 const ListingPublished = lazy(() => import("./pages/ListingPublished"));
+const Cities = lazy(() => import("./pages/Cities"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // City landing pages - direct imports since they're lightweight wrappers
@@ -156,6 +157,9 @@ const AnimatedRoutes = () => {
           
           {/* SEO article page - separate purpose from tools hub */}
           <Route path="/vendi-ai-suite" element={<PageTransition><VendiAISuite /></PageTransition>} />
+          
+          {/* Cities hub page */}
+          <Route path="/cities" element={<PageTransition><Cities /></PageTransition>} />
           
           {/* City landing pages */}
           <Route path="/houston/list" element={<PageTransition><HoustonList /></PageTransition>} />
