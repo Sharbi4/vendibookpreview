@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Check, ExternalLink, Share2, MapPin, Facebook, Twitter, Linkedin, Link2, MessageCircle } from 'lucide-react';
 import { CATEGORY_LABELS, MODE_LABELS } from '@/types/listing';
 import { useToast } from '@/hooks/use-toast';
+import confetti from 'canvas-confetti';
 
 interface PublishSuccessModalProps {
   open: boolean;
@@ -23,6 +24,34 @@ interface PublishSuccessModalProps {
   onViewListing: () => void;
 }
 
+const fireConfetti = () => {
+  // First burst - left side
+  confetti({
+    particleCount: 80,
+    spread: 70,
+    origin: { x: 0.2, y: 0.6 },
+    colors: ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444'],
+  });
+
+  // Second burst - right side
+  confetti({
+    particleCount: 80,
+    spread: 70,
+    origin: { x: 0.8, y: 0.6 },
+    colors: ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444'],
+  });
+
+  // Delayed center burst
+  setTimeout(() => {
+    confetti({
+      particleCount: 100,
+      spread: 100,
+      origin: { x: 0.5, y: 0.5 },
+      colors: ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444'],
+    });
+  }, 200);
+};
+
 export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
   open,
   onOpenChange,
@@ -32,6 +61,23 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showShareOptions, setShowShareOptions] = useState(false);
+  const [hasConfettiFired, setHasConfettiFired] = useState(false);
+
+  // Fire confetti when modal opens
+  useEffect(() => {
+    if (open && listing && !hasConfettiFired) {
+      // Small delay to let modal render first
+      const timer = setTimeout(() => {
+        fireConfetti();
+        setHasConfettiFired(true);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+    // Reset when modal closes
+    if (!open) {
+      setHasConfettiFired(false);
+    }
+  }, [open, listing, hasConfettiFired]);
 
   if (!listing) return null;
   
