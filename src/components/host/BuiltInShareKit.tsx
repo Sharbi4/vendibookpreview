@@ -1,18 +1,9 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
-import {
-  Copy,
-  Download,
-  Link2,
-  Check,
-  Eye,
-  MousePointerClick,
-  MessageSquare,
-} from 'lucide-react';
+import { Link2, Check, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Platform icons as simple SVG components (monochrome)
@@ -40,66 +31,28 @@ const XIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const TEMPLATES = {
-  short: (title: string, city: string) =>
-    `Now available on Vendibook: ${title} in ${city}. Check dates + request to book here: [Short Link]`,
-  long: (assetType: string) =>
-    `Hosting my ${assetType} on Vendibook. Verified renters, secure payments, and flexible pickup/delivery. View availability + request to book: [Short Link]`,
-};
-
-const ASSET_TILES = [
-  { id: 'square', label: 'Square Post (1:1)', description: 'Perfect for feed posts' },
-  { id: 'story', label: 'Story/Reel (9:16)', description: 'Vertical format' },
-  { id: 'flyer', label: 'Flyer (PDF)', description: 'Printable asset' },
-];
-
 const BuiltInShareKit = () => {
-  const [captionTemplate, setCaptionTemplate] = useState<'short' | 'long'>('short');
-  const [caption, setCaption] = useState(TEMPLATES.short('[Your Listing Title]', '[City]'));
   const [copiedLink, setCopiedLink] = useState(false);
-  const [copiedCaption, setCopiedCaption] = useState(false);
 
-  // Demo placeholder values
-  const demoTitle = 'Your Listing Title';
-  const demoCity = 'Los Angeles';
-  const demoAssetType = 'Food Truck';
-
-  const handleTemplateChange = (template: 'short' | 'long') => {
-    setCaptionTemplate(template);
-    if (template === 'short') {
-      setCaption(TEMPLATES.short(demoTitle, demoCity));
-    } else {
-      setCaption(TEMPLATES.long(demoAssetType));
-    }
-  };
+  const listingUrl = 'https://vendibook.com/listing/your-listing';
 
   const handleCopyLink = async () => {
-    await navigator.clipboard.writeText('https://vendibook.com/listing/your-listing');
+    await navigator.clipboard.writeText(listingUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
     toast({ title: 'Link copied!' });
     trackEventToDb('copy_link', 'share_kit');
   };
 
-  const handleCopyCaption = async () => {
-    await navigator.clipboard.writeText(caption);
-    setCopiedCaption(true);
-    setTimeout(() => setCopiedCaption(false), 2000);
-    toast({ title: 'Caption copied!' });
-    trackEventToDb('copy_caption', 'share_kit');
-  };
-
   const handleShareClick = (platform: string) => {
     trackEventToDb('share_click', 'share_kit', { platform });
-    
+
     // On mobile, try native share
     if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
       navigator.share({
-        title: `${demoTitle} on Vendibook`,
-        text: caption,
-        url: 'https://vendibook.com/listing/your-listing',
+        title: 'Check out my listing on Vendibook',
+        url: listingUrl,
       }).catch(() => {
-        // Fallback to URL if share is cancelled
         openShareUrl(platform);
       });
     } else {
@@ -108,192 +61,101 @@ const BuiltInShareKit = () => {
   };
 
   const openShareUrl = (platform: string) => {
-    const listingUrl = encodeURIComponent('https://vendibook.com/listing/your-listing');
-    const text = encodeURIComponent(caption);
-    
+    const encodedUrl = encodeURIComponent(listingUrl);
+    const text = encodeURIComponent('Check out my listing on Vendibook');
+
     const urls: Record<string, string> = {
       tiktok: 'https://www.tiktok.com/upload',
       instagram: 'https://www.instagram.com/',
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${listingUrl}&quote=${text}`,
-      x: `https://twitter.com/intent/tweet?text=${text}&url=${listingUrl}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+      x: `https://twitter.com/intent/tweet?text=${text}&url=${encodedUrl}`,
     };
-    
+
     window.open(urls[platform], '_blank', 'noopener,noreferrer');
   };
 
-  const handleAssetDownload = (type: string) => {
-    trackEventToDb('asset_download', 'share_kit', { type });
-    toast({ title: `${type} download started`, description: 'Asset will be ready shortly.' });
+  const handleNativeShare = () => {
+    trackEventToDb('share_native', 'share_kit');
+
+    if (navigator.share) {
+      navigator.share({
+        title: 'Check out my listing on Vendibook',
+        url: listingUrl,
+      }).catch(() => {
+        // User cancelled or share failed, fallback to copy
+        handleCopyLink();
+      });
+    } else {
+      handleCopyLink();
+    }
   };
 
   const platformButtons = [
-    { id: 'tiktok', label: 'TikTok', icon: TikTokIcon, hoverColor: 'hover:text-[#000000]' },
+    { id: 'tiktok', label: 'TikTok', icon: TikTokIcon, hoverColor: 'hover:text-[#000000] dark:hover:text-white' },
     { id: 'instagram', label: 'Instagram', icon: InstagramIcon, hoverColor: 'hover:text-[#E4405F]' },
     { id: 'facebook', label: 'Facebook', icon: FacebookIcon, hoverColor: 'hover:text-[#1877F2]' },
-    { id: 'x', label: 'X', icon: XIcon, hoverColor: 'hover:text-[#000000]' },
+    { id: 'x', label: 'X', icon: XIcon, hoverColor: 'hover:text-[#000000] dark:hover:text-white' },
   ];
 
   return (
     <section className="py-14 md:py-20 bg-background">
       <div className="container">
-        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/[0.02] to-transparent max-w-5xl mx-auto overflow-hidden">
-          <CardContent className="p-0">
-            <div className="grid md:grid-cols-2 gap-0">
-              {/* Left: Copy + Actions */}
-              <div className="p-6 md:p-8 space-y-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-foreground mb-2">
-                    Built-in Share Kit
-                  </h2>
-                  <p className="text-muted-foreground">
-                    Share your listing in one tap to get more qualified renters (or buyers).
-                  </p>
-                </div>
+        <Card className="border-l-4 border-l-[#FF5124] border-t border-r border-b border-border bg-gradient-to-r from-[#FF5124]/[0.03] to-transparent max-w-3xl mx-auto">
+          <CardContent className="p-6 md:p-8">
+            {/* Headline + Subhead */}
+            <div className="mb-6">
+              <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">
+                Share your listing to social
+              </h2>
+              <p className="text-muted-foreground">
+                Post to TikTok, Instagram, Facebook, or X to bring in renters and buyers you already trust.
+              </p>
+            </div>
 
-                {/* Platform Share Buttons */}
-                <div className="space-y-3">
-                  <p className="text-sm font-medium text-foreground">Share to</p>
-                  <div className="flex flex-wrap gap-2">
-                    {platformButtons.map((platform) => (
-                      <button
-                        key={platform.id}
-                        onClick={() => handleShareClick(platform.id)}
-                        className={cn(
-                          "inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border bg-background text-muted-foreground transition-all",
-                          platform.hoverColor,
-                          "hover:border-primary/30 hover:bg-muted/50"
-                        )}
-                      >
-                        <platform.icon className="h-4 w-4" />
-                        <span className="text-sm font-medium">{platform.label}</span>
-                      </button>
-                    ))}
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="h-auto py-2.5"
-                      onClick={handleCopyLink}
-                    >
-                      {copiedLink ? <Check className="h-4 w-4 mr-2" /> : <Link2 className="h-4 w-4 mr-2" />}
-                      {copiedLink ? 'Copied' : 'Copy link'}
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Caption Templates */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-foreground">Caption</p>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => handleTemplateChange('short')}
-                        className={cn(
-                          "px-3 py-1 text-xs rounded-md transition-all",
-                          captionTemplate === 'short'
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground hover:bg-muted/80"
-                        )}
-                      >
-                        Short
-                      </button>
-                      <button
-                        onClick={() => handleTemplateChange('long')}
-                        className={cn(
-                          "px-3 py-1 text-xs rounded-md transition-all",
-                          captionTemplate === 'long'
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground hover:bg-muted/80"
-                        )}
-                      >
-                        Detailed
-                      </button>
-                    </div>
-                  </div>
-                  <Textarea
-                    value={caption}
-                    onChange={(e) => setCaption(e.target.value)}
-                    rows={3}
-                    className="resize-none text-sm"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCopyCaption}
-                    className="w-full"
+            {/* Share buttons */}
+            <div className="space-y-4">
+              <p className="text-sm font-medium text-foreground">Share to</p>
+              <div className="flex flex-wrap items-center gap-2">
+                {platformButtons.map((platform) => (
+                  <button
+                    key={platform.id}
+                    onClick={() => handleShareClick(platform.id)}
+                    className={cn(
+                      "inline-flex items-center justify-center w-11 h-11 rounded-lg border border-border bg-background text-muted-foreground transition-all",
+                      platform.hoverColor,
+                      "hover:border-[#FF5124]/30 hover:bg-muted/50"
+                    )}
+                    aria-label={`Share to ${platform.label}`}
                   >
-                    {copiedCaption ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
-                    {copiedCaption ? 'Caption copied!' : 'Copy caption'}
-                  </Button>
-                </div>
-
-                {/* Quality-first microcopy */}
-                <p className="text-xs text-muted-foreground">
-                  Quality-first marketplace: verified profiles + required documents help keep requests legitimate.
-                </p>
+                    <platform.icon className="h-5 w-5" />
+                  </button>
+                ))}
               </div>
 
-              {/* Right: Preview Mock */}
-              <div className="bg-muted/30 p-6 md:p-8 border-t md:border-t-0 md:border-l border-border space-y-6">
-                {/* Preview Listing Card Mock */}
-                <div className="space-y-3">
-                  <p className="text-sm font-medium text-foreground">Preview</p>
-                  <div className="bg-background rounded-xl border border-border p-4 space-y-3 shadow-sm">
-                    <div className="aspect-[4/3] bg-muted rounded-lg flex items-center justify-center">
-                      <div className="text-center text-muted-foreground">
-                        <div className="w-12 h-12 mx-auto mb-2 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <Eye className="h-5 w-5 text-primary" />
-                        </div>
-                        <p className="text-xs">Your listing photo</p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground text-sm">{demoTitle}</p>
-                      <p className="text-xs text-muted-foreground">{demoCity}, CA</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Asset Tiles */}
-                <div className="space-y-3">
-                  <p className="text-sm font-medium text-foreground">Downloadable assets</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {ASSET_TILES.map((asset) => (
-                      <button
-                        key={asset.id}
-                        onClick={() => handleAssetDownload(asset.label)}
-                        className="group p-3 rounded-lg border border-border bg-background hover:border-primary/30 hover:bg-muted/50 transition-all text-left"
-                      >
-                        <div className="aspect-square bg-muted rounded-md mb-2 flex items-center justify-center">
-                          <Download className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                        </div>
-                        <p className="text-xs font-medium text-foreground truncate">{asset.label}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Mini Metrics Panel */}
-                <div className="space-y-3">
-                  <p className="text-sm font-medium text-foreground">Share performance</p>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-background rounded-lg border border-border p-3 text-center">
-                      <MousePointerClick className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
-                      <p className="text-lg font-semibold text-foreground">—</p>
-                      <p className="text-xs text-muted-foreground">Clicks</p>
-                    </div>
-                    <div className="bg-background rounded-lg border border-border p-3 text-center">
-                      <Eye className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
-                      <p className="text-lg font-semibold text-foreground">—</p>
-                      <p className="text-xs text-muted-foreground">Views</p>
-                    </div>
-                    <div className="bg-background rounded-lg border border-border p-3 text-center">
-                      <MessageSquare className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
-                      <p className="text-lg font-semibold text-foreground">—</p>
-                      <p className="text-xs text-muted-foreground">Inquiries</p>
-                    </div>
-                  </div>
-                </div>
+              {/* Actions */}
+              <div className="flex flex-wrap gap-3 pt-2">
+                <Button onClick={handleCopyLink} className="bg-primary hover:bg-primary/90">
+                  {copiedLink ? <Check className="h-4 w-4 mr-2" /> : <Link2 className="h-4 w-4 mr-2" />}
+                  {copiedLink ? 'Copied!' : 'Copy listing link'}
+                </Button>
+                <Button variant="outline" onClick={handleNativeShare} className="md:hidden">
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
+                </Button>
               </div>
+
+              {/* Helper text */}
+              <p className="text-xs text-muted-foreground pt-2">
+                Sharing to your audience helps you get faster, more qualified requests.
+              </p>
+            </div>
+
+            {/* Quality line */}
+            <div className="mt-6 pt-5 border-t border-border">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Quality-first marketplace:</span>{' '}
+                we review listings and monitor activity to help keep Vendibook high-trust.
+              </p>
             </div>
           </CardContent>
         </Card>
