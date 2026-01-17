@@ -206,20 +206,22 @@ const ListPage: React.FC = () => {
 
         {/* Rotating tips */}
         <motion.div 
-          className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-start gap-3"
+          className="bg-muted/50 rounded-2xl p-4 flex items-start gap-3"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          <Lightbulb className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center shrink-0 shadow-sm">
+            <Lightbulb className="w-5 h-5 text-primary" />
+          </div>
           <div className="flex-1 min-h-[40px]">
-            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">Pro tip</p>
+            <p className="text-sm font-medium">Pro tip</p>
             <motion.p 
               key={currentTip}
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
-              className="text-sm text-amber-700 dark:text-amber-300"
+              className="text-sm text-muted-foreground"
             >
               {tips[currentTip]}
             </motion.p>
