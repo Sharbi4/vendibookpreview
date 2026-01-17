@@ -5,7 +5,7 @@ import ListingCard from '@/components/listing/ListingCard';
 import ListingPreviewDrawer from '@/components/listing/ListingPreviewDrawer';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Navigation, Map, List, Columns } from 'lucide-react';
+import { MapPin, Navigation, Map, List, Columns, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Pagination,
@@ -519,6 +519,21 @@ const FeaturedListings = () => {
               </p>
             </div>
           )
+        )}
+
+        {/* Browse All CTA */}
+        {sortedListings.length > 0 && (
+          <div className="text-center mt-10">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => navigate('/search')}
+              className="gap-2"
+            >
+              Browse All Listings
+              <ArrowRight className="h-5 w-5" />
+            </Button>
+          </div>
         )}
       </div>
 

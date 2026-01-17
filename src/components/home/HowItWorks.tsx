@@ -1,4 +1,4 @@
-import { Search, Calendar, Truck, LucideIcon } from 'lucide-react';
+import { Search, ShieldCheck, CreditCard, HeadphonesIcon, LucideIcon } from 'lucide-react';
 
 interface Step {
   icon: LucideIcon;
@@ -9,49 +9,51 @@ interface Step {
 const steps: Step[] = [
   {
     icon: Search,
-    title: 'Search',
-    description: 'Browse food trucks, trailers, ghost kitchens, and vendor lots in your area.',
+    title: 'Find & Verify',
+    description: 'Browse verified listings near you',
   },
   {
-    icon: Calendar,
-    title: 'Book',
-    description: 'Select your dates, submit a booking request, and wait for host approval.',
+    icon: ShieldCheck,
+    title: 'Book or Buy',
+    description: 'Submit a request or purchase instantly',
   },
   {
-    icon: Truck,
-    title: 'Launch',
-    description: 'Pick up your rental or access your space and start your mobile food business.',
+    icon: CreditCard,
+    title: 'Pay Securely',
+    description: 'Funds held in escrow until complete',
+  },
+  {
+    icon: HeadphonesIcon,
+    title: 'Get Support',
+    description: '24/7 dispute resolution if needed',
   },
 ];
 
 const HowItWorks = () => {
   return (
-    <section className="py-16 md:py-20 bg-background">
-      {/* NATURAL Section - Clean background */}
-      <div className="container relative z-10">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-            How Vendibook Works
+    <section className="py-12 md:py-16 bg-muted/30">
+      <div className="container max-w-5xl mx-auto px-4">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+            How It Works
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Get your mobile food business up and running in three simple steps.
+          <p className="text-muted-foreground">
+            From search to support in four simple steps
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {steps.map((step, index) => {
             const Icon = step.icon;
             return (
               <div key={index} className="text-center group">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full 
-                                icon-gradient-container icon-shimmer mb-4 transition-transform duration-300
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full 
+                                bg-primary/10 mb-3 transition-transform duration-300
                                 group-hover:scale-110">
-                  <div className="icon-gradient">
-                    <Icon className="h-8 w-8 text-primary" strokeWidth={1.5} />
-                  </div>
+                  <Icon className="h-6 w-6 text-primary" strokeWidth={1.5} />
                 </div>
-                <div className="text-sm font-medium text-primary mb-2">Step {index + 1}</div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">{step.title}</h3>
+                <div className="text-xs font-medium text-primary mb-1">Step {index + 1}</div>
+                <h3 className="text-base font-semibold text-foreground mb-1">{step.title}</h3>
                 <p className="text-muted-foreground text-sm">{step.description}</p>
               </div>
             );

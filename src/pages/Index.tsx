@@ -8,16 +8,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 // Lazy load below-the-fold components for faster initial load
 const FeaturedListings = lazy(() => import('@/components/home/FeaturedListings'));
-const CategoryCarousels = lazy(() => import('@/components/home/CategoryCarousels'));
 const HowItWorks = lazy(() => import('@/components/home/HowItWorks'));
-const NewsletterSection = lazy(() => import('@/components/newsletter/NewsletterSection'));
-const NewsletterPopup = lazy(() => import('@/components/newsletter/NewsletterPopup'));
-const TrustSafetySection = lazy(() => import('@/components/trust/TrustSafetySection'));
-const AIToolsSection = lazy(() => import('@/components/home/AIToolsSection'));
-const HelpCenterPreview = lazy(() => import('@/components/home/HelpCenterPreview'));
+const SupplySection = lazy(() => import('@/components/home/SupplySection'));
 const ReviewsSection = lazy(() => import('@/components/home/ReviewsSection'));
-const PaymentsSection = lazy(() => import('@/components/home/PaymentsSection'));
-const VendorLotsSection = lazy(() => import('@/components/home/VendorLotsSection'));
+const CategoryCarousels = lazy(() => import('@/components/home/CategoryCarousels'));
+const FinalCTA = lazy(() => import('@/components/home/FinalCTA'));
 
 // Minimal loading fallback for lazy sections
 const SectionSkeleton = () => (
@@ -50,19 +45,27 @@ const Index = () => {
       <Header />
       
       <main className="flex-1">
+        {/* 1. Hero - above the fold */}
         <Hero />
+        
         <Suspense fallback={<SectionSkeleton />}>
+          {/* 2. Listings Grid (Demand) */}
           <FeaturedListings />
-          <CategoryCarousels />
-          <ReviewsSection />
-          <TrustSafetySection />
-          <PaymentsSection />
-          <AIToolsSection />
-          <VendorLotsSection />
-          <HelpCenterPreview />
+          
+          {/* 3. How It Works (4 steps, lightweight) */}
           <HowItWorks />
-          <NewsletterSection />
-          <NewsletterPopup />
+          
+          {/* 4. Supply Section (Owners/Hosts + AI tools callout) */}
+          <SupplySection />
+          
+          {/* 5. Social Proof */}
+          <ReviewsSection />
+          
+          {/* 6. SEO Lists - Browse by Category */}
+          <CategoryCarousels />
+          
+          {/* 7. Final CTA */}
+          <FinalCTA />
         </Suspense>
       </main>
 

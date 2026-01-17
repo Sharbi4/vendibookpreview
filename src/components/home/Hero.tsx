@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Search } from 'lucide-react';
+import { ArrowRight, Search, ShieldCheck, CreditCard, Headphones } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 
@@ -23,7 +23,7 @@ const Hero = () => {
   const parallax3 = scrollY * 0.2;
 
   return (
-    <section className="relative overflow-hidden pt-2 pb-2 mx-4 mt-4 rounded-3xl">
+    <section className="relative overflow-hidden pt-2 pb-6 mx-4 mt-4 rounded-3xl">
       {/* Animated gradient background */}
       <div 
         className="absolute inset-0 bg-gradient-to-br from-vendibook-cream via-vendibook-cream/80 to-primary/5"
@@ -99,21 +99,21 @@ const Hero = () => {
             <img 
               src={vendibookLogo} 
               alt="Vendibook" 
-              className="h-48 md:h-56 w-auto mix-blend-multiply transition-transform duration-300 hover:scale-105 drop-shadow-sm"
+              className="h-44 md:h-52 w-auto mix-blend-multiply transition-transform duration-300 hover:scale-105 drop-shadow-sm"
             />
           </div>
           
           {/* Tagline */}
           <p 
-            className="text-lg md:text-xl text-muted-foreground font-medium -mt-6 md:-mt-8 animate-fade-in"
+            className="text-lg md:text-xl text-muted-foreground font-medium -mt-4 md:-mt-6 animate-fade-in"
             style={{ animationDelay: '0.2s', animationFillMode: 'backwards' }}
           >
-            The Marketplace for Mobile Food Businesses
+            Rent, buy, or sell mobile food assets—with built-in trust
           </p>
 
           {/* CTA Buttons */}
           <div 
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4 animate-fade-in"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6 animate-fade-in"
             style={{ animationDelay: '0.4s', animationFillMode: 'backwards' }}
           >
             <Button
@@ -123,7 +123,7 @@ const Hero = () => {
               className="text-base px-8 py-6"
             >
               <Search className="mr-2 h-5 w-5" />
-              Browse Listings
+              Search Listings
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <Button
@@ -132,8 +132,27 @@ const Hero = () => {
               onClick={() => navigate('/host')}
               className="text-base px-8 py-6 border-2"
             >
-              List Your Asset
+              List an Asset
             </Button>
+          </div>
+
+          {/* Trust badges */}
+          <div 
+            className="flex flex-wrap items-center justify-center gap-6 mt-8 animate-fade-in"
+            style={{ animationDelay: '0.6s', animationFillMode: 'backwards' }}
+          >
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              <span>Verified listings</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <CreditCard className="h-4 w-4 text-primary" />
+              <span>Secure payments</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Headphones className="h-4 w-4 text-primary" />
+              <span>24/7 support</span>
+            </div>
           </div>
         </div>
       </div>
