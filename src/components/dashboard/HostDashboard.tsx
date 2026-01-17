@@ -167,14 +167,14 @@ const HostDashboard = () => {
               <div className="relative overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl p-12 text-center border border-border/50">
                 <div className="absolute inset-0 bg-grid-pattern opacity-5" />
                 <Truck className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h4 className="font-semibold text-foreground text-lg mb-2">No listings yet</h4>
+                <h4 className="font-semibold text-foreground text-lg mb-2">You haven't listed anything yet</h4>
                 <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
                   Create your first listing to start earning on Vendibook.
                 </p>
                 <Button asChild size="lg" className="shadow-lg">
                   <Link to="/create-listing">
                     <Plus className="h-4 w-4 mr-2" />
-                    Create Your First Listing
+                    List Your First Asset
                   </Link>
                 </Button>
               </div>

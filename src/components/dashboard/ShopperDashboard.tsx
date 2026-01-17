@@ -30,7 +30,7 @@ const ShopperDashboard = () => {
             </p>
           </div>
           <Button asChild size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all hover:scale-105">
-            <Link to="/">
+            <Link to="/search">
               <Store className="h-5 w-5 mr-2" />
               Browse Listings
             </Link>
@@ -107,7 +107,7 @@ const ShopperDashboard = () => {
                 Your booking requests waiting for host approval will appear here.
               </p>
               <Button asChild size="lg" className="shadow-lg">
-                <Link to="/">Browse Listings</Link>
+                <Link to="/search">Browse Listings</Link>
               </Button>
             </div>
           ) : (

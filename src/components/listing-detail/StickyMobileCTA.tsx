@@ -72,7 +72,7 @@ export const StickyMobileCTA = ({
 
         {/* CTA Buttons */}
         <div className="flex items-center gap-2">
-          {/* Secondary: Message Host (ghost/demoted) */}
+          {/* Secondary: Ask a Question (ghost/demoted) */}
           {onMessageHost && (
             <Button
               variant="ghost"
@@ -81,7 +81,7 @@ export const StickyMobileCTA = ({
               className="gap-1.5 text-muted-foreground"
             >
               <MessageCircle className="h-4 w-4" />
-              <span className="hidden sm:inline">Message</span>
+              <span className="hidden sm:inline">Ask</span>
             </Button>
           )}
 

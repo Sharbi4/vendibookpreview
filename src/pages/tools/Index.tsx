@@ -99,7 +99,7 @@ const ToolsIndex = () => {
         <Header />
 
         <main className="flex-1">
-          {/* Hero Section */}
+          {/* Hero Section with clear CTA */}
           <section className="py-16 md:py-20 bg-gradient-to-b from-primary/5 to-background">
             <div className="container text-center">
               <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
@@ -110,8 +110,20 @@ const ToolsIndex = () => {
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 leading-tight max-w-3xl mx-auto">
                 Free tools to help you earn more from your mobile food asset
               </h1>
-              <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
+              <p className="text-lg text-muted-foreground mb-6 max-w-xl mx-auto">
                 AI-powered utilities designed specifically for food truck and trailer owners.
+              </p>
+              
+              {/* Primary CTA - Guide users to start with PricePilot */}
+              <Button size="lg" asChild className="shadow-lg">
+                <Link to="/tools/pricepilot">
+                  <DollarSign className="h-5 w-5 mr-2" />
+                  Start with PricePilot
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Link>
+              </Button>
+              <p className="text-sm text-muted-foreground mt-3">
+                Our most popular tool – get data-backed pricing for your asset
               </p>
             </div>
           </section>
@@ -136,7 +148,7 @@ const ToolsIndex = () => {
                       <CardContent className="pt-0">
                         <Button asChild variant="ghost" className="w-full justify-between group-hover:bg-primary/5">
                           <Link to={tool.href}>
-                            Open tool
+                            Try {tool.name}
                             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                           </Link>
                         </Button>

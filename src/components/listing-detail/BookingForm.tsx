@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Loader2, MapPin, Truck, Building, Info, UserCheck, CheckCircle2 } from 'lucide-react';
+import { Calendar, Loader2, MapPin, Truck, Building, Info, UserCheck, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -356,7 +356,7 @@ const BookingForm = ({
 
   return (
     <div data-booking-form className="bg-card border border-border rounded-xl p-6 shadow-card sticky top-24">
-      {/* Price Header */}
+      {/* Price Header with placeholder breakdown hint */}
       <div className="mb-6">
         <div className="flex items-baseline gap-2">
           <span className="text-2xl font-bold text-foreground">
@@ -367,6 +367,12 @@ const BookingForm = ({
         {priceWeekly && (
           <p className="text-sm text-muted-foreground mt-1">
             ${priceWeekly} / week
+          </p>
+        )}
+        {/* Placeholder breakdown hint when no dates selected */}
+        {!startDate && priceDaily && (
+          <p className="text-xs text-muted-foreground mt-2 italic">
+            ${priceDaily}/day × days = total + platform fee
           </p>
         )}
       </div>
@@ -724,6 +730,12 @@ const BookingForm = ({
           </p>
         </div>
       )}
+
+      {/* Trust Badge before submit */}
+      <div className="mb-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+        <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+        <span>Protected by Vendibook</span>
+      </div>
 
       {/* Submit Button */}
       <Button 

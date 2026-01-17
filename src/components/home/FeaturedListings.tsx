@@ -40,33 +40,8 @@ const FeaturedListings = () => {
   const navigate = useNavigate();
   const { apiKey: mapToken, isLoading: isMapLoading, error: mapError } = useGoogleMapsToken();
 
-  // Request user location 10 seconds after page load (after listings are shown)
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if ('geolocation' in navigator && !userLocation && !locationError) {
-        setIsRequestingLocation(true);
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            setUserLocation({
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude
-            });
-            setIsRequestingLocation(false);
-            setSortBy('nearest');
-            setViewMode('split'); // Switch to split view when location is available
-          },
-          (error) => {
-            console.log('Geolocation error:', error.message);
-            setLocationError(error.message);
-            setIsRequestingLocation(false);
-          },
-          { timeout: 10000, maximumAge: 300000 } // 5 min cache
-        );
-      }
-    }, 10000); // Wait 10 seconds before asking for location
-
-    return () => clearTimeout(timeoutId);
-  }, [userLocation, locationError]);
+  // Auto-request location removed - keep only manual "Find nearby" button
+  // This prevents unsolicited location prompts which feel invasive (UX audit item #11)
 
   // Fetch nearby listings from edge function when we have location
   const { data: nearbyData, isLoading: isLoadingNearby } = useQuery({
