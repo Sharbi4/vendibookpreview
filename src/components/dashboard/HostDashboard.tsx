@@ -10,6 +10,7 @@ import SellerSalesSection from './SellerSalesSection';
 import { AIInsightsCard } from './AIInsightsCard';
 import { EnhancedAnalytics } from './EnhancedAnalytics';
 import { RevenueAnalyticsCard } from './RevenueAnalyticsCard';
+import { HostOnboardingCard } from './HostOnboardingCard';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
@@ -70,15 +71,20 @@ const HostDashboard = () => {
         </div>
       </div>
 
-      {/* Stripe Status */}
-      <StripeStatusCard 
-        isConnected={isConnected}
-        hasAccountStarted={hasAccountStarted}
-        isLoading={stripeLoading}
-        isOpeningDashboard={isOpeningDashboard}
-        onConnect={handleConnectStripe}
-        onOpenDashboard={openStripeDashboard}
-      />
+      {/* Host Onboarding Progress Card - Next Best Action */}
+      <HostOnboardingCard />
+
+      {/* Stripe Status - only show if onboarding card is hidden (all steps complete) */}
+      {isConnected && (
+        <StripeStatusCard 
+          isConnected={isConnected}
+          hasAccountStarted={hasAccountStarted}
+          isLoading={stripeLoading}
+          isOpeningDashboard={isOpeningDashboard}
+          onConnect={handleConnectStripe}
+          onOpenDashboard={openStripeDashboard}
+        />
+      )}
 
       {/* AI Insights Section - Now powered by real AI */}
       <AIInsightsCard />

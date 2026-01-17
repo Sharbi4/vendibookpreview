@@ -67,11 +67,12 @@ const HostCard = ({
       </div>
 
       <div className="flex gap-2">
+        {/* Message button demoted to ghost variant to emphasize primary booking CTA */}
         <MessageHostButton 
           listingId={listingId}
           hostId={hostId}
-          variant="outline"
-          className="flex-1"
+          variant="ghost"
+          className="flex-1 text-muted-foreground hover:text-foreground"
         />
         <Button 
           variant="ghost" 

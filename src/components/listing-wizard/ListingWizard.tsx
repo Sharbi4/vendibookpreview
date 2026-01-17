@@ -19,6 +19,7 @@ import { StepPhotos } from './StepPhotos';
 import { StepReview } from './StepReview';
 import { StripeConnectModal } from './StripeConnectModal';
 import { PublishSuccessModal } from './PublishSuccessModal';
+import { StripeConnectBanner } from './StripeConnectBanner';
 
 const STEPS = ['Type', 'Details', 'Location', 'Pricing', 'Documents', 'Photos', 'Review'];
 
@@ -387,6 +388,8 @@ export const ListingWizard: React.FC = () => {
             </button>
             <h1 className="font-semibold">Create Listing</h1>
           </div>
+          {/* Stripe Connect Status Banner - Early awareness */}
+          <StripeConnectBanner className="mb-4" variant="compact" />
           <WizardProgress
             currentStep={currentStep}
             steps={STEPS}

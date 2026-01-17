@@ -246,7 +246,7 @@ const InquiryForm = ({
   };
 
   return (
-    <div className="bg-card border border-border rounded-xl p-6 shadow-card sticky top-24">
+    <div data-booking-form className="bg-card border border-border rounded-xl p-6 shadow-card sticky top-24">
       {/* Price Header */}
       <div className="mb-6">
         <span className="text-2xl font-bold text-foreground">
