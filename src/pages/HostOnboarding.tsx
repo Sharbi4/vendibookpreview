@@ -290,28 +290,6 @@ const HostOnboarding = () => {
                 </p>
               </div>
 
-              {/* Mode Selector */}
-              <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8 max-w-2xl mx-auto">
-                <ModeCard
-                  icon={<Calendar className="h-5 w-5" />}
-                  title="Rent it out"
-                  isSelected={selectedMode === 'rent'}
-                  onClick={() => setSelectedMode('rent')}
-                />
-                <ModeCard
-                  icon={<ShoppingBag className="h-5 w-5" />}
-                  title="Sell it"
-                  isSelected={selectedMode === 'sell'}
-                  onClick={() => setSelectedMode('sell')}
-                />
-                <ModeCard
-                  icon={<Repeat className="h-5 w-5" />}
-                  title="Rent + Sell"
-                  badge="Recommended"
-                  isSelected={selectedMode === 'both'}
-                  onClick={() => setSelectedMode('both')}
-                />
-              </div>
 
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
