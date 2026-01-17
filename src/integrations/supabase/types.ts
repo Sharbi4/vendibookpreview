@@ -14,6 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notes: {
+        Row: {
+          created_at: string
+          created_by: string
+          entity_id: string
+          entity_type: string
+          id: string
+          note: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          note: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          note?: string
+        }
+        Relationships: []
+      }
+      analytics_events: {
+        Row: {
+          city: string | null
+          created_at: string
+          event_category: string | null
+          event_name: string
+          id: string
+          listing_id: string | null
+          metadata: Json | null
+          route: string | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          event_category?: string | null
+          event_name: string
+          id?: string
+          listing_id?: string | null
+          metadata?: Json | null
+          route?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          event_category?: string | null
+          event_name?: string
+          id?: string
+          listing_id?: string | null
+          metadata?: Json | null
+          route?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_events_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       asset_requests: {
         Row: {
           admin_notes: string | null
@@ -215,6 +289,7 @@ export type Database = {
           first_response_at: string | null
           fulfillment_selected: string | null
           host_id: string
+          host_nudge_sent_at: string | null
           host_response: string | null
           id: string
           is_instant_book: boolean | null
@@ -243,6 +318,7 @@ export type Database = {
           first_response_at?: string | null
           fulfillment_selected?: string | null
           host_id: string
+          host_nudge_sent_at?: string | null
           host_response?: string | null
           id?: string
           is_instant_book?: boolean | null
@@ -271,6 +347,7 @@ export type Database = {
           first_response_at?: string | null
           fulfillment_selected?: string | null
           host_id?: string
+          host_nudge_sent_at?: string | null
           host_response?: string | null
           id?: string
           is_instant_book?: boolean | null
@@ -756,6 +833,7 @@ export type Database = {
           avatar_url: string | null
           city: string | null
           created_at: string
+          draft_nudge_sent_at: string | null
           email: string | null
           full_name: string | null
           id: string
@@ -765,6 +843,7 @@ export type Database = {
           state: string | null
           stripe_account_id: string | null
           stripe_identity_session_id: string | null
+          stripe_nudge_sent_at: string | null
           stripe_onboarding_complete: boolean | null
           stripe_onboarding_started_at: string | null
           updated_at: string
@@ -776,6 +855,7 @@ export type Database = {
           avatar_url?: string | null
           city?: string | null
           created_at?: string
+          draft_nudge_sent_at?: string | null
           email?: string | null
           full_name?: string | null
           id: string
@@ -785,6 +865,7 @@ export type Database = {
           state?: string | null
           stripe_account_id?: string | null
           stripe_identity_session_id?: string | null
+          stripe_nudge_sent_at?: string | null
           stripe_onboarding_complete?: boolean | null
           stripe_onboarding_started_at?: string | null
           updated_at?: string
@@ -796,6 +877,7 @@ export type Database = {
           avatar_url?: string | null
           city?: string | null
           created_at?: string
+          draft_nudge_sent_at?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
@@ -805,6 +887,7 @@ export type Database = {
           state?: string | null
           stripe_account_id?: string | null
           stripe_identity_session_id?: string | null
+          stripe_nudge_sent_at?: string | null
           stripe_onboarding_complete?: boolean | null
           stripe_onboarding_started_at?: string | null
           updated_at?: string
@@ -886,6 +969,62 @@ export type Database = {
           },
           {
             foreignKeyName: "reviews_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      risk_flags: {
+        Row: {
+          created_at: string
+          description: string | null
+          flag_type: string
+          id: string
+          listing_id: string | null
+          metadata: Json | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          flag_type: string
+          id?: string
+          listing_id?: string | null
+          metadata?: Json | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          flag_type?: string
+          id?: string
+          listing_id?: string | null
+          metadata?: Json | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_flags_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
