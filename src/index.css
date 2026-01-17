@@ -67,8 +67,26 @@
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-card: 0 2px 8px rgb(0 0 0 / 0.08);
-    --shadow-card-hover: 0 8px 25px rgb(0 0 0 / 0.12);
+    --shadow-card: 0 1px 3px rgb(0 0 0 / 0.06);
+    --shadow-card-hover: 0 4px 12px rgb(0 0 0 / 0.08);
+
+    /* Dashboard Unified Tokens */
+    --dashboard-border: 0 0% 90%;
+    --dashboard-card-bg: 0 0% 100%;
+    --dashboard-section-gap: 1.5rem;
+    
+    /* Status Colors - Subtle Tints */
+    --status-success-bg: 142 76% 97%;
+    --status-success-text: 142 76% 36%;
+    --status-success-border: 142 76% 85%;
+    
+    --status-warning-bg: 38 92% 96%;
+    --status-warning-text: 38 92% 40%;
+    --status-warning-border: 38 92% 80%;
+    
+    --status-info-bg: 214 100% 97%;
+    --status-info-text: 214 100% 40%;
+    --status-info-border: 214 100% 85%;
   }
 
   .dark {

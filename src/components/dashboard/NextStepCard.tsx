@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, CreditCard, FileText, UserCheck, Calendar, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostListings } from '@/hooks/useHostListings';
@@ -40,7 +39,7 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
     {
       id: 'stripe',
       title: 'Connect Stripe to get paid',
-      description: 'Set up payments to start receiving earnings from your listings.',
+      description: 'Set up payments to receive earnings.',
       icon: CreditCard,
       action: {
         label: 'Connect Stripe',
@@ -50,7 +49,7 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
     },
     {
       id: 'bookings',
-      title: `${bookingStats.pending} booking request${bookingStats.pending > 1 ? 's' : ''} need${bookingStats.pending === 1 ? 's' : ''} your response`,
+      title: `${bookingStats.pending} request${bookingStats.pending > 1 ? 's' : ''} awaiting response`,
       description: 'Respond now to avoid missed revenue.',
       icon: Calendar,
       action: {
@@ -62,7 +61,7 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
     {
       id: 'drafts',
       title: `Publish your draft listing${stats.drafts > 1 ? 's' : ''}`,
-      description: `You have ${stats.drafts} unpublished listing${stats.drafts > 1 ? 's' : ''} ready to go live.`,
+      description: `${stats.drafts} unpublished listing${stats.drafts > 1 ? 's' : ''} ready to go live.`,
       icon: FileText,
       action: {
         label: 'Publish Draft',
@@ -73,7 +72,7 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
     {
       id: 'verify',
       title: 'Verify your identity',
-      description: 'Build trust with renters through ID verification.',
+      description: 'Build trust with a verified badge.',
       icon: UserCheck,
       action: {
         label: 'Verify Identity',
@@ -84,7 +83,7 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
     {
       id: 'listing',
       title: 'Create your first listing',
-      description: 'List your asset to start earning on Vendibook.',
+      description: 'Start earning on Vendibook.',
       icon: FileText,
       action: {
         label: 'Create Listing',
@@ -118,11 +117,9 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
   // Loading state
   if (stripeLoading || listingsLoading || bookingsLoading) {
     return (
-      <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-background">
-        <CardContent className="flex items-center justify-center py-6">
-          <Loader2 className="h-5 w-5 animate-spin text-primary" />
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center py-4 rounded-xl bg-card border border-border">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
     );
   }
 
@@ -134,43 +131,41 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
   const Icon = nextStep.icon;
 
   return (
-    <Card className="border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-background shadow-sm">
-      <CardContent className="flex items-center gap-4 py-4 px-5">
-        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center">
-          <Icon className="h-5 w-5 text-primary" />
-        </div>
-        
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-foreground text-sm leading-tight">
-            {nextStep.title}
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-            {nextStep.description}
-          </p>
-        </div>
+    <div className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border ring-1 ring-primary/10">
+      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+        <Icon className="h-5 w-5 text-primary" />
+      </div>
+      
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-foreground text-sm leading-tight">
+          {nextStep.title}
+        </p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {nextStep.description}
+        </p>
+      </div>
 
-        <div className="flex-shrink-0">
-          {nextStep.action.to ? (
-            <Button size="sm" asChild className="gap-1.5">
-              <Link to={nextStep.action.to}>
-                {nextStep.action.label}
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </Button>
-          ) : (
-            <Button 
-              size="sm" 
-              onClick={nextStep.action.onClick}
-              disabled={isConnectingStripe}
-              className="gap-1.5"
-            >
-              {isConnectingStripe ? 'Connecting...' : nextStep.action.label}
-              {!isConnectingStripe && <ArrowRight className="h-3.5 w-3.5" />}
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+      <div className="flex-shrink-0">
+        {nextStep.action.to ? (
+          <Button size="sm" asChild className="gap-1.5">
+            <Link to={nextStep.action.to}>
+              {nextStep.action.label}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
+        ) : (
+          <Button 
+            size="sm" 
+            onClick={nextStep.action.onClick}
+            disabled={isConnectingStripe}
+            className="gap-1.5"
+          >
+            {isConnectingStripe ? 'Connecting...' : nextStep.action.label}
+            {!isConnectingStripe && <ArrowRight className="h-3.5 w-3.5" />}
+          </Button>
+        )}
+      </div>
+    </div>
   );
 };
 

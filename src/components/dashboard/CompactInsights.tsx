@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp, TrendingUp, AlertCircle, Lightbulb, Target, Loader2 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAIInsights, AIInsight } from '@/hooks/useAIInsights';
@@ -14,26 +13,26 @@ export const CompactInsights = () => {
   const getIcon = (type: AIInsight['type']) => {
     switch (type) {
       case 'success':
-        return <TrendingUp className="h-4 w-4 text-emerald-600" />;
+        return <TrendingUp className="h-4 w-4" />;
       case 'warning':
-        return <AlertCircle className="h-4 w-4 text-amber-600" />;
+        return <AlertCircle className="h-4 w-4" />;
       case 'tip':
-        return <Lightbulb className="h-4 w-4 text-blue-600" />;
+        return <Lightbulb className="h-4 w-4" />;
       case 'opportunity':
-        return <Target className="h-4 w-4 text-purple-600" />;
+        return <Target className="h-4 w-4" />;
     }
   };
 
-  const getBgColor = (type: AIInsight['type']) => {
+  const getIconColor = (type: AIInsight['type']) => {
     switch (type) {
       case 'success':
-        return 'bg-emerald-50 dark:bg-emerald-900/20';
+        return 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30';
       case 'warning':
-        return 'bg-amber-50 dark:bg-amber-900/20';
+        return 'text-amber-600 bg-amber-50 dark:bg-amber-900/30';
       case 'tip':
-        return 'bg-blue-50 dark:bg-blue-900/20';
+        return 'text-blue-600 bg-blue-50 dark:bg-blue-900/30';
       case 'opportunity':
-        return 'bg-purple-50 dark:bg-purple-900/20';
+        return 'text-purple-600 bg-purple-50 dark:bg-purple-900/30';
     }
   };
 
@@ -57,16 +56,16 @@ export const CompactInsights = () => {
   const renderInsight = (insight: AIInsight, index: number) => (
     <div
       key={index}
-      className={cn(
-        "flex items-start gap-3 p-3 rounded-lg",
-        getBgColor(insight.type)
-      )}
+      className="flex items-start gap-3 p-3 rounded-lg bg-card border border-border"
     >
-      <div className="flex-shrink-0 mt-0.5">
+      <div className={cn(
+        "flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center",
+        getIconColor(insight.type)
+      )}>
         {getIcon(insight.type)}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground leading-tight">
+        <p className="text-sm font-medium text-foreground leading-snug">
           {insight.title}
         </p>
         {insight.action && (
@@ -85,31 +84,29 @@ export const CompactInsights = () => {
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="border-border/50">
-        <CardContent className="p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <h4 className="text-sm font-medium text-muted-foreground">Recommendations</h4>
-            {hiddenInsights.length > 0 && (
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1">
-                  {isOpen ? 'Show less' : `+${hiddenInsights.length} more`}
-                  {isOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                </Button>
-              </CollapsibleTrigger>
-            )}
-          </div>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-medium text-muted-foreground">Recommendations</h4>
+          {hiddenInsights.length > 0 && (
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground">
+                {isOpen ? 'Show less' : `+${hiddenInsights.length} more`}
+                {isOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              </Button>
+            </CollapsibleTrigger>
+          )}
+        </div>
 
-          {/* Always visible insights */}
-          <div className="space-y-2">
-            {visibleInsights.map((insight, index) => renderInsight(insight, index))}
-          </div>
+        {/* Always visible insights */}
+        <div className="space-y-2">
+          {visibleInsights.map((insight, index) => renderInsight(insight, index))}
+        </div>
 
-          {/* Collapsible additional insights */}
-          <CollapsibleContent className="space-y-2">
-            {hiddenInsights.map((insight, index) => renderInsight(insight, index + 2))}
-          </CollapsibleContent>
-        </CardContent>
-      </Card>
+        {/* Collapsible additional insights */}
+        <CollapsibleContent className="space-y-2">
+          {hiddenInsights.map((insight, index) => renderInsight(insight, index + 2))}
+        </CollapsibleContent>
+      </div>
     </Collapsible>
   );
 };
