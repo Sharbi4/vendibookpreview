@@ -78,25 +78,13 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 }
 
 function calculateFreightCost(
-  distanceMiles: number,
-  lengthInches?: number,
-  widthInches?: number,
-  heightInches?: number,
-  weightLbs?: number
+  distanceMiles: number
 ): { baseCost: number; fuelSurcharge: number; handlingFee: number; totalCost: number } {
-  // Base cost calculation
-  let baseCost = Math.max(
+  // Flat rate: $4.50/mile with minimum charge
+  const baseCost = Math.max(
     FREIGHT_RATES.minimumCharge,
     distanceMiles * FREIGHT_RATES.baseRatePerMile
   );
-
-  // Add size/weight surcharge if applicable
-  if (weightLbs && weightLbs > 500) {
-    baseCost *= 1.25;
-  }
-  if (lengthInches && lengthInches > 120) {
-    baseCost *= 1.15;
-  }
 
   const fuelSurcharge = baseCost * FREIGHT_RATES.fuelSurchargePercent;
   const handlingFee = FREIGHT_RATES.handlingFee;
@@ -187,7 +175,7 @@ const handler = async (req: Request): Promise<Response> => {
     logStep("Calculated distance", { distanceMiles });
 
     // Calculate freight cost
-    const costs = calculateFreightCost(distanceMiles, lengthInches, widthInches, heightInches, weightLbs);
+    const costs = calculateFreightCost(distanceMiles);
     logStep("Calculated costs", costs);
 
     // Estimate transit time
