@@ -13,8 +13,8 @@ import { LocationSearchInput } from '@/components/search/LocationSearchInput';
 import { RadiusFilter } from '@/components/search/RadiusFilter';
 import SearchResultsMap from '@/components/search/SearchResultsMap';
 import NoResultsAlert from '@/components/search/NoResultsAlert';
-import NewsletterSection from '@/components/newsletter/NewsletterSection';
-// AI Features popup removed - it interrupts demand journey (UX audit item #4)
+import InlineSubscribe from '@/components/search/InlineSubscribe';
+import RequestAssetCTA from '@/components/search/RequestAssetCTA';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -561,42 +561,38 @@ const Search = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      {/* AI Features popup removed - it interrupts demand journey (UX audit item #4) */}
       
       <main className="flex-1">
-        {/* Search Header */}
-        <div className="bg-gradient-to-b from-primary/5 to-background border-b border-border">
-          <div className="container py-8">
-            <h1 className="text-3xl font-bold text-foreground mb-6">
-              Find Your Perfect Asset
-            </h1>
-            
-            {/* Search Bar */}
-            <div className="flex gap-3">
+        {/* Simplified Search Header - Max 2 rows above fold */}
+        <div className="border-b border-border bg-background">
+          <div className="container py-4">
+            {/* Row 1: Search + Filters */}
+            <div className="flex gap-2">
               <div className="relative flex-1">
-                <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Search food trucks, trailers, kitchens..."
+                  placeholder="Search trucks, trailers, kitchens..."
                   value={searchQuery}
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-12 h-12 text-base rounded-full border-2 focus:border-primary"
+                  className="pl-10 h-10 text-sm rounded-lg border focus:border-primary"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => handleSearch('')}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
                     <X className="h-4 w-4" />
                   </button>
                 )}
               </div>
               
-              {/* Filter Button (Mobile) */}
+              {/* Filter Button */}
               <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="lg" className="md:hidden rounded-full relative">
-                    <SlidersHorizontal className="h-5 w-5" />
+                  <Button variant="outline" size="default" className="rounded-lg relative shrink-0">
+                    <SlidersHorizontal className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Filters</span>
                     {activeFiltersCount > 0 && (
                       <span className="absolute -top-1 -right-1 h-5 w-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
                         {activeFiltersCount}
@@ -637,67 +633,39 @@ const Search = () => {
               </Sheet>
             </div>
 
-            {/* Quick Filters */}
-            <div className="flex flex-wrap gap-2 mt-4">
-              <Select value={mode} onValueChange={handleModeChange}>
-                <SelectTrigger className="w-[140px] rounded-full">
-                  <SelectValue placeholder="All Types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="rent">For Rent</SelectItem>
-                  <SelectItem value="sale">For Sale</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={category} onValueChange={handleCategoryChange}>
-                <SelectTrigger className="w-[160px] rounded-full">
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
+            {/* Row 2: Popular chips - scrollable, max 5 */}
+            <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              <span className="text-xs font-medium text-muted-foreground whitespace-nowrap shrink-0">Popular:</span>
+              {POPULAR_FEATURES.slice(0, 5).map((feature) => {
+                const IconComponent = feature.icon;
+                const isSelected = selectedAmenities.includes(feature.id);
+                return (
+                  <button
+                    key={feature.id}
+                    onClick={() => toggleAmenity(feature.id)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap shrink-0",
+                      isSelected 
+                        ? "bg-primary text-primary-foreground" 
+                        : "bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+                    )}
+                  >
+                    <IconComponent className="h-3 w-3" />
+                    {feature.label}
+                  </button>
+                );
+              })}
               {activeFiltersCount > 0 && (
-                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+                <button 
+                  onClick={clearFilters} 
+                  className="text-xs text-muted-foreground hover:text-foreground whitespace-nowrap shrink-0 ml-2"
+                >
                   Clear all
-                  <X className="h-4 w-4 ml-1" />
-                </Button>
+                </button>
               )}
-            </div>
-
-            {/* Popular Features Quick Filter Bar */}
-            <div className="mt-4">
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Popular:</span>
-                {POPULAR_FEATURES.slice(0, 8).map((feature) => {
-                  const IconComponent = feature.icon;
-                  const isSelected = selectedAmenities.includes(feature.id);
-                  return (
-                    <button
-                      key={feature.id}
-                      onClick={() => toggleAmenity(feature.id)}
-                      className={cn(
-                        "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap",
-                        isSelected 
-                          ? "bg-primary text-primary-foreground" 
-                          : "bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
-                      )}
-                    >
-                      <IconComponent className="h-3 w-3" />
-                      {feature.label}
-                    </button>
-                  );
-                })}
-              </div>
             </div>
           </div>
         </div>
-
         {/* Results */}
         <div className="container py-8">
           <div className="flex gap-8">
@@ -870,26 +838,34 @@ const Search = () => {
                 <>
                   {filteredListings.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredListings.map((listing) => {
+                      {filteredListings.map((listing, index) => {
                         const distance = getListingDistance(listing);
                         const isHostVerified = hostVerificationMap[listing.host_id] ?? false;
                         const canDeliverToUser = checkListingDeliveryCapability(listing);
                         return (
-                          <div key={listing.id} className="relative">
-                            <ListingCard 
-                              listing={listing} 
-                              hostVerified={isHostVerified}
-                              showQuickBook
-                              onQuickBook={handleQuickBook}
-                              canDeliverToUser={canDeliverToUser}
-                            />
-                            {distance !== null && (
-                              <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 z-10">
-                                <Navigation className="h-3 w-3" />
-                                {distance < 1 ? '< 1' : Math.round(distance)} mi
+                          <>
+                            <div key={listing.id} className="relative">
+                              <ListingCard 
+                                listing={listing} 
+                                hostVerified={isHostVerified}
+                                showQuickBook
+                                onQuickBook={handleQuickBook}
+                                canDeliverToUser={canDeliverToUser}
+                              />
+                              {distance !== null && (
+                                <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 z-10">
+                                  <Navigation className="h-3 w-3" />
+                                  {distance < 1 ? '< 1' : Math.round(distance)} mi
+                                </div>
+                              )}
+                            </div>
+                            {/* Inline subscribe after 8th listing */}
+                            {index === 7 && filteredListings.length > 8 && (
+                              <div key="inline-subscribe" className="col-span-1 sm:col-span-2 lg:col-span-3">
+                                <InlineSubscribe />
                               </div>
                             )}
-                          </div>
+                          </>
                         );
                       })}
                     </div>
@@ -900,14 +876,23 @@ const Search = () => {
                       mode={mode}
                     />
                   )}
+                  
+                  {/* Inline subscribe at bottom if less than 8 results */}
+                  {filteredListings.length > 0 && filteredListings.length <= 8 && (
+                    <div className="mt-6">
+                      <InlineSubscribe />
+                    </div>
+                  )}
                 </>
               )}
             </div>
           </div>
         </div>
 
-        {/* Newsletter Section */}
-        <NewsletterSection />
+        {/* Request Asset CTA */}
+        <div className="container py-8">
+          <RequestAssetCTA />
+        </div>
       </main>
 
       <Footer />
