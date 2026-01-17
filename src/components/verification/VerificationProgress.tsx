@@ -26,21 +26,21 @@ const VerificationProgress = () => {
   const steps: VerificationStep[] = [
     {
       id: 'stripe',
-      title: 'Connect Stripe',
+      title: 'Stripe connected',
       isComplete: isConnected && isOnboardingComplete,
       action: () => connectStripe(),
-      actionLabel: isConnected ? 'Complete' : 'Connect',
+      actionLabel: 'Connect Stripe',
       isLoading: isConnecting,
     },
     {
       id: 'identity',
-      title: 'Verify identity',
+      title: 'Identity verified',
       isComplete: isVerified,
       action: () => {
         setIsStartingVerification(true);
         navigate('/verify-identity');
       },
-      actionLabel: 'Verify',
+      actionLabel: 'Verify Identity',
       isLoading: isStartingVerification,
     },
   ];
@@ -63,15 +63,16 @@ const VerificationProgress = () => {
 
   return (
     <div className="p-4 rounded-xl bg-card border border-border">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <Shield className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-foreground">Verification</span>
+          <span className="text-sm font-medium text-foreground">Trust & Verification</span>
         </div>
         <span className="text-xs text-muted-foreground">
-          {completedSteps}/{steps.length}
+          {completedSteps} of {steps.length} complete
         </span>
       </div>
+      <p className="text-xs text-muted-foreground mb-3">Complete these steps to unlock all features.</p>
 
       <div className="space-y-2">
         {steps.map((step) => {

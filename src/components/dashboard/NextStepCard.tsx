@@ -39,7 +39,7 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
     {
       id: 'stripe',
       title: 'Connect Stripe to get paid',
-      description: 'Set up payments to receive earnings.',
+      description: 'Set up payouts so you can accept bookings and sales.',
       icon: CreditCard,
       action: {
         label: 'Connect Stripe',
@@ -49,8 +49,8 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
     },
     {
       id: 'bookings',
-      title: `${bookingStats.pending} request${bookingStats.pending > 1 ? 's' : ''} awaiting response`,
-      description: 'Respond now to avoid missed revenue.',
+      title: 'Respond to booking requests',
+      description: `You have ${bookingStats.pending} request${bookingStats.pending > 1 ? 's' : ''} waiting for your decision.`,
       icon: Calendar,
       action: {
         label: 'Review Requests',
@@ -60,8 +60,8 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
     },
     {
       id: 'drafts',
-      title: `Publish your draft listing${stats.drafts > 1 ? 's' : ''}`,
-      description: `${stats.drafts} unpublished listing${stats.drafts > 1 ? 's' : ''} ready to go live.`,
+      title: 'Publish your draft listing',
+      description: 'Finish setup and go live in minutes.',
       icon: FileText,
       action: {
         label: 'Publish Draft',
@@ -72,7 +72,7 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
     {
       id: 'verify',
       title: 'Verify your identity',
-      description: 'Build trust with a verified badge.',
+      description: 'Earn your verified badge and build trust.',
       icon: UserCheck,
       action: {
         label: 'Verify Identity',
@@ -83,10 +83,10 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
     {
       id: 'listing',
       title: 'Create your first listing',
-      description: 'Start earning on Vendibook.',
+      description: 'Add a truck, trailer, kitchen, or lot.',
       icon: FileText,
       action: {
-        label: 'Create Listing',
+        label: 'New Listing',
         to: '/create-listing',
       },
       priority: 5,

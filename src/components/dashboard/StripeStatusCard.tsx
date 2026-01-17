@@ -1,4 +1,4 @@
-import { Check, Loader2, ExternalLink, TrendingUp } from 'lucide-react';
+import { Check, Loader2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StripeLogo } from '@/components/ui/StripeLogo';
 
@@ -32,9 +32,12 @@ const StripeStatusCard = ({
         <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
           <Check className="h-3.5 w-3.5 text-emerald-600" strokeWidth={2.5} />
         </div>
-        <div className="flex items-center gap-1.5">
-          <StripeLogo size="xs" />
-          <span className="text-sm font-medium text-foreground">Connected</span>
+        <div className="flex flex-col">
+          <div className="flex items-center gap-1.5">
+            <StripeLogo size="xs" />
+            <span className="text-sm font-medium text-foreground">Stripe connected</span>
+          </div>
+          <span className="text-xs text-muted-foreground">Payments enabled</span>
         </div>
       </div>
       {onOpenDashboard && (
@@ -49,8 +52,7 @@ const StripeStatusCard = ({
             <Loader2 className="h-3 w-3 animate-spin" />
           ) : (
             <>
-              <TrendingUp className="h-3 w-3" />
-              Dashboard
+              View Payouts
               <ExternalLink className="h-3 w-3" />
             </>
           )}

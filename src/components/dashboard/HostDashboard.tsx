@@ -59,28 +59,32 @@ const HostDashboard = () => {
         />
       )}
 
-      {/* B) Key Metrics Row - Unified style */}
+      {/* B) Key Metrics Row - Tight labels */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <CompactStatCard 
           icon={Truck} 
-          label="Active Listings" 
+          label="Listings" 
           value={stats.published}
+          subtext={`${stats.published} active`}
         />
         <CompactStatCard 
           icon={Eye} 
-          label="Views (30d)" 
+          label="Views" 
           value={analytics?.totalViews || 0}
+          subtext="Last 30 days"
         />
         <CompactStatCard 
           icon={Calendar} 
-          label="Pending Requests" 
+          label="Requests" 
           value={bookingStats.pending}
+          subtext="Awaiting response"
           highlight={bookingStats.pending > 0}
         />
         <CompactStatCard 
           icon={DollarSign} 
-          label="Revenue (30d)" 
+          label="Revenue" 
           value={revenueAnalytics?.revenueThisMonth ? `$${revenueAnalytics.revenueThisMonth.toLocaleString()}` : '$0'}
+          subtext="This month"
         />
       </div>
 
@@ -127,12 +131,12 @@ const HostDashboard = () => {
                 <Truck className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
                 <p className="text-sm font-medium text-foreground mb-1">No listings yet</p>
                 <p className="text-xs text-muted-foreground mb-4">
-                  Create your first listing to start earning.
+                  Create a listing to start earning.
                 </p>
                 <Button asChild size="sm">
                   <Link to="/create-listing">
                     <Plus className="h-3.5 w-3.5 mr-1.5" />
-                    Create Listing
+                    New Listing
                   </Link>
                 </Button>
               </div>
@@ -173,9 +177,9 @@ const HostDashboard = () => {
             ) : (
               <div className="py-8 text-center">
                 <BarChart3 className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
-                <p className="text-sm font-medium text-foreground mb-1">No analytics yet</p>
+                <p className="text-sm font-medium text-foreground mb-1">No views yet</p>
                 <p className="text-xs text-muted-foreground">
-                  Analytics appear once your listings get views.
+                  Publish a listing to start getting discovered.
                 </p>
               </div>
             )}
@@ -212,12 +216,12 @@ const HostDashboard = () => {
 
       {/* E) Host Tools - Minimal link */}
       <div className="flex items-center justify-between py-3 px-4 rounded-lg bg-card border border-border">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Wrench className="h-4 w-4" />
-          <span>Need help with pricing or permits?</span>
+        <div className="flex items-center gap-2 text-sm">
+          <Wrench className="h-4 w-4 text-muted-foreground" />
+          <span className="text-muted-foreground">Price smarter, write faster, stay compliant.</span>
         </div>
         <Button variant="ghost" size="sm" asChild className="text-primary h-7 text-xs">
-          <Link to="/tools">Host Tools →</Link>
+          <Link to="/tools">Open Host Tools</Link>
         </Button>
       </div>
 
