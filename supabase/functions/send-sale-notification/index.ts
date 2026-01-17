@@ -14,7 +14,7 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[SALE-NOTIFICATION] ${step}${detailsStr}`);
 };
 
-type NotificationType = 'payment_received' | 'buyer_confirmed' | 'seller_confirmed' | 'completed' | 'payout_failed' | 'payout_completed';
+type NotificationType = 'payment_received' | 'buyer_confirmed' | 'seller_confirmed' | 'completed' | 'payout_failed' | 'payout_completed' | 'cash_purchase_request';
 
 interface NotificationRequest {
   transaction_id: string;
@@ -294,6 +294,67 @@ const getEmailContent = (
               <p style="color: #92400e; margin: 0; font-size: 14px;">
                 💡 <strong>Tip:</strong> You can view all your payouts and account activity in your Stripe dashboard.
               </p>
+            </div>
+            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong><br><a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a></p>
+          </div>
+        `,
+      },
+    },
+    cash_purchase_request: {
+      buyer: {
+        subject: `Purchase Request Submitted - ${listingTitle}`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Purchase Request Submitted! 📝</h1>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+              Your request to purchase <strong>${listingTitle}</strong> for <strong>$${amount.toLocaleString()}</strong> (pay in person) has been submitted.
+            </p>
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
+              <h3 style="color: #1a1a1a; margin: 0 0 12px;">What's Next?</h3>
+              <ul style="color: #4a4a4a; margin: 0; padding-left: 20px; line-height: 1.8;">
+                <li>The seller (${sellerName}) will contact you to arrange ${fulfillmentLabel.toLowerCase()}</li>
+                <li>You'll pay in person when you meet</li>
+                <li>Both parties will confirm the transaction in your dashboard</li>
+              </ul>
+            </div>
+            <div style="background: #fef3c7; border-radius: 12px; padding: 16px; margin: 24px 0;">
+              <p style="color: #92400e; margin: 0; font-size: 14px;">
+                ⚠️ <strong>Important:</strong> Since this is a cash transaction, please only pay in person and get a receipt.
+              </p>
+            </div>
+            <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong><br><a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a></p>
+          </div>
+        `,
+      },
+      seller: {
+        subject: `🔔 New Cash Purchase Request - ${listingTitle}`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">New Purchase Request! 🎉</h1>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+              <strong>${buyerName}</strong> wants to purchase <strong>${listingTitle}</strong> for <strong>$${amount.toLocaleString()}</strong> and pay in person.
+            </p>
+            <div style="background: #dbeafe; border-radius: 12px; padding: 20px; margin: 24px 0;">
+              <h3 style="color: #1e40af; margin: 0 0 12px;">📞 Contact the Buyer</h3>
+              <p style="color: #1e3a8a; margin: 0; font-size: 14px; line-height: 1.6;">
+                Please reach out to the buyer to arrange ${fulfillmentLabel.toLowerCase()} and payment. Their contact details are available in your dashboard.
+              </p>
+            </div>
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
+              <h3 style="color: #1a1a1a; margin: 0 0 12px;">Transaction Details</h3>
+              <table style="width: 100%; color: #4a4a4a;">
+                <tr><td style="padding: 8px 0;">Sale Amount:</td><td style="text-align: right;"><strong>$${amount.toLocaleString()}</strong></td></tr>
+                <tr><td style="padding: 8px 0;">Payment Method:</td><td style="text-align: right;">In Person (Cash)</td></tr>
+                <tr><td style="padding: 8px 0;">Fulfillment:</td><td style="text-align: right;">${fulfillmentLabel}</td></tr>
+              </table>
+            </div>
+            <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin: 24px 0;">
+              <h3 style="color: #92400e; margin: 0 0 12px;">Next Steps</h3>
+              <ol style="color: #78350f; margin: 0; padding-left: 20px; line-height: 1.8;">
+                <li>Contact the buyer to arrange a meeting</li>
+                <li>Collect payment in person</li>
+                <li>Confirm the sale in your dashboard after ${fulfillmentLabel.toLowerCase()}</li>
+              </ol>
             </div>
             <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong><br><a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a></p>
           </div>

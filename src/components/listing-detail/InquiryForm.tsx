@@ -252,6 +252,19 @@ const InquiryForm = ({
 
         if (txError) throw txError;
 
+        // Send notification to seller about cash purchase request
+        try {
+          await supabase.functions.invoke('send-sale-notification', {
+            body: {
+              transaction_id: txData.id,
+              notification_type: 'cash_purchase_request',
+            },
+          });
+        } catch (notifError) {
+          console.error('Failed to send cash purchase notification:', notifError);
+          // Don't block the flow if notification fails
+        }
+
         trackFormSubmitConversion({ form_type: 'purchase_cash', listing_id: listingId });
 
         toast({
