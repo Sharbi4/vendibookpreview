@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
-import { ShieldCheck, Loader2, MapPin, Truck, Calculator, AlertCircle, CreditCard, Banknote } from 'lucide-react';
+import { ShieldCheck, Loader2, MapPin, Truck, Calculator, AlertCircle, CreditCard, Banknote, CheckCircle2 } from 'lucide-react';
 import { CheckoutOverlay } from '@/components/checkout';
 import { FreightInfoCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
@@ -695,15 +696,24 @@ const InquiryForm = ({
           <Label htmlFor="buyerName" className="text-sm text-muted-foreground mb-1 block">
             Full Name <span className="text-destructive">*</span>
           </Label>
-          <Input
-            id="buyerName"
-            placeholder="Your name"
-            value={name}
-            onChange={(e) => handleFieldChange('name', e.target.value, setName)}
-            onBlur={() => handleFieldBlur('name')}
-            className={touchedFields.has('name') && fieldErrors.name ? 'border-destructive focus-visible:ring-destructive' : ''}
-            required
-          />
+          <div className="relative">
+            <Input
+              id="buyerName"
+              placeholder="Your name"
+              value={name}
+              onChange={(e) => handleFieldChange('name', e.target.value, setName)}
+              onBlur={() => handleFieldBlur('name')}
+              className={cn(
+                'pr-10',
+                touchedFields.has('name') && fieldErrors.name && 'border-destructive focus-visible:ring-destructive',
+                touchedFields.has('name') && !fieldErrors.name && name.trim() && 'border-emerald-500 focus-visible:ring-emerald-500'
+              )}
+              required
+            />
+            {touchedFields.has('name') && !fieldErrors.name && name.trim() && (
+              <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
+            )}
+          </div>
           {touchedFields.has('name') && fieldErrors.name && (
             <p className="text-xs text-destructive mt-1 flex items-center gap-1">
               <AlertCircle className="h-3 w-3" />
@@ -716,16 +726,25 @@ const InquiryForm = ({
           <Label htmlFor="buyerEmail" className="text-sm text-muted-foreground mb-1 block">
             Email <span className="text-destructive">*</span>
           </Label>
-          <Input
-            id="buyerEmail"
-            type="email"
-            placeholder="Your email"
-            value={email}
-            onChange={(e) => handleFieldChange('email', e.target.value, setEmail)}
-            onBlur={() => handleFieldBlur('email')}
-            className={touchedFields.has('email') && fieldErrors.email ? 'border-destructive focus-visible:ring-destructive' : ''}
-            required
-          />
+          <div className="relative">
+            <Input
+              id="buyerEmail"
+              type="email"
+              placeholder="Your email"
+              value={email}
+              onChange={(e) => handleFieldChange('email', e.target.value, setEmail)}
+              onBlur={() => handleFieldBlur('email')}
+              className={cn(
+                'pr-10',
+                touchedFields.has('email') && fieldErrors.email && 'border-destructive focus-visible:ring-destructive',
+                touchedFields.has('email') && !fieldErrors.email && email.trim() && 'border-emerald-500 focus-visible:ring-emerald-500'
+              )}
+              required
+            />
+            {touchedFields.has('email') && !fieldErrors.email && email.trim() && (
+              <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
+            )}
+          </div>
           {touchedFields.has('email') && fieldErrors.email && (
             <p className="text-xs text-destructive mt-1 flex items-center gap-1">
               <AlertCircle className="h-3 w-3" />
@@ -738,17 +757,26 @@ const InquiryForm = ({
           <Label htmlFor="buyerPhone" className="text-sm font-medium mb-1 block">
             Phone Number <span className="text-destructive">*</span>
           </Label>
-          <Input
-            id="buyerPhone"
-            type="tel"
-            placeholder="(555) 123-4567"
-            value={phone}
-            onChange={(e) => handlePhoneChange(e.target.value)}
-            onBlur={() => handleFieldBlur('phone')}
-            className={touchedFields.has('phone') && fieldErrors.phone ? 'border-destructive focus-visible:ring-destructive' : ''}
-            required
-            maxLength={14}
-          />
+          <div className="relative">
+            <Input
+              id="buyerPhone"
+              type="tel"
+              placeholder="(555) 123-4567"
+              value={phone}
+              onChange={(e) => handlePhoneChange(e.target.value)}
+              onBlur={() => handleFieldBlur('phone')}
+              className={cn(
+                'pr-10',
+                touchedFields.has('phone') && fieldErrors.phone && 'border-destructive focus-visible:ring-destructive',
+                touchedFields.has('phone') && !fieldErrors.phone && phone.trim() && 'border-emerald-500 focus-visible:ring-emerald-500'
+              )}
+              required
+              maxLength={14}
+            />
+            {touchedFields.has('phone') && !fieldErrors.phone && phone.trim() && (
+              <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
+            )}
+          </div>
           {touchedFields.has('phone') && fieldErrors.phone && (
             <p className="text-xs text-destructive mt-1 flex items-center gap-1">
               <AlertCircle className="h-3 w-3" />
