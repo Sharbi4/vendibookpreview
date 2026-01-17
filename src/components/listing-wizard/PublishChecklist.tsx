@@ -81,7 +81,7 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
       
       {/* Do This Next Spotlight */}
       {nextStep && !allRequiredComplete && (
-        <div className="mx-4 mb-3 p-3 bg-primary/5 border border-primary/20 rounded-xl">
+        <div className="mx-4 mb-3 p-3 bg-muted/50 border border-border rounded-lg">
           <div className="flex items-center gap-1.5 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-primary" />
             <span className="text-[10px] font-semibold text-primary uppercase tracking-wide">Do this next</span>
