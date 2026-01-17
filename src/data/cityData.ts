@@ -70,6 +70,23 @@ export const CITY_DATA: Record<string, CityData> = {
     neighborhoods: ['Deep Ellum', 'Bishop Arts', 'Uptown', 'Design District', 'Oak Cliff', 'Plano'],
     popularCategories: ['food_truck', 'food_trailer', 'vendor_lot'],
   },
+  phoenix: {
+    slug: 'phoenix',
+    name: 'Phoenix',
+    state: 'AZ',
+    tagline: 'The desert\'s hottest food scene',
+    supplyHeadline: 'List your asset in Phoenix',
+    supplySubheadline: 'Phoenix food entrepreneurs are searching for trucks, trailers, and kitchen space. Get listed today.',
+    demandHeadline: 'Find rentals in Phoenix',
+    demandSubheadline: 'Browse food trucks, trailers, ghost kitchens, and vendor lots across the Valley of the Sun.',
+    stats: {
+      activeListings: 28,
+      avgDailyRate: 225,
+      hostsEarning: 6,
+    },
+    neighborhoods: ['Downtown', 'Scottsdale', 'Tempe', 'Mesa', 'Chandler', 'Gilbert'],
+    popularCategories: ['food_truck', 'food_trailer', 'vendor_lot'],
+  },
 };
 
 export const ASSET_TYPES = {

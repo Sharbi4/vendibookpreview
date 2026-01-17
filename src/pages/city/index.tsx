@@ -22,3 +22,10 @@ export const DallasBrowse = () => <CityDemandPage city={CITY_DATA.dallas} />;
 export const DallasListFoodTruck = () => <CitySupplyPage city={CITY_DATA.dallas} assetType="food-truck" />;
 export const DallasListFoodTrailer = () => <CitySupplyPage city={CITY_DATA.dallas} assetType="food-trailer" />;
 export const DallasListVendorLot = () => <CitySupplyPage city={CITY_DATA.dallas} assetType="vendor-lot" />;
+
+// Phoenix pages
+export const PhoenixList = () => <CitySupplyPage city={CITY_DATA.phoenix} />;
+export const PhoenixBrowse = () => <CityDemandPage city={CITY_DATA.phoenix} />;
+export const PhoenixListFoodTruck = () => <CitySupplyPage city={CITY_DATA.phoenix} assetType="food-truck" />;
+export const PhoenixListFoodTrailer = () => <CitySupplyPage city={CITY_DATA.phoenix} assetType="food-trailer" />;
+export const PhoenixListVendorLot = () => <CitySupplyPage city={CITY_DATA.phoenix} assetType="vendor-lot" />;
