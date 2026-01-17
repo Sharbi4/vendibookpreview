@@ -38,6 +38,8 @@ import {
   UserCheck,
   Handshake,
   Wallet,
+  Lock,
+  Share2,
 } from 'lucide-react';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
 import { cn } from '@/lib/utils';
@@ -72,6 +74,8 @@ const HostOnboarding = () => {
     { icon: <MessageSquare className="h-6 w-6" />, title: 'Messaging + booking management', description: 'Keep everything in one place: questions, requests, dates, and terms.' },
     { icon: <Banknote className="h-6 w-6" />, title: 'Stripe payouts', description: 'Get paid to your bank account through Stripe Connect.' },
     { icon: <Headphones className="h-6 w-6" />, title: '24/7 Zendesk support', description: 'Support for disputes, questions, and account help.' },
+    { icon: <Lock className="h-6 w-6" />, title: 'Escrow-style sales', description: 'Funds are held securely until the transaction is confirmed by both parties.' },
+    { icon: <Share2 className="h-6 w-6" />, title: 'Share on social media', description: 'Use our built-in share kit for Facebook, X.com, Instagram, TikTok, and more.' },
   ];
 
   const rentalSteps = [
