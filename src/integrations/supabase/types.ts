@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      asset_requests: {
+        Row: {
+          admin_notes: string | null
+          asset_type: string
+          assigned_to: string | null
+          budget_max: number | null
+          budget_min: number | null
+          city: string
+          created_at: string
+          email: string | null
+          end_date: string | null
+          id: string
+          notes: string | null
+          phone: string | null
+          start_date: string | null
+          state: string | null
+          status: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          asset_type: string
+          assigned_to?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          city: string
+          created_at?: string
+          email?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          start_date?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          asset_type?: string
+          assigned_to?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          city?: string
+          created_at?: string
+          email?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          start_date?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       availability_alerts: {
         Row: {
           category: string | null
@@ -152,6 +212,7 @@ export type Database = {
           delivery_instructions: string | null
           document_reminder_sent_at: string | null
           end_date: string
+          first_response_at: string | null
           fulfillment_selected: string | null
           host_id: string
           host_response: string | null
@@ -179,6 +240,7 @@ export type Database = {
           delivery_instructions?: string | null
           document_reminder_sent_at?: string | null
           end_date: string
+          first_response_at?: string | null
           fulfillment_selected?: string | null
           host_id: string
           host_response?: string | null
@@ -206,6 +268,7 @@ export type Database = {
           delivery_instructions?: string | null
           document_reminder_sent_at?: string | null
           end_date?: string
+          first_response_at?: string | null
           fulfillment_selected?: string | null
           host_id?: string
           host_response?: string | null
@@ -997,6 +1060,66 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_searches: {
+        Row: {
+          amenities: string[] | null
+          category: string | null
+          created_at: string
+          frequency: string | null
+          id: string
+          instant_book_only: boolean | null
+          last_notified_at: string | null
+          latitude: number | null
+          location_text: string | null
+          longitude: number | null
+          max_price: number | null
+          min_price: number | null
+          mode: string | null
+          name: string | null
+          radius_miles: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amenities?: string[] | null
+          category?: string | null
+          created_at?: string
+          frequency?: string | null
+          id?: string
+          instant_book_only?: boolean | null
+          last_notified_at?: string | null
+          latitude?: number | null
+          location_text?: string | null
+          longitude?: number | null
+          max_price?: number | null
+          min_price?: number | null
+          mode?: string | null
+          name?: string | null
+          radius_miles?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amenities?: string[] | null
+          category?: string | null
+          created_at?: string
+          frequency?: string | null
+          id?: string
+          instant_book_only?: boolean | null
+          last_notified_at?: string | null
+          latitude?: number | null
+          location_text?: string | null
+          longitude?: number | null
+          max_price?: number | null
+          min_price?: number | null
+          mode?: string | null
+          name?: string | null
+          radius_miles?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1073,6 +1196,38 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_all_asset_requests: {
+        Args: never
+        Returns: {
+          admin_notes: string | null
+          asset_type: string
+          assigned_to: string | null
+          budget_max: number | null
+          budget_min: number | null
+          city: string
+          created_at: string
+          email: string | null
+          end_date: string | null
+          id: string
+          notes: string | null
+          phone: string | null
+          start_date: string | null
+          state: string | null
+          status: string | null
+          updated_at: string
+          user_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "asset_requests"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_host_avg_response_time: {
+        Args: { host_user_id: string }
+        Returns: unknown
+      }
       get_safe_host_profile: {
         Args: { host_user_id: string }
         Returns: {
@@ -1095,6 +1250,40 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { user_id: string }; Returns: boolean }
+      is_fast_responder: { Args: { host_user_id: string }; Returns: boolean }
+      update_asset_request_status: {
+        Args: {
+          new_admin_notes?: string
+          new_assigned_to?: string
+          new_status: string
+          request_id: string
+        }
+        Returns: {
+          admin_notes: string | null
+          asset_type: string
+          assigned_to: string | null
+          budget_max: number | null
+          budget_min: number | null
+          city: string
+          created_at: string
+          email: string | null
+          end_date: string | null
+          id: string
+          notes: string | null
+          phone: string | null
+          start_date: string | null
+          state: string | null
+          status: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "asset_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       app_role: "host" | "shopper" | "admin"

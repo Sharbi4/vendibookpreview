@@ -11,6 +11,7 @@ import BookingRequestsSection from './BookingRequestsSection';
 import SellerSalesSection from './SellerSalesSection';
 import { EnhancedAnalytics } from './EnhancedAnalytics';
 import { RevenueAnalyticsCard } from './RevenueAnalyticsCard';
+import { GetBookedFasterCard } from './GetBookedFasterCard';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
@@ -214,7 +215,10 @@ const HostDashboard = () => {
       {/* D) Insights - Collapsed by default */}
       <CompactInsights />
 
-      {/* E) Host Tools - Minimal link */}
+      {/* E) Get Booked Faster Tips */}
+      <GetBookedFasterCard />
+
+      {/* F) Host Tools - Minimal link */}
       <div className="flex items-center justify-between py-3 px-4 rounded-lg bg-card border border-border">
         <div className="flex items-center gap-2 text-sm">
           <Wrench className="h-4 w-4 text-muted-foreground" />
