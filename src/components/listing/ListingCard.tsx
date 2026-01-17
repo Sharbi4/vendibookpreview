@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import RatingBadge from '@/components/reviews/RatingBadge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import VerificationBadge from '@/components/verification/VerificationBadge';
+import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 
 interface ListingCardProps {
   listing: Listing;
@@ -196,9 +197,11 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
               </span>
             )}
           </span>
-          <span className="text-xs px-2 py-1 bg-secondary rounded-full text-muted-foreground">
-            {CATEGORY_LABELS[listing.category]}
-          </span>
+          <CategoryTooltip category={listing.category} side="top">
+            <span className="text-xs px-2 py-1 bg-secondary rounded-full text-muted-foreground cursor-help">
+              {CATEGORY_LABELS[listing.category]}
+            </span>
+          </CategoryTooltip>
         </div>
 
         {/* Delivery Radius Badge */}

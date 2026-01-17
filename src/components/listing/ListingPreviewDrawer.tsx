@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/sheet';
 import { MapPin, Calendar, ExternalLink, Navigation } from 'lucide-react';
 import VerificationBadge from '@/components/verification/VerificationBadge';
+import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 
 interface ListingWithDistance extends Listing {
   distance_miles?: number;
@@ -70,9 +71,11 @@ const ListingPreviewDrawer = ({
             <Badge variant={listing.mode === 'rent' ? 'default' : 'secondary'}>
               {listing.mode === 'rent' ? 'For Rent' : 'For Sale'}
             </Badge>
-            <Badge variant="outline" className="bg-background/80">
-              {CATEGORY_LABELS[listing.category]}
-            </Badge>
+            <CategoryTooltip category={listing.category} side="bottom">
+              <Badge variant="outline" className="bg-background/80 cursor-help">
+                {CATEGORY_LABELS[listing.category]}
+              </Badge>
+            </CategoryTooltip>
           </div>
         </div>
 

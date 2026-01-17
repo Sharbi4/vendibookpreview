@@ -15,10 +15,10 @@ import { Input } from '@/components/ui/input';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
-import { CATEGORY_LABELS } from '@/types/listing';
+import { CATEGORY_LABELS, ListingCategory } from '@/types/listing';
 import type { CityData } from '@/data/cityData';
 import { trackEvent, trackSearchStarted } from '@/lib/analytics';
-import { CategoryGuide } from '@/components/categories/CategoryGuide';
+import { CategoryGuide, CategoryTooltip } from '@/components/categories/CategoryGuide';
 
 interface CityDemandPageProps {
   city: CityData;
@@ -191,9 +191,11 @@ export function CityDemandPage({ city }: CityDemandPageProps) {
                           alt={listing.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
-                        <span className="absolute top-3 left-3 px-2 py-1 bg-background/90 backdrop-blur-sm rounded text-xs font-medium">
-                          {CATEGORY_LABELS[listing.category as keyof typeof CATEGORY_LABELS]}
-                        </span>
+                        <CategoryTooltip category={listing.category as ListingCategory} side="bottom">
+                          <span className="absolute top-3 left-3 px-2 py-1 bg-background/90 backdrop-blur-sm rounded text-xs font-medium cursor-help">
+                            {CATEGORY_LABELS[listing.category as keyof typeof CATEGORY_LABELS]}
+                          </span>
+                        </CategoryTooltip>
                       </div>
                       <CardContent className="p-4">
                         <h3 className="font-semibold text-foreground line-clamp-1 mb-1">{listing.title}</h3>

@@ -15,7 +15,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import type { ListingCategory } from '@/types/listing';
 
 export interface CategoryDefinition {
   key: string;
@@ -252,6 +259,66 @@ export function CategoryInfoModal() {
         <CategoryGuide variant="accordion" showActions={false} />
       </DialogContent>
     </Dialog>
+  );
+}
+
+// Helper to get category definition by key
+export function getCategoryDefinition(categoryKey: string): CategoryDefinition | undefined {
+  return CATEGORY_DEFINITIONS.find(cat => cat.key === categoryKey);
+}
+
+// Tooltip wrapper for category badges
+interface CategoryTooltipProps {
+  category: ListingCategory | string;
+  children: React.ReactNode;
+  side?: 'top' | 'bottom' | 'left' | 'right';
+}
+
+export function CategoryTooltip({ category, children, side = 'bottom' }: CategoryTooltipProps) {
+  const definition = getCategoryDefinition(category);
+  
+  if (!definition) {
+    return <>{children}</>;
+  }
+
+  const Icon = definition.icon;
+
+  return (
+    <TooltipProvider delayDuration={300}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {children}
+        </TooltipTrigger>
+        <TooltipContent 
+          side={side} 
+          className="max-w-[280px] p-3"
+          sideOffset={5}
+        >
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-6 rounded bg-primary/10 flex items-center justify-center">
+                <Icon className="h-3.5 w-3.5 text-primary" />
+              </div>
+              <span className="font-semibold text-sm">{definition.label}</span>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {definition.definition}
+            </p>
+            <div className="pt-1 border-t border-border">
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Best for</p>
+              <ul className="text-xs text-muted-foreground space-y-0.5">
+                {definition.bestFor.slice(0, 3).map((item, i) => (
+                  <li key={i} className="flex items-center gap-1">
+                    <span className="h-1 w-1 rounded-full bg-primary shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 

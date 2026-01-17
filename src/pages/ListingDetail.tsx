@@ -28,6 +28,7 @@ import { useTrackListingView } from '@/hooks/useListingAnalytics';
 import { CATEGORY_LABELS } from '@/types/listing';
 import { useEffect } from 'react';
 import { trackListingViewed } from '@/lib/analytics';
+import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -114,9 +115,11 @@ const ListingDetail = () => {
               <div className="space-y-3">
                 {/* Badges */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="secondary" className="text-xs">
-                    {CATEGORY_LABELS[listing.category]}
-                  </Badge>
+                  <CategoryTooltip category={listing.category} side="bottom">
+                    <Badge variant="secondary" className="text-xs cursor-help">
+                      {CATEGORY_LABELS[listing.category]}
+                    </Badge>
+                  </CategoryTooltip>
                   <Badge variant={isRental ? 'default' : 'outline'} className="text-xs">
                     For {isRental ? 'Rent' : 'Sale'}
                   </Badge>
