@@ -24,6 +24,8 @@ const ListPage = lazy(() => import("./pages/List"));
 const ListingDetail = lazy(() => import("./pages/ListingDetail"));
 const Profile = lazy(() => import("./pages/Profile"));
 const EditProfile = lazy(() => import("./pages/EditProfile"));
+const Account = lazy(() => import("./pages/Account"));
+const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Insurance = lazy(() => import("./pages/Insurance"));
@@ -113,9 +115,11 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
           <Route path="/create-listing" element={<PageTransition><CreateListing /></PageTransition>} />
           <Route path="/listing/:id" element={<PageTransition><ListingDetail /></PageTransition>} />
-          <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
-          <Route path="/profile/edit" element={<PageTransition><EditProfile /></PageTransition>} />
-          <Route path="/profile/:id" element={<PageTransition><Profile /></PageTransition>} />
+          <Route path="/profile" element={<Navigate to="/account" replace />} />
+          <Route path="/profile/edit" element={<Navigate to="/account" replace />} />
+          <Route path="/profile/:id" element={<Navigate to={`/u/${window.location.pathname.split('/').pop()}`} replace />} />
+          <Route path="/account" element={<PageTransition><Account /></PageTransition>} />
+          <Route path="/u/:userId" element={<PageTransition><PublicProfile /></PageTransition>} />
           <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
           <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
           <Route path="/insurance" element={<PageTransition><Insurance /></PageTransition>} />

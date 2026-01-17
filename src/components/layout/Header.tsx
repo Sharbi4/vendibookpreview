@@ -456,9 +456,9 @@ const Header = () => {
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Messages
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                <DropdownMenuItem onClick={() => navigate('/account')}>
                   <User className="h-4 w-4 mr-2" />
-                  My Profile
+                  My Account
                 </DropdownMenuItem>
                 {isVerified ? (
                   <div className="flex items-center gap-2 px-2 py-1.5 text-sm text-emerald-600">
