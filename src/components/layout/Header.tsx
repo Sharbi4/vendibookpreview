@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, Phone, ShieldCheck, Clock, TrendingUp, Sparkles, Mic, MicOff, ChevronDown } from 'lucide-react';
+import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, Phone, ShieldCheck, Clock, TrendingUp, Sparkles, Mic, MicOff, ChevronDown, Wrench, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -457,15 +457,20 @@ const Header = () => {
                   <LayoutDashboard className="h-4 w-4 mr-2" />
                   Dashboard
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/profile')}>
-                  <User className="h-4 w-4 mr-2" />
-                  My Profile
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/messages')}>
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Messages
                 </DropdownMenuItem>
-                {!isVerified && (
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <User className="h-4 w-4 mr-2" />
+                  My Profile
+                </DropdownMenuItem>
+                {isVerified ? (
+                  <div className="flex items-center gap-2 px-2 py-1.5 text-sm text-emerald-600">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Verified
+                  </div>
+                ) : (
                   <DropdownMenuItem onClick={() => navigate('/verify-identity')}>
                     <Shield className="h-4 w-4 mr-2 text-amber-500" />
                     Verify Identity
@@ -478,10 +483,6 @@ const Header = () => {
                     Admin Dashboard
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={() => navigate('/how-it-works')}>
-                  <HelpCircle className="h-4 w-4 mr-2" />
-                  How It Works
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/help')}>
                   <HelpCircle className="h-4 w-4 mr-2" />
                   Help Center
@@ -533,10 +534,12 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile Menu - Simplified */}
+      {/* Mobile Menu - Simplified with Section Headers */}
       {isMenuOpen && (
         <div className="md:hidden border-t border-border bg-background animate-fade-in">
-          <nav className="container py-4 flex flex-col gap-1">
+          <nav className="container py-4 flex flex-col">
+            {/* Marketplace Section */}
+            <p className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Marketplace</p>
             <Link 
               to="/search" 
               className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
@@ -566,7 +569,7 @@ const Header = () => {
               className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              <Sparkles className="h-4 w-4 text-primary" />
+              <Wrench className="h-4 w-4 text-muted-foreground" />
               Host Tools
             </Link>
             <Link 
@@ -577,18 +580,12 @@ const Header = () => {
               <HelpCircle className="h-4 w-4 text-muted-foreground" />
               Help Center
             </Link>
-            <Link 
-              to="/help" 
-              className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <HelpCircle className="h-4 w-4 text-muted-foreground" />
-              Help Center
-            </Link>
             
-            <div className="border-t border-border mt-2 pt-3">
+            {/* Account Section */}
+            <div className="border-t border-border mt-3 pt-3">
+              <p className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Account</p>
               {user ? (
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col">
                   <Link 
                     to="/dashboard" 
                     className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
@@ -598,14 +595,6 @@ const Header = () => {
                     Dashboard
                   </Link>
                   <Link 
-                    to="/profile" 
-                    className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    My Profile
-                  </Link>
-                  <Link 
                     to="/messages" 
                     className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
                     onClick={() => setIsMenuOpen(false)}
@@ -613,7 +602,20 @@ const Header = () => {
                     <MessageCircle className="h-4 w-4 text-muted-foreground" />
                     Messages
                   </Link>
-                  {!isVerified && (
+                  <Link 
+                    to="/profile" 
+                    className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    My Profile
+                  </Link>
+                  {isVerified ? (
+                    <div className="flex items-center gap-3 text-sm font-medium py-3 px-2 text-emerald-600">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Verified
+                    </div>
+                  ) : (
                     <Link 
                       to="/verify-identity" 
                       className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors text-amber-600"
