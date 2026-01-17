@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useBlocker } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Save, Send, Loader2, Cloud, CloudOff, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save, Send, Loader2, Cloud, Check, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,6 +31,7 @@ import { StepReview } from './StepReview';
 import { StripeConnectModal } from './StripeConnectModal';
 import { PublishSuccessModal } from './PublishSuccessModal';
 import { StripeConnectBanner } from './StripeConnectBanner';
+import { ListingPreviewModal } from './ListingPreviewModal';
 
 const STEPS = ['Type', 'Details', 'Location', 'Pricing', 'Documents', 'Photos', 'Review'];
 
@@ -79,6 +80,7 @@ export const ListingWizard: React.FC = () => {
   const [lastAutoSaved, setLastAutoSaved] = useState<Date | null>(null);
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [publishedListing, setPublishedListing] = useState<PublishedListing | null>(null);
   const [dismissedTips, setDismissedTips] = useState<Set<number>>(new Set());
   const [showExitDialog, setShowExitDialog] = useState(false);
@@ -660,14 +662,28 @@ export const ListingWizard: React.FC = () => {
 
         {/* Navigation */}
         <div className="flex items-center justify-between mt-6">
-          <Button
-            variant="outline"
-            onClick={prevStep}
-            disabled={currentStep === 1 || isSaving}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={prevStep}
+              disabled={currentStep === 1 || isSaving}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            
+            {/* Preview button - show when there's enough content */}
+            {(formData.title || formData.description) && (
+              <Button
+                variant="ghost"
+                onClick={() => setShowPreviewModal(true)}
+                className="text-muted-foreground"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Preview
+              </Button>
+            )}
+          </div>
 
           <div className="flex items-center gap-3">
             {currentStep === 7 ? (
@@ -763,6 +779,30 @@ export const ListingWizard: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Listing Preview Modal */}
+      <ListingPreviewModal
+        open={showPreviewModal}
+        onOpenChange={setShowPreviewModal}
+        listing={{
+          title: formData.title,
+          description: formData.description,
+          category: formData.category!,
+          mode: formData.mode as 'rent' | 'sale',
+          images: formData.images.map(file => URL.createObjectURL(file)),
+          priceDaily: formData.price_daily,
+          priceWeekly: formData.price_weekly,
+          priceSale: formData.price_sale,
+          address: formData.address,
+          pickupLocationText: formData.pickup_location_text,
+          highlights: formData.highlights || [],
+          amenities: formData.amenities || [],
+          instantBook: formData.instant_book,
+          fulfillmentType: formData.fulfillment_type,
+          deliveryFee: formData.delivery_fee,
+          deliveryRadiusMiles: formData.delivery_radius_miles,
+        }}
+      />
     </div>
   );
 };
