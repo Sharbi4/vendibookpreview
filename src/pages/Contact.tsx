@@ -23,6 +23,8 @@ const contactSchema = z.object({
   phone: z.string().trim().min(1, "Phone number is required").max(20, "Phone number must be less than 20 characters"),
   subject: z.string().trim().min(1, "Subject is required").max(200, "Subject must be less than 200 characters"),
   message: z.string().trim().min(1, "Message is required").max(2000, "Message must be less than 2000 characters"),
+  // Honeypot field - should always be empty for real users
+  website: z.string().optional(),
 });
 
 type ContactFormData = z.infer<typeof contactSchema>;
@@ -34,6 +36,7 @@ const Contact = () => {
     phone: '',
     subject: '',
     message: '',
+    website: '', // Honeypot field
   });
   const [errors, setErrors] = useState<Partial<Record<keyof ContactFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -403,7 +406,21 @@ const Contact = () => {
                               )}
                             </div>
 
-                            <Button 
+                            {/* Honeypot field - hidden from real users, bots will fill it */}
+                            <div className="absolute -left-[9999px] opacity-0 pointer-events-none" aria-hidden="true">
+                              <Label htmlFor="website">Website</Label>
+                              <Input
+                                id="website"
+                                name="website"
+                                type="text"
+                                value={formData.website || ''}
+                                onChange={handleChange}
+                                tabIndex={-1}
+                                autoComplete="off"
+                              />
+                            </div>
+
+                            <Button
                               type="submit" 
                               size="lg" 
                               className="w-full h-14 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-shadow" 
