@@ -266,12 +266,33 @@ const InquiryForm = ({
     return error;
   };
 
+  // Format phone number as user types: (XXX) XXX-XXXX
+  const formatPhoneNumber = (value: string): string => {
+    // Remove all non-digit characters
+    const digits = value.replace(/\D/g, '');
+    
+    // Apply formatting based on length
+    if (digits.length === 0) return '';
+    if (digits.length <= 3) return `(${digits}`;
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+  };
+
   // Validate field on change if already touched
   const handleFieldChange = (fieldName: string, value: string, setter: (val: string) => void) => {
     setter(value);
     if (touchedFields.has(fieldName)) {
       // Delay validation slightly for better UX
       setTimeout(() => validateField(fieldName), 100);
+    }
+  };
+
+  // Special handler for phone with auto-formatting
+  const handlePhoneChange = (value: string) => {
+    const formatted = formatPhoneNumber(value);
+    setPhone(formatted);
+    if (touchedFields.has('phone')) {
+      setTimeout(() => validateField('phone'), 100);
     }
   };
 
@@ -722,10 +743,11 @@ const InquiryForm = ({
             type="tel"
             placeholder="(555) 123-4567"
             value={phone}
-            onChange={(e) => handleFieldChange('phone', e.target.value, setPhone)}
+            onChange={(e) => handlePhoneChange(e.target.value)}
             onBlur={() => handleFieldBlur('phone')}
             className={touchedFields.has('phone') && fieldErrors.phone ? 'border-destructive focus-visible:ring-destructive' : ''}
             required
+            maxLength={14}
           />
           {touchedFields.has('phone') && fieldErrors.phone && (
             <p className="text-xs text-destructive mt-1 flex items-center gap-1">
