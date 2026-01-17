@@ -18,19 +18,36 @@ import {
   UtensilsCrossed,
   Gauge,
   Zap,
-  Home,
   Package,
   Archive,
-  CircleDot,
   Monitor,
   Truck,
   Building,
   DoorOpen,
   Warehouse,
-  Coffee,
-  Settings,
   Fan,
   CheckCircle2,
+  Sun,
+  Heater,
+  Snowflake,
+  PanelTop,
+  CookingPot,
+  Microwave,
+  Lamp,
+  Bath,
+  BriefcaseMedical,
+  FireExtinguisher,
+  AirVent,
+  Armchair,
+  SquareStack,
+  Camera,
+  Lock,
+  Clock,
+  UserCheck,
+  Star,
+  Rotate3D,
+  Beer,
+  Heart,
 } from 'lucide-react';
 import { ListingCategory, AMENITIES_BY_CATEGORY } from '@/types/listing';
 
@@ -41,74 +58,125 @@ interface AmenitiesSectionProps {
 
 // Icon mapping for amenities
 const amenityIcons: Record<string, React.ElementType> = {
-  // Food Truck / Trailer - Kitchen Equipment
-  three_compartment_sink: Droplet,
-  hand_wash_sink: Droplet,
-  refrigerator: Refrigerator,
-  freezer: Thermometer,
-  fryer: Flame,
-  flat_top_grill: UtensilsCrossed,
-  oven: Flame,
-  warmers: Thermometer,
-  steam_table: Gauge,
-  hood_system: Wind,
-  
-  // Food Truck / Trailer - Power & Utilities
+  // Food Truck - Core Utilities
   generator: Zap,
-  propane_tanks: Fuel,
-  water_tank: Droplet,
-  waste_water_tank: Droplet,
-  electrical_hookup: Plug,
+  shore_power: Plug,
+  propane_system: Fuel,
+  solar_battery: Sun,
+  fresh_water_tank: Droplet,
+  grey_water_tank: Droplet,
+  hot_water_heater: Heater,
   
-  // Food Truck / Trailer - Additional Features
-  pos_system: Monitor,
-  serving_window: DoorOpen,
-  awning: Umbrella,
-  ac_unit: Fan,
+  // Food Truck - Kitchen & Cooking
+  hood_system: Wind,
   fire_suppression: ShieldCheck,
-  
-  // Ghost Kitchen - Kitchen Equipment
-  commercial_refrigerator: Refrigerator,
-  walk_in_cooler: Thermometer,
-  walk_in_freezer: Thermometer,
-  range: Flame,
-  convection_oven: Flame,
+  flat_top_grill: UtensilsCrossed,
+  fryer: Flame,
+  range_burners: Flame,
+  oven: CookingPot,
+  microwave: Microwave,
+  steam_table: Gauge,
   prep_tables: UtensilsCrossed,
+  food_warmer: Lamp,
   
-  // Ghost Kitchen - Utilities & Infrastructure
+  // Food Truck - Cold Storage
+  refrigerator: Refrigerator,
+  freezer: Snowflake,
+  reach_in_fridge: Refrigerator,
+  undercounter_fridge: Refrigerator,
+  
+  // Food Truck - Service & Build
+  serving_window: DoorOpen,
+  dual_windows: DoorOpen,
+  pos_shelf: Monitor,
+  menu_board_mount: PanelTop,
+  exterior_lighting: Lightbulb,
+  awning: Umbrella,
+  pass_through: DoorOpen,
+  
+  // Food Truck - Cleaning & Safety
+  three_compartment_sink: Bath,
+  handwashing_sink: Droplet,
+  nsf_surfaces: CheckCircle2,
+  first_aid_kit: BriefcaseMedical,
+  fire_extinguisher: FireExtinguisher,
+  
+  // Food Truck - Comfort & Ops
+  ac: AirVent,
+  heat: Heater,
+  storage_cabinets: SquareStack,
+  staff_seating: Armchair,
+  
+  // Ghost Kitchen - Infrastructure
+  type_i_hood: Wind,
+  type_ii_hood: Wind,
   grease_trap: Archive,
-  hvac: Wind,
-  high_voltage: Zap,
-  gas_hookup: Fuel,
+  floor_drains: Droplet,
+  sprinkler_system: Droplet,
   
-  // Ghost Kitchen - Additional Features
-  storage_area: Warehouse,
-  office_space: Building,
-  restroom: DoorOpen,
+  // Ghost Kitchen - Prep & Storage
+  shelving_storage: SquareStack,
+  walk_in_cooler: Thermometer,
+  walk_in_freezer: Snowflake,
+  
+  // Ghost Kitchen - Warewashing
+  dish_pit: Bath,
+  commercial_dishwasher: Bath,
+  
+  // Ghost Kitchen - Equipment Access
+  shared_equipment: Package,
+  dedicated_equipment: Package,
+  cold_storage_included: Snowflake,
+  
+  // Ghost Kitchen - Operations
+  dedicated_station: Building,
+  private_suite: Building,
+  packaging_station: Package,
   loading_dock: Truck,
+  onsite_parking: Car,
+  security_cameras: Camera,
+  
+  // Ghost Kitchen - Compliance
+  health_inspected: CheckCircle2,
+  commissary_rules: CheckCircle2,
+  permit_guidance: CheckCircle2,
+  
+  // Vendor Lot - Hookups
+  power_110v: Plug,
+  power_220v: Zap,
+  water_hookup: Droplet,
+  sewer_hookup: Archive,
+  dump_station: Trash2,
+  
+  // Vendor Lot - Site Features
+  high_foot_traffic: Users,
+  near_nightlife: Star,
+  near_office: Building,
+  event_space: Star,
+  covered_shade: Umbrella,
+  seating_area: Armchair,
+  stage_entertainment: Star,
+  lighting: Lightbulb,
+  
+  // Vendor Lot - Guest Amenities
+  restrooms_onsite: DoorOpen,
+  handwash_stations: Droplet,
+  trash_service: Trash2,
   wifi: Wifi,
   
-  // Vendor Lot - Utility Hookups
-  electric_hookup: Plug,
-  water_hookup: Droplet,
-  trash_service: Trash2,
-  oil_dumping: Fuel,
-  grease_disposal: Archive,
-  sewage_hookup: CircleDot,
+  // Vendor Lot - Safety & Access
+  security_onsite: ShieldCheck,
+  gated_lot: Lock,
+  cameras: Camera,
+  overnight_parking: Car,
+  access_24_7: Clock,
+  staff_onsite: UserCheck,
   
-  // Vendor Lot - Location Features
-  major_street: MapPin,
-  high_traffic: Users,
-  corner_lot: MapPin,
-  visibility: Lightbulb,
-  parking_available: Car,
-  
-  // Vendor Lot - Amenities
-  covered_parking: Umbrella,
-  customer_seating: Users,
-  restroom_access: DoorOpen,
-  security: ShieldCheck,
-  lighting: Lightbulb,
+  // Vendor Lot - Rules & Positioning
+  exclusive_spot: Star,
+  rotating_spots: Rotate3D,
+  alcohol_allowed: Beer,
+  family_friendly: Heart,
 };
 
 // Get the label for an amenity ID
