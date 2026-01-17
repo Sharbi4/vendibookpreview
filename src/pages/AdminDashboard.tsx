@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History, Zap } from 'lucide-react';
+import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History, Zap, Headphones } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminTransactions } from '@/hooks/useAdminTransactions';
 import { useAdminPendingDocuments, useAdminDocumentStats } from '@/hooks/useAdminDocumentReview';
 import { useAdminInstantBookings, useAdminInstantBookStats } from '@/hooks/useAdminInstantBookings';
+import { useAdminAssetRequests } from '@/hooks/useAssetRequests';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +18,7 @@ import AdminDocumentReviewCard from '@/components/admin/AdminDocumentReviewCard'
 import AdminDocumentHistorySection from '@/components/admin/AdminDocumentHistorySection';
 import AdminBulkDocumentActions from '@/components/admin/AdminBulkDocumentActions';
 import InstantBookMonitorCard from '@/components/admin/InstantBookMonitorCard';
+import ConciergeQueueCard from '@/components/admin/ConciergeQueueCard';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -40,6 +42,7 @@ const AdminDashboard = () => {
   const documentStats = useAdminDocumentStats();
   const { data: instantBookings, isLoading: instantBookLoading } = useAdminInstantBookings();
   const instantBookStats = useAdminInstantBookStats();
+  const { allRequests, isLoading: conciergeLoading, updateStatus, isUpdating: conciergeUpdating, stats: conciergeStats } = useAdminAssetRequests();
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -94,7 +97,17 @@ const AdminDashboard = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-9 gap-4 mb-8">
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-2">
+                <Headphones className="h-4 w-4 text-purple-500" />
+                <span className="text-sm text-muted-foreground">Concierge</span>
+              </div>
+              <p className="text-2xl font-bold text-purple-600">{conciergeStats.new}</p>
+              <p className="text-xs text-muted-foreground">new requests</p>
+            </CardContent>
+          </Card>
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
@@ -171,8 +184,17 @@ const AdminDashboard = () => {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="disputes" className="space-y-6">
+        <Tabs defaultValue="concierge" className="space-y-6">
           <TabsList className="flex-wrap h-auto">
+            <TabsTrigger value="concierge" className="relative">
+              <Headphones className="h-4 w-4 mr-1" />
+              Concierge
+              {conciergeStats.new > 0 && (
+                <Badge className="ml-2 h-5 px-1.5 bg-purple-500">
+                  {conciergeStats.new}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="instant-book" className="relative">
               <Zap className="h-4 w-4 mr-1" />
               Instant Book
@@ -212,6 +234,65 @@ const AdminDashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="all">All Transactions</TabsTrigger>
           </TabsList>
+
+          {/* Concierge Tab */}
+          <TabsContent value="concierge" className="space-y-4">
+            {conciergeLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-32" />
+                ))}
+              </div>
+            ) : !allRequests || allRequests.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Headphones className="h-12 w-12 text-purple-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground">No Asset Requests</h3>
+                  <p className="text-muted-foreground">No concierge requests have been submitted yet.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {/* Summary Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Card>
+                    <CardContent className="pt-4 pb-4">
+                      <p className="text-sm text-muted-foreground">Total Requests</p>
+                      <p className="text-2xl font-bold">{conciergeStats.total}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-4">
+                      <p className="text-sm text-muted-foreground">New</p>
+                      <p className="text-2xl font-bold text-blue-600">{conciergeStats.new}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-4">
+                      <p className="text-sm text-muted-foreground">Contacted</p>
+                      <p className="text-2xl font-bold text-amber-600">{conciergeStats.contacted}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-4">
+                      <p className="text-sm text-muted-foreground">Matched</p>
+                      <p className="text-2xl font-bold text-emerald-600">{conciergeStats.matched}</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Request Cards */}
+                {allRequests.map((request) => (
+                  <ConciergeQueueCard
+                    key={request.id}
+                    request={request}
+                    onUpdate={updateStatus}
+                    isUpdating={conciergeUpdating}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
           {/* Instant Book Tab */}
           <TabsContent value="instant-book" className="space-y-4">
