@@ -77,10 +77,10 @@ const SupplySection = () => {
 
             <Button
               variant="outline"
-              onClick={() => navigate('/ai-tools')}
+              onClick={() => navigate('/tools')}
               className="gap-2"
             >
-              Explore AI Tools
+              Explore Host Tools
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
