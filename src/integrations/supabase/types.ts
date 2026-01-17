@@ -582,6 +582,8 @@ export type Database = {
       }
       listings: {
         Row: {
+          accept_card_payment: boolean | null
+          accept_cash_payment: boolean | null
           access_instructions: string | null
           address: string | null
           amenities: string[] | null
@@ -625,6 +627,8 @@ export type Database = {
           width_inches: number | null
         }
         Insert: {
+          accept_card_payment?: boolean | null
+          accept_cash_payment?: boolean | null
           access_instructions?: string | null
           address?: string | null
           amenities?: string[] | null
@@ -668,6 +672,8 @@ export type Database = {
           width_inches?: number | null
         }
         Update: {
+          accept_card_payment?: boolean | null
+          accept_cash_payment?: boolean | null
           access_instructions?: string | null
           address?: string | null
           amenities?: string[] | null

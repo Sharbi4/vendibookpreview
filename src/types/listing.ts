@@ -43,6 +43,9 @@ export interface Listing {
   // Vendibook freight fields
   vendibook_freight_enabled?: boolean;
   freight_payer?: FreightPayer | string;
+  // Payment method preferences (for sales)
+  accept_cash_payment?: boolean;
+  accept_card_payment?: boolean;
 }
 
 // Category-specific amenities
@@ -248,6 +251,9 @@ export interface ListingFormData {
     deadline_offset_hours?: number;
     description?: string;
   }[];
+  // Payment method preferences (for sales)
+  accept_cash_payment: boolean;
+  accept_card_payment: boolean;
 }
 
 export const CATEGORY_LABELS: Record<ListingCategory, string> = {

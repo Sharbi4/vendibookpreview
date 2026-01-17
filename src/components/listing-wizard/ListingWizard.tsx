@@ -91,13 +91,17 @@ export const ListingWizard: React.FC = () => {
     return urls;
   };
 
+  // Check if Stripe Connect is required (only if card payments are enabled for sale listings)
+  const requiresStripeConnect = formData.mode === 'rent' || 
+    (formData.mode === 'sale' && formData.accept_card_payment);
+
   const saveListing = async (publish: boolean) => {
     if (!user) {
       toast({ title: 'Please sign in', variant: 'destructive' });
       return;
     }
 
-    if (publish && !isOnboardingComplete) {
+    if (publish && requiresStripeConnect && !isOnboardingComplete) {
       setShowStripeModal(true);
       return;
     }
@@ -173,6 +177,9 @@ export const ListingWizard: React.FC = () => {
         width_inches: formData.width_inches ? parseFloat(formData.width_inches) : null,
         height_inches: formData.height_inches ? parseFloat(formData.height_inches) : null,
         freight_category: formData.freight_category || null,
+        // Payment method preferences (for sales)
+        accept_cash_payment: formData.mode === 'sale' ? formData.accept_cash_payment : false,
+        accept_card_payment: formData.mode === 'sale' ? formData.accept_card_payment : true,
       };
 
       const { data: listing, error: insertError } = await supabase
@@ -363,6 +370,7 @@ export const ListingWizard: React.FC = () => {
             formData={formData}
             canPublish={canPublish()}
             isStripeConnected={isOnboardingComplete}
+            requiresStripeConnect={requiresStripeConnect}
           />
         );
       default:
@@ -433,15 +441,15 @@ export const ListingWizard: React.FC = () => {
                 </Button>
                 <Button
                   onClick={() => saveListing(true)}
-                  disabled={isSaving || !canPublish() || !isOnboardingComplete}
-                  title={!isOnboardingComplete ? 'Connect Stripe to publish' : undefined}
+                  disabled={isSaving || !canPublish() || (requiresStripeConnect && !isOnboardingComplete)}
+                  title={requiresStripeConnect && !isOnboardingComplete ? 'Connect Stripe to publish' : undefined}
                 >
                   {isSaving ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
                     <Send className="w-4 h-4 mr-2" />
                   )}
-                  {!isOnboardingComplete ? 'Connect Stripe to Publish' : 'Publish'}
+                  {requiresStripeConnect && !isOnboardingComplete ? 'Connect Stripe to Publish' : 'Publish'}
                 </Button>
               </>
             ) : (
