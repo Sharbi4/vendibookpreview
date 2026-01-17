@@ -2421,9 +2421,9 @@ Examples:
       },
       {
         id: 'requirements',
-        title: 'What You'll Need',
+        title: 'What You Will Need',
         content: `**For Individuals**
-- Valid government-issued ID (driver's license or passport)
+- Valid government-issued ID (drivers license or passport)
 - Social Security Number (last 4 digits)
 - Bank account routing and account numbers
 - Home address
@@ -2458,7 +2458,7 @@ Examples:
 
 **5. Complete Setup**
 - Review all information
-- Accept Stripe's terms of service
+- Accept Stripe terms of service
 - Submit for verification`
       },
       {
@@ -2475,7 +2475,7 @@ Some accounts require additional review:
 
 **While waiting:**
 - You can create listings
-- Listings won't go live until verification completes`
+- Listings will not go live until verification completes`
       },
       {
         id: 'troubleshooting',
@@ -2527,7 +2527,7 @@ Payouts are sent directly to the bank account connected via Stripe.`
 - Covers platform, support, and payment processing
 - Deducted automatically from your payout
 
-**What's Included in the Fee**
+**What is Included in the Fee**
 - Stripe payment processing
 - Customer support for you and your renters
 - Dispute resolution services
@@ -2555,7 +2555,7 @@ Payouts are sent directly to the bank account connected via Stripe.`
         id: 'delays',
         title: 'What Causes Delays?',
         content: `**Common Delay Causes**
-- Bank holidays (payouts don't process on weekends)
+- Bank holidays (payouts do not process on weekends)
 - First payout (may take extra 1-2 days)
 - Account verification issues
 - Disputes or holds on your account
@@ -2584,8 +2584,8 @@ When you book a rental, a security deposit may be authorized on your card:
 - Amount varies by listing (set by host)
 - Released within 48 hours after successful return
 
-**When You're Charged**
-You're only charged if:
+**When You Are Charged**
+You are only charged if:
 - Damage is documented with photos
 - Host files a claim within 48 hours of return
 - Claim is reviewed and approved by Vendibook
@@ -2619,7 +2619,7 @@ You're only charged if:
 1. Document with photos immediately
 2. Contact the host through Vendibook messaging
 3. Do not attempt major repairs without host approval
-4. Report the issue—don't hide it
+4. Report the issue—do not hide it
 
 **Normal Wear vs. Damage**
 - Normal wear: Minor scuffs, expected equipment wear
@@ -2671,7 +2671,7 @@ You're only charged if:
 - [ ] Verify pickup/delivery date and time with host
 - [ ] Confirm exact address and any access instructions
 - [ ] Ensure you have proper vehicle/tow capacity (if applicable)
-- [ ] Bring valid driver's license and booking confirmation
+- [ ] Bring valid drivers license and booking confirmation
 - [ ] Have Vendibook app ready for communication
 
 **What to Bring**
@@ -2801,7 +2801,7 @@ Longer distances = higher costs. Cross-country moves can cost $2,000-$5,000+.
       {
         id: 'getting-quotes',
         title: 'Getting Freight Quotes',
-        content: `**Information You'll Need**
+        content: `**Information You Will Need**
 - Pickup address (seller location)
 - Delivery address
 - Asset dimensions (L x W x H)
@@ -2813,10 +2813,10 @@ Longer distances = higher costs. Cross-country moves can cost $2,000-$5,000+.
 Always get 3+ quotes to compare. Prices can vary significantly between carriers.
 
 **Questions to Ask**
-- Is insurance included? What's covered?
-- What's the estimated delivery window?
+- Is insurance included? What is covered?
+- What is the estimated delivery window?
 - Are there any additional fees (fuel surcharge, tolls)?
-- What if there's damage during transport?`
+- What if there is damage during transport?`
       },
       {
         id: 'preparing-for-transport',
@@ -2847,7 +2847,7 @@ Always get 3+ quotes to compare. Prices can vary significantly between carriers.
 1. Document extensively with photos
 2. Note on delivery receipt
 3. Contact carrier immediately
-4. File claim with carrier's insurance
+4. File claim with carrier insurance
 5. Notify Vendibook support`
       }
     ],
@@ -2898,8 +2898,8 @@ Always get 3+ quotes to compare. Prices can vary significantly between carriers.
 - Year, make, model, and specs
 - Complete equipment list
 - Recent maintenance or upgrades
-- Why you're selling (buyers appreciate honesty)
-- What's included vs. not included
+- Why you are selling (buyers appreciate honesty)
+- What is included vs. not included
 
 **Pricing**
 - Set a fair asking price
@@ -2920,7 +2920,7 @@ Serious buyers may want to inspect in person. Be accommodating.
 
 **Negotiate Professionally**
 - Consider reasonable offers
-- Don't be offended by low offers—counter instead
+- Do not be offended by low offers—counter instead
 - Get everything in writing`
       },
       {
@@ -2931,7 +2931,7 @@ When you accept an offer, the buyer is prompted to complete payment.
 
 **Payment Processing**
 - Funds held in escrow until transaction completes
-- You'll receive confirmation when payment clears
+- You will receive confirmation when payment clears
 
 **Transfer of Ownership**
 - Meet buyer for pickup/inspection
@@ -3018,8 +3018,8 @@ Most buyers expect to negotiate. Price 5-10% higher than your minimum acceptable
 - Transparency builds trust
 
 **Forgetting Fees**
-- Factor in Vendibook's 10% service fee
-- Consider any shipping costs you'll cover`
+- Factor in Vendibook 10% service fee
+- Consider any shipping costs you will cover`
       }
     ],
     relatedArticles: ['selling-end-to-end', 'host-listing-checklist']
@@ -3173,7 +3173,7 @@ We may make exceptions for:
 **How to Request**
 1. Contact support via Zendesk
 2. Provide documentation
-3. We'll review on a case-by-case basis
+3. We will review on a case-by-case basis
 
 **Asset Issues**
 If the asset significantly differs from the listing or is unsafe:
@@ -3189,7 +3189,7 @@ If the asset significantly differs from the listing or is unsafe:
 1. Contact support within 48 hours
 2. Explain your situation
 3. Provide any supporting documentation
-4. We'll review and respond
+4. We will review and respond
 
 **What We Consider**
 - Booking terms and cancellation policy
@@ -3212,13 +3212,13 @@ If the asset significantly differs from the listing or is unsafe:
         title: 'Immediate Steps',
         content: `**1. Ensure Safety First**
 - Turn off equipment if sparking, smoking, or leaking
-- Evacuate if there's a fire or gas leak
+- Evacuate if there is a fire or gas leak
 - Call 911 for emergencies
 
 **2. Document the Issue**
 - Take photos and video immediately
 - Note the time and what happened
-- Don't try to fix before documenting
+- Do not try to fix before documenting
 
 **3. Contact the Host**
 - Message through Vendibook right away
@@ -3235,14 +3235,14 @@ If the asset significantly differs from the listing or is unsafe:
 - Current impact on your operation
 
 **Stay Calm and Professional**
-- Issues happen—it's not necessarily anyone's fault
+- Issues happen—it is not necessarily anyones fault
 - Focus on solutions, not blame
 - Keep all communication in Vendibook messaging`
       },
       {
         id: 'minor-issues',
         title: 'Handling Minor Issues',
-        content: `**What's "Minor"**
+        content: `**What is Minor**
 - Blown fuse (if spares available)
 - Clogged drain
 - Equipment needs basic reset
@@ -3250,20 +3250,20 @@ If the asset significantly differs from the listing or is unsafe:
 
 **Before DIY Fixes**
 - Get host permission first
-- Only attempt if you're comfortable
+- Only attempt if you are comfortable
 - Document before and after
 - Save any receipts for supplies
 
 **What NOT to Do**
-- Don't attempt electrical repairs
-- Don't modify gas connections
-- Don't force stuck equipment
-- Don't exceed your skill level`
+- Do not attempt electrical repairs
+- Do not modify gas connections
+- Do not force stuck equipment
+- Do not exceed your skill level`
       },
       {
         id: 'major-issues',
         title: 'Handling Major Issues',
-        content: `**What's "Major"**
+        content: `**What is Major**
 - Refrigeration failure (food safety risk)
 - Gas leak
 - Generator failure
@@ -3274,7 +3274,7 @@ If the asset significantly differs from the listing or is unsafe:
 1. Stop using the affected equipment
 2. Document extensively
 3. Contact host immediately
-4. Wait for host's direction on repairs
+4. Wait for host direction on repairs
 5. Consider contacting Vendibook support
 
 **Emergency Contacts**
@@ -3299,9 +3299,9 @@ If the asset significantly differs from the listing or is unsafe:
 1. Document everything
 2. Communicate with host first
 3. If unresolved, contact Vendibook support
-4. We'll mediate and determine fair resolution
+4. We will mediate and determine fair resolution
 
-**Note:** Normal wear and user-caused issues don't qualify for compensation.`
+**Note:** Normal wear and user-caused issues do not qualify for compensation.`
       }
     ],
     relatedArticles: ['dispute-evidence', 'deposits-protection']
@@ -3334,7 +3334,7 @@ If the asset significantly differs from the listing or is unsafe:
 - Include context (wider shots + close-ups)
 
 **Timestamp Your Photos**
-- Use your phone's camera (automatically timestamps)
+- Use your phone camera (automatically timestamps)
 - Include a newspaper/screen with date visible if possible
 - Email photos to yourself for additional timestamp proof
 
@@ -3355,7 +3355,7 @@ If the asset significantly differs from the listing or is unsafe:
 
 **Video Best Practices**
 - Keep under 2 minutes
-- Narrate what you're showing
+- Narrate what you are showing
 - Hold camera steady
 - Include wide shot and close-ups
 - Ensure audio is clear`
@@ -3389,11 +3389,11 @@ If the asset significantly differs from the listing or is unsafe:
 **What to Include in Description**
 - Clear summary of what happened
 - Specific dates and times
-- What resolution you're seeking
+- What resolution you are seeking
 - Reference to uploaded evidence
 
 **After Submission**
-- We'll review within 48 hours
+- We will review within 48 hours
 - May request additional information
 - Both parties get opportunity to respond
 - Decision typically within 5-7 business days`
@@ -3402,18 +3402,18 @@ If the asset significantly differs from the listing or is unsafe:
         id: 'tips',
         title: 'Pro Tips',
         content: `**Do**
-- Document immediately—don't wait
+- Document immediately—do not wait
 - Over-document rather than under-document
 - Be factual and objective
 - Organize evidence clearly
 
-**Don't**
+**Do Not**
 - Delete original files
 - Edit or alter photos
 - Make exaggerated claims
 - Use profanity or personal attacks
 
-**If You're a Host**
+**If You Are a Host**
 - Take check-in and check-out photos every time
 - Use a consistent checklist
 - Note condition on every rental
