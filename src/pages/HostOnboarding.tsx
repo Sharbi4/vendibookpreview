@@ -168,7 +168,7 @@ const HostOnboarding = () => {
                 List Your Asset
               </p>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 leading-tight">
-                Earn from your mobile food asset
+                Book more rentals. Close more sales.
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
                 Rent it out, sell it, or do both — with verified users, protected payments, and Stripe-powered payouts.
