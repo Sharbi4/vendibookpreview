@@ -399,17 +399,22 @@ const Header = () => {
         {/* Desktop Navigation - Simplified */}
         <nav className="hidden md:flex items-center gap-5">
           <Link 
-            to="/tools" 
-            className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            to="/search" 
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span>Host Tools</span>
+            Browse Listings
           </Link>
           <Link 
             to="/host" 
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             List Your Asset
+          </Link>
+          <Link 
+            to="/how-it-works" 
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            How It Works
           </Link>
         </nav>
 
@@ -535,14 +540,6 @@ const Header = () => {
             >
               <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
               List Your Asset
-            </Link>
-            <Link 
-              to="/tools" 
-              className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Sparkles className="h-4 w-4 text-primary" />
-              Host Tools
             </Link>
             <Link 
               to="/how-it-works" 

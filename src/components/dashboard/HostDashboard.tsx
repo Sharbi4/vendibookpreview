@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Plus, Truck, FileText, Eye, Loader2, Calendar, BarChart3, DollarSign } from 'lucide-react';
+import { Plus, Truck, FileText, Eye, Loader2, Calendar, BarChart3, DollarSign, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EnhancedStatCard from './EnhancedStatCard';
@@ -53,12 +53,20 @@ const HostDashboard = () => {
               Start earning by listing your food truck, trailer, or kitchen space. Join thousands of successful hosts.
             </p>
           </div>
-          <Button asChild size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all hover:scale-105">
-            <Link to="/create-listing">
-              <Plus className="h-5 w-5 mr-2" />
-              Create Listing
-            </Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button asChild size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all hover:scale-105">
+              <Link to="/create-listing">
+                <Plus className="h-5 w-5 mr-2" />
+                Create Listing
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="transition-all hover:scale-105">
+              <Link to="/tools">
+                <Sparkles className="h-4 w-4 mr-2 text-primary" />
+                Host Tools
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
 
