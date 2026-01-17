@@ -1,16 +1,15 @@
 import { Link } from 'react-router-dom';
-import { Plus, Truck, FileText, Eye, Loader2, Calendar, BarChart3, DollarSign, Sparkles } from 'lucide-react';
+import { Plus, Truck, Eye, Loader2, Calendar, BarChart3, DollarSign, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import EnhancedStatCard from './EnhancedStatCard';
-import StripeStatusCard from './StripeStatusCard';
+import { NextStepCard } from './NextStepCard';
+import { CompactStatCard } from './CompactStatCard';
+import { CompactInsights } from './CompactInsights';
 import HostListingCard from './HostListingCard';
 import BookingRequestsSection from './BookingRequestsSection';
 import SellerSalesSection from './SellerSalesSection';
-import { AIInsightsCard } from './AIInsightsCard';
 import { EnhancedAnalytics } from './EnhancedAnalytics';
 import { RevenueAnalyticsCard } from './RevenueAnalyticsCard';
-import { HostOnboardingCard } from './HostOnboardingCard';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
@@ -22,7 +21,7 @@ import { useState } from 'react';
 const HostDashboard = () => {
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing } = useHostListings();
   const { stats: bookingStats } = useHostBookings();
-  const { isConnected, hasAccountStarted, isLoading: stripeLoading, connectStripe, isConnecting, openStripeDashboard, isOpeningDashboard } = useStripeConnect();
+  const { isConnected, isLoading: stripeLoading, connectStripe, isConnecting, openStripeDashboard, isOpeningDashboard } = useStripeConnect();
   const { analytics, isLoading: analyticsLoading } = useListingAnalytics();
   const { analytics: revenueAnalytics, isLoading: revenueLoading } = useRevenueAnalytics();
   const [showStripeModal, setShowStripeModal] = useState(false);
@@ -40,173 +39,114 @@ const HostDashboard = () => {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Hero CTA with enhanced gradient */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-primary/15 via-primary/10 to-purple-500/10 rounded-2xl p-8 border border-primary/20">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-        <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl" />
-        
-        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">List Your Asset</h2>
-            <p className="text-muted-foreground max-w-md">
-              Start earning by listing your food truck, trailer, or kitchen space. Join thousands of successful hosts.
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button asChild size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all hover:scale-105">
-              <Link to="/create-listing">
-                <Plus className="h-5 w-5 mr-2" />
-                Create Listing
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="transition-all hover:scale-105">
-              <Link to="/tools">
-                <Sparkles className="h-4 w-4 mr-2 text-primary" />
-                Host Tools
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div className="space-y-6">
+      {/* A) Next Step Action Card - Single priority action */}
+      <NextStepCard 
+        onConnectStripe={handleConnectStripe}
+        isConnectingStripe={isConnecting}
+      />
 
-      {/* Host Onboarding Progress Card - Next Best Action */}
-      <HostOnboardingCard />
-
-      {/* Stripe Status - only show if onboarding card is hidden (all steps complete) */}
-      {isConnected && (
-        <StripeStatusCard 
-          isConnected={isConnected}
-          hasAccountStarted={hasAccountStarted}
-          isLoading={stripeLoading}
-          isOpeningDashboard={isOpeningDashboard}
-          onConnect={handleConnectStripe}
-          onOpenDashboard={openStripeDashboard}
-        />
-      )}
-
-      {/* AI Insights Section - Now powered by real AI */}
-      <AIInsightsCard />
-
-      {/* Enhanced Quick Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <EnhancedStatCard 
+      {/* B) Key Metrics Row - Compact, 4 stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <CompactStatCard 
           icon={Truck} 
-          label="Total Listings" 
-          value={stats.total}
-          subtext={`${stats.published} active`}
-          variant="primary"
+          label="Active Listings" 
+          value={stats.published}
         />
-        <EnhancedStatCard 
+        <CompactStatCard 
           icon={Eye} 
-          label="Total Views" 
+          label="Views (30d)" 
           value={analytics?.totalViews || 0}
-          trend={analytics?.viewsTrend}
-          variant="success"
         />
-        <EnhancedStatCard 
+        <CompactStatCard 
           icon={Calendar} 
           label="Pending Requests" 
           value={bookingStats.pending}
-          subtext="Awaiting response"
-          variant="warning"
+          highlight={bookingStats.pending > 0}
         />
-        <EnhancedStatCard 
-          icon={FileText} 
-          label="Drafts" 
-          value={stats.drafts}
-          subtext="Ready to publish"
-          variant="info"
+        <CompactStatCard 
+          icon={DollarSign} 
+          label="Revenue (30d)" 
+          value={revenueAnalytics?.revenueThisMonth ? `$${revenueAnalytics.revenueThisMonth.toLocaleString()}` : '$0'}
         />
       </div>
 
-      {/* Main Tabs */}
+      {/* C) Listings Module - Primary work area */}
       <Tabs defaultValue="listings" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-6 bg-muted/50 p-1 rounded-xl">
-          <TabsTrigger value="listings" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            My Listings
+        <TabsList className="grid w-full grid-cols-4 mb-4 bg-muted/50 p-1 rounded-lg h-10">
+          <TabsTrigger value="listings" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            Listings
           </TabsTrigger>
-          <TabsTrigger value="bookings" className="relative rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            Booking Requests
+          <TabsTrigger value="bookings" className="relative rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            Requests
             {bookingStats.pending > 0 && (
-              <span className="ml-2 px-2 py-0.5 text-xs bg-amber-500 text-white rounded-full animate-pulse">
+              <span className="ml-1.5 px-1.5 py-0.5 text-[10px] bg-amber-500 text-white rounded-full">
                 {bookingStats.pending}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            <BarChart3 className="h-4 w-4 mr-1.5" />
+          <TabsTrigger value="analytics" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
             Analytics
           </TabsTrigger>
-          <TabsTrigger value="revenue" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            <DollarSign className="h-4 w-4 mr-1.5" />
+          <TabsTrigger value="revenue" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
             Revenue
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="listings" className="animate-fade-in">
+        <TabsContent value="listings" className="mt-0">
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">My Listings</h3>
-              {listings.length > 0 && (
-                <Button variant="outline" size="sm" asChild className="hover:scale-105 transition-transform">
-                  <Link to="/create-listing">
-                    <Plus className="h-4 w-4 mr-1" />
-                    New Listing
-                  </Link>
-                </Button>
-              )}
+              <h3 className="text-base font-semibold text-foreground">My Listings</h3>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/create-listing">
+                  <Plus className="h-4 w-4 mr-1.5" />
+                  New Listing
+                </Link>
+              </Button>
             </div>
 
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
             ) : listings.length === 0 ? (
-              <div className="relative overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl p-12 text-center border border-border/50">
-                <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-                <Truck className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h4 className="font-semibold text-foreground text-lg mb-2">You haven't listed anything yet</h4>
-                <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-                  Create your first listing to start earning on Vendibook.
+              <div className="bg-muted/30 rounded-xl p-8 text-center border border-border/50">
+                <Truck className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                <h4 className="font-medium text-foreground mb-1">No listings yet</h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Create your first listing to start earning.
                 </p>
-                <Button asChild size="lg" className="shadow-lg">
+                <Button asChild size="sm">
                   <Link to="/create-listing">
-                    <Plus className="h-4 w-4 mr-2" />
-                    List Your First Asset
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    Create Listing
                   </Link>
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4">
-                {listings.map((listing, index) => (
-                  <div 
+              <div className="space-y-3">
+                {listings.map((listing) => (
+                  <HostListingCard
                     key={listing.id}
-                    className="animate-fade-in"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <HostListingCard
-                      listing={listing}
-                      onPause={pauseListing}
-                      onPublish={handlePublish}
-                      onDelete={deleteListing}
-                    />
-                  </div>
+                    listing={listing}
+                    onPause={pauseListing}
+                    onPublish={handlePublish}
+                    onDelete={deleteListing}
+                  />
                 ))}
               </div>
             )}
           </div>
         </TabsContent>
 
-        <TabsContent value="bookings" className="animate-fade-in">
+        <TabsContent value="bookings" className="mt-0">
           <BookingRequestsSection />
         </TabsContent>
 
-        <TabsContent value="analytics" className="animate-fade-in">
+        <TabsContent value="analytics" className="mt-0">
           {analyticsLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
           ) : analytics ? (
             <EnhancedAnalytics 
@@ -215,21 +155,20 @@ const HostDashboard = () => {
               bookingStats={bookingStats}
             />
           ) : (
-            <div className="relative overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl p-12 text-center border border-border/50">
-              <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-              <BarChart3 className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h4 className="font-semibold text-foreground text-lg mb-2">No analytics yet</h4>
-              <p className="text-muted-foreground max-w-sm mx-auto">
-                Analytics will appear once your listings start getting views.
+            <div className="bg-muted/30 rounded-xl p-8 text-center border border-border/50">
+              <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+              <h4 className="font-medium text-foreground mb-1">No analytics yet</h4>
+              <p className="text-sm text-muted-foreground">
+                Analytics appear once your listings get views.
               </p>
             </div>
           )}
         </TabsContent>
 
-        <TabsContent value="revenue" className="animate-fade-in">
+        <TabsContent value="revenue" className="mt-0">
           {revenueLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
           ) : revenueAnalytics ? (
             <RevenueAnalyticsCard 
@@ -238,17 +177,30 @@ const HostDashboard = () => {
               isOpeningDashboard={isOpeningDashboard}
             />
           ) : (
-            <div className="relative overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl p-12 text-center border border-border/50">
-              <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-              <DollarSign className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h4 className="font-semibold text-foreground text-lg mb-2">No revenue yet</h4>
-              <p className="text-muted-foreground max-w-sm mx-auto">
-                Revenue analytics will appear once you start making sales.
+            <div className="bg-muted/30 rounded-xl p-8 text-center border border-border/50">
+              <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+              <h4 className="font-medium text-foreground mb-1">No revenue yet</h4>
+              <p className="text-sm text-muted-foreground">
+                Revenue analytics appear once you make sales.
               </p>
             </div>
           )}
         </TabsContent>
       </Tabs>
+
+      {/* D) Insights - Collapsed by default, max 2 visible */}
+      <CompactInsights />
+
+      {/* E) Host Tools - Small link only */}
+      <div className="flex items-center justify-between py-3 px-4 bg-muted/30 rounded-lg border border-border/50">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Wrench className="h-4 w-4" />
+          <span>Need help with pricing or permits?</span>
+        </div>
+        <Button variant="ghost" size="sm" asChild className="text-primary h-7">
+          <Link to="/tools">Host Tools →</Link>
+        </Button>
+      </div>
 
       {/* Sales Section */}
       <SellerSalesSection />
