@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, DollarSign, Sparkles, Loader2, TrendingUp, TrendingDown, Target, Wallet, Info, Zap, CreditCard, Banknote } from 'lucide-react';
+import { Calendar, DollarSign, Sparkles, Loader2, TrendingUp, TrendingDown, Target, Wallet, Info, Zap, CreditCard, Banknote, Check } from 'lucide-react';
 import { ListingFormData, FreightPayer } from '@/types/listing';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -620,6 +620,10 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                   </Label>
                   <p className="text-sm text-muted-foreground mt-1">
                     Accept cash or other payments at pickup/delivery. You'll arrange payment directly with the buyer.
+                  </p>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1.5 flex items-center gap-1">
+                    <Check className="w-3 h-3" />
+                    No platform fee on in-person payments
                   </p>
                 </div>
               </div>
