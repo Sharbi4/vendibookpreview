@@ -559,6 +559,12 @@ const InquiryForm = ({
         </div>
       </div>
 
+      {/* Trust Badge before submit */}
+      <div className="mb-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+        <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+        <span>Protected by Vendibook</span>
+      </div>
+
       {/* Buy Now Button */}
       <Button 
         onClick={handlePurchase}

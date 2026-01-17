@@ -66,13 +66,27 @@ const HostCard = ({
         <VerificationBadge isVerified={isVerified} variant="card" />
       </div>
 
+      {/* Trust mini-row */}
+      <div className="mb-4 p-3 bg-muted/50 rounded-lg flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1">
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+          <span>{isVerified ? 'Verified Host' : 'Host'}</span>
+        </div>
+        <span className="text-border">•</span>
+        <div className="flex items-center gap-1">
+          <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+          <span>Secure Payments</span>
+        </div>
+      </div>
+
       <div className="flex gap-2">
-        {/* Message button demoted to ghost variant to emphasize primary booking CTA */}
+        {/* Message button demoted to ghost - "Ask a Question" label is clearer */}
         <MessageHostButton 
           listingId={listingId}
           hostId={hostId}
           variant="ghost"
           className="flex-1 text-muted-foreground hover:text-foreground"
+          label="Ask a Question"
         />
         <Button 
           variant="ghost" 

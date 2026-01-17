@@ -434,13 +434,14 @@ export const ListingWizard: React.FC = () => {
                 <Button
                   onClick={() => saveListing(true)}
                   disabled={isSaving || !canPublish() || !isOnboardingComplete}
+                  title={!isOnboardingComplete ? 'Connect Stripe to publish' : undefined}
                 >
                   {isSaving ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
                     <Send className="w-4 h-4 mr-2" />
                   )}
-                  Publish
+                  {!isOnboardingComplete ? 'Connect Stripe to Publish' : 'Publish'}
                 </Button>
               </>
             ) : (

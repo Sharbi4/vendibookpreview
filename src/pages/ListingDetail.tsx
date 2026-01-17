@@ -70,9 +70,9 @@ const ListingDetail = () => {
             This listing may have been removed or is no longer available.
           </p>
           <Button asChild>
-            <Link to="/">
+            <Link to="/search">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to listings
+              Back to Search
             </Link>
           </Button>
         </div>
@@ -93,9 +93,9 @@ const ListingDetail = () => {
         {/* Back Button */}
         <div className="container pt-6">
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/">
+            <Link to="/search">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to listings
+              Back to Search
             </Link>
           </Button>
         </div>

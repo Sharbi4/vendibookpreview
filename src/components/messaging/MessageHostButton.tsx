@@ -13,6 +13,7 @@ interface MessageHostButtonProps {
   size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
   fullWidth?: boolean;
+  label?: string;
 }
 
 const MessageHostButton = ({
@@ -22,6 +23,7 @@ const MessageHostButton = ({
   size = 'default',
   className = '',
   fullWidth = false,
+  label = 'Message Host',
 }: MessageHostButtonProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -74,7 +76,7 @@ const MessageHostButton = ({
       ) : (
         <MessageCircle className="h-4 w-4 mr-2" />
       )}
-      Message Host
+      {label}
     </Button>
   );
 };

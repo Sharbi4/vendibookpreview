@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import HostDashboard from '@/components/dashboard/HostDashboard';
 import ShopperDashboard from '@/components/dashboard/ShopperDashboard';
 import VerificationProgress from '@/components/verification/VerificationProgress';
@@ -13,7 +14,9 @@ import {
   User,
   Bell,
   Shield,
-  ShieldCheck
+  ShieldCheck,
+  Home,
+  ShoppingBag
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -87,11 +90,35 @@ const Dashboard = () => {
           <VerificationProgress />
         </div>
 
-        {/* Host Dashboard */}
-        {isHost && <HostDashboard />}
-
-        {/* Shopper Dashboard - show for shoppers OR users with no roles */}
-        {(!isHost || isShopper) && <ShopperDashboard />}
+        {/* Dashboard Content - Tabs for dual-role users */}
+        {isHost && isShopper ? (
+          <Tabs defaultValue="host" className="w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-2 mb-6 bg-muted/50 p-1 rounded-xl mx-auto">
+              <TabsTrigger value="host" className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <Home className="h-4 w-4" />
+                As Host
+              </TabsTrigger>
+              <TabsTrigger value="renter" className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <ShoppingBag className="h-4 w-4" />
+                As Renter
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="host" className="animate-fade-in">
+              <HostDashboard />
+            </TabsContent>
+            
+            <TabsContent value="renter" className="animate-fade-in">
+              <ShopperDashboard />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <>
+            {/* Single role: show appropriate dashboard */}
+            {isHost && <HostDashboard />}
+            {!isHost && <ShopperDashboard />}
+          </>
+        )}
 
         {/* Enhanced Account Info */}
         <div className="relative overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl p-6 mt-8 border border-border/50">
