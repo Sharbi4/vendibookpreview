@@ -13,6 +13,7 @@ import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { supabase } from '@/integrations/supabase/client';
 import { CATEGORY_LABELS, ListingCategory, FreightPayer, AMENITIES_BY_CATEGORY, FREIGHT_CATEGORY_LABELS, FreightCategory, FulfillmentType, isMobileAsset, isStaticLocation as isStaticLocationFn } from '@/types/listing';
 import { LocationSearchInput } from '@/components/search/LocationSearchInput';
+import { AvailabilityStep } from './AvailabilityStep';
 import { PublishChecklist, createChecklistItems } from './PublishChecklist';
 import { PublishSuccessModal } from './PublishSuccessModal';
 import { AuthGateModal } from './AuthGateModal';
@@ -153,6 +154,10 @@ export const PublishWizard: React.FC = () => {
   const [isStaticLocation, setIsStaticLocation] = useState(false);
   const [pickupCoordinates, setPickupCoordinates] = useState<[number, number] | null>(null);
 
+  // Availability step state
+  const [availableFrom, setAvailableFrom] = useState<string | null>(null);
+  const [availableTo, setAvailableTo] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchListing = async () => {
       if (!listingId) return;
@@ -209,6 +214,9 @@ export const PublishWizard: React.FC = () => {
       // Determine if it's a static location (either by category or toggled)
       const categoryIsStatic = isStaticLocationFn(data.category as ListingCategory);
       setIsStaticLocation(categoryIsStatic || (data.fulfillment_type === 'on_site'));
+      // Availability fields
+      setAvailableFrom(data.available_from || null);
+      setAvailableTo(data.available_to || null);
       setIsLoading(false);
     };
 
@@ -550,6 +558,11 @@ export const PublishWizard: React.FC = () => {
           hours_of_access: hoursOfAccess || null,
           location_notes: locationNotes || null,
         };
+      } else if (step === 'availability') {
+        updateData = {
+          available_from: availableFrom || null,
+          available_to: availableTo || null,
+        };
       }
 
       if (Object.keys(updateData).length > 0) {
@@ -564,8 +577,11 @@ export const PublishWizard: React.FC = () => {
         setListing(prev => prev ? { ...prev, ...updateData } : null);
       }
 
-      // Move to next step
-      const steps: PublishStep[] = ['photos', 'pricing', 'details', 'location', 'stripe', 'review'];
+      // Move to next step - rental listings have availability step after pricing
+      const isRentalListing = listing.mode === 'rent';
+      const steps: PublishStep[] = isRentalListing 
+        ? ['photos', 'pricing', 'availability', 'details', 'location', 'stripe', 'review']
+        : ['photos', 'pricing', 'details', 'location', 'stripe', 'review'];
       const currentIndex = steps.indexOf(step);
       if (currentIndex < steps.length - 1) {
         setStep(steps[currentIndex + 1]);
@@ -1165,6 +1181,35 @@ export const PublishWizard: React.FC = () => {
                 </div>
               )}
 
+              {/* Step: Availability (Rental only) */}
+              {step === 'availability' && listing.mode === 'rent' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Set availability</h2>
+                    <p className="text-muted-foreground">
+                      Control when your listing is available for bookings.
+                    </p>
+                  </div>
+
+                  <AvailabilityStep
+                    listingId={listing.id}
+                    availableFrom={availableFrom}
+                    availableTo={availableTo}
+                    onAvailableFromChange={setAvailableFrom}
+                    onAvailableToChange={setAvailableTo}
+                  />
+
+                  <div className="flex gap-3 pt-4">
+                    <Button variant="outline" onClick={() => setStep('pricing')}>Back</Button>
+                    <Button onClick={saveStep} disabled={isSaving}>
+                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      Continue
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Step: Details */}
               {step === 'details' && (
                 <div className="space-y-6">
@@ -1469,7 +1514,7 @@ export const PublishWizard: React.FC = () => {
 
                   <div className="flex flex-col gap-3">
                     <div className="flex gap-3">
-                      <Button variant="outline" onClick={() => setStep('pricing')}>Back</Button>
+                      <Button variant="outline" onClick={() => setStep(listing.mode === 'rent' ? 'availability' : 'pricing')}>Back</Button>
                       <Button onClick={handleDetailsSave} disabled={isSaving || !title || !description}>
                         {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                         {!user && isGuestDraft ? 'Save & Continue' : 'Continue'}
