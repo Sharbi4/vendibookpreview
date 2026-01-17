@@ -10,6 +10,7 @@ import { z } from 'zod';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 import Header from '@/components/layout/Header';
 import { trackSignupCompleted } from '@/lib/analytics';
+import { trackSignupConversion } from '@/lib/gtagConversions';
 
 const authSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -108,6 +109,11 @@ const Auth = () => {
         } else {
           // Track signup completion
           trackSignupCompleted(selectedRole);
+          
+          // Track Google Ads conversion for host signups
+          if (selectedRole === 'host') {
+            trackSignupConversion({ role: 'host' });
+          }
           
           toast({
             title: 'Welcome to Vendibook!',
