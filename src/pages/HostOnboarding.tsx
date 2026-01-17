@@ -4,6 +4,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import BuiltInShareKit from '@/components/host/BuiltInShareKit';
 import {
   Popover,
   PopoverContent,
@@ -244,6 +245,9 @@ const HostOnboarding = () => {
             </div>
           </div>
         </section>
+
+        {/* BUILT-IN SHARE KIT */}
+        <BuiltInShareKit />
 
         {/* HOW IT WORKS */}
         <section id="how-it-works" className="py-14 md:py-20 bg-muted/30 scroll-mt-20">
