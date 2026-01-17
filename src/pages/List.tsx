@@ -104,7 +104,7 @@ const ListPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/20">
+          <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/20 border border-border">
             <img src={vendibookIcon} alt="Vendibook" className="w-14 h-14 object-contain" />
           </div>
           <h2 className="text-3xl font-bold mb-3">List your asset</h2>
@@ -182,7 +182,7 @@ const ListPage: React.FC = () => {
 
         {/* Benefits section */}
         <motion.div 
-          className="bg-muted/50 rounded-2xl p-6 space-y-4"
+          className="bg-muted/50 rounded-2xl p-6 space-y-4 border border-border"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
@@ -206,7 +206,7 @@ const ListPage: React.FC = () => {
 
         {/* Rotating tips */}
         <motion.div 
-          className="bg-muted/50 rounded-2xl p-4 flex items-start gap-3"
+          className="bg-muted/50 rounded-2xl p-4 flex items-start gap-3 border border-border"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
