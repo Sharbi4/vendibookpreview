@@ -1,40 +1,33 @@
 import { Star, Quote, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
-const reviews = [
-  {
-    id: 1,
-    name: "Marcus Johnson",
-    role: "Food Truck Owner",
-    avatar: "",
-    rating: 5,
-    text: "Found the perfect spot for my food truck. The booking process was seamless and my equipment was protected the entire time.",
-    location: "Atlanta, GA"
-  },
-  {
-    id: 2,
-    name: "Sarah Chen",
-    role: "Event Caterer",
-    avatar: "",
-    rating: 5,
-    text: "I've rented from three different hosts now. Every experience has been professional and the escrow payments give me total peace of mind.",
-    location: "Houston, TX"
-  },
-  {
-    id: 3,
-    name: "David Williams",
-    role: "Ghost Kitchen Host",
-    avatar: "",
-    rating: 5,
-    text: "As a host, I love how VendiBook handles everything. Document verification and secure payments mean I can focus on helping entrepreneurs succeed.",
-    location: "Miami, FL"
-  }
-];
-
+const reviews = [{
+  id: 1,
+  name: "Marcus Johnson",
+  role: "Food Truck Owner",
+  avatar: "",
+  rating: 5,
+  text: "Found the perfect spot for my food truck. The booking process was seamless and my equipment was protected the entire time.",
+  location: "Atlanta, GA"
+}, {
+  id: 2,
+  name: "Sarah Chen",
+  role: "Event Caterer",
+  avatar: "",
+  rating: 5,
+  text: "I've rented from three different hosts now. Every experience has been professional and the escrow payments give me total peace of mind.",
+  location: "Houston, TX"
+}, {
+  id: 3,
+  name: "David Williams",
+  role: "Ghost Kitchen Host",
+  avatar: "",
+  rating: 5,
+  text: "As a host, I love how VendiBook handles everything. Document verification and secure payments mean I can focus on helping entrepreneurs succeed.",
+  location: "Miami, FL"
+}];
 const ReviewsSection = () => {
-  return (
-    <section className="py-16 px-4 bg-background">
+  return <section className="py-16 px-4 bg-background">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
@@ -43,7 +36,7 @@ const ReviewsSection = () => {
             Trusted by Entrepreneurs
           </div>
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-            What Our Users Say
+            What Vendibook Users Say
           </h2>
           
           {/* Stats Row */}
@@ -65,11 +58,7 @@ const ReviewsSection = () => {
 
         {/* Reviews Grid - 3 cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {reviews.map((review) => (
-            <Card 
-              key={review.id} 
-              className="bg-card border-border/50 hover:shadow-lg transition-all duration-300"
-            >
+          {reviews.map(review => <Card key={review.id} className="bg-card border-border/50 hover:shadow-lg transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex items-start gap-3 mb-4">
                   <Avatar className="h-10 w-10 border-2 border-primary/20">
@@ -88,9 +77,7 @@ const ReviewsSection = () => {
                 </div>
                 
                 <div className="flex gap-0.5 mb-3">
-                  {[...Array(review.rating)].map((_, i) => (
-                    <Star key={i} className="h-3.5 w-3.5 fill-primary text-primary" />
-                  ))}
+                  {[...Array(review.rating)].map((_, i) => <Star key={i} className="h-3.5 w-3.5 fill-primary text-primary" />)}
                 </div>
                 
                 <div className="relative">
@@ -100,12 +87,9 @@ const ReviewsSection = () => {
                   </p>
                 </div>
               </CardContent>
-            </Card>
-          ))}
+            </Card>)}
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default ReviewsSection;
