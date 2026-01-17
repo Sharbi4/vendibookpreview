@@ -193,6 +193,10 @@ const InquiryForm = ({
   const validateForm = (): string | null => {
     if (!name.trim()) return 'Please enter your name';
     if (!email.trim()) return 'Please enter your email';
+    if (!phone.trim()) return 'Please enter your phone number';
+    if (!/^[\d\s\-\(\)\+]{10,}$/.test(phone.trim())) {
+      return 'Please enter a valid phone number (at least 10 digits)';
+    }
     if ((fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight') && !deliveryAddress.trim()) {
       return 'Please enter a delivery address';
     }
@@ -599,15 +603,16 @@ const InquiryForm = ({
         </div>
         
         <div>
-          <Label htmlFor="buyerPhone" className="text-sm text-muted-foreground mb-1 block">
-            Phone (optional)
+          <Label htmlFor="buyerPhone" className="text-sm font-medium mb-1 block">
+            Phone Number <span className="text-destructive">*</span>
           </Label>
           <Input
             id="buyerPhone"
             type="tel"
-            placeholder="Phone number"
+            placeholder="(555) 123-4567"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            required
           />
         </div>
       </div>
