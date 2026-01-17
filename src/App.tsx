@@ -36,6 +36,9 @@ const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
 const Messages = lazy(() => import("./pages/Messages"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminMetrics = lazy(() => import("./pages/AdminMetrics"));
+const AdminListings = lazy(() => import("./pages/AdminListings"));
+const AdminRisk = lazy(() => import("./pages/AdminRisk"));
 const NotificationPreferences = lazy(() => import("./pages/NotificationPreferences"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const HelpArticle = lazy(() => import("./pages/HelpArticle"));
@@ -125,6 +128,9 @@ const AnimatedRoutes = () => {
           <Route path="/messages" element={<PageTransition><Messages /></PageTransition>} />
           <Route path="/messages/:conversationId" element={<PageTransition><Messages /></PageTransition>} />
           <Route path="/admin" element={<PageTransition><AdminDashboard /></PageTransition>} />
+          <Route path="/admin/metrics" element={<PageTransition><AdminMetrics /></PageTransition>} />
+          <Route path="/admin/listings" element={<PageTransition><AdminListings /></PageTransition>} />
+          <Route path="/admin/risk" element={<PageTransition><AdminRisk /></PageTransition>} />
           <Route path="/notification-preferences" element={<PageTransition><NotificationPreferences /></PageTransition>} />
           <Route path="/help" element={<PageTransition><HelpCenter /></PageTransition>} />
           <Route path="/help/:slug" element={<PageTransition><HelpArticle /></PageTransition>} />
