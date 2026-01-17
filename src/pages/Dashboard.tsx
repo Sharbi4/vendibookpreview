@@ -63,9 +63,9 @@ const Dashboard = () => {
           
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" asChild className="h-8 text-xs">
-              <Link to="/profile/edit">
+              <Link to="/account">
                 <User className="h-3.5 w-3.5 mr-1.5" />
-                My Profile
+                My Account
               </Link>
             </Button>
             <Button variant="outline" size="sm" asChild className="h-8 text-xs">

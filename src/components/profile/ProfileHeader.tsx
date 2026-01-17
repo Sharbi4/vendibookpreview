@@ -58,7 +58,7 @@ const ProfileHeader = ({
               </h1>
               {isOwnProfile && (
                 <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>
-                  <Link to="/profile/edit">
+                  <Link to="/account">
                     <Edit className="h-3 w-3 mr-1" />
                     Edit
                   </Link>
