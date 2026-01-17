@@ -197,6 +197,22 @@ export const trackAlertsEnabled = (category?: string, zipCode?: string): void =>
   });
 };
 
+// City landing page events
+export const trackCityListModuleViewed = (): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'city_list_module_viewed',
+  });
+};
+
+export const trackCityListClicked = (city: string): void => {
+  trackEvent({
+    category: 'Supply',
+    action: `city_list_clicked_${city}`,
+    label: city,
+  });
+};
+
 // Generic analytics exports for other parts of the app
 export { trackEvent };
 export type { AnalyticsEvent };

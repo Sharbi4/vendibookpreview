@@ -1,6 +1,8 @@
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, DollarSign, Calendar, Shield, Sparkles, CreditCard, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { trackCityListModuleViewed, trackCityListClicked } from '@/lib/analytics';
 
 const benefits = [
   { icon: Calendar, text: 'Set your own availability & pricing' },
@@ -9,8 +11,41 @@ const benefits = [
   { icon: DollarSign, text: 'No upfront fees—only pay when you earn' },
 ];
 
+const topCities = [
+  { name: 'Houston', slug: 'houston' },
+  { name: 'Los Angeles', slug: 'los-angeles' },
+  { name: 'Dallas', slug: 'dallas' },
+  { name: 'Phoenix', slug: 'phoenix' },
+];
+
 const SupplySection = () => {
   const navigate = useNavigate();
+  const moduleRef = useRef<HTMLDivElement>(null);
+  const hasTrackedView = useRef(false);
+
+  // Track module impression
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasTrackedView.current) {
+          trackCityListModuleViewed();
+          hasTrackedView.current = true;
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (moduleRef.current) {
+      observer.observe(moduleRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  const handleCityClick = (city: { name: string; slug: string }) => {
+    trackCityListClicked(city.slug);
+    navigate(`/${city.slug}/list`);
+  };
 
   return (
     <section className="py-16 md:py-20 bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -37,16 +72,35 @@ const SupplySection = () => {
               ))}
             </ul>
 
-            {/* CTA */}
+            {/* Primary CTA */}
             <Button
               variant="gradient-premium"
               size="lg"
               onClick={() => navigate('/host')}
-              className="gap-2"
+              className="gap-2 mb-6"
             >
               List Your Asset
               <ArrowRight className="h-5 w-5" />
             </Button>
+
+            {/* City module - compact secondary routing */}
+            <div ref={moduleRef} className="pt-4 border-t border-border/50">
+              <p className="text-sm font-medium text-foreground mb-2">List in top cities</p>
+              <p className="text-xs text-muted-foreground mb-3">
+                Get early visibility in these launch markets.
+              </p>
+              <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+                {topCities.map((city) => (
+                  <button
+                    key={city.slug}
+                    onClick={() => handleCityClick(city)}
+                    className="flex-shrink-0 px-3 py-1.5 text-sm font-medium text-foreground bg-background border border-border rounded-full hover:border-primary hover:text-primary transition-colors"
+                  >
+                    {city.name}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Right: AI Tools callout */}
