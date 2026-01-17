@@ -564,12 +564,12 @@ const PublicProfile = () => {
 
       {/* Section 2: Mobile Sticky CTA */}
       {!isOwnProfile && isHost && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border px-4 py-3 z-40 safe-area-inset-bottom">
-          <div className="flex gap-2 max-w-lg mx-auto">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border shadow-lg z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 12px)' }}>
+          <div className="flex gap-2 px-4 py-3 max-w-lg mx-auto">
             <Button 
               onClick={handleMessageHost} 
               disabled={isMessaging}
-              className="flex-1 h-11"
+              className="flex-1 h-11 rounded-lg font-medium"
             >
               {isMessaging ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -581,9 +581,9 @@ const PublicProfile = () => {
             <Button 
               variant="outline" 
               onClick={handleViewListingsClick}
-              className="flex-1 h-11"
+              className="flex-1 h-11 rounded-lg font-medium"
             >
-              Listings ({stats?.totalListings || 0})
+              View Listings ({stats?.totalListings || 0})
             </Button>
           </div>
         </div>
