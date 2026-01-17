@@ -427,6 +427,15 @@ const Header = () => {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-2 ml-4">
+          {user && (
+            <Button 
+              variant="gradient"
+              className="rounded-full"
+              onClick={() => navigate('/list')}
+            >
+              Create a Listing
+            </Button>
+          )}
           {user && <NotificationCenter />}
           {user ? (
             <DropdownMenu>
