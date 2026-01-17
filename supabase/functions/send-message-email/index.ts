@@ -54,8 +54,16 @@ Deno.serve(async (req) => {
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            @font-face {
+              font-family: 'Sofia Pro Soft';
+              src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
+              font-weight: 300;
+              font-style: normal;
+            }
+          </style>
         </head>
-        <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
+        <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
           <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
             <!-- Header with Logo -->
             <div style="text-align: center; margin-bottom: 40px;">

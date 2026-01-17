@@ -227,7 +227,7 @@ serve(async (req) => {
           : `This is a friendly reminder that your Instant Book booking for <strong>${listingTitle}</strong> is still waiting for required documents.`;
 
         const emailHtml = `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: ${emailHeaderBg}; padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
               <h1 style="color: white; margin: 0; font-size: 22px;">${emailHeaderIcon} ${emailHeaderTitle}</h1>
             </div>
