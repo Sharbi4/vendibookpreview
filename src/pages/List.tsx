@@ -104,8 +104,8 @@ const ListPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/20">
-            <Sparkles className="w-10 h-10 text-primary-foreground" />
+          <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/20">
+            <img src={vendibookIcon} alt="Vendibook" className="w-14 h-14 object-contain" />
           </div>
           <h2 className="text-3xl font-bold mb-3">List your asset</h2>
           <p className="text-muted-foreground text-lg max-w-md mx-auto">
