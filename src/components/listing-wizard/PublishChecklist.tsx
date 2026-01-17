@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Circle, Camera, DollarSign, Calendar, FileText, CreditCard, UserCheck } from 'lucide-react';
+import { Check, Circle, Camera, DollarSign, Calendar, FileText, CreditCard, UserCheck, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface ChecklistItem {
@@ -92,6 +92,7 @@ export const createChecklistItems = (
     hasPricing: boolean;
     hasAvailability: boolean;
     hasDescription: boolean;
+    hasLocation: boolean;
     hasStripe: boolean;
     hasVerification: boolean;
     isRental: boolean;
@@ -136,6 +137,14 @@ export const createChecklistItems = (
       completed: formState.hasDescription,
       required: true,
       current: currentStep === 'details',
+    },
+    {
+      id: 'location',
+      label: 'Location & fulfillment',
+      icon: <MapPin className="w-4 h-4" />,
+      completed: formState.hasLocation,
+      required: true,
+      current: currentStep === 'location',
     },
     {
       id: 'stripe',
