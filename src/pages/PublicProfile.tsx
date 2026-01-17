@@ -333,141 +333,177 @@ const PublicProfile = () => {
       />
       <Header />
 
-      <main className="flex-1 pb-20 md:pb-0">
-        {/* Section 1: Header */}
+      <main className="flex-1 pb-24 md:pb-0">
+        {/* Section 1: Header with Desktop CTA */}
         <div className="border-b bg-card">
           <div className="container py-5 md:py-6">
-            <div className="flex items-start gap-4">
-              {/* Avatar */}
-              <div className="relative flex-shrink-0">
-                <Avatar className="h-16 w-16 md:h-20 md:w-20 border-2 border-border">
-                  <AvatarImage src={profile.avatar_url || undefined} alt={displayName} />
-                  <AvatarFallback className="text-xl font-bold bg-primary text-primary-foreground">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                {profile.identity_verified && (
-                  <div className="absolute -bottom-0.5 -right-0.5 bg-background rounded-full p-0.5 shadow-sm border border-border">
-                    <ShieldCheck className="h-4 w-4 text-emerald-600" />
+            <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
+              {/* Left: Profile Info */}
+              <div className="flex items-start gap-4 flex-1 min-w-0">
+                {/* Avatar */}
+                <div className="relative flex-shrink-0">
+                  <Avatar className="h-16 w-16 md:h-20 md:w-20 border-2 border-border">
+                    <AvatarImage src={profile.avatar_url || undefined} alt={displayName} />
+                    <AvatarFallback className="text-xl font-bold bg-primary text-primary-foreground">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  {profile.identity_verified && (
+                    <div className="absolute -bottom-0.5 -right-0.5 bg-background rounded-full p-0.5 shadow-sm border border-border">
+                      <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h1 className="text-lg md:text-xl font-bold text-foreground truncate">
+                        {displayName}
+                      </h1>
+                      {profile.business_name && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <Building2 className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{profile.business_name}</span>
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <MapPin className="h-3 w-3 flex-shrink-0" />
+                        <span>{serviceArea || 'Service area not set'}</span>
+                      </p>
+                    </div>
+
+                    {/* Overflow Menu - Mobile only position */}
+                    <div className="md:hidden">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 -mt-1">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                          <DropdownMenuItem onClick={handleShare}>
+                            <Share2 className="h-4 w-4 mr-2" />
+                            Share profile
+                          </DropdownMenuItem>
+                          {!isOwnProfile && (
+                            <DropdownMenuItem onClick={handleReport}>
+                              <Flag className="h-4 w-4 mr-2" />
+                              Report profile
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => setShowSafetyModal(true)}>
+                            <ShieldAlert className="h-4 w-4 mr-2" />
+                            Safety tips
+                          </DropdownMenuItem>
+                          {isOwnProfile && (
+                            <DropdownMenuItem onClick={() => navigate('/account')}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              Edit profile
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+
+                  {/* Trust Pills - Max 4 */}
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {profile.identity_verified ? (
+                      <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-emerald-500/50 text-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20 dark:text-emerald-400">
+                        <ShieldCheck className="h-3 w-3 mr-0.5" />
+                        Verified ID
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-muted text-muted-foreground">
+                        Not verified
+                      </Badge>
+                    )}
+                    {responseTimeData?.avgResponseTime && (
+                      <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-blue-500/50 text-blue-700 bg-blue-50/50 dark:bg-blue-950/20 dark:text-blue-400">
+                        <Clock className="h-3 w-3 mr-0.5" />
+                        ~{responseTimeData.avgResponseTime}
+                      </Badge>
+                    )}
+                    {(completedBookings || 0) > 0 && (
+                      <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-purple-500/50 text-purple-700 bg-purple-50/50 dark:bg-purple-950/20 dark:text-purple-400">
+                        <Calendar className="h-3 w-3 mr-0.5" />
+                        {completedBookings} completed
+                      </Badge>
+                    )}
+                    {stats?.averageRating && (
+                      <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-amber-500/50 text-amber-700 bg-amber-50/50 dark:bg-amber-950/20 dark:text-amber-400">
+                        <Star className="h-3 w-3 mr-0.5 fill-amber-500" />
+                        {stats.averageRating.toFixed(1)} ({stats.totalReviewsReceived})
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Member since */}
+                  <p className="text-[10px] text-muted-foreground mt-1.5">
+                    Member since {memberSinceText}
+                  </p>
+                </div>
+              </div>
+
+              {/* Right: Desktop CTA Block + Overflow Menu */}
+              <div className="hidden md:flex flex-col items-end gap-3 flex-shrink-0">
+                {/* Overflow Menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuItem onClick={handleShare}>
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Share profile
+                    </DropdownMenuItem>
+                    {!isOwnProfile && (
+                      <DropdownMenuItem onClick={handleReport}>
+                        <Flag className="h-4 w-4 mr-2" />
+                        Report profile
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem onClick={() => setShowSafetyModal(true)}>
+                      <ShieldAlert className="h-4 w-4 mr-2" />
+                      Safety tips
+                    </DropdownMenuItem>
+                    {isOwnProfile && (
+                      <DropdownMenuItem onClick={() => navigate('/account')}>
+                        <Eye className="h-4 w-4 mr-2" />
+                        Edit profile
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* CTA Buttons */}
+                {!isOwnProfile && isHost && (
+                  <div className="flex flex-col gap-2 w-48">
+                    <Button onClick={handleMessageHost} disabled={isMessaging} className="w-full">
+                      {isMessaging ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                      )}
+                      {listingContext ? 'Message about listing' : 'Message Host'}
+                    </Button>
+                    <Button variant="outline" onClick={handleViewListingsClick} className="w-full">
+                      View Listings ({stats?.totalListings || 0})
+                    </Button>
                   </div>
                 )}
-              </div>
 
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <h1 className="text-lg md:text-xl font-bold text-foreground truncate">
-                      {displayName}
-                    </h1>
-                    {profile.business_name && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                        <Building2 className="h-3 w-3 flex-shrink-0" />
-                        <span className="truncate">{profile.business_name}</span>
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                      <MapPin className="h-3 w-3 flex-shrink-0" />
-                      <span>{serviceArea || 'Service area not set'}</span>
-                    </p>
-                  </div>
-
-                  {/* Overflow Menu */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 -mt-1">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                      <DropdownMenuItem onClick={handleShare}>
-                        <Share2 className="h-4 w-4 mr-2" />
-                        Share profile
-                      </DropdownMenuItem>
-                      {!isOwnProfile && (
-                        <DropdownMenuItem onClick={handleReport}>
-                          <Flag className="h-4 w-4 mr-2" />
-                          Report profile
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem onClick={() => setShowSafetyModal(true)}>
-                        <ShieldAlert className="h-4 w-4 mr-2" />
-                        Safety tips
-                      </DropdownMenuItem>
-                      {isOwnProfile && (
-                        <DropdownMenuItem onClick={() => navigate('/account')}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          Edit profile
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                {/* Trust Pills - Max 4 */}
-                <div className="flex flex-wrap gap-1.5 mt-2.5">
-                  {profile.identity_verified ? (
-                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-emerald-500/50 text-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20 dark:text-emerald-400">
-                      <ShieldCheck className="h-3 w-3 mr-0.5" />
-                      Verified ID
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-muted text-muted-foreground">
-                      Not verified
-                    </Badge>
-                  )}
-                  {responseTimeData?.avgResponseTime && (
-                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-blue-500/50 text-blue-700 bg-blue-50/50 dark:bg-blue-950/20 dark:text-blue-400">
-                      <Clock className="h-3 w-3 mr-0.5" />
-                      ~{responseTimeData.avgResponseTime}
-                    </Badge>
-                  )}
-                  {(completedBookings || 0) > 0 && (
-                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-purple-500/50 text-purple-700 bg-purple-50/50 dark:bg-purple-950/20 dark:text-purple-400">
-                      <Calendar className="h-3 w-3 mr-0.5" />
-                      {completedBookings} completed
-                    </Badge>
-                  )}
-                  {stats?.averageRating && (
-                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-amber-500/50 text-amber-700 bg-amber-50/50 dark:bg-amber-950/20 dark:text-amber-400">
-                      <Star className="h-3 w-3 mr-0.5 fill-amber-500" />
-                      {stats.averageRating.toFixed(1)} ({stats.totalReviewsReceived})
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Member since */}
-                <p className="text-[10px] text-muted-foreground mt-2">
-                  Member since {memberSinceText}
-                </p>
+                {isOwnProfile && (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/account">Edit profile</Link>
+                  </Button>
+                )}
               </div>
             </div>
-
-            {/* Desktop CTAs - Right aligned */}
-            {!isOwnProfile && isHost && (
-              <div className="hidden md:flex gap-2 mt-4">
-                <Button onClick={handleMessageHost} disabled={isMessaging}>
-                  {isMessaging ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                  )}
-                  {listingContext ? 'Message about listing' : 'Message Host'}
-                </Button>
-                <Button variant="outline" onClick={handleViewListingsClick}>
-                  <MapPin className="h-4 w-4 mr-2" />
-                  View Listings ({stats?.totalListings || 0})
-                </Button>
-              </div>
-            )}
-
-            {isOwnProfile && (
-              <div className="hidden md:flex mt-4">
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/account">Edit profile</Link>
-                </Button>
-              </div>
-            )}
           </div>
         </div>
 
@@ -528,26 +564,25 @@ const PublicProfile = () => {
 
       {/* Section 2: Mobile Sticky CTA */}
       {!isOwnProfile && isHost && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border p-3 z-40">
-          <div className="flex gap-2">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border px-4 py-3 z-40 safe-area-inset-bottom">
+          <div className="flex gap-2 max-w-lg mx-auto">
             <Button 
               onClick={handleMessageHost} 
               disabled={isMessaging}
-              className="flex-1"
+              className="flex-1 h-11"
             >
               {isMessaging ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
                 <MessageCircle className="h-4 w-4 mr-2" />
               )}
-              Message Host
+              {listingContext ? 'Message about listing' : 'Message Host'}
             </Button>
             <Button 
               variant="outline" 
               onClick={handleViewListingsClick}
-              className="flex-1"
+              className="flex-1 h-11"
             >
-              <MapPin className="h-4 w-4 mr-2" />
               Listings ({stats?.totalListings || 0})
             </Button>
           </div>
