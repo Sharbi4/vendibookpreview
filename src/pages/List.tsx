@@ -25,6 +25,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import vendibookIcon from '@/assets/vendibook-icon.png';
 
 type ListingMode = 'choose' | 'import' | 'scratch';
 
@@ -263,7 +264,7 @@ const ListPage: React.FC = () => {
               <span className="hidden sm:inline">Back</span>
             </button>
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-primary">V</span>
+              <img src={vendibookIcon} alt="Vendibook" className="w-7 h-7" />
               <h1 className="font-semibold">List your asset</h1>
             </div>
             <div className="w-16" />
