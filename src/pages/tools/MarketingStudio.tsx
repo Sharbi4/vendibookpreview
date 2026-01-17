@@ -152,7 +152,7 @@ const MarketingStudio = () => {
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
-                    <BreadcrumbLink asChild><Link to="/tools">Vendi AI Suite</Link></BreadcrumbLink>
+                    <BreadcrumbLink asChild><Link to="/tools">Host Tools</Link></BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem><BreadcrumbPage>Marketing Studio</BreadcrumbPage></BreadcrumbItem>

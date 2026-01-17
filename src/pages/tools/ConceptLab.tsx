@@ -104,7 +104,7 @@ const ConceptLab = () => {
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                      <Link to="/tools">Vendi AI Suite</Link>
+                      <Link to="/tools">Host Tools</Link>
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
@@ -373,7 +373,7 @@ const ConceptLab = () => {
                 <Button size="lg" className="bg-gradient-to-r from-orange-500 to-amber-500" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
                   Generate Ideas
                 </Button>
-                <Button size="lg" variant="outline" asChild><Link to="/create-listing">Create a Listing</Link></Button>
+                <Button size="lg" variant="outline" asChild><Link to="/host">List Your Asset</Link></Button>
               </div>
             </div>
           </section>

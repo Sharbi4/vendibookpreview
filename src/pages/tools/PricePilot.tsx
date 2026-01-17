@@ -129,7 +129,7 @@ const PricePilot = () => {
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                      <Link to="/tools">Vendi AI Suite</Link>
+                      <Link to="/tools">Host Tools</Link>
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
@@ -363,8 +363,8 @@ const PricePilot = () => {
                       )}
 
                       <Button className="w-full" asChild>
-                        <Link to="/create-listing">
-                          Apply to New Listing
+                        <Link to="/host">
+                          List Your Asset
                           <ArrowRight className="h-4 w-4 ml-2" />
                         </Link>
                       </Button>
@@ -425,7 +425,7 @@ const PricePilot = () => {
                   Start Pricing Now
                 </Button>
                 <Button size="lg" variant="outline" asChild>
-                  <Link to="/create-listing">Create a Listing</Link>
+                  <Link to="/host">List Your Asset</Link>
                 </Button>
               </div>
             </div>

@@ -142,7 +142,7 @@ const PermitPath = () => {
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                      <Link to="/tools">Vendi AI Suite</Link>
+                      <Link to="/tools">Host Tools</Link>
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
@@ -429,7 +429,7 @@ const PermitPath = () => {
                 <Button size="lg" className="bg-gradient-to-r from-amber-500 to-orange-500" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
                   Find My Permits
                 </Button>
-                <Button size="lg" variant="outline" asChild><Link to="/create-listing">Create a Listing</Link></Button>
+                <Button size="lg" variant="outline" asChild><Link to="/host">List Your Asset</Link></Button>
               </div>
             </div>
           </section>
