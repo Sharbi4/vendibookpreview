@@ -129,8 +129,8 @@ const generateEmailHtml = (unsubscribeToken: string, userEmail: string, hasLogo:
                           <p style="margin: 0 0 12px; color: ${COLORS.gray}; font-size: 14px; line-height: 1.5;">
                             Get smart recommendations with our AI equipment guide, license finder, and market research tools.
                           </p>
-                          <a href="${BASE_URL}/ai-tools" style="color: ${COLORS.primary}; text-decoration: none; font-size: 14px; font-weight: 600;">
-                            Try AI Tools →
+                          <a href="${BASE_URL}/tools" style="color: ${COLORS.primary}; text-decoration: none; font-size: 14px; font-weight: 600;">
+                            Explore Host Tools →
                           </a>
                         </td>
                       </tr>

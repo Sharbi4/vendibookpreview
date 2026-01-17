@@ -664,7 +664,7 @@ const VendiAISuite = () => {
               <Link to="/tools">
                 <Button size="lg" className="gap-2 w-full sm:w-auto">
                   <Sparkles className="w-4 h-4" />
-                  Open Vendi AI Suite
+                  Explore Host Tools
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
