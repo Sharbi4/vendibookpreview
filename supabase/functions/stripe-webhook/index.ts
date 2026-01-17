@@ -481,6 +481,268 @@ serve(async (req) => {
         break;
       }
 
+      case "transfer.paid": {
+        const transfer = event.data.object as Stripe.Transfer;
+        logStep("Processing transfer.paid", { 
+          transferId: transfer.id,
+          amount: transfer.amount,
+          destination: transfer.destination,
+          metadata: transfer.metadata,
+        });
+
+        // Check if this is a rental booking payout
+        const bookingId = transfer.metadata?.booking_id;
+        const saleTransactionId = transfer.metadata?.sale_transaction_id;
+
+        if (bookingId) {
+          // Handle rental booking payout
+          const { data: booking } = await supabaseClient
+            .from("booking_requests")
+            .select("*, listings(title, host_id)")
+            .eq("id", bookingId)
+            .single();
+
+          if (booking) {
+            const hostId = booking.listings?.host_id || booking.host_id;
+            const listingTitle = booking.listings?.title || "Rental";
+            const payoutAmount = transfer.amount / 100;
+
+            // Get host profile for email
+            const { data: hostProfile } = await supabaseClient
+              .from("profiles")
+              .select("email, full_name, display_name")
+              .eq("id", hostId)
+              .single();
+
+            if (hostProfile?.email) {
+              try {
+                await fetch(
+                  `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-payout-notification`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+                    },
+                    body: JSON.stringify({
+                      hostEmail: hostProfile.email,
+                      hostName: hostProfile.display_name || hostProfile.full_name || "Host",
+                      payoutAmount,
+                      listingTitle,
+                      bookingId,
+                      hostId,
+                      transferId: transfer.id,
+                      payoutStatus: "completed",
+                      transactionType: "rental",
+                    }),
+                  }
+                );
+                logStep("Payout notification sent to host for rental", { 
+                  email: hostProfile.email, 
+                  amount: payoutAmount 
+                });
+              } catch (emailError) {
+                logStep("WARNING: Failed to send rental payout notification", { error: String(emailError) });
+              }
+            }
+          }
+        } else if (saleTransactionId) {
+          // Handle escrow sale payout
+          const { data: saleTransaction } = await supabaseClient
+            .from("sale_transactions")
+            .select("*, listings(title)")
+            .eq("id", saleTransactionId)
+            .single();
+
+          if (saleTransaction) {
+            const sellerId = saleTransaction.seller_id;
+            const listingTitle = saleTransaction.listings?.title || "Sale";
+            const payoutAmount = transfer.amount / 100;
+
+            // Get seller profile for email
+            const { data: sellerProfile } = await supabaseClient
+              .from("profiles")
+              .select("email, full_name, display_name")
+              .eq("id", sellerId)
+              .single();
+
+            if (sellerProfile?.email) {
+              try {
+                await fetch(
+                  `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-payout-notification`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+                    },
+                    body: JSON.stringify({
+                      hostEmail: sellerProfile.email,
+                      hostName: sellerProfile.display_name || sellerProfile.full_name || "Seller",
+                      payoutAmount,
+                      listingTitle,
+                      saleTransactionId,
+                      hostId: sellerId,
+                      transferId: transfer.id,
+                      payoutStatus: "completed",
+                      transactionType: "sale",
+                    }),
+                  }
+                );
+                logStep("Payout notification sent to seller for sale", { 
+                  email: sellerProfile.email, 
+                  amount: payoutAmount 
+                });
+              } catch (emailError) {
+                logStep("WARNING: Failed to send sale payout notification", { error: String(emailError) });
+              }
+            }
+
+            // Update sale transaction with payout completion
+            await supabaseClient
+              .from("sale_transactions")
+              .update({
+                payout_completed_at: new Date().toISOString(),
+                transfer_id: transfer.id,
+              })
+              .eq("id", saleTransactionId);
+
+            logStep("Sale transaction updated with payout completion", { saleTransactionId });
+          }
+        } else {
+          // Try to find by destination account
+          const destinationAccount = typeof transfer.destination === 'string' 
+            ? transfer.destination 
+            : transfer.destination?.id;
+
+          if (destinationAccount) {
+            const { data: hostProfile } = await supabaseClient
+              .from("profiles")
+              .select("id, email, full_name, display_name")
+              .eq("stripe_account_id", destinationAccount)
+              .single();
+
+            if (hostProfile?.email) {
+              const payoutAmount = transfer.amount / 100;
+              try {
+                await fetch(
+                  `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-payout-notification`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+                    },
+                    body: JSON.stringify({
+                      hostEmail: hostProfile.email,
+                      hostName: hostProfile.display_name || hostProfile.full_name || "Host",
+                      payoutAmount,
+                      listingTitle: "Payout",
+                      hostId: hostProfile.id,
+                      transferId: transfer.id,
+                      payoutStatus: "completed",
+                      transactionType: "payout",
+                    }),
+                  }
+                );
+                logStep("Generic payout notification sent", { 
+                  email: hostProfile.email, 
+                  amount: payoutAmount 
+                });
+              } catch (emailError) {
+                logStep("WARNING: Failed to send generic payout notification", { error: String(emailError) });
+              }
+            }
+          }
+        }
+        break;
+      }
+
+      case "transfer.failed": {
+        const transfer = event.data.object as Stripe.Transfer;
+        logStep("Processing transfer.failed", { 
+          transferId: transfer.id,
+          metadata: transfer.metadata,
+        });
+
+        const bookingId = transfer.metadata?.booking_id;
+        const saleTransactionId = transfer.metadata?.sale_transaction_id;
+        
+        // Determine recipient and send failure notification
+        let recipientId: string | null = null;
+        let listingTitle = "Transaction";
+        
+        if (bookingId) {
+          const { data: booking } = await supabaseClient
+            .from("booking_requests")
+            .select("host_id, listings(title)")
+            .eq("id", bookingId)
+            .single();
+          if (booking) {
+            recipientId = booking.host_id;
+            const listingsData = booking.listings as unknown as { title: string } | null;
+            listingTitle = listingsData?.title || "Rental";
+          }
+        } else if (saleTransactionId) {
+          const { data: sale } = await supabaseClient
+            .from("sale_transactions")
+            .select("seller_id, listings(title)")
+            .eq("id", saleTransactionId)
+            .single();
+          if (sale) {
+            recipientId = sale.seller_id;
+            const listingsData = sale.listings as unknown as { title: string } | null;
+            listingTitle = listingsData?.title || "Sale";
+          }
+        }
+
+        if (recipientId) {
+          const { data: profile } = await supabaseClient
+            .from("profiles")
+            .select("email, full_name, display_name")
+            .eq("id", recipientId)
+            .single();
+
+          if (profile?.email) {
+            try {
+              await fetch(
+                `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-payout-notification`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+                  },
+                  body: JSON.stringify({
+                    hostEmail: profile.email,
+                    hostName: profile.display_name || profile.full_name || "User",
+                    payoutAmount: transfer.amount / 100,
+                    listingTitle,
+                    hostId: recipientId,
+                    transferId: transfer.id,
+                    payoutStatus: "failed",
+                    transactionType: bookingId ? "rental" : "sale",
+                  }),
+                }
+              );
+              logStep("Failed payout notification sent", { email: profile.email });
+            } catch (emailError) {
+              logStep("WARNING: Failed to send failed payout notification", { error: String(emailError) });
+            }
+          }
+
+          // Create in-app notification for failed payout
+          await supabaseClient.from("notifications").insert({
+            user_id: recipientId,
+            type: "payout_failed",
+            title: "Payout Failed",
+            message: `Your payout of $${(transfer.amount / 100).toFixed(2)} for "${listingTitle}" could not be processed. Please check your Stripe account settings.`,
+            link: "/dashboard",
+          });
+        }
+        break;
+      }
+
       default:
         logStep("Unhandled event type", { type: event.type });
     }
