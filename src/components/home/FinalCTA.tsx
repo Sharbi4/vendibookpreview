@@ -5,7 +5,7 @@ const FinalCTA = () => {
   const navigate = useNavigate();
   return <section className="py-16 md:py-20 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10">
       <div className="container max-w-4xl mx-auto px-4 text-center">
-        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">Publish your listing today</h2>
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">Your next move starts here.</h2>
         <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
           Whether you're looking for equipment or have assets to list, Vendibook has you covered.
         </p>
