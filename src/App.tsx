@@ -113,10 +113,14 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
           <Route path="/create-listing" element={<PageTransition><CreateListing /></PageTransition>} />
           <Route path="/listing/:id" element={<PageTransition><ListingDetail /></PageTransition>} />
+          {/* Profile routes */}
           <Route path="/profile" element={<Navigate to="/account" replace />} />
           <Route path="/profile/edit" element={<Navigate to="/account" replace />} />
           <Route path="/profile/:id" element={<Navigate to={`/u/${window.location.pathname.split('/').pop()}`} replace />} />
+          {/* Private account route - owner only */}
           <Route path="/account" element={<PageTransition><Account /></PageTransition>} />
+          <Route path="/account/profile" element={<Navigate to="/account" replace />} />
+          {/* Public profile route - accessible to all */}
           <Route path="/u/:userId" element={<PageTransition><PublicProfile /></PageTransition>} />
           <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
           <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
