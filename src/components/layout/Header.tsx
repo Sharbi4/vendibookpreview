@@ -17,6 +17,7 @@ import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import MobileMenu from './MobileMenu';
 
 // Type declarations for Web Speech API
 interface SpeechRecognitionEvent extends Event {
@@ -528,141 +529,17 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile Menu - Simplified with Section Headers */}
-      {isMenuOpen && (
-        <div className="md:hidden border-t border-border bg-background animate-fade-in">
-          <nav className="container py-4 flex flex-col">
-            {/* Marketplace Section */}
-            <p className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Marketplace</p>
-            <Link 
-              to="/browse" 
-              className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Search className="h-4 w-4 text-muted-foreground" />
-              Browse Listings
-            </Link>
-            <Link 
-              to="/host" 
-              className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
-              List Your Asset
-            </Link>
-            <Link 
-              to="/how-it-works" 
-              className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <HelpCircle className="h-4 w-4 text-muted-foreground" />
-              How It Works
-            </Link>
-            <Link 
-              to="/help" 
-              className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <HelpCircle className="h-4 w-4 text-muted-foreground" />
-              Help Center
-            </Link>
-            
-            {/* Account Section */}
-            <div className="border-t border-border mt-3 pt-3">
-              <p className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Account</p>
-              {user ? (
-                <div className="flex flex-col">
-                  <Link 
-                    to="/dashboard" 
-                    className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
-                    Dashboard
-                  </Link>
-                  <Link 
-                    to="/messages" 
-                    className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <MessageCircle className="h-4 w-4 text-muted-foreground" />
-                    Messages
-                  </Link>
-                  <Link 
-                    to="/profile" 
-                    className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    My Profile
-                  </Link>
-                  {isVerified ? (
-                    <div className="flex items-center gap-3 text-sm font-medium py-3 px-2 text-emerald-600">
-                      <CheckCircle2 className="h-4 w-4" />
-                      Verified
-                    </div>
-                  ) : (
-                    <Link 
-                      to="/verify-identity" 
-                      className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors text-amber-600"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <Shield className="h-4 w-4" />
-                      Verify Identity
-                    </Link>
-                  )}
-                  {isAdmin && (
-                    <Link 
-                      to="/admin" 
-                      className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors text-primary"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <ShieldCheck className="h-4 w-4" />
-                      Admin Dashboard
-                    </Link>
-                  )}
-                  <div className="pt-2 mt-2 border-t border-border">
-                    <Button 
-                      variant="ghost" 
-                      className="w-full justify-start gap-3 px-2"
-                      onClick={() => {
-                        handleSignOut();
-                        setIsMenuOpen(false);
-                      }}
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Sign Out
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2 pt-2">
-                  <Button 
-                    variant="outline" 
-                    className="w-full rounded-full"
-                    onClick={() => {
-                      navigate('/auth');
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    Sign In
-                  </Button>
-                  <Button 
-                    variant="gradient"
-                    className="w-full rounded-full"
-                    onClick={() => {
-                      navigate('/auth');
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    Get Started
-                  </Button>
-                </div>
-              )}
-            </div>
-          </nav>
-        </div>
-      )}
+      {/* Mobile Menu - Redesigned */}
+      <MobileMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        user={user}
+        profile={profile}
+        isVerified={isVerified}
+        isAdmin={isAdmin}
+        onSignOut={handleSignOut}
+        onNavigate={navigate}
+      />
     </header>
   );
 };
