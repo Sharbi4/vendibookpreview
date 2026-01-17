@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import CookieConsent from "@/components/CookieConsent";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -37,7 +37,7 @@ const NotificationPreferences = lazy(() => import("./pages/NotificationPreferenc
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const HelpArticle = lazy(() => import("./pages/HelpArticle"));
 const CaliforniaPrivacy = lazy(() => import("./pages/CaliforniaPrivacy"));
-const AITools = lazy(() => import("./pages/AITools"));
+const ToolsIndex = lazy(() => import("./pages/tools/Index"));
 const PricePilot = lazy(() => import("./pages/tools/PricePilot"));
 const PermitPath = lazy(() => import("./pages/tools/PermitPath"));
 const BuildKit = lazy(() => import("./pages/tools/BuildKit"));
@@ -45,7 +45,6 @@ const ListingStudio = lazy(() => import("./pages/tools/ListingStudio"));
 const ConceptLab = lazy(() => import("./pages/tools/ConceptLab"));
 const MarketRadar = lazy(() => import("./pages/tools/MarketRadar"));
 const MarketingStudio = lazy(() => import("./pages/tools/MarketingStudio"));
-const ToolsIndex = lazy(() => import("./pages/tools/Index"));
 const OrderTracking = lazy(() => import("./pages/OrderTracking"));
 const HostOnboarding = lazy(() => import("./pages/HostOnboarding"));
 const Install = lazy(() => import("./pages/Install"));
@@ -98,7 +97,8 @@ const AnimatedRoutes = () => {
           <Route path="/help" element={<PageTransition><HelpCenter /></PageTransition>} />
           <Route path="/help/:slug" element={<PageTransition><HelpArticle /></PageTransition>} />
           <Route path="/california-privacy" element={<PageTransition><CaliforniaPrivacy /></PageTransition>} />
-          <Route path="/ai-tools" element={<PageTransition><AITools /></PageTransition>} />
+          
+          {/* Tools - /tools is the canonical hub */}
           <Route path="/tools" element={<PageTransition><ToolsIndex /></PageTransition>} />
           <Route path="/tools/pricepilot" element={<PageTransition><PricePilot /></PageTransition>} />
           <Route path="/tools/permitpath" element={<PageTransition><PermitPath /></PageTransition>} />
@@ -107,13 +107,20 @@ const AnimatedRoutes = () => {
           <Route path="/tools/concept-lab" element={<PageTransition><ConceptLab /></PageTransition>} />
           <Route path="/tools/market-radar" element={<PageTransition><MarketRadar /></PageTransition>} />
           <Route path="/tools/marketing-studio" element={<PageTransition><MarketingStudio /></PageTransition>} />
+          
+          {/* Redirect old /ai-tools route to /tools */}
+          <Route path="/ai-tools" element={<Navigate to="/tools" replace />} />
+          
           <Route path="/order-tracking/:transactionId" element={<PageTransition><OrderTracking /></PageTransition>} />
           <Route path="/host" element={<PageTransition><HostOnboarding /></PageTransition>} />
           <Route path="/install" element={<PageTransition><Install /></PageTransition>} />
           <Route path="/vendor-lots" element={<PageTransition><VendorLots /></PageTransition>} />
           <Route path="/faq" element={<PageTransition><FAQ /></PageTransition>} />
           <Route path="/unsubscribe" element={<PageTransition><Unsubscribe /></PageTransition>} />
+          
+          {/* SEO article page - separate purpose from tools hub */}
           <Route path="/vendi-ai-suite" element={<PageTransition><VendiAISuite /></PageTransition>} />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>

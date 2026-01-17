@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, Phone, ShieldCheck, Clock, TrendingUp, Sparkles, Mic, MicOff, DollarSign, FileText, Wrench, Brain, Lightbulb, Globe, ChevronDown, ChevronRight } from 'lucide-react';
+import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, Phone, ShieldCheck, Clock, TrendingUp, Sparkles, Mic, MicOff, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -86,8 +86,6 @@ const Header = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [isListening, setIsListening] = useState(false);
-  const [isAIMenuExpanded, setIsAIMenuExpanded] = useState(false);
-  const [isMobileAIExpanded, setIsMobileAIExpanded] = useState(false);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
@@ -398,127 +396,17 @@ const Header = () => {
           </button>
         </div>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
-          {/* Vendi AI Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group">
-                <span>Vendi</span>
-                <span className="bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold">AI</span>
-                <ChevronDown className="h-3.5 w-3.5 opacity-70 group-hover:opacity-100 transition-opacity" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-80 p-2 bg-background border border-border shadow-xl z-50">
-              {/* Header */}
-              <div className="px-3 py-2 mb-1">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Vendi AI Suite</p>
-                    <p className="text-xs text-muted-foreground">Your AI co-pilot for mobile food business</p>
-                  </div>
-                </div>
-              </div>
-              <DropdownMenuSeparator className="my-2" />
-              
-              {/* AI Tools Grid */}
-              <div className="space-y-1">
-                <DropdownMenuItem 
-                  onClick={() => navigate('/tools/pricepilot')} 
-                  className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shrink-0 shadow-sm">
-                    <DollarSign className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">PricePilot</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">Find out what to charge</p>
-                  </div>
-                </DropdownMenuItem>
-                
-                <DropdownMenuItem 
-                  onClick={() => navigate('/tools/permitpath')} 
-                  className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shrink-0 shadow-sm">
-                    <FileText className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">PermitPath</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">See what permits you need</p>
-                  </div>
-                </DropdownMenuItem>
-                
-                <DropdownMenuItem 
-                  onClick={() => navigate('/tools/buildkit')} 
-                  className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shrink-0 shadow-sm">
-                    <Wrench className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">BuildKit</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">Get equipment tips & guides</p>
-                  </div>
-                </DropdownMenuItem>
-                
-                <DropdownMenuItem 
-                  onClick={() => navigate('/tools/listing-studio')} 
-                  className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-rose-400 to-pink-600 flex items-center justify-center shrink-0 shadow-sm">
-                    <Brain className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">Listing Studio</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">Write a great listing fast</p>
-                  </div>
-                </DropdownMenuItem>
-                
-                <DropdownMenuItem 
-                  onClick={() => navigate('/tools/concept-lab')} 
-                  className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-yellow-300 to-amber-500 flex items-center justify-center shrink-0 shadow-sm">
-                    <Lightbulb className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">Concept Lab</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">Get food truck business ideas</p>
-                  </div>
-                </DropdownMenuItem>
-                
-                <DropdownMenuItem 
-                  onClick={() => navigate('/tools/market-radar')} 
-                  className="cursor-pointer flex items-start gap-3 p-3 rounded-lg hover:bg-accent/80 transition-colors"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center shrink-0 shadow-sm">
-                    <Globe className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">Market Radar</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">Research your market</p>
-                  </div>
-                </DropdownMenuItem>
-              </div>
-              
-              <DropdownMenuSeparator className="my-2" />
-              
-              {/* View All Link */}
-              <DropdownMenuItem 
-                onClick={() => navigate('/ai-tools')} 
-                className="cursor-pointer flex items-center justify-center gap-2 p-2 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors"
-              >
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium text-primary">Open Command Center</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {/* Desktop Navigation - Simplified */}
+        <nav className="hidden md:flex items-center gap-5">
           <Link 
-            to="/create-listing" 
+            to="/tools" 
+            className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span>Host Tools</span>
+          </Link>
+          <Link 
+            to="/host" 
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             List Your Asset
@@ -526,7 +414,7 @@ const Header = () => {
         </nav>
 
         {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-2 ml-4">
           {user && <NotificationCenter />}
           {user ? (
             <DropdownMenu>
@@ -544,16 +432,17 @@ const Header = () => {
                   {!isVerified && (
                     <Shield className="h-3 w-3 text-amber-500" />
                   )}
+                  <ChevronDown className="h-3.5 w-3.5 opacity-60" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 bg-background">
-                <DropdownMenuItem onClick={() => navigate('/profile')}>
-                  <User className="h-4 w-4 mr-2" />
-                  My Profile
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/dashboard')}>
                   <LayoutDashboard className="h-4 w-4 mr-2" />
                   Dashboard
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <User className="h-4 w-4 mr-2" />
+                  My Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/messages')}>
                   <MessageCircle className="h-4 w-4 mr-2" />
@@ -576,9 +465,9 @@ const Header = () => {
                   <HelpCircle className="h-4 w-4 mr-2" />
                   How It Works
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/contact')}>
-                  <Phone className="h-4 w-4 mr-2" />
-                  Contact Us
+                <DropdownMenuItem onClick={() => navigate('/help')}>
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  Help Center
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
@@ -627,180 +516,82 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Simplified */}
       {isMenuOpen && (
         <div className="md:hidden border-t border-border bg-background animate-fade-in">
-          <nav className="container py-4 flex flex-col gap-4">
+          <nav className="container py-4 flex flex-col gap-1">
             <Link 
               to="/search" 
-              className="text-sm font-medium py-2"
+              className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              Search
+              <Search className="h-4 w-4 text-muted-foreground" />
+              Browse Listings
             </Link>
-            {/* Vendi AI Section - Collapsible */}
-            <div className="py-2">
-              <button
-                onClick={() => setIsMobileAIExpanded(!isMobileAIExpanded)}
-                className="flex items-center justify-between w-full text-sm font-semibold text-foreground py-2"
-              >
-                <span className="flex items-center gap-1">
-                  <span>Vendi</span>
-                  <span className="bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent font-bold">AI</span>
-                </span>
-                <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isMobileAIExpanded ? 'rotate-180' : ''}`} />
-              </button>
-              {isMobileAIExpanded && (
-                <div className="flex flex-col gap-2 mt-2 animate-fade-in">
-                  {/* Header Card */}
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/10">
-                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                      <Sparkles className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">Vendi AI Suite</p>
-                      <p className="text-xs text-muted-foreground">Your AI co-pilot for mobile food business</p>
-                    </div>
-                  </div>
-                  
-                  {/* AI Tools List */}
-                  <div className="space-y-1">
-                    <Link 
-                      to="/tools/pricepilot" 
-                      className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shrink-0 shadow-sm">
-                        <DollarSign className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">PricePilot</p>
-                        <p className="text-xs text-muted-foreground">Find out what to charge</p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/tools/permitpath" 
-                      className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shrink-0 shadow-sm">
-                        <FileText className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">PermitPath</p>
-                        <p className="text-xs text-muted-foreground">See what permits you need</p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/tools/buildkit" 
-                      className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shrink-0 shadow-sm">
-                        <Wrench className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">BuildKit</p>
-                        <p className="text-xs text-muted-foreground">Get equipment tips & guides</p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/tools/listing-studio" 
-                      className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-rose-400 to-pink-600 flex items-center justify-center shrink-0 shadow-sm">
-                        <Brain className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">Listing Studio</p>
-                        <p className="text-xs text-muted-foreground">Write a great listing fast</p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/tools/concept-lab" 
-                      className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-yellow-300 to-amber-500 flex items-center justify-center shrink-0 shadow-sm">
-                        <Lightbulb className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">Concept Lab</p>
-                        <p className="text-xs text-muted-foreground">Get food truck business ideas</p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/tools/market-radar" 
-                      className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center shrink-0 shadow-sm">
-                        <Globe className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">Market Radar</p>
-                        <p className="text-xs text-muted-foreground">Research your market</p>
-                      </div>
-                    </Link>
-                  </div>
-                  
-                  {/* View All Link */}
-                  <Link 
-                    to="/ai-tools" 
-                    className="flex items-center justify-center gap-2 p-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium text-primary">Open Command Center</span>
-                  </Link>
-                </div>
-              )}
-            </div>
             <Link 
-              to="/create-listing" 
-              className="text-sm font-medium py-2"
+              to="/host" 
+              className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
+              <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
               List Your Asset
             </Link>
+            <Link 
+              to="/tools" 
+              className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Sparkles className="h-4 w-4 text-primary" />
+              Host Tools
+            </Link>
+            <Link 
+              to="/how-it-works" 
+              className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+              How It Works
+            </Link>
+            <Link 
+              to="/help" 
+              className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+              Help Center
+            </Link>
             
-            <div className="flex flex-col gap-2 pt-2 border-t border-border">
+            <div className="border-t border-border mt-2 pt-3">
               {user ? (
-                <>
-                  <Link 
-                    to="/profile" 
-                    className="flex items-center gap-2 text-sm font-medium py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <User className="h-4 w-4" />
-                    My Profile
-                  </Link>
+                <div className="flex flex-col gap-1">
                   <Link 
                     to="/dashboard" 
-                    className="flex items-center gap-2 text-sm font-medium py-2"
+                    className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <LayoutDashboard className="h-4 w-4" />
+                    <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
                     Dashboard
                   </Link>
                   <Link 
-                    to="/messages" 
-                    className="flex items-center gap-2 text-sm font-medium py-2"
+                    to="/profile" 
+                    className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <MessageCircle className="h-4 w-4" />
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    My Profile
+                  </Link>
+                  <Link 
+                    to="/messages" 
+                    className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <MessageCircle className="h-4 w-4 text-muted-foreground" />
                     Messages
                   </Link>
                   {!isVerified && (
                     <Link 
                       to="/verify-identity" 
-                      className="flex items-center gap-2 text-sm font-medium py-2 text-amber-600"
+                      className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors text-amber-600"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <Shield className="h-4 w-4" />
@@ -810,33 +601,17 @@ const Header = () => {
                   {isAdmin && (
                     <Link 
                       to="/admin" 
-                      className="flex items-center gap-2 text-sm font-medium py-2 text-primary"
+                      className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors text-primary"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <ShieldCheck className="h-4 w-4" />
                       Admin Dashboard
                     </Link>
                   )}
-                  <Link 
-                    to="/how-it-works" 
-                    className="flex items-center gap-2 text-sm font-medium py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <HelpCircle className="h-4 w-4" />
-                    How It Works
-                  </Link>
-                  <Link 
-                    to="/contact" 
-                    className="flex items-center gap-2 text-sm font-medium py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Phone className="h-4 w-4" />
-                    Contact Us
-                  </Link>
-                  <div className="pt-2 border-t border-border mt-2">
+                  <div className="pt-2 mt-2 border-t border-border">
                     <Button 
                       variant="ghost" 
-                      className="w-full rounded-full justify-start gap-2"
+                      className="w-full justify-start gap-3 px-2"
                       onClick={() => {
                         handleSignOut();
                         setIsMenuOpen(false);
@@ -846,48 +621,30 @@ const Header = () => {
                       Sign Out
                     </Button>
                   </div>
-                </>
+                </div>
               ) : (
-                <>
-                  <Link 
-                    to="/how-it-works" 
-                    className="flex items-center gap-2 text-sm font-medium py-2"
-                    onClick={() => setIsMenuOpen(false)}
+                <div className="flex flex-col gap-2 pt-2">
+                  <Button 
+                    variant="outline" 
+                    className="w-full rounded-full"
+                    onClick={() => {
+                      navigate('/auth');
+                      setIsMenuOpen(false);
+                    }}
                   >
-                    <HelpCircle className="h-4 w-4" />
-                    How It Works
-                  </Link>
-                  <Link 
-                    to="/contact" 
-                    className="flex items-center gap-2 text-sm font-medium py-2"
-                    onClick={() => setIsMenuOpen(false)}
+                    Sign In
+                  </Button>
+                  <Button 
+                    variant="gradient"
+                    className="w-full rounded-full"
+                    onClick={() => {
+                      navigate('/auth');
+                      setIsMenuOpen(false);
+                    }}
                   >
-                    <Phone className="h-4 w-4" />
-                    Contact Us
-                  </Link>
-                  <div className="pt-2 border-t border-border mt-2 flex flex-col gap-2">
-                    <Button 
-                      variant="outline" 
-                      className="w-full rounded-full"
-                      onClick={() => {
-                        navigate('/auth');
-                        setIsMenuOpen(false);
-                      }}
-                    >
-                      Sign In
-                    </Button>
-                    <Button 
-                      variant="gradient"
-                      className="w-full rounded-full"
-                      onClick={() => {
-                        navigate('/auth');
-                        setIsMenuOpen(false);
-                      }}
-                    >
-                      Get Started
-                    </Button>
-                  </div>
-                </>
+                    Get Started
+                  </Button>
+                </div>
               )}
             </div>
           </nav>

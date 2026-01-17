@@ -79,8 +79,8 @@ const tools = [
 const pageJsonLd = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
-  "name": "Vendi AI Suite - Free AI Tools for Food Truck Businesses",
-  "description": "Access 6 powerful AI tools designed specifically for food truck owners. Pricing, permits, listings, concepts, equipment, and market research.",
+  "name": "Host Tools - Free AI Tools for Food Truck Businesses",
+  "description": "Access 7 powerful AI tools designed specifically for food truck owners. Pricing, permits, listings, concepts, equipment, marketing, and market research.",
   "url": "https://vendibook.com/tools"
 };
 
@@ -88,8 +88,8 @@ const ToolsIndex = () => {
   return (
     <>
       <SEO
-        title="Vendi AI Suite | Free AI Tools for Food Trucks | Vendibook"
-        description="Access 6 powerful AI tools designed specifically for food truck owners. Get pricing recommendations, find permits, generate listings, and more."
+        title="Host Tools | Free AI Tools for Food Trucks | Vendibook"
+        description="Access 7 powerful AI tools designed specifically for food truck owners. Get pricing recommendations, find permits, generate listings, and more."
         canonical="/tools"
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageJsonLd) }} />
@@ -109,14 +109,14 @@ const ToolsIndex = () => {
             <div className="container relative z-10 text-center">
               <Badge className="mb-4 bg-gradient-to-r from-primary to-amber-500 text-white border-0">
                 <Sparkles className="h-3 w-3 mr-1" />
-                Vendi AI Suite
+                Host Tools
               </Badge>
               
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 leading-tight">
                 AI tools built for <span className="text-primary">food truck success</span>
               </h1>
               <p className="text-xl text-foreground/70 mb-8 max-w-2xl mx-auto">
-                6 powerful AI tools to help you price smarter, stay compliant, write better listings, and grow your mobile food business.
+                7 powerful AI tools to help you price smarter, stay compliant, write better listings, and grow your mobile food business.
               </p>
             </div>
           </section>
@@ -161,19 +161,19 @@ const ToolsIndex = () => {
           {/* CTA Section */}
           <section className="py-20 bg-gradient-to-r from-primary/10 via-amber-500/10 to-orange-500/10">
             <div className="container text-center">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to supercharge your business?</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to list your asset?</h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
-                All tools are free to use. Start with any tool above or explore the full Command Center.
+                All tools are free to use. When you're ready, create a listing and start earning.
               </p>
               <div className="flex flex-wrap gap-4 justify-center">
                 <Button size="lg" asChild>
-                  <Link to="/ai-tools">
-                    Open Command Center
+                  <Link to="/host">
+                    List Your Asset
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
-                  <Link to="/create-listing">Create a Listing</Link>
+                  <Link to="/search">Browse Listings</Link>
                 </Button>
               </div>
             </div>
