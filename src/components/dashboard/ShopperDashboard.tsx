@@ -24,9 +24,9 @@ const ShopperDashboard = () => {
         
         <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">Find Your Next Rental</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Find your next rental</h2>
             <p className="text-muted-foreground max-w-md">
-              Browse food trucks, trailers, ghost kitchens, and vendor lots. Start your culinary journey today.
+              Browse trucks, trailers, kitchens, and lots near you.
             </p>
           </div>
           <Button asChild size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all hover:scale-105">
@@ -42,7 +42,7 @@ const ShopperDashboard = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <EnhancedStatCard 
           icon={Calendar} 
-          label="Total Bookings" 
+          label="Bookings" 
           value={stats.total}
           variant="primary"
         />
@@ -50,14 +50,14 @@ const ShopperDashboard = () => {
           icon={Clock} 
           label="Pending" 
           value={stats.pending}
-          subtext="Awaiting approval"
+          subtext={stats.pending > 0 ? "Awaiting response" : undefined}
           variant="warning"
         />
         <EnhancedStatCard 
           icon={CheckCircle2} 
           label="Approved" 
           value={stats.approved}
-          subtext="Ready to use"
+          subtext={stats.approved > 0 ? "Ready to go" : undefined}
           variant="success"
         />
         <EnhancedStatCard 
@@ -101,10 +101,10 @@ const ShopperDashboard = () => {
           ) : pendingBookings.length === 0 ? (
             <div className="relative overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl p-12 text-center border border-border/50">
               <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-              <Clock className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h4 className="font-semibold text-foreground text-lg mb-2">No pending requests</h4>
               <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-                Your booking requests waiting for host approval will appear here.
+                Requests awaiting host response appear here.
               </p>
               <Button asChild size="lg" className="shadow-lg">
                 <Link to="/search">Browse Listings</Link>
@@ -138,10 +138,10 @@ const ShopperDashboard = () => {
           ) : approvedBookings.length === 0 ? (
             <div className="relative overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl p-12 text-center border border-border/50">
               <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-              <CheckCircle2 className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h4 className="font-semibold text-foreground text-lg mb-2">No approved bookings</h4>
+              <CheckCircle2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h4 className="font-semibold text-foreground text-lg mb-2">No confirmed bookings</h4>
               <p className="text-muted-foreground max-w-sm mx-auto">
-                Your confirmed bookings will appear here.
+                Confirmed bookings appear here.
               </p>
             </div>
           ) : (
@@ -172,10 +172,10 @@ const ShopperDashboard = () => {
           ) : pastBookings.length === 0 ? (
             <div className="relative overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl p-12 text-center border border-border/50">
               <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-              <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h4 className="font-semibold text-foreground text-lg mb-2">No past bookings</h4>
               <p className="text-muted-foreground max-w-sm mx-auto">
-                Completed, declined, and cancelled bookings will appear here.
+                Completed and cancelled bookings appear here.
               </p>
             </div>
           ) : (
