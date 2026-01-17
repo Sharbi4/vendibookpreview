@@ -121,6 +121,9 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const origin = req.headers.get("origin") || "https://vendibook.com";
+    
+    // Generate idempotency key to prevent duplicate charges on retries
+    const idempotencyKey = `checkout_${user.id}_${listing_id}_${mode}_${Date.now()}`;
 
     // Calculate fees based on mode
     let customerTotal: number; // What the customer pays (in cents)
@@ -346,8 +349,10 @@ serve(async (req) => {
       };
     }
 
-    const session = await stripe.checkout.sessions.create(sessionParams);
-    logStep("Checkout session created", { sessionId: session.id, url: session.url });
+    const session = await stripe.checkout.sessions.create(sessionParams, {
+      idempotencyKey,
+    });
+    logStep("Checkout session created", { sessionId: session.id, url: session.url, idempotencyKey });
 
     return new Response(
       JSON.stringify({ 
