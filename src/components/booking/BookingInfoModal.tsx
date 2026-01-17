@@ -86,8 +86,25 @@ export function BookingInfoModal({
     }
   }, [open]);
 
+  // Format phone number as user types: (XXX) XXX-XXXX
+  const formatPhoneNumber = (value: string): string => {
+    // Remove all non-digit characters
+    const digits = value.replace(/\D/g, '');
+    
+    // Apply formatting based on length
+    if (digits.length === 0) return '';
+    if (digits.length <= 3) return `(${digits}`;
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+  };
+
   const updateField = <K extends keyof BookingUserInfo>(field: K, value: BookingUserInfo[K]) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // Apply phone formatting if updating phone number
+    const processedValue = field === 'phoneNumber' && typeof value === 'string' 
+      ? formatPhoneNumber(value) as BookingUserInfo[K]
+      : value;
+    
+    setFormData(prev => ({ ...prev, [field]: processedValue }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
@@ -258,6 +275,7 @@ export function BookingInfoModal({
                   value={formData.phoneNumber}
                   onChange={(e) => updateField('phoneNumber', e.target.value)}
                   placeholder="(555) 123-4567"
+                  maxLength={14}
                   className={cn(errors.phoneNumber && 'border-destructive')}
                 />
                 {errors.phoneNumber && (
