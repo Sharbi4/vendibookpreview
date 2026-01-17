@@ -23,7 +23,6 @@ interface FreightEstimateResponse {
   estimate?: {
     distanceMiles: number;
     baseCost: number;
-    fuelSurcharge: number;
     handlingFee: number;
     totalCost: number;
     transitDaysMin: number;
@@ -36,7 +35,6 @@ interface FreightEstimateResponse {
 const FREIGHT_RATES = {
   baseRatePerMile: 4.50,
   minimumCharge: 150,
-  fuelSurchargePercent: 0.15,
   handlingFee: 75,
   maxMilesForStandard: 500,
 };
@@ -79,20 +77,18 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 
 function calculateFreightCost(
   distanceMiles: number
-): { baseCost: number; fuelSurcharge: number; handlingFee: number; totalCost: number } {
+): { baseCost: number; handlingFee: number; totalCost: number } {
   // Flat rate: $4.50/mile with minimum charge
   const baseCost = Math.max(
     FREIGHT_RATES.minimumCharge,
     distanceMiles * FREIGHT_RATES.baseRatePerMile
   );
 
-  const fuelSurcharge = baseCost * FREIGHT_RATES.fuelSurchargePercent;
   const handlingFee = FREIGHT_RATES.handlingFee;
-  const totalCost = baseCost + fuelSurcharge + handlingFee;
+  const totalCost = baseCost + handlingFee;
 
   return {
     baseCost: Math.round(baseCost * 100) / 100,
-    fuelSurcharge: Math.round(fuelSurcharge * 100) / 100,
     handlingFee,
     totalCost: Math.round(totalCost * 100) / 100,
   };
