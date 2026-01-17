@@ -45,12 +45,10 @@ const HostOnboarding = () => {
           <div className="container relative">
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
-                Earn from your truck, trailer, or kitchen.{' '}
-                <span className="text-primary">We handle the rest.</span>
+                Earn from your food truck, trailer, kitchen, lot, or equipment
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                List your asset in minutes. Get verified renters. Receive secure payouts. 
-                Vendibook makes it simple to monetize your mobile food business.
+                Set availability, set requirements, approve renters, and get paid securely. Vendibook handles the rest.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
                 <Button asChild size="lg" variant="gradient-premium" className="text-lg px-8 py-6">
@@ -266,7 +264,7 @@ const HostOnboarding = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
                 <Button asChild size="lg" variant="gradient-premium" className="text-lg px-8 py-6">
                   <Link to="/create-listing">
-                    List Your Asset
+                    Start Listing
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
