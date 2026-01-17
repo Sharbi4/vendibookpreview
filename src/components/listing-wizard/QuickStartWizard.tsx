@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ListingCategory, ListingMode, CATEGORY_LABELS } from '@/types/listing';
 import { cn } from '@/lib/utils';
+import { trackDraftCreated, trackEvent } from '@/lib/analytics';
 
 type QuickStartStep = 'category' | 'mode' | 'location' | 'created';
 
@@ -135,7 +136,7 @@ export const QuickStartWizard: React.FC = () => {
       setStep('created');
       
       // Track analytics event
-      console.log('[ANALYTICS] Draft created', { listingId: listing.id, category: data.category, mode: data.mode });
+      trackDraftCreated(data.category || undefined);
       
     } catch (error) {
       console.error('Error creating draft:', error);

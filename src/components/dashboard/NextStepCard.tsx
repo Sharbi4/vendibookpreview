@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, CreditCard, FileText, UserCheck, Calendar, Loader2 } from 'lucide-react';
+import { ArrowRight, CreditCard, FileText, UserCheck, Calendar, Loader2, Search, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,12 +25,12 @@ interface NextStepCardProps {
 }
 
 export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCardProps) => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { isConnected, isLoading: stripeLoading } = useStripeConnect();
   const { stats, isLoading: listingsLoading } = useHostListings();
   const { stats: bookingStats, isLoading: bookingsLoading } = useHostBookings();
 
-  const isIdentityVerified = user?.user_metadata?.identity_verified || false;
+  const isIdentityVerified = profile?.identity_verified || false;
   const hasDrafts = stats.drafts > 0;
   const hasPendingRequests = bookingStats.pending > 0;
 
@@ -87,7 +87,7 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
       icon: FileText,
       action: {
         label: 'New Listing',
-        to: '/create-listing',
+        to: '/list',
       },
       priority: 5,
     },

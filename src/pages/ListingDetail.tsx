@@ -26,6 +26,7 @@ import { useListingAverageRating } from '@/hooks/useReviews';
 import { useTrackListingView } from '@/hooks/useListingAnalytics';
 import { CATEGORY_LABELS } from '@/types/listing';
 import { useEffect } from 'react';
+import { trackListingViewed } from '@/lib/analytics';
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +38,7 @@ const ListingDetail = () => {
   useEffect(() => {
     if (id && listing && !isLoading) {
       trackView(id);
+      trackListingViewed(id, listing.category);
     }
   }, [id, listing, isLoading, trackView]);
 

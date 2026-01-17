@@ -15,6 +15,7 @@ import { Loader2 } from "lucide-react";
 // Lazy load all pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
+const Activation = lazy(() => import("./pages/Activation"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const CreateListing = lazy(() => import("./pages/CreateListing"));
@@ -78,6 +79,7 @@ const AnimatedRoutes = () => {
           <Route path="/browse" element={<PageTransition><Browse /></PageTransition>} />
           <Route path="/search" element={<PageTransition><Search /></PageTransition>} />
           <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
+          <Route path="/activation" element={<PageTransition><Activation /></PageTransition>} />
           <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
           <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
           <Route path="/create-listing" element={<PageTransition><CreateListing /></PageTransition>} />

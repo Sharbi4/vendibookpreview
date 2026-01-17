@@ -100,6 +100,72 @@ export const trackFaqExpand = ({ tileId, tileTitle, question }: TrustTileEvent &
   });
 };
 
+// Activation & Conversion funnel events
+export const trackSignupCompleted = (role?: string): void => {
+  trackEvent({
+    category: 'Activation',
+    action: 'signup_completed',
+    label: role || 'unknown',
+  });
+};
+
+export const trackPathSelected = (path: 'demand' | 'supply'): void => {
+  trackEvent({
+    category: 'Activation',
+    action: 'path_selected',
+    label: path,
+  });
+};
+
+export const trackSearchStarted = (location?: string): void => {
+  trackEvent({
+    category: 'Conversion',
+    action: 'search_started',
+    label: location || 'no_location',
+  });
+};
+
+export const trackListingViewed = (listingId: string, category?: string): void => {
+  trackEvent({
+    category: 'Conversion',
+    action: 'listing_viewed',
+    label: category,
+    metadata: { listing_id: listingId },
+  });
+};
+
+export const trackRequestStarted = (listingId: string): void => {
+  trackEvent({
+    category: 'Conversion',
+    action: 'request_started',
+    metadata: { listing_id: listingId },
+  });
+};
+
+export const trackRequestSubmitted = (listingId: string, isInstantBook?: boolean): void => {
+  trackEvent({
+    category: 'Conversion',
+    action: 'request_submitted',
+    metadata: { listing_id: listingId, instant_book: isInstantBook },
+  });
+};
+
+export const trackDraftCreated = (category?: string): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'draft_created',
+    label: category,
+  });
+};
+
+export const trackListingPublished = (listingId: string): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'listing_published',
+    metadata: { listing_id: listingId },
+  });
+};
+
 // Generic analytics exports for other parts of the app
 export { trackEvent };
 export type { AnalyticsEvent };

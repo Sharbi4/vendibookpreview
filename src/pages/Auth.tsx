@@ -9,6 +9,7 @@ import { Truck, Store, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 import Header from '@/components/layout/Header';
+import { trackSignupCompleted } from '@/lib/analytics';
 
 const authSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -105,11 +106,15 @@ const Auth = () => {
             });
           }
         } else {
+          // Track signup completion
+          trackSignupCompleted(selectedRole);
+          
           toast({
             title: 'Welcome to Vendibook!',
             description: 'Your account has been created successfully.',
           });
-          navigate('/');
+          // Route to activation page after signup
+          navigate('/activation');
         }
       } else {
         const { error } = await signIn(email, password);
