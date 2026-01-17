@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useBlocker } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Save, Send, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save, Send, Loader2, Cloud, CloudOff, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -75,22 +75,116 @@ export const ListingWizard: React.FC = () => {
   } = useStripeConnect();
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [lastAutoSaved, setLastAutoSaved] = useState<Date | null>(null);
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [publishedListing, setPublishedListing] = useState<PublishedListing | null>(null);
   const [dismissedTips, setDismissedTips] = useState<Set<number>>(new Set());
   const [showExitDialog, setShowExitDialog] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null);
   const hasUnsavedChanges = useRef(false);
   const isNavigatingAway = useRef(false);
+  const lastSavedData = useRef<string>('');
 
   // Check if user has made progress
   const hasProgress = formData.mode || formData.category || formData.title || 
     formData.description || formData.images.length > 0;
 
+  // Serialize form data for comparison (excluding images which can't be easily serialized)
+  const getSerializedFormData = useCallback(() => {
+    const { images, ...rest } = formData;
+    return JSON.stringify(rest);
+  }, [formData]);
+
   // Update unsaved changes ref
   useEffect(() => {
-    hasUnsavedChanges.current = hasProgress && !showSuccessModal;
-  }, [hasProgress, showSuccessModal]);
+    const currentData = getSerializedFormData();
+    hasUnsavedChanges.current = hasProgress && !showSuccessModal && currentData !== lastSavedData.current;
+  }, [hasProgress, showSuccessModal, getSerializedFormData]);
+
+  // Auto-save function
+  const performAutoSave = useCallback(async () => {
+    if (!user || !formData.mode || !formData.category || showSuccessModal) {
+      return;
+    }
+
+    const currentData = getSerializedFormData();
+    if (currentData === lastSavedData.current) {
+      return; // No changes to save
+    }
+
+    setIsAutoSaving(true);
+    try {
+      const draftData = {
+        host_id: user.id,
+        mode: formData.mode,
+        category: formData.category,
+        status: 'draft' as const,
+        title: formData.title || 'Untitled Draft',
+        description: formData.description || '',
+        fulfillment_type: formData.fulfillment_type || 'on_site',
+        address: formData.address || null,
+        price_daily: formData.price_daily ? parseFloat(formData.price_daily) : null,
+        price_weekly: formData.price_weekly ? parseFloat(formData.price_weekly) : null,
+        price_sale: formData.price_sale ? parseFloat(formData.price_sale) : null,
+        highlights: formData.highlights || [],
+        amenities: formData.amenities || [],
+        pickup_location_text: formData.pickup_location_text || null,
+        delivery_fee: formData.delivery_fee ? parseFloat(formData.delivery_fee) : null,
+        delivery_radius_miles: formData.delivery_radius_miles ? parseInt(formData.delivery_radius_miles) : null,
+        pickup_instructions: formData.pickup_instructions || null,
+        delivery_instructions: formData.delivery_instructions || null,
+        access_instructions: formData.access_instructions || null,
+        hours_of_access: formData.hours_of_access || null,
+        location_notes: formData.location_notes || null,
+        available_from: formData.available_from || null,
+        available_to: formData.available_to || null,
+        instant_book: formData.mode === 'rent' ? formData.instant_book : false,
+      };
+
+      if (draftId) {
+        // Update existing draft
+        const { error } = await supabase
+          .from('listings')
+          .update(draftData as any)
+          .eq('id', draftId);
+        
+        if (error) throw error;
+      } else {
+        // Create new draft
+        const { data, error } = await supabase
+          .from('listings')
+          .insert(draftData as any)
+          .select('id')
+          .single();
+        
+        if (error) throw error;
+        if (data) {
+          setDraftId(data.id);
+        }
+      }
+
+      lastSavedData.current = currentData;
+      setLastAutoSaved(new Date());
+      hasUnsavedChanges.current = false;
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+    } finally {
+      setIsAutoSaving(false);
+    }
+  }, [user, formData, draftId, showSuccessModal, getSerializedFormData]);
+
+  // Auto-save every 30 seconds
+  useEffect(() => {
+    if (!hasProgress || showSuccessModal) return;
+
+    const interval = setInterval(() => {
+      performAutoSave();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [hasProgress, showSuccessModal, performAutoSave]);
 
   // Browser beforeunload handler
   useEffect(() => {
@@ -511,7 +605,33 @@ export const ListingWizard: React.FC = () => {
               <ArrowLeft className="w-4 h-4" />
               Back to Dashboard
             </button>
-            <h1 className="font-semibold">Create Listing</h1>
+            <div className="flex items-center gap-4">
+              {/* Auto-save status indicator */}
+              {hasProgress && (
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  {isAutoSaving ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : lastAutoSaved ? (
+                    <>
+                      <Cloud className="w-3.5 h-3.5 text-green-500" />
+                      <span className="hidden sm:inline">
+                        Saved {lastAutoSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      <span className="sm:hidden">Saved</span>
+                    </>
+                  ) : draftId ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-green-500" />
+                      <span>Draft</span>
+                    </>
+                  ) : null}
+                </div>
+              )}
+              <h1 className="font-semibold">Create Listing</h1>
+            </div>
           </div>
           {/* Stripe Connect Status Banner - Early awareness */}
           <StripeConnectBanner className="mb-4" variant="compact" />
