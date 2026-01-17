@@ -18,6 +18,27 @@ interface GeocodeResult {
   context?: string;
 }
 
+const parseLatLngQuery = (query: string): { lat: number; lng: number } | null => {
+  const match = query.trim().match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+  if (!match) return null;
+
+  const a = Number(match[1]);
+  const b = Number(match[2]);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+
+  // Prefer (lat, lng) when it matches valid ranges.
+  if (Math.abs(a) <= 90 && Math.abs(b) <= 180) {
+    return { lat: a, lng: b };
+  }
+
+  // Otherwise allow (lng, lat)
+  if (Math.abs(a) <= 180 && Math.abs(b) <= 90) {
+    return { lat: b, lng: a };
+  }
+
+  return null;
+};
+
 const handler = async (req: Request): Promise<Response> => {
   console.log("geocode-location function called");
 
@@ -47,6 +68,50 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log("Geocoding query:", query);
+
+    // If the query looks like coordinates, use Reverse Geocoding.
+    const latLng = parseLatLngQuery(query);
+    if (latLng) {
+      const reverseUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.lat},${latLng.lng}&key=${GOOGLE_MAPS_API_KEY}`;
+      const reverseRes = await fetch(reverseUrl);
+
+      if (!reverseRes.ok) {
+        console.error("Google Reverse Geocode API error:", reverseRes.status, await reverseRes.text());
+        return new Response(
+          JSON.stringify({ error: "Geocoding service error" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      const reverseData = await reverseRes.json();
+      if (reverseData.status !== "OK" && reverseData.status !== "ZERO_RESULTS") {
+        console.error("Google Reverse Geocode API status error:", reverseData.status, reverseData.error_message);
+        return new Response(
+          JSON.stringify({ error: reverseData.error_message || "Geocoding failed" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      const first = reverseData.results?.[0];
+      const formatted = first?.formatted_address as string | undefined;
+
+      const results: GeocodeResult[] = formatted
+        ? [{
+            id: `latlng:${latLng.lat},${latLng.lng}`,
+            placeName: formatted,
+            center: [latLng.lng, latLng.lat],
+            text: formatted.split(',')[0] || formatted,
+            context: formatted.split(',').slice(1).join(',').trim() || undefined,
+          }]
+        : [];
+
+      console.log(`Found ${results.length} results for "${query}" (reverse geocode)`);
+
+      return new Response(
+        JSON.stringify({ results }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     // Call Google Places Autocomplete API
     const encodedQuery = encodeURIComponent(query.trim());
