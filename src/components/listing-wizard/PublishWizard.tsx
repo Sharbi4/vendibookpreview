@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, Sparkles, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, Sparkles, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { supabase } from '@/integrations/supabase/client';
-import { CATEGORY_LABELS, ListingCategory, FreightPayer } from '@/types/listing';
+import { CATEGORY_LABELS, ListingCategory, FreightPayer, AMENITIES_BY_CATEGORY, FREIGHT_CATEGORY_LABELS, FreightCategory } from '@/types/listing';
 import { PublishChecklist, createChecklistItems } from './PublishChecklist';
 import { PublishSuccessModal } from './PublishSuccessModal';
 import { AuthGateModal } from './AuthGateModal';
@@ -49,6 +49,13 @@ interface ListingData {
   freight_payer: FreightPayer;
   accept_card_payment: boolean;
   accept_cash_payment: boolean;
+  highlights: string[] | null;
+  amenities: string[] | null;
+  weight_lbs: number | null;
+  length_inches: number | null;
+  width_inches: number | null;
+  height_inches: number | null;
+  freight_category: string | null;
 }
 
 interface RentalSuggestions {
@@ -104,6 +111,21 @@ export const PublishWizard: React.FC = () => {
   const [rentalSuggestions, setRentalSuggestions] = useState<RentalSuggestions | null>(null);
   const [saleSuggestions, setSaleSuggestions] = useState<SaleSuggestions | null>(null);
 
+  // Details step state
+  const [highlights, setHighlights] = useState<string[]>([]);
+  const [newHighlight, setNewHighlight] = useState('');
+  const [amenities, setAmenities] = useState<string[]>([]);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [originalDescription, setOriginalDescription] = useState<string | null>(null);
+  const [showOptimized, setShowOptimized] = useState(false);
+  
+  // Dimensions state (for sale listings)
+  const [weightLbs, setWeightLbs] = useState('');
+  const [lengthInches, setLengthInches] = useState('');
+  const [widthInches, setWidthInches] = useState('');
+  const [heightInches, setHeightInches] = useState('');
+  const [freightCategory, setFreightCategory] = useState<FreightCategory | null>(null);
+
   useEffect(() => {
     const fetchListing = async () => {
       if (!listingId) return;
@@ -138,6 +160,14 @@ export const PublishWizard: React.FC = () => {
       setFreightPayer((data.freight_payer as FreightPayer) || 'buyer');
       setAcceptCardPayment(data.accept_card_payment ?? true);
       setAcceptCashPayment(data.accept_cash_payment ?? false);
+      // Set details step fields
+      setHighlights(data.highlights || []);
+      setAmenities(data.amenities || []);
+      setWeightLbs(data.weight_lbs?.toString() || '');
+      setLengthInches(data.length_inches?.toString() || '');
+      setWidthInches(data.width_inches?.toString() || '');
+      setHeightInches(data.height_inches?.toString() || '');
+      setFreightCategory((data.freight_category as FreightCategory) || null);
       setIsLoading(false);
     };
 
@@ -290,6 +320,98 @@ export const PublishWizard: React.FC = () => {
     setPriceSale(String(saleSuggestions[key]));
   };
 
+  // AI Description Optimization
+  const optimizeDescription = async () => {
+    if (!description || description.trim().length < 10) {
+      toast({
+        title: 'Description too short',
+        description: 'Please write at least 10 characters to optimize.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsOptimizing(true);
+    setOriginalDescription(description);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('optimize-description', {
+        body: {
+          rawDescription: description,
+          category: listing?.category,
+          mode: listing?.mode,
+          title: title,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.optimizedDescription) {
+        setDescription(data.optimizedDescription);
+        setShowOptimized(true);
+        toast({
+          title: 'Description optimized!',
+          description: 'Your listing description has been professionally rewritten.',
+        });
+      }
+    } catch (error) {
+      console.error('Error optimizing description:', error);
+      toast({
+        title: 'Optimization failed',
+        description: error instanceof Error ? error.message : 'Please try again later.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
+  const revertDescription = () => {
+    if (originalDescription) {
+      setDescription(originalDescription);
+      setOriginalDescription(null);
+      setShowOptimized(false);
+      toast({
+        title: 'Description reverted',
+        description: 'Your original description has been restored.',
+      });
+    }
+  };
+
+  // Highlights management
+  const addHighlight = () => {
+    if (newHighlight.trim() && highlights.length < 6) {
+      setHighlights(prev => [...prev, newHighlight.trim()]);
+      setNewHighlight('');
+    }
+  };
+
+  const removeHighlight = (index: number) => {
+    setHighlights(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleHighlightKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addHighlight();
+    }
+  };
+
+  // Amenities management
+  const toggleAmenity = (amenityId: string) => {
+    setAmenities(prev => {
+      if (prev.includes(amenityId)) {
+        return prev.filter(a => a !== amenityId);
+      }
+      return [...prev, amenityId];
+    });
+  };
+
+  // Get amenities for the selected category
+  const categoryAmenities = listing?.category
+    ? AMENITIES_BY_CATEGORY[listing.category as ListingCategory]
+    : [];
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setImages(prev => [...prev, ...Array.from(e.target.files!)]);
@@ -359,7 +481,17 @@ export const PublishWizard: React.FC = () => {
           };
         }
       } else if (step === 'details') {
-        updateData = { title, description };
+        updateData = { 
+          title, 
+          description,
+          highlights,
+          amenities,
+          weight_lbs: parseFloat(weightLbs) || null,
+          length_inches: parseFloat(lengthInches) || null,
+          width_inches: parseFloat(widthInches) || null,
+          height_inches: parseFloat(heightInches) || null,
+          freight_category: freightCategory,
+        };
       }
 
       if (Object.keys(updateData).length > 0) {
@@ -975,29 +1107,301 @@ export const PublishWizard: React.FC = () => {
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-xl font-bold text-foreground mb-2">Add details</h2>
-                    <p className="text-muted-foreground">Help renters understand your listing.</p>
+                    <p className="text-muted-foreground">
+                      {listing.mode === 'rent' ? 'Help renters understand your listing.' : 'Help buyers understand your listing.'}
+                    </p>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="title">Title</Label>
-                      <Input
-                        id="title"
-                        placeholder="e.g., 2020 Custom Food Truck"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                      />
+                  {/* Title */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="title" className="text-base font-medium">Listing Title</Label>
+                      <span className="text-sm text-muted-foreground">{title.length}/80</span>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        placeholder="Describe your listing, key features, and what makes it special..."
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        rows={6}
-                      />
+                    <Input
+                      id="title"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value.slice(0, 80))}
+                      placeholder="e.g., 2022 Fully Equipped Taco Truck"
+                      className="text-lg"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Make it catchy and descriptive. Include key details like year, type, or specialty.
+                    </p>
+                  </div>
+
+                  {/* Description with AI Optimize */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="description" className="text-base font-medium">Description</Label>
+                      <div className="flex items-center gap-2">
+                        {showOptimized && originalDescription && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={revertDescription}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <RotateCcw className="w-3 h-3 mr-1" />
+                            Revert
+                          </Button>
+                        )}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={optimizeDescription}
+                          disabled={isOptimizing || !description || description.length < 10}
+                          className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 hover:border-primary/40"
+                        >
+                          {isOptimizing ? (
+                            <>
+                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                              Optimizing...
+                            </>
+                          ) : showOptimized ? (
+                            <>
+                              <Check className="w-3 h-3 mr-1 text-green-500" />
+                              Optimized
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3 h-3 mr-1" />
+                              AI Optimize
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </div>
+                    
+                    <Textarea
+                      id="description"
+                      value={description}
+                      onChange={(e) => {
+                        setDescription(e.target.value);
+                        if (showOptimized) setShowOptimized(false);
+                      }}
+                      placeholder="Describe your listing in detail. What makes it special? What equipment is included? What's the condition?"
+                      rows={6}
+                      className="resize-none"
+                    />
+                    
+                    <div className="flex items-start justify-between gap-4">
+                      <p className="text-sm text-muted-foreground">
+                        Be detailed! {listing.mode === 'rent' ? 'Renters' : 'Buyers'} want to know everything about your asset.
+                      </p>
+                      {!showOptimized && description.length >= 10 && (
+                        <p className="text-xs text-muted-foreground/70 whitespace-nowrap">
+                          ✨ Tip: Click AI Optimize for a professional rewrite
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Amenities - Category specific */}
+                  {categoryAmenities.length > 0 && (
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-base font-medium">What's Included</Label>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Select all features and amenities that come with your listing.
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-6">
+                        {categoryAmenities.map((group) => (
+                          <div key={group.label} className="space-y-3">
+                            <h4 className="text-sm font-medium text-muted-foreground">{group.label}</h4>
+                            <div className="grid grid-cols-2 gap-3">
+                              {group.items.map((item) => (
+                                <label
+                                  key={item.id}
+                                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                                    amenities.includes(item.id)
+                                      ? 'border-primary bg-primary/5'
+                                      : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                                  }`}
+                                >
+                                  <Checkbox
+                                    checked={amenities.includes(item.id)}
+                                    onCheckedChange={() => toggleAmenity(item.id)}
+                                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                  />
+                                  <span className="text-sm">{item.label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {amenities.length > 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          {amenities.length} item{amenities.length !== 1 ? 's' : ''} selected
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Item Dimensions - Only for sale listings with mobile assets */}
+                  {listing.mode === 'sale' && (listing.category === 'food_truck' || listing.category === 'food_trailer') && (
+                    <div className="space-y-4 p-4 rounded-xl border border-border bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <Package className="h-5 w-5 text-primary" />
+                        <Label className="text-base font-medium">Item Dimensions</Label>
+                        <InfoTooltip content="Provide accurate dimensions for freight cost estimates. This helps buyers understand shipping costs." />
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        These dimensions are used to calculate accurate freight estimates for buyers.
+                      </p>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Weight */}
+                        <div className="space-y-2">
+                          <Label htmlFor="weight_lbs" className="flex items-center gap-1.5 text-sm">
+                            <Scale className="h-3.5 w-3.5" />
+                            Weight (lbs)
+                          </Label>
+                          <Input
+                            id="weight_lbs"
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={weightLbs}
+                            onChange={(e) => setWeightLbs(e.target.value)}
+                            placeholder="e.g., 5000"
+                          />
+                        </div>
+
+                        {/* Freight Category */}
+                        <div className="space-y-2">
+                          <Label htmlFor="freight_category" className="flex items-center gap-1.5 text-sm">
+                            <Package className="h-3.5 w-3.5" />
+                            Freight Type
+                          </Label>
+                          <select
+                            id="freight_category"
+                            value={freightCategory || ''}
+                            onChange={(e) => setFreightCategory(e.target.value as FreightCategory || null)}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          >
+                            <option value="">Select type</option>
+                            {Object.entries(FREIGHT_CATEGORY_LABELS).map(([value, label]) => (
+                              <option key={value} value={value}>
+                                {label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4">
+                        {/* Length */}
+                        <div className="space-y-2">
+                          <Label htmlFor="length_inches" className="flex items-center gap-1.5 text-sm">
+                            <Ruler className="h-3.5 w-3.5" />
+                            Length (in)
+                          </Label>
+                          <Input
+                            id="length_inches"
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={lengthInches}
+                            onChange={(e) => setLengthInches(e.target.value)}
+                            placeholder="e.g., 240"
+                          />
+                        </div>
+
+                        {/* Width */}
+                        <div className="space-y-2">
+                          <Label htmlFor="width_inches" className="flex items-center gap-1.5 text-sm">
+                            <Ruler className="h-3.5 w-3.5" />
+                            Width (in)
+                          </Label>
+                          <Input
+                            id="width_inches"
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={widthInches}
+                            onChange={(e) => setWidthInches(e.target.value)}
+                            placeholder="e.g., 96"
+                          />
+                        </div>
+
+                        {/* Height */}
+                        <div className="space-y-2">
+                          <Label htmlFor="height_inches" className="flex items-center gap-1.5 text-sm">
+                            <Ruler className="h-3.5 w-3.5" />
+                            Height (in)
+                          </Label>
+                          <Input
+                            id="height_inches"
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={heightInches}
+                            onChange={(e) => setHeightInches(e.target.value)}
+                            placeholder="e.g., 120"
+                          />
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground">
+                        💡 Tip: Typical food truck dimensions are 16-26 ft long (192-312 in), 7-8 ft wide (84-96 in), and 8-10 ft tall (96-120 in).
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Highlights */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Key Highlights (Optional)</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Add up to 6 bullet points to showcase the best features.
+                    </p>
+                    
+                    {highlights.length > 0 && (
+                      <ul className="space-y-2">
+                        {highlights.map((highlight, index) => (
+                          <li
+                            key={index}
+                            className="flex items-center gap-2 p-3 bg-muted rounded-lg"
+                          >
+                            <span className="flex-1">{highlight}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeHighlight(index)}
+                              className="text-muted-foreground hover:text-destructive transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {highlights.length < 6 && (
+                      <div className="flex gap-2">
+                        <Input
+                          value={newHighlight}
+                          onChange={(e) => setNewHighlight(e.target.value)}
+                          onKeyDown={handleHighlightKeyDown}
+                          placeholder="e.g., Brand new refrigeration system"
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={addHighlight}
+                          disabled={!newHighlight.trim()}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-col gap-3">
