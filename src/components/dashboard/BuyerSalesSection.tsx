@@ -26,9 +26,9 @@ const BuyerSalesSection = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-foreground mb-2">My Purchases</h2>
+        <h2 className="text-xl font-bold text-foreground mb-2">Purchases</h2>
         <p className="text-muted-foreground text-sm">
-          Track and confirm your purchases. Funds are held in escrow until both parties confirm.
+          Funds held in escrow until both parties confirm.
         </p>
       </div>
 
@@ -36,7 +36,7 @@ const BuyerSalesSection = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard 
           icon={ShoppingBag} 
-          label="Total Purchases" 
+          label="Purchases" 
           value={stats.total}
         />
         <StatCard 
@@ -55,7 +55,7 @@ const BuyerSalesSection = () => {
         />
         <StatCard 
           icon={Package} 
-          label="Completed" 
+          label="Complete" 
           value={stats.completed}
           iconBgClass="bg-primary/10"
           iconClass="text-primary"
@@ -87,7 +87,7 @@ const BuyerSalesSection = () => {
               <ShieldCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h4 className="font-semibold text-foreground mb-2">No pending confirmations</h4>
               <p className="text-muted-foreground">
-                Purchases awaiting your confirmation will appear here.
+                Purchases awaiting confirmation appear here.
               </p>
             </div>
           ) : (
@@ -117,7 +117,7 @@ const BuyerSalesSection = () => {
               <CheckCircle2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h4 className="font-semibold text-foreground mb-2">No confirmed purchases</h4>
               <p className="text-muted-foreground">
-                Your confirmed and completed purchases will appear here.
+                Confirmed purchases appear here.
               </p>
             </div>
           ) : (
@@ -147,7 +147,7 @@ const BuyerSalesSection = () => {
               <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h4 className="font-semibold text-foreground mb-2">No other transactions</h4>
               <p className="text-muted-foreground">
-                Disputed, refunded, or cancelled transactions will appear here.
+                Disputed or refunded transactions appear here.
               </p>
             </div>
           ) : (
