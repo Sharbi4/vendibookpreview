@@ -176,11 +176,11 @@ const MobileMenu = ({
                     onClick={() => handleNavigation('/messages')}
                   />
                   <MenuLink
-                    to="/profile"
+                    to="/account"
                     icon={User}
-                    label="My Profile"
-                    isActive={isActive('/profile')}
-                    onClick={() => handleNavigation('/profile')}
+                    label="My Account"
+                    isActive={isActive('/account')}
+                    onClick={() => handleNavigation('/account')}
                   />
                   {isAdmin && (
                     <MenuLink

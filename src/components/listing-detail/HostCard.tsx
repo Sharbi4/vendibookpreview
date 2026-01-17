@@ -26,7 +26,7 @@ const HostCard = ({
     ? hostName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : 'H';
 
-  const profileLink = hostId ? `/profile/${hostId}` : '#';
+  const profileLink = hostId ? `/u/${hostId}` : '#';
 
   return (
     <div className="bg-card border border-border rounded-xl p-6">

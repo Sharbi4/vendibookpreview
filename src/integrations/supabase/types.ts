@@ -831,8 +831,10 @@ export type Database = {
           address1: string | null
           address2: string | null
           avatar_url: string | null
+          business_name: string | null
           city: string | null
           created_at: string
+          display_name: string | null
           draft_nudge_sent_at: string | null
           email: string | null
           full_name: string | null
@@ -840,6 +842,8 @@ export type Database = {
           identity_verified: boolean | null
           identity_verified_at: string | null
           phone_number: string | null
+          public_city: string | null
+          public_state: string | null
           state: string | null
           stripe_account_id: string | null
           stripe_identity_session_id: string | null
@@ -847,14 +851,17 @@ export type Database = {
           stripe_onboarding_complete: boolean | null
           stripe_onboarding_started_at: string | null
           updated_at: string
+          username: string | null
           zip_code: string | null
         }
         Insert: {
           address1?: string | null
           address2?: string | null
           avatar_url?: string | null
+          business_name?: string | null
           city?: string | null
           created_at?: string
+          display_name?: string | null
           draft_nudge_sent_at?: string | null
           email?: string | null
           full_name?: string | null
@@ -862,6 +869,8 @@ export type Database = {
           identity_verified?: boolean | null
           identity_verified_at?: string | null
           phone_number?: string | null
+          public_city?: string | null
+          public_state?: string | null
           state?: string | null
           stripe_account_id?: string | null
           stripe_identity_session_id?: string | null
@@ -869,14 +878,17 @@ export type Database = {
           stripe_onboarding_complete?: boolean | null
           stripe_onboarding_started_at?: string | null
           updated_at?: string
+          username?: string | null
           zip_code?: string | null
         }
         Update: {
           address1?: string | null
           address2?: string | null
           avatar_url?: string | null
+          business_name?: string | null
           city?: string | null
           created_at?: string
+          display_name?: string | null
           draft_nudge_sent_at?: string | null
           email?: string | null
           full_name?: string | null
@@ -884,6 +896,8 @@ export type Database = {
           identity_verified?: boolean | null
           identity_verified_at?: string | null
           phone_number?: string | null
+          public_city?: string | null
+          public_state?: string | null
           state?: string | null
           stripe_account_id?: string | null
           stripe_identity_session_id?: string | null
@@ -891,6 +905,7 @@ export type Database = {
           stripe_onboarding_complete?: boolean | null
           stripe_onboarding_started_at?: string | null
           updated_at?: string
+          username?: string | null
           zip_code?: string | null
         }
         Relationships: []
@@ -1371,10 +1386,15 @@ export type Database = {
         Args: { host_user_id: string }
         Returns: {
           avatar_url: string
+          business_name: string
           created_at: string
+          display_name: string
           full_name: string
           id: string
           identity_verified: boolean
+          public_city: string
+          public_state: string
+          username: string
         }[]
       }
       get_user_roles: {
