@@ -22,8 +22,6 @@ const CreateListing = lazy(() => import("./pages/CreateListing"));
 const EditListing = lazy(() => import("./pages/EditListing"));
 const ListPage = lazy(() => import("./pages/List"));
 const ListingDetail = lazy(() => import("./pages/ListingDetail"));
-const Profile = lazy(() => import("./pages/Profile"));
-const EditProfile = lazy(() => import("./pages/EditProfile"));
 const Account = lazy(() => import("./pages/Account"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const Privacy = lazy(() => import("./pages/Privacy"));
