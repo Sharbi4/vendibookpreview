@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, PlusCircle, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { trackEvent } from '@/lib/analytics';
@@ -19,12 +19,15 @@ const ChoosePathModal = ({ isOpen, onClose }: ChoosePathModalProps) => {
   const handlePathSelect = async (path: 'demand' | 'supply') => {
     setIsSubmitting(true);
     
-    // Track analytics
+    // Track path selection
     trackEvent({
       category: 'Activation',
       action: 'path_selected',
       label: path,
     });
+    
+    // Mark modal as seen
+    localStorage.setItem('choose_path_shown_at', new Date().toISOString());
 
     // Store selection in localStorage for routing
     localStorage.setItem('user_path_preference', path);
@@ -64,12 +67,20 @@ const ChoosePathModal = ({ isOpen, onClose }: ChoosePathModalProps) => {
 
   if (!isOpen) return null;
 
+  const handleDismiss = () => {
+    // Mark as seen when dismissed
+    localStorage.setItem('choose_path_shown_at', new Date().toISOString());
+    onClose();
+    // Route to search by default when dismissed
+    navigate('/search');
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
       <div className="relative w-full max-w-md bg-background rounded-2xl shadow-2xl overflow-hidden animate-scale-in">
         {/* Close button */}
         <button
-          onClick={onClose}
+          onClick={handleDismiss}
           className="absolute top-4 right-4 p-1 rounded-full hover:bg-muted transition-colors"
           aria-label="Close"
         >
@@ -81,7 +92,7 @@ const ChoosePathModal = ({ isOpen, onClose }: ChoosePathModalProps) => {
             What are you here to do?
           </h2>
           <p className="text-muted-foreground text-center text-sm mb-8">
-            Choose your path to get started
+            We'll take you to the right place.
           </p>
 
           <div className="space-y-3">

@@ -13,7 +13,7 @@ import { LocationSearchInput } from '@/components/search/LocationSearchInput';
 import { RadiusFilter } from '@/components/search/RadiusFilter';
 import SearchResultsMap from '@/components/search/SearchResultsMap';
 import NoResultsAlert from '@/components/search/NoResultsAlert';
-import InlineSubscribe from '@/components/search/InlineSubscribe';
+import GetAlertsCard from '@/components/search/GetAlertsCard';
 import RequestAssetCTA from '@/components/search/RequestAssetCTA';
 import MobileStickyBar from '@/components/search/MobileStickyBar';
 import { Button } from '@/components/ui/button';
@@ -823,10 +823,10 @@ const Search = () => {
                                 </div>
                               )}
                             </div>
-                            {/* Inline subscribe after 8th listing */}
+                            {/* Get alerts after 8th listing */}
                             {index === 7 && filteredListings.length > 8 && (
-                              <div key="inline-subscribe" className="col-span-1 sm:col-span-2 lg:col-span-3">
-                                <InlineSubscribe />
+                              <div key="get-alerts" className="col-span-1 sm:col-span-2 lg:col-span-3">
+                                <GetAlertsCard category={category !== 'all' ? category : undefined} radius={searchRadius} />
                               </div>
                             )}
                           </>
@@ -841,10 +841,10 @@ const Search = () => {
                     />
                   )}
                   
-                  {/* Inline subscribe at bottom if less than 8 results */}
+                  {/* Get alerts at bottom if less than 8 results */}
                   {filteredListings.length > 0 && filteredListings.length <= 8 && (
                     <div className="mt-6">
-                      <InlineSubscribe />
+                      <GetAlertsCard category={category !== 'all' ? category : undefined} radius={searchRadius} />
                     </div>
                   )}
                 </>

@@ -109,11 +109,26 @@ export const trackSignupCompleted = (role?: string): void => {
   });
 };
 
+export const trackChoosePathShown = (): void => {
+  trackEvent({
+    category: 'Activation',
+    action: 'choose_path_shown',
+  });
+};
+
 export const trackPathSelected = (path: 'demand' | 'supply'): void => {
   trackEvent({
     category: 'Activation',
     action: 'path_selected',
     label: path,
+  });
+};
+
+export const trackActivationScreenViewed = (role: 'demand' | 'supply'): void => {
+  trackEvent({
+    category: 'Activation',
+    action: 'activation_screen_viewed',
+    label: role,
   });
 };
 
@@ -163,6 +178,22 @@ export const trackListingPublished = (listingId: string): void => {
     category: 'Supply',
     action: 'listing_published',
     metadata: { listing_id: listingId },
+  });
+};
+
+export const trackStripeConnected = (): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'stripe_connected',
+  });
+};
+
+export const trackAlertsEnabled = (category?: string, zipCode?: string): void => {
+  trackEvent({
+    category: 'Activation',
+    action: 'alerts_enabled',
+    label: category || 'all',
+    metadata: { zip_code: zipCode },
   });
 };
 

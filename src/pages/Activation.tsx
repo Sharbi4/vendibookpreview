@@ -6,35 +6,71 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { trackEvent } from '@/lib/analytics';
 import vendibookLogo from '@/assets/vendibook-logo.png';
+import ChoosePathModal from '@/components/activation/ChoosePathModal';
 
 const Activation = () => {
   const navigate = useNavigate();
   const { user, roles, isLoading, hasRole } = useAuth();
   const [location, setLocation] = useState('');
   const [isLocating, setIsLocating] = useState(false);
+  const [showChoosePathModal, setShowChoosePathModal] = useState(false);
 
-  // Determine user's primary role
-  const isSupply = hasRole('host');
-  const isDemand = hasRole('shopper') || (!isSupply && !hasRole('shopper'));
+  // Check if user has any roles
+  const hasAnyRole = roles.length > 0;
+  
+  // Determine user's primary role from roles or localStorage preference
+  const pathPreference = localStorage.getItem('user_path_preference');
+  const isSupply = hasRole('host') || pathPreference === 'supply';
+  const isDemand = hasRole('shopper') || pathPreference === 'demand' || (!isSupply && !hasAnyRole);
 
   useEffect(() => {
     // Track activation page view
     if (user) {
       trackEvent({
         category: 'Activation',
-        action: 'activation_page_viewed',
+        action: 'activation_screen_viewed',
         label: isSupply ? 'supply' : 'demand',
       });
     }
   }, [user, isSupply]);
 
   useEffect(() => {
+    // If not logged in, redirect to auth
     if (!isLoading && !user) {
       navigate('/auth');
+      return;
     }
-  }, [user, isLoading, navigate]);
+
+    // If user has roles and has already seen the activation flow, redirect to dashboard
+    if (!isLoading && user && hasAnyRole) {
+      const hasSeenActivation = localStorage.getItem('activation_completed');
+      if (hasSeenActivation) {
+        navigate('/dashboard');
+        return;
+      }
+    }
+
+    // If user has no roles and no path preference, show choose path modal
+    if (!isLoading && user && !hasAnyRole && !pathPreference) {
+      // Check if modal was shown recently (within 30 days)
+      const lastShown = localStorage.getItem('choose_path_shown_at');
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      if (!lastShown || new Date(lastShown) < thirtyDaysAgo) {
+        trackEvent({
+          category: 'Activation',
+          action: 'choose_path_shown',
+        });
+        setShowChoosePathModal(true);
+      }
+    }
+  }, [user, isLoading, navigate, hasAnyRole, pathPreference]);
 
   const handleSearchListings = () => {
+    // Mark activation as completed
+    localStorage.setItem('activation_completed', 'true');
+    
     trackEvent({
       category: 'Activation',
       action: 'search_started',
@@ -49,11 +85,20 @@ const Activation = () => {
   };
 
   const handleCreateListing = () => {
+    // Mark activation as completed
+    localStorage.setItem('activation_completed', 'true');
+    
     trackEvent({
       category: 'Activation',
       action: 'create_listing_started',
     });
     navigate('/list');
+  };
+
+  const handleCloseModal = () => {
+    setShowChoosePathModal(false);
+    // Mark activation as completed since user chose a path
+    localStorage.setItem('activation_completed', 'true');
   };
 
   const handleUseLocation = () => {
@@ -188,7 +233,10 @@ const Activation = () => {
           {/* Skip link */}
           <p className="text-center mt-6">
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => {
+                localStorage.setItem('activation_completed', 'true');
+                navigate('/dashboard');
+              }}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Skip to dashboard
@@ -196,6 +244,12 @@ const Activation = () => {
           </p>
         </div>
       </div>
+
+      {/* Choose Path Modal */}
+      <ChoosePathModal 
+        isOpen={showChoosePathModal} 
+        onClose={handleCloseModal} 
+      />
     </div>
   );
 };
