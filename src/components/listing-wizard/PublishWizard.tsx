@@ -26,6 +26,7 @@ import { LocationSearchInput } from '@/components/search/LocationSearchInput';
 import { AvailabilityStep } from './AvailabilityStep';
 import { PublishChecklist, createChecklistItems } from './PublishChecklist';
 import { PublishSuccessModal } from './PublishSuccessModal';
+import { ListingPreviewModal } from './ListingPreviewModal';
 import { AuthGateModal } from './AuthGateModal';
 import { getGuestDraft, clearGuestDraft } from '@/lib/guestDraft';
 import { cn } from '@/lib/utils';
@@ -642,6 +643,7 @@ export const PublishWizard: React.FC = () => {
   // TOS agreement state for publish confirmation
   const [tosAgreed, setTosAgreed] = useState(false);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   // Checklist state
   const checklistState = {
@@ -1556,6 +1558,37 @@ export const PublishWizard: React.FC = () => {
                     </p>
                   </div>
 
+                  {/* Static Location Toggle - Only for mobile assets (show regardless of current state) */}
+                  {isMobileAsset(listing.category) && (
+                    <div className="p-4 bg-muted/50 rounded-xl border">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-start gap-3">
+                          <Building2 className="w-5 h-5 text-muted-foreground mt-0.5" />
+                          <div>
+                            <Label htmlFor="static-toggle" className="text-base font-medium cursor-pointer">
+                              Static Location
+                            </Label>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              This asset is parked at a fixed location (e.g., permanently stationed at a venue, lot, or property)
+                            </p>
+                          </div>
+                        </div>
+                        <Switch
+                          id="static-toggle"
+                          checked={isStaticLocation}
+                          onCheckedChange={(checked) => {
+                            setIsStaticLocation(checked);
+                            if (checked) {
+                              setFulfillmentType('on_site');
+                            } else {
+                              setFulfillmentType('pickup');
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {/* Static Location (Ghost Kitchen, Vendor Lot) or Mobile Asset with Static Toggle */}
                   {(isStaticLocationFn(listing.category) || isStaticLocation) ? (
                     <div className="space-y-6">
@@ -1618,36 +1651,6 @@ export const PublishWizard: React.FC = () => {
                   ) : (
                     /* Mobile Asset - Not Static */
                     <div className="space-y-6">
-                      {/* Static Location Toggle - Only for mobile assets */}
-                      {isMobileAsset(listing.category) && (
-                        <div className="p-4 bg-muted/50 rounded-xl border">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-start gap-3">
-                              <Building2 className="w-5 h-5 text-muted-foreground mt-0.5" />
-                              <div>
-                                <Label htmlFor="static-toggle" className="text-base font-medium cursor-pointer">
-                                  Static Location
-                                </Label>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  This asset is parked at a fixed location (e.g., permanently stationed at a venue, lot, or property)
-                                </p>
-                              </div>
-                            </div>
-                            <Switch
-                              id="static-toggle"
-                              checked={isStaticLocation}
-                              onCheckedChange={(checked) => {
-                                setIsStaticLocation(checked);
-                                if (checked) {
-                                  setFulfillmentType('on_site');
-                                } else {
-                                  setFulfillmentType('pickup');
-                                }
-                              }}
-                            />
-                          </div>
-                        </div>
-                      )}
 
                       {/* Fulfillment Type */}
                       <div className="space-y-3">
@@ -2014,13 +2017,20 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="flex gap-3">
+                  <div className="flex flex-wrap gap-3">
                     <Button variant="outline" onClick={() => setStep('stripe')}>Back</Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => setShowPreviewModal(true)}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Preview as Shopper
+                    </Button>
                     <Button 
                       onClick={() => setShowPublishDialog(true)} 
                       disabled={isSaving || !canPublish || !isOnboardingComplete}
                     >
-                      <Eye className="w-4 h-4 mr-2" />
+                      <Send className="w-4 h-4 mr-2" />
                       Publish Listing
                     </Button>
                   </div>
@@ -2103,6 +2113,38 @@ export const PublishWizard: React.FC = () => {
         onAuthSuccess={handleAuthSuccess}
         draftId={listingId}
       />
+
+      {/* Listing Preview Modal */}
+      {listing && (
+        <ListingPreviewModal
+          open={showPreviewModal}
+          onOpenChange={setShowPreviewModal}
+          listing={{
+            title,
+            description,
+            category: listing.category,
+            mode: listing.mode,
+            images: existingImages,
+            priceDaily,
+            priceWeekly,
+            priceSale,
+            address,
+            pickupLocationText,
+            highlights,
+            amenities,
+            instantBook,
+            fulfillmentType,
+            deliveryFee,
+            deliveryRadiusMiles,
+          }}
+          host={user ? {
+            name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'You',
+            avatar: user.user_metadata?.avatar_url || null,
+            memberSince: user.created_at || new Date().toISOString(),
+            isVerified: false,
+          } : undefined}
+        />
+      )}
     </div>
   );
 };
