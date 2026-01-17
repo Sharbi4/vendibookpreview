@@ -402,7 +402,7 @@ const Header = () => {
             to="/search" 
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            Browse Listings
+            Browse
           </Link>
           <Link 
             to="/host" 
@@ -415,6 +415,18 @@ const Header = () => {
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             How It Works
+          </Link>
+          <Link 
+            to="/tools" 
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Host Tools
+          </Link>
+          <Link 
+            to="/help" 
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Help
           </Link>
         </nav>
 
@@ -548,6 +560,22 @@ const Header = () => {
             >
               <HelpCircle className="h-4 w-4 text-muted-foreground" />
               How It Works
+            </Link>
+            <Link 
+              to="/tools" 
+              className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Sparkles className="h-4 w-4 text-primary" />
+              Host Tools
+            </Link>
+            <Link 
+              to="/help" 
+              className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+              Help Center
             </Link>
             <Link 
               to="/help" 
