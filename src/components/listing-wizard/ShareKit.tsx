@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import QRCode from 'qrcode';
+import { jsPDF } from 'jspdf';
 import { 
   Check, 
   Copy, 
@@ -11,7 +12,8 @@ import {
   QrCode,
   Image as ImageIcon,
   ChevronDown,
-  Sparkles
+  Sparkles,
+  FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -259,6 +261,153 @@ ${hashtags}`;
       toast({ title: 'QR code downloaded' });
     };
     qrImage.src = qrCodeDataUrl;
+  };
+
+  const handleDownloadPdfFlyer = async () => {
+    if (!qrCodeDataUrl) return;
+
+    try {
+      // Create PDF - Letter size (8.5 x 11 inches)
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'in',
+        format: 'letter',
+      });
+
+      const pageWidth = 8.5;
+      const pageHeight = 11;
+      const margin = 0.75;
+      const contentWidth = pageWidth - margin * 2;
+
+      // Brand colors
+      const primaryColor: [number, number, number] = [255, 81, 36]; // #FF5124
+      const darkColor: [number, number, number] = [26, 26, 26];
+      const grayColor: [number, number, number] = [100, 100, 100];
+
+      // Header bar
+      pdf.setFillColor(...primaryColor);
+      pdf.rect(0, 0, pageWidth, 1.2, 'F');
+
+      // Vendibook logo text
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(28);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('VendiBook', margin, 0.8);
+
+      // Tagline
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Book food trucks & trailers', margin + 2.8, 0.8);
+
+      let yPos = 1.6;
+
+      // Main headline
+      pdf.setTextColor(...darkColor);
+      pdf.setFontSize(32);
+      pdf.setFont('helvetica', 'bold');
+      
+      const headlineText = listing.mode === 'rent' ? 'RENT THIS' : 'FOR SALE';
+      pdf.text(headlineText, pageWidth / 2, yPos, { align: 'center' });
+      yPos += 0.5;
+
+      // Category badge
+      pdf.setFillColor(...primaryColor);
+      const categoryText = categoryLabel.toUpperCase();
+      const categoryWidth = pdf.getTextWidth(categoryText) * 0.05 + 0.4;
+      pdf.roundedRect((pageWidth - categoryWidth) / 2, yPos - 0.15, categoryWidth, 0.35, 0.1, 0.1, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(categoryText, pageWidth / 2, yPos + 0.08, { align: 'center' });
+      yPos += 0.6;
+
+      // Title
+      pdf.setTextColor(...darkColor);
+      pdf.setFontSize(22);
+      pdf.setFont('helvetica', 'bold');
+      const titleLines = pdf.splitTextToSize(listing.title, contentWidth);
+      pdf.text(titleLines, pageWidth / 2, yPos, { align: 'center' });
+      yPos += titleLines.length * 0.35 + 0.3;
+
+      // Location
+      if (locationShort) {
+        pdf.setTextColor(...grayColor);
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`📍 ${locationShort}`, pageWidth / 2, yPos, { align: 'center' });
+        yPos += 0.4;
+      }
+
+      // Price box
+      if (priceText) {
+        yPos += 0.2;
+        pdf.setFillColor(250, 250, 250);
+        pdf.roundedRect(margin + 0.5, yPos - 0.15, contentWidth - 1, 0.7, 0.1, 0.1, 'F');
+        pdf.setTextColor(...primaryColor);
+        pdf.setFontSize(28);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(priceText, pageWidth / 2, yPos + 0.35, { align: 'center' });
+        yPos += 1;
+      }
+
+      // Highlights
+      if (listing.highlights && listing.highlights.length > 0) {
+        pdf.setTextColor(...darkColor);
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'normal');
+        
+        listing.highlights.slice(0, 4).forEach((highlight) => {
+          pdf.text(`✓ ${highlight}`, pageWidth / 2, yPos, { align: 'center' });
+          yPos += 0.35;
+        });
+        yPos += 0.2;
+      }
+
+      // QR Code section
+      yPos = Math.max(yPos + 0.3, 7);
+      
+      // QR code background box
+      const qrBoxWidth = 3.5;
+      const qrBoxHeight = 3.2;
+      pdf.setFillColor(248, 248, 248);
+      pdf.roundedRect((pageWidth - qrBoxWidth) / 2, yPos - 0.2, qrBoxWidth, qrBoxHeight, 0.15, 0.15, 'F');
+      pdf.setDrawColor(230, 230, 230);
+      pdf.roundedRect((pageWidth - qrBoxWidth) / 2, yPos - 0.2, qrBoxWidth, qrBoxHeight, 0.15, 0.15, 'S');
+
+      // QR Code
+      const qrSize = 2;
+      const qrX = (pageWidth - qrSize) / 2;
+      pdf.addImage(qrCodeDataUrl, 'PNG', qrX, yPos, qrSize, qrSize);
+      yPos += qrSize + 0.25;
+
+      // Scan instruction
+      pdf.setTextColor(...darkColor);
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('SCAN TO VIEW & BOOK', pageWidth / 2, yPos, { align: 'center' });
+      yPos += 0.35;
+
+      pdf.setTextColor(...grayColor);
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('vendibook.com', pageWidth / 2, yPos, { align: 'center' });
+
+      // Footer
+      pdf.setFillColor(...primaryColor);
+      pdf.rect(0, pageHeight - 0.5, pageWidth, 0.5, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(10);
+      pdf.text('Questions? Call 1-877-8-VENDI-2 | support@vendibook.com', pageWidth / 2, pageHeight - 0.18, { align: 'center' });
+
+      // Save
+      pdf.save(`vendibook-flyer-${listing.id}.pdf`);
+      
+      trackShareQrDownloaded();
+      toast({ title: 'PDF flyer downloaded' });
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+      toast({ title: 'Failed to generate PDF', variant: 'destructive' });
+    }
   };
 
   const handleDownloadShareImage = async () => {
@@ -560,6 +709,33 @@ ${hashtags}`;
               <p className="text-xs text-muted-foreground">
                 Print and display to drive walk-in traffic
               </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Card 4: Print Flyer */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            Print flyer
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-20 rounded-lg bg-muted border-2 border-dashed border-border flex flex-col items-center justify-center shrink-0">
+              <QrCode className="w-6 h-6 text-muted-foreground mb-1" />
+              <span className="text-[8px] text-muted-foreground font-medium">PDF</span>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm text-muted-foreground mb-2">
+                Print-ready flyer with QR code, listing details, and Vendibook branding. Perfect for events or display on your truck.
+              </p>
+              <Button variant="outline" size="sm" onClick={handleDownloadPdfFlyer}>
+                <Download className="w-4 h-4 mr-2" />
+                Download PDF flyer
+              </Button>
             </div>
           </div>
         </CardContent>
