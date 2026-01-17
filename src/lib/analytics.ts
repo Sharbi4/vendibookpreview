@@ -266,6 +266,49 @@ export const trackImportFinishLaterClicked = (): void => {
   });
 };
 
+// Share Kit events
+export const trackShareKitViewed = (): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'share_kit_viewed',
+  });
+};
+
+export const trackShareLinkCopied = (): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'share_link_copied',
+  });
+};
+
+export const trackShareFbTextCopied = (): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'share_fb_text_copied',
+  });
+};
+
+export const trackShareQrDownloaded = (): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'share_qr_downloaded',
+  });
+};
+
+export const trackShareImageDownloaded = (): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'share_image_downloaded',
+  });
+};
+
+export const trackShareKitDismissed = (): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'share_kit_dismissed',
+  });
+};
+
 // Generic analytics exports for other parts of the app
 export { trackEvent };
 export type { AnalyticsEvent };

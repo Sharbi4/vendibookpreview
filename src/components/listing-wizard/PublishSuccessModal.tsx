@@ -1,9 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Check, ExternalLink, Facebook, Twitter, Linkedin, Link2, MapPin } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { CATEGORY_LABELS, MODE_LABELS, type ListingFormData } from '@/types/listing';
+import { Check, ExternalLink, Share2, MapPin } from 'lucide-react';
+import { CATEGORY_LABELS, MODE_LABELS } from '@/types/listing';
 
 interface PublishSuccessModalProps {
   open: boolean;
@@ -28,11 +28,9 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
   listing,
   onViewListing,
 }) => {
-  const { toast } = useToast();
+  const navigate = useNavigate();
 
   if (!listing) return null;
-
-  const listingUrl = `${window.location.origin}/listing/${listing.id}`;
   
   const formatPrice = () => {
     if (listing.mode === 'rent') {
@@ -46,32 +44,14 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
   const categoryLabel = CATEGORY_LABELS[listing.category as keyof typeof CATEGORY_LABELS] || listing.category;
   const modeLabel = MODE_LABELS[listing.mode as keyof typeof MODE_LABELS] || listing.mode;
 
-  const shareText = `Check out my ${categoryLabel} listing on Vendibook: ${listing.title}`;
-
-  const shareLinks = {
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(listingUrl)}`,
-    twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(listingUrl)}`,
-    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(listingUrl)}`,
+  const handleShareKit = () => {
+    onOpenChange(false);
+    navigate(`/listing-published/${listing.id}`);
   };
 
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(listingUrl);
-      toast({
-        title: 'Link copied!',
-        description: 'Listing URL copied to clipboard',
-      });
-    } catch (err) {
-      toast({
-        title: 'Failed to copy',
-        description: 'Please copy the URL manually',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const openShare = (url: string) => {
-    window.open(url, '_blank', 'width=600,height=400');
+  const handleDashboard = () => {
+    onOpenChange(false);
+    navigate('/dashboard');
   };
 
   return (
@@ -82,9 +62,9 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
             <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mb-4">
               <Check className="w-8 h-8 text-green-500" />
             </div>
-            <DialogTitle className="text-xl">Listing Published!</DialogTitle>
+            <DialogTitle className="text-xl">You're live 🎉</DialogTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Your listing is now live on Vendibook
+              Share your listing to get booked faster.
             </p>
           </div>
         </DialogHeader>
@@ -122,58 +102,29 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
           </div>
         </div>
 
-        {/* Share Links */}
-        <div className="space-y-3">
-          <p className="text-sm font-medium text-center">Share your listing</p>
-          <div className="flex items-center justify-center gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              className="rounded-full h-10 w-10 hover:bg-[#1877F2]/10 hover:border-[#1877F2] hover:text-[#1877F2]"
-              onClick={() => openShare(shareLinks.facebook)}
-            >
-              <Facebook className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="rounded-full h-10 w-10 hover:bg-[#1DA1F2]/10 hover:border-[#1DA1F2] hover:text-[#1DA1F2]"
-              onClick={() => openShare(shareLinks.twitter)}
-            >
-              <Twitter className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="rounded-full h-10 w-10 hover:bg-[#0A66C2]/10 hover:border-[#0A66C2] hover:text-[#0A66C2]"
-              onClick={() => openShare(shareLinks.linkedin)}
-            >
-              <Linkedin className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="rounded-full h-10 w-10"
-              onClick={copyToClipboard}
-            >
-              <Link2 className="w-5 h-5" />
-            </Button>
-          </div>
-        </div>
-
         {/* Action Buttons */}
         <div className="flex flex-col gap-2 mt-2">
-          <Button onClick={onViewListing} className="w-full">
-            <ExternalLink className="w-4 h-4 mr-2" />
-            View Listing
+          <Button onClick={handleShareKit} className="w-full">
+            <Share2 className="w-4 h-4 mr-2" />
+            Share your listing
           </Button>
-          <Button
-            variant="ghost"
-            onClick={() => onOpenChange(false)}
-            className="w-full text-muted-foreground"
-          >
-            Go to Dashboard
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={onViewListing}
+              className="flex-1"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              View Listing
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={handleDashboard}
+              className="flex-1 text-muted-foreground"
+            >
+              Dashboard
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
