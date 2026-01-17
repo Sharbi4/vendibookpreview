@@ -26,6 +26,7 @@ import { RequiredDocumentsBanner } from '@/components/documents/RequiredDocument
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { calculateRentalFees, RENTAL_RENTER_FEE_PERCENT } from '@/lib/commissions';
 import type { TablesInsert } from '@/integrations/supabase/types';
+import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 
 interface QuickBookingModalProps {
   listing: Listing | null;
@@ -251,9 +252,11 @@ const QuickBookingModal = ({
                 />
                 <div>
                   <span className="block">{listing.title}</span>
-                  <span className="text-sm font-normal text-muted-foreground">
-                    {CATEGORY_LABELS[listing.category]}
-                  </span>
+                  <CategoryTooltip category={listing.category} side="bottom">
+                    <span className="text-sm font-normal text-muted-foreground cursor-help">
+                      {CATEGORY_LABELS[listing.category]}
+                    </span>
+                  </CategoryTooltip>
                 </div>
               </>
             )}
