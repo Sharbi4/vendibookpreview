@@ -1,21 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, Sparkles, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { supabase } from '@/integrations/supabase/client';
-import { CATEGORY_LABELS, ListingCategory } from '@/types/listing';
+import { CATEGORY_LABELS, ListingCategory, FreightPayer } from '@/types/listing';
 import { PublishChecklist, createChecklistItems } from './PublishChecklist';
 import { PublishSuccessModal } from './PublishSuccessModal';
 import { AuthGateModal } from './AuthGateModal';
 import { getGuestDraft, clearGuestDraft } from '@/lib/guestDraft';
 import { cn } from '@/lib/utils';
+import { FreightSettingsCard } from '@/components/freight';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
+import {
+  calculateRentalFees,
+  calculateSaleFees,
+  formatCurrency,
+  RENTAL_HOST_FEE_PERCENT,
+  SALE_SELLER_FEE_PERCENT,
+} from '@/lib/commissions';
 
 type PublishStep = 'photos' | 'pricing' | 'details' | 'availability' | 'rules' | 'stripe' | 'review';
 
@@ -26,6 +36,7 @@ interface ListingData {
   title: string;
   description: string;
   address: string | null;
+  pickup_location_text: string | null;
   cover_image_url: string | null;
   image_urls: string[] | null;
   price_daily: number | null;
@@ -34,6 +45,27 @@ interface ListingData {
   available_from: string | null;
   available_to: string | null;
   instant_book: boolean;
+  vendibook_freight_enabled: boolean;
+  freight_payer: FreightPayer;
+  accept_card_payment: boolean;
+  accept_cash_payment: boolean;
+}
+
+interface RentalSuggestions {
+  daily_low: number;
+  daily_suggested: number;
+  daily_high: number;
+  weekly_low: number;
+  weekly_suggested: number;
+  weekly_high: number;
+  reasoning: string;
+}
+
+interface SaleSuggestions {
+  sale_low: number;
+  sale_suggested: number;
+  sale_high: number;
+  reasoning: string;
 }
 
 export const PublishWizard: React.FC = () => {
@@ -60,6 +92,17 @@ export const PublishWizard: React.FC = () => {
   const [priceWeekly, setPriceWeekly] = useState('');
   const [priceSale, setPriceSale] = useState('');
   const [instantBook, setInstantBook] = useState(false);
+  
+  // New pricing fields
+  const [vendibookFreightEnabled, setVendibookFreightEnabled] = useState(false);
+  const [freightPayer, setFreightPayer] = useState<FreightPayer>('buyer');
+  const [acceptCardPayment, setAcceptCardPayment] = useState(true);
+  const [acceptCashPayment, setAcceptCashPayment] = useState(false);
+  
+  // AI suggestions state
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [rentalSuggestions, setRentalSuggestions] = useState<RentalSuggestions | null>(null);
+  const [saleSuggestions, setSaleSuggestions] = useState<SaleSuggestions | null>(null);
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -91,6 +134,10 @@ export const PublishWizard: React.FC = () => {
       setPriceSale(data.price_sale?.toString() || '');
       setInstantBook(data.instant_book || false);
       setExistingImages(data.image_urls || []);
+      setVendibookFreightEnabled(data.vendibook_freight_enabled || false);
+      setFreightPayer((data.freight_payer as FreightPayer) || 'buyer');
+      setAcceptCardPayment(data.accept_card_payment ?? true);
+      setAcceptCashPayment(data.accept_cash_payment ?? false);
       setIsLoading(false);
     };
 
@@ -147,6 +194,102 @@ export const PublishWizard: React.FC = () => {
     await saveStep();
   };
 
+  // Calculate payout estimates
+  const rentalPayoutEstimates = useMemo(() => {
+    const dailyPrice = parseFloat(priceDaily) || 0;
+    const weeklyPrice = parseFloat(priceWeekly) || 0;
+    
+    return {
+      daily: dailyPrice > 0 ? calculateRentalFees(dailyPrice) : null,
+      weekly: weeklyPrice > 0 ? calculateRentalFees(weeklyPrice) : null,
+    };
+  }, [priceDaily, priceWeekly]);
+
+  const estimatedFreightCost = 500; // Placeholder
+  
+  const salePayoutEstimate = useMemo(() => {
+    const salePriceNum = parseFloat(priceSale) || 0;
+    if (salePriceNum <= 0) return null;
+    
+    const isSellerPaidFreight = vendibookFreightEnabled && freightPayer === 'seller';
+    const freightCost = vendibookFreightEnabled ? estimatedFreightCost : 0;
+    
+    return calculateSaleFees(salePriceNum, freightCost, isSellerPaidFreight);
+  }, [priceSale, vendibookFreightEnabled, freightPayer]);
+
+  const getLocation = () => {
+    if (listing?.address) return listing.address;
+    if (listing?.pickup_location_text) return listing.pickup_location_text;
+    return '';
+  };
+
+  const handleGetSuggestions = async () => {
+    if (!title || !listing?.category) {
+      toast({
+        title: 'Missing information',
+        description: 'Please add a title and category first to get pricing suggestions.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLoadingSuggestions(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('suggest-pricing', {
+        body: {
+          title: title,
+          category: listing.category,
+          location: getLocation(),
+          mode: listing.mode,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (listing.mode === 'rent') {
+        setRentalSuggestions(data as RentalSuggestions);
+      } else {
+        setSaleSuggestions(data as SaleSuggestions);
+      }
+
+      toast({
+        title: 'Suggestions ready!',
+        description: 'AI pricing suggestions have been generated based on your listing details.',
+      });
+    } catch (error) {
+      console.error('Error getting suggestions:', error);
+      toast({
+        title: 'Could not get suggestions',
+        description: error instanceof Error ? error.message : 'Please try again later.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
+  const applyRentalSuggestion = (type: 'low' | 'suggested' | 'high') => {
+    if (!rentalSuggestions) return;
+    
+    const dailyKey = `daily_${type}` as keyof RentalSuggestions;
+    const weeklyKey = `weekly_${type}` as keyof RentalSuggestions;
+    
+    setPriceDaily(String(rentalSuggestions[dailyKey]));
+    setPriceWeekly(String(rentalSuggestions[weeklyKey]));
+  };
+
+  const applySaleSuggestion = (type: 'low' | 'suggested' | 'high') => {
+    if (!saleSuggestions) return;
+    
+    const key = `sale_${type}` as keyof SaleSuggestions;
+    setPriceSale(String(saleSuggestions[key]));
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setImages(prev => [...prev, ...Array.from(e.target.files!)]);
@@ -200,13 +343,21 @@ export const PublishWizard: React.FC = () => {
         setExistingImages(imageUrls);
         setImages([]);
       } else if (step === 'pricing') {
-        updateData = listing.mode === 'sale'
-          ? { price_sale: parseFloat(priceSale) || null }
-          : {
-              price_daily: parseFloat(priceDaily) || null,
-              price_weekly: parseFloat(priceWeekly) || null,
-              instant_book: instantBook,
-            };
+        if (listing.mode === 'sale') {
+          updateData = { 
+            price_sale: parseFloat(priceSale) || null,
+            vendibook_freight_enabled: vendibookFreightEnabled,
+            freight_payer: freightPayer,
+            accept_card_payment: acceptCardPayment,
+            accept_cash_payment: acceptCashPayment,
+          };
+        } else {
+          updateData = {
+            price_daily: parseFloat(priceDaily) || null,
+            price_weekly: parseFloat(priceWeekly) || null,
+            instant_book: instantBook,
+          };
+        }
       } else if (step === 'details') {
         updateData = { title, description };
       }
@@ -400,67 +551,417 @@ export const PublishWizard: React.FC = () => {
                     </p>
                   </div>
 
+                  {/* AI Suggestions Button */}
+                  <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-4 border border-primary/20">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-foreground mb-1">AI Pricing Assistant</h4>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Get smart pricing suggestions based on your listing title, category, and location.
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleGetSuggestions}
+                          disabled={isLoadingSuggestions}
+                          className="border-primary/30 hover:bg-primary/5"
+                        >
+                          {isLoadingSuggestions ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Analyzing market...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              Get AI Suggestions
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
                   {listing.mode === 'sale' ? (
-                    <div className="space-y-2">
-                      <Label htmlFor="priceSale">Sale price</Label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                        <Input
-                          id="priceSale"
-                          type="number"
-                          placeholder="0"
-                          value={priceSale}
-                          onChange={(e) => setPriceSale(e.target.value)}
-                          className="pl-8"
+                    <>
+                      {/* Sale Suggestions Display */}
+                      {saleSuggestions && (
+                        <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+                          <h4 className="font-medium text-foreground flex items-center gap-2">
+                            <Target className="w-4 h-4 text-primary" />
+                            Suggested Pricing
+                          </h4>
+                          
+                          <div className="grid grid-cols-3 gap-3">
+                            <button
+                              type="button"
+                              onClick={() => applySaleSuggestion('low')}
+                              className="p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                            >
+                              <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
+                                <TrendingDown className="w-3 h-3" />
+                                Quick Sale
+                              </div>
+                              <div className="font-semibold text-foreground">${saleSuggestions.sale_low.toLocaleString()}</div>
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={() => applySaleSuggestion('suggested')}
+                              className="p-3 rounded-lg border-2 border-primary bg-primary/5 hover:bg-primary/10 transition-all text-left"
+                            >
+                              <div className="flex items-center gap-1 text-primary text-xs mb-1">
+                                <Target className="w-3 h-3" />
+                                Recommended
+                              </div>
+                              <div className="font-semibold text-foreground">${saleSuggestions.sale_suggested.toLocaleString()}</div>
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={() => applySaleSuggestion('high')}
+                              className="p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                            >
+                              <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
+                                <TrendingUp className="w-3 h-3" />
+                                Premium
+                              </div>
+                              <div className="font-semibold text-foreground">${saleSuggestions.sale_high.toLocaleString()}</div>
+                            </button>
+                          </div>
+                          
+                          <p className="text-sm text-muted-foreground italic">
+                            {saleSuggestions.reasoning}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Sale Price Input */}
+                      <div className="space-y-2">
+                        <Label htmlFor="priceSale" className="text-base font-medium">Asking Price *</Label>
+                        <div className="relative max-w-sm">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                          <Input
+                            id="priceSale"
+                            type="number"
+                            placeholder="0"
+                            value={priceSale}
+                            onChange={(e) => setPriceSale(e.target.value)}
+                            className="pl-8 text-xl"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Payout Estimate for Sales */}
+                      {salePayoutEstimate && (
+                        <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-foreground max-w-md">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 bg-green-500/10 rounded-lg">
+                              <Wallet className="w-5 h-5 text-green-600" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h4 className="font-medium text-foreground">
+                                  {vendibookFreightEnabled && freightPayer === 'seller' 
+                                    ? 'Seller Payout Estimate (Free Shipping)' 
+                                    : 'Estimated Payout'}
+                                </h4>
+                              </div>
+                              
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Item price:</span>
+                                <span className="text-sm text-foreground">
+                                  {formatCurrency(salePayoutEstimate.salePrice)}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center justify-between mt-1">
+                                <span className="text-sm text-muted-foreground">Platform commission:</span>
+                                <span className="text-sm text-destructive">
+                                  -{formatCurrency(salePayoutEstimate.sellerFee)}
+                                </span>
+                              </div>
+                              
+                              {salePayoutEstimate.freightDeduction > 0 && (
+                                <div className="flex items-center justify-between mt-1">
+                                  <span className="text-sm text-muted-foreground">Freight (seller-paid):</span>
+                                  <span className="text-sm text-destructive">
+                                    -{formatCurrency(salePayoutEstimate.freightDeduction)}
+                                  </span>
+                                </div>
+                              )}
+                              
+                              <div className="flex items-center justify-between mt-2 pt-2 border-t border-green-300/30">
+                                <span className="text-sm font-medium text-foreground">Estimated payout:</span>
+                                <span className="font-semibold text-green-600 text-lg">
+                                  {formatCurrency(salePayoutEstimate.sellerReceives)}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-start gap-1.5 mt-3 text-xs text-muted-foreground">
+                                <Info className="w-3 h-3 mt-0.5 shrink-0" />
+                                <span>Platform fee is {SALE_SELLER_FEE_PERCENT}% of the sale price</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Payment Method Options */}
+                      <div className="pt-6 border-t">
+                        <div className="flex items-center gap-2 mb-4">
+                          <CreditCard className="w-5 h-5 text-primary" />
+                          <h3 className="text-lg font-semibold">Accepted Payment Methods</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Select how buyers can pay for your item. You can enable both options.
+                        </p>
+
+                        <div className="space-y-4">
+                          <div className="flex items-start space-x-3 p-4 rounded-lg border border-border bg-card hover:border-primary/30 transition-colors">
+                            <Checkbox
+                              id="accept_card_payment"
+                              checked={acceptCardPayment}
+                              onCheckedChange={(checked) => setAcceptCardPayment(!!checked)}
+                              className="mt-0.5"
+                            />
+                            <div className="flex-1">
+                              <Label
+                                htmlFor="accept_card_payment"
+                                className="flex items-center gap-2 text-base font-medium cursor-pointer"
+                              >
+                                <CreditCard className="w-4 h-4 text-primary" />
+                                Pay by Card (Online)
+                              </Label>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Accept secure online payments via Stripe. Funds are deposited to your connected Stripe account after sale confirmation.
+                              </p>
+                              {acceptCardPayment && (
+                                <div className="mt-2 p-2 bg-primary/5 rounded text-xs text-muted-foreground">
+                                  <Info className="w-3 h-3 inline mr-1" />
+                                  Requires Stripe Connect setup to receive payments.
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-start space-x-3 p-4 rounded-lg border border-border bg-card hover:border-primary/30 transition-colors">
+                            <Checkbox
+                              id="accept_cash_payment"
+                              checked={acceptCashPayment}
+                              onCheckedChange={(checked) => setAcceptCashPayment(!!checked)}
+                              className="mt-0.5"
+                            />
+                            <div className="flex-1">
+                              <Label
+                                htmlFor="accept_cash_payment"
+                                className="flex items-center gap-2 text-base font-medium cursor-pointer"
+                              >
+                                <Banknote className="w-4 h-4 text-green-600" />
+                                Pay in Person
+                              </Label>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Accept cash or other payments at pickup/delivery. You'll arrange payment directly with the buyer.
+                              </p>
+                            </div>
+                          </div>
+
+                          {!acceptCardPayment && !acceptCashPayment && (
+                            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                              <p className="text-sm text-destructive flex items-center gap-2">
+                                <Info className="w-4 h-4" />
+                                Please select at least one payment method.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Freight Settings */}
+                      <div className="pt-6 border-t">
+                        <FreightSettingsCard
+                          enabled={vendibookFreightEnabled}
+                          payer={freightPayer}
+                          onEnabledChange={(enabled) => setVendibookFreightEnabled(enabled)}
+                          onPayerChange={(payer) => setFreightPayer(payer)}
                         />
                       </div>
-                    </div>
+                    </>
                   ) : (
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="priceDaily">Daily rate</Label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                          <Input
-                            id="priceDaily"
-                            type="number"
-                            placeholder="0"
-                            value={priceDaily}
-                            onChange={(e) => setPriceDaily(e.target.value)}
-                            className="pl-8"
-                          />
+                    <>
+                      {/* Rental Suggestions Display */}
+                      {rentalSuggestions && (
+                        <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+                          <h4 className="font-medium text-foreground flex items-center gap-2">
+                            <Target className="w-4 h-4 text-primary" />
+                            Suggested Pricing
+                          </h4>
+                          
+                          <div className="grid grid-cols-3 gap-3">
+                            <button
+                              type="button"
+                              onClick={() => applyRentalSuggestion('low')}
+                              className="p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                            >
+                              <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
+                                <TrendingDown className="w-3 h-3" />
+                                Budget
+                              </div>
+                              <div className="font-semibold text-foreground">${rentalSuggestions.daily_low}/day</div>
+                              <div className="text-xs text-muted-foreground">${rentalSuggestions.weekly_low}/week</div>
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={() => applyRentalSuggestion('suggested')}
+                              className="p-3 rounded-lg border-2 border-primary bg-primary/5 hover:bg-primary/10 transition-all text-left"
+                            >
+                              <div className="flex items-center gap-1 text-primary text-xs mb-1">
+                                <Target className="w-3 h-3" />
+                                Recommended
+                              </div>
+                              <div className="font-semibold text-foreground">${rentalSuggestions.daily_suggested}/day</div>
+                              <div className="text-xs text-muted-foreground">${rentalSuggestions.weekly_suggested}/week</div>
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={() => applyRentalSuggestion('high')}
+                              className="p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                            >
+                              <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
+                                <TrendingUp className="w-3 h-3" />
+                                Premium
+                              </div>
+                              <div className="font-semibold text-foreground">${rentalSuggestions.daily_high}/day</div>
+                              <div className="text-xs text-muted-foreground">${rentalSuggestions.weekly_high}/week</div>
+                            </button>
+                          </div>
+                          
+                          <p className="text-sm text-muted-foreground italic">
+                            {rentalSuggestions.reasoning}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Rental Pricing Inputs */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="priceDaily" className="text-base font-medium">Daily Rate *</Label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                            <Input
+                              id="priceDaily"
+                              type="number"
+                              placeholder="0"
+                              value={priceDaily}
+                              onChange={(e) => setPriceDaily(e.target.value)}
+                              className="pl-8 text-lg"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="priceWeekly" className="text-base font-medium">Weekly Rate (optional)</Label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                            <Input
+                              id="priceWeekly"
+                              type="number"
+                              placeholder="0"
+                              value={priceWeekly}
+                              onChange={(e) => setPriceWeekly(e.target.value)}
+                              className="pl-8 text-lg"
+                            />
+                          </div>
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="priceWeekly">Weekly rate (optional)</Label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                          <Input
-                            id="priceWeekly"
-                            type="number"
-                            placeholder="0"
-                            value={priceWeekly}
-                            onChange={(e) => setPriceWeekly(e.target.value)}
-                            className="pl-8"
-                          />
+
+                      {/* Payout Estimate for Rentals */}
+                      {(rentalPayoutEstimates.daily || rentalPayoutEstimates.weekly) && (
+                        <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-foreground">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 bg-green-500/10 rounded-lg">
+                              <Wallet className="w-5 h-5 text-green-600" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-medium text-foreground mb-2">Estimated Payout</h4>
+                              <div className="space-y-2">
+                                {rentalPayoutEstimates.daily && (
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground">Daily rental:</span>
+                                    <div className="text-right">
+                                      <span className="font-semibold text-green-600">
+                                        {formatCurrency(rentalPayoutEstimates.daily.hostReceives)}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground ml-2">
+                                        ({formatCurrency(rentalPayoutEstimates.daily.hostFee)} fee)
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                                {rentalPayoutEstimates.weekly && (
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground">Weekly rental:</span>
+                                    <div className="text-right">
+                                      <span className="font-semibold text-green-600">
+                                        {formatCurrency(rentalPayoutEstimates.weekly.hostReceives)}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground ml-2">
+                                        ({formatCurrency(rentalPayoutEstimates.weekly.hostFee)} fee)
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex items-start gap-1.5 mt-3 text-xs text-muted-foreground">
+                                <Info className="w-3 h-3 mt-0.5 shrink-0" />
+                                <span>Platform fee is {RENTAL_HOST_FEE_PERCENT}% of the rental price</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Instant Book Toggle */}
+                      <div className="pt-4 border-t">
+                        <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-xl p-4 border border-amber-500/20">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-start gap-3 flex-1">
+                              <div className="p-2 bg-amber-500/10 rounded-lg">
+                                <Zap className="w-5 h-5 text-amber-600" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-medium text-foreground">Instant Book</h4>
+                                  <InfoTooltip 
+                                    content="When enabled, renters can book and pay immediately. Documents are still reviewed - if rejected, the booking is cancelled and payment is fully refunded." 
+                                  />
+                                </div>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  Allow renters to book immediately without waiting for approval.
+                                </p>
+                              </div>
+                            </div>
+                            <Switch
+                              checked={instantBook}
+                              onCheckedChange={(checked) => setInstantBook(checked)}
+                            />
+                          </div>
                         </div>
                       </div>
-                      <label className="flex items-center gap-3 p-4 rounded-lg border border-border cursor-pointer hover:bg-muted/50">
-                        <Checkbox
-                          checked={instantBook}
-                          onCheckedChange={(checked) => setInstantBook(checked === true)}
-                        />
-                        <div>
-                          <span className="font-medium text-foreground">Enable Instant Book</span>
-                          <p className="text-sm text-muted-foreground">Allow renters to book and pay instantly</p>
-                        </div>
-                      </label>
-                    </div>
+                    </>
                   )}
 
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 pt-4">
                     <Button variant="outline" onClick={() => setStep('photos')}>Back</Button>
-                    <Button onClick={saveStep} disabled={isSaving || (listing.mode === 'sale' ? !priceSale : !priceDaily)}>
+                    <Button 
+                      onClick={saveStep} 
+                      disabled={isSaving || (listing.mode === 'sale' ? (!priceSale || (!acceptCardPayment && !acceptCashPayment)) : !priceDaily)}
+                    >
                       {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                       Continue
                       <ChevronRight className="w-4 h-4 ml-2" />
