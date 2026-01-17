@@ -112,7 +112,7 @@ const ListingStudio = () => {
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                      <Link to="/tools">Vendi AI Suite</Link>
+                      <Link to="/tools">Host Tools</Link>
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
@@ -287,8 +287,8 @@ const ListingStudio = () => {
                       </OutputSection>
 
                       <Button className="w-full" asChild>
-                        <Link to="/create-listing">
-                          Create Listing Now
+                        <Link to="/host">
+                          List Your Asset
                           <ArrowRight className="h-4 w-4 ml-2" />
                         </Link>
                       </Button>
@@ -339,7 +339,7 @@ const ListingStudio = () => {
                 <Button size="lg" className="bg-gradient-to-r from-red-500 to-orange-500" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
                   Write My Listing
                 </Button>
-                <Button size="lg" variant="outline" asChild><Link to="/create-listing">Create a Listing</Link></Button>
+                <Button size="lg" variant="outline" asChild><Link to="/host">List Your Asset</Link></Button>
               </div>
             </div>
           </section>

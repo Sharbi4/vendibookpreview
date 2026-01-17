@@ -45,7 +45,7 @@ const articleSchema = generateArticleSchema({
 
 const breadcrumbSchema = generateBreadcrumbSchema([
   { name: 'Home', url: '/' },
-  { name: 'AI Tools', url: '/ai-tools' },
+  { name: 'Host Tools', url: '/tools' },
   { name: 'Vendi AI Suite Guide', url: '/vendi-ai-suite' },
 ]);
 
@@ -97,7 +97,7 @@ const tools = [
       'Renewing expired permits',
       'Converting from cart to truck operations'
     ],
-    href: '/ai-tools',
+    href: '/tools/permitpath',
     category: 'Compliance'
   },
   {
@@ -118,7 +118,7 @@ const tools = [
       'Pricing for new locations',
       'Competitive analysis'
     ],
-    href: '/ai-tools',
+    href: '/tools/pricepilot',
     category: 'Revenue'
   },
   {
@@ -139,7 +139,7 @@ const tools = [
       'Describing equipment for sale',
       'Writing social media posts'
     ],
-    href: '/ai-tools',
+    href: '/tools/listing-studio',
     category: 'Marketing'
   },
   {
@@ -160,7 +160,7 @@ const tools = [
       'Troubleshooting issues',
       'Planning equipment upgrades'
     ],
-    href: '/ai-tools',
+    href: '/tools/buildkit',
     category: 'Operations'
   },
   {
@@ -181,7 +181,7 @@ const tools = [
       'Identifying market gaps',
       'Validating new menu ideas'
     ],
-    href: '/ai-tools',
+    href: '/tools/concept-lab',
     category: 'Strategy'
   },
   {
@@ -202,7 +202,7 @@ const tools = [
       'Understanding local food trends',
       'Planning expansion'
     ],
-    href: '/ai-tools',
+    href: '/tools/market-radar',
     category: 'Intelligence'
   },
 ];
@@ -286,7 +286,7 @@ const VendiAISuite = () => {
             <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
               <Link to="/" className="hover:text-primary transition-colors">Home</Link>
               <span>/</span>
-              <Link to="/ai-tools" className="hover:text-primary transition-colors">AI Tools</Link>
+              <Link to="/tools" className="hover:text-primary transition-colors">Host Tools</Link>
               <span>/</span>
               <span className="text-foreground">Vendi AI Suite Guide</span>
             </nav>
@@ -309,7 +309,7 @@ const VendiAISuite = () => {
                 </p>
 
                 <div className="flex flex-wrap gap-4 mb-8">
-                  <Link to="/ai-tools">
+                  <Link to="/tools">
                     <Button size="lg" className="gap-2">
                       <Sparkles className="w-4 h-4" />
                       Open AI Suite
@@ -560,7 +560,7 @@ const VendiAISuite = () => {
                           <div className="flex-1">
                             <h3 className="font-semibold text-foreground mb-1">{item.title}</h3>
                             <p className="text-sm text-muted-foreground mb-3">{item.description}</p>
-                            <Link to="/ai-tools">
+                            <Link to="/tools">
                               <Badge variant="secondary" className="cursor-pointer hover:bg-primary/10 transition-colors">
                                 Use {item.tool} →
                               </Badge>
@@ -661,7 +661,7 @@ const VendiAISuite = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/ai-tools">
+              <Link to="/tools">
                 <Button size="lg" className="gap-2 w-full sm:w-auto">
                   <Sparkles className="w-4 h-4" />
                   Open Vendi AI Suite

@@ -45,44 +45,40 @@ const ToolCrossLinks = ({ currentTool, title, subtitle }: ToolCrossLinksProps) =
   if (relatedTools.length === 0) return null;
 
   return (
-    <section className="py-16 bg-muted/30">
+    <section className="py-12 bg-muted/30">
       <div className="container">
         <div className="text-center mb-8">
-          <Badge variant="outline" className="mb-3">Continue Your Journey</Badge>
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">
-            {title || 'Next Steps in Your Workflow'}
+          <h2 className="text-xl md:text-2xl font-bold mb-2">
+            {title || 'Related Tools'}
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            {subtitle || 'These tools work great together. Continue building your food truck business.'}
+          <p className="text-muted-foreground text-sm max-w-lg mx-auto">
+            {subtitle || 'Continue building your food truck business with these tools.'}
           </p>
         </div>
         
-        <div className="grid gap-4 md:grid-cols-3 max-w-4xl mx-auto">
+        <div className="grid gap-4 md:grid-cols-3 max-w-3xl mx-auto">
           {relatedTools.map((tool) => (
             <Link key={tool.id} to={tool.path}>
-              <Card className="h-full border-2 border-transparent hover:border-primary/20 transition-all hover:shadow-lg group cursor-pointer">
-                <CardContent className="p-6">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tool.gradient} flex items-center justify-center mb-4 text-white group-hover:scale-110 transition-transform`}>
+              <Card className="h-full border hover:border-primary/30 transition-all hover:shadow-md group cursor-pointer">
+                <CardContent className="p-5">
+                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${tool.gradient} flex items-center justify-center mb-3 text-white group-hover:scale-110 transition-transform`}>
                     {tool.icon}
                   </div>
-                  <h3 className="font-bold text-lg mb-1 group-hover:text-primary transition-colors">
+                  <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
                     {tool.name}
                   </h3>
-                  <p className="text-sm text-muted-foreground mb-3">
+                  <p className="text-xs text-muted-foreground">
                     {tool.tagline}
                   </p>
-                  <span className="text-sm font-medium text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
-                    Try it now <ArrowRight className="h-4 w-4" />
-                  </span>
                 </CardContent>
               </Card>
             </Link>
           ))}
         </div>
         
-        <div className="text-center mt-8">
-          <Link to="/ai-tools" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            ← Back to Command Center
+        <div className="text-center mt-6">
+          <Link to="/tools" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            ← View all Host Tools
           </Link>
         </div>
       </div>
