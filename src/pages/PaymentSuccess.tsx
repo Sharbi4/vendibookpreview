@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { CheckCircle2, Calendar, ArrowRight, Loader2, Home, ShieldCheck, Clock, Sparkles, PartyPopper, Mail, ChevronDown, ChevronUp, Receipt, Download, FileText, Printer } from 'lucide-react';
+import { CheckCircle2, Calendar, ArrowRight, Loader2, Home, ShieldCheck, Clock, Sparkles, PartyPopper, Mail, ChevronDown, ChevronUp, Receipt, Download, FileText, Printer, Wallet, BanknoteIcon } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -347,7 +347,7 @@ const PaymentSuccess = () => {
                   )}
 
                   {/* Escrow Process Steps */}
-                  <div className="bg-muted/30 rounded-xl p-4 mb-6 text-left">
+                  <div className="bg-muted/30 rounded-xl p-4 mb-4 text-left">
                     <h4 className="font-semibold text-foreground mb-3 text-sm">What happens next?</h4>
                     <div className="space-y-3">
                       {[
@@ -370,6 +370,23 @@ const PaymentSuccess = () => {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Seller Payout Timeline */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/20 rounded-xl p-4 mb-6 text-left border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
+                        <BanknoteIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-foreground text-sm flex items-center gap-2">
+                          Seller Payout Timeline
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Funds will be released to the seller within <span className="font-medium text-blue-600 dark:text-blue-400">2-3 business days</span> after you confirm receipt. The seller will receive their payout minus the 12.9% platform fee.
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -567,6 +584,33 @@ const PaymentSuccess = () => {
                       </div>
                     </Collapsible>
                   )}
+
+                  {/* Host Payout Timeline for Rentals */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/20 rounded-xl p-4 mb-6 text-left border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
+                        <BanknoteIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-foreground text-sm flex items-center gap-2">
+                          Host Payout Timeline
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Your host will receive their payout within <span className="font-medium text-blue-600 dark:text-blue-400">2-3 business days</span> after the booking begins. Payouts are processed automatically via Stripe.
+                        </p>
+                        <div className="mt-2 flex items-center gap-4 text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                            <span className="text-muted-foreground">You paid: <span className="font-medium text-foreground">${booking?.total_price?.toFixed(2) || '—'}</span></span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                            <span className="text-muted-foreground">Platform fee: <span className="font-medium text-foreground">12.9%</span></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
                   {/* Quick Actions for Rentals */}
                   <div className="flex items-center justify-center gap-3 mb-6">
