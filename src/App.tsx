@@ -111,6 +111,9 @@ const AnimatedRoutes = () => {
           {/* Redirect old /ai-tools route to /tools */}
           <Route path="/ai-tools" element={<Navigate to="/tools" replace />} />
           
+          {/* Redirect /list to /host for canonical supply landing */}
+          <Route path="/list" element={<Navigate to="/host" replace />} />
+          
           <Route path="/order-tracking/:transactionId" element={<PageTransition><OrderTracking /></PageTransition>} />
           <Route path="/host" element={<PageTransition><HostOnboarding /></PageTransition>} />
           <Route path="/install" element={<PageTransition><Install /></PageTransition>} />

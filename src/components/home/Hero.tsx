@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Search, ShieldCheck, CreditCard, Headphones } from 'lucide-react';
+import { ArrowRight, Search, ShieldCheck, CreditCard, Headphones, FileCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 
@@ -103,12 +103,20 @@ const Hero = () => {
             />
           </div>
           
+          {/* Headline */}
+          <h1 
+            className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight animate-fade-in"
+            style={{ animationDelay: '0.15s', animationFillMode: 'backwards' }}
+          >
+            The trusted marketplace for mobile food businesses
+          </h1>
+          
           {/* Tagline */}
           <p 
-            className="text-lg md:text-xl text-muted-foreground font-medium -mt-4 md:-mt-6 animate-fade-in"
+            className="text-base md:text-lg text-muted-foreground mt-3 max-w-xl mx-auto animate-fade-in"
             style={{ animationDelay: '0.2s', animationFillMode: 'backwards' }}
           >
-            Rent, buy, or sell mobile food assets—with built-in trust
+            Rent, buy, or sell food trucks, trailers, kitchens, and vendor lots—with verification, secure payments, and compliant workflows.
           </p>
 
           {/* CTA Buttons */}
@@ -138,18 +146,22 @@ const Hero = () => {
 
           {/* Trust badges */}
           <div 
-            className="flex flex-wrap items-center justify-center gap-6 mt-8 animate-fade-in"
+            className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-8 animate-fade-in"
             style={{ animationDelay: '0.6s', animationFillMode: 'backwards' }}
           >
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <ShieldCheck className="h-4 w-4 text-primary" />
-              <span>Verified listings</span>
+              <span>Verified users</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <CreditCard className="h-4 w-4 text-primary" />
               <span>Secure payments</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <FileCheck className="h-4 w-4 text-primary" />
+              <span>Document workflows</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Headphones className="h-4 w-4 text-primary" />
               <span>24/7 support</span>
             </div>

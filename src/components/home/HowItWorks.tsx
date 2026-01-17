@@ -1,4 +1,6 @@
-import { Search, ShieldCheck, CreditCard, HeadphonesIcon, LucideIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Search, ShieldCheck, CreditCard, ArrowRight, LucideIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Step {
   icon: LucideIcon;
@@ -9,40 +11,35 @@ interface Step {
 const steps: Step[] = [
   {
     icon: Search,
-    title: 'Find & Verify',
-    description: 'Browse verified listings near you',
+    title: 'Find or List',
+    description: 'Browse verified listings or create your own',
   },
   {
     icon: ShieldCheck,
-    title: 'Book or Buy',
-    description: 'Submit a request or purchase instantly',
+    title: 'Verify & Approve',
+    description: 'Upload documents, get approved, stay compliant',
   },
   {
     icon: CreditCard,
-    title: 'Pay Securely',
-    description: 'Funds held in escrow until complete',
-  },
-  {
-    icon: HeadphonesIcon,
-    title: 'Get Support',
-    description: '24/7 dispute resolution if needed',
+    title: 'Transact Securely',
+    description: 'Payments held in escrow until complete',
   },
 ];
 
 const HowItWorks = () => {
   return (
     <section className="py-12 md:py-16 bg-muted/30">
-      <div className="container max-w-5xl mx-auto px-4">
+      <div className="container max-w-4xl mx-auto px-4">
         <div className="text-center mb-10">
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
             How It Works
           </h2>
           <p className="text-muted-foreground">
-            From search to support in four simple steps
+            Three simple steps to get started
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           {steps.map((step, index) => {
             const Icon = step.icon;
             return (
@@ -58,6 +55,15 @@ const HowItWorks = () => {
               </div>
             );
           })}
+        </div>
+
+        <div className="text-center">
+          <Button variant="outline" asChild>
+            <Link to="/how-it-works" className="gap-2">
+              See how it works
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </div>
     </section>
