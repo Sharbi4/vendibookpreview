@@ -18,6 +18,8 @@ const Auth = lazy(() => import("./pages/Auth"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const CreateListing = lazy(() => import("./pages/CreateListing"));
+const EditListing = lazy(() => import("./pages/EditListing"));
+const ListPage = lazy(() => import("./pages/List"));
 const ListingDetail = lazy(() => import("./pages/ListingDetail"));
 const Profile = lazy(() => import("./pages/Profile"));
 const EditProfile = lazy(() => import("./pages/EditProfile"));
@@ -113,8 +115,9 @@ const AnimatedRoutes = () => {
           {/* Redirect old /ai-tools route to /tools */}
           <Route path="/ai-tools" element={<Navigate to="/tools" replace />} />
           
-          {/* Redirect /list to /host for canonical supply landing */}
-          <Route path="/list" element={<Navigate to="/host" replace />} />
+          {/* Supply flow: /list is quick start, then /create-listing/:id for publish wizard */}
+          <Route path="/list" element={<PageTransition><ListPage /></PageTransition>} />
+          <Route path="/create-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />
           
           <Route path="/order-tracking/:transactionId" element={<PageTransition><OrderTracking /></PageTransition>} />
           <Route path="/host" element={<PageTransition><HostOnboarding /></PageTransition>} />
