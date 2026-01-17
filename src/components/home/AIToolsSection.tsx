@@ -126,22 +126,14 @@ const AIToolsSection = () => {
 
   return (
     <section className="py-16 md:py-20 bg-background" aria-labelledby="ai-tools-heading">
-      {/* SEO-rich hidden content for search engines */}
+      {/* SEO-rich hidden content for search engines - kept minimal for page performance */}
       <div className="sr-only">
-        <h1>Free AI Tools for Food Truck Owners and Mobile Vendors</h1>
-        <p>Vendibook offers free AI-powered tools to help food truck entrepreneurs succeed: license finder, permit lookup, pricing calculator, equipment maintenance guides, and business planning tools.</p>
-        <ul>
-          <li>Food truck license requirements by state - California, Texas, Florida, New York, and all 50 states</li>
-          <li>Mobile vendor permit lookup - city-specific requirements for street vending</li>
-          <li>Health department permit checklist for food trucks and food trailers</li>
-          <li>Commercial kitchen equipment maintenance schedules</li>
-          <li>Food truck business startup cost calculator</li>
-          <li>Ghost kitchen licensing requirements</li>
-        </ul>
+        <h1>Host Tools - Free Utilities for Food Truck Owners</h1>
+        <p>Free tools to help you price, write, and stay compliant so you earn more and book faster.</p>
       </div>
 
       <div className="container max-w-7xl mx-auto px-4 relative z-10">
-        {/* Header */}
+        {/* Header - 2-line blurb */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
           <div className="flex items-start gap-3">
             <div className="p-2.5 rounded-xl icon-gradient-container icon-shimmer">
@@ -154,10 +146,10 @@ const AIToolsSection = () => {
                 id="ai-tools-heading" 
                 className="text-2xl md:text-3xl font-semibold text-foreground mb-2"
               >
-                Vendi AI Suite
+                Host Tools
               </h2>
               <p className="text-muted-foreground max-w-xl">
-                Your AI co-pilot for running a mobile food business. Price smarter, find permits faster, and launch with confidence.
+                Free utilities to help you price, write, and stay compliant—so you earn more and book faster.
               </p>
             </div>
           </div>
@@ -166,7 +158,7 @@ const AIToolsSection = () => {
             className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 
                        transition-colors group whitespace-nowrap font-medium"
           >
-            Explore Host Tools
+            View All Tools
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
@@ -215,9 +207,9 @@ const AIToolsSection = () => {
                     <ArrowRight className="w-5 h-5" />
                   </span>
                   
-                  {/* Disclaimer */}
+                  {/* Permit disclaimer - short and clear */}
                   <p className="text-xs text-muted-foreground mt-3 italic">
-                    *AI-generated results are for informational purposes only. Requirements vary by jurisdiction—always verify with your local government agencies before applying.
+                    *For informational purposes only. Always verify requirements with your local government.
                   </p>
                 </div>
               </div>
@@ -250,7 +242,7 @@ const AIToolsSection = () => {
                     </div>
                   </div>
                   
-                  {/* Content */}
+                  {/* Content - Benefit-first: "Do X so you Y" */}
                   <h3 className="text-base font-semibold text-foreground mb-1">
                     {tool.title}
                   </h3>
@@ -273,12 +265,12 @@ const AIToolsSection = () => {
         {/* Bottom CTA */}
         <div className="mt-10 text-center">
           <p className="text-sm text-muted-foreground mb-4">
-            All AI tools are <span className="text-primary font-medium">free to use</span> — no credit card required
+            All tools are <span className="text-primary font-medium">100% free</span> — no account required
           </p>
           <Link to="/tools">
             <Button size="lg" className="gap-2">
-              <Sparkles className="w-4 h-4" />
               Explore Host Tools
+              <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
         </div>

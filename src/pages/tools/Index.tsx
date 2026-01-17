@@ -13,57 +13,57 @@ import {
   Wrench, 
   Search,
   ArrowRight,
-  Sparkles,
   Megaphone,
   CheckCircle2
 } from 'lucide-react';
 
+// Benefit-first descriptions: "Do X so you Y"
 const tools = [
   {
     name: 'PricePilot',
-    description: 'Get data-backed daily and weekly rates for your asset.',
+    description: 'Set competitive rates so you book faster.',
     icon: DollarSign,
     gradient: 'from-yellow-400 to-orange-500',
     href: '/tools/pricepilot',
   },
   {
     name: 'PermitPath',
-    description: 'Find all licenses and permits required in your city.',
+    description: 'Find required licenses so you stay compliant.',
     icon: FileCheck,
     gradient: 'from-amber-400 to-orange-600',
     href: '/tools/permitpath',
   },
   {
     name: 'Listing Studio',
-    description: 'Generate high-converting titles and descriptions.',
+    description: 'Write listings that convert browsers to bookers.',
     icon: FileText,
     gradient: 'from-rose-400 to-pink-600',
     href: '/tools/listing-studio',
   },
   {
     name: 'Concept Lab',
-    description: 'Generate profitable food truck business concepts.',
+    description: 'Generate business concepts matched to your market.',
     icon: Lightbulb,
     gradient: 'from-yellow-300 to-amber-500',
     href: '/tools/concept-lab',
   },
   {
     name: 'BuildKit',
-    description: 'Equipment guides and maintenance schedules.',
+    description: 'Get equipment guides so you maintain with confidence.',
     icon: Wrench,
     gradient: 'from-orange-400 to-red-500',
     href: '/tools/buildkit',
   },
   {
     name: 'Market Radar',
-    description: 'Research locations, competitors, and demand.',
+    description: 'Research demand so you pick the right location.',
     icon: Search,
     gradient: 'from-blue-400 to-indigo-600',
     href: '/tools/market-radar',
   },
   {
     name: 'Marketing Studio',
-    description: 'Create social posts, flyers, and promo materials.',
+    description: 'Create promos so you attract more customers.',
     icon: Megaphone,
     gradient: 'from-pink-500 to-purple-600',
     href: '/tools/marketing-studio',
@@ -71,10 +71,10 @@ const tools = [
 ];
 
 const benefits = [
-  'Set competitive pricing based on market data',
-  'Understand local permit requirements before you start',
-  'Write listings that convert browsers to bookers',
-  'Plan your equipment and maintenance needs'
+  'Price competitively based on real market data',
+  'Know your permit requirements before you start',
+  'Write listings that actually convert',
+  'Maintain your equipment with confidence'
 ];
 
 const pageJsonLd = {
@@ -99,22 +99,21 @@ const ToolsIndex = () => {
         <Header />
 
         <main className="flex-1">
-          {/* Hero Section with clear CTA */}
+          {/* Hero Section - Clear, benefit-first headline */}
           <section className="py-16 md:py-20 bg-gradient-to-b from-primary/5 to-background">
             <div className="container text-center">
               <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
-                <Sparkles className="h-3 w-3 mr-1" />
-                Free for Hosts
+                100% Free
               </Badge>
               
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 leading-tight max-w-3xl mx-auto">
-                Free tools to help you earn more from your mobile food asset
+                Host Tools
               </h1>
-              <p className="text-lg text-muted-foreground mb-6 max-w-xl mx-auto">
-                AI-powered utilities designed specifically for food truck and trailer owners.
+              <p className="text-lg text-muted-foreground mb-8 max-w-lg mx-auto">
+                Free utilities to help you price, write, and stay compliant—so you earn more and book faster.
               </p>
               
-              {/* Primary CTA - Guide users to start with PricePilot */}
+              {/* Primary CTA */}
               <Button size="lg" asChild className="shadow-lg">
                 <Link to="/tools/pricepilot">
                   <DollarSign className="h-5 w-5 mr-2" />
@@ -123,7 +122,7 @@ const ToolsIndex = () => {
                 </Link>
               </Button>
               <p className="text-sm text-muted-foreground mt-3">
-                Our most popular tool – get data-backed pricing for your asset
+                Most popular — set your rates in 60 seconds
               </p>
             </div>
           </section>
