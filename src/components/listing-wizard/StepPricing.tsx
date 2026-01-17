@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, DollarSign, Sparkles, Loader2, TrendingUp, TrendingDown, Target, Wallet, Info, Zap } from 'lucide-react';
+import { Calendar, DollarSign, Sparkles, Loader2, TrendingUp, TrendingDown, Target, Wallet, Info, Zap, CreditCard, Banknote } from 'lucide-react';
 import { ListingFormData, FreightPayer } from '@/types/listing';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -560,6 +561,79 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Payment Method Options */}
+          <div className="pt-6 border-t">
+            <div className="flex items-center gap-2 mb-4">
+              <CreditCard className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-semibold">Accepted Payment Methods</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Select how buyers can pay for your item. You can enable both options.
+            </p>
+
+            <div className="space-y-4">
+              {/* Pay by Card (Stripe) */}
+              <div className="flex items-start space-x-3 p-4 rounded-lg border border-border bg-card hover:border-primary/30 transition-colors">
+                <Checkbox
+                  id="accept_card_payment"
+                  checked={formData.accept_card_payment}
+                  onCheckedChange={(checked) => updateField('accept_card_payment', !!checked)}
+                  className="mt-0.5"
+                />
+                <div className="flex-1">
+                  <Label
+                    htmlFor="accept_card_payment"
+                    className="flex items-center gap-2 text-base font-medium cursor-pointer"
+                  >
+                    <CreditCard className="w-4 h-4 text-primary" />
+                    Pay by Card (Online)
+                  </Label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Accept secure online payments via Stripe. Funds are deposited to your connected Stripe account after sale confirmation.
+                  </p>
+                  {formData.accept_card_payment && (
+                    <div className="mt-2 p-2 bg-primary/5 rounded text-xs text-muted-foreground">
+                      <Info className="w-3 h-3 inline mr-1" />
+                      Requires Stripe Connect setup to receive payments.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Pay in Person */}
+              <div className="flex items-start space-x-3 p-4 rounded-lg border border-border bg-card hover:border-primary/30 transition-colors">
+                <Checkbox
+                  id="accept_cash_payment"
+                  checked={formData.accept_cash_payment}
+                  onCheckedChange={(checked) => updateField('accept_cash_payment', !!checked)}
+                  className="mt-0.5"
+                />
+                <div className="flex-1">
+                  <Label
+                    htmlFor="accept_cash_payment"
+                    className="flex items-center gap-2 text-base font-medium cursor-pointer"
+                  >
+                    <Banknote className="w-4 h-4 text-green-600" />
+                    Pay in Person
+                  </Label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Accept cash or other payments at pickup/delivery. You'll arrange payment directly with the buyer.
+                  </p>
+                </div>
+              </div>
+
+              {/* Validation Warning */}
+              {!formData.accept_card_payment && !formData.accept_cash_payment && (
+                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <p className="text-sm text-destructive flex items-center gap-2">
+                    <Info className="w-4 h-4" />
+                    Please select at least one payment method.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Vendibook Freight Settings (Pod 1) */}

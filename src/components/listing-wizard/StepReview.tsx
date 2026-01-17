@@ -7,12 +7,14 @@ interface StepReviewProps {
   formData: ListingFormData;
   canPublish: boolean;
   isStripeConnected: boolean;
+  requiresStripeConnect?: boolean;
 }
 
 export const StepReview: React.FC<StepReviewProps> = ({
   formData,
   canPublish,
   isStripeConnected,
+  requiresStripeConnect = true,
 }) => {
   const previewImage = useMemo(() => {
     if (formData.images.length > 0) {
@@ -42,9 +44,12 @@ export const StepReview: React.FC<StepReviewProps> = ({
   if (!formData.description.trim()) issues.push('Description is required');
   if (formData.mode === 'rent' && !formData.price_daily) issues.push('Daily price is required');
   if (formData.mode === 'sale' && !formData.price_sale) issues.push('Sale price is required');
+  if (formData.mode === 'sale' && !formData.accept_cash_payment && !formData.accept_card_payment) {
+    issues.push('At least one payment method is required');
+  }
   if (totalPhotos < minPhotos) issues.push(`Minimum ${minPhotos} photos required (${totalPhotos} added)`);
   if (!formData.address && !formData.pickup_location_text) issues.push('Location is required');
-  if (!isStripeConnected) issues.push('Stripe account not connected');
+  if (requiresStripeConnect && !isStripeConnected) issues.push('Stripe account not connected');
 
   return (
     <div className="space-y-6">
@@ -145,8 +150,8 @@ export const StepReview: React.FC<StepReviewProps> = ({
       {/* Issues */}
       {issues.length > 0 && (
         <div className="space-y-3">
-          {/* Stripe-specific messaging */}
-          {!isStripeConnected && (
+          {/* Stripe-specific messaging - only show if Stripe is required */}
+          {requiresStripeConnect && !isStripeConnected && (
             <div className="p-4 rounded-xl border-2 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
               <div className="flex items-start gap-3">
                 <CreditCard className="w-5 h-5 text-amber-600 mt-0.5" />
@@ -155,7 +160,7 @@ export const StepReview: React.FC<StepReviewProps> = ({
                     Connect Stripe to get paid
                   </p>
                   <p className="text-sm text-amber-700 dark:text-amber-300 mt-0.5">
-                    To go live and receive payments, connect your Stripe account.
+                    To go live and receive card payments, connect your Stripe account.
                   </p>
                 </div>
               </div>

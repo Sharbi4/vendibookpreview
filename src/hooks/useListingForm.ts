@@ -36,6 +36,9 @@ const initialFormData: ListingFormData = {
   height_inches: '',
   freight_category: null,
   required_documents: [],
+  // Payment method preferences (for sales) - both enabled by default
+  accept_cash_payment: true,
+  accept_card_payment: true,
 };
 
 const TOTAL_STEPS = 7;
@@ -113,9 +116,10 @@ export const useListingForm = () => {
         }
         return !!formData.fulfillment_type && formData.pickup_location_text.trim().length > 0;
       case 4:
-        // Price required
+        // Price required, and for sales, at least one payment method
         if (formData.mode === 'sale') {
-          return formData.price_sale.trim().length > 0 && parseFloat(formData.price_sale) > 0;
+          const hasPaymentMethod = formData.accept_cash_payment || formData.accept_card_payment;
+          return formData.price_sale.trim().length > 0 && parseFloat(formData.price_sale) > 0 && hasPaymentMethod;
         }
         return formData.price_daily.trim().length > 0 && parseFloat(formData.price_daily) > 0;
       case 5:
