@@ -15,6 +15,7 @@ import SearchResultsMap from '@/components/search/SearchResultsMap';
 import NoResultsAlert from '@/components/search/NoResultsAlert';
 import InlineSubscribe from '@/components/search/InlineSubscribe';
 import RequestAssetCTA from '@/components/search/RequestAssetCTA';
+import MobileStickyBar from '@/components/search/MobileStickyBar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -853,7 +854,7 @@ const Search = () => {
         </div>
 
         {/* Request Asset CTA */}
-        <div className="container py-8">
+        <div className="container py-8 pb-24 md:pb-8">
           <RequestAssetCTA />
         </div>
       </main>
@@ -867,6 +868,16 @@ const Search = () => {
         onOpenChange={setIsBookingModalOpen}
         initialStartDate={dateRange?.from}
         initialEndDate={dateRange?.to}
+      />
+
+      {/* Mobile Sticky Bar */}
+      <MobileStickyBar
+        activeFiltersCount={activeFiltersCount}
+        sortBy={sortBy}
+        onSortChange={handleSortChange}
+        onFiltersClick={() => setIsFiltersOpen(true)}
+        hasLocation={!!locationCoords}
+        hasSearchQuery={!!searchQuery.trim()}
       />
     </div>
   );
