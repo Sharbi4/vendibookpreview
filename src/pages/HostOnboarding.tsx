@@ -350,7 +350,7 @@ const HostOnboarding = () => {
                     <h4 className="font-semibold text-foreground mb-1">Need help right now?</h4>
                     <p className="text-sm text-muted-foreground">Chat with our team 24/7 or submit a support request.</p>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-2 justify-center mb-3">
+                  <div className="flex flex-col sm:flex-row gap-2 justify-center">
                     <Button size="sm" onClick={openZendeskChat}>
                       Chat with Support
                     </Button>
@@ -358,9 +358,6 @@ const HostOnboarding = () => {
                       <Link to="/contact">Submit Request</Link>
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground text-center">
-                    Powered by Zendesk + Vendibook Support Desk APIs
-                  </p>
                 </CardContent>
               </Card>
             </div>
