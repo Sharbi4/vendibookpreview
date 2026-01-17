@@ -49,110 +49,100 @@ const Dashboard = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       
-      <main className="flex-1 container py-8">
-        {/* Enhanced Welcome Section */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-background via-background to-primary/5 border border-border/50 p-6 mb-8">
-          <div className="absolute inset-0 bg-grid-pattern opacity-[0.03]" />
-          <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
+      <main className="flex-1 container py-6 md:py-8 max-w-5xl">
+        {/* Clean Welcome Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-foreground">
+              {profile?.full_name ? `Welcome, ${profile.full_name.split(' ')[0]}` : 'Dashboard'}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {isHost ? 'Manage listings and bookings' : 'Track your bookings'}
+            </p>
+          </div>
           
-          <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
-                Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! 👋
-              </h1>
-              <p className="text-muted-foreground">
-                {isHost 
-                  ? 'Manage your listings, bookings, and track your performance.'
-                  : 'Track your bookings and discover new opportunities.'
-                }
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" asChild className="hover:scale-105 transition-transform">
-                <Link to="/profile/edit">
-                  <User className="h-4 w-4 mr-1.5" />
-                  Profile
-                </Link>
-              </Button>
-              <Button variant="outline" size="sm" asChild className="hover:scale-105 transition-transform">
-                <Link to="/notification-preferences">
-                  <Bell className="h-4 w-4 mr-1.5" />
-                  Notifications
-                </Link>
-              </Button>
-            </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" asChild className="h-8 text-xs">
+              <Link to="/profile/edit">
+                <User className="h-3.5 w-3.5 mr-1.5" />
+                Profile
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild className="h-8 text-xs">
+              <Link to="/notification-preferences">
+                <Bell className="h-3.5 w-3.5 mr-1.5" />
+                Alerts
+              </Link>
+            </Button>
           </div>
         </div>
 
-        {/* Verification Progress Section */}
-        <div className="mb-8">
+        {/* Verification Progress - Compact Checklist */}
+        <div className="mb-6">
           <VerificationProgress />
         </div>
 
         {/* Dashboard Content - Tabs for dual-role users */}
         {isHost && isShopper ? (
           <Tabs defaultValue="host" className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-2 mb-6 bg-muted/50 p-1 rounded-xl mx-auto">
-              <TabsTrigger value="host" className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <Home className="h-4 w-4" />
+            <TabsList className="grid w-full max-w-xs grid-cols-2 mb-6 bg-muted/50 p-1 rounded-lg h-9 mx-auto">
+              <TabsTrigger value="host" className="gap-1.5 rounded-md text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <Home className="h-3.5 w-3.5" />
                 As Host
               </TabsTrigger>
-              <TabsTrigger value="renter" className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <ShoppingBag className="h-4 w-4" />
+              <TabsTrigger value="renter" className="gap-1.5 rounded-md text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <ShoppingBag className="h-3.5 w-3.5" />
                 As Renter
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="host" className="animate-fade-in">
+            <TabsContent value="host" className="mt-0">
               <HostDashboard />
             </TabsContent>
             
-            <TabsContent value="renter" className="animate-fade-in">
+            <TabsContent value="renter" className="mt-0">
               <ShopperDashboard />
             </TabsContent>
           </Tabs>
         ) : (
           <>
-            {/* Single role: show appropriate dashboard */}
             {isHost && <HostDashboard />}
             {!isHost && <ShopperDashboard />}
           </>
         )}
 
-        {/* Enhanced Account Info */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl p-6 mt-8 border border-border/50">
-          <div className="absolute inset-0 bg-grid-pattern opacity-[0.03]" />
-          <div className="relative">
-            <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Settings className="h-5 w-5 text-muted-foreground" />
-              Your Account
+        {/* Compact Account Info */}
+        <div className="mt-6 p-4 rounded-xl bg-card border border-border">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+              <Settings className="h-4 w-4 text-muted-foreground" />
+              Account
             </h3>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="p-4 rounded-lg bg-background/50 border border-border/50">
-                <span className="text-sm text-muted-foreground">Email</span>
-                <p className="font-medium text-foreground mt-1 truncate">{user.email}</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="text-sm">
+              <span className="text-xs text-muted-foreground block mb-0.5">Email</span>
+              <p className="font-medium text-foreground truncate">{user.email}</p>
+            </div>
+            <div className="text-sm">
+              <span className="text-xs text-muted-foreground block mb-0.5">Role</span>
+              <div className="flex gap-1.5 flex-wrap">
+                {roles.map((role) => (
+                  <span 
+                    key={role}
+                    className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full capitalize font-medium"
+                  >
+                    {role}
+                  </span>
+                ))}
               </div>
-              <div className="p-4 rounded-lg bg-background/50 border border-border/50">
-                <span className="text-sm text-muted-foreground">Role</span>
-                <div className="flex gap-2 mt-1 flex-wrap">
-                  {roles.map((role) => (
-                    <span 
-                      key={role}
-                      className="px-3 py-1 bg-primary/10 text-primary text-sm rounded-full capitalize font-medium"
-                    >
-                      {role}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="p-4 rounded-lg bg-background/50 border border-border/50">
-                <span className="text-sm text-muted-foreground">Verification</span>
-                <p className={`flex items-center gap-2 mt-1 font-medium ${isVerified ? 'text-emerald-600' : 'text-amber-600'}`}>
-                  {isVerified ? <ShieldCheck className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
-                  {isVerified ? 'Verified' : 'Pending'}
-                </p>
-              </div>
+            </div>
+            <div className="text-sm">
+              <span className="text-xs text-muted-foreground block mb-0.5">Verification</span>
+              <p className={`flex items-center gap-1.5 font-medium text-xs ${isVerified ? 'text-emerald-600' : 'text-amber-600'}`}>
+                {isVerified ? <ShieldCheck className="h-3.5 w-3.5" /> : <Shield className="h-3.5 w-3.5" />}
+                {isVerified ? 'Verified' : 'Pending'}
+              </p>
             </div>
           </div>
         </div>

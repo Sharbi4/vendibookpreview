@@ -13,23 +13,21 @@ export const CompactStatCard = ({ icon: Icon, label, value, subtext, highlight }
   return (
     <div className={cn(
       "flex items-center gap-3 p-4 rounded-xl border bg-card",
-      highlight && "border-primary/30 bg-primary/5"
+      "border-border shadow-[var(--shadow-card)]",
+      highlight && "ring-1 ring-primary/20"
     )}>
       <div className={cn(
-        "flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center",
-        highlight ? "bg-primary/15" : "bg-muted"
+        "flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center",
+        highlight ? "bg-primary/10" : "bg-muted"
       )}>
         <Icon className={cn(
-          "h-4 w-4",
+          "h-5 w-5",
           highlight ? "text-primary" : "text-muted-foreground"
         )} />
       </div>
-      <div className="min-w-0">
-        <p className="text-xl font-bold text-foreground leading-none">{value}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
-        {subtext && (
-          <p className="text-xs text-muted-foreground/70">{subtext}</p>
-        )}
+      <div className="min-w-0 flex-1">
+        <p className="text-2xl font-bold text-foreground leading-none tracking-tight">{value}</p>
+        <p className="text-xs text-muted-foreground mt-1">{label}</p>
       </div>
     </div>
   );
