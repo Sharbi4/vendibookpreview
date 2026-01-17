@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 declare global {
@@ -7,39 +8,56 @@ declare global {
   }
 }
 
+// Only show Zendesk widget on these routes
+const ALLOWED_ROUTES = ['/contact', '/help'];
+
 const ZendeskWidget = () => {
   const { user, profile } = useAuth();
+  const location = useLocation();
+
+  const isAllowedRoute = ALLOWED_ROUTES.some(route => 
+    location.pathname === route || location.pathname.startsWith(`${route}/`)
+  );
 
   useEffect(() => {
+    // Hide/show widget based on route
+    if (window.zE) {
+      try {
+        if (isAllowedRoute) {
+          window.zE('messenger', 'show');
+        } else {
+          window.zE('messenger', 'hide');
+        }
+      } catch (error) {
+        console.debug('Zendesk messenger visibility:', error);
+      }
+    }
+  }, [isAllowedRoute, location.pathname]);
+
+  useEffect(() => {
+    if (!isAllowedRoute) return;
+
     const configureWidget = () => {
       if (!window.zE) return;
 
       try {
         if (user && profile) {
-          // User is logged in - set conversation fields for the Messaging SDK
-          // This pre-fills user info when they open the messenger
           window.zE('messenger:set', 'conversationFields', [
             { id: 'email', value: profile.email || user.email || '' },
             { id: 'name', value: profile.full_name || '' },
           ]);
-
-          // Set locale
           window.zE('messenger:set', 'locale', 'en-US');
         } else {
-          // User logged out - clear conversation fields
           window.zE('messenger:set', 'conversationFields', []);
         }
       } catch (error) {
-        // Silently handle any API compatibility issues
         console.debug('Zendesk Messaging SDK configuration:', error);
       }
     };
 
-    // Check if Zendesk is already loaded
     if (window.zE) {
       configureWidget();
     } else {
-      // Wait for Zendesk to load
       const checkInterval = setInterval(() => {
         if (window.zE) {
           configureWidget();
@@ -47,7 +65,6 @@ const ZendeskWidget = () => {
         }
       }, 500);
 
-      // Clean up after 10 seconds if it never loads
       const timeout = setTimeout(() => clearInterval(checkInterval), 10000);
 
       return () => {
@@ -55,7 +72,7 @@ const ZendeskWidget = () => {
         clearTimeout(timeout);
       };
     }
-  }, [user, profile]);
+  }, [user, profile, isAllowedRoute]);
 
   return null;
 };
