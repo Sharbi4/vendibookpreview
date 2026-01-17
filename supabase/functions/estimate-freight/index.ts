@@ -34,7 +34,7 @@ interface FreightEstimateResponse {
 
 // Freight rate calculations (simplified)
 const FREIGHT_RATES = {
-  baseRatePerMile: 2.50,
+  baseRatePerMile: 4.50,
   minimumCharge: 150,
   fuelSurchargePercent: 0.15,
   handlingFee: 75,
