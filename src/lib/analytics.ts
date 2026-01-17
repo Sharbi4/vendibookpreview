@@ -213,6 +213,59 @@ export const trackCityListClicked = (city: string): void => {
   });
 };
 
+// Import listing flow events
+export const trackImportFlowStarted = (): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'import_flow_started',
+  });
+};
+
+export const trackImportMethodSelected = (method: string): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'import_method_selected',
+    label: method,
+  });
+};
+
+export const trackImportContentSubmitted = (): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'import_content_submitted',
+  });
+};
+
+export const trackImportReviewViewed = (): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'import_review_viewed',
+  });
+};
+
+export const trackDraftCreatedFromImport = (importSource: string): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'draft_created',
+    label: 'import',
+    metadata: { import_source: importSource },
+  });
+};
+
+export const trackImportContinueSetupClicked = (): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'import_continue_setup_clicked',
+  });
+};
+
+export const trackImportFinishLaterClicked = (): void => {
+  trackEvent({
+    category: 'Supply',
+    action: 'import_finish_later_clicked',
+  });
+};
+
 // Generic analytics exports for other parts of the app
 export { trackEvent };
 export type { AnalyticsEvent };
