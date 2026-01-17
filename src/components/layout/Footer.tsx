@@ -35,6 +35,7 @@ const footerSections: FooterSection[] = [
     title: 'List & Earn',
     links: [
       { label: 'List Your Asset', href: '/host' },
+      { label: 'Sell Your Asset', href: '/host?mode=sell' },
       { label: 'Host FAQ', href: '/faq' },
       { label: 'Insurance Info', href: '/insurance' },
     ],
