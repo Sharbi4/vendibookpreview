@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate, useBlocker } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Save, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -8,6 +8,16 @@ import { useListingForm } from '@/hooks/useListingForm';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { supabase } from '@/integrations/supabase/client';
 import { CATEGORY_LABELS } from '@/types/listing';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 import { WizardProgress } from './WizardProgress';
 import { StepHelpTips } from './StepHelpTips';
@@ -69,6 +79,111 @@ export const ListingWizard: React.FC = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [publishedListing, setPublishedListing] = useState<PublishedListing | null>(null);
   const [dismissedTips, setDismissedTips] = useState<Set<number>>(new Set());
+  const [showExitDialog, setShowExitDialog] = useState(false);
+  const hasUnsavedChanges = useRef(false);
+  const isNavigatingAway = useRef(false);
+
+  // Check if user has made progress
+  const hasProgress = formData.mode || formData.category || formData.title || 
+    formData.description || formData.images.length > 0;
+
+  // Update unsaved changes ref
+  useEffect(() => {
+    hasUnsavedChanges.current = hasProgress && !showSuccessModal;
+  }, [hasProgress, showSuccessModal]);
+
+  // Browser beforeunload handler
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges.current && !showSuccessModal) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [showSuccessModal]);
+
+  // React Router navigation blocker
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      hasUnsavedChanges.current && 
+      !showSuccessModal &&
+      currentLocation.pathname !== nextLocation.pathname
+  );
+
+  // Show exit dialog when blocker is triggered
+  useEffect(() => {
+    if (blocker.state === 'blocked') {
+      setShowExitDialog(true);
+    }
+  }, [blocker.state]);
+
+  const handleConfirmExit = () => {
+    setShowExitDialog(false);
+    if (blocker.state === 'blocked') {
+      blocker.proceed();
+    }
+  };
+
+  const handleCancelExit = () => {
+    setShowExitDialog(false);
+    if (blocker.state === 'blocked') {
+      blocker.reset();
+    }
+  };
+
+  const handleSaveAndExit = async () => {
+    if (!user || !formData.mode || !formData.category) {
+      toast({
+        title: 'Cannot save draft',
+        description: 'Please complete at least the listing type to save.',
+        variant: 'destructive',
+      });
+      handleCancelExit();
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Minimal draft save
+      const { error } = await supabase
+        .from('listings')
+        .insert({
+          host_id: user.id,
+          mode: formData.mode,
+          category: formData.category,
+          status: 'draft',
+          title: formData.title || 'Untitled Draft',
+          description: formData.description || '',
+          fulfillment_type: formData.fulfillment_type || 'on_site',
+        } as any);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Draft saved!',
+        description: 'Your progress has been saved. Continue from your dashboard.',
+      });
+      
+      hasUnsavedChanges.current = false;
+      setShowExitDialog(false);
+      if (blocker.state === 'blocked') {
+        blocker.proceed();
+      }
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      toast({
+        title: 'Failed to save',
+        description: 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const uploadImages = async (listingId: string): Promise<string[]> => {
     const urls: string[] = [];
@@ -488,6 +603,46 @@ export const ListingWizard: React.FC = () => {
         listing={publishedListing}
         onViewListing={handleViewListing}
       />
+
+      {/* Exit confirmation dialog */}
+      <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save your progress?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Would you like to save your listing as a draft before leaving?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel onClick={handleCancelExit}>
+              Keep editing
+            </AlertDialogCancel>
+            <Button
+              variant="outline"
+              onClick={handleConfirmExit}
+              className="sm:order-first"
+            >
+              Leave without saving
+            </Button>
+            <AlertDialogAction 
+              onClick={handleSaveAndExit}
+              disabled={isSaving || !formData.mode || !formData.category}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save & exit
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
