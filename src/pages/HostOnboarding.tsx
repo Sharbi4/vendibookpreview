@@ -254,7 +254,7 @@ const HostOnboarding = () => {
           <div className="container">
             <div className="text-center mb-8">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-                How it works
+                A Secure Process
               </h2>
               <p className="text-muted-foreground mb-6">
                 From listing to payout in four simple steps — whether you rent, sell, or both.
