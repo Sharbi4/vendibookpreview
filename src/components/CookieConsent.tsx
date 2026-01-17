@@ -11,13 +11,13 @@ import {
 } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-
-interface CookiePreferences {
-  necessary: boolean;
-  analytics: boolean;
-  marketing: boolean;
-  functional: boolean;
-}
+import {
+  type CookiePreferences,
+  initializeTrackingFromConsent,
+  loadGoogleAnalytics,
+  loadGoogleAds,
+  removeTrackingScripts,
+} from '@/lib/cookieConsent';
 
 const defaultPreferences: CookiePreferences = {
   necessary: true,
@@ -40,6 +40,8 @@ const CookieConsent = () => {
     } else {
       const savedPrefs = JSON.parse(consent);
       setPreferences(savedPrefs);
+      // Initialize tracking based on saved preferences
+      initializeTrackingFromConsent();
     }
   }, []);
 
@@ -49,6 +51,17 @@ const CookieConsent = () => {
     setPreferences(prefs);
     setShowBanner(false);
     setShowSettings(false);
+
+    // Apply tracking preferences immediately
+    if (prefs.analytics) {
+      loadGoogleAnalytics();
+    } else {
+      removeTrackingScripts();
+    }
+
+    if (prefs.marketing && prefs.analytics) {
+      loadGoogleAds();
+    }
   };
 
   const acceptAll = () => {

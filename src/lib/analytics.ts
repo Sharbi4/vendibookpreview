@@ -19,6 +19,8 @@ type TrustModalEvent = TrustTileEvent & {
   ctaLabel?: string;
 };
 
+import { hasAnalyticsConsent } from '@/lib/cookieConsent';
+
 // Generic event tracker - extend this to send to your analytics provider
 const trackEvent = (event: AnalyticsEvent): void => {
   // Log to console in development
@@ -26,8 +28,13 @@ const trackEvent = (event: AnalyticsEvent): void => {
     console.log('[Analytics]', event);
   }
 
+  // Only track if user has given analytics consent
+  if (!hasAnalyticsConsent()) {
+    return;
+  }
+
   // Google Analytics 4 (if gtag is available)
-  if (typeof window !== 'undefined' && 'gtag' in window) {
+  if (typeof window !== 'undefined' && 'gtag' in window && window.gtag) {
     (window as unknown as { gtag: (...args: unknown[]) => void }).gtag('event', event.action, {
       event_category: event.category,
       event_label: event.label,
