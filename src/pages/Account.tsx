@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { 
   ArrowLeft, Camera, Eye, EyeOff, Key, Loader2, Save, User, 
   ShieldCheck, CreditCard, Globe, Lock, ExternalLink, Bell,
-  Building2, MapPin, Phone, Mail, ChevronDown, Pencil
+  Building2, MapPin, Phone, Mail, ChevronDown, Pencil, Check, X, AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,11 +58,19 @@ interface ProfileData {
   identity_verified: boolean;
 }
 
+// Username must be 3-30 chars, lowercase letters, numbers, and underscores only
+const usernameRegex = /^[a-z0-9_]{3,30}$/;
+
 const profileSchema = z.object({
   full_name: z.string().trim().min(1, 'Full name is required').max(100),
   email: z.string().trim().email('Invalid email address').max(255),
   display_name: z.string().trim().max(100).optional(),
-  username: z.string().trim().max(30).optional(),
+  username: z.string().trim()
+    .min(3, 'Username must be at least 3 characters')
+    .max(30, 'Username must be less than 30 characters')
+    .regex(usernameRegex, 'Only lowercase letters, numbers, and underscores allowed')
+    .optional()
+    .or(z.literal('')),
   business_name: z.string().trim().max(100).optional(),
   public_city: z.string().trim().max(100).optional(),
   public_state: z.string().trim().max(100).optional(),
@@ -122,6 +130,9 @@ const Account = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const usernameCheckTimeout = useRef<NodeJS.Timeout | null>(null);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -187,12 +198,76 @@ const Account = () => {
     }
   }, [formData, originalData]);
 
+  // Check username uniqueness with debounce
+  const checkUsernameAvailability = async (username: string) => {
+    if (!username || username.length < 3) {
+      setUsernameStatus('idle');
+      return;
+    }
+
+    // Validate format first
+    if (!usernameRegex.test(username)) {
+      setUsernameStatus('invalid');
+      return;
+    }
+
+    setIsCheckingUsername(true);
+    setUsernameStatus('checking');
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username)
+        .neq('id', user?.id || '')
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking username:', error);
+        setUsernameStatus('idle');
+      } else if (data) {
+        setUsernameStatus('taken');
+      } else {
+        setUsernameStatus('available');
+      }
+    } catch (err) {
+      console.error('Error checking username:', err);
+      setUsernameStatus('idle');
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
+  };
+
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    setFormData(prev => ({ ...prev, username: value }));
+    if (errors.username) {
+      setErrors(prev => ({ ...prev, username: '' }));
+    }
+
+    // Clear existing timeout
+    if (usernameCheckTimeout.current) {
+      clearTimeout(usernameCheckTimeout.current);
+    }
+
+    // Check if it's unchanged from original
+    if (value === originalData?.username) {
+      setUsernameStatus('idle');
+      return;
+    }
+
+    // Debounce the uniqueness check
+    usernameCheckTimeout.current = setTimeout(() => {
+      checkUsernameAvailability(value);
+    }, 500);
   };
 
   const handlePasswordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -280,6 +355,17 @@ const Account = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    // Check if username is taken before submitting
+    if (usernameStatus === 'taken') {
+      setErrors(prev => ({ ...prev, username: 'This username is already taken' }));
+      return;
+    }
+
+    if (usernameStatus === 'invalid') {
+      setErrors(prev => ({ ...prev, username: 'Only lowercase letters, numbers, and underscores allowed' }));
+      return;
+    }
 
     const result = profileSchema.safeParse(formData);
     if (!result.success) {
@@ -798,15 +884,57 @@ const Account = () => {
                       <Label htmlFor="username" className="text-sm">Username</Label>
                       <VisibilityBadge isPublic={true} />
                     </div>
-                    <Input
-                      id="username"
-                      name="username"
-                      value={formData.username}
-                      onChange={handleInputChange}
-                      placeholder="@username"
-                      className="h-9"
-                    />
-                    <p className="text-xs text-muted-foreground">Unique identifier for your profile</p>
+                    <div className="relative">
+                      <Input
+                        id="username"
+                        name="username"
+                        value={formData.username}
+                        onChange={handleUsernameChange}
+                        placeholder="your_username"
+                        className={`h-9 pr-9 ${
+                          errors.username || usernameStatus === 'taken' || usernameStatus === 'invalid'
+                            ? 'border-destructive focus-visible:ring-destructive' 
+                            : usernameStatus === 'available' 
+                            ? 'border-emerald-500 focus-visible:ring-emerald-500' 
+                            : ''
+                        }`}
+                        maxLength={30}
+                      />
+                      <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                        {isCheckingUsername && (
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        )}
+                        {!isCheckingUsername && usernameStatus === 'available' && (
+                          <Check className="h-4 w-4 text-emerald-500" />
+                        )}
+                        {!isCheckingUsername && (usernameStatus === 'taken' || usernameStatus === 'invalid') && (
+                          <X className="h-4 w-4 text-destructive" />
+                        )}
+                      </div>
+                    </div>
+                    {usernameStatus === 'taken' && (
+                      <p className="text-xs text-destructive flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" /> This username is already taken
+                      </p>
+                    )}
+                    {usernameStatus === 'invalid' && formData.username.length > 0 && (
+                      <p className="text-xs text-destructive flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" /> Only lowercase letters, numbers, and underscores allowed
+                      </p>
+                    )}
+                    {usernameStatus === 'available' && (
+                      <p className="text-xs text-emerald-600 flex items-center gap-1">
+                        <Check className="h-3 w-3" /> Username is available
+                      </p>
+                    )}
+                    {(usernameStatus === 'idle' || usernameStatus === 'checking') && (
+                      <p className="text-xs text-muted-foreground">
+                        3-30 characters, lowercase letters, numbers, underscores only
+                      </p>
+                    )}
+                    {errors.username && (
+                      <p className="text-xs text-destructive">{errors.username}</p>
+                    )}
                   </div>
                 </div>
 
