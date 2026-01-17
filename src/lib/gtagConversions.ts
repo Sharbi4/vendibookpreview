@@ -49,6 +49,19 @@ export const trackFormSubmitConversion = (params?: Record<string, unknown>) => {
 };
 
 /**
+ * Track host/supply signup conversion event
+ * Call this when a host completes signup for listing their asset
+ */
+export const trackSignupConversion = (params?: Record<string, unknown>) => {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', 'conversion_event_signup', {
+      send_to: 'AW-17121224552',
+      ...params,
+    });
+  }
+};
+
+/**
  * Track custom conversion event
  */
 export const trackCustomConversion = (eventName: string, params?: Record<string, unknown>) => {
