@@ -17,6 +17,7 @@ import GetAlertsCard from '@/components/search/GetAlertsCard';
 import RequestAssetCTA from '@/components/search/RequestAssetCTA';
 import MobileStickyBar from '@/components/search/MobileStickyBar';
 import SaveSearchButton from '@/components/search/SaveSearchButton';
+import { CategoryInfoModal } from '@/components/categories/CategoryGuide';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -1055,7 +1056,10 @@ const FilterContent = ({
 
       {/* Category Filter */}
       <div className="space-y-3">
-        <Label className="text-sm font-medium">Category</Label>
+        <Label className="text-sm font-medium flex items-center">
+          Category
+          <CategoryInfoModal />
+        </Label>
         <div className="space-y-2">
           <label className="flex items-center gap-2 cursor-pointer">
             <Checkbox
