@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MapPin, Truck, Package, Info, Building2 } from 'lucide-react';
 import { ListingFormData, FulfillmentType } from '@/types/listing';
 import { Label } from '@/components/ui/label';
@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import { LocationSearchInput } from '@/components/search/LocationSearchInput';
 
 interface StepLocationProps {
   formData: ListingFormData;
@@ -30,6 +31,8 @@ export const StepLocation: React.FC<StepLocationProps> = ({
   isCategoryStaticLocation,
   onToggleStaticLocation,
 }) => {
+  // Track selected coordinates for location inputs (not persisted, just for UI validation)
+  const [pickupCoordinates, setPickupCoordinates] = useState<[number, number] | null>(null);
   if (isStaticLocation) {
     return (
       <div className="space-y-6">
@@ -218,10 +221,17 @@ export const StepLocation: React.FC<StepLocationProps> = ({
         <>
           <div className="space-y-2">
             <Label htmlFor="pickup_location_text" className="text-base font-medium">Pickup Location *</Label>
-            <Input
-              id="pickup_location_text"
+            <LocationSearchInput
               value={formData.pickup_location_text}
-              onChange={(e) => updateField('pickup_location_text', e.target.value)}
+              onChange={(value) => updateField('pickup_location_text', value)}
+              onLocationSelect={(location) => {
+                if (location) {
+                  setPickupCoordinates(location.coordinates);
+                } else {
+                  setPickupCoordinates(null);
+                }
+              }}
+              selectedCoordinates={pickupCoordinates}
               placeholder="City, State (e.g., Austin, TX)"
             />
             <p className="text-sm text-muted-foreground">
@@ -248,10 +258,17 @@ export const StepLocation: React.FC<StepLocationProps> = ({
           {formData.fulfillment_type === 'delivery' && (
             <div className="space-y-2">
               <Label htmlFor="pickup_location_text" className="text-base font-medium">Your Base Location *</Label>
-              <Input
-                id="pickup_location_text"
+              <LocationSearchInput
                 value={formData.pickup_location_text}
-                onChange={(e) => updateField('pickup_location_text', e.target.value)}
+                onChange={(value) => updateField('pickup_location_text', value)}
+                onLocationSelect={(location) => {
+                  if (location) {
+                    setPickupCoordinates(location.coordinates);
+                  } else {
+                    setPickupCoordinates(null);
+                  }
+                }}
+                selectedCoordinates={pickupCoordinates}
                 placeholder="City, State (e.g., Austin, TX)"
               />
             </div>
