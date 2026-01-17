@@ -162,11 +162,11 @@ const AIToolsSection = () => {
             </div>
           </div>
           <Link 
-            to="/ai-tools" 
+            to="/tools" 
             className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 
                        transition-colors group whitespace-nowrap font-medium"
           >
-            Open Command Center
+            Explore Host Tools
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
@@ -275,10 +275,10 @@ const AIToolsSection = () => {
           <p className="text-sm text-muted-foreground mb-4">
             All AI tools are <span className="text-primary font-medium">free to use</span> — no credit card required
           </p>
-          <Link to="/ai-tools">
+          <Link to="/tools">
             <Button size="lg" className="gap-2">
               <Sparkles className="w-4 h-4" />
-              Explore AI Tools
+              Explore Host Tools
             </Button>
           </Link>
         </div>
@@ -319,7 +319,7 @@ const AIToolsSection = () => {
               </div>
               
               <div className="mt-6 flex gap-3">
-                <Link to="/ai-tools" className="flex-1">
+                <Link to="/tools" className="flex-1">
                   <Button className="w-full gap-2">
                     <Sparkles className="w-4 h-4" />
                     {selectedTool.cta}
