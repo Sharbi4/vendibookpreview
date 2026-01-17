@@ -40,10 +40,10 @@ const PriceBreakdownModal = ({
 }: PriceBreakdownModalProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Calculate fees
+  // Calculate fees using the shared commissions logic
   const subtotal = basePrice + deliveryFee;
   const platformFee = mode === 'rent' 
-    ? Math.round(subtotal * RENTAL_RENTER_FEE_PERCENT) / 100 
+    ? Math.round(subtotal * (RENTAL_RENTER_FEE_PERCENT / 100) * 100) / 100 
     : 0; // Sales don't have buyer-side platform fee visible
   const total = subtotal + platformFee;
 
@@ -95,7 +95,7 @@ const PriceBreakdownModal = ({
             {mode === 'rent' && platformFee > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground flex items-center gap-1.5">
-                  Service fee
+                  Platform fee ({RENTAL_RENTER_FEE_PERCENT}%)
                   <Tooltip>
                     <TooltipTrigger>
                       <Info className="h-3.5 w-3.5 text-muted-foreground/70" />
