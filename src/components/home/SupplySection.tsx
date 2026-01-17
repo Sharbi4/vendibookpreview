@@ -54,7 +54,7 @@ const SupplySection = () => {
           {/* Left: Content */}
           <div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Earn with your truck, trailer, or equipment
+              Rent it out. Sell it. Stay in control.
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
               Turn idle assets into income. List your food truck, trailer, ghost kitchen, or vendor lot and reach thousands of entrepreneurs.
