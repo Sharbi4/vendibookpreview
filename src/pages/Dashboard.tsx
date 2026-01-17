@@ -50,14 +50,14 @@ const Dashboard = () => {
       <Header />
       
       <main className="flex-1 container py-6 md:py-8 max-w-5xl">
-        {/* Clean Welcome Header */}
+        {/* Welcome Card */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-foreground">
-              {profile?.full_name ? `Welcome, ${profile.full_name.split(' ')[0]}` : 'Dashboard'}
+              {profile?.full_name ? `Welcome back, ${profile.full_name.split(' ')[0]} 👋` : 'Dashboard'}
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              {isHost ? 'Manage listings and bookings' : 'Track your bookings'}
+              Manage listings, requests, and payouts in one place.
             </p>
           </div>
           
@@ -65,13 +65,13 @@ const Dashboard = () => {
             <Button variant="outline" size="sm" asChild className="h-8 text-xs">
               <Link to="/profile/edit">
                 <User className="h-3.5 w-3.5 mr-1.5" />
-                Profile
+                My Profile
               </Link>
             </Button>
             <Button variant="outline" size="sm" asChild className="h-8 text-xs">
               <Link to="/notification-preferences">
                 <Bell className="h-3.5 w-3.5 mr-1.5" />
-                Alerts
+                Notifications
               </Link>
             </Button>
           </div>

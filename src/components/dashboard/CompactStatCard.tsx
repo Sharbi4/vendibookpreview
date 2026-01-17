@@ -9,6 +9,8 @@ interface CompactStatCardProps {
   highlight?: boolean;
 }
 
+// Tight label format per spec
+
 export const CompactStatCard = ({ icon: Icon, label, value, subtext, highlight }: CompactStatCardProps) => {
   return (
     <div className={cn(
