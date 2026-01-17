@@ -309,6 +309,42 @@ export const trackShareKitDismissed = (): void => {
   });
 };
 
+// Asset Request events
+export const trackAssetRequestOpened = (): void => {
+  trackEvent({
+    category: 'Conversion',
+    action: 'asset_request_opened',
+  });
+};
+
+export const trackAssetRequestSubmitted = (assetType: string, city: string): void => {
+  trackEvent({
+    category: 'Conversion',
+    action: 'asset_request_submitted',
+    label: assetType,
+    metadata: { city },
+  });
+};
+
+// Saved Search events
+export const trackSearchSaved = (category?: string, location?: string): void => {
+  trackEvent({
+    category: 'Search',
+    action: 'search_saved',
+    label: category || 'all',
+    metadata: { location },
+  });
+};
+
+// Badge interaction events
+export const trackBadgeClicked = (badgeType: string): void => {
+  trackEvent({
+    category: 'Trust',
+    action: 'badge_clicked',
+    label: badgeType,
+  });
+};
+
 // Generic analytics exports for other parts of the app
 export { trackEvent };
 export type { AnalyticsEvent };

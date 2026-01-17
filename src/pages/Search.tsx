@@ -16,6 +16,7 @@ import NoResultsAlert from '@/components/search/NoResultsAlert';
 import GetAlertsCard from '@/components/search/GetAlertsCard';
 import RequestAssetCTA from '@/components/search/RequestAssetCTA';
 import MobileStickyBar from '@/components/search/MobileStickyBar';
+import SaveSearchButton from '@/components/search/SaveSearchButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -634,7 +635,7 @@ const Search = () => {
               </Sheet>
             </div>
 
-            {/* Row 2: Results count + Sort + View toggle */}
+            {/* Row 2: Results count + Sort + View toggle + Save Search */}
             <div className="mt-2 flex items-center justify-between gap-3">
               <p className="text-sm text-muted-foreground truncate">
                 {isLoadingListings ? (
@@ -650,6 +651,18 @@ const Search = () => {
                 )}
               </p>
               <div className="flex items-center gap-2 shrink-0">
+                {/* Save Search Button */}
+                <SaveSearchButton
+                  category={category !== 'all' ? category : undefined}
+                  mode={mode !== 'all' ? mode : undefined}
+                  locationText={locationText}
+                  latitude={locationCoords?.[1]}
+                  longitude={locationCoords?.[0]}
+                  radiusMiles={searchRadius}
+                  instantBookOnly={instantBookOnly}
+                  amenities={selectedAmenities}
+                />
+                
                 {/* View Toggle */}
                 <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'map')}>
                   <ToggleGroupItem value="grid" aria-label="Grid view" className="h-8 px-2">
