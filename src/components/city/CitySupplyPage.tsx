@@ -2,9 +2,6 @@ import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   ArrowRight, 
-  Truck, 
-  Store, 
-  ChefHat, 
   MapPin, 
   Shield, 
   CreditCard, 
@@ -27,18 +24,12 @@ import Footer from '@/components/layout/Footer';
 import type { CityData } from '@/data/cityData';
 import { ASSET_TYPES } from '@/data/cityData';
 import { trackEvent } from '@/lib/analytics';
+import { CategoryGuide } from '@/components/categories/CategoryGuide';
 
 interface CitySupplyPageProps {
   city: CityData;
   assetType?: keyof typeof ASSET_TYPES;
 }
-
-const ASSET_TILES = [
-  { key: 'food_truck', icon: Truck, label: 'Food Truck', desc: 'Mobile kitchen on wheels' },
-  { key: 'food_trailer', icon: Store, label: 'Food Trailer', desc: 'Towable food prep unit' },
-  { key: 'ghost_kitchen', icon: ChefHat, label: 'Ghost Kitchen', desc: 'Delivery-only kitchen' },
-  { key: 'vendor_lot', icon: MapPin, label: 'Vendor Lot', desc: 'Prime vending location' },
-];
 
 const HOW_IT_WORKS = [
   { step: 1, title: 'Create your listing', desc: 'Add photos, set your price, define availability.' },
@@ -149,21 +140,12 @@ export function CitySupplyPage({ city, assetType }: CitySupplyPageProps) {
               <h2 className="text-2xl font-bold text-foreground mb-2">What you can list</h2>
               <p className="text-muted-foreground mb-8">Choose the asset type that fits your business.</p>
               
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {ASSET_TILES.map(({ key, icon: Icon, label, desc }) => (
-                  <Card 
-                    key={key} 
-                    className="group cursor-pointer hover:border-primary/50 transition-all hover:shadow-lg"
-                    onClick={() => navigate(`/${city.slug}/list-${key.replace('_', '-')}`)}>
-                    <CardContent className="p-6">
-                      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                        <Icon className="h-6 w-6 text-primary" />
-                      </div>
-                      <h3 className="font-semibold text-foreground mb-1">{label}</h3>
-                      <p className="text-sm text-muted-foreground">{desc}</p>
-                    </CardContent>
-                  </Card>
-                ))}
+              {/* Mobile: Accordion, Desktop: Compact cards */}
+              <div className="md:hidden">
+                <CategoryGuide variant="accordion" mode="list" citySlug={city.slug} />
+              </div>
+              <div className="hidden md:block">
+                <CategoryGuide variant="compact" mode="list" citySlug={city.slug} />
               </div>
             </div>
           </section>

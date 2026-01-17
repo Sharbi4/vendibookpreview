@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, MapPin, ShieldCheck, CreditCard, FileText, Headphones, Truck, ChefHat, Building2, MapPinned } from 'lucide-react';
+import { Search, MapPin, ShieldCheck, CreditCard, FileText, Headphones } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,15 +15,9 @@ import {
 } from '@/lib/analytics';
 import TrustModal from '@/components/trust/TrustModal';
 import { trustTiles, TrustTile } from '@/components/trust/trustContent';
+import { CategoryGuide } from '@/components/categories/CategoryGuide';
 
 const CITIES = Object.values(CITY_DATA);
-
-const CATEGORY_LINKS = [
-  { label: 'Food Trucks', href: '/search?category=food_truck', icon: Truck },
-  { label: 'Food Trailers', href: '/search?category=food_trailer', icon: ChefHat },
-  { label: 'Vendor Lots', href: '/search?category=vendor_lot', icon: MapPinned },
-  { label: 'Ghost Kitchens', href: '/search?category=ghost_kitchen', icon: Building2 },
-];
 
 const TRUST_ITEMS = [
   { id: 'identity-verified', icon: ShieldCheck, label: 'Verified Users' },
@@ -152,27 +146,18 @@ const Cities = () => {
           </div>
         </section>
 
-        {/* Popular Categories */}
+        {/* Category Guide */}
         <section className="py-12 bg-muted/30">
           <div className="container">
-            <h2 className="text-lg font-semibold text-foreground text-center mb-6">
-              Browse by category
-            </h2>
-            <div className="flex flex-wrap justify-center gap-3">
-              {CATEGORY_LINKS.map((cat) => (
-                <Button
-                  key={cat.href}
-                  asChild
-                  variant="outline"
-                  className="gap-2"
-                >
-                  <Link to={cat.href}>
-                    <cat.icon className="h-4 w-4" />
-                    {cat.label}
-                  </Link>
-                </Button>
-              ))}
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-foreground mb-2">
+                What can you find?
+              </h2>
+              <p className="text-muted-foreground">
+                Understand what each category means before you browse or list.
+              </p>
             </div>
+            <CategoryGuide variant="cards" mode="both" />
           </div>
         </section>
 

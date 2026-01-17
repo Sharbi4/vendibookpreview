@@ -3,9 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { 
   Search, 
   MapPin, 
-  Truck, 
-  Store, 
-  ChefHat, 
   Shield, 
   BadgeCheck,
   CreditCard,
@@ -21,17 +18,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { CATEGORY_LABELS } from '@/types/listing';
 import type { CityData } from '@/data/cityData';
 import { trackEvent, trackSearchStarted } from '@/lib/analytics';
+import { CategoryGuide } from '@/components/categories/CategoryGuide';
 
 interface CityDemandPageProps {
   city: CityData;
 }
-
-const CATEGORY_TILES = [
-  { key: 'food_truck', icon: Truck, label: 'Food Trucks' },
-  { key: 'food_trailer', icon: Store, label: 'Food Trailers' },
-  { key: 'ghost_kitchen', icon: ChefHat, label: 'Ghost Kitchens' },
-  { key: 'vendor_lot', icon: MapPin, label: 'Vendor Lots' },
-];
 
 export function CityDemandPage({ city }: CityDemandPageProps) {
   const navigate = useNavigate();
@@ -127,30 +118,18 @@ export function CityDemandPage({ city }: CityDemandPageProps) {
           </div>
         </section>
 
-        {/* Category Tiles */}
+        {/* Category Guide */}
         <section className="py-16 bg-muted/30">
           <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold text-foreground mb-2">Browse by category</h2>
-            <p className="text-muted-foreground mb-8">Find exactly what you need.</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">What's available?</h2>
+            <p className="text-muted-foreground mb-8">Find exactly what you need in {city.name}.</p>
             
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {CATEGORY_TILES.map(({ key, icon: Icon, label }) => (
-                <Card 
-                  key={key} 
-                  className="group cursor-pointer hover:border-primary/50 transition-all hover:shadow-lg"
-                  onClick={() => handleSearch(key)}
-                >
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                      <Icon className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">{label}</h3>
-                      <p className="text-sm text-muted-foreground">in {city.name}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            {/* Mobile: Accordion, Desktop: Compact cards */}
+            <div className="md:hidden">
+              <CategoryGuide variant="accordion" mode="browse" citySlug={city.slug} />
+            </div>
+            <div className="hidden md:block">
+              <CategoryGuide variant="compact" mode="browse" citySlug={city.slug} />
             </div>
           </div>
         </section>
