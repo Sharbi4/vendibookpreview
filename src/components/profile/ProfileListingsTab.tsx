@@ -94,8 +94,8 @@ const ProfileListingsTab = ({
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
       </div>
     );
   }
@@ -103,28 +103,28 @@ const ProfileListingsTab = ({
   // Empty state with CTAs
   if (!listings || listings.length === 0) {
     return (
-      <div className="text-center py-12 px-4">
-        <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-          <MapPin className="h-7 w-7 text-muted-foreground/50" />
+      <div className="text-center py-8 px-4">
+        <div className="w-12 h-12 mx-auto mb-3 rounded-lg bg-muted flex items-center justify-center">
+          <MapPin className="h-5 w-5 text-muted-foreground/50" />
         </div>
-        <h3 className="font-semibold text-foreground mb-2">No listings yet</h3>
-        <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
+        <h3 className="font-medium text-sm text-foreground mb-1">No listings yet</h3>
+        <p className="text-xs text-muted-foreground mb-4 max-w-xs mx-auto">
           {isOwnProfile 
-            ? 'Start earning by listing your food truck, trailer, or kitchen. Most hosts publish in under 5 minutes.'
+            ? 'List your food truck, trailer, or kitchen. Most hosts publish in under 5 minutes.'
             : 'This host hasn\'t published any listings yet.'}
         </p>
         {isOwnProfile && (
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Button asChild>
+          <div className="flex items-center justify-center gap-2">
+            <Button size="sm" asChild className="h-8 text-xs rounded-lg">
               <Link to="/list">
-                <PlusSquare className="h-4 w-4 mr-2" />
+                <PlusSquare className="h-3.5 w-3.5 mr-1" />
                 Create Listing
               </Link>
             </Button>
-            <Button variant="outline" asChild>
+            <Button variant="outline" size="sm" asChild className="h-8 text-xs rounded-lg">
               <Link to="/list?import=true">
-                <Upload className="h-4 w-4 mr-2" />
-                Import Listing
+                <Upload className="h-3.5 w-3.5 mr-1" />
+                Import
               </Link>
             </Button>
           </div>
@@ -134,15 +134,15 @@ const ProfileListingsTab = ({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Featured Listings Section */}
       {featuredListings.length > 0 && filter === 'all' && (
-        <div className="mb-6">
-          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Featured Listings
+        <div className="mb-4">
+          <h3 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            Featured
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {featuredListings.map((listing) => (
               <Link 
                 key={`featured-${listing.id}`} 
@@ -161,21 +161,21 @@ const ProfileListingsTab = ({
 
       {/* Filter Chips */}
       {showFilters && (
-        <div className="flex flex-wrap gap-1.5 pb-1">
+        <div className="flex flex-wrap gap-1 pb-0.5">
           {CATEGORY_FILTERS.filter(f => availableFilters.includes(f.value)).map((filterOption) => (
             <Badge
               key={filterOption.value}
               variant={filter === filterOption.value ? 'default' : 'outline'}
-              className={`cursor-pointer text-xs px-2.5 py-1 transition-colors ${
+              className={`cursor-pointer text-[10px] px-2 py-0.5 rounded-md transition-colors ${
                 filter === filterOption.value 
                   ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
-                  : 'hover:bg-muted'
+                  : 'border-border hover:bg-muted'
               }`}
               onClick={() => setFilter(filterOption.value)}
             >
               {filterOption.label}
               {filterOption.value !== 'all' && (
-                <span className="ml-1 opacity-70">
+                <span className="ml-0.5 opacity-70">
                   ({listings.filter(l => {
                     if (filterOption.value === 'rent' || filterOption.value === 'sale') {
                       return l.mode === filterOption.value;
@@ -191,11 +191,11 @@ const ProfileListingsTab = ({
 
       {/* All Listings Header */}
       {featuredListings.length > 0 && filter === 'all' && (
-        <h3 className="text-sm font-semibold text-foreground">All Listings</h3>
+        <h3 className="text-xs font-semibold text-foreground">All Listings</h3>
       )}
 
       {/* Listings Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {filteredListings.map((listing) => (
           <Link 
             key={listing.id} 
@@ -212,28 +212,28 @@ const ProfileListingsTab = ({
 
       {/* No results for filter */}
       {filteredListings.length === 0 && filter !== 'all' && (
-        <div className="text-center py-8">
-          <p className="text-sm text-muted-foreground">
-            No {CATEGORY_FILTERS.find(f => f.value === filter)?.label.toLowerCase()} listings found.
+        <div className="text-center py-6">
+          <p className="text-xs text-muted-foreground">
+            No {CATEGORY_FILTERS.find(f => f.value === filter)?.label.toLowerCase()} listings.
           </p>
           <Button 
             variant="link" 
             size="sm" 
             onClick={() => setFilter('all')}
-            className="mt-2"
+            className="mt-1 h-auto p-0 text-xs"
           >
-            View all listings
+            View all
           </Button>
         </div>
       )}
 
       {/* Own profile - add create button at bottom */}
       {isOwnProfile && listings.length > 0 && (
-        <div className="flex justify-center pt-4">
-          <Button variant="outline" asChild>
+        <div className="flex justify-center pt-2">
+          <Button variant="outline" size="sm" asChild className="h-8 text-xs rounded-lg">
             <Link to="/list">
-              <PlusSquare className="h-4 w-4 mr-2" />
-              Add Another Listing
+              <PlusSquare className="h-3.5 w-3.5 mr-1" />
+              Add Listing
             </Link>
           </Button>
         </div>

@@ -333,24 +333,24 @@ const PublicProfile = () => {
       />
       <Header />
 
-      <main className="flex-1 pb-24 md:pb-0">
+      <main className="flex-1 pb-20 md:pb-0">
         {/* Section 1: Header with Desktop CTA */}
-        <div className="border-b bg-card">
-          <div className="container py-5 md:py-6">
-            <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
+        <div className="border-b border-border bg-card">
+          <div className="container py-4 md:py-5">
+            <div className="flex flex-col md:flex-row md:items-start gap-3 md:gap-5">
               {/* Left: Profile Info */}
-              <div className="flex items-start gap-4 flex-1 min-w-0">
+              <div className="flex items-start gap-3 flex-1 min-w-0">
                 {/* Avatar */}
                 <div className="relative flex-shrink-0">
-                  <Avatar className="h-16 w-16 md:h-20 md:w-20 border-2 border-border">
-                    <AvatarImage src={profile.avatar_url || undefined} alt={displayName} />
-                    <AvatarFallback className="text-xl font-bold bg-primary text-primary-foreground">
+                  <Avatar className="h-14 w-14 md:h-16 md:w-16 border-2 border-border rounded-xl">
+                    <AvatarImage src={profile.avatar_url || undefined} alt={displayName} className="rounded-xl" />
+                    <AvatarFallback className="text-lg font-semibold bg-primary text-primary-foreground rounded-xl">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
                   {profile.identity_verified && (
-                    <div className="absolute -bottom-0.5 -right-0.5 bg-background rounded-full p-0.5 shadow-sm border border-border">
-                      <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                    <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-0.5 border border-border">
+                      <ShieldCheck className="h-3.5 w-3.5 text-primary" />
                     </div>
                   )}
                 </div>
@@ -359,46 +359,46 @@ const PublicProfile = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <h1 className="text-lg md:text-xl font-bold text-foreground truncate">
+                      <h1 className="text-base md:text-lg font-semibold text-foreground truncate leading-tight">
                         {displayName}
                       </h1>
                       {profile.business_name && (
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                           <Building2 className="h-3 w-3 flex-shrink-0" />
                           <span className="truncate">{profile.business_name}</span>
                         </p>
                       )}
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                         <MapPin className="h-3 w-3 flex-shrink-0" />
                         <span>{serviceArea || 'Service area not set'}</span>
                       </p>
                     </div>
 
-                    {/* Overflow Menu - Mobile only position */}
+                    {/* Overflow Menu - Mobile only */}
                     <div className="md:hidden">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 -mt-1">
+                          <Button variant="ghost" size="icon" className="h-7 w-7 -mr-1.5 -mt-0.5">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem onClick={handleShare}>
+                        <DropdownMenuContent align="end" className="w-40 rounded-lg">
+                          <DropdownMenuItem onClick={handleShare} className="text-sm">
                             <Share2 className="h-4 w-4 mr-2" />
-                            Share profile
+                            Share
                           </DropdownMenuItem>
                           {!isOwnProfile && (
-                            <DropdownMenuItem onClick={handleReport}>
+                            <DropdownMenuItem onClick={handleReport} className="text-sm">
                               <Flag className="h-4 w-4 mr-2" />
-                              Report profile
+                              Report
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem onClick={() => setShowSafetyModal(true)}>
+                          <DropdownMenuItem onClick={() => setShowSafetyModal(true)} className="text-sm">
                             <ShieldAlert className="h-4 w-4 mr-2" />
                             Safety tips
                           </DropdownMenuItem>
                           {isOwnProfile && (
-                            <DropdownMenuItem onClick={() => navigate('/account')}>
+                            <DropdownMenuItem onClick={() => navigate('/account')} className="text-sm">
                               <Eye className="h-4 w-4 mr-2" />
                               Edit profile
                             </DropdownMenuItem>
@@ -408,71 +408,71 @@ const PublicProfile = () => {
                     </div>
                   </div>
 
-                  {/* Trust Pills - Max 4 */}
-                  <div className="flex flex-wrap gap-1.5 mt-2">
+                  {/* Trust Pills - Unified styling */}
+                  <div className="flex flex-wrap gap-1 mt-1.5">
                     {profile.identity_verified ? (
-                      <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-emerald-500/50 text-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20 dark:text-emerald-400">
-                        <ShieldCheck className="h-3 w-3 mr-0.5" />
-                        Verified ID
+                      <Badge variant="outline" className="text-[10px] h-[18px] px-1.5 rounded-md border-primary/30 text-primary bg-primary/5">
+                        <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />
+                        Verified
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-muted text-muted-foreground">
+                      <Badge variant="outline" className="text-[10px] h-[18px] px-1.5 rounded-md border-border text-muted-foreground">
                         Not verified
                       </Badge>
                     )}
                     {responseTimeData?.avgResponseTime && (
-                      <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-blue-500/50 text-blue-700 bg-blue-50/50 dark:bg-blue-950/20 dark:text-blue-400">
-                        <Clock className="h-3 w-3 mr-0.5" />
+                      <Badge variant="outline" className="text-[10px] h-[18px] px-1.5 rounded-md border-border text-foreground">
+                        <Clock className="h-2.5 w-2.5 mr-0.5" />
                         ~{responseTimeData.avgResponseTime}
                       </Badge>
                     )}
                     {(completedBookings || 0) > 0 && (
-                      <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-purple-500/50 text-purple-700 bg-purple-50/50 dark:bg-purple-950/20 dark:text-purple-400">
-                        <Calendar className="h-3 w-3 mr-0.5" />
-                        {completedBookings} completed
+                      <Badge variant="outline" className="text-[10px] h-[18px] px-1.5 rounded-md border-border text-foreground">
+                        <Calendar className="h-2.5 w-2.5 mr-0.5" />
+                        {completedBookings} booked
                       </Badge>
                     )}
                     {stats?.averageRating && (
-                      <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-amber-500/50 text-amber-700 bg-amber-50/50 dark:bg-amber-950/20 dark:text-amber-400">
-                        <Star className="h-3 w-3 mr-0.5 fill-amber-500" />
+                      <Badge variant="outline" className="text-[10px] h-[18px] px-1.5 rounded-md border-border text-foreground">
+                        <Star className="h-2.5 w-2.5 mr-0.5 fill-primary text-primary" />
                         {stats.averageRating.toFixed(1)} ({stats.totalReviewsReceived})
                       </Badge>
                     )}
                   </div>
 
                   {/* Member since */}
-                  <p className="text-[10px] text-muted-foreground mt-1.5">
+                  <p className="text-[10px] text-muted-foreground mt-1">
                     Member since {memberSinceText}
                   </p>
                 </div>
               </div>
 
-              {/* Right: Desktop CTA Block + Overflow Menu */}
-              <div className="hidden md:flex flex-col items-end gap-3 flex-shrink-0">
+              {/* Right: Desktop CTA Block */}
+              <div className="hidden md:flex flex-col items-end gap-2 flex-shrink-0">
                 {/* Overflow Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button variant="ghost" size="icon" className="h-7 w-7">
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44">
-                    <DropdownMenuItem onClick={handleShare}>
+                  <DropdownMenuContent align="end" className="w-40 rounded-lg">
+                    <DropdownMenuItem onClick={handleShare} className="text-sm">
                       <Share2 className="h-4 w-4 mr-2" />
-                      Share profile
+                      Share
                     </DropdownMenuItem>
                     {!isOwnProfile && (
-                      <DropdownMenuItem onClick={handleReport}>
+                      <DropdownMenuItem onClick={handleReport} className="text-sm">
                         <Flag className="h-4 w-4 mr-2" />
-                        Report profile
+                        Report
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem onClick={() => setShowSafetyModal(true)}>
+                    <DropdownMenuItem onClick={() => setShowSafetyModal(true)} className="text-sm">
                       <ShieldAlert className="h-4 w-4 mr-2" />
                       Safety tips
                     </DropdownMenuItem>
                     {isOwnProfile && (
-                      <DropdownMenuItem onClick={() => navigate('/account')}>
+                      <DropdownMenuItem onClick={() => navigate('/account')} className="text-sm">
                         <Eye className="h-4 w-4 mr-2" />
                         Edit profile
                       </DropdownMenuItem>
@@ -482,23 +482,23 @@ const PublicProfile = () => {
 
                 {/* CTA Buttons */}
                 {!isOwnProfile && isHost && (
-                  <div className="flex flex-col gap-2 w-48">
-                    <Button onClick={handleMessageHost} disabled={isMessaging} className="w-full">
+                  <div className="flex flex-col gap-1.5 w-44">
+                    <Button onClick={handleMessageHost} disabled={isMessaging} size="sm" className="w-full rounded-lg">
                       {isMessaging ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
                       ) : (
-                        <MessageCircle className="h-4 w-4 mr-2" />
+                        <MessageCircle className="h-4 w-4 mr-1.5" />
                       )}
                       {listingContext ? 'Message about listing' : 'Message Host'}
                     </Button>
-                    <Button variant="outline" onClick={handleViewListingsClick} className="w-full">
+                    <Button variant="outline" onClick={handleViewListingsClick} size="sm" className="w-full rounded-lg">
                       View Listings ({stats?.totalListings || 0})
                     </Button>
                   </div>
                 )}
 
                 {isOwnProfile && (
-                  <Button variant="outline" size="sm" asChild>
+                  <Button variant="outline" size="sm" asChild className="rounded-lg">
                     <Link to="/account">Edit profile</Link>
                   </Button>
                 )}
@@ -508,21 +508,21 @@ const PublicProfile = () => {
         </div>
 
         {/* Section 3 & 4: Listings & Reviews Tabs */}
-        <div ref={listingsRef} className="container py-5">
+        <div ref={listingsRef} className="container py-4">
           <Tabs defaultValue="listings" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-5 bg-muted/50 p-1 rounded-lg h-10">
-              <TabsTrigger value="listings" className="gap-1.5 text-sm rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <MapPin className="h-4 w-4" />
+            <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted p-0.5 rounded-lg h-9">
+              <TabsTrigger value="listings" className="gap-1 text-xs font-medium rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <MapPin className="h-3.5 w-3.5" />
                 Listings
                 {(stats?.totalListings || 0) > 0 && (
-                  <span className="text-xs text-muted-foreground">({stats?.totalListings})</span>
+                  <span className="text-[10px] text-muted-foreground ml-0.5">({stats?.totalListings})</span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="reviews" className="gap-1.5 text-sm rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <Star className="h-4 w-4" />
+              <TabsTrigger value="reviews" className="gap-1 text-xs font-medium rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <Star className="h-3.5 w-3.5" />
                 Reviews
                 {(stats?.totalReviewsReceived || 0) > 0 && (
-                  <span className="text-xs text-muted-foreground">({stats?.totalReviewsReceived})</span>
+                  <span className="text-[10px] text-muted-foreground ml-0.5">({stats?.totalReviewsReceived})</span>
                 )}
               </TabsTrigger>
             </TabsList>
