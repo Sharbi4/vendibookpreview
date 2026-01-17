@@ -11,7 +11,6 @@ import {
   Clock, 
   CheckCircle2,
   TrendingUp,
-  Users,
   Star,
   ChevronRight,
   Lightbulb
@@ -23,7 +22,6 @@ import { trackEvent } from '@/lib/analytics';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import vendibookIcon from '@/assets/vendibook-icon.png';
 
@@ -33,12 +31,6 @@ const benefits = [
   { icon: DollarSign, text: 'Earn $500-2,000/week', subtext: 'Average host earnings' },
   { icon: Shield, text: 'Secure payments', subtext: 'Stripe-powered escrow' },
   { icon: Clock, text: 'List in 5 minutes', subtext: 'AI-assisted creation' },
-];
-
-const stats = [
-  { value: '2,500+', label: 'Active listings' },
-  { value: '$1.2M+', label: 'Host earnings' },
-  { value: '4.9★', label: 'Avg review' },
 ];
 
 const tips = [
