@@ -264,7 +264,6 @@ const ListPage: React.FC = () => {
               <span className="hidden sm:inline">Back</span>
             </button>
             <div className="flex items-center gap-2">
-              <img src={vendibookIcon} alt="Vendibook" className="w-7 h-7" />
               <h1 className="font-semibold">List your asset</h1>
             </div>
             <div className="w-16" />
