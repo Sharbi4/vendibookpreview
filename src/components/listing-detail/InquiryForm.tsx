@@ -190,9 +190,15 @@ const InquiryForm = ({
   const currentDeliveryFee = getDeliveryFeeForSelection();
   const totalPrice = (priceSale || 0) + currentDeliveryFee;
 
+  // RFC 5322 compliant email regex for strict validation
+  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+
   const validateForm = (): string | null => {
     if (!name.trim()) return 'Please enter your name';
     if (!email.trim()) return 'Please enter your email';
+    if (!emailRegex.test(email.trim())) {
+      return 'Please enter a valid email address';
+    }
     if (!phone.trim()) return 'Please enter your phone number';
     if (!/^[\d\s\-\(\)\+]{10,}$/.test(phone.trim())) {
       return 'Please enter a valid phone number (at least 10 digits)';
