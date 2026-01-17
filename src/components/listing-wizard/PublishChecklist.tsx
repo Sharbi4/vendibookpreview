@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Circle, Camera, DollarSign, Calendar, FileText, CreditCard, UserCheck, MapPin } from 'lucide-react';
+import { Check, Circle, Camera, DollarSign, Calendar, FileText, CreditCard, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface ChecklistItem {
@@ -94,7 +94,6 @@ export const createChecklistItems = (
     hasDescription: boolean;
     hasLocation: boolean;
     hasStripe: boolean;
-    hasVerification: boolean;
     isRental: boolean;
   },
   currentStep: string
@@ -153,14 +152,6 @@ export const createChecklistItems = (
       completed: formState.hasStripe,
       required: true,
       current: currentStep === 'stripe',
-    },
-    {
-      id: 'verification',
-      label: 'Verify identity',
-      icon: <UserCheck className="w-4 h-4" />,
-      completed: formState.hasVerification,
-      required: false,
-      current: currentStep === 'verification',
     }
   );
 

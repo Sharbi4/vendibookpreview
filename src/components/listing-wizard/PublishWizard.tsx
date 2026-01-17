@@ -1,17 +1,27 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, Sparkles, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2 } from 'lucide-react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, Sparkles, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { supabase } from '@/integrations/supabase/client';
-import { CATEGORY_LABELS, ListingCategory, FreightPayer, AMENITIES_BY_CATEGORY, FREIGHT_CATEGORY_LABELS, FreightCategory, FulfillmentType, isMobileAsset, isStaticLocation as isStaticLocationFn } from '@/types/listing';
+import { CATEGORY_LABELS, ListingCategory, FreightPayer, AMENITIES_BY_CATEGORY, FREIGHT_CATEGORY_LABELS, FreightCategory, FulfillmentType, isMobileAsset, isStaticLocation as isStaticLocationFn, MODE_LABELS } from '@/types/listing';
 import { LocationSearchInput } from '@/components/search/LocationSearchInput';
 import { AvailabilityStep } from './AvailabilityStep';
 import { PublishChecklist, createChecklistItems } from './PublishChecklist';
@@ -629,6 +639,10 @@ export const PublishWizard: React.FC = () => {
     }
   };
 
+  // TOS agreement state for publish confirmation
+  const [tosAgreed, setTosAgreed] = useState(false);
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
+
   // Checklist state
   const checklistState = {
     hasPhotos: existingImages.length >= 3 || images.length >= 3 || (existingImages.length + images.length) >= 3,
@@ -641,7 +655,6 @@ export const PublishWizard: React.FC = () => {
         : !!(fulfillmentType && pickupLocationText)
     ) : false,
     hasStripe: isOnboardingComplete,
-    hasVerification: false, // Optional
     isRental: listing?.mode === 'rent',
   };
 
@@ -1847,26 +1860,121 @@ export const PublishWizard: React.FC = () => {
               {step === 'review' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Review & publish</h2>
-                    <p className="text-muted-foreground">Your listing is ready to go live.</p>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Review your listing</h2>
+                    <p className="text-muted-foreground">Here's how your listing will appear to shoppers.</p>
                   </div>
 
-                  <div className="rounded-xl border border-border overflow-hidden">
-                    {existingImages[0] && (
-                      <img src={existingImages[0]} alt="" className="w-full h-48 object-cover" />
+                  {/* Full Listing Preview Card */}
+                  <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-lg">
+                    {/* Cover Image */}
+                    {existingImages.length > 0 && (
+                      <div className="aspect-video relative">
+                        <img src={existingImages[0]} alt="" className="w-full h-full object-cover" />
+                        {existingImages.length > 1 && (
+                          <div className="absolute bottom-3 right-3 bg-black/70 text-white text-sm px-2.5 py-1 rounded-full">
+                            +{existingImages.length - 1} photos
+                          </div>
+                        )}
+                        {/* Mode & Category Badges */}
+                        <div className="absolute top-3 left-3 flex gap-2">
+                          <span className={cn(
+                            "px-3 py-1 text-xs font-medium rounded-full backdrop-blur-sm",
+                            listing.mode === 'rent'
+                              ? "bg-blue-500/90 text-white"
+                              : "bg-green-500/90 text-white"
+                          )}>
+                            {MODE_LABELS[listing.mode]}
+                          </span>
+                        </div>
+                      </div>
                     )}
-                    <div className="p-4">
-                      <h3 className="font-semibold text-lg text-foreground">{title}</h3>
-                      <p className="text-muted-foreground text-sm mt-1 line-clamp-2">{description}</p>
-                      <p className="text-primary font-semibold mt-2">
-                        {listing.mode === 'sale'
-                          ? `$${parseFloat(priceSale).toLocaleString()}`
-                          : `$${priceDaily}/day`}
+
+                    {/* Content */}
+                    <div className="p-5 space-y-4">
+                      {/* Title & Price Row */}
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                            {CATEGORY_LABELS[listing.category]}
+                          </span>
+                          <h3 className="font-bold text-xl text-foreground mt-1">{title || 'Untitled Listing'}</h3>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-2xl font-bold text-primary">
+                            {listing.mode === 'sale'
+                              ? `$${parseFloat(priceSale || '0').toLocaleString()}`
+                              : `$${parseFloat(priceDaily || '0').toLocaleString()}`}
+                          </div>
+                          {listing.mode === 'rent' && (
+                            <div className="text-sm text-muted-foreground">per day</div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Location */}
+                      {(address || pickupLocationText) && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <MapPin className="w-4 h-4" />
+                          <span className="text-sm">{address || pickupLocationText}</span>
+                        </div>
+                      )}
+
+                      {/* Description Preview */}
+                      <p className="text-muted-foreground text-sm line-clamp-3">
+                        {description || 'No description provided.'}
                       </p>
+
+                      {/* Highlights */}
+                      {highlights.length > 0 && (
+                        <div className="pt-3 border-t border-border">
+                          <div className="flex flex-wrap gap-2">
+                            {highlights.slice(0, 4).map((highlight, i) => (
+                              <span key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                                <Check className="w-3 h-3" />
+                                {highlight}
+                              </span>
+                            ))}
+                            {highlights.length > 4 && (
+                              <span className="text-xs text-muted-foreground">+{highlights.length - 4} more</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Fulfillment Info */}
+                      <div className="pt-3 border-t border-border flex flex-wrap gap-3">
+                        {instantBook && listing.mode === 'rent' && (
+                          <div className="flex items-center gap-1.5 text-sm text-emerald-600">
+                            <Zap className="w-4 h-4" />
+                            <span className="font-medium">Instant Book</span>
+                          </div>
+                        )}
+                        {fulfillmentType && (
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                            {fulfillmentType === 'delivery' ? <Truck className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
+                            <span>{fulfillmentType === 'pickup' ? 'Pickup only' : fulfillmentType === 'delivery' ? 'Delivery available' : fulfillmentType === 'both' ? 'Pickup & Delivery' : 'On-site'}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Stripe Connect Panel - Clear messaging */}
+                  {/* Missing Requirements Warning */}
+                  {!canPublish && (
+                    <div className="p-4 rounded-xl border border-destructive/30 bg-destructive/10">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
+                        <div>
+                          <p className="font-medium text-destructive">Cannot publish yet</p>
+                          <p className="text-sm text-destructive/80 mt-0.5">
+                            Complete all required checklist items before publishing.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Stripe Connect Panel */}
                   {!isOnboardingComplete && (
                     <div className="p-5 rounded-xl border-2 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
                       <div className="flex items-start gap-3">
@@ -1893,11 +2001,27 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Ready to Publish Message */}
+                  {canPublish && isOnboardingComplete && (
+                    <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                        <Check className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-emerald-800 dark:text-emerald-200">Your listing is ready!</p>
+                        <p className="text-sm text-emerald-600 dark:text-emerald-400">Review the preview above and publish when you're ready.</p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex gap-3">
                     <Button variant="outline" onClick={() => setStep('stripe')}>Back</Button>
-                    <Button onClick={handlePublish} disabled={isSaving || !canPublish || !isOnboardingComplete}>
-                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-                      Publish
+                    <Button 
+                      onClick={() => setShowPublishDialog(true)} 
+                      disabled={isSaving || !canPublish || !isOnboardingComplete}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Publish Listing
                     </Button>
                   </div>
                 </div>
@@ -1906,6 +2030,51 @@ export const PublishWizard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Publish Confirmation Dialog */}
+      <AlertDialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl">Publish your listing?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p>
+                  Your listing will be visible to all shoppers on VendiBook and you'll start receiving 
+                  {listing?.mode === 'rent' ? ' booking requests' : ' purchase inquiries'}.
+                </p>
+                
+                {/* TOS Checkbox */}
+                <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
+                  <Checkbox
+                    id="tos-agreement"
+                    checked={tosAgreed}
+                    onCheckedChange={(checked) => setTosAgreed(checked === true)}
+                    className="mt-0.5"
+                  />
+                  <label htmlFor="tos-agreement" className="text-sm text-foreground cursor-pointer leading-relaxed">
+                    I agree to VendiBook's{' '}
+                    <Link to="/terms" target="_blank" className="text-primary hover:underline">
+                      Terms of Service
+                    </Link>{' '}
+                    and confirm this listing accurately represents my asset.
+                  </label>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setTosAgreed(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handlePublish}
+              disabled={!tosAgreed || isSaving}
+              className={cn(!tosAgreed && "opacity-50 cursor-not-allowed")}
+            >
+              {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+              Yes, publish
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <PublishSuccessModal
         open={showSuccessModal}
