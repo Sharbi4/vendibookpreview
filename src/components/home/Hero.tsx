@@ -127,11 +127,11 @@ const Hero = () => {
             <Button
               variant="gradient-premium"
               size="lg"
-              onClick={() => navigate('/search')}
+              onClick={() => navigate('/browse')}
               className="text-base px-8 py-6"
             >
               <Search className="mr-2 h-5 w-5" />
-              Search Listings
+              Browse Listings
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <Button
@@ -140,7 +140,7 @@ const Hero = () => {
               onClick={() => navigate('/host')}
               className="text-base px-8 py-6 border-2"
             >
-              List an Asset
+              List Your Asset
             </Button>
           </div>
 

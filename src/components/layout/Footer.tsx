@@ -41,9 +41,9 @@ const footerSections: FooterSection[] = [
     title: 'Host Tools',
     links: [
       { label: 'All Tools', href: '/tools' },
-      { label: 'Price Pilot', href: '/tools/pricing' },
+      { label: 'Price Pilot', href: '/tools/pricepilot' },
       { label: 'Listing Studio', href: '/tools/listing-studio' },
-      { label: 'Permit Path', href: '/tools/permit-path' },
+      { label: 'Permit Path', href: '/tools/permitpath' },
     ],
   },
   {

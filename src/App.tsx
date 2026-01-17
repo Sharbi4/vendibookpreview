@@ -52,6 +52,7 @@ const VendorLots = lazy(() => import("./pages/VendorLots"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const VendiAISuite = lazy(() => import("./pages/VendiAISuite"));
+const Browse = lazy(() => import("./pages/Browse"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -72,6 +73,7 @@ const AnimatedRoutes = () => {
       <Suspense fallback={<PageLoader />} key={location.pathname}>
         <Routes location={location}>
           <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+          <Route path="/browse" element={<PageTransition><Browse /></PageTransition>} />
           <Route path="/search" element={<PageTransition><Search /></PageTransition>} />
           <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
           <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />

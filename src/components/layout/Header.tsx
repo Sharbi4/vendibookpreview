@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, Phone, ShieldCheck, Clock, TrendingUp, Sparkles, Mic, MicOff, ChevronDown, Wrench, CheckCircle2 } from 'lucide-react';
+import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, Phone, ShieldCheck, Clock, TrendingUp, Mic, MicOff, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -396,13 +396,13 @@ const Header = () => {
           </button>
         </div>
 
-        {/* Desktop Navigation - Simplified */}
+        {/* Desktop Navigation - Simplified two-sided journeys */}
         <nav className="hidden md:flex items-center gap-5">
           <Link 
-            to="/search" 
+            to="/browse" 
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            Browse
+            Browse Listings
           </Link>
           <Link 
             to="/host" 
@@ -415,12 +415,6 @@ const Header = () => {
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             How It Works
-          </Link>
-          <Link 
-            to="/tools" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Host Tools
           </Link>
           <Link 
             to="/help" 
@@ -541,7 +535,7 @@ const Header = () => {
             {/* Marketplace Section */}
             <p className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Marketplace</p>
             <Link 
-              to="/search" 
+              to="/browse" 
               className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
@@ -563,14 +557,6 @@ const Header = () => {
             >
               <HelpCircle className="h-4 w-4 text-muted-foreground" />
               How It Works
-            </Link>
-            <Link 
-              to="/tools" 
-              className="flex items-center gap-3 text-sm font-medium py-3 px-2 rounded-lg hover:bg-muted transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Wrench className="h-4 w-4 text-muted-foreground" />
-              Host Tools
             </Link>
             <Link 
               to="/help" 
