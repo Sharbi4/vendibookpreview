@@ -565,7 +565,7 @@ const Search = () => {
       <main className="flex-1">
         {/* Simplified Search Header - Max 2 rows above fold */}
         <div className="border-b border-border bg-background">
-          <div className="container py-4">
+          <div className="container py-3">
             {/* Row 1: Search + Filters */}
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -590,8 +590,8 @@ const Search = () => {
               {/* Filter Button */}
               <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="default" className="rounded-lg relative shrink-0">
-                    <SlidersHorizontal className="h-4 w-4 mr-2" />
+                  <Button variant="outline" size="default" className="rounded-lg relative shrink-0 h-10">
+                    <SlidersHorizontal className="h-4 w-4 sm:mr-2" />
                     <span className="hidden sm:inline">Filters</span>
                     {activeFiltersCount > 0 && (
                       <span className="absolute -top-1 -right-1 h-5 w-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
@@ -633,41 +633,49 @@ const Search = () => {
               </Sheet>
             </div>
 
-            {/* Row 2: Popular chips - scrollable, max 5 */}
-            <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              <span className="text-xs font-medium text-muted-foreground whitespace-nowrap shrink-0">Popular:</span>
-              {POPULAR_FEATURES.slice(0, 5).map((feature) => {
-                const IconComponent = feature.icon;
-                const isSelected = selectedAmenities.includes(feature.id);
-                return (
-                  <button
-                    key={feature.id}
-                    onClick={() => toggleAmenity(feature.id)}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap shrink-0",
-                      isSelected 
-                        ? "bg-primary text-primary-foreground" 
-                        : "bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+            {/* Row 2: Results count + Sort + View toggle */}
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <p className="text-sm text-muted-foreground truncate">
+                {isLoadingListings ? (
+                  'Loading...'
+                ) : (
+                  <>
+                    <span className="font-semibold text-foreground">{filteredListings.length}</span>
+                    {' '}result{filteredListings.length !== 1 ? 's' : ''}
+                    {searchQuery && (
+                      <span className="hidden sm:inline"> for "<span className="text-foreground">{searchQuery}</span>"</span>
                     )}
-                  >
-                    <IconComponent className="h-3 w-3" />
-                    {feature.label}
-                  </button>
-                );
-              })}
-              {activeFiltersCount > 0 && (
-                <button 
-                  onClick={clearFilters} 
-                  className="text-xs text-muted-foreground hover:text-foreground whitespace-nowrap shrink-0 ml-2"
+                  </>
+                )}
+              </p>
+              <div className="flex items-center gap-2 shrink-0">
+                {/* View Toggle */}
+                <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'map')}>
+                  <ToggleGroupItem value="grid" aria-label="Grid view" className="h-8 px-2">
+                    <LayoutGrid className="h-3.5 w-3.5" />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="map" aria-label="Map view" className="h-8 px-2">
+                    <Map className="h-3.5 w-3.5" />
+                  </ToggleGroupItem>
+                </ToggleGroup>
+
+                <select
+                  value={sortBy}
+                  onChange={(e) => handleSortChange(e.target.value)}
+                  className="text-xs border border-border rounded-md px-2 py-1.5 bg-background"
                 >
-                  Clear all
-                </button>
-              )}
+                  <option value="newest">Newest</option>
+                  {searchQuery.trim() && <option value="relevance">Relevance</option>}
+                  <option value="price-low">Price: Low</option>
+                  <option value="price-high">Price: High</option>
+                  {locationCoords && <option value="distance">Distance</option>}
+                </select>
+              </div>
             </div>
           </div>
         </div>
         {/* Results */}
-        <div className="container py-8">
+        <div className="container py-6">
           <div className="flex gap-8">
             {/* Desktop Sidebar Filters */}
             <aside className="hidden md:block w-64 shrink-0">
@@ -708,51 +716,6 @@ const Search = () => {
 
             {/* Results Grid */}
             <div className="flex-1">
-              {/* Results Count & Sort */}
-              <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <p className="text-muted-foreground">
-                  {isLoadingListings ? (
-                    'Loading...'
-                  ) : (
-                    <>
-                      <span className="font-semibold text-foreground">{filteredListings.length}</span>
-                      {' '}result{filteredListings.length !== 1 ? 's' : ''} found
-                      {searchQuery && (
-                        <span> for "<span className="text-foreground">{searchQuery}</span>"</span>
-                      )}
-                      {locationCoords && (
-                        <span> within <span className="text-foreground">{searchRadius} miles</span></span>
-                      )}
-                    </>
-                  )}
-                </p>
-                <div className="flex items-center gap-4">
-                  {/* View Toggle */}
-                  <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'map')}>
-                    <ToggleGroupItem value="grid" aria-label="Grid view" className="px-3">
-                      <LayoutGrid className="h-4 w-4" />
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="map" aria-label="Map view" className="px-3">
-                      <Map className="h-4 w-4" />
-                    </ToggleGroupItem>
-                  </ToggleGroup>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">Sort by:</span>
-                    <select
-                      value={sortBy}
-                      onChange={(e) => handleSortChange(e.target.value)}
-                      className="text-sm border border-border rounded-lg px-3 py-2 bg-background"
-                    >
-                      <option value="newest">Newest</option>
-                      {searchQuery.trim() && <option value="relevance">Relevance</option>}
-                      <option value="price-low">Price: Low to High</option>
-                      <option value="price-high">Price: High to Low</option>
-                      {locationCoords && <option value="distance">Distance</option>}
-                    </select>
-                  </div>
-                </div>
-              </div>
 
               {/* Active Filters Badges */}
               {(mode !== 'all' || category !== 'all' || locationCoords || dateRange?.from || selectedAmenities.length > 0 || instantBookOnly) && (
