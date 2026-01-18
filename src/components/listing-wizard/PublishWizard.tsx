@@ -2019,13 +2019,16 @@ export const PublishWizard: React.FC = () => {
 
                   {/* Ready to Publish Message */}
                   {canPublish && isOnboardingComplete && (
-                    <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-                        <Check className="w-5 h-5 text-emerald-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-emerald-800 dark:text-emerald-200">Your listing is ready!</p>
-                        <p className="text-sm text-emerald-600 dark:text-emerald-400">Review the preview above and publish when you're ready.</p>
+                    <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+                      <div className="relative flex items-center gap-3">
+                        <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md flex items-center justify-center shrink-0">
+                          <Check className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground">Your listing is ready!</p>
+                          <p className="text-sm text-muted-foreground">Review the preview above and publish when you're ready.</p>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -2042,6 +2045,7 @@ export const PublishWizard: React.FC = () => {
                     <Button 
                       onClick={() => setShowPublishDialog(true)} 
                       disabled={isSaving || !canPublish || !isOnboardingComplete}
+                      className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
                     >
                       <Send className="w-4 h-4 mr-2" />
                       Publish Listing
@@ -2067,20 +2071,23 @@ export const PublishWizard: React.FC = () => {
                 </p>
                 
                 {/* TOS Checkbox */}
-                <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
-                  <Checkbox
-                    id="tos-agreement"
-                    checked={tosAgreed}
-                    onCheckedChange={(checked) => setTosAgreed(checked === true)}
-                    className="mt-0.5"
-                  />
-                  <label htmlFor="tos-agreement" className="text-sm text-foreground cursor-pointer leading-relaxed">
-                    I agree to VendiBook's{' '}
-                    <Link to="/terms" target="_blank" className="text-primary hover:underline">
-                      Terms of Service
-                    </Link>{' '}
-                    and confirm this listing accurately represents my asset.
-                  </label>
+                <div className="relative overflow-hidden rounded-xl p-3 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+                  <div className="relative flex items-start gap-3">
+                    <Checkbox
+                      id="tos-agreement"
+                      checked={tosAgreed}
+                      onCheckedChange={(checked) => setTosAgreed(checked === true)}
+                      className="mt-0.5"
+                    />
+                    <label htmlFor="tos-agreement" className="text-sm text-foreground cursor-pointer leading-relaxed">
+                      I agree to VendiBook's{' '}
+                      <Link to="/terms" target="_blank" className="text-primary hover:underline font-medium">
+                        Terms of Service
+                      </Link>{' '}
+                      and confirm this listing accurately represents my asset.
+                    </label>
+                  </div>
                 </div>
               </div>
             </AlertDialogDescription>
@@ -2090,7 +2097,10 @@ export const PublishWizard: React.FC = () => {
             <AlertDialogAction
               onClick={handlePublish}
               disabled={!tosAgreed || isSaving}
-              className={cn(!tosAgreed && "opacity-50 cursor-not-allowed")}
+              className={cn(
+                "bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md",
+                !tosAgreed && "opacity-50 cursor-not-allowed"
+              )}
             >
               {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
               Yes, publish
