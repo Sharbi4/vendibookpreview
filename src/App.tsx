@@ -23,6 +23,7 @@ const EditListing = lazy(() => import("./pages/EditListing"));
 const ListPage = lazy(() => import("./pages/List"));
 const ListingDetail = lazy(() => import("./pages/ListingDetail"));
 const Account = lazy(() => import("./pages/Account"));
+const Favorites = lazy(() => import("./pages/Favorites"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
@@ -120,6 +121,7 @@ const AnimatedRoutes = () => {
           <Route path="/profile/:id" element={<Navigate to={`/u/${window.location.pathname.split('/').pop()}`} replace />} />
           {/* Private account route - owner only */}
           <Route path="/account" element={<PageTransition><Account /></PageTransition>} />
+          <Route path="/favorites" element={<PageTransition><Favorites /></PageTransition>} />
           <Route path="/account/profile" element={<Navigate to="/account" replace />} />
           {/* Public profile route - accessible to all */}
           <Route path="/u/:userId" element={<PageTransition><PublicProfile /></PageTransition>} />
