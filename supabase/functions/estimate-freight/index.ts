@@ -21,22 +21,28 @@ interface FreightEstimateRequest {
 interface FreightEstimateResponse {
   success: boolean;
   estimate?: {
-    distanceMiles: number;
-    baseCost: number;
-    handlingFee: number;
-    totalCost: number;
-    transitDaysMin: number;
-    transitDaysMax: number;
+    distance_miles: number;
+    base_cost: number;
+    fuel_surcharge: number;
+    handling_fee: number;
+    subtotal: number;
+    tax_rate: number;
+    tax_amount: number;
+    total_cost: number;
+    rate_per_mile: number;
+    estimated_transit_days: { min: number; max: number };
   };
+  disclaimer?: string;
   error?: string;
 }
 
-// Freight rate calculations (simplified)
+// Freight rate calculations - Premium flat rate
 const FREIGHT_RATES = {
-  baseRatePerMile: 4.50,
+  ratePerMile: 4.50,
   minimumCharge: 150,
   handlingFee: 75,
-  maxMilesForStandard: 500,
+  fuelSurchargePercent: 0.08, // 8% fuel surcharge
+  defaultTaxRate: 0.0825, // 8.25% default tax rate (can be adjusted per state)
 };
 
 async function geocodeAddress(address: string, apiKey: string): Promise<{ lat: number; lng: number } | null> {
@@ -76,35 +82,59 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 }
 
 function calculateFreightCost(
-  distanceMiles: number
-): { baseCost: number; handlingFee: number; totalCost: number } {
-  // Flat rate: $4.50/mile with minimum charge
+  distanceMiles: number,
+  taxRate: number = FREIGHT_RATES.defaultTaxRate
+): { 
+  base_cost: number; 
+  fuel_surcharge: number;
+  handling_fee: number; 
+  subtotal: number;
+  tax_rate: number;
+  tax_amount: number;
+  total_cost: number;
+  rate_per_mile: number;
+} {
+  // Base cost: $4.50/mile with minimum charge
   const baseCost = Math.max(
     FREIGHT_RATES.minimumCharge,
-    distanceMiles * FREIGHT_RATES.baseRatePerMile
+    distanceMiles * FREIGHT_RATES.ratePerMile
   );
 
+  // Fuel surcharge: 8% of base cost
+  const fuelSurcharge = baseCost * FREIGHT_RATES.fuelSurchargePercent;
+  
+  // Handling fee: flat $75
   const handlingFee = FREIGHT_RATES.handlingFee;
-  const totalCost = baseCost + handlingFee;
+  
+  // Subtotal before tax
+  const subtotal = baseCost + fuelSurcharge + handlingFee;
+  
+  // Tax calculation
+  const taxAmount = subtotal * taxRate;
+  
+  // Total cost
+  const totalCost = subtotal + taxAmount;
 
   return {
-    baseCost: Math.round(baseCost * 100) / 100,
-    handlingFee,
-    totalCost: Math.round(totalCost * 100) / 100,
+    base_cost: Math.round(baseCost * 100) / 100,
+    fuel_surcharge: Math.round(fuelSurcharge * 100) / 100,
+    handling_fee: handlingFee,
+    subtotal: Math.round(subtotal * 100) / 100,
+    tax_rate: taxRate,
+    tax_amount: Math.round(taxAmount * 100) / 100,
+    total_cost: Math.round(totalCost * 100) / 100,
+    rate_per_mile: FREIGHT_RATES.ratePerMile,
   };
 }
 
 function estimateTransitDays(distanceMiles: number): { min: number; max: number } {
-  if (distanceMiles <= 250) {
-    return { min: 1, max: 3 };
-  } else if (distanceMiles <= 500) {
-    return { min: 2, max: 5 };
-  } else if (distanceMiles <= 1000) {
-    return { min: 3, max: 7 };
+  // Standard 7-10 business days for all US shipments
+  if (distanceMiles <= 500) {
+    return { min: 7, max: 10 };
   } else if (distanceMiles <= 1500) {
-    return { min: 5, max: 10 };
+    return { min: 7, max: 10 };
   } else {
-    return { min: 7, max: 14 };
+    return { min: 7, max: 10 };
   }
 }
 
@@ -181,12 +211,14 @@ const handler = async (req: Request): Promise<Response> => {
     const response: FreightEstimateResponse = {
       success: true,
       estimate: {
-        distanceMiles: Math.round(distanceMiles),
+        distance_miles: Math.round(distanceMiles),
         ...costs,
-        transitDaysMin: transitDays.min,
-        transitDaysMax: transitDays.max,
+        estimated_transit_days: transitDays,
       },
+      disclaimer: "Freight rate: $4.50/mile. Final pricing confirmed within 2 business days after payment.",
     };
+
+    logStep("Returning estimate", response);
 
     return new Response(
       JSON.stringify(response),
