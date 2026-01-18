@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays, eachDayOfInterval } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +11,9 @@ import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { TablesInsert } from '@/integrations/supabase/types';
+
+// Shared components
+import { WizardHeader, type WizardStep } from '@/components/shared';
 
 // Step components
 import BookingStepDates from './steps/BookingStepDates';
@@ -246,121 +250,104 @@ const BookingWizard = ({
     );
   }
 
-  const stepLabels = [
+  const stepLabels: WizardStep[] = [
     { step: 1, label: 'Select Dates', short: 'Dates' },
     { step: 2, label: 'Requirements', short: 'Docs' },
     { step: 3, label: 'Details', short: 'Details' },
     { step: 4, label: 'Review', short: 'Review' },
   ];
 
+  const stepVariants = {
+    enter: { opacity: 0, x: 20 },
+    center: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -20 },
+  };
+
   return (
     <div className="bg-card border-2 border-border rounded-2xl shadow-xl overflow-hidden">
-      {/* Premium Header */}
-      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-6 py-4 border-b border-border/50">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            {instantBook ? (
-              <span className="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-semibold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Instant Book
-              </span>
-            ) : (
-              <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                Request to Book
-              </span>
-            )}
-          </div>
-          <span className="text-xs text-muted-foreground">
-            Step {currentStep} of {totalSteps}
-          </span>
-        </div>
-        
-        {/* Step indicators */}
-        <div className="flex gap-1">
-          {stepLabels.map((s) => (
-            <div key={s.step} className="flex-1">
-              <div 
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  s.step < currentStep 
-                    ? 'bg-primary' 
-                    : s.step === currentStep 
-                    ? 'bg-primary/70' 
-                    : 'bg-muted'
-                }`}
-              />
-              <span className={`text-[10px] mt-1 block text-center ${
-                s.step === currentStep ? 'text-primary font-medium' : 'text-muted-foreground'
-              }`}>
-                {s.short}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Premium Wizard Header */}
+      <WizardHeader
+        mode="booking"
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        steps={stepLabels}
+        instantBook={instantBook}
+      />
 
-      {/* Step content */}
+      {/* Step content with animations */}
       <div className="p-6">
-        {currentStep === 1 && (
-          <BookingStepDates
-            startDate={startDate}
-            endDate={endDate}
-            onStartDateChange={setStartDate}
-            onEndDateChange={setEndDate}
-            availableFrom={availableFrom}
-            availableTo={availableTo}
-            isDateUnavailable={isDateUnavailable}
-            rentalDays={rentalDays}
-            priceDaily={priceDaily}
-            onContinue={handleNext}
-            hasUnavailableDates={hasUnavailableDatesInRange()}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep}
+            variants={stepVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+          >
+            {currentStep === 1 && (
+              <BookingStepDates
+                startDate={startDate}
+                endDate={endDate}
+                onStartDateChange={setStartDate}
+                onEndDateChange={setEndDate}
+                availableFrom={availableFrom}
+                availableTo={availableTo}
+                isDateUnavailable={isDateUnavailable}
+                rentalDays={rentalDays}
+                priceDaily={priceDaily}
+                onContinue={handleNext}
+                hasUnavailableDates={hasUnavailableDatesInRange()}
+              />
+            )}
 
-        {currentStep === 2 && (
-          <BookingStepRequirements
-            listingId={listingId}
-            onContinue={handleNext}
-            onBack={handleBack}
-          />
-        )}
+            {currentStep === 2 && (
+              <BookingStepRequirements
+                listingId={listingId}
+                onContinue={handleNext}
+                onBack={handleBack}
+              />
+            )}
 
-        {currentStep === 3 && (
-          <BookingStepDetails
-            isMobileAsset={isMobileAsset}
-            fulfillmentType={fulfillmentType}
-            fulfillmentSelected={fulfillmentSelected}
-            onFulfillmentChange={setFulfillmentSelected}
-            deliveryAddress={deliveryAddress}
-            onDeliveryAddressChange={setDeliveryAddress}
-            deliveryFee={deliveryFee}
-            deliveryRadiusMiles={deliveryRadiusMiles}
-            pickupLocation={pickupLocation}
-            message={message}
-            onMessageChange={setMessage}
-            userInfo={userInfo}
-            onUserInfoChange={setUserInfo}
-            onContinue={handleNext}
-            onBack={handleBack}
-          />
-        )}
+            {currentStep === 3 && (
+              <BookingStepDetails
+                isMobileAsset={isMobileAsset}
+                fulfillmentType={fulfillmentType}
+                fulfillmentSelected={fulfillmentSelected}
+                onFulfillmentChange={setFulfillmentSelected}
+                deliveryAddress={deliveryAddress}
+                onDeliveryAddressChange={setDeliveryAddress}
+                deliveryFee={deliveryFee}
+                deliveryRadiusMiles={deliveryRadiusMiles}
+                pickupLocation={pickupLocation}
+                message={message}
+                onMessageChange={setMessage}
+                userInfo={userInfo}
+                onUserInfoChange={setUserInfo}
+                onContinue={handleNext}
+                onBack={handleBack}
+              />
+            )}
 
-        {currentStep === 4 && (
-          <BookingStepReview
-            listingTitle={listingTitle}
-            startDate={startDate!}
-            endDate={endDate!}
-            rentalDays={rentalDays}
-            priceDaily={priceDaily!}
-            basePrice={basePrice}
-            deliveryFee={fulfillmentSelected === 'delivery' ? currentDeliveryFee : 0}
-            fees={fees}
-            fulfillmentSelected={fulfillmentSelected}
-            instantBook={instantBook}
-            isSubmitting={isSubmitting}
-            onSubmit={handleSubmit}
-            onBack={handleBack}
-          />
-        )}
+            {currentStep === 4 && (
+              <BookingStepReview
+                listingTitle={listingTitle}
+                startDate={startDate!}
+                endDate={endDate!}
+                rentalDays={rentalDays}
+                priceDaily={priceDaily!}
+                basePrice={basePrice}
+                deliveryFee={fulfillmentSelected === 'delivery' ? currentDeliveryFee : 0}
+                fees={fees}
+                fulfillmentSelected={fulfillmentSelected}
+                instantBook={instantBook}
+                isSubmitting={isSubmitting}
+                onSubmit={handleSubmit}
+                onBack={handleBack}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
