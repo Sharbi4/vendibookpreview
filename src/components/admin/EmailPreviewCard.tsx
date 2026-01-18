@@ -267,6 +267,8 @@ const emailTemplates = {
 
 // Generate HTML for each template
 const generateEmailHtml = (templateId: string, data: Record<string, unknown>): string => {
+  const logoUrl = 'https://vendibookpreview.lovable.app/images/vendibook-email-logo.png';
+  
   const baseStyles = `
     font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     margin: 0;
@@ -291,6 +293,12 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
     </head>
     <body style="${baseStyles}">
       <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+        <!-- Logo Header -->
+        <div style="text-align: center; margin-bottom: 24px;">
+          <a href="https://vendibookpreview.lovable.app" style="display: inline-block;">
+            <img src="${logoUrl}" alt="VendiBook" style="max-width: 180px; height: auto;" />
+          </a>
+        </div>
         <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
           ${content}
           <p style="color: #888; font-size: 14px; margin-top: 30px;">
