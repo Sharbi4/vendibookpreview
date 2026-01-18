@@ -301,7 +301,7 @@ const BookingWizard = ({
       />
 
       {/* Step content with animations */}
-      <div className="p-6">
+      <div className="relative bg-white dark:bg-card p-6">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
