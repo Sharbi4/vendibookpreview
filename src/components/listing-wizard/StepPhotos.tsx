@@ -80,10 +80,10 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
       {/* Quality indicator */}
       {totalPhotos > 0 && (
         <div className={cn(
-          "flex items-center gap-2 p-3 rounded-lg text-sm",
+          "flex items-center gap-2 p-3 rounded-xl border text-sm",
           totalPhotos >= minPhotos 
-            ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
-            : "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
+            ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
+            : "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800"
         )}>
           {totalPhotos >= minPhotos ? (
             <>

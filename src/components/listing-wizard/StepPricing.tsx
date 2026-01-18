@@ -321,7 +321,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
 
             {/* Payout Estimate for Rentals */}
             {(rentalPayoutEstimates.daily || rentalPayoutEstimates.weekly) && (
-              <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-foreground">
+              <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-green-500/20">
                 <div className="flex items-start gap-3">
                   <div className="p-2 bg-green-500/10 rounded-lg">
                     <Wallet className="w-5 h-5 text-green-600" />
@@ -594,7 +594,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
 
             {/* Payout Estimate for Sales (Pod 6) */}
             {salePayoutEstimate && (
-              <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-foreground max-w-md">
+              <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-green-500/20 max-w-md">
                 <div className="flex items-start gap-3">
                   <div className="p-2 bg-green-500/10 rounded-lg">
                     <Wallet className="w-5 h-5 text-green-600" />
