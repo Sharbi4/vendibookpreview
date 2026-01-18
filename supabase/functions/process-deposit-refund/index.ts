@@ -33,10 +33,10 @@ serve(async (req) => {
     }
     logStep("Processing refund request", { booking_id, refund_type, deduction_amount });
 
-    // Get booking details
+    // Get booking details with listing and renter info
     const { data: booking, error: bookingError } = await supabaseClient
       .from('booking_requests')
-      .select('*, listings(title)')
+      .select('*, listings(title, host_id)')
       .eq('id', booking_id)
       .single();
 
@@ -44,6 +44,20 @@ serve(async (req) => {
       throw new Error(`Booking not found: ${bookingError?.message}`);
     }
     logStep("Found booking", { bookingId: booking.id, depositAmount: booking.deposit_amount, depositStatus: booking.deposit_status });
+
+    // Get renter profile
+    const { data: renterProfile } = await supabaseClient
+      .from('profiles')
+      .select('full_name, email, display_name')
+      .eq('id', booking.shopper_id)
+      .single();
+
+    // Get host profile
+    const { data: hostProfile } = await supabaseClient
+      .from('profiles')
+      .select('full_name, display_name, business_name')
+      .eq('id', booking.host_id)
+      .single();
 
     // Check if there's a deposit to refund
     if (!booking.deposit_amount || booking.deposit_amount <= 0) {
@@ -125,9 +139,39 @@ serve(async (req) => {
           link: `/dashboard`,
         },
       });
-      logStep("Notification sent to renter");
+      logStep("In-app notification sent to renter");
     } catch (notifError) {
-      logStep("Failed to send notification", { error: notifError });
+      logStep("Failed to send in-app notification", { error: notifError });
+    }
+
+    // Send email notification to renter
+    if (renterProfile?.email) {
+      try {
+        const hostName = hostProfile?.business_name || hostProfile?.display_name || hostProfile?.full_name || 'Host';
+        const renterName = renterProfile.display_name || renterProfile.full_name || 'Renter';
+        
+        await supabaseClient.functions.invoke('send-deposit-notification', {
+          body: {
+            email: renterProfile.email,
+            renterName,
+            listingTitle: booking.listings?.title || 'Your Rental',
+            bookingId: booking_id,
+            startDate: booking.start_date,
+            endDate: booking.end_date,
+            originalDeposit: booking.deposit_amount,
+            refundAmount,
+            deductionAmount: booking.deposit_amount - refundAmount,
+            refundType: refund_type,
+            notes,
+            hostName,
+          },
+        });
+        logStep("Deposit notification email sent to renter");
+      } catch (emailError) {
+        logStep("Failed to send deposit notification email", { error: emailError });
+      }
+    } else {
+      logStep("No email found for renter, skipping email notification");
     }
 
     return new Response(JSON.stringify({ 
