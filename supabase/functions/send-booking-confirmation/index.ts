@@ -57,6 +57,9 @@ const handler = async (req: Request): Promise<Response> => {
     const siteUrl = Deno.env.get("SITE_URL") || "https://vendibookpreview.lovable.app";
     const logoUrl = `${siteUrl}/images/vendibook-email-logo.png`;
 
+    // Create short booking reference ID (first 8 chars uppercase)
+    const bookingRef = bookingId.substring(0, 8).toUpperCase();
+
     const formatDate = (dateStr: string) => {
       return new Date(dateStr).toLocaleDateString('en-US', { 
         weekday: 'long', 
@@ -121,6 +124,11 @@ const handler = async (req: Request): Promise<Response> => {
                 <h3 style="color: #FF5124; font-size: 18px; margin: 0 0 16px 0; border-bottom: 1px solid #FFD4C7; padding-bottom: 12px;">
                   📋 Booking Details
                 </h3>
+                
+                <div style="margin-bottom: 12px;">
+                  <p style="color: #6b7280; font-size: 12px; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.5px;">Booking Reference</p>
+                  <p style="color: #1f2937; font-size: 16px; margin: 0; font-weight: 600;">#${bookingRef}</p>
+                </div>
                 
                 <div style="margin-bottom: 12px;">
                   <p style="color: #6b7280; font-size: 12px; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.5px;">Listing</p>
@@ -200,7 +208,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "VendiBook <noreply@updates.vendibook.com>",
         to: [email],
-        subject: `Booking Confirmed: ${listingTitle} ✓`,
+        subject: `Booking #${bookingRef} Confirmed: ${listingTitle} ✓`,
         html,
       }),
     });
