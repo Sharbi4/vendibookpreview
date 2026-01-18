@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Lock, CalendarCheck, Clock, Calendar, Info } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, Lock, CalendarCheck, Clock, Calendar, Info, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, isBefore, startOfDay, addDays } from 'date-fns';
 import { useListingAvailability } from '@/hooks/useListingAvailability';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface AvailabilityStepProps {
   listingId: string;
@@ -18,6 +21,8 @@ interface AvailabilityStepProps {
   availableTo: string | null;
   onAvailableFromChange: (date: string | null) => void;
   onAvailableToChange: (date: string | null) => void;
+  bufferDays?: number;
+  onBufferDaysChange?: (days: number) => void;
 }
 
 export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
@@ -26,12 +31,16 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
   availableTo,
   onAvailableFromChange,
   onAvailableToChange,
+  bufferDays: propBufferDays,
+  onBufferDaysChange,
 }) => {
+  const { toast } = useToast();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [blockReason, setBlockReason] = useState('');
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [useAvailabilityWindow, setUseAvailabilityWindow] = useState(!!(availableFrom || availableTo));
+  const [bufferDays, setBufferDays] = useState<number>(propBufferDays || 0);
 
   const {
     bookings,
@@ -41,6 +50,59 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
     isDateBooked,
     isDatePending,
   } = useListingAvailability(listingId);
+
+  // Fetch existing buffer days from listing if not provided via props
+  useEffect(() => {
+    const fetchBufferDays = async () => {
+      if (propBufferDays !== undefined) return;
+      
+      const { data } = await supabase
+        .from('listings')
+        .select('rental_buffer_days')
+        .eq('id', listingId)
+        .single();
+      
+      if (data && (data as any).rental_buffer_days) {
+        setBufferDays((data as any).rental_buffer_days);
+      }
+    };
+    
+    if (listingId) {
+      fetchBufferDays();
+    }
+  }, [listingId, propBufferDays]);
+
+  // Save buffer days when changed
+  const handleBufferDaysChange = async (value: string) => {
+    const days = parseInt(value) || 0;
+    setBufferDays(days);
+    
+    if (onBufferDaysChange) {
+      onBufferDaysChange(days);
+    } else if (listingId) {
+      // Save directly to database if no callback provided
+      const { error } = await supabase
+        .from('listings')
+        .update({ rental_buffer_days: days } as any)
+        .eq('id', listingId);
+      
+      if (error) {
+        console.error('Error saving buffer days:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to save buffer time setting.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Buffer time updated',
+          description: days > 0 
+            ? `${days} day${days > 1 ? 's' : ''} will be blocked before and after each booking.`
+            : 'Buffer time has been disabled.',
+        });
+      }
+    }
+  };
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -187,6 +249,44 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
                 </PopoverContent>
               </Popover>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Buffer Time Setting */}
+      <div className="p-4 rounded-xl border border-border bg-muted/30">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Timer className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <Label className="text-base font-medium">Buffer time between rentals</Label>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Automatically block days before and after bookings for prep/cleanup
+              </p>
+            </div>
+          </div>
+          <Select value={bufferDays.toString()} onValueChange={handleBufferDaysChange}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="0">No buffer</SelectItem>
+              <SelectItem value="1">1 day</SelectItem>
+              <SelectItem value="2">2 days</SelectItem>
+              <SelectItem value="3">3 days</SelectItem>
+              <SelectItem value="5">5 days</SelectItem>
+              <SelectItem value="7">7 days</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {bufferDays > 0 && (
+          <div className="mt-3 pt-3 border-t border-border">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{bufferDays} day{bufferDays > 1 ? 's' : ''}</span> will be 
+              automatically blocked before and after each confirmed booking.
+            </p>
           </div>
         )}
       </div>

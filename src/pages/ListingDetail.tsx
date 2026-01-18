@@ -22,6 +22,7 @@ import PricingSection from '@/components/listing-detail/PricingSection';
 import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
 import CompactTrustSection from '@/components/trust/CompactTrustSection';
 import CancellationPolicyCard from '@/components/trust/CancellationPolicyCard';
+import AvailabilityCalendarDisplay from '@/components/listing-detail/AvailabilityCalendarDisplay';
 import { useListing } from '@/hooks/useListing';
 import { useListingAverageRating } from '@/hooks/useReviews';
 import { useTrackListingView } from '@/hooks/useListingAnalytics';
@@ -193,7 +194,16 @@ const ListingDetail = () => {
                 />
               </div>
 
-              {/* Section 4: Requirements - Modal Entry Point (Rentals only) */}
+              {/* Section 4: Availability Calendar (Rentals only) */}
+              {isRental && (
+                <AvailabilityCalendarDisplay
+                  listingId={listing.id}
+                  availableFrom={listing.available_from}
+                  availableTo={listing.available_to}
+                />
+              )}
+
+              {/* Section 5: Requirements - Modal Entry Point (Rentals only) */}
               {isRental && <RequirementsModal listingId={listing.id} />}
 
               {/* Section 5: Host Card */}
