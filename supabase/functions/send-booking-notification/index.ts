@@ -19,6 +19,43 @@ const logStep = (step: string, details?: any) => {
   console.log(`[BOOKING-NOTIFICATION] ${step}${detailsStr}`);
 };
 
+const LOGO_URL = 'https://vendibookpreview.lovable.app/images/vendibook-email-logo.png';
+
+const wrapEmailHtml = (content: string) => `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      @font-face {
+        font-family: 'Sofia Pro Soft';
+        src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
+        font-weight: 300;
+        font-style: normal;
+      }
+    </style>
+  </head>
+  <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+      <!-- Logo Header -->
+      <div style="text-align: center; margin-bottom: 24px;">
+        <a href="https://vendibookpreview.lovable.app" style="display: inline-block;">
+          <img src="${LOGO_URL}" alt="VendiBook" style="max-width: 180px; height: auto;" />
+        </a>
+      </div>
+      <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        ${content}
+        <p style="color: #888; font-size: 14px; margin-top: 30px;">
+          — The VendiBook Team<br>
+          <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a>
+        </p>
+      </div>
+    </div>
+  </body>
+  </html>
+`;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -111,53 +148,28 @@ serve(async (req) => {
         emails.push({
           to: host.email,
           subject: `New Booking Request #${bookingRef} - ${listingTitle}`,
-          html: `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <style>
-                @font-face {
-                  font-family: 'Sofia Pro Soft';
-                  src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-                  font-weight: 300;
-                  font-style: normal;
-                }
-              </style>
-            </head>
-            <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
-              <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-                <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                  <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">New Booking Request 📩</h1>
-                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                    You have received a new booking request for <strong>${listingTitle}</strong>.
-                  </p>
-                  <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
-                    <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
-                    <p style="margin: 0 0 10px 0;"><strong>Guest:</strong> ${shopper?.full_name || "A shopper"}</p>
-                    <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
-                    <p style="margin: 0 0 10px 0;"><strong>Total:</strong> $${booking.total_price}</p>
-                    ${booking.message ? `<p style="margin: 0;"><strong>Message:</strong> ${booking.message}</p>` : ""}
-                  </div>
-                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
-                    Please review and respond to this request as soon as possible.
-                  </p>
-                  <div style="text-align: center; margin: 24px 0;">
-                    <a href="https://vendibookpreview.lovable.app/dashboard" 
-                       style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                      View Booking Request
-                    </a>
-                  </div>
-                  <p style="color: #888; font-size: 14px; margin-top: 30px;">
-                    — The VendiBook Team<br>
-                    <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a>
-                  </p>
-                </div>
-              </div>
-            </body>
-            </html>
-          `,
+          html: wrapEmailHtml(`
+            <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">New Booking Request 📩</h1>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+              You have received a new booking request for <strong>${listingTitle}</strong>.
+            </p>
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
+              <p style="margin: 0 0 10px 0;"><strong>Guest:</strong> ${shopper?.full_name || "A shopper"}</p>
+              <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
+              <p style="margin: 0 0 10px 0;"><strong>Total:</strong> $${booking.total_price}</p>
+              ${booking.message ? `<p style="margin: 0;"><strong>Message:</strong> ${booking.message}</p>` : ""}
+            </div>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
+              Please review and respond to this request as soon as possible.
+            </p>
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="https://vendibookpreview.lovable.app/dashboard" 
+                 style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                View Booking Request
+              </a>
+            </div>
+          `),
         });
       }
       
@@ -175,54 +187,29 @@ serve(async (req) => {
         emails.push({
           to: shopper.email,
           subject: `Booking Request #${bookingRef} Submitted - ${listingTitle}`,
-          html: `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <style>
-                @font-face {
-                  font-family: 'Sofia Pro Soft';
-                  src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-                  font-weight: 300;
-                  font-style: normal;
-                }
-              </style>
-            </head>
-            <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
-              <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-                <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                  <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">Booking Request Submitted ✓</h1>
-                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
-                    Hi ${shopper.full_name || "there"},
-                  </p>
-                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                    Your booking request for <strong>${listingTitle}</strong> has been submitted successfully.
-                  </p>
-                  <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
-                    <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
-                    <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
-                    <p style="margin: 0;"><strong>Total:</strong> $${booking.total_price}</p>
-                  </div>
-                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
-                    The host will review your request and respond soon. We'll notify you once they respond.
-                  </p>
-                  <div style="text-align: center; margin: 24px 0;">
-                    <a href="https://vendibookpreview.lovable.app/dashboard" 
-                       style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                      View Booking Status
-                    </a>
-                  </div>
-                  <p style="color: #888; font-size: 14px; margin-top: 30px;">
-                    — The VendiBook Team<br>
-                    <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a>
-                  </p>
-                </div>
-              </div>
-            </body>
-            </html>
-          `,
+          html: wrapEmailHtml(`
+            <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">Booking Request Submitted ✓</h1>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
+              Hi ${shopper.full_name || "there"},
+            </p>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+              Your booking request for <strong>${listingTitle}</strong> has been submitted successfully.
+            </p>
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
+              <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
+              <p style="margin: 0;"><strong>Total:</strong> $${booking.total_price}</p>
+            </div>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
+              The host will review your request and respond soon. We'll notify you once they respond.
+            </p>
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="https://vendibookpreview.lovable.app/dashboard" 
+                 style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                View Booking Status
+              </a>
+            </div>
+          `),
         });
       }
     } else if (event_type === "approved") {
@@ -262,60 +249,35 @@ serve(async (req) => {
             emails.push({
               to: shopper.email,
               subject: `🎉 Booking #${bookingRef} Approved - ${listingTitle}`,
-              html: `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                  <meta charset="utf-8">
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                  <style>
-                    @font-face {
-                      font-family: 'Sofia Pro Soft';
-                      src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-                      font-weight: 300;
-                      font-style: normal;
-                    }
-                  </style>
-                </head>
-                <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
-                  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-                    <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                      <h1 style="color: #16a34a; font-size: 24px; margin: 0 0 20px 0;">Booking Approved! 🎉</h1>
-                      <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
-                        Great news, ${shopper.full_name || "there"}!
-                      </p>
-                      <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                        Your booking for <strong>${listingTitle}</strong> has been approved by the host.
-                      </p>
-                      <div style="background: #dcfce7; border-radius: 12px; padding: 20px; margin: 20px 0;">
-                        <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
-                        <p style="margin: 0 0 10px 0;"><strong>Confirmed Dates:</strong> ${startDate} - ${endDate}</p>
-                        <p style="margin: 0;"><strong>Total:</strong> $${booking.total_price}</p>
-                      </div>
-                      ${host_response ? `
-                        <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
-                          <p style="margin: 0 0 10px 0; font-weight: bold;">Message from host:</p>
-                          <p style="margin: 0; color: #4a4a4a;">${host_response}</p>
-                        </div>
-                      ` : ""}
-                      <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
-                        You can message the host through your dashboard if you have any questions.
-                      </p>
-                      <div style="text-align: center; margin: 24px 0;">
-                        <a href="https://vendibookpreview.lovable.app/dashboard" 
-                           style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                          View Booking Details
-                        </a>
-                      </div>
-                      <p style="color: #888; font-size: 14px; margin-top: 30px;">
-                        — The VendiBook Team<br>
-                        <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a>
-                      </p>
-                    </div>
+              html: wrapEmailHtml(`
+                <h1 style="color: #16a34a; font-size: 24px; margin: 0 0 20px 0;">Booking Approved! 🎉</h1>
+                <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
+                  Great news, ${shopper.full_name || "there"}!
+                </p>
+                <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                  Your booking for <strong>${listingTitle}</strong> has been approved by the host.
+                </p>
+                <div style="background: #dcfce7; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                  <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
+                  <p style="margin: 0 0 10px 0;"><strong>Confirmed Dates:</strong> ${startDate} - ${endDate}</p>
+                  <p style="margin: 0;"><strong>Total:</strong> $${booking.total_price}</p>
+                </div>
+                ${host_response ? `
+                  <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                    <p style="margin: 0 0 10px 0; font-weight: bold;">Message from host:</p>
+                    <p style="margin: 0; color: #4a4a4a;">${host_response}</p>
                   </div>
-                </body>
-                </html>
-              `,
+                ` : ""}
+                <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
+                  You can message the host through your dashboard if you have any questions.
+                </p>
+                <div style="text-align: center; margin: 24px 0;">
+                  <a href="https://vendibookpreview.lovable.app/dashboard" 
+                     style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                    View Booking Details
+                  </a>
+                </div>
+              `),
             });
           }
         } catch (confirmError: any) {
@@ -337,58 +299,33 @@ serve(async (req) => {
         emails.push({
           to: shopper.email,
           subject: `Booking #${bookingRef} Update - ${listingTitle}`,
-          html: `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <style>
-                @font-face {
-                  font-family: 'Sofia Pro Soft';
-                  src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-                  font-weight: 300;
-                  font-style: normal;
-                }
-              </style>
-            </head>
-            <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
-              <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-                <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                  <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">Booking Not Available</h1>
-                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
-                    Hi ${shopper.full_name || "there"},
-                  </p>
-                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 12px 0;">
-                    <strong>Booking Reference:</strong> #${bookingRef}
-                  </p>
-                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                    Unfortunately, the host was unable to approve your booking request for <strong>${listingTitle}</strong> for ${startDate} - ${endDate}.
-                  </p>
-                  ${host_response ? `
-                    <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
-                      <p style="margin: 0 0 10px 0; font-weight: bold;">Message from host:</p>
-                      <p style="margin: 0; color: #4a4a4a;">${host_response}</p>
-                    </div>
-                  ` : ""}
-                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
-                    Don't worry! There are plenty of other great options available. Browse our marketplace to find your perfect match.
-                  </p>
-                  <div style="text-align: center; margin: 24px 0;">
-                    <a href="https://vendibookpreview.lovable.app/search" 
-                       style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                      Browse Listings
-                    </a>
-                  </div>
-                  <p style="color: #888; font-size: 14px; margin-top: 30px;">
-                    — The VendiBook Team<br>
-                    <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a>
-                  </p>
-                </div>
+          html: wrapEmailHtml(`
+            <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">Booking Not Available</h1>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
+              Hi ${shopper.full_name || "there"},
+            </p>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 12px 0;">
+              <strong>Booking Reference:</strong> #${bookingRef}
+            </p>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+              Unfortunately, the host was unable to approve your booking request for <strong>${listingTitle}</strong> for ${startDate} - ${endDate}.
+            </p>
+            ${host_response ? `
+              <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                <p style="margin: 0 0 10px 0; font-weight: bold;">Message from host:</p>
+                <p style="margin: 0; color: #4a4a4a;">${host_response}</p>
               </div>
-            </body>
-            </html>
-          `,
+            ` : ""}
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
+              Don't worry! There are plenty of other great options available. Browse our marketplace to find your perfect match.
+            </p>
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="https://vendibookpreview.lovable.app/search" 
+                 style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                Browse Listings
+              </a>
+            </div>
+          `),
         });
       }
       
