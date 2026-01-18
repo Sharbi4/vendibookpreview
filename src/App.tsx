@@ -61,6 +61,7 @@ const VendiAISuite = lazy(() => import("./pages/VendiAISuite"));
 const Browse = lazy(() => import("./pages/Browse"));
 const ListingPublished = lazy(() => import("./pages/ListingPublished"));
 const Cities = lazy(() => import("./pages/Cities"));
+const SaleCheckout = lazy(() => import("./pages/SaleCheckout"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // City landing pages - direct imports since they're lightweight wrappers
@@ -159,6 +160,7 @@ const AnimatedRoutes = () => {
           <Route path="/list" element={<PageTransition><ListPage /></PageTransition>} />
           <Route path="/create-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />
           <Route path="/listing-published/:listingId" element={<PageTransition><ListingPublished /></PageTransition>} />
+          <Route path="/checkout/:listingId" element={<PageTransition><SaleCheckout /></PageTransition>} />
           
           <Route path="/order-tracking/:transactionId" element={<PageTransition><OrderTracking /></PageTransition>} />
           <Route path="/host" element={<PageTransition><HostOnboarding /></PageTransition>} />
