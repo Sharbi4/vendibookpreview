@@ -33,6 +33,8 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
   const [rangeEnd, setRangeEnd] = useState<Date | null>(null);
   const [blockReason, setBlockReason] = useState('');
   const [showBlockDialog, setShowBlockDialog] = useState(false);
+  const [showBlockUntilDialog, setShowBlockUntilDialog] = useState(false);
+  const [blockUntilDate, setBlockUntilDate] = useState<Date | undefined>(undefined);
   const [isRangeMode, setIsRangeMode] = useState(false);
   const [useAvailabilityWindow, setUseAvailabilityWindow] = useState(!!(availableFrom || availableTo));
 
@@ -256,11 +258,43 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
             />
           </div>
         </div>
-        <p className="text-sm text-muted-foreground mb-4">
+        <p className="text-sm text-muted-foreground mb-3">
           {isRangeMode 
             ? 'Click a start date, then an end date to block a range.' 
             : 'Click dates to block/unblock them.'}
         </p>
+
+        {/* Quick Actions */}
+        <div className="mb-4">
+          <Popover open={showBlockUntilDialog} onOpenChange={setShowBlockUntilDialog}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Calendar className="h-4 w-4" />
+                Block until...
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <div className="p-3 border-b border-border">
+                <p className="text-sm font-medium">Block all dates from today until:</p>
+              </div>
+              <CalendarComponent
+                mode="single"
+                selected={blockUntilDate}
+                onSelect={(date) => {
+                  if (date) {
+                    setBlockUntilDate(date);
+                    blockDateRange(startOfDay(new Date()), date, 'Blocked until ' + format(date, 'MMM d'));
+                    setShowBlockUntilDialog(false);
+                    setBlockUntilDate(undefined);
+                  }
+                }}
+                disabled={(date) => isBefore(date, startOfDay(new Date()))}
+                initialFocus
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
 
         {/* Range Selection Indicator */}
         {isRangeMode && rangeStart && !rangeEnd && (
