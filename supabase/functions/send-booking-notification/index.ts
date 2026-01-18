@@ -99,6 +99,9 @@ serve(async (req) => {
       day: "numeric",
     });
 
+    // Create short booking reference ID (first 8 chars uppercase)
+    const bookingRef = booking.id.substring(0, 8).toUpperCase();
+
     const emails: { to: string; subject: string; html: string }[] = [];
     const inAppNotifications: { user_id: string; type: string; title: string; message: string; link: string }[] = [];
 
@@ -107,7 +110,7 @@ serve(async (req) => {
       if (host?.email) {
         emails.push({
           to: host.email,
-          subject: `New Booking Request for ${listingTitle}`,
+          subject: `New Booking Request #${bookingRef} - ${listingTitle}`,
           html: `
             <!DOCTYPE html>
             <html>
@@ -131,6 +134,7 @@ serve(async (req) => {
                     You have received a new booking request for <strong>${listingTitle}</strong>.
                   </p>
                   <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                    <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
                     <p style="margin: 0 0 10px 0;"><strong>Guest:</strong> ${shopper?.full_name || "A shopper"}</p>
                     <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
                     <p style="margin: 0 0 10px 0;"><strong>Total:</strong> $${booking.total_price}</p>
@@ -170,7 +174,7 @@ serve(async (req) => {
       if (shopper?.email) {
         emails.push({
           to: shopper.email,
-          subject: `Booking Request Submitted - ${listingTitle}`,
+          subject: `Booking Request #${bookingRef} Submitted - ${listingTitle}`,
           html: `
             <!DOCTYPE html>
             <html>
@@ -197,6 +201,7 @@ serve(async (req) => {
                     Your booking request for <strong>${listingTitle}</strong> has been submitted successfully.
                   </p>
                   <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                    <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
                     <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
                     <p style="margin: 0;"><strong>Total:</strong> $${booking.total_price}</p>
                   </div>
@@ -256,7 +261,7 @@ serve(async (req) => {
             // Fallback to basic email
             emails.push({
               to: shopper.email,
-              subject: `🎉 Booking Approved - ${listingTitle}`,
+              subject: `🎉 Booking #${bookingRef} Approved - ${listingTitle}`,
               html: `
                 <!DOCTYPE html>
                 <html>
@@ -283,6 +288,7 @@ serve(async (req) => {
                         Your booking for <strong>${listingTitle}</strong> has been approved by the host.
                       </p>
                       <div style="background: #dcfce7; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                        <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
                         <p style="margin: 0 0 10px 0;"><strong>Confirmed Dates:</strong> ${startDate} - ${endDate}</p>
                         <p style="margin: 0;"><strong>Total:</strong> $${booking.total_price}</p>
                       </div>
@@ -330,7 +336,7 @@ serve(async (req) => {
       if (shopper?.email) {
         emails.push({
           to: shopper.email,
-          subject: `Booking Update - ${listingTitle}`,
+          subject: `Booking #${bookingRef} Update - ${listingTitle}`,
           html: `
             <!DOCTYPE html>
             <html>
@@ -352,6 +358,9 @@ serve(async (req) => {
                   <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">Booking Not Available</h1>
                   <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
                     Hi ${shopper.full_name || "there"},
+                  </p>
+                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 12px 0;">
+                    <strong>Booking Reference:</strong> #${bookingRef}
                   </p>
                   <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                     Unfortunately, the host was unable to approve your booking request for <strong>${listingTitle}</strong> for ${startDate} - ${endDate}.
