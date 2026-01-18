@@ -233,6 +233,7 @@ const BookingWizard = ({
         if (!checkoutData?.url) throw new Error('Failed to create checkout session');
 
         trackFormSubmitConversion({ form_type: 'instant_book', listing_id: listingId });
+        clearDraft(); // Clear saved draft on successful submission
         window.location.href = checkoutData.url;
         return;
       }
@@ -244,6 +245,7 @@ const BookingWizard = ({
 
       trackFormSubmitConversion({ form_type: 'booking_request', listing_id: listingId });
       trackRequestSubmitted(listingId, instantBook);
+      clearDraft(); // Clear saved draft on successful submission
       setBookingComplete(true);
     } catch (error) {
       console.error('Error submitting booking:', error);
