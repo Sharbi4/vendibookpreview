@@ -439,6 +439,57 @@ export const StepPricing: React.FC<StepPricingProps> = ({
               )}
             </div>
           </div>
+
+          {/* Security Deposit */}
+          <div className="pt-6 border-t">
+            <div className="bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-xl p-4 border border-blue-500/20">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-blue-500/10 rounded-lg">
+                  <Wallet className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-medium text-foreground">Security Deposit</h4>
+                    <InfoTooltip 
+                      content="A refundable security deposit is charged at booking and returned after the rental ends without damage or delays." 
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Protect your equipment with a refundable deposit. Returned in full if no damage or late returns.
+                  </p>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="deposit_amount" className="text-sm">Deposit Amount (Optional)</Label>
+                    <div className="relative max-w-xs">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                      <Input
+                        id="deposit_amount"
+                        type="number"
+                        min="0"
+                        step="50"
+                        value={formData.deposit_amount}
+                        onChange={(e) => updateField('deposit_amount', e.target.value)}
+                        placeholder="0.00"
+                        className="pl-7"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Leave blank for no deposit. Typical deposits are $200-$1,000 depending on equipment value.
+                    </p>
+                  </div>
+
+                  {parseFloat(formData.deposit_amount) > 0 && (
+                    <div className="mt-4 p-3 bg-blue-500/5 rounded-lg border border-blue-500/10">
+                      <p className="text-xs text-muted-foreground">
+                        <strong className="text-blue-700 dark:text-blue-400">How it works:</strong> The ${parseFloat(formData.deposit_amount).toLocaleString()} deposit is charged when the booking is confirmed. 
+                        After the rental ends, you can release the deposit in full or deduct for any damage/late fees.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </>
       ) : (
         <>

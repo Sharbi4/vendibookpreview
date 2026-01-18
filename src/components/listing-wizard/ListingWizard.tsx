@@ -381,6 +381,8 @@ export const ListingWizard: React.FC = () => {
         longitude,
         // Instant Book (for rentals)
         instant_book: formData.mode === 'rent' ? formData.instant_book : false,
+        // Security deposit for rentals
+        deposit_amount: formData.mode === 'rent' && formData.deposit_amount ? parseFloat(formData.deposit_amount) : null,
         // Vendibook freight fields (for sales)
         vendibook_freight_enabled: formData.mode === 'sale' ? formData.vendibook_freight_enabled : false,
         freight_payer: formData.mode === 'sale' && formData.vendibook_freight_enabled ? formData.freight_payer : 'buyer',

@@ -39,6 +39,7 @@ export interface BookingWizardProps {
   deliveryRadiusMiles?: number | null;
   instantBook?: boolean;
   listingTitle: string;
+  depositAmount?: number | null;
 }
 
 export type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
@@ -57,6 +58,7 @@ const BookingWizard = ({
   deliveryRadiusMiles,
   instantBook = false,
   listingTitle,
+  depositAmount = null,
 }: BookingWizardProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -201,6 +203,7 @@ const BookingWizard = ({
         total_price: fees.customerTotal,
         fulfillment_selected: fulfillmentSelected,
         is_instant_book: instantBook,
+        deposit_amount: depositAmount,
       };
 
       if (fulfillmentSelected === 'delivery') {
@@ -226,6 +229,7 @@ const BookingWizard = ({
             mode: 'rent',
             amount: fees.subtotal,
             delivery_fee: currentDeliveryFee,
+            deposit_amount: depositAmount,
           },
         });
 
@@ -358,6 +362,7 @@ const BookingWizard = ({
                 priceDaily={priceDaily!}
                 basePrice={basePrice}
                 deliveryFee={fulfillmentSelected === 'delivery' ? currentDeliveryFee : 0}
+                depositAmount={depositAmount}
                 fees={fees}
                 fulfillmentSelected={fulfillmentSelected}
                 instantBook={instantBook}

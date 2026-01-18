@@ -246,6 +246,7 @@ const ListingDetail = () => {
                   deliveryRadiusMiles={listing.delivery_radius_miles}
                   instantBook={listing.instant_book || false}
                   listingTitle={listing.title}
+                  depositAmount={(listing as any).deposit_amount || null}
                 />
               ) : (
                 <InquiryForm
