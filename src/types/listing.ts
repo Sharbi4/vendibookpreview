@@ -33,6 +33,7 @@ export interface Listing {
   available_to: string | null;
   cover_image_url: string | null;
   image_urls: string[];
+  video_urls?: string[];
   created_at: string;
   updated_at: string;
   published_at: string | null;
@@ -429,6 +430,8 @@ export interface ListingFormData {
   available_to: string;
   images: File[];
   existingImages: string[];
+  videos: File[];
+  existingVideos: string[];
   // Instant Book (for rentals)
   instant_book: boolean;
   // Security deposit for rentals

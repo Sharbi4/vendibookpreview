@@ -677,6 +677,7 @@ export type Database = {
           title: string
           updated_at: string
           vendibook_freight_enabled: boolean | null
+          video_urls: string[] | null
           view_count: number | null
           weight_lbs: number | null
           width_inches: number | null
@@ -724,6 +725,7 @@ export type Database = {
           title: string
           updated_at?: string
           vendibook_freight_enabled?: boolean | null
+          video_urls?: string[] | null
           view_count?: number | null
           weight_lbs?: number | null
           width_inches?: number | null
@@ -771,6 +773,7 @@ export type Database = {
           title?: string
           updated_at?: string
           vendibook_freight_enabled?: boolean | null
+          video_urls?: string[] | null
           view_count?: number | null
           weight_lbs?: number | null
           width_inches?: number | null
