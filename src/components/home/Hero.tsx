@@ -63,11 +63,12 @@ const Hero = () => {
           
           {/* Tagline */}
           <p 
-            className="text-base md:text-lg text-white/90 mt-3 max-w-xl mx-auto animate-fade-in flex items-center justify-center gap-2"
+            className="text-base md:text-lg text-white/90 mt-3 max-w-xl mx-auto animate-fade-in flex items-center justify-center gap-2 flex-wrap"
             style={{ animationDelay: '0.2s', animationFillMode: 'backwards' }}
           >
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-br from-primary via-amber-400 to-yellow-300 shadow-lg">
-              <Sparkles className="w-3 h-3 text-white" />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-primary via-amber-400 to-yellow-300 shadow-lg text-xs font-bold text-white uppercase tracking-wide">
+              <Sparkles className="w-3 h-3" />
+              New
             </span>
             Now, accept payments in person or through our secure platform for protection.
           </p>
