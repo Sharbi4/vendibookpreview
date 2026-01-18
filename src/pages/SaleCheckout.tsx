@@ -15,7 +15,7 @@ import Footer from '@/components/layout/Footer';
 import { 
   ShieldCheck, Loader2, MapPin, Truck, Calculator, AlertCircle, 
   CreditCard, Banknote, Check, ArrowLeft, Package, Clock, 
-  DollarSign, Handshake, CheckCircle2, AlertTriangle
+  DollarSign, Handshake, CheckCircle2, AlertTriangle, Pencil
 } from 'lucide-react';
 import { CheckoutOverlay } from '@/components/checkout';
 import { FreightInfoCard } from '@/components/freight';
@@ -969,7 +969,17 @@ const SaleCheckout = () => {
 
                   {/* Delivery Summary */}
                   <div className="border border-border rounded-xl p-4 mb-6">
-                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Delivery Method</h3>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-medium text-muted-foreground">Delivery Method</h3>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep('delivery')}
+                        className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                      >
+                        <Pencil className="h-3 w-3" />
+                        Edit
+                      </button>
+                    </div>
                     <div className="flex items-center gap-3">
                       {fulfillmentSelected === 'pickup' && <MapPin className="h-5 w-5 text-primary" />}
                       {fulfillmentSelected === 'delivery' && <Truck className="h-5 w-5 text-primary" />}
@@ -992,7 +1002,17 @@ const SaleCheckout = () => {
 
                   {/* Buyer Info Summary */}
                   <div className="border border-border rounded-xl p-4 mb-6">
-                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Your Information</h3>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-medium text-muted-foreground">Your Information</h3>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep('information')}
+                        className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                      >
+                        <Pencil className="h-3 w-3" />
+                        Edit
+                      </button>
+                    </div>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Name</span>
