@@ -16,7 +16,8 @@ import {
   Shield,
   ShieldCheck,
   Home,
-  ShoppingBag
+  ShoppingBag,
+  Heart
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -62,6 +63,12 @@ const Dashboard = () => {
           </div>
           
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" asChild className="h-8 text-xs">
+              <Link to="/favorites">
+                <Heart className="h-3.5 w-3.5 mr-1.5" />
+                Favorites
+              </Link>
+            </Button>
             <Button variant="outline" size="sm" asChild className="h-8 text-xs">
               <Link to="/account">
                 <User className="h-3.5 w-3.5 mr-1.5" />
