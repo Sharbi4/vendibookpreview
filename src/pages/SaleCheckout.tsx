@@ -1150,33 +1150,67 @@ const SaleCheckout = () => {
                     </div>
                   </div>
 
-                  {/* Price Summary */}
-                  <div className="border border-border rounded-xl p-4 mb-6 bg-gradient-to-br from-muted/30 to-muted/50">
-                    <h3 className="text-sm font-medium text-foreground mb-3">Order Total</h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <div className="flex flex-col">
-                          <span className="text-foreground font-medium">{listing?.title}</span>
-                          <span className="text-xs text-muted-foreground">Item #{listing?.id?.slice(0, 8).toUpperCase()}</span>
+                  {/* Order Summary - Premium */}
+                  <div className="border border-border rounded-2xl overflow-hidden mb-6 bg-gradient-to-br from-card via-card to-muted/30 shadow-lg">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-5 py-4 border-b border-border/50">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-base font-semibold text-foreground">Order Summary</h3>
+                          <p className="text-xs text-muted-foreground mt-0.5">Review your purchase details</p>
                         </div>
-                        <div className="flex flex-col items-end">
-                          <span className="text-xs text-muted-foreground">For Sale Price</span>
-                          <span className="text-foreground font-medium">${priceSale.toLocaleString()}</span>
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
+                          <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                          <span className="text-xs font-medium text-primary">Protected</span>
                         </div>
                       </div>
+                    </div>
+
+                    <div className="p-5 space-y-4">
+                      {/* Item Details */}
+                      <div className="flex gap-4 p-3 rounded-xl bg-muted/40 border border-border/50">
+                        {listing?.cover_image_url && (
+                          <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-border/50">
+                            <img 
+                              src={listing.cover_image_url} 
+                              alt={listing.title} 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-foreground truncate">{listing?.title}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs px-2 py-0.5 rounded-md bg-muted border border-border text-muted-foreground font-mono">
+                              #{listing?.id?.slice(0, 8).toUpperCase()}
+                            </span>
+                            <span className="text-xs text-muted-foreground capitalize">{listing?.category?.replace('_', ' ')}</span>
+                          </div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <span className="text-xs text-muted-foreground block">For Sale Price</span>
+                          <span className="text-lg font-bold text-foreground">${priceSale.toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      {/* Freight Breakdown */}
                       {fulfillmentSelected === 'delivery' && deliveryFee > 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Delivery fee</span>
-                          <span className="text-foreground">+${deliveryFee.toLocaleString()}</span>
+                        <div className="flex justify-between text-sm py-2 border-b border-border/30">
+                          <span className="text-muted-foreground flex items-center gap-2">
+                            <Truck className="h-4 w-4" /> Delivery fee
+                          </span>
+                          <span className="text-foreground font-medium">+${deliveryFee.toLocaleString()}</span>
                         </div>
                       )}
+
                       {fulfillmentSelected === 'vendibook_freight' && hasValidEstimate && !isFreightSellerPaid && (
-                        <>
-                          <div className="pt-2 border-t border-border/50">
-                            <div className="text-xs text-muted-foreground mb-2">Freight breakdown ($4.50/mi)</div>
+                        <div className="space-y-2 py-2 border-t border-border/30">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                            <Truck className="h-3.5 w-3.5" />
+                            <span>VendiBook Freight · $4.50/mile</span>
                           </div>
                           <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Distance ({estimate?.distance_miles?.toFixed(0)} miles)</span>
+                            <span className="text-muted-foreground">Distance ({estimate?.distance_miles?.toFixed(0)} mi)</span>
                             <span className="text-foreground">+${estimate?.base_cost?.toLocaleString()}</span>
                           </div>
                           <div className="flex justify-between text-sm">
@@ -1187,21 +1221,31 @@ const SaleCheckout = () => {
                             <span className="text-muted-foreground">Handling fee</span>
                             <span className="text-foreground">+${estimate?.handling_fee?.toLocaleString()}</span>
                           </div>
-                          <div className="flex justify-between text-sm">
+                          <div className="flex justify-between text-sm pb-2 border-b border-border/30">
                             <span className="text-muted-foreground">Tax ({((estimate?.tax_rate ?? 0) * 100).toFixed(2)}%)</span>
                             <span className="text-foreground">+${estimate?.tax_amount?.toLocaleString()}</span>
                           </div>
-                        </>
-                      )}
-                      {fulfillmentSelected === 'vendibook_freight' && isFreightSellerPaid && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Freight shipping</span>
-                          <span className="text-emerald-600 font-medium">FREE (Seller pays)</span>
                         </div>
                       )}
-                      <div className="flex justify-between font-bold text-xl pt-3 mt-2 border-t-2 border-primary/20">
-                        <span>Grand Total</span>
-                        <span className="text-primary">${totalPrice.toLocaleString()}</span>
+
+                      {fulfillmentSelected === 'vendibook_freight' && isFreightSellerPaid && (
+                        <div className="flex justify-between text-sm py-2 border-t border-border/30">
+                          <span className="text-muted-foreground flex items-center gap-2">
+                            <Truck className="h-4 w-4" /> Freight shipping
+                          </span>
+                          <span className="text-emerald-600 font-semibold flex items-center gap-1">
+                            <CheckCircle2 className="h-4 w-4" /> FREE
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Grand Total */}
+                      <div className="flex justify-between items-center pt-4 mt-2 border-t-2 border-primary/30">
+                        <div>
+                          <span className="text-lg font-bold text-foreground">Grand Total</span>
+                          <p className="text-xs text-muted-foreground">All fees included</p>
+                        </div>
+                        <span className="text-2xl font-bold text-primary">${totalPrice.toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
