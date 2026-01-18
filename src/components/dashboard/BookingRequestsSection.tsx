@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Loader2, Inbox, FileText, Filter, Zap } from 'lucide-react';
+import { Calendar, Loader2, Inbox, FileText, Filter, Zap, History, CheckCircle2, XCircle, Shield, Undo2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import {
@@ -81,6 +81,7 @@ const BookingRequestsSection = () => {
   const pendingBookings = bookings.filter(b => b.status === 'pending');
   const approvedBookings = bookings.filter(b => b.status === 'approved');
   const declinedBookings = bookings.filter(b => b.status === 'declined');
+  const completedBookings = bookings.filter(b => b.status === 'completed' || b.status === 'cancelled');
   const instantBookCount = bookings.filter(b => b.is_instant_book).length;
 
   // Calculate doc stats from cache
@@ -245,7 +246,7 @@ const BookingRequestsSection = () => {
 
       {/* Tabs */}
       <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="pending" className="relative">
             Pending
             {stats.pending > 0 && (
@@ -255,6 +256,15 @@ const BookingRequestsSection = () => {
             )}
           </TabsTrigger>
           <TabsTrigger value="approved">Approved</TabsTrigger>
+          <TabsTrigger value="completed" className="relative">
+            <History className="h-3.5 w-3.5 mr-1" />
+            History
+            {completedBookings.length > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-muted text-muted-foreground rounded-full">
+                {completedBookings.length}
+              </span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="declined">Declined</TabsTrigger>
         </TabsList>
 
@@ -274,6 +284,18 @@ const BookingRequestsSection = () => {
           )}
         </TabsContent>
 
+        <TabsContent value="completed" className="mt-4">
+          {completedBookings.length === 0 ? (
+            <EmptyState message="No completed rentals yet" icon={<History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />} />
+          ) : (
+            <div className="space-y-4">
+              {completedBookings.map(booking => (
+                <CompletedBookingCard key={booking.id} booking={booking} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
         <TabsContent value="declined" className="mt-4">
           {declinedBookings.length === 0 ? (
             <EmptyState message="No declined requests" />
@@ -286,11 +308,137 @@ const BookingRequestsSection = () => {
   );
 };
 
-const EmptyState = ({ message }: { message: string }) => (
+const EmptyState = ({ message, icon }: { message: string; icon?: React.ReactNode }) => (
   <div className="bg-muted/50 rounded-xl p-12 text-center">
-    <Inbox className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+    {icon || <Inbox className="h-12 w-12 text-muted-foreground mx-auto mb-4" />}
     <p className="text-muted-foreground">{message}</p>
   </div>
 );
+
+// Completed booking card with deposit history
+const CompletedBookingCard = ({ booking }: { booking: any }) => {
+  const hasDeposit = (booking.deposit_amount ?? 0) > 0;
+  const depositStatus = booking.deposit_status || 'pending';
+  const depositAmount = booking.deposit_amount || 0;
+  const isCompleted = booking.status === 'completed';
+  const isCancelled = booking.status === 'cancelled';
+
+  const shopperInitials = booking.shopper?.full_name
+    ? booking.shopper.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+    : 'U';
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  return (
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div className="flex flex-col sm:flex-row">
+        {/* Listing Image */}
+        <div className="sm:w-32 h-24 sm:h-auto flex-shrink-0 relative">
+          <img
+            src={booking.listing?.cover_image_url || '/placeholder.svg'}
+            alt={booking.listing?.title || 'Listing'}
+            className="w-full h-full object-cover"
+          />
+          <div className={`absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-medium ${
+            isCompleted ? 'bg-primary/90 text-primary-foreground' : 'bg-muted text-muted-foreground'
+          }`}>
+            {isCompleted ? 'Completed' : 'Cancelled'}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 p-4">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div>
+              <h4 className="font-medium text-sm text-foreground line-clamp-1">
+                {booking.listing?.title || 'Listing'}
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                {formatDate(booking.start_date)} → {formatDate(booking.end_date)}
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {isCompleted ? (
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+              ) : (
+                <XCircle className="h-4 w-4 text-muted-foreground" />
+              )}
+            </div>
+          </div>
+
+          {/* Renter Info */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-medium text-primary">
+              {shopperInitials}
+            </div>
+            <span className="text-xs text-muted-foreground">{booking.shopper?.full_name || 'Guest'}</span>
+            <span className="ml-auto text-sm font-semibold">${booking.total_price}</span>
+          </div>
+
+          {/* Deposit History Section */}
+          {hasDeposit && (
+            <div className={`rounded-lg p-3 border ${
+              depositStatus === 'refunded' ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800' :
+              depositStatus === 'forfeited' ? 'bg-destructive/5 border-destructive/20' :
+              depositStatus === 'charged' ? 'bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800' :
+              'bg-muted/30 border-border'
+            }`}>
+              <div className="flex items-start gap-2">
+                <Shield className={`h-4 w-4 mt-0.5 flex-shrink-0 ${
+                  depositStatus === 'refunded' ? 'text-emerald-600' :
+                  depositStatus === 'forfeited' ? 'text-destructive' :
+                  depositStatus === 'charged' ? 'text-blue-600' :
+                  'text-muted-foreground'
+                }`} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium">Security Deposit</span>
+                    <span className="text-xs font-semibold">${depositAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center gap-1 mt-1">
+                    {depositStatus === 'refunded' && (
+                      <>
+                        <Undo2 className="h-3 w-3 text-emerald-600" />
+                        <span className="text-[10px] text-emerald-600 font-medium">Fully Refunded</span>
+                      </>
+                    )}
+                    {depositStatus === 'forfeited' && (
+                      <>
+                        <XCircle className="h-3 w-3 text-destructive" />
+                        <span className="text-[10px] text-destructive font-medium">Forfeited</span>
+                      </>
+                    )}
+                    {depositStatus === 'charged' && (
+                      <span className="text-[10px] text-blue-600 font-medium">Held • Awaiting Release</span>
+                    )}
+                    {depositStatus === 'pending' && (
+                      <span className="text-[10px] text-muted-foreground">Never collected</span>
+                    )}
+                  </div>
+                  {booking.deposit_refund_notes && (
+                    <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">
+                      Note: {booking.deposit_refund_notes}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* No deposit badge */}
+          {!hasDeposit && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/30 rounded px-2 py-1 w-fit">
+              <Shield className="h-3 w-3" />
+              <span>No deposit required</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default BookingRequestsSection;
