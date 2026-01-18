@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Lazy load below-the-fold components for faster initial load
-const FeaturedListings = lazy(() => import('@/components/home/FeaturedListings'));
+const ListingsSections = lazy(() => import('@/components/home/ListingsSections'));
 const SupplySection = lazy(() => import('@/components/home/SupplySection'));
 const ReviewsSection = lazy(() => import('@/components/home/ReviewsSection'));
 const CategoryCarousels = lazy(() => import('@/components/home/CategoryCarousels'));
@@ -48,8 +48,8 @@ const Index = () => {
         <Hero />
         
         <Suspense fallback={<SectionSkeleton />}>
-          {/* 2. Listings Grid (Demand) */}
-          <FeaturedListings />
+          {/* 2. For Sale & For Rent Sections */}
+          <ListingsSections />
           
           {/* 3. Supply Section (Owners/Hosts + AI tools callout) */}
           <SupplySection />
