@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { 
@@ -14,11 +14,14 @@ import {
   Star,
   ShieldCheck,
   Settings,
+  Search,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 import {
   Popover,
   PopoverContent,
@@ -111,6 +114,7 @@ const NotificationItem = ({
 
 const NotificationCenter = () => {
   const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
   const { user } = useAuth();
   const { 
@@ -123,8 +127,20 @@ const NotificationCenter = () => {
     clearAll,
   } = useNotifications(user?.id);
 
+  // Filter notifications by search query (booking ref, title, or message)
+  const filteredNotifications = useMemo(() => {
+    if (!searchQuery.trim()) return notifications;
+    
+    const query = searchQuery.toLowerCase().trim();
+    return notifications.filter(notification => 
+      notification.title.toLowerCase().includes(query) ||
+      notification.message.toLowerCase().includes(query)
+    );
+  }, [notifications, searchQuery]);
+
   const handleNavigate = (link: string | null) => {
     setOpen(false);
+    setSearchQuery('');
     if (link) {
       navigate(link);
     }
@@ -175,7 +191,32 @@ const NotificationCenter = () => {
           </div>
         </div>
         
-        <ScrollArea className="max-h-[400px]">
+        {/* Search input */}
+        {notifications.length > 0 && (
+          <div className="px-3 py-2 border-b">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Search by booking ref (e.g. #A1B2C3D4)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-8 pl-8 pr-8 text-sm"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0.5 top-1/2 -translate-y-1/2 h-7 w-7"
+                  onClick={() => setSearchQuery('')}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+        
+        <ScrollArea className="max-h-[350px]">
           {isLoading ? (
             <div className="py-8 text-center text-muted-foreground text-sm">
               Loading...
@@ -185,9 +226,15 @@ const NotificationCenter = () => {
               <Bell className="h-10 w-10 text-muted-foreground/50 mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">No notifications yet</p>
             </div>
+          ) : filteredNotifications.length === 0 ? (
+            <div className="py-8 text-center">
+              <Search className="h-10 w-10 text-muted-foreground/50 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No matching notifications</p>
+              <p className="text-xs text-muted-foreground mt-1">Try a different search term</p>
+            </div>
           ) : (
             <div className="divide-y">
-              {notifications.map((notification) => (
+              {filteredNotifications.map((notification) => (
                 <NotificationItem
                   key={notification.id}
                   notification={notification}
