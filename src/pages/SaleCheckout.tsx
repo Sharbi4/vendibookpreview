@@ -27,7 +27,7 @@ import { calculateDistance } from '@/lib/geolocation';
 import SEO from '@/components/SEO';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
-type CheckoutStep = 'delivery' | 'information';
+type CheckoutStep = 'delivery' | 'information' | 'summary';
 
 const SaleCheckout = () => {
   const { listingId } = useParams();
@@ -401,29 +401,48 @@ const SaleCheckout = () => {
             {/* Main Form - Left Side */}
             <div className="lg:col-span-3 space-y-8">
               {/* Step Indicator */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                {/* Step 1 */}
                 <div className={cn(
                   "flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors",
                   currentStep === 'delivery' 
                     ? "bg-primary text-primary-foreground" 
                     : "bg-primary/20 text-primary"
                 )}>
-                  {currentStep === 'information' ? <Check className="w-4 h-4" /> : '1'}
+                  {currentStep !== 'delivery' ? <Check className="w-4 h-4" /> : '1'}
                 </div>
-                <span className={cn("text-sm font-medium", currentStep === 'delivery' ? "text-foreground" : "text-muted-foreground")}>
+                <span className={cn("text-xs font-medium hidden sm:inline", currentStep === 'delivery' ? "text-foreground" : "text-muted-foreground")}>
                   Delivery
                 </span>
                 <div className="h-px flex-1 bg-border" />
+                
+                {/* Step 2 */}
                 <div className={cn(
                   "flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors",
                   currentStep === 'information' 
                     ? "bg-primary text-primary-foreground" 
+                    : currentStep === 'summary' 
+                      ? "bg-primary/20 text-primary"
+                      : "bg-muted text-muted-foreground"
+                )}>
+                  {currentStep === 'summary' ? <Check className="w-4 h-4" /> : '2'}
+                </div>
+                <span className={cn("text-xs font-medium hidden sm:inline", currentStep === 'information' ? "text-foreground" : "text-muted-foreground")}>
+                  Your Info
+                </span>
+                <div className="h-px flex-1 bg-border" />
+                
+                {/* Step 3 */}
+                <div className={cn(
+                  "flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors",
+                  currentStep === 'summary' 
+                    ? "bg-primary text-primary-foreground" 
                     : "bg-muted text-muted-foreground"
                 )}>
-                  2
+                  3
                 </div>
-                <span className={cn("text-sm font-medium", currentStep === 'information' ? "text-foreground" : "text-muted-foreground")}>
-                  Your Information
+                <span className={cn("text-xs font-medium hidden sm:inline", currentStep === 'summary' ? "text-foreground" : "text-muted-foreground")}>
+                  Review & Pay
                 </span>
               </div>
 
@@ -879,72 +898,279 @@ const SaleCheckout = () => {
                       </div>
                     )}
 
-                    {/* Payment Method */}
-                    {hasMultiplePaymentOptions && (
-                      <div className="space-y-3 pt-4 border-t border-border">
-                        <Label className="text-sm font-medium">Payment Method</Label>
-                        <div className="grid grid-cols-2 gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setPaymentMethod('card')}
-                            className={cn(
-                              "flex items-center gap-2 p-3 rounded-lg border-2 transition-all",
-                              paymentMethod === 'card' 
-                                ? "border-primary bg-primary/5" 
-                                : "border-border hover:border-primary/50"
-                            )}
-                          >
-                            <CreditCard className={cn("h-5 w-5", paymentMethod === 'card' ? "text-primary" : "text-muted-foreground")} />
-                            <span className="text-sm font-medium">Pay via Card</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setPaymentMethod('cash')}
-                            className={cn(
-                              "flex items-center gap-2 p-3 rounded-lg border-2 transition-all",
-                              paymentMethod === 'cash' 
-                                ? "border-primary bg-primary/5" 
-                                : "border-border hover:border-primary/50"
-                            )}
-                          >
-                            <Banknote className={cn("h-5 w-5", paymentMethod === 'cash' ? "text-primary" : "text-muted-foreground")} />
-                            <span className="text-sm font-medium">Pay in Person</span>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Terms */}
-                    <div className="flex items-start gap-3 pt-4">
-                      <Checkbox
-                        id="terms"
-                        checked={agreedToTerms}
-                        onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
-                      />
-                      <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight">
-                        I agree to the{' '}
-                        <a href="/terms" target="_blank" className="text-primary hover:underline">
-                          Terms of Service
-                        </a>
-                      </label>
-                    </div>
-
-                    {/* Submit */}
+                    {/* Continue Button */}
                     <Button
-                      onClick={handlePurchase}
-                      disabled={isPurchasing || !agreedToTerms}
+                      onClick={() => {
+                        // Validate fields before moving to summary
+                        const nameError = fieldValidators.name(name);
+                        const emailError = fieldValidators.email(email);
+                        const phoneError = fieldValidators.phone(phone);
+                        const addressError = fieldValidators.address(address);
+                        
+                        let deliveryAddressError: string | undefined;
+                        if (fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight') {
+                          if (!deliveryAddress.trim()) deliveryAddressError = 'Delivery address is required';
+                        }
+                        
+                        if (nameError || emailError || phoneError || addressError || deliveryAddressError) {
+                          setFieldErrors({ name: nameError, email: emailError, phone: phoneError, address: addressError, deliveryAddress: deliveryAddressError });
+                          setTouchedFields(new Set(['name', 'email', 'phone', 'address', 'deliveryAddress']));
+                          toast({
+                            title: 'Missing information',
+                            description: nameError || addressError || emailError || phoneError || deliveryAddressError,
+                            variant: 'destructive',
+                          });
+                          return;
+                        }
+                        
+                        setCurrentStep('summary');
+                      }}
                       className="w-full"
                       size="lg"
                     >
-                      {isPurchasing ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : null}
-                      {paymentMethod === 'cash' 
-                        ? `Submit Request - $${totalPrice.toLocaleString()}`
-                        : `Proceed to Payment - $${totalPrice.toLocaleString()}`
-                      }
+                      Continue to Review
                     </Button>
                   </div>
+                </div>
+              )}
+
+              {/* STEP 3: Review & Summary */}
+              {currentStep === 'summary' && (
+                <div className="bg-card border border-border rounded-xl p-6">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep('information')}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to your information
+                  </button>
+
+                  <h2 className="text-lg font-semibold text-foreground mb-6">Review Your Order</h2>
+
+                  {/* Listing Info */}
+                  <div className="border border-border rounded-xl p-4 mb-6">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Item</h3>
+                    <div className="flex gap-4">
+                      <img 
+                        src={listing.cover_image_url || listing.image_urls?.[0] || '/placeholder.svg'}
+                        alt={listing.title}
+                        className="w-24 h-24 object-cover rounded-lg"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-foreground">{listing.title}</h4>
+                        <p className="text-sm text-muted-foreground capitalize mt-1">
+                          {listing.category?.replace('_', ' ')}
+                        </p>
+                        <p className="text-lg font-bold text-primary mt-2">${priceSale.toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Delivery Summary */}
+                  <div className="border border-border rounded-xl p-4 mb-6">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Delivery Method</h3>
+                    <div className="flex items-center gap-3">
+                      {fulfillmentSelected === 'pickup' && <MapPin className="h-5 w-5 text-primary" />}
+                      {fulfillmentSelected === 'delivery' && <Truck className="h-5 w-5 text-primary" />}
+                      {fulfillmentSelected === 'vendibook_freight' && <Package className="h-5 w-5 text-primary" />}
+                      <div>
+                        <p className="font-medium text-foreground">
+                          {fulfillmentSelected === 'pickup' && 'Local Pickup'}
+                          {fulfillmentSelected === 'delivery' && 'Local Delivery'}
+                          {fulfillmentSelected === 'vendibook_freight' && 'Vendibook Freight'}
+                        </p>
+                        {(fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight') && deliveryAddress && (
+                          <p className="text-sm text-muted-foreground mt-1">{deliveryAddress}</p>
+                        )}
+                      </div>
+                      {currentDeliveryFee > 0 && (
+                        <span className="ml-auto font-medium">+${currentDeliveryFee.toLocaleString()}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Buyer Info Summary */}
+                  <div className="border border-border rounded-xl p-4 mb-6">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Your Information</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Name</span>
+                        <span className="font-medium text-foreground">{name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Email</span>
+                        <span className="font-medium text-foreground">{email}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Phone</span>
+                        <span className="font-medium text-foreground">{phone}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Address</span>
+                        <span className="font-medium text-foreground text-right max-w-[200px]">{address}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* How It Works - Always visible */}
+                  <div className="border border-border rounded-xl p-4 mb-6 bg-muted/30">
+                    <h3 className="text-sm font-medium text-foreground mb-4">How It Works</h3>
+                    <div className="space-y-4">
+                      <div className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <DollarSign className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="w-0.5 flex-1 bg-border mt-2" />
+                        </div>
+                        <div className="pb-3">
+                          <h4 className="font-medium text-foreground text-sm">1. Submit Payment Hold</h4>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Your payment is securely held in escrow. Funds are not released to the seller yet.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Handshake className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="w-0.5 flex-1 bg-border mt-2" />
+                        </div>
+                        <div className="pb-3">
+                          <h4 className="font-medium text-foreground text-sm">2. Meet & Confirm Sale</h4>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Meet the seller, inspect the item, and confirm everything is as described.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-foreground text-sm">3. Funds Released</h4>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Once both buyer and seller confirm, funds are released to the seller. Done!
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Price Summary */}
+                  <div className="border border-border rounded-xl p-4 mb-6">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Order Total</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Item price</span>
+                        <span className="text-foreground">${priceSale.toLocaleString()}</span>
+                      </div>
+                      {currentDeliveryFee > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            {fulfillmentSelected === 'vendibook_freight' ? 'Freight shipping' : 'Delivery fee'}
+                          </span>
+                          <span className="text-foreground">+${currentDeliveryFee.toLocaleString()}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between font-bold text-lg pt-2 border-t border-border">
+                        <span>Total</span>
+                        <span className="text-primary">${totalPrice.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Method Selection */}
+                  {hasMultiplePaymentOptions && (
+                    <div className="space-y-3 mb-6">
+                      <Label className="text-sm font-medium">Payment Method</Label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMethod('card')}
+                          className={cn(
+                            "flex items-center gap-2 p-3 rounded-lg border-2 transition-all",
+                            paymentMethod === 'card' 
+                              ? "border-primary bg-primary/5" 
+                              : "border-border hover:border-primary/50"
+                          )}
+                        >
+                          <CreditCard className={cn("h-5 w-5", paymentMethod === 'card' ? "text-primary" : "text-muted-foreground")} />
+                          <span className="text-sm font-medium">Pay via Card</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMethod('cash')}
+                          className={cn(
+                            "flex items-center gap-2 p-3 rounded-lg border-2 transition-all",
+                            paymentMethod === 'cash' 
+                              ? "border-primary bg-primary/5" 
+                              : "border-border hover:border-primary/50"
+                          )}
+                        >
+                          <Banknote className={cn("h-5 w-5", paymentMethod === 'cash' ? "text-primary" : "text-muted-foreground")} />
+                          <span className="text-sm font-medium">Pay in Person</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TOS Agreement */}
+                  <div className="flex items-start gap-3 p-4 border border-border rounded-xl mb-6 bg-muted/30">
+                    <Checkbox
+                      id="terms"
+                      checked={agreedToTerms}
+                      onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+                    />
+                    <label htmlFor="terms" className="text-sm text-foreground leading-tight">
+                      I agree to the{' '}
+                      <a href="/terms" target="_blank" className="text-primary hover:underline font-medium">
+                        Terms of Service
+                      </a>{' '}
+                      and understand that my payment will be held in escrow until both parties confirm the transaction.
+                    </label>
+                  </div>
+
+                  {/* Next Steps */}
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6">
+                    <h3 className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-primary" />
+                      What happens next?
+                    </h3>
+                    <ul className="text-xs text-muted-foreground space-y-1.5">
+                      <li>• You'll be redirected to complete your payment securely via Stripe</li>
+                      <li>• The seller will be notified and will confirm the sale</li>
+                      <li>• You'll receive details on pickup/delivery coordination</li>
+                      <li>• After you both confirm, funds are released</li>
+                    </ul>
+                  </div>
+
+                  {/* Submit */}
+                  <Button
+                    onClick={handlePurchase}
+                    disabled={isPurchasing || !agreedToTerms}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {isPurchasing ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <ShieldCheck className="h-4 w-4 mr-2" />
+                    )}
+                    {paymentMethod === 'cash' 
+                      ? `Submit Cash Request - $${totalPrice.toLocaleString()}`
+                      : `Pay Securely - $${totalPrice.toLocaleString()}`
+                    }
+                  </Button>
+
+                  <p className="text-xs text-center text-muted-foreground mt-3">
+                    <ShieldCheck className="inline h-3 w-3 mr-1 text-emerald-500" />
+                    Protected by Vendibook escrow
+                  </p>
                 </div>
               )}
             </div>
