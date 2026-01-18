@@ -36,8 +36,8 @@ export const StepLocation: React.FC<StepLocationProps> = ({
   if (isStaticLocation) {
     return (
       <div className="space-y-6">
-        <div className="p-4 bg-muted rounded-xl flex items-start gap-3">
-          <Info className="w-5 h-5 text-muted-foreground mt-0.5" />
+        <div className="p-4 bg-muted/50 border border-border rounded-xl flex items-start gap-3">
+          <Info className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
           <p className="text-sm text-muted-foreground">
             This is a fixed on-site location. Customers will come to this address.
           </p>
@@ -98,7 +98,7 @@ export const StepLocation: React.FC<StepLocationProps> = ({
     <div className="space-y-6">
       {/* Static Location Toggle - Only show for mobile assets that aren't inherently static */}
       {isMobileAsset && !isCategoryStaticLocation && (
-        <div className="p-4 bg-muted/50 rounded-xl border">
+        <div className="p-4 bg-muted/50 rounded-xl border border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-start gap-3">
               <Building2 className="w-5 h-5 text-muted-foreground mt-0.5" />

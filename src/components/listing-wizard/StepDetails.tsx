@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { cn } from '@/lib/utils';
 
 interface StepDetailsProps {
   formData: ListingFormData;
@@ -224,11 +225,12 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
                   {group.items.map((item) => (
                     <label
                       key={item.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                      className={cn(
+                        "flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all",
                         formData.amenities?.includes(item.id)
                           ? 'border-primary bg-primary/5'
                           : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                      }`}
+                      )}
                     >
                       <Checkbox
                         checked={formData.amenities?.includes(item.id) || false}
@@ -376,7 +378,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
             {formData.highlights.map((highlight, index) => (
               <li
                 key={index}
-                className="flex items-center gap-2 p-3 bg-muted rounded-lg"
+                className="flex items-center gap-2 p-3 bg-muted/50 rounded-xl border border-border"
               >
                 <span className="flex-1">{highlight}</span>
                 <button

@@ -61,7 +61,7 @@ export const StepReview: React.FC<StepReviewProps> = ({
       </div>
 
       {/* Preview Card */}
-      <div className="bg-card border rounded-2xl overflow-hidden shadow-lg">
+      <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
         {/* Cover Image */}
         {previewImage ? (
           <div className="aspect-video bg-muted">
@@ -185,9 +185,9 @@ export const StepReview: React.FC<StepReviewProps> = ({
       )}
 
       {issues.length === 0 && (
-        <div className="bg-green-50 border border-foreground rounded-xl p-4 flex items-center gap-3">
-          <Check className="w-5 h-5 text-green-600" />
-          <p className="text-green-700 font-medium">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 flex items-center gap-3">
+          <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
+          <p className="text-green-700 dark:text-green-300 font-medium">
             Your listing is ready to publish!
           </p>
         </div>

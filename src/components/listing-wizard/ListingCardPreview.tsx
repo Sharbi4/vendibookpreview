@@ -71,7 +71,7 @@ export const ListingCardPreview: React.FC<ListingCardPreviewProps> = ({ listing,
         Card Preview (Search Results)
       </div>
       
-      <div className="group cursor-pointer card-hover block bg-card rounded-xl border border-border/50 overflow-hidden shadow-sm">
+      <div className="group cursor-pointer card-hover block bg-card rounded-xl border border-border overflow-hidden shadow-sm">
         {/* Image Container */}
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
           {coverImage ? (
