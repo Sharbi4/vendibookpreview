@@ -510,9 +510,9 @@ const Header = () => {
               <Button 
                 variant="gradient"
                 className="rounded-full"
-                onClick={() => navigate('/auth')}
+                onClick={() => navigate('/list')}
               >
-                Get Started
+                Create a Listing
               </Button>
             </>
           )}
