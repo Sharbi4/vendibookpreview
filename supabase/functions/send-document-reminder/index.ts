@@ -227,7 +227,22 @@ serve(async (req) => {
           : `This is a friendly reminder that your Instant Book booking for <strong>${listingTitle}</strong> is still waiting for required documents.`;
 
         const emailHtml = `
-          <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              @font-face {
+                font-family: 'Sofia Pro Soft';
+                src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
+                font-weight: 300;
+                font-style: normal;
+              }
+            </style>
+          </head>
+          <body style="margin: 0; padding: 0; background-color: #f9fafb; font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: ${emailHeaderBg}; padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
               <h1 style="color: white; margin: 0; font-size: 22px;">${emailHeaderIcon} ${emailHeaderTitle}</h1>
             </div>
@@ -296,10 +311,14 @@ serve(async (req) => {
               <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
               
               <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
+                Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a>
+                <br><br>
                 © ${new Date().getFullYear()} VendiBook. All rights reserved.
               </p>
             </div>
           </div>
+          </body>
+          </html>
         `;
 
         // Send the email

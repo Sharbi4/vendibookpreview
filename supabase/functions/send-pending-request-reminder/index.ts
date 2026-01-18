@@ -118,6 +118,14 @@ serve(async (req) => {
               <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                  @font-face {
+                    font-family: 'Sofia Pro Soft';
+                    src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
+                    font-weight: 300;
+                    font-style: normal;
+                  }
+                </style>
               </head>
               <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <div style="text-align: center; margin-bottom: 30px;">
@@ -138,8 +146,8 @@ serve(async (req) => {
                 <p><strong>Quick responses lead to more bookings!</strong> Hosts who respond within 2 hours are 3x more likely to get repeat customers.</p>
                 
                 <div style="text-align: center; margin: 30px 0;">
-                  <a href="https://vendibook.lovable.app/dashboard" 
-                     style="display: inline-block; background-color: #FF5124; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                  <a href="https://vendibookpreview.lovable.app/dashboard" 
+                     style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">
                     Review Requests
                   </a>
                 </div>
