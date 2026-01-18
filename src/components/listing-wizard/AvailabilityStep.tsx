@@ -1,19 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Lock, CalendarCheck, Clock, Calendar, Info, Timer } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronLeft, ChevronRight, Lock, CalendarCheck, Clock, Calendar, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, isBefore, startOfDay, addDays } from 'date-fns';
 import { useListingAvailability } from '@/hooks/useListingAvailability';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 
 interface AvailabilityStepProps {
   listingId: string;
@@ -21,8 +18,6 @@ interface AvailabilityStepProps {
   availableTo: string | null;
   onAvailableFromChange: (date: string | null) => void;
   onAvailableToChange: (date: string | null) => void;
-  bufferDays?: number;
-  onBufferDaysChange?: (days: number) => void;
 }
 
 export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
@@ -31,78 +26,25 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
   availableTo,
   onAvailableFromChange,
   onAvailableToChange,
-  bufferDays: propBufferDays,
-  onBufferDaysChange,
 }) => {
-  const { toast } = useToast();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [rangeStart, setRangeStart] = useState<Date | null>(null);
+  const [rangeEnd, setRangeEnd] = useState<Date | null>(null);
   const [blockReason, setBlockReason] = useState('');
   const [showBlockDialog, setShowBlockDialog] = useState(false);
+  const [isRangeMode, setIsRangeMode] = useState(false);
   const [useAvailabilityWindow, setUseAvailabilityWindow] = useState(!!(availableFrom || availableTo));
-  const [bufferDays, setBufferDays] = useState<number>(propBufferDays || 0);
 
   const {
     bookings,
     blockDate,
     unblockDate,
+    blockDateRange,
     isDateBlocked,
     isDateBooked,
     isDatePending,
   } = useListingAvailability(listingId);
-
-  // Fetch existing buffer days from listing if not provided via props
-  useEffect(() => {
-    const fetchBufferDays = async () => {
-      if (propBufferDays !== undefined) return;
-      
-      const { data } = await supabase
-        .from('listings')
-        .select('rental_buffer_days')
-        .eq('id', listingId)
-        .single();
-      
-      if (data && (data as any).rental_buffer_days) {
-        setBufferDays((data as any).rental_buffer_days);
-      }
-    };
-    
-    if (listingId) {
-      fetchBufferDays();
-    }
-  }, [listingId, propBufferDays]);
-
-  // Save buffer days when changed
-  const handleBufferDaysChange = async (value: string) => {
-    const days = parseInt(value) || 0;
-    setBufferDays(days);
-    
-    if (onBufferDaysChange) {
-      onBufferDaysChange(days);
-    } else if (listingId) {
-      // Save directly to database if no callback provided
-      const { error } = await supabase
-        .from('listings')
-        .update({ rental_buffer_days: days } as any)
-        .eq('id', listingId);
-      
-      if (error) {
-        console.error('Error saving buffer days:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to save buffer time setting.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Buffer time updated',
-          description: days > 0 
-            ? `${days} day${days > 1 ? 's' : ''} will be blocked before and after each booking.`
-            : 'Buffer time has been disabled.',
-        });
-      }
-    }
-  };
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -117,22 +59,63 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
     if (isBefore(date, startOfDay(new Date()))) return;
     if (isDateBooked(date)) return;
 
-    setSelectedDate(date);
-
-    if (isDateBlocked(date)) {
-      unblockDate(date);
+    if (isRangeMode) {
+      // Range selection mode
+      if (!rangeStart) {
+        setRangeStart(date);
+        setRangeEnd(null);
+      } else if (!rangeEnd) {
+        // Ensure end is after start
+        if (isBefore(date, rangeStart)) {
+          setRangeEnd(rangeStart);
+          setRangeStart(date);
+        } else {
+          setRangeEnd(date);
+        }
+        setShowBlockDialog(true);
+      }
     } else {
-      setShowBlockDialog(true);
+      // Single date mode
+      setSelectedDate(date);
+      if (isDateBlocked(date)) {
+        unblockDate(date);
+      } else {
+        setShowBlockDialog(true);
+      }
     }
   };
 
   const handleBlockConfirm = () => {
-    if (selectedDate) {
+    if (isRangeMode && rangeStart && rangeEnd) {
+      blockDateRange(rangeStart, rangeEnd, blockReason || undefined);
+      setShowBlockDialog(false);
+      setBlockReason('');
+      setRangeStart(null);
+      setRangeEnd(null);
+    } else if (selectedDate) {
       blockDate(selectedDate, blockReason || undefined);
       setShowBlockDialog(false);
       setBlockReason('');
       setSelectedDate(null);
     }
+  };
+
+  const cancelRangeSelection = () => {
+    setRangeStart(null);
+    setRangeEnd(null);
+    setShowBlockDialog(false);
+    setBlockReason('');
+  };
+
+  const isInRange = (date: Date): boolean => {
+    if (!rangeStart || !rangeEnd) return false;
+    return date >= rangeStart && date <= rangeEnd;
+  };
+
+  const isRangeEndpoint = (date: Date): boolean => {
+    if (rangeStart && isSameDay(date, rangeStart)) return true;
+    if (rangeEnd && isSameDay(date, rangeEnd)) return true;
+    return false;
   };
 
   const getDayStatus = (date: Date): 'available' | 'blocked' | 'booked' | 'pending' | 'past' | 'outside_window' => {
@@ -253,53 +236,45 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
         )}
       </div>
 
-      {/* Buffer Time Setting */}
-      <div className="p-4 rounded-xl border border-border bg-muted/30">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Timer className="w-5 h-5 text-primary" />
-            </div>
-            <div className="flex-1">
-              <Label className="text-base font-medium">Buffer time between rentals</Label>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Automatically block days before and after bookings for prep/cleanup
-              </p>
-            </div>
-          </div>
-          <Select value={bufferDays.toString()} onValueChange={handleBufferDaysChange}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Select" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="0">No buffer</SelectItem>
-              <SelectItem value="1">1 day</SelectItem>
-              <SelectItem value="2">2 days</SelectItem>
-              <SelectItem value="3">3 days</SelectItem>
-              <SelectItem value="5">5 days</SelectItem>
-              <SelectItem value="7">7 days</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        {bufferDays > 0 && (
-          <div className="mt-3 pt-3 border-t border-border">
-            <p className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{bufferDays} day{bufferDays > 1 ? 's' : ''}</span> will be 
-              automatically blocked before and after each confirmed booking.
-            </p>
-          </div>
-        )}
-      </div>
-
       {/* Block Dates Section */}
       <div>
-        <div className="flex items-center gap-2 mb-4">
-          <Lock className="w-5 h-5 text-muted-foreground" />
-          <h3 className="font-medium text-foreground">Block specific dates</h3>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Lock className="w-5 h-5 text-muted-foreground" />
+            <h3 className="font-medium text-foreground">Block dates</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="range-mode" className="text-sm text-muted-foreground">Range mode</Label>
+            <Switch
+              id="range-mode"
+              checked={isRangeMode}
+              onCheckedChange={(checked) => {
+                setIsRangeMode(checked);
+                setRangeStart(null);
+                setRangeEnd(null);
+              }}
+            />
+          </div>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
-          Click on dates to block them from bookings. This is useful for maintenance, personal use, or other commitments.
+          {isRangeMode 
+            ? 'Click a start date, then an end date to block a range.' 
+            : 'Click dates to block/unblock them.'}
         </p>
+
+        {/* Range Selection Indicator */}
+        {isRangeMode && rangeStart && !rangeEnd && (
+          <div className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/20">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-foreground">
+                Start: <strong>{format(rangeStart, 'MMM d, yyyy')}</strong> — Now select end date
+              </span>
+              <Button variant="ghost" size="sm" onClick={cancelRangeSelection}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Calendar */}
         <div className="bg-card rounded-xl border border-border p-4">
@@ -334,6 +309,8 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
             {daysInMonth.map(date => {
               const status = getDayStatus(date);
               const isSelected = selectedDate && isSameDay(date, selectedDate);
+              const isRangeStart = rangeStart && isSameDay(date, rangeStart);
+              const inRange = rangeStart && !rangeEnd && !isBefore(date, rangeStart) && !isBefore(date, startOfDay(new Date()));
 
               return (
                 <button
@@ -345,6 +322,8 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
                     statusColors[status],
                     isToday(date) && 'ring-2 ring-primary ring-offset-1',
                     isSelected && 'ring-2 ring-primary',
+                    isRangeStart && 'ring-2 ring-primary bg-primary/20',
+                    isRangeMode && inRange && status === 'available' && 'hover:bg-primary/10',
                   )}
                 >
                   <span className="font-medium">{format(date, 'd')}</span>
@@ -415,12 +394,24 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
       </div>
 
       {/* Block Date Dialog */}
-      <Dialog open={showBlockDialog} onOpenChange={setShowBlockDialog}>
+      <Dialog open={showBlockDialog} onOpenChange={(open) => {
+        setShowBlockDialog(open);
+        if (!open) {
+          setRangeStart(null);
+          setRangeEnd(null);
+          setSelectedDate(null);
+          setBlockReason('');
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Block Date</DialogTitle>
+            <DialogTitle>
+              {isRangeMode && rangeStart && rangeEnd ? 'Block Date Range' : 'Block Date'}
+            </DialogTitle>
             <DialogDescription>
-              Block {selectedDate ? format(selectedDate, 'MMMM d, yyyy') : ''} from bookings.
+              {isRangeMode && rangeStart && rangeEnd 
+                ? `Block ${format(rangeStart, 'MMM d')} – ${format(rangeEnd, 'MMM d, yyyy')} from bookings.`
+                : selectedDate ? `Block ${format(selectedDate, 'MMMM d, yyyy')} from bookings.` : ''}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-4">
@@ -434,11 +425,17 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
               />
             </div>
             <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowBlockDialog(false)}>
+              <Button variant="outline" onClick={() => {
+                setShowBlockDialog(false);
+                setRangeStart(null);
+                setRangeEnd(null);
+                setSelectedDate(null);
+                setBlockReason('');
+              }}>
                 Cancel
               </Button>
               <Button onClick={handleBlockConfirm}>
-                Block Date
+                {isRangeMode && rangeStart && rangeEnd ? 'Block Range' : 'Block Date'}
               </Button>
             </div>
           </div>

@@ -213,7 +213,7 @@ export const AvailabilityCalendarDisplay: React.FC<AvailabilityCalendarDisplayPr
       <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
         <Info className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
         <p className="text-[11px] text-muted-foreground">
-          Buffer days are automatically blocked before and after each booking to allow for preparation time.
+          Grayed out dates are unavailable for booking.
         </p>
       </div>
     </div>
