@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Shield, Sparkles, CheckCircle2, CreditCard, ShieldCheck, Users, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackCityListModuleViewed, trackCityListClicked } from '@/lib/analytics';
+import supplyFoodTruck from '@/assets/supply-food-truck.jpg';
 
 const benefits = [
   { icon: ShieldCheck, text: 'Secure platform to sell or rent your assets' },
@@ -60,9 +61,16 @@ const SupplySection = () => {
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               A safe way to sell or rent your food truck.
             </h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              We built VendiBook to support the food truck community. Whether you're selling your truck, renting it out, or looking for a vendor spot—we've got your back.
-            </p>
+            <div className="flex items-start gap-4 mb-8">
+              <img 
+                src={supplyFoodTruck} 
+                alt="Food truck owner" 
+                className="w-24 h-24 md:w-32 md:h-32 rounded-xl object-cover shadow-lg flex-shrink-0 border-2 border-primary/20"
+              />
+              <p className="text-lg text-muted-foreground">
+                We built VendiBook to support the food truck community. Whether you're selling your truck, renting it out, or looking for a vendor spot—we've got your back.
+              </p>
+            </div>
 
             {/* Benefits list */}
             <ul className="space-y-4 mb-8">
