@@ -26,6 +26,8 @@ const initialFormData: ListingFormData = {
   available_to: '',
   images: [],
   existingImages: [],
+  videos: [],
+  existingVideos: [],
   instant_book: false,
   deposit_amount: '',
   vendibook_freight_enabled: false,

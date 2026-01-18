@@ -81,6 +81,7 @@ const ListingDetail = () => {
   }
 
   const images = listing.image_urls || (listing.cover_image_url ? [listing.cover_image_url] : []);
+  const videos = (listing as any).video_urls || [];
   const location = listing.address || listing.pickup_location_text;
   const isRental = listing.mode === 'rent';
 
@@ -104,7 +105,7 @@ const ListingDetail = () => {
 
         {/* Photo Gallery - Full width on mobile */}
         <div className="container py-4">
-          <PhotoGallery images={images} title={listing.title} />
+          <PhotoGallery images={images} videos={videos} title={listing.title} />
         </div>
 
         {/* Main Content */}

@@ -304,6 +304,29 @@ export const ListingWizard: React.FC = () => {
     return urls;
   };
 
+  const uploadVideos = async (listingId: string): Promise<string[]> => {
+    const urls: string[] = [];
+    
+    for (const file of formData.videos) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user!.id}/${listingId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('listing-videos')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('listing-videos')
+        .getPublicUrl(fileName);
+
+      urls.push(publicUrl);
+    }
+    
+    return urls;
+  };
+
   // Check if Stripe Connect is required (only if card payments are enabled for sale listings)
   const requiresStripeConnect = formData.mode === 'rent' || 
     (formData.mode === 'sale' && formData.accept_card_payment);
@@ -405,17 +428,28 @@ export const ListingWizard: React.FC = () => {
 
       if (insertError) throw insertError;
 
-      // Upload images and get the final cover URL
+      // Upload images and videos
       let coverImageUrl: string | null = null;
+      let imageUrls: string[] = [];
+      let videoUrls: string[] = [];
+
       if (formData.images.length > 0) {
-        const imageUrls = await uploadImages(listing.id);
+        imageUrls = await uploadImages(listing.id);
         coverImageUrl = imageUrls[0] || null;
-        
+      }
+
+      if (formData.videos.length > 0) {
+        videoUrls = await uploadVideos(listing.id);
+      }
+
+      // Update listing with media URLs
+      if (imageUrls.length > 0 || videoUrls.length > 0) {
         const { error: updateError } = await supabase
           .from('listings')
           .update({
             cover_image_url: coverImageUrl,
             image_urls: imageUrls,
+            video_urls: videoUrls,
           } as any)
           .eq('id', listing.id);
 
