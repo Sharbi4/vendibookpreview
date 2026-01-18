@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Mail, Send, Eye, ChevronDown, Check, Loader2 } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Mail, Send, Eye, ChevronDown, Check, Loader2, Edit2, RotateCcw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,8 +19,27 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+
+// Helper to get field type hints
+const getFieldType = (key: string, value: unknown): 'text' | 'number' | 'array' | 'textarea' => {
+  if (Array.isArray(value)) return 'array';
+  if (typeof value === 'number') return 'number';
+  if (key.toLowerCase().includes('message') || key.toLowerCase().includes('response') || key.toLowerCase().includes('reason')) return 'textarea';
+  return 'text';
+};
+
+// Helper to format field labels
+const formatFieldLabel = (key: string): string => {
+  return key
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/_/g, ' ')
+    .replace(/^./, str => str.toUpperCase())
+    .trim();
+};
 
 // Email template definitions with sample data
 const emailTemplates = {
@@ -698,10 +717,32 @@ const EmailPreviewCard = () => {
   const [testEmail, setTestEmail] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['booking']));
+  const [customData, setCustomData] = useState<Record<string, unknown>>({});
+  const [isEditingData, setIsEditingData] = useState(false);
 
   const currentTemplates = emailTemplates[selectedCategory as keyof typeof emailTemplates]?.templates || [];
   const currentTemplate = currentTemplates.find(t => t.id === selectedTemplate);
-  const previewHtml = currentTemplate ? generateEmailHtml(currentTemplate.id, currentTemplate.sampleData) : '';
+  
+  // Initialize customData when template changes
+  useEffect(() => {
+    if (currentTemplate) {
+      setCustomData({ ...currentTemplate.sampleData });
+      setIsEditingData(false);
+    }
+  }, [selectedTemplate, currentTemplate?.id]);
+
+  // Merge original sample data with custom edits
+  const mergedData = useMemo(() => {
+    if (!currentTemplate) return {};
+    return { ...currentTemplate.sampleData, ...customData };
+  }, [currentTemplate, customData]);
+
+  const previewHtml = currentTemplate ? generateEmailHtml(currentTemplate.id, mergedData) : '';
+
+  const hasChanges = useMemo(() => {
+    if (!currentTemplate) return false;
+    return JSON.stringify(currentTemplate.sampleData) !== JSON.stringify(customData);
+  }, [currentTemplate, customData]);
 
   const toggleCategory = (category: string) => {
     setExpandedCategories(prev => {
@@ -713,6 +754,35 @@ const EmailPreviewCard = () => {
       }
       return newSet;
     });
+  };
+
+  const handleDataChange = (key: string, value: unknown) => {
+    setCustomData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleResetData = () => {
+    if (currentTemplate) {
+      setCustomData({ ...currentTemplate.sampleData });
+      toast.success('Sample data reset to defaults');
+    }
+  };
+
+  const handleArrayChange = (key: string, index: number, value: string) => {
+    const currentArray = Array.isArray(customData[key]) ? [...(customData[key] as string[])] : [];
+    currentArray[index] = value;
+    handleDataChange(key, currentArray);
+  };
+
+  const handleAddArrayItem = (key: string) => {
+    const currentArray = Array.isArray(customData[key]) ? [...(customData[key] as string[])] : [];
+    currentArray.push('');
+    handleDataChange(key, currentArray);
+  };
+
+  const handleRemoveArrayItem = (key: string, index: number) => {
+    const currentArray = Array.isArray(customData[key]) ? [...(customData[key] as string[])] : [];
+    currentArray.splice(index, 1);
+    handleDataChange(key, currentArray);
   };
 
   const handleSendTest = async () => {
@@ -883,19 +953,133 @@ const EmailPreviewCard = () => {
         </CardContent>
       </Card>
 
-      {/* Sample Data Card */}
+      {/* Sample Data Editor Card */}
       {currentTemplate && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Sample Data</CardTitle>
-            <CardDescription>
-              The following sample data is used to generate this preview
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Edit2 className="h-4 w-4" />
+                  Sample Data Editor
+                </CardTitle>
+                <CardDescription>
+                  Edit the sample data to test different scenarios and edge cases
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="edit-mode"
+                    checked={isEditingData}
+                    onCheckedChange={setIsEditingData}
+                  />
+                  <Label htmlFor="edit-mode" className="text-sm cursor-pointer">
+                    Edit Mode
+                  </Label>
+                </div>
+                {hasChanges && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResetData}
+                  >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Reset
+                  </Button>
+                )}
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <pre className="bg-muted rounded-lg p-4 overflow-auto text-sm">
-              {JSON.stringify(currentTemplate.sampleData, null, 2)}
-            </pre>
+            {isEditingData ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(customData).map(([key, value]) => {
+                    const fieldType = getFieldType(key, value);
+                    
+                    return (
+                      <div key={key} className={fieldType === 'textarea' || fieldType === 'array' ? 'md:col-span-2' : ''}>
+                        <Label className="text-sm font-medium mb-1.5 block">
+                          {formatFieldLabel(key)}
+                          <span className="text-muted-foreground font-normal ml-2 text-xs">
+                            ({fieldType === 'number' ? 'number' : fieldType === 'array' ? 'list' : 'text'})
+                          </span>
+                        </Label>
+                        
+                        {fieldType === 'number' ? (
+                          <Input
+                            type="number"
+                            value={value as number}
+                            onChange={(e) => handleDataChange(key, parseFloat(e.target.value) || 0)}
+                            className="font-mono"
+                          />
+                        ) : fieldType === 'textarea' ? (
+                          <Textarea
+                            value={value as string}
+                            onChange={(e) => handleDataChange(key, e.target.value)}
+                            className="font-mono text-sm min-h-[80px]"
+                            placeholder={`Enter ${formatFieldLabel(key).toLowerCase()}...`}
+                          />
+                        ) : fieldType === 'array' ? (
+                          <div className="space-y-2">
+                            {(value as string[]).map((item, index) => (
+                              <div key={index} className="flex gap-2">
+                                <Input
+                                  value={item}
+                                  onChange={(e) => handleArrayChange(key, index, e.target.value)}
+                                  className="font-mono text-sm"
+                                  placeholder={`Item ${index + 1}`}
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleRemoveArrayItem(key, index)}
+                                  className="shrink-0"
+                                >
+                                  Remove
+                                </Button>
+                              </div>
+                            ))}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleAddArrayItem(key)}
+                            >
+                              + Add Item
+                            </Button>
+                          </div>
+                        ) : (
+                          <Input
+                            type="text"
+                            value={value as string}
+                            onChange={(e) => handleDataChange(key, e.target.value)}
+                            className="font-mono text-sm"
+                            placeholder={`Enter ${formatFieldLabel(key).toLowerCase()}...`}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {hasChanges && (
+                  <div className="flex items-center gap-2 pt-2 text-sm text-muted-foreground">
+                    <Badge variant="secondary" className="text-xs">Modified</Badge>
+                    <span>Preview updates automatically as you edit</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <pre className="bg-muted rounded-lg p-4 overflow-auto text-sm font-mono">
+                  {JSON.stringify(mergedData, null, 2)}
+                </pre>
+                <p className="text-xs text-muted-foreground">
+                  Enable Edit Mode to modify the sample data and test different scenarios.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
