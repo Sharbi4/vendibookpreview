@@ -2,14 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, ShoppingCart, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { useAuth } from '@/contexts/AuthContext';
 import BookingWizard from './BookingWizard';
+import { BookingOnboardingModal, useBookingOnboarding } from '@/components/booking/BookingOnboardingModal';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 
 interface StickyMobileCTAProps {
@@ -53,7 +49,9 @@ export const StickyMobileCTA = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
-  const [showBookingSheet, setShowBookingSheet] = useState(false);
+  const [showBookingDrawer, setShowBookingDrawer] = useState(false);
+  const { shouldShow: showOnboarding, setShouldShow: setShowOnboarding } = useBookingOnboarding();
+  const [pendingBooking, setPendingBooking] = useState(false);
 
   // Show sticky CTA after scrolling past a certain point
   useEffect(() => {
@@ -65,6 +63,14 @@ export const StickyMobileCTA = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Open booking drawer after onboarding completes
+  useEffect(() => {
+    if (pendingBooking && !showOnboarding) {
+      setShowBookingDrawer(true);
+      setPendingBooking(false);
+    }
+  }, [pendingBooking, showOnboarding]);
+
   const isAvailable = status === 'published';
   const price = isRental ? priceDaily : priceSale;
 
@@ -75,13 +81,28 @@ export const StickyMobileCTA = ({
     }
 
     if (isRental) {
-      setShowBookingSheet(true);
+      // Show onboarding first if not seen
+      if (showOnboarding) {
+        setShowOnboarding(true);
+        setPendingBooking(true);
+      } else {
+        setShowBookingDrawer(true);
+      }
     } else {
       // Scroll to inquiry form for sales
       const formElement = document.querySelector('[data-booking-form]');
       if (formElement) {
         formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
+    }
+  };
+
+  const handleOnboardingClose = (open: boolean) => {
+    setShowOnboarding(open);
+    if (!open && pendingBooking) {
+      // Onboarding was closed, open the drawer
+      setShowBookingDrawer(true);
+      setPendingBooking(false);
     }
   };
 
@@ -124,32 +145,41 @@ export const StickyMobileCTA = ({
         </div>
       </div>
 
-      {/* Mobile Booking Sheet */}
-      <Sheet open={showBookingSheet} onOpenChange={setShowBookingSheet}>
-        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
-          <SheetHeader className="mb-4">
-            <SheetTitle>
+      {/* Onboarding Modal */}
+      <BookingOnboardingModal
+        open={showOnboarding && pendingBooking}
+        onOpenChange={handleOnboardingClose}
+        instantBook={instantBook}
+      />
+
+      {/* Full-screen Mobile Booking Drawer */}
+      <Drawer open={showBookingDrawer} onOpenChange={setShowBookingDrawer}>
+        <DrawerContent className="h-[95vh] max-h-[95vh]">
+          <DrawerHeader className="sr-only">
+            <DrawerTitle>
               {instantBook ? 'Book Now' : 'Request to Book'}
-            </SheetTitle>
-          </SheetHeader>
+            </DrawerTitle>
+          </DrawerHeader>
           
-          <BookingWizard
-            listingId={listingId}
-            hostId={hostId}
-            category={category}
-            fulfillmentType={fulfillmentType}
-            priceDaily={priceDaily}
-            priceWeekly={priceWeekly || null}
-            availableFrom={availableFrom}
-            availableTo={availableTo}
-            pickupLocation={pickupLocation}
-            deliveryFee={deliveryFee}
-            deliveryRadiusMiles={deliveryRadiusMiles}
-            instantBook={instantBook}
-            listingTitle={listingTitle}
-          />
-        </SheetContent>
-      </Sheet>
+          <div className="overflow-y-auto flex-1 pb-safe">
+            <BookingWizard
+              listingId={listingId}
+              hostId={hostId}
+              category={category}
+              fulfillmentType={fulfillmentType}
+              priceDaily={priceDaily}
+              priceWeekly={priceWeekly || null}
+              availableFrom={availableFrom}
+              availableTo={availableTo}
+              pickupLocation={pickupLocation}
+              deliveryFee={deliveryFee}
+              deliveryRadiusMiles={deliveryRadiusMiles}
+              instantBook={instantBook}
+              listingTitle={listingTitle}
+            />
+          </div>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 };

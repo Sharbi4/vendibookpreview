@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays, eachDayOfInterval } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
+import { useBookingDraft } from '@/hooks/useBookingDraft';
 import { calculateRentalFees } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
@@ -61,6 +62,7 @@ const BookingWizard = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isDateUnavailable } = useBlockedDates({ listingId });
+  const { draft, saveDraft, clearDraft, isLoaded: draftLoaded } = useBookingDraft({ listingId });
 
   // Wizard state
   const [currentStep, setCurrentStep] = useState(1);
@@ -68,16 +70,32 @@ const BookingWizard = ({
   const [bookingComplete, setBookingComplete] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
 
-  // Form state
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
-  const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>(
-    category === 'ghost_kitchen' || category === 'vendor_lot' ? 'on_site' : 
-    fulfillmentType === 'delivery' ? 'delivery' : 'pickup'
+  // Form state - initialize from draft if available
+  const [startDate, setStartDate] = useState<Date | undefined>(
+    draft?.startDate ? new Date(draft.startDate) : undefined
   );
-  const [deliveryAddress, setDeliveryAddress] = useState('');
-  const [message, setMessage] = useState('');
+  const [endDate, setEndDate] = useState<Date | undefined>(
+    draft?.endDate ? new Date(draft.endDate) : undefined
+  );
+  const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>(
+    draft?.fulfillmentSelected || (category === 'ghost_kitchen' || category === 'vendor_lot' ? 'on_site' : 
+    fulfillmentType === 'delivery' ? 'delivery' : 'pickup')
+  );
+  const [deliveryAddress, setDeliveryAddress] = useState(draft?.deliveryAddress || '');
+  const [message, setMessage] = useState(draft?.message || '');
   const [userInfo, setUserInfo] = useState<BookingUserInfo | null>(null);
+
+  // Save draft when form state changes
+  useEffect(() => {
+    if (!draftLoaded) return;
+    saveDraft({
+      startDate: startDate?.toISOString(),
+      endDate: endDate?.toISOString(),
+      fulfillmentSelected,
+      deliveryAddress,
+      message,
+    });
+  }, [startDate, endDate, fulfillmentSelected, deliveryAddress, message, saveDraft, draftLoaded]);
 
   const isMobileAsset = category === 'food_truck' || category === 'food_trailer';
   const totalSteps = instantBook ? 4 : 4;
