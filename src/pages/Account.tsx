@@ -545,12 +545,15 @@ const Account = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* SECTION 1: Personal Information (Private) */}
-          <Card>
-            <CardHeader>
+          <Card className="relative overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+            <CardHeader className="relative">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <User className="h-5 w-5" />
+                    <div className="p-1.5 bg-gradient-to-br from-primary to-amber-500 rounded-lg">
+                      <User className="h-4 w-4 text-white" />
+                    </div>
                     Personal Information
                   </CardTitle>
                   <CardDescription>Private details used for account management</CardDescription>
@@ -701,7 +704,7 @@ const Account = () => {
                     {passwordErrors.confirmPassword && <p className="text-sm text-destructive">{passwordErrors.confirmPassword}</p>}
                   </div>
 
-                  <Button type="button" onClick={handlePasswordChange} disabled={isChangingPassword} className="w-full">
+                  <Button type="button" onClick={handlePasswordChange} disabled={isChangingPassword} className="w-full bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md">
                     {isChangingPassword ? (
                       <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Updating...</>
                     ) : (
@@ -714,12 +717,15 @@ const Account = () => {
           </Card>
 
           {/* SECTION 2: Address (Private) */}
-          <Card>
-            <CardHeader>
+          <Card className="relative overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+            <CardHeader className="relative">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
+                    <div className="p-1.5 bg-gradient-to-br from-primary to-amber-500 rounded-lg">
+                      <MapPin className="h-4 w-4 text-white" />
+                    </div>
                     Address
                   </CardTitle>
                   <CardDescription>Used for billing, payouts, and verification. Not shown publicly.</CardDescription>
@@ -727,7 +733,7 @@ const Account = () => {
                 <VisibilityBadge isPublic={false} />
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="relative space-y-4">
               <div className="space-y-3">
                 <Input
                   id="address1"
@@ -776,19 +782,22 @@ const Account = () => {
           </Card>
 
           {/* SECTION 3: Business Information (Mixed) */}
-          <Card>
-            <CardHeader>
+          <Card className="relative overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+            <CardHeader className="relative">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Building2 className="h-5 w-5" />
+                    <div className="p-1.5 bg-gradient-to-br from-primary to-amber-500 rounded-lg">
+                      <Building2 className="h-4 w-4 text-white" />
+                    </div>
                     Business Information
                   </CardTitle>
                   <CardDescription>Optional business details</CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="relative space-y-4">
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
                   <Label htmlFor="business_name" className="text-sm">Business Name</Label>
@@ -809,12 +818,15 @@ const Account = () => {
 
           {/* SECTION 4: Public Profile */}
           <div ref={publicSectionRef}>
-            <Card>
-              <CardHeader>
+            <Card className="relative overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+              <CardHeader className="relative">
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <Globe className="h-5 w-5" />
+                      <div className="p-1.5 bg-gradient-to-br from-primary to-amber-500 rounded-lg">
+                        <Globe className="h-4 w-4 text-white" />
+                      </div>
                       Public Profile
                     </CardTitle>
                     <CardDescription>Information visible to other users</CardDescription>
@@ -822,7 +834,7 @@ const Account = () => {
                   <VisibilityBadge isPublic={true} />
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="relative space-y-6">
                 {/* Avatar */}
                 <div className="flex items-center gap-4">
                   <div className="relative">
@@ -971,12 +983,12 @@ const Account = () => {
                 </div>
 
                 {/* Preview Card */}
-                <div className="border rounded-lg p-4 bg-muted/30">
-                  <p className="text-xs font-medium text-muted-foreground mb-3">THIS IS WHAT PEOPLE SEE</p>
+                <div className="border-2 border-primary/20 rounded-lg p-4 bg-gradient-to-br from-primary/5 via-amber-500/5 to-yellow-400/5">
+                  <p className="text-xs font-medium text-primary mb-3">THIS IS WHAT PEOPLE SEE</p>
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12 border border-border">
+                    <Avatar className="h-12 w-12 border-2 border-primary/30 shadow-md">
                       <AvatarImage src={formData.avatar_url || undefined} />
-                      <AvatarFallback className="text-sm font-bold bg-primary text-primary-foreground">
+                      <AvatarFallback className="text-sm font-bold bg-gradient-to-br from-primary to-amber-500 text-white">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
@@ -995,7 +1007,7 @@ const Account = () => {
                       )}
                     </div>
                   </div>
-                  <Button variant="link" size="sm" className="mt-3 h-auto p-0 text-xs" asChild>
+                  <Button variant="link" size="sm" className="mt-3 h-auto p-0 text-xs text-primary" asChild>
                     <Link to={`/u/${user?.id}`}>
                       View full public profile →
                     </Link>
@@ -1006,24 +1018,29 @@ const Account = () => {
           </div>
 
           {/* SECTION 5: Trust & Verification */}
-          <Card>
-            <CardHeader>
+          <Card className="relative overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+            <CardHeader className="relative">
               <CardTitle className="text-lg flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5" />
+                <div className="p-1.5 bg-gradient-to-br from-primary to-amber-500 rounded-lg">
+                  <ShieldCheck className="h-4 w-4 text-white" />
+                </div>
                 Trust & Verification
               </CardTitle>
               <CardDescription>Build trust with identity verification and payment setup</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="relative space-y-4">
               {/* Identity Verification */}
-              <div className="border rounded-lg p-4">
+              <div className="border-2 border-primary/20 rounded-lg p-4 bg-background/50 backdrop-blur-sm">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-medium flex items-center gap-2">
-                    <User className="h-4 w-4" />
+                    <div className="p-1 bg-gradient-to-br from-primary to-amber-500 rounded">
+                      <User className="h-3.5 w-3.5 text-white" />
+                    </div>
                     Identity Verification
                   </h4>
                   {formData.identity_verified ? (
-                    <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                    <Badge className="bg-gradient-to-r from-primary to-amber-500 text-white border-0 shadow-sm">
                       <ShieldCheck className="h-3 w-3 mr-1" />
                       Verified
                     </Badge>
@@ -1037,7 +1054,7 @@ const Account = () => {
                     : 'Verify your identity to earn a "Verified ID" badge and build trust with other users.'}
                 </p>
                 {!formData.identity_verified && (
-                  <Button size="sm" asChild>
+                  <Button size="sm" className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md" asChild>
                     <Link to="/verify-identity">
                       <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />
                       Verify Identity
@@ -1047,16 +1064,18 @@ const Account = () => {
               </div>
 
               {/* Stripe Payouts */}
-              <div className="border rounded-lg p-4">
+              <div className="border-2 border-primary/20 rounded-lg p-4 bg-background/50 backdrop-blur-sm">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-medium flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" />
+                    <div className="p-1 bg-gradient-to-br from-primary to-amber-500 rounded">
+                      <CreditCard className="h-3.5 w-3.5 text-white" />
+                    </div>
                     Stripe Payouts
                   </h4>
                   {stripeLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : stripeConnected ? (
-                    <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                    <Badge className="bg-gradient-to-r from-primary to-amber-500 text-white border-0 shadow-sm">
                       <CreditCard className="h-3 w-3 mr-1" />
                       Connected
                     </Badge>
@@ -1070,7 +1089,7 @@ const Account = () => {
                     : 'Connect Stripe to receive payments for bookings and sales.'}
                 </p>
                 {!stripeConnected && (
-                  <Button size="sm" onClick={connectStripe} disabled={isConnecting}>
+                  <Button size="sm" className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md" onClick={connectStripe} disabled={isConnecting}>
                     {isConnecting ? (
                       <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Connecting...</>
                     ) : (
@@ -1083,14 +1102,17 @@ const Account = () => {
           </Card>
 
           {/* Notification Preferences Link */}
-          <Card className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate('/notification-preferences')}>
-            <CardHeader>
+          <Card className="relative overflow-hidden cursor-pointer border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10 hover:from-primary/15 hover:via-amber-500/15 hover:to-yellow-400/15 transition-all" onClick={() => navigate('/notification-preferences')}>
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+            <CardHeader className="relative">
               <CardTitle className="flex items-center justify-between text-lg">
                 <span className="flex items-center gap-2">
-                  <Bell className="h-5 w-5" />
+                  <div className="p-1.5 bg-gradient-to-br from-primary to-amber-500 rounded-lg">
+                    <Bell className="h-4 w-4 text-white" />
+                  </div>
                   Notification Preferences
                 </span>
-                <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                <ExternalLink className="h-4 w-4 text-primary" />
               </CardTitle>
               <CardDescription>
                 Manage email and in-app notification settings
@@ -1100,7 +1122,7 @@ const Account = () => {
 
           {/* Desktop Save Button */}
           <div className="hidden md:flex justify-end gap-3">
-            <Button type="submit" disabled={isSaving || !hasChanges}>
+            <Button type="submit" disabled={isSaving || !hasChanges} className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md">
               {isSaving ? (
                 <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</>
               ) : (
@@ -1111,12 +1133,12 @@ const Account = () => {
         </form>
 
         {/* Mobile Sticky Save Button */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur border-t md:hidden z-50">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur border-t border-primary/20 md:hidden z-50">
           <Button 
             type="submit" 
             onClick={handleSubmit}
             disabled={isSaving || !hasChanges}
-            className="w-full"
+            className="w-full bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
           >
             {isSaving ? (
               <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</>
