@@ -127,7 +127,7 @@ const Hero = () => {
             <Button
               variant="gradient-premium"
               size="lg"
-              onClick={() => navigate('/browse')}
+              onClick={() => navigate('/search')}
               className="text-base px-8 py-6"
             >
               <Search className="mr-2 h-5 w-5" />
