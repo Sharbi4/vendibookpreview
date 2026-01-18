@@ -165,7 +165,7 @@ serve(async (req) => {
       inAppNotifications.push({
         user_id: booking.host_id,
         type: "booking_request",
-        title: "New Booking Request",
+        title: `New Booking Request #${bookingRef}`,
         message: `${shopper?.full_name || "Someone"} requested to book ${listingTitle} from ${startDate} to ${endDate}`,
         link: "/dashboard",
       });
@@ -327,7 +327,7 @@ serve(async (req) => {
       inAppNotifications.push({
         user_id: booking.shopper_id,
         type: "booking_approved",
-        title: "Booking Approved!",
+        title: `Booking #${bookingRef} Approved!`,
         message: `Your booking for ${listingTitle} from ${startDate} to ${endDate} has been approved`,
         link: "/dashboard",
       });
@@ -396,7 +396,7 @@ serve(async (req) => {
       inAppNotifications.push({
         user_id: booking.shopper_id,
         type: "booking_declined",
-        title: "Booking Declined",
+        title: `Booking #${bookingRef} Declined`,
         message: `Your booking request for ${listingTitle} was not approved${host_response ? `: "${host_response}"` : ""}`,
         link: "/dashboard",
       });
