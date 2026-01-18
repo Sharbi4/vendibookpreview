@@ -118,14 +118,17 @@ export const GetBookedFasterCard = () => {
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden">
+    <div className="relative overflow-hidden rounded-xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+      
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
+        className="relative w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-primary" />
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-amber-500 shadow-md flex items-center justify-center">
+            <Sparkles className="h-4 w-4 text-white" />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-foreground">Get booked faster</h3>
@@ -140,23 +143,27 @@ export const GetBookedFasterCard = () => {
       </button>
 
       {isExpanded && (
-        <div className="px-4 pb-4 space-y-3">
+        <div className="relative px-4 pb-4 space-y-3">
           {tips.map((tip) => {
             const Icon = tip.icon;
             return (
               <div
                 key={tip.id}
-                className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg"
+                className="flex items-start gap-3 p-3 bg-card/80 backdrop-blur-sm rounded-lg border border-border"
               >
-                <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center flex-shrink-0">
-                  <Icon className="h-4 w-4 text-muted-foreground" />
+                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                  <Icon className="h-4 w-4 text-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">{tip.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{tip.description}</p>
                 </div>
                 {tip.actionTo && (
-                  <Button size="sm" variant="ghost" asChild className="flex-shrink-0 h-7 text-xs">
+                  <Button 
+                    size="sm" 
+                    asChild 
+                    className="flex-shrink-0 h-7 text-xs bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
+                  >
                     <Link to={tip.actionTo}>
                       {tip.actionLabel}
                       <ArrowRight className="h-3 w-3 ml-1" />
