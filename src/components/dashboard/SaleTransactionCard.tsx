@@ -29,15 +29,87 @@ interface SaleTransactionCardProps {
   isDisputing?: boolean;
 }
 
-const STATUS_CONFIG = {
-  pending: { label: 'Pending Payment', variant: 'secondary' as const, icon: Clock },
-  paid: { label: 'In Escrow', variant: 'default' as const, icon: ShieldCheck },
-  buyer_confirmed: { label: 'Buyer Confirmed', variant: 'default' as const, icon: CheckCircle2 },
-  seller_confirmed: { label: 'Seller Confirmed', variant: 'default' as const, icon: CheckCircle2 },
-  completed: { label: 'Completed', variant: 'default' as const, icon: CheckCircle2 },
-  disputed: { label: 'Disputed', variant: 'destructive' as const, icon: AlertCircle },
-  refunded: { label: 'Refunded', variant: 'secondary' as const, icon: DollarSign },
-  cancelled: { label: 'Cancelled', variant: 'secondary' as const, icon: AlertCircle },
+// Role-specific status labels for clarity
+const getStatusConfig = (status: string, role: 'buyer' | 'seller', transaction: SaleTransaction) => {
+  const hasShipping = transaction.fulfillment_type === 'delivery' || transaction.fulfillment_type === 'vendibook_freight';
+  
+  // Role-specific labels for better clarity
+  if (role === 'buyer') {
+    switch (status) {
+      case 'pending':
+        return { label: 'Pending Payment', variant: 'secondary' as const, icon: Clock };
+      case 'paid':
+        if (hasShipping && !transaction.shipped_at) {
+          return { label: 'Awaiting Shipment', variant: 'default' as const, icon: Package };
+        }
+        if (hasShipping && transaction.shipped_at && !transaction.delivered_at) {
+          return { label: 'In Transit', variant: 'default' as const, icon: Truck };
+        }
+        return { label: 'Ready to Confirm Receipt', variant: 'default' as const, icon: ShieldCheck };
+      case 'seller_confirmed':
+        return { label: 'Ready to Confirm Receipt', variant: 'default' as const, icon: ShieldCheck };
+      case 'buyer_confirmed':
+        return { label: 'Awaiting Seller Confirmation', variant: 'default' as const, icon: Clock };
+      case 'completed':
+        return { label: 'Complete', variant: 'default' as const, icon: CheckCircle2 };
+      case 'disputed':
+        return { label: 'Under Review', variant: 'destructive' as const, icon: AlertCircle };
+      case 'refunded':
+        return { label: 'Refunded', variant: 'secondary' as const, icon: DollarSign };
+      case 'cancelled':
+        return { label: 'Cancelled', variant: 'secondary' as const, icon: AlertCircle };
+      default:
+        return { label: 'Unknown', variant: 'secondary' as const, icon: Clock };
+    }
+  } else {
+    // Seller labels
+    switch (status) {
+      case 'pending':
+        return { label: 'Awaiting Payment', variant: 'secondary' as const, icon: Clock };
+      case 'paid':
+        if (hasShipping && !transaction.shipped_at) {
+          return { label: 'Ship Now', variant: 'default' as const, icon: Package };
+        }
+        if (hasShipping && transaction.shipped_at && !transaction.delivered_at) {
+          return { label: 'In Transit', variant: 'default' as const, icon: Truck };
+        }
+        return { label: 'Confirm Handoff', variant: 'default' as const, icon: ShieldCheck };
+      case 'buyer_confirmed':
+        return { label: 'Confirm to Release Funds', variant: 'default' as const, icon: ShieldCheck };
+      case 'seller_confirmed':
+        return { label: 'Awaiting Buyer Confirmation', variant: 'default' as const, icon: Clock };
+      case 'completed':
+        return { label: 'Funds Released', variant: 'default' as const, icon: CheckCircle2 };
+      case 'disputed':
+        return { label: 'Under Review', variant: 'destructive' as const, icon: AlertCircle };
+      case 'refunded':
+        return { label: 'Refunded', variant: 'secondary' as const, icon: DollarSign };
+      case 'cancelled':
+        return { label: 'Cancelled', variant: 'secondary' as const, icon: AlertCircle };
+      default:
+        return { label: 'Unknown', variant: 'secondary' as const, icon: Clock };
+    }
+  }
+};
+
+// Action button labels based on context
+const getActionLabel = (role: 'buyer' | 'seller', transaction: SaleTransaction): string => {
+  const hasShipping = transaction.fulfillment_type === 'delivery' || transaction.fulfillment_type === 'vendibook_freight';
+  
+  if (role === 'buyer') {
+    if (hasShipping && transaction.delivered_at) {
+      return 'Confirm Delivery';
+    }
+    return 'Confirm Receipt';
+  } else {
+    if (hasShipping && !transaction.shipped_at) {
+      return 'Mark as Shipped';
+    }
+    if (hasShipping) {
+      return 'Confirm Delivery';
+    }
+    return 'Confirm Handoff';
+  }
 };
 
 const SaleTransactionCard = ({ 
@@ -51,7 +123,7 @@ const SaleTransactionCard = ({
   const [disputeReason, setDisputeReason] = useState('');
   const [disputeDialogOpen, setDisputeDialogOpen] = useState(false);
   
-  const statusConfig = STATUS_CONFIG[transaction.status];
+  const statusConfig = getStatusConfig(transaction.status, role, transaction);
   const StatusIcon = statusConfig.icon;
   
   const otherParty = role === 'buyer' ? transaction.seller : transaction.buyer;
@@ -66,6 +138,8 @@ const SaleTransactionCard = ({
   const isWaitingForOther = role === 'buyer'
     ? transaction.buyer_confirmed_at && !transaction.seller_confirmed_at
     : transaction.seller_confirmed_at && !transaction.buyer_confirmed_at;
+
+  const actionLabel = getActionLabel(role, transaction);
 
   const handleSubmitDispute = () => {
     if (onDispute && disputeReason.length >= 10) {
@@ -255,7 +329,7 @@ const SaleTransactionCard = ({
               </div>
             )}
             
-            {/* Confirmation status */}
+            {/* Confirmation status with clearer labels */}
             <div className="flex flex-wrap items-center gap-4 mb-4 text-sm">
               <div className="flex items-center gap-2">
                 {transaction.buyer_confirmed_at ? (
@@ -264,7 +338,10 @@ const SaleTransactionCard = ({
                   <Clock className="h-4 w-4 text-amber-500" />
                 )}
                 <span className={transaction.buyer_confirmed_at ? 'text-emerald-600' : 'text-muted-foreground'}>
-                  Buyer {transaction.buyer_confirmed_at ? 'confirmed' : 'pending'}
+                  {transaction.buyer_confirmed_at 
+                    ? `Buyer confirmed ${format(new Date(transaction.buyer_confirmed_at), 'MMM d')}`
+                    : 'Buyer confirmation pending'
+                  }
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -274,10 +351,36 @@ const SaleTransactionCard = ({
                   <Clock className="h-4 w-4 text-amber-500" />
                 )}
                 <span className={transaction.seller_confirmed_at ? 'text-emerald-600' : 'text-muted-foreground'}>
-                  Seller {transaction.seller_confirmed_at ? 'confirmed' : 'pending'}
+                  {transaction.seller_confirmed_at 
+                    ? `Seller confirmed ${format(new Date(transaction.seller_confirmed_at), 'MMM d')}`
+                    : 'Seller confirmation pending'
+                  }
                 </span>
               </div>
             </div>
+
+            {/* Action hint for current user */}
+            {canConfirm && (
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mb-4">
+                <div className="flex items-start gap-2">
+                  <ShieldCheck className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      {role === 'buyer' 
+                        ? 'Ready to confirm receipt' 
+                        : 'Ready to confirm this sale'
+                      }
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {role === 'buyer'
+                        ? 'Once you confirm, funds will be released to the seller after their confirmation.'
+                        : 'Once both parties confirm, payment will be released to your account.'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Dispute message if disputed */}
             {transaction.status === 'disputed' && transaction.message && (
@@ -292,13 +395,14 @@ const SaleTransactionCard = ({
               </div>
             )}
             
-            {/* Actions */}
+            {/* Actions with clearer labels */}
             <div className="flex flex-wrap gap-2">
               {canConfirm && (
                 <Button 
                   onClick={() => onConfirm(transaction.id)}
                   disabled={isConfirming}
-                  className="bg-emerald-600 hover:bg-emerald-700"
+                  size="lg"
+                  className="bg-emerald-600 hover:bg-emerald-700 shadow-md"
                 >
                   {isConfirming ? (
                     <>
@@ -308,7 +412,7 @@ const SaleTransactionCard = ({
                   ) : (
                     <>
                       <CheckCircle2 className="h-4 w-4 mr-2" />
-                      {role === 'buyer' ? 'Confirm Receipt' : 'Confirm Delivery'}
+                      {actionLabel}
                     </>
                   )}
                 </Button>
@@ -366,32 +470,49 @@ const SaleTransactionCard = ({
               )}
               
               {isWaitingForOther && (
-                <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-sm">
-                    Waiting for {role === 'buyer' ? 'seller' : 'buyer'} confirmation
-                  </span>
+                <div className="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 px-4 py-2.5 rounded-lg">
+                  <Clock className="h-4 w-4 flex-shrink-0" />
+                  <div className="text-sm">
+                    <span className="font-medium">
+                      Awaiting {role === 'buyer' ? 'seller' : 'buyer'} confirmation
+                    </span>
+                    <span className="text-amber-600 ml-1">
+                      — Funds will be released once confirmed
+                    </span>
+                  </div>
                 </div>
               )}
               
               {transaction.status === 'completed' && (
-                <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span className="text-sm">
-                    {role === 'seller' 
-                      ? transaction.payout_completed_at 
-                        ? 'Payment released to your account'
-                        : 'Payment being processed'
-                      : 'Transaction complete'
-                    }
-                  </span>
+                <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-lg">
+                  <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                  <div className="text-sm">
+                    <span className="font-medium">
+                      {role === 'seller' 
+                        ? transaction.payout_completed_at 
+                          ? 'Funds released to your account'
+                          : 'Processing payout to your account'
+                        : 'Transaction complete'
+                      }
+                    </span>
+                    {role === 'seller' && transaction.payout_completed_at && (
+                      <span className="text-emerald-600 ml-1">
+                        — ${transaction.seller_payout.toLocaleString()} deposited
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
 
               {transaction.status === 'disputed' && (
-                <div className="flex items-center gap-2 text-destructive bg-destructive/10 px-3 py-2 rounded-lg">
-                  <AlertCircle className="h-4 w-4" />
-                  <span className="text-sm">Under review by our team</span>
+                <div className="flex items-center gap-2 text-destructive bg-destructive/10 border border-destructive/20 px-4 py-2.5 rounded-lg">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                  <div className="text-sm">
+                    <span className="font-medium">Under review by our team</span>
+                    <span className="text-destructive/80 ml-1">
+                      — Payment held securely
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
