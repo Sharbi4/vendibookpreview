@@ -748,8 +748,14 @@ const SaleCheckout = () => {
                   {/* Price Summary for Step 1 */}
                   <div className="mt-6 pt-4 border-t border-border space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Item price</span>
-                      <span className="text-foreground">${priceSale.toLocaleString()}</span>
+                      <div className="flex flex-col">
+                        <span className="text-foreground font-medium">{listing?.title}</span>
+                        <span className="text-xs text-muted-foreground">Item #{listing?.id?.slice(0, 8).toUpperCase()}</span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className="text-xs text-muted-foreground">For Sale Price</span>
+                        <span className="text-foreground font-medium">${priceSale.toLocaleString()}</span>
+                      </div>
                     </div>
                     {fulfillmentSelected === 'delivery' && deliveryFee > 0 && (
                       <div className="flex justify-between text-sm">
@@ -1149,8 +1155,14 @@ const SaleCheckout = () => {
                     <h3 className="text-sm font-medium text-foreground mb-3">Order Total</h3>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Item price</span>
-                        <span className="text-foreground">${priceSale.toLocaleString()}</span>
+                        <div className="flex flex-col">
+                          <span className="text-foreground font-medium">{listing?.title}</span>
+                          <span className="text-xs text-muted-foreground">Item #{listing?.id?.slice(0, 8).toUpperCase()}</span>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <span className="text-xs text-muted-foreground">For Sale Price</span>
+                          <span className="text-foreground font-medium">${priceSale.toLocaleString()}</span>
+                        </div>
                       </div>
                       {fulfillmentSelected === 'delivery' && deliveryFee > 0 && (
                         <div className="flex justify-between text-sm">
