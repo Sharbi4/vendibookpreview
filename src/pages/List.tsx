@@ -112,100 +112,6 @@ const ListPage: React.FC = () => {
     // Enhanced choose mode
     return (
       <div className="space-y-8">
-        {/* Drafts Section - show only if user has drafts */}
-        {user && drafts.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <FileEdit className="w-4 h-4 text-muted-foreground" />
-                <h3 className="font-semibold text-sm">Your Drafts</h3>
-                <Badge variant="secondary" className="text-xs">
-                  {drafts.length}
-                </Badge>
-              </div>
-            </div>
-            <div className="space-y-2">
-              {drafts.slice(0, 3).map((draft) => (
-                <Card
-                  key={draft.id}
-                  className="transition-all hover:shadow-md hover:border-primary/30 group"
-                >
-                  <CardContent className="flex items-center gap-3 p-3">
-                    <div 
-                      className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
-                      onClick={() => navigate(`/edit-listing/${draft.id}`)}
-                    >
-                      {draft.cover_image_url ? (
-                        <img
-                          src={draft.cover_image_url}
-                          alt={draft.title}
-                          className="w-12 h-12 rounded-lg object-cover shrink-0"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                          <ImageIcon className="w-5 h-5 text-muted-foreground" />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {draft.title || 'Untitled Draft'}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {draft.category?.replace('_', ' ') || 'No category'} • {draft.mode === 'rent' ? 'For Rent' : 'For Sale'}
-                        </p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
-                    </div>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete draft?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will permanently delete "{draft.title || 'Untitled Draft'}". This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            onClick={() => deleteListing(draft.id)}
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </CardContent>
-                </Card>
-              ))}
-              {drafts.length > 3 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full text-xs text-muted-foreground"
-                  onClick={() => navigate('/dashboard')}
-                >
-                  View all {drafts.length} drafts
-                </Button>
-              )}
-            </div>
-          </motion.div>
-        )}
-
         {/* Hero section */}
         <motion.div 
           className="text-center"
@@ -389,11 +295,103 @@ const ListPage: React.FC = () => {
     );
   };
 
+  // Compact drafts sidebar component
+  const DraftsSidebar = () => {
+    if (!user || drafts.length === 0 || mode !== 'choose') return null;
+    
+    return (
+      <motion.aside
+        className="hidden lg:block w-56 shrink-0"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="sticky top-24 space-y-2">
+          <div className="flex items-center gap-2 px-1 mb-2">
+            <FileEdit className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Drafts</span>
+            <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+              {drafts.length}
+            </Badge>
+          </div>
+          <div className="space-y-1">
+            {drafts.slice(0, 5).map((draft) => (
+              <div
+                key={draft.id}
+                className="group flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                onClick={() => navigate(`/edit-listing/${draft.id}`)}
+              >
+                {draft.cover_image_url ? (
+                  <img
+                    src={draft.cover_image_url}
+                    alt={draft.title}
+                    className="w-8 h-8 rounded object-cover shrink-0"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded bg-muted flex items-center justify-center shrink-0">
+                    <ImageIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium truncate">
+                    {draft.title || 'Untitled'}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    {draft.category?.replace('_', ' ') || 'No category'}
+                  </p>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete draft?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete "{draft.title || 'Untitled Draft'}". This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        onClick={() => deleteListing(draft.id)}
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            ))}
+          </div>
+          {drafts.length > 5 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-[10px] text-muted-foreground h-7"
+              onClick={() => navigate('/dashboard')}
+            >
+              View all {drafts.length} drafts
+            </Button>
+          )}
+        </div>
+      </motion.aside>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Enhanced Header */}
       <div className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container max-w-4xl mx-auto px-4 py-4">
+        <div className="container max-w-5xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <button
               onClick={handleBack}
@@ -410,9 +408,14 @@ const ListPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="container max-w-2xl mx-auto px-4 py-8 sm:py-12">
-        {renderContent()}
+      {/* Content with sidebar layout */}
+      <div className="container max-w-5xl mx-auto px-4 py-8 sm:py-12">
+        <div className="flex gap-8">
+          <DraftsSidebar />
+          <div className="flex-1 max-w-2xl mx-auto">
+            {renderContent()}
+          </div>
+        </div>
       </div>
     </div>
   );
