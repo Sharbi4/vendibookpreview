@@ -676,19 +676,51 @@ const SaleCheckout = () => {
                             )}
                             
                             {hasValidEstimate && !isEstimating && (
-                              <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
-                                <div className="flex items-center justify-between">
+                              <div className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl">
+                                <div className="flex items-center justify-between mb-3">
+                                  <span className="text-sm font-semibold text-foreground">Freight Quote</span>
+                                  <span className="text-xs text-muted-foreground bg-background/80 px-2 py-0.5 rounded-full">
+                                    ${estimate?.rate_per_mile?.toFixed(2)}/mile
+                                  </span>
+                                </div>
+                                
+                                {/* Premium breakdown */}
+                                <div className="space-y-1.5 text-xs border-t border-primary/10 pt-3 mb-3">
+                                  <div className="flex justify-between text-muted-foreground">
+                                    <span>Distance ({estimate?.distance_miles?.toFixed(0)} mi × $4.50)</span>
+                                    <span>${estimate?.base_cost?.toLocaleString()}</span>
+                                  </div>
+                                  <div className="flex justify-between text-muted-foreground">
+                                    <span>Fuel surcharge (8%)</span>
+                                    <span>${estimate?.fuel_surcharge?.toLocaleString()}</span>
+                                  </div>
+                                  <div className="flex justify-between text-muted-foreground">
+                                    <span>Handling fee</span>
+                                    <span>${estimate?.handling_fee?.toLocaleString()}</span>
+                                  </div>
+                                  <div className="flex justify-between text-muted-foreground pt-1 border-t border-primary/10">
+                                    <span>Subtotal</span>
+                                    <span>${estimate?.subtotal?.toLocaleString()}</span>
+                                  </div>
+                                  <div className="flex justify-between text-muted-foreground">
+                                    <span>Tax ({((estimate?.tax_rate ?? 0) * 100).toFixed(2)}%)</span>
+                                    <span>${estimate?.tax_amount?.toLocaleString()}</span>
+                                  </div>
+                                </div>
+                                
+                                {/* Total */}
+                                <div className="flex items-center justify-between pt-2 border-t border-primary/20">
                                   <div>
-                                    <span className="text-sm font-medium text-foreground">Freight Cost</span>
+                                    <span className="text-sm font-semibold text-foreground">Total Freight</span>
                                     <div className="text-xs text-muted-foreground">
-                                      {estimate?.distance_miles?.toFixed(0)} miles • Est. 7-10 business days
+                                      Est. 7-10 business days
                                     </div>
                                   </div>
                                   <span className={cn(
-                                    "text-lg font-semibold",
-                                    isFreightSellerPaid ? "text-emerald-600" : "text-foreground"
+                                    "text-xl font-bold",
+                                    isFreightSellerPaid ? "text-emerald-600" : "text-primary"
                                   )}>
-                                    {isFreightSellerPaid ? 'FREE' : `+$${freightCost.toLocaleString()}`}
+                                    {isFreightSellerPaid ? 'FREE' : `$${freightCost.toLocaleString()}`}
                                   </span>
                                 </div>
                               </div>
@@ -726,10 +758,24 @@ const SaleCheckout = () => {
                       </div>
                     )}
                     {fulfillmentSelected === 'vendibook_freight' && hasValidEstimate && !isFreightSellerPaid && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Freight shipping</span>
-                        <span className="text-foreground">+${freightCost.toLocaleString()}</span>
-                      </div>
+                      <>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Freight ({estimate?.distance_miles?.toFixed(0)} mi)</span>
+                          <span className="text-foreground">+${estimate?.base_cost?.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Fuel surcharge</span>
+                          <span className="text-foreground">+${estimate?.fuel_surcharge?.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Handling</span>
+                          <span className="text-foreground">+${estimate?.handling_fee?.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Tax ({((estimate?.tax_rate ?? 0) * 100).toFixed(2)}%)</span>
+                          <span className="text-foreground">+${estimate?.tax_amount?.toLocaleString()}</span>
+                        </div>
+                      </>
                     )}
                     {fulfillmentSelected === 'vendibook_freight' && hasValidEstimate && isFreightSellerPaid && (
                       <div className="flex justify-between text-sm">
@@ -737,7 +783,7 @@ const SaleCheckout = () => {
                         <span className="text-emerald-600 font-medium">FREE (Seller pays)</span>
                       </div>
                     )}
-                    <div className="flex justify-between font-semibold pt-2 border-t border-border">
+                    <div className="flex justify-between font-bold text-lg pt-2 border-t border-border">
                       <span>Total</span>
                       <span className="text-primary">${totalPrice.toLocaleString()}</span>
                     </div>
@@ -1099,23 +1145,50 @@ const SaleCheckout = () => {
                   </div>
 
                   {/* Price Summary */}
-                  <div className="border border-border rounded-xl p-4 mb-6">
-                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Order Total</h3>
+                  <div className="border border-border rounded-xl p-4 mb-6 bg-gradient-to-br from-muted/30 to-muted/50">
+                    <h3 className="text-sm font-medium text-foreground mb-3">Order Total</h3>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Item price</span>
                         <span className="text-foreground">${priceSale.toLocaleString()}</span>
                       </div>
-                      {currentDeliveryFee > 0 && (
+                      {fulfillmentSelected === 'delivery' && deliveryFee > 0 && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            {fulfillmentSelected === 'vendibook_freight' ? 'Freight shipping' : 'Delivery fee'}
-                          </span>
-                          <span className="text-foreground">+${currentDeliveryFee.toLocaleString()}</span>
+                          <span className="text-muted-foreground">Delivery fee</span>
+                          <span className="text-foreground">+${deliveryFee.toLocaleString()}</span>
                         </div>
                       )}
-                      <div className="flex justify-between font-bold text-lg pt-2 border-t border-border">
-                        <span>Total</span>
+                      {fulfillmentSelected === 'vendibook_freight' && hasValidEstimate && !isFreightSellerPaid && (
+                        <>
+                          <div className="pt-2 border-t border-border/50">
+                            <div className="text-xs text-muted-foreground mb-2">Freight breakdown ($4.50/mi)</div>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Distance ({estimate?.distance_miles?.toFixed(0)} miles)</span>
+                            <span className="text-foreground">+${estimate?.base_cost?.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Fuel surcharge (8%)</span>
+                            <span className="text-foreground">+${estimate?.fuel_surcharge?.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Handling fee</span>
+                            <span className="text-foreground">+${estimate?.handling_fee?.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Tax ({((estimate?.tax_rate ?? 0) * 100).toFixed(2)}%)</span>
+                            <span className="text-foreground">+${estimate?.tax_amount?.toLocaleString()}</span>
+                          </div>
+                        </>
+                      )}
+                      {fulfillmentSelected === 'vendibook_freight' && isFreightSellerPaid && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Freight shipping</span>
+                          <span className="text-emerald-600 font-medium">FREE (Seller pays)</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between font-bold text-xl pt-3 mt-2 border-t-2 border-primary/20">
+                        <span>Grand Total</span>
                         <span className="text-primary">${totalPrice.toLocaleString()}</span>
                       </div>
                     </div>
