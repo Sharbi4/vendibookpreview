@@ -240,29 +240,46 @@ export const QuickStartWizard: React.FC = () => {
       {/* Step: Category */}
       {step === 'category' && (
         <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground mb-2">What are you listing?</h1>
-            <p className="text-muted-foreground">Choose one to get started.</p>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            {categoryOptions.map((option) => {
-              const Icon = option.icon;
-              return (
-                <button
-                  key={option.value}
-                  onClick={() => handleCategorySelect(option.value)}
-                  className={cn(
-                    "p-6 rounded-xl border-2 text-center transition-all hover:border-primary hover:bg-primary/5",
-                    data.category === option.value
-                      ? "border-primary bg-primary/5"
-                      : "border-border"
-                  )}
-                >
-                  <Icon className="w-8 h-8 mx-auto mb-3 text-primary" />
-                  <span className="font-medium text-foreground">{option.label}</span>
-                </button>
-              );
-            })}
+          <div className="relative overflow-hidden rounded-2xl border-2 border-primary/20 shadow-xl">
+            {/* Gradient Header */}
+            <div className="relative bg-gradient-to-r from-primary/15 via-amber-500/10 to-yellow-400/5 border-b border-primary/20 px-6 py-5">
+              <h1 className="text-2xl font-bold text-foreground mb-1">What are you listing?</h1>
+              <p className="text-muted-foreground">Choose one to get started.</p>
+            </div>
+            {/* White Content */}
+            <div className="relative bg-white dark:bg-card p-6">
+              <div className="grid grid-cols-2 gap-4">
+                {categoryOptions.map((option) => {
+                  const Icon = option.icon;
+                  const isSelected = data.category === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => handleCategorySelect(option.value)}
+                      className={cn(
+                        "relative overflow-hidden p-5 rounded-xl border-2 text-center transition-all",
+                        isSelected
+                          ? "border-primary bg-gradient-to-br from-primary/10 to-amber-500/10 shadow-md"
+                          : "border-primary/20 bg-gradient-to-br from-primary/5 to-amber-500/5 hover:border-primary/40 hover:shadow-md"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center shadow-md",
+                        isSelected
+                          ? "bg-gradient-to-br from-primary to-amber-500"
+                          : "bg-gradient-to-br from-primary/20 to-amber-500/20"
+                      )}>
+                        <Icon className={cn(
+                          "w-6 h-6",
+                          isSelected ? "text-white" : "text-primary"
+                        )} />
+                      </div>
+                      <span className="font-semibold text-foreground">{option.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -270,32 +287,49 @@ export const QuickStartWizard: React.FC = () => {
       {/* Step: Mode */}
       {step === 'mode' && (
         <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground mb-2">Rent or sell?</h1>
-            <p className="text-muted-foreground">You can change this later.</p>
+          <div className="relative overflow-hidden rounded-2xl border-2 border-primary/20 shadow-xl">
+            {/* Gradient Header */}
+            <div className="relative bg-gradient-to-r from-primary/15 via-amber-500/10 to-yellow-400/5 border-b border-primary/20 px-6 py-5">
+              <h1 className="text-2xl font-bold text-foreground mb-1">Rent or sell?</h1>
+              <p className="text-muted-foreground">You can change this later.</p>
+            </div>
+            {/* White Content */}
+            <div className="relative bg-white dark:bg-card p-6">
+              <div className="grid grid-cols-2 gap-4">
+                {modeOptions.map((option) => {
+                  const Icon = option.icon;
+                  const isSelected = data.mode === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => handleModeSelect(option.value)}
+                      className={cn(
+                        "relative overflow-hidden p-5 rounded-xl border-2 text-center transition-all",
+                        isSelected
+                          ? "border-primary bg-gradient-to-br from-primary/10 to-amber-500/10 shadow-md"
+                          : "border-primary/20 bg-gradient-to-br from-primary/5 to-amber-500/5 hover:border-primary/40 hover:shadow-md"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center shadow-md",
+                        isSelected
+                          ? "bg-gradient-to-br from-primary to-amber-500"
+                          : "bg-gradient-to-br from-primary/20 to-amber-500/20"
+                      )}>
+                        <Icon className={cn(
+                          "w-6 h-6",
+                          isSelected ? "text-white" : "text-primary"
+                        )} />
+                      </div>
+                      <span className="font-semibold text-foreground block mb-1">{option.label}</span>
+                      <span className="text-sm text-muted-foreground">{option.description}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            {modeOptions.map((option) => {
-              const Icon = option.icon;
-              return (
-                <button
-                  key={option.value}
-                  onClick={() => handleModeSelect(option.value)}
-                  className={cn(
-                    "p-6 rounded-xl border-2 text-center transition-all hover:border-primary hover:bg-primary/5",
-                    data.mode === option.value
-                      ? "border-primary bg-primary/5"
-                      : "border-border"
-                  )}
-                >
-                  <Icon className="w-8 h-8 mx-auto mb-3 text-primary" />
-                  <span className="font-medium text-foreground block mb-1">{option.label}</span>
-                  <span className="text-sm text-muted-foreground">{option.description}</span>
-                </button>
-              );
-            })}
-          </div>
-          <Button variant="ghost" onClick={() => setStep('category')} className="mt-4">
+          <Button variant="ghost" onClick={() => setStep('category')} className="mt-2">
             ← Back
           </Button>
         </div>
@@ -304,38 +338,47 @@ export const QuickStartWizard: React.FC = () => {
       {/* Step: Location */}
       {step === 'location' && (
         <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground mb-2">Where is it located?</h1>
-            <p className="text-muted-foreground">City, state, or zip code.</p>
-          </div>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <div className="relative">
-                <MapPinned className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="location"
-                  placeholder="e.g., Los Angeles, CA"
-                  value={data.location}
-                  onChange={handleLocationChange}
-                  className="pl-10"
-                />
+          <div className="relative overflow-hidden rounded-2xl border-2 border-primary/20 shadow-xl">
+            {/* Gradient Header */}
+            <div className="relative bg-gradient-to-r from-primary/15 via-amber-500/10 to-yellow-400/5 border-b border-primary/20 px-6 py-5">
+              <h1 className="text-2xl font-bold text-foreground mb-1">Where is it located?</h1>
+              <p className="text-muted-foreground">City, state, or zip code.</p>
+            </div>
+            {/* White Content */}
+            <div className="relative bg-white dark:bg-card p-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="location" className="font-medium">Location</Label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-amber-500/20 flex items-center justify-center">
+                      <MapPinned className="w-4 h-4 text-primary" />
+                    </div>
+                    <Input
+                      id="location"
+                      placeholder="e.g., Los Angeles, CA"
+                      value={data.location}
+                      onChange={handleLocationChange}
+                      className="pl-14 h-12 border-2 border-primary/20 focus:border-primary"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleUseMyLocation}
+                  className="text-sm text-primary hover:underline font-medium"
+                >
+                  Use my current location
+                </button>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={handleUseMyLocation}
-              className="text-sm text-primary hover:underline"
-            >
-              Use my current location
-            </button>
           </div>
-          <div className="flex flex-col gap-3 pt-4">
+          <div className="flex flex-col gap-3 pt-2">
             <div className="flex items-center gap-3">
               <Button variant="ghost" onClick={() => setStep('mode')}>
                 ← Back
               </Button>
               <Button 
+                variant="gradient"
                 onClick={handleCreateDraft} 
                 disabled={isCreating}
                 className="flex-1"
