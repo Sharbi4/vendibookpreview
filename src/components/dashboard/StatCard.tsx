@@ -14,14 +14,15 @@ const StatCard = ({
   label, 
   value, 
   subtext,
-  iconBgClass = 'bg-primary/10',
-  iconClass = 'text-primary'
 }: StatCardProps) => {
   return (
-    <div className="bg-card border border-border rounded-xl p-6">
-      <div className="flex items-center gap-4">
-        <div className={`w-12 h-12 rounded-full ${iconBgClass} flex items-center justify-center`}>
-          <Icon className={`h-6 w-6 ${iconClass}`} />
+    <div className="relative overflow-hidden rounded-xl p-6 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+      
+      <div className="relative flex items-center gap-4">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-md">
+          <Icon className="h-6 w-6 text-white" />
         </div>
         <div>
           <p className="text-2xl font-bold text-foreground">{value}</p>

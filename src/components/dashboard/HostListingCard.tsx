@@ -47,8 +47,11 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete }: HostListingC
 
   return (
     <>
-      <div className="bg-card border border-border rounded-xl overflow-hidden card-hover">
-        <div className="flex flex-col sm:flex-row">
+      <div className="relative overflow-hidden rounded-xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10 card-hover">
+        {/* Animated background */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+        
+        <div className="relative flex flex-col sm:flex-row">
           {/* Image */}
           <div className="sm:w-48 h-40 sm:h-auto flex-shrink-0">
             <img
@@ -92,14 +95,14 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete }: HostListingC
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border flex-wrap">
-              <Button variant="outline" size="sm" asChild>
+            <div className="flex items-center gap-2 mt-4 pt-4 border-t border-primary/20 flex-wrap">
+              <Button variant="outline" size="sm" asChild className="bg-card/80 backdrop-blur-sm">
                 <Link to={`/listing/${listing.id}`}>
                   <Eye className="h-4 w-4 mr-1" />
                   View
                 </Link>
               </Button>
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" asChild className="bg-card/80 backdrop-blur-sm">
                 <Link to={`/edit-listing/${listing.id}`}>
                   <Edit2 className="h-4 w-4 mr-1" />
                   Edit
@@ -110,6 +113,7 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete }: HostListingC
                   variant="outline" 
                   size="sm"
                   onClick={() => setShowCalendar(true)}
+                  className="bg-card/80 backdrop-blur-sm"
                 >
                   <Calendar className="h-4 w-4 mr-1" />
                   Availability
@@ -120,6 +124,7 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete }: HostListingC
                   variant="outline" 
                   size="sm"
                   onClick={() => onPause(listing.id)}
+                  className="bg-card/80 backdrop-blur-sm"
                 >
                   <Pause className="h-4 w-4 mr-1" />
                   Pause
@@ -127,9 +132,9 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete }: HostListingC
               )}
               {(listing.status === 'draft' || listing.status === 'paused') && onPublish && (
                 <Button 
-                  variant="outline" 
                   size="sm"
                   onClick={() => onPublish(listing.id)}
+                  className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
                 >
                   <Play className="h-4 w-4 mr-1" />
                   Publish

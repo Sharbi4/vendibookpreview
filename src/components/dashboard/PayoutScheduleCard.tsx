@@ -52,12 +52,15 @@ export const PayoutScheduleCard = ({
   const recentPastPayouts = pastPayouts.slice(0, 5);
 
   return (
-    <Card className="border-0 shadow-lg bg-gradient-to-br from-card to-card/80 overflow-hidden">
-      <CardHeader className="pb-3 border-b border-border/50">
+    <Card className="relative overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10 shadow-lg">
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+      
+      <CardHeader className="relative pb-3 border-b border-primary/20">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#635bff]/10 flex items-center justify-center">
-              <Calendar className="h-4 w-4 text-[#635bff]" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-md">
+              <Calendar className="h-4 w-4 text-white" />
             </div>
             Payout Schedule
           </CardTitle>
@@ -69,7 +72,7 @@ export const PayoutScheduleCard = ({
                 size="sm" 
                 onClick={onOpenStripeDashboard}
                 disabled={isOpeningDashboard}
-                className="text-xs"
+                className="text-xs bg-card/80 backdrop-blur-sm"
               >
                 {isOpeningDashboard ? (
                   <Loader2 className="h-3 w-3 animate-spin mr-1" />
@@ -81,14 +84,14 @@ export const PayoutScheduleCard = ({
         </div>
       </CardHeader>
       
-      <CardContent className="p-0">
+      <CardContent className="relative p-0">
         {/* Next Payout Banner */}
         {pendingPayout > 0 && (
-          <div className="p-4 bg-gradient-to-r from-[#635bff]/10 via-[#635bff]/5 to-transparent border-b border-border/50">
+          <div className="p-4 bg-gradient-to-r from-primary/10 via-amber-500/10 to-transparent border-b border-primary/20">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-[#635bff]/20 flex items-center justify-center">
-                  <Wallet className="h-6 w-6 text-[#635bff]" />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-md">
+                  <Wallet className="h-6 w-6 text-white" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">

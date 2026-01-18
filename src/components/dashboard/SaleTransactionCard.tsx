@@ -162,8 +162,11 @@ const SaleTransactionCard = ({
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow">
-      <CardContent className="p-0">
+    <Card className="relative overflow-hidden hover:shadow-md transition-shadow border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+      
+      <CardContent className="relative p-0">
         <div className="flex flex-col sm:flex-row">
           {/* Image */}
           <div className="w-full sm:w-48 h-32 sm:h-auto flex-shrink-0">

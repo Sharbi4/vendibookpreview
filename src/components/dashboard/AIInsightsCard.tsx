@@ -55,18 +55,21 @@ export const AIInsightsCard = () => {
   };
 
   return (
-    <Card className="border-0 shadow-lg bg-gradient-to-br from-card via-card to-primary/5 overflow-hidden">
-      <CardHeader className="pb-3">
+    <Card className="relative overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10 shadow-lg">
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+      
+      <CardHeader className="relative pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary to-purple-500 rounded-full blur-md opacity-50 animate-pulse" />
-              <div className="relative icon-gradient-container">
-                <Sparkles className="h-5 w-5 text-primary icon-gradient" />
+              <div className="absolute inset-0 bg-gradient-to-r from-primary to-amber-500 rounded-full blur-md opacity-50 animate-pulse" />
+              <div className="relative p-1.5 bg-gradient-to-br from-primary to-amber-500 rounded-lg shadow-md">
+                <Sparkles className="h-4 w-4 text-white" />
               </div>
             </div>
             AI Insights
-            <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full ml-2">
+            <span className="text-xs font-normal text-primary bg-primary/10 px-2 py-0.5 rounded-full ml-2">
               Powered by AI
             </span>
           </CardTitle>
@@ -115,7 +118,7 @@ export const AIInsightsCard = () => {
         )}
       </CardHeader>
       
-      <CardContent className="space-y-3">
+      <CardContent className="relative space-y-3">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8 gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />

@@ -15,39 +15,45 @@ interface EnhancedStatCardProps {
 
 const variantStyles = {
   default: {
-    bg: 'bg-gradient-to-br from-card to-muted/30',
-    iconBg: 'bg-primary/10',
-    iconColor: 'text-primary',
-    glow: 'bg-primary/10',
+    bg: 'bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10',
+    border: 'border-primary/30',
+    iconBg: 'bg-gradient-to-br from-primary to-amber-500',
+    iconColor: 'text-white',
+    glow: 'bg-primary/20',
   },
   primary: {
-    bg: 'bg-gradient-to-br from-primary/10 to-primary/5',
-    iconBg: 'bg-primary/20',
-    iconColor: 'text-primary',
+    bg: 'bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10',
+    border: 'border-primary/30',
+    iconBg: 'bg-gradient-to-br from-primary to-amber-500',
+    iconColor: 'text-white',
     glow: 'bg-primary/20',
   },
   success: {
     bg: 'bg-gradient-to-br from-emerald-500/10 to-emerald-500/5',
-    iconBg: 'bg-emerald-500/20',
-    iconColor: 'text-emerald-600',
+    border: 'border-emerald-500/30',
+    iconBg: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
+    iconColor: 'text-white',
     glow: 'bg-emerald-500/20',
   },
   warning: {
     bg: 'bg-gradient-to-br from-amber-500/10 to-amber-500/5',
-    iconBg: 'bg-amber-500/20',
-    iconColor: 'text-amber-600',
+    border: 'border-amber-500/30',
+    iconBg: 'bg-gradient-to-br from-amber-500 to-amber-600',
+    iconColor: 'text-white',
     glow: 'bg-amber-500/20',
   },
   danger: {
     bg: 'bg-gradient-to-br from-red-500/10 to-red-500/5',
-    iconBg: 'bg-red-500/20',
-    iconColor: 'text-red-600',
+    border: 'border-red-500/30',
+    iconBg: 'bg-gradient-to-br from-red-500 to-red-600',
+    iconColor: 'text-white',
     glow: 'bg-red-500/20',
   },
   info: {
     bg: 'bg-gradient-to-br from-blue-500/10 to-blue-500/5',
-    iconBg: 'bg-blue-500/20',
-    iconColor: 'text-blue-600',
+    border: 'border-blue-500/30',
+    iconBg: 'bg-gradient-to-br from-blue-500 to-blue-600',
+    iconColor: 'text-white',
     glow: 'bg-blue-500/20',
   },
 };
@@ -68,9 +74,13 @@ const EnhancedStatCard = ({
 
   return (
     <div className={cn(
-      "relative overflow-hidden rounded-xl border border-border/50 p-5 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] group",
-      styles.bg
+      "relative overflow-hidden rounded-xl border-2 p-5 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] group",
+      styles.bg,
+      styles.border
     )}>
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse opacity-50" />
+      
       {/* Animated glow effect */}
       <div className={cn(
         "absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500",
@@ -80,12 +90,10 @@ const EnhancedStatCard = ({
       {/* Icon with gradient container */}
       <div className="relative flex items-start justify-between mb-3">
         <div className={cn(
-          "w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110",
+          "w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-md",
           styles.iconBg
         )}>
-          <div className="icon-gradient-container">
-            <Icon className={cn("h-6 w-6 icon-gradient", styles.iconColor)} />
-          </div>
+          <Icon className={cn("h-6 w-6", styles.iconColor)} />
         </div>
         
         {/* Trend indicator */}

@@ -62,19 +62,24 @@ const VerificationProgress = () => {
   }
 
   return (
-    <div className="p-4 rounded-xl bg-card border border-border">
-      <div className="flex items-center justify-between mb-1">
+    <div className="relative overflow-hidden p-4 rounded-xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+      
+      <div className="relative flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
-          <Shield className="h-4 w-4 text-muted-foreground" />
+          <div className="p-1.5 bg-gradient-to-br from-primary to-amber-500 rounded-lg shadow-md">
+            <Shield className="h-3.5 w-3.5 text-white" />
+          </div>
           <span className="text-sm font-medium text-foreground">Trust & Verification</span>
         </div>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs font-semibold text-primary">
           {completedSteps} of {steps.length} complete
         </span>
       </div>
-      <p className="text-xs text-muted-foreground mb-3">Complete these steps to unlock all features.</p>
+      <p className="relative text-xs text-muted-foreground mb-3">Complete these steps to unlock all features.</p>
 
-      <div className="space-y-2">
+      <div className="relative space-y-2">
         {steps.map((step) => {
           const isNext = !step.isComplete && steps.slice(0, steps.indexOf(step)).every(s => s.isComplete);
           
@@ -82,20 +87,20 @@ const VerificationProgress = () => {
             <div
               key={step.id}
               className={cn(
-                "flex items-center justify-between py-2 px-3 rounded-lg",
-                step.isComplete && "bg-muted/50",
-                isNext && "bg-primary/5 ring-1 ring-primary/20"
+                "flex items-center justify-between py-2 px-3 rounded-lg bg-card/60 backdrop-blur-sm",
+                step.isComplete && "opacity-70",
+                isNext && "bg-card border border-primary/50 shadow-sm"
               )}
             >
               <div className="flex items-center gap-2.5">
                 <div className={cn(
                   "w-5 h-5 rounded-full flex items-center justify-center",
                   step.isComplete 
-                    ? "bg-emerald-100 dark:bg-emerald-900/50" 
+                    ? "bg-gradient-to-br from-primary to-amber-500" 
                     : "bg-muted border border-border"
                 )}>
                   {step.isComplete ? (
-                    <Check className="h-3 w-3 text-emerald-600" strokeWidth={2.5} />
+                    <Check className="h-3 w-3 text-white" strokeWidth={2.5} />
                   ) : (
                     <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
                   )}
@@ -111,10 +116,9 @@ const VerificationProgress = () => {
               {!step.isComplete && step.action && isNext && (
                 <Button
                   size="sm"
-                  variant="default"
                   onClick={step.action}
                   disabled={step.isLoading}
-                  className="h-7 text-xs gap-1"
+                  className="h-7 text-xs gap-1 bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
                 >
                   {step.isLoading ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
