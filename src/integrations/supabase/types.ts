@@ -618,6 +618,7 @@ export type Database = {
           price_sale: number | null
           price_weekly: number | null
           published_at: string | null
+          rental_buffer_days: number | null
           status: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at: string
@@ -663,6 +664,7 @@ export type Database = {
           price_sale?: number | null
           price_weekly?: number | null
           published_at?: string | null
+          rental_buffer_days?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at?: string
@@ -708,6 +710,7 @@ export type Database = {
           price_sale?: number | null
           price_weekly?: number | null
           published_at?: string | null
+          rental_buffer_days?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
           title?: string
           updated_at?: string
