@@ -303,6 +303,9 @@ export type Database = {
           paid_at: string | null
           payment_intent_id: string | null
           payment_status: string | null
+          payout_processed: boolean | null
+          payout_processed_at: string | null
+          payout_transfer_id: string | null
           responded_at: string | null
           shopper_id: string
           start_date: string
@@ -337,6 +340,9 @@ export type Database = {
           paid_at?: string | null
           payment_intent_id?: string | null
           payment_status?: string | null
+          payout_processed?: boolean | null
+          payout_processed_at?: string | null
+          payout_transfer_id?: string | null
           responded_at?: string | null
           shopper_id: string
           start_date: string
@@ -371,6 +377,9 @@ export type Database = {
           paid_at?: string | null
           payment_intent_id?: string | null
           payment_status?: string | null
+          payout_processed?: boolean | null
+          payout_processed_at?: string | null
+          payout_transfer_id?: string | null
           responded_at?: string | null
           shopper_id?: string
           start_date?: string
