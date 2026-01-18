@@ -66,10 +66,10 @@ const BookingStepRequirements = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="border-b border-border/50 pb-4">
+      <div className="border-b border-primary/10 pb-4">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <Shield className="h-5 w-5 text-primary" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-md transition-transform duration-300 hover:scale-105">
+            <Shield className="h-5 w-5 text-white" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-foreground">Document Requirements</h3>
@@ -214,9 +214,11 @@ const BookingStepRequirements = ({
       )}
 
       {/* What's Next */}
-      <div className="p-3 bg-muted/50 rounded-lg">
+      <div className="p-3 bg-gradient-to-r from-muted/50 to-primary/5 rounded-xl border border-border/50">
         <div className="flex items-center gap-2 text-sm">
-          <ArrowRight className="h-4 w-4 text-primary" />
+          <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center">
+            <ArrowRight className="h-3 w-3 text-white" />
+          </div>
           <span className="text-muted-foreground">
             <strong className="text-foreground">Next:</strong> Enter booking details and contact info
           </span>

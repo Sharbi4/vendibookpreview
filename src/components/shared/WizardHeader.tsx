@@ -31,11 +31,13 @@ const WizardHeader = ({
   onHelpClick,
 }: WizardHeaderProps) => {
   return (
-    <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-b border-border/50">
+    <div className="relative bg-gradient-to-r from-primary/15 via-amber-500/10 to-yellow-400/5 border-b border-primary/20">
       {/* Top bar */}
       <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4 text-primary" />
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-sm">
+            <ShieldCheck className="h-3.5 w-3.5 text-white" />
+          </div>
           <span className="font-semibold text-sm text-foreground">
             {mode === 'checkout' ? 'Secure Checkout' : 'Secure Booking'}
           </span>
