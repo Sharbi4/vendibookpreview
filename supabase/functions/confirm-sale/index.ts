@@ -231,6 +231,7 @@ serve(async (req) => {
       ? 'completed' 
       : (role === 'buyer' ? 'buyer_confirmed' : 'seller_confirmed');
 
+    // Send email notification
     EdgeRuntime.waitUntil(
       fetch(`${supabaseUrl}/functions/v1/send-sale-notification`, {
         method: 'POST',
@@ -243,11 +244,112 @@ serve(async (req) => {
           notification_type: notificationType,
         }),
       }).then(res => {
-        logStep("Notification sent", { status: res.status, type: notificationType });
+        logStep("Email notification sent", { status: res.status, type: notificationType });
       }).catch(err => {
-        logStep("Notification failed", { error: err.message });
+        logStep("Email notification failed", { error: err.message });
       })
     );
+
+    // Fetch listing title for notification message
+    const { data: listingData } = await supabaseClient
+      .from('listings')
+      .select('title')
+      .eq('id', transaction.listing_id)
+      .single();
+    
+    const listingTitle = listingData?.title || 'your item';
+
+    // Send in-app notifications based on status
+    if (role === 'buyer') {
+      // Buyer confirmed - notify seller
+      EdgeRuntime.waitUntil(
+        fetch(`${supabaseUrl}/functions/v1/create-notification`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+          },
+          body: JSON.stringify({
+            user_id: transaction.seller_id,
+            type: 'sale_confirmed',
+            title: 'Buyer confirmed receipt',
+            message: `The buyer has confirmed receipt of "${listingTitle}". ${newStatus === 'completed' ? 'Funds have been released to your account!' : 'Please confirm the handoff to release funds.'}`,
+            link: '/dashboard?tab=sales',
+            send_email: false, // Email already sent via send-sale-notification
+          }),
+        }).then(res => {
+          logStep("In-app notification sent to seller", { status: res.status });
+        }).catch(err => {
+          logStep("In-app notification to seller failed", { error: err.message });
+        })
+      );
+    } else {
+      // Seller confirmed - notify buyer
+      EdgeRuntime.waitUntil(
+        fetch(`${supabaseUrl}/functions/v1/create-notification`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+          },
+          body: JSON.stringify({
+            user_id: transaction.buyer_id,
+            type: 'sale_confirmed',
+            title: 'Seller confirmed handoff',
+            message: `The seller has confirmed handoff of "${listingTitle}". ${newStatus === 'completed' ? 'Transaction complete!' : 'Please confirm receipt to release funds.'}`,
+            link: '/dashboard?tab=purchases',
+            send_email: false, // Email already sent via send-sale-notification
+          }),
+        }).then(res => {
+          logStep("In-app notification sent to buyer", { status: res.status });
+        }).catch(err => {
+          logStep("In-app notification to buyer failed", { error: err.message });
+        })
+      );
+    }
+
+    // If completed, send completion notifications to both parties
+    if (newStatus === 'completed') {
+      // Notify both parties that transaction is complete
+      EdgeRuntime.waitUntil(
+        Promise.all([
+          fetch(`${supabaseUrl}/functions/v1/create-notification`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseAnonKey}`,
+            },
+            body: JSON.stringify({
+              user_id: transaction.buyer_id,
+              type: 'sale',
+              title: 'Transaction complete!',
+              message: `Your purchase of "${listingTitle}" is complete. Thank you for using VendiBook!`,
+              link: '/dashboard?tab=purchases',
+              send_email: false,
+            }),
+          }),
+          fetch(`${supabaseUrl}/functions/v1/create-notification`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseAnonKey}`,
+            },
+            body: JSON.stringify({
+              user_id: transaction.seller_id,
+              type: 'sale',
+              title: 'Sale complete - Funds released!',
+              message: `Your sale of "${listingTitle}" is complete. Funds have been released to your account!`,
+              link: '/dashboard?tab=sales',
+              send_email: false,
+            }),
+          }),
+        ]).then(() => {
+          logStep("Completion in-app notifications sent to both parties");
+        }).catch(err => {
+          logStep("Completion in-app notifications failed", { error: err.message });
+        })
+      );
+    }
 
     return new Response(
       JSON.stringify({ 
