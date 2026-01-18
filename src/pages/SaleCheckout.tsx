@@ -433,6 +433,9 @@ const SaleCheckout = () => {
                           <div className="font-medium text-foreground">Local Pickup</div>
                           <div className="text-sm text-muted-foreground">Pick up at seller's location</div>
                         </div>
+                        <div className="text-right">
+                          <span className="text-sm font-medium text-emerald-600">FREE</span>
+                        </div>
                         {fulfillmentSelected === 'pickup' && (
                           <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
                             <Check className="w-4 h-4 text-primary-foreground" />
@@ -442,88 +445,221 @@ const SaleCheckout = () => {
                     )}
 
                     {fulfillmentOptions.includes('delivery') && (
-                      <button
-                        type="button"
-                        onClick={() => setFulfillmentSelected('delivery')}
-                        className={cn(
-                          "w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left",
-                          fulfillmentSelected === 'delivery' 
-                            ? "border-primary bg-primary/5" 
-                            : "border-border hover:border-primary/50"
-                        )}
-                      >
-                        <div className={cn(
-                          "flex items-center justify-center w-12 h-12 rounded-lg",
-                          fulfillmentSelected === 'delivery' ? "bg-primary/10" : "bg-muted"
-                        )}>
-                          <Truck className={cn("h-6 w-6", fulfillmentSelected === 'delivery' ? "text-primary" : "text-muted-foreground")} />
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-medium text-foreground">Local Delivery</div>
-                          <div className="text-sm text-muted-foreground">
-                            {listing.delivery_radius_miles ? `Within ${listing.delivery_radius_miles} miles` : 'Seller delivers to you'}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          {deliveryFee ? (
-                            <span className="text-sm font-medium text-foreground">+${deliveryFee}</span>
-                          ) : (
-                            <span className="text-sm font-medium text-emerald-600">FREE</span>
+                      <div className="space-y-3">
+                        <button
+                          type="button"
+                          onClick={() => setFulfillmentSelected('delivery')}
+                          className={cn(
+                            "w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left",
+                            fulfillmentSelected === 'delivery' 
+                              ? "border-primary bg-primary/5" 
+                              : "border-border hover:border-primary/50"
                           )}
-                        </div>
+                        >
+                          <div className={cn(
+                            "flex items-center justify-center w-12 h-12 rounded-lg",
+                            fulfillmentSelected === 'delivery' ? "bg-primary/10" : "bg-muted"
+                          )}>
+                            <Truck className={cn("h-6 w-6", fulfillmentSelected === 'delivery' ? "text-primary" : "text-muted-foreground")} />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium text-foreground">Local Delivery</div>
+                            <div className="text-sm text-muted-foreground">
+                              {listing.delivery_radius_miles ? `Within ${listing.delivery_radius_miles} miles` : 'Seller delivers to you'}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            {deliveryFee ? (
+                              <span className="text-sm font-medium text-foreground">+${deliveryFee.toLocaleString()}</span>
+                            ) : (
+                              <span className="text-sm font-medium text-emerald-600">FREE</span>
+                            )}
+                          </div>
+                          {fulfillmentSelected === 'delivery' && (
+                            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                              <Check className="w-4 h-4 text-primary-foreground" />
+                            </div>
+                          )}
+                        </button>
+                        
+                        {/* Show delivery address input when delivery is selected */}
                         {fulfillmentSelected === 'delivery' && (
-                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                            <Check className="w-4 h-4 text-primary-foreground" />
+                          <div className="ml-16 p-4 bg-muted/30 rounded-lg border border-border">
+                            <ValidatedInput
+                              id="deliveryAddressStep1"
+                              label="Delivery Address"
+                              value={deliveryAddress}
+                              onChange={setDeliveryAddress}
+                              placeholder="Enter your delivery address"
+                              error={fieldErrors.deliveryAddress}
+                              touched={touchedFields.has('deliveryAddress')}
+                              required
+                            />
+                            {deliveryFee > 0 && (
+                              <div className="mt-3 flex items-center justify-between text-sm p-2 bg-primary/5 rounded-lg">
+                                <span className="text-muted-foreground">Delivery Fee</span>
+                                <span className="font-semibold text-foreground">+${deliveryFee.toLocaleString()}</span>
+                              </div>
+                            )}
                           </div>
                         )}
-                      </button>
+                      </div>
                     )}
 
                     {fulfillmentOptions.includes('vendibook_freight') && (
-                      <button
-                        type="button"
-                        onClick={() => setFulfillmentSelected('vendibook_freight')}
-                        className={cn(
-                          "w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left",
-                          fulfillmentSelected === 'vendibook_freight' 
-                            ? "border-primary bg-primary/5" 
-                            : "border-border hover:border-primary/50"
-                        )}
-                      >
-                        <div className={cn(
-                          "flex items-center justify-center w-12 h-12 rounded-lg",
-                          fulfillmentSelected === 'vendibook_freight' ? "bg-primary/10" : "bg-muted"
-                        )}>
-                          <Package className={cn("h-6 w-6", fulfillmentSelected === 'vendibook_freight' ? "text-primary" : "text-muted-foreground")} />
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-medium text-foreground">Vendibook Freight</div>
-                          <div className="text-sm text-muted-foreground">Nationwide shipping with tracking</div>
-                        </div>
-                        <div className="text-right">
-                          {isFreightSellerPaid ? (
-                            <span className="text-sm font-medium text-emerald-600">FREE</span>
-                          ) : hasValidEstimate ? (
-                            <span className="text-sm font-medium text-foreground">+${freightCost.toFixed(0)}</span>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">Get quote</span>
+                      <div className="space-y-3">
+                        <button
+                          type="button"
+                          onClick={() => setFulfillmentSelected('vendibook_freight')}
+                          className={cn(
+                            "w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left",
+                            fulfillmentSelected === 'vendibook_freight' 
+                              ? "border-primary bg-primary/5" 
+                              : "border-border hover:border-primary/50"
                           )}
-                        </div>
+                        >
+                          <div className={cn(
+                            "flex items-center justify-center w-12 h-12 rounded-lg",
+                            fulfillmentSelected === 'vendibook_freight' ? "bg-primary/10" : "bg-muted"
+                          )}>
+                            <Package className={cn("h-6 w-6", fulfillmentSelected === 'vendibook_freight' ? "text-primary" : "text-muted-foreground")} />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium text-foreground">Vendibook Freight</div>
+                            <div className="text-sm text-muted-foreground">Nationwide shipping with tracking</div>
+                          </div>
+                          <div className="text-right">
+                            {isFreightSellerPaid ? (
+                              <span className="text-sm font-medium text-emerald-600">FREE</span>
+                            ) : hasValidEstimate ? (
+                              <span className="text-sm font-medium text-foreground">+${freightCost.toLocaleString()}</span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Enter address for quote</span>
+                            )}
+                          </div>
+                          {fulfillmentSelected === 'vendibook_freight' && (
+                            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                              <Check className="w-4 h-4 text-primary-foreground" />
+                            </div>
+                          )}
+                        </button>
+                        
+                        {/* Show address input and freight estimate when freight is selected */}
                         {fulfillmentSelected === 'vendibook_freight' && (
-                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                            <Check className="w-4 h-4 text-primary-foreground" />
+                          <div className="ml-16 p-4 bg-muted/30 rounded-lg border border-border space-y-3">
+                            <div>
+                              <Label htmlFor="freightAddressStep1" className="text-sm font-medium mb-2 block">
+                                Delivery Address *
+                              </Label>
+                              <AddressAutocomplete
+                                id="freightAddressStep1"
+                                value={deliveryAddress}
+                                onChange={(value) => {
+                                  setDeliveryAddress(value);
+                                  setIsAddressComplete(false);
+                                  clearEstimate();
+                                }}
+                                onAddressSelect={(addr) => {
+                                  setDeliveryAddress(addr.fullAddress);
+                                  setIsAddressComplete(addr.validation.isComplete);
+                                  if (addr.validation.isComplete) {
+                                    fetchFreightEstimate(addr.fullAddress);
+                                  }
+                                }}
+                                onValidationChange={(validation) => {
+                                  setIsAddressComplete(validation?.isComplete ?? false);
+                                }}
+                                placeholder="Enter delivery address for quote"
+                                requireComplete={true}
+                              />
+                            </div>
+                            
+                            {isEstimating && (
+                              <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                <span className="text-sm text-muted-foreground">Calculating freight rate at $4.50/mile...</span>
+                              </div>
+                            )}
+                            
+                            {hasValidEstimate && !isEstimating && (
+                              <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <span className="text-sm font-medium text-foreground">Freight Cost</span>
+                                    <div className="text-xs text-muted-foreground">
+                                      {estimate?.distance_miles?.toFixed(0)} miles • Est. {estimate?.estimated_transit_days.min}-{estimate?.estimated_transit_days.max} days
+                                    </div>
+                                  </div>
+                                  <span className={cn(
+                                    "text-lg font-semibold",
+                                    isFreightSellerPaid ? "text-emerald-600" : "text-foreground"
+                                  )}>
+                                    {isFreightSellerPaid ? 'FREE' : `+$${freightCost.toLocaleString()}`}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {estimateError && (
+                              <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+                                <AlertCircle className="h-4 w-4" />
+                                <span>{estimateError}</span>
+                              </div>
+                            )}
                           </div>
                         )}
-                      </button>
+                      </div>
                     )}
+                  </div>
+
+                  {/* Price Summary for Step 1 */}
+                  <div className="mt-6 pt-4 border-t border-border space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Item price</span>
+                      <span className="text-foreground">${priceSale.toLocaleString()}</span>
+                    </div>
+                    {fulfillmentSelected === 'delivery' && deliveryFee > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Delivery fee</span>
+                        <span className="text-foreground">+${deliveryFee.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {fulfillmentSelected === 'vendibook_freight' && hasValidEstimate && !isFreightSellerPaid && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Freight shipping</span>
+                        <span className="text-foreground">+${freightCost.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {fulfillmentSelected === 'vendibook_freight' && hasValidEstimate && isFreightSellerPaid && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Freight shipping</span>
+                        <span className="text-emerald-600 font-medium">FREE (Seller pays)</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-semibold pt-2 border-t border-border">
+                      <span>Total</span>
+                      <span className="text-primary">${totalPrice.toLocaleString()}</span>
+                    </div>
                   </div>
 
                   <Button 
                     onClick={() => setCurrentStep('information')}
-                    className="w-full mt-6" 
+                    className="w-full mt-4" 
                     size="lg"
+                    disabled={
+                      (fulfillmentSelected === 'vendibook_freight' && !hasValidEstimate && !isFreightSellerPaid) ||
+                      (fulfillmentSelected === 'delivery' && !deliveryAddress.trim()) ||
+                      isEstimating
+                    }
                   >
-                    Start Purchase
+                    {isEstimating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Calculating...
+                      </>
+                    ) : (
+                      'Continue'
+                    )}
                   </Button>
                 </div>
               )}
