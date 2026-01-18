@@ -613,7 +613,7 @@ const SaleCheckout = () => {
                           </div>
                           <div className="flex-1">
                             <div className="font-medium text-foreground">Vendibook Freight</div>
-                            <div className="text-sm text-muted-foreground">Nationwide shipping with tracking</div>
+                            <div className="text-sm text-muted-foreground">7-10 days shipping anywhere in the US</div>
                           </div>
                           <div className="text-right">
                             {isFreightSellerPaid ? (
@@ -633,7 +633,14 @@ const SaleCheckout = () => {
                         
                         {/* Show address input and freight estimate when freight is selected */}
                         {fulfillmentSelected === 'vendibook_freight' && (
-                          <div className="ml-16 p-4 bg-muted/30 rounded-lg border border-border space-y-3">
+                          <div className="ml-16 p-4 bg-muted/30 rounded-lg border border-border space-y-4">
+                            {/* Info banner */}
+                            <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                              <p className="text-xs text-muted-foreground">
+                                <strong className="text-foreground">How it works:</strong> Enter your address to calculate freight. Within 2 business days after payment, we'll contact you via email or phone to schedule delivery.
+                              </p>
+                            </div>
+                            
                             <div>
                               <Label htmlFor="freightAddressStep1" className="text-sm font-medium mb-2 block">
                                 Delivery Address *
@@ -664,7 +671,7 @@ const SaleCheckout = () => {
                             {isEstimating && (
                               <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
                                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                                <span className="text-sm text-muted-foreground">Calculating freight rate at $4.50/mile...</span>
+                                <span className="text-sm text-muted-foreground">Calculating freight rate...</span>
                               </div>
                             )}
                             
@@ -674,7 +681,7 @@ const SaleCheckout = () => {
                                   <div>
                                     <span className="text-sm font-medium text-foreground">Freight Cost</span>
                                     <div className="text-xs text-muted-foreground">
-                                      {estimate?.distance_miles?.toFixed(0)} miles • Est. {estimate?.estimated_transit_days.min}-{estimate?.estimated_transit_days.max} days
+                                      {estimate?.distance_miles?.toFixed(0)} miles • Est. 7-10 business days
                                     </div>
                                   </div>
                                   <span className={cn(
@@ -693,6 +700,13 @@ const SaleCheckout = () => {
                                 <span>{estimateError}</span>
                               </div>
                             )}
+
+                            {/* Delivery Contact Info Notice */}
+                            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                              <p className="text-xs text-amber-800 dark:text-amber-300">
+                                <strong>Shipping contact info:</strong> We'll use your email and phone number from the next step to coordinate delivery scheduling.
+                              </p>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -990,6 +1004,9 @@ const SaleCheckout = () => {
                           {fulfillmentSelected === 'delivery' && 'Local Delivery'}
                           {fulfillmentSelected === 'vendibook_freight' && 'Vendibook Freight'}
                         </p>
+                        {fulfillmentSelected === 'vendibook_freight' && (
+                          <p className="text-xs text-muted-foreground">7-10 business days • Anywhere in US</p>
+                        )}
                         {(fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight') && deliveryAddress && (
                           <p className="text-sm text-muted-foreground mt-1">{deliveryAddress}</p>
                         )}
@@ -1157,19 +1174,46 @@ const SaleCheckout = () => {
 
                   {/* Next Steps */}
                   <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6">
-                    <h3 className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                     <h3 className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
                       <Clock className="h-4 w-4 text-primary" />
                       What happens next?
                     </h3>
-                    <ul className="text-xs text-muted-foreground space-y-1.5">
-                      <li>• You'll be redirected to complete your payment securely via Stripe</li>
-                      <li>• The seller will be notified and will confirm the sale</li>
-                      <li>• You'll receive details on pickup/delivery coordination</li>
-                      <li>• After you both confirm, funds are released</li>
-                    </ul>
+                    {fulfillmentSelected === 'vendibook_freight' ? (
+                      <ul className="text-xs text-muted-foreground space-y-1.5">
+                        <li>• Complete your payment securely via Stripe</li>
+                        <li>• Within 2 business days, we'll contact you via email or phone to schedule delivery</li>
+                        <li>• Your item ships with tracking (7-10 business days)</li>
+                        <li>• Once delivered, confirm receipt and funds are released to the seller</li>
+                      </ul>
+                    ) : (
+                      <ul className="text-xs text-muted-foreground space-y-1.5">
+                        <li>• You'll be redirected to complete your payment securely via Stripe</li>
+                        <li>• The seller will be notified and will confirm the sale</li>
+                        <li>• You'll receive details on pickup/delivery coordination</li>
+                        <li>• After you both confirm, funds are released</li>
+                      </ul>
+                    )}
                   </div>
 
-                  {/* Questions CTA */}
+                  {/* Freight Contact Notice */}
+                  {fulfillmentSelected === 'vendibook_freight' && (
+                    <div className="border border-primary/30 bg-primary/5 rounded-xl p-4 mb-6">
+                      <h3 className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                        <Truck className="h-4 w-4 text-primary" />
+                        Shipping Delivery Contact
+                      </h3>
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <p>We'll use the following info to schedule your delivery:</p>
+                        <div className="mt-2 p-2 bg-background/50 rounded-lg">
+                          <p><strong>Email:</strong> {email}</p>
+                          <p><strong>Phone:</strong> {phone}</p>
+                        </div>
+                        <p className="mt-2 text-amber-700 dark:text-amber-400">
+                          Make sure this information is correct — we'll reach out within 2 business days after payment.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   <div className="border border-border rounded-xl p-4 mb-6 bg-muted/20">
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
