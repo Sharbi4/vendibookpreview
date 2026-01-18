@@ -136,9 +136,15 @@ serve(async (req) => {
                     <p style="margin: 0 0 10px 0;"><strong>Total:</strong> $${booking.total_price}</p>
                     ${booking.message ? `<p style="margin: 0;"><strong>Message:</strong> ${booking.message}</p>` : ""}
                   </div>
-                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                    Please log in to your dashboard to approve or decline this request.
+                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
+                    Please review and respond to this request as soon as possible.
                   </p>
+                  <div style="text-align: center; margin: 24px 0;">
+                    <a href="https://vendibookpreview.lovable.app/dashboard" 
+                       style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                      View Booking Request
+                    </a>
+                  </div>
                   <p style="color: #888; font-size: 14px; margin-top: 30px;">
                     — The VendiBook Team<br>
                     <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a>
@@ -194,9 +200,15 @@ serve(async (req) => {
                     <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
                     <p style="margin: 0;"><strong>Total:</strong> $${booking.total_price}</p>
                   </div>
-                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
                     The host will review your request and respond soon. We'll notify you once they respond.
                   </p>
+                  <div style="text-align: center; margin: 24px 0;">
+                    <a href="https://vendibookpreview.lovable.app/dashboard" 
+                       style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                      View Booking Status
+                    </a>
+                  </div>
                   <p style="color: #888; font-size: 14px; margin-top: 30px;">
                     — The VendiBook Team<br>
                     <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a>
@@ -280,9 +292,15 @@ serve(async (req) => {
                           <p style="margin: 0; color: #4a4a4a;">${host_response}</p>
                         </div>
                       ` : ""}
-                      <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                      <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
                         You can message the host through your dashboard if you have any questions.
                       </p>
+                      <div style="text-align: center; margin: 24px 0;">
+                        <a href="https://vendibookpreview.lovable.app/dashboard" 
+                           style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                          View Booking Details
+                        </a>
+                      </div>
                       <p style="color: #888; font-size: 14px; margin-top: 30px;">
                         — The VendiBook Team<br>
                         <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a>
@@ -344,9 +362,15 @@ serve(async (req) => {
                       <p style="margin: 0; color: #4a4a4a;">${host_response}</p>
                     </div>
                   ` : ""}
-                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
                     Don't worry! There are plenty of other great options available. Browse our marketplace to find your perfect match.
                   </p>
+                  <div style="text-align: center; margin: 24px 0;">
+                    <a href="https://vendibookpreview.lovable.app/search" 
+                       style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                      Browse Listings
+                    </a>
+                  </div>
                   <p style="color: #888; font-size: 14px; margin-top: 30px;">
                     — The VendiBook Team<br>
                     <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a>
