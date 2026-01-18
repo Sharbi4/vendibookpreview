@@ -243,9 +243,9 @@ const MobileMenu = ({
                 <Button
                   variant="gradient"
                   className="w-full h-11 rounded-xl"
-                  onClick={() => handleNavigation('/auth')}
+                  onClick={() => handleNavigation('/list')}
                 >
-                  Get Started
+                  Create a Listing
                 </Button>
               </div>
             )}
