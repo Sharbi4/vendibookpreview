@@ -955,53 +955,140 @@ const FilterContent = ({
 
   const availableAmenities = getAvailableAmenities();
   return (
-    <>
-      {/* Date Range Filter */}
-      <DateRangeFilter
-        dateRange={dateRange}
-        onDateRangeChange={onDateRangeChange}
-      />
+    <div className="space-y-5">
+      {/* Type Filter - First */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium flex items-center gap-2">
+          <Tag className="h-4 w-4" />
+          Listing Type
+        </Label>
+        <div className="flex flex-wrap gap-2">
+          {[
+            { value: 'all', label: 'All' },
+            { value: 'rent', label: 'For Rent' },
+            { value: 'sale', label: 'For Sale' },
+          ].map((option) => (
+            <label 
+              key={option.value} 
+              className={cn(
+                "flex items-center gap-1.5 cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors",
+                mode === option.value 
+                  ? "bg-primary text-primary-foreground border-primary" 
+                  : "border-border hover:bg-muted"
+              )}
+            >
+              <input
+                type="radio"
+                name="mode"
+                checked={mode === option.value}
+                onChange={() => onModeChange(option.value)}
+                className="sr-only"
+              />
+              <span>{option.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
 
-      {/* Location Filter with Geocoding */}
-      <div className="space-y-3">
+      {/* Category Filter */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium flex items-center">
+          Category
+          <CategoryInfoModal />
+        </Label>
+        <div className="flex flex-wrap gap-2">
+          <label 
+            className={cn(
+              "flex items-center cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors",
+              category === 'all' 
+                ? "bg-primary text-primary-foreground border-primary" 
+                : "border-border hover:bg-muted"
+            )}
+          >
+            <input
+              type="radio"
+              name="category"
+              checked={category === 'all'}
+              onChange={() => onCategoryChange('all')}
+              className="sr-only"
+            />
+            <span>All</span>
+          </label>
+          {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
+            <label 
+              key={key} 
+              className={cn(
+                "flex items-center cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors",
+                category === key 
+                  ? "bg-primary text-primary-foreground border-primary" 
+                  : "border-border hover:bg-muted"
+              )}
+            >
+              <input
+                type="radio"
+                name="category"
+                checked={category === key}
+                onChange={() => onCategoryChange(key)}
+                className="sr-only"
+              />
+              <span>{label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Location Filter with Geocoding - Second */}
+      <div className="space-y-2">
         <Label className="text-sm font-medium flex items-center gap-2">
           <MapPin className="h-4 w-4" />
           Location
         </Label>
-        <LocationSearchInput
-          value={locationText}
-          onChange={onLocationTextChange}
-          onLocationSelect={onLocationSelect}
-          selectedCoordinates={locationCoords}
-          placeholder="City, state, or zip code"
-        />
+        <div className="max-w-xs">
+          <LocationSearchInput
+            value={locationText}
+            onChange={onLocationTextChange}
+            onLocationSelect={onLocationSelect}
+            selectedCoordinates={locationCoords}
+            placeholder="City, state, or zip code"
+          />
+        </div>
       </div>
 
       {/* Radius Filter */}
-      <RadiusFilter
-        radius={searchRadius}
-        onChange={onRadiusChange}
-        disabled={!locationCoords}
-      />
+      <div className="max-w-xs">
+        <RadiusFilter
+          radius={searchRadius}
+          onChange={onRadiusChange}
+          disabled={!locationCoords}
+        />
+      </div>
+
+      {/* Date Range Filter */}
+      <div className="max-w-xs">
+        <DateRangeFilter
+          dateRange={dateRange}
+          onDateRangeChange={onDateRangeChange}
+        />
+      </div>
 
       {/* Delivery to My Location Filter */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         <Label className="text-sm font-medium flex items-center gap-2">
           <Truck className="h-4 w-4" />
           Delivery Options
         </Label>
-        <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+        <label className="flex items-start gap-3 cursor-pointer p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors max-w-xs">
           <Checkbox
             checked={deliveryFilterEnabled}
             onCheckedChange={(checked) => onDeliveryFilterChange(checked === true)}
             disabled={!locationCoords}
           />
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             <span className="text-sm font-medium">Delivers to my location</span>
             <p className="text-xs text-muted-foreground">
               {locationCoords 
-                ? "Show only listings that can deliver to your selected location"
-                : "Select a location above to enable this filter"
+                ? "Only listings that deliver to you"
+                : "Select a location first"
               }
             </p>
           </div>
@@ -1009,75 +1096,26 @@ const FilterContent = ({
       </div>
 
       {/* Instant Book Filter */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         <Label className="text-sm font-medium flex items-center gap-2">
           <Zap className="h-4 w-4" />
           Booking Options
         </Label>
-        <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+        <label className="flex items-start gap-3 cursor-pointer p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors max-w-xs">
           <Checkbox
             checked={instantBookOnly}
             onCheckedChange={(checked) => onInstantBookChange(checked === true)}
           />
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             <span className="text-sm font-medium flex items-center gap-1.5">
               <Zap className="h-3.5 w-3.5 text-amber-500" />
               Instant Book only
             </span>
             <p className="text-xs text-muted-foreground">
-              Show only rentals you can book and pay for immediately
+              Book and pay immediately
             </p>
           </div>
         </label>
-      </div>
-
-      {/* Type Filter */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium flex items-center gap-2">
-          <Tag className="h-4 w-4" />
-          Listing Type
-        </Label>
-        <div className="space-y-2">
-          {[
-            { value: 'all', label: 'All Types' },
-            { value: 'rent', label: 'For Rent' },
-            { value: 'sale', label: 'For Sale' },
-          ].map((option) => (
-            <label key={option.value} className="flex items-center gap-2 cursor-pointer">
-              <Checkbox
-                checked={mode === option.value}
-                onCheckedChange={() => onModeChange(option.value)}
-              />
-              <span className="text-sm">{option.label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Category Filter */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium flex items-center">
-          Category
-          <CategoryInfoModal />
-        </Label>
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <Checkbox
-              checked={category === 'all'}
-              onCheckedChange={() => onCategoryChange('all')}
-            />
-            <span className="text-sm">All Categories</span>
-          </label>
-          {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-            <label key={key} className="flex items-center gap-2 cursor-pointer">
-              <Checkbox
-                checked={category === key}
-                onCheckedChange={() => onCategoryChange(key)}
-              />
-              <span className="text-sm">{label}</span>
-            </label>
-          ))}
-        </div>
       </div>
 
       {/* Amenities Filter - Show when category is selected */}
@@ -1146,7 +1184,7 @@ const FilterContent = ({
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
