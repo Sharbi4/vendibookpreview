@@ -64,12 +64,15 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
   }, [allRequiredComplete]);
 
   return (
-    <div className={cn("bg-card border border-border rounded-xl overflow-hidden", className)}>
+    <div className={cn("relative overflow-hidden rounded-xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10", className)}>
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+      
       {/* Header */}
-      <div className="p-4 pb-3">
+      <div className="relative p-4 pb-3">
         <div className="flex items-center justify-between mb-1">
           <h3 className="font-semibold text-foreground">Launch Your Listing</h3>
-          <span className="text-xs text-muted-foreground font-medium">
+          <span className="text-xs text-primary font-semibold">
             {progressPercentage}%
           </span>
         </div>
@@ -81,9 +84,11 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
       
       {/* Do This Next Spotlight */}
       {nextStep && !allRequiredComplete && (
-        <div className="mx-4 mb-3 p-3 bg-muted/50 border border-border rounded-lg">
+        <div className="relative mx-4 mb-3 p-3 bg-card/80 backdrop-blur-sm border border-border rounded-lg">
           <div className="flex items-center gap-1.5 mb-2">
-            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <div className="p-1 bg-gradient-to-br from-primary to-amber-500 rounded-md">
+              <Sparkles className="w-3 h-3 text-white" />
+            </div>
             <span className="text-[10px] font-semibold text-primary uppercase tracking-wide">Do this next</span>
           </div>
           <div className="flex items-center justify-between gap-3">
@@ -102,7 +107,7 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
               )}
               <Button 
                 size="sm" 
-                className="h-7 text-xs px-3"
+                className="h-7 text-xs px-3 bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
                 onClick={() => onItemClick?.(nextStep.id)}
               >
                 Start
@@ -114,26 +119,26 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
       )}
       
       {/* Checklist Items */}
-      <div className="px-4 pb-2">
+      <div className="relative px-4 pb-2">
         <div className="space-y-1">
           {items.map((item) => (
             <button
               key={item.id}
               onClick={() => onItemClick?.(item.id)}
               className={cn(
-                "w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-all",
+                "w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-all bg-card/60 backdrop-blur-sm",
                 item.current
-                  ? "bg-primary/10 border border-primary/30"
+                  ? "bg-card border border-primary/50 shadow-sm"
                   : item.completed
-                  ? "bg-muted/30 hover:bg-muted/50"
-                  : "hover:bg-muted/50"
+                  ? "hover:bg-card/80"
+                  : "hover:bg-card/80"
               )}
             >
               <div
                 className={cn(
                   "w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors",
                   item.completed
-                    ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400"
+                    ? "bg-gradient-to-br from-primary to-amber-500 text-white"
                     : "bg-muted text-muted-foreground"
                 )}
               >
@@ -177,9 +182,14 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
       </div>
       
       {/* Footer with Publish Button */}
-      <div className="p-4 pt-2 border-t border-border/50">
+      <div className="relative p-4 pt-2 border-t border-primary/20">
         <Button 
-          className="w-full"
+          className={cn(
+            "w-full",
+            allRequiredComplete 
+              ? "bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
+              : ""
+          )}
           disabled={!allRequiredComplete}
           variant={allRequiredComplete ? "default" : "secondary"}
         >
