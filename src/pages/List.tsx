@@ -19,7 +19,8 @@ import {
   ShieldCheck,
   BadgeCheck,
   FileEdit,
-  ImageIcon
+  ImageIcon,
+  Trash2
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { QuickStartWizard } from '@/components/listing-wizard/QuickStartWizard';
@@ -31,6 +32,17 @@ import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import vendibookIcon from '@/assets/vendibook-icon.png';
 import { useHostListings } from '@/hooks/useHostListings';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 type ListingMode = 'choose' | 'import' | 'scratch';
 
@@ -49,7 +61,7 @@ const tips = [
 const ListPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
-  const { listings, isLoading: listingsLoading } = useHostListings();
+  const { listings, isLoading: listingsLoading, deleteListing } = useHostListings();
   const [mode, setMode] = useState<ListingMode>('choose');
   const [currentTip, setCurrentTip] = useState(0);
 
@@ -120,30 +132,63 @@ const ListPage: React.FC = () => {
               {drafts.slice(0, 3).map((draft) => (
                 <Card
                   key={draft.id}
-                  className="cursor-pointer transition-all hover:shadow-md hover:border-primary/30 group"
-                  onClick={() => navigate(`/edit-listing/${draft.id}`)}
+                  className="transition-all hover:shadow-md hover:border-primary/30 group"
                 >
                   <CardContent className="flex items-center gap-3 p-3">
-                    {draft.cover_image_url ? (
-                      <img
-                        src={draft.cover_image_url}
-                        alt={draft.title}
-                        className="w-12 h-12 rounded-lg object-cover shrink-0"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                        <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                    <div 
+                      className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+                      onClick={() => navigate(`/edit-listing/${draft.id}`)}
+                    >
+                      {draft.cover_image_url ? (
+                        <img
+                          src={draft.cover_image_url}
+                          alt={draft.title}
+                          className="w-12 h-12 rounded-lg object-cover shrink-0"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                          <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {draft.title || 'Untitled Draft'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {draft.category?.replace('_', ' ') || 'No category'} • {draft.mode === 'rent' ? 'For Rent' : 'For Sale'}
+                        </p>
                       </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">
-                        {draft.title || 'Untitled Draft'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {draft.category?.replace('_', ' ') || 'No category'} • {draft.mode === 'rent' ? 'For Rent' : 'For Sale'}
-                      </p>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete draft?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete "{draft.title || 'Untitled Draft'}". This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            onClick={() => deleteListing(draft.id)}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </CardContent>
                 </Card>
               ))}
