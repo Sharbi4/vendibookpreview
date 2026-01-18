@@ -16,8 +16,14 @@ import Footer from '@/components/layout/Footer';
 import { 
   ShieldCheck, Loader2, MapPin, Truck, Calculator, AlertCircle, 
   CreditCard, Banknote, Check, ArrowLeft, Package, Clock, 
-  DollarSign, Handshake, CheckCircle2, AlertTriangle, Pencil, MessageCircle
+  DollarSign, Handshake, CheckCircle2, AlertTriangle, Pencil, MessageCircle,
+  ChevronDown, Lock, RotateCcw, HeadphonesIcon
 } from 'lucide-react';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { CheckoutOverlay } from '@/components/checkout';
 import { FreightInfoCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
@@ -1260,6 +1266,57 @@ const SaleCheckout = () => {
                         </div>
                         <span className="text-2xl font-bold text-primary">${totalPrice.toLocaleString()}</span>
                       </div>
+
+                      {/* What's Included - Collapsible */}
+                      <Collapsible className="mt-4">
+                        <CollapsibleTrigger className="flex items-center justify-between w-full py-3 px-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors group">
+                          <div className="flex items-center gap-2">
+                            <ShieldCheck className="h-4 w-4 text-primary" />
+                            <span className="text-sm font-medium text-foreground">What's Included</span>
+                          </div>
+                          <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="pt-3 pb-1">
+                          <div className="space-y-3 px-1">
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                                <Lock className="h-4 w-4 text-emerald-600" />
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-medium text-foreground">Secure Escrow Payment</h4>
+                                <p className="text-xs text-muted-foreground mt-0.5">Your funds are held securely until you confirm receipt and satisfaction.</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                                <ShieldCheck className="h-4 w-4 text-blue-600" />
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-medium text-foreground">Buyer Protection Guarantee</h4>
+                                <p className="text-xs text-muted-foreground mt-0.5">Full refund if item doesn't match description or doesn't arrive.</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+                                <RotateCcw className="h-4 w-4 text-amber-600" />
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-medium text-foreground">Dispute Resolution</h4>
+                                <p className="text-xs text-muted-foreground mt-0.5">Our team mediates any issues between buyers and sellers.</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+                                <HeadphonesIcon className="h-4 w-4 text-purple-600" />
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-medium text-foreground">Dedicated Support</h4>
+                                <p className="text-xs text-muted-foreground mt-0.5">Real humans available 7 days a week to help with your purchase.</p>
+                              </div>
+                            </div>
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
                     </div>
                   </div>
 
