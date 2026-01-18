@@ -295,8 +295,8 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
       <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
         <!-- Logo Header -->
         <div style="text-align: center; margin-bottom: 24px;">
-          <a href="https://vendibookpreview.lovable.app" style="display: inline-block;">
-            <img src="${logoUrl}" alt="VendiBook" style="max-width: 180px; height: auto;" />
+          <a href="https://vendibookpreview.lovable.app" style="display: inline-block; background-color: #ffffff; padding: 16px 24px; border-radius: 12px;">
+            <img src="${logoUrl}" alt="VendiBook" style="max-width: 360px; height: auto;" />
           </a>
         </div>
         <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">

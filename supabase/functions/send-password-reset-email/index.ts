@@ -65,7 +65,9 @@ Deno.serve(async (req) => {
           <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
             <!-- Header with Logo -->
             <div style="text-align: center; margin-bottom: 40px;">
-              <img src="${logoUrl}" alt="VendiBook" style="max-width: 200px; height: auto; margin-bottom: 16px;" />
+              <div style="display: inline-block; background-color: #ffffff; padding: 16px 24px; border-radius: 12px; margin-bottom: 16px;">
+                <img src="${logoUrl}" alt="VendiBook" style="max-width: 360px; height: auto;" />
+              </div>
               <p style="color: #6b7280; font-size: 14px; margin-top: 8px;">Your Mobile Food Business Marketplace</p>
             </div>
             

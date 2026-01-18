@@ -110,14 +110,16 @@ export function EmailReceiptPreview({
       <CardContent className="p-6 bg-gradient-to-b from-background to-muted/20">
         {/* Logo Section */}
         <div className="text-center mb-6">
-          <img 
-            src="/images/vendibook-email-logo.png" 
-            alt="VendiBook" 
-            className="h-10 mx-auto mb-2"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
-          />
+          <div className="inline-block bg-white p-4 rounded-xl mb-2">
+            <img 
+              src="/images/vendibook-email-logo.png" 
+              alt="VendiBook" 
+              className="h-20 mx-auto"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          </div>
           <p className="text-sm text-muted-foreground">Your Mobile Food Business Marketplace</p>
         </div>
 
