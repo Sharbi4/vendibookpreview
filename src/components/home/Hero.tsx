@@ -66,7 +66,7 @@ const Hero = () => {
             className="text-base md:text-lg text-white/90 mt-3 max-w-xl mx-auto animate-fade-in"
             style={{ animationDelay: '0.2s', animationFillMode: 'backwards' }}
           >
-            Rent, buy, or sell food trucks, trailers, kitchens, and vendor lots—with verification, secure payments, and compliant workflows.
+            Now, accept payments in person or through our secure platform for protection.
           </p>
 
           {/* CTA Buttons */}
