@@ -1,6 +1,8 @@
-import { CheckCircle2, Calendar, MessageCircle, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Calendar, MessageCircle, ArrowRight, Clock, ShieldCheck, Sparkles, PartyPopper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import confetti from 'canvas-confetti';
 
 interface BookingStepConfirmationProps {
   instantBook: boolean;
@@ -13,47 +15,157 @@ const BookingStepConfirmation = ({
   bookingId,
   listingTitle,
 }: BookingStepConfirmationProps) => {
+  const confettiFired = useRef(false);
+
+  useEffect(() => {
+    if (confettiFired.current) return;
+    confettiFired.current = true;
+
+    // Fire confetti celebration
+    const duration = 2000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1000 };
+
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    const interval = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+      if (timeLeft <= 0) return clearInterval(interval);
+
+      const particleCount = 40 * (timeLeft / duration);
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.2, 0.8), y: Math.random() - 0.2 },
+        colors: ['#FF5124', '#FFB800', '#22C55E', '#3B82F6', '#A855F7'],
+      });
+    }, 250);
+  }, []);
+
   return (
-    <div className="bg-card border border-border rounded-xl p-6 shadow-card text-center">
-      {/* Success icon */}
-      <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-        <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+    <div className="bg-gradient-to-br from-card via-card to-emerald-50/30 dark:to-emerald-950/10 border-2 border-emerald-200 dark:border-emerald-800/50 rounded-2xl overflow-hidden shadow-xl">
+      {/* Success Header */}
+      <div className="pt-8 pb-6 px-6 text-center">
+        <div className="relative w-20 h-20 mx-auto mb-4">
+          <div className="absolute inset-0 bg-emerald-200 dark:bg-emerald-900/50 rounded-full animate-pulse" />
+          <div className="absolute inset-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-full" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <CheckCircle2 className="h-10 w-10 text-emerald-600" />
+          </div>
+          <Sparkles className="absolute -top-1 -right-1 h-5 w-5 text-amber-500 animate-bounce" />
+        </div>
+
+        <h3 className="text-2xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
+          <PartyPopper className="h-5 w-5 text-primary" />
+          {instantBook ? "You're Booked!" : 'Request Sent!'}
+          <PartyPopper className="h-5 w-5 text-primary transform scale-x-[-1]" />
+        </h3>
+
+        <p className="text-muted-foreground max-w-sm mx-auto">
+          {instantBook
+            ? 'Your booking is confirmed. Check messages for next steps.'
+            : 'The host will review your request and respond within 24-48 hours.'}
+        </p>
       </div>
 
-      {/* Title */}
-      <h3 className="text-xl font-semibold text-foreground mb-2">
-        {instantBook ? "You're booked!" : 'Request sent!'}
-      </h3>
+      {/* What Happens Next */}
+      <div className="px-6 pb-6">
+        <div className="bg-muted/50 rounded-xl p-4 mb-6">
+          <h4 className="font-semibold text-foreground text-sm mb-3">What happens next?</h4>
+          <div className="space-y-3">
+            {instantBook ? (
+              <>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Booking Confirmed</p>
+                    <p className="text-xs text-muted-foreground">Your dates are secured</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-amber-600">2</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Check Messages</p>
+                    <p className="text-xs text-muted-foreground">Get pickup/delivery details from host</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-muted-foreground">3</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Enjoy Your Rental</p>
+                    <p className="text-xs text-muted-foreground">Arrive on your start date</p>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Request Submitted</p>
+                    <p className="text-xs text-muted-foreground">Host has been notified</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+                    <Clock className="h-3.5 w-3.5 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Await Host Response</p>
+                    <p className="text-xs text-muted-foreground">Usually within 24-48 hours</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-muted-foreground">3</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Complete Payment</p>
+                    <p className="text-xs text-muted-foreground">If approved, you'll pay to confirm</p>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
 
-      {/* Body */}
-      <p className="text-muted-foreground mb-6">
-        {instantBook
-          ? 'Check messages for pickup/delivery details.'
-          : 'The host will respond within 24-48 hours.'}
-      </p>
+        {/* Trust badge */}
+        <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mb-6 p-3 bg-primary/5 rounded-lg border border-primary/10">
+          <ShieldCheck className="h-4 w-4 text-primary" />
+          <span>Protected by VendiBook's Booking Guarantee</span>
+        </div>
 
-      {/* Primary CTA */}
-      <Button variant="gradient" asChild className="w-full mb-3">
-        <Link to="/dashboard">
-          <Calendar className="h-4 w-4 mr-2" />
-          View booking
-        </Link>
-      </Button>
-
-      {/* Secondary actions */}
-      <div className="flex gap-3">
-        <Button variant="outline" asChild className="flex-1">
-          <Link to="/messages">
-            <MessageCircle className="h-4 w-4 mr-2" />
-            Message host
+        {/* Primary CTA */}
+        <Button variant="gradient" asChild className="w-full h-12 text-base mb-3">
+          <Link to="/dashboard">
+            <Calendar className="h-4 w-4 mr-2" />
+            View My Booking
           </Link>
         </Button>
-        <Button variant="ghost" asChild className="flex-1">
-          <Link to="/search">
-            Keep browsing
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Link>
-        </Button>
+
+        {/* Secondary actions */}
+        <div className="flex gap-3">
+          <Button variant="outline" asChild className="flex-1">
+            <Link to="/messages">
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Message Host
+            </Link>
+          </Button>
+          <Button variant="ghost" asChild className="flex-1">
+            <Link to="/search">
+              Keep Browsing
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Link>
+          </Button>
+        </div>
       </div>
     </div>
   );

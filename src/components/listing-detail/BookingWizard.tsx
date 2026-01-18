@@ -246,23 +246,55 @@ const BookingWizard = ({
     );
   }
 
+  const stepLabels = [
+    { step: 1, label: 'Select Dates', short: 'Dates' },
+    { step: 2, label: 'Requirements', short: 'Docs' },
+    { step: 3, label: 'Details', short: 'Details' },
+    { step: 4, label: 'Review', short: 'Review' },
+  ];
+
   return (
-    <div className="bg-card border border-border rounded-xl shadow-card overflow-hidden">
-      {/* Progress indicator */}
-      <div className="px-6 pt-4 pb-2">
-        <div className="flex items-center justify-between mb-2">
+    <div className="bg-card border-2 border-border rounded-2xl shadow-xl overflow-hidden">
+      {/* Premium Header */}
+      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-6 py-4 border-b border-border/50">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            {instantBook ? (
+              <span className="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-semibold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Instant Book
+              </span>
+            ) : (
+              <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                Request to Book
+              </span>
+            )}
+          </div>
           <span className="text-xs text-muted-foreground">
             Step {currentStep} of {totalSteps}
           </span>
-          <span className="text-xs text-muted-foreground">
-            {instantBook ? 'Instant Book' : 'Request to Book'}
-          </span>
         </div>
-        <div className="h-1 bg-muted rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-primary transition-all duration-300"
-            style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-          />
+        
+        {/* Step indicators */}
+        <div className="flex gap-1">
+          {stepLabels.map((s) => (
+            <div key={s.step} className="flex-1">
+              <div 
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  s.step < currentStep 
+                    ? 'bg-primary' 
+                    : s.step === currentStep 
+                    ? 'bg-primary/70' 
+                    : 'bg-muted'
+                }`}
+              />
+              <span className={`text-[10px] mt-1 block text-center ${
+                s.step === currentStep ? 'text-primary font-medium' : 'text-muted-foreground'
+              }`}>
+                {s.short}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 
