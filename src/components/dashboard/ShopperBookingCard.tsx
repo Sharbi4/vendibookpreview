@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { format } from 'date-fns';
+import { format, isPast, parseISO } from 'date-fns';
 import { 
   Calendar, 
   MapPin, 
@@ -18,7 +18,10 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
-  Zap
+  Zap,
+  Shield,
+  Undo2,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import InstantBookTimeline from './InstantBookTimeline';
@@ -166,6 +169,13 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
   const bookingCancelled = booking.status === 'cancelled';
   const bookingConfirmed = isApproved && isPaid;
 
+  // Deposit state
+  const depositAmount = (booking as any).deposit_amount as number | null;
+  const depositStatus = ((booking as any).deposit_status as string) || 'pending';
+  const depositRefundNotes = (booking as any).deposit_refund_notes as string | null;
+  const hasDeposit = (depositAmount ?? 0) > 0;
+  const rentalEnded = isPast(parseISO(booking.end_date));
+
   const handlePayNow = async () => {
     if (!listing) return;
     
@@ -282,6 +292,68 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
               {booking.fulfillment_selected === 'delivery' && booking.delivery_address && (
                 <span> • {booking.delivery_address}</span>
               )}
+            </div>
+          )}
+
+          {/* Security Deposit Status */}
+          {hasDeposit && (
+            <div className={`rounded-lg p-3 mb-3 border ${
+              depositStatus === 'refunded' ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800' :
+              depositStatus === 'forfeited' ? 'bg-destructive/5 border-destructive/20' :
+              depositStatus === 'charged' ? 'bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800' :
+              'bg-muted/30 border-border'
+            }`}>
+              <div className="flex items-start gap-2">
+                <Shield className={`h-4 w-4 mt-0.5 flex-shrink-0 ${
+                  depositStatus === 'refunded' ? 'text-emerald-600' :
+                  depositStatus === 'forfeited' ? 'text-destructive' :
+                  depositStatus === 'charged' ? 'text-blue-600' :
+                  'text-muted-foreground'
+                }`} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Security Deposit</span>
+                    <span className="text-sm font-semibold">${depositAmount?.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    {depositStatus === 'pending' && (
+                      <>
+                        <Clock className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Collected at checkout</span>
+                      </>
+                    )}
+                    {depositStatus === 'charged' && !rentalEnded && (
+                      <>
+                        <Shield className="h-3 w-3 text-blue-600" />
+                        <span className="text-xs text-blue-600">Held until rental ends</span>
+                      </>
+                    )}
+                    {depositStatus === 'charged' && rentalEnded && (
+                      <>
+                        <Clock className="h-3 w-3 text-amber-600" />
+                        <span className="text-xs text-amber-600">Pending release by host</span>
+                      </>
+                    )}
+                    {depositStatus === 'refunded' && (
+                      <>
+                        <Undo2 className="h-3 w-3 text-emerald-600" />
+                        <span className="text-xs text-emerald-600 font-medium">Refunded to your account</span>
+                      </>
+                    )}
+                    {depositStatus === 'forfeited' && (
+                      <>
+                        <AlertTriangle className="h-3 w-3 text-destructive" />
+                        <span className="text-xs text-destructive font-medium">Forfeited</span>
+                      </>
+                    )}
+                  </div>
+                  {depositRefundNotes && (depositStatus === 'refunded' || depositStatus === 'forfeited') && (
+                    <p className="text-xs text-muted-foreground mt-1.5 bg-background/50 rounded px-2 py-1">
+                      {depositRefundNotes}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
