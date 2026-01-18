@@ -1,14 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, DollarSign, Calendar, Shield, Sparkles, CreditCard, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Shield, Sparkles, CheckCircle2, CreditCard, ShieldCheck, Users, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackCityListModuleViewed, trackCityListClicked } from '@/lib/analytics';
 
 const benefits = [
-  { icon: Calendar, text: 'Set your own availability & pricing' },
-  { icon: Shield, text: 'Verified listings get more bookings' },
-  { icon: CreditCard, text: 'Instant payouts via Stripe Connect' },
-  { icon: DollarSign, text: 'No upfront fees—only pay when you earn' },
+  { icon: ShieldCheck, text: 'Secure platform to sell or rent your assets' },
+  { icon: CreditCard, text: 'Accept payments in-person or through our platform' },
+  { icon: Shield, text: 'Spam & scam protection built in' },
+  { icon: Users, text: 'Made by food truck owners, for food truck owners' },
 ];
 
 const topCities = [
@@ -53,11 +53,15 @@ const SupplySection = () => {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left: Content */}
           <div>
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mb-4">
+              <Heart className="h-4 w-4" />
+              Built by a food truck owner & chef
+            </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Rent it out. Sell it. Stay in control.
+              A safe way to sell or rent your food truck.
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Turn idle assets into income. List your food truck, trailer, ghost kitchen, or vendor lot and reach thousands of entrepreneurs.
+              We built VendiBook to support the food truck community. Whether you're selling your truck, renting it out, or looking for a vendor spot—we've got your back.
             </p>
 
             {/* Benefits list */}
