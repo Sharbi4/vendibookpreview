@@ -55,63 +55,83 @@ const InquiryForm = ({
   };
 
   return (
-    <div data-booking-form className="bg-card border border-border rounded-xl p-6 shadow-card sticky top-24">
-      <div className="mb-6">
-        <span className="text-2xl font-bold text-foreground">
+    <div data-booking-form className="relative overflow-hidden bg-gradient-to-br from-background to-primary/5 border-2 border-primary/20 rounded-2xl shadow-xl sticky top-24">
+      {/* Subtle animated background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-amber-500/5 to-yellow-400/5 opacity-50" />
+      
+      {/* Header section with gradient */}
+      <div className="relative bg-gradient-to-r from-primary/15 via-amber-500/10 to-yellow-400/5 border-b border-primary/20 px-6 py-4">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-sm">
+            <ShieldCheck className="h-3.5 w-3.5 text-white" />
+          </div>
+          <span className="font-semibold text-sm text-foreground">Secure Purchase</span>
+        </div>
+        <span className="text-2xl font-bold bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent">
           ${priceSale?.toLocaleString()}
         </span>
       </div>
 
-      <h3 className="text-sm font-medium text-foreground mb-3">Delivery Options</h3>
-      
-      <div className="space-y-2 mb-6">
-        {fulfillmentOptions.includes('pickup') && (
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-foreground">Local Pickup</span>
-          </div>
-        )}
+      {/* Content section with white background */}
+      <div className="relative bg-white dark:bg-card p-6">
+        <h3 className="text-sm font-medium text-foreground mb-3">Delivery Options</h3>
+        
+        <div className="space-y-2 mb-6">
+          {fulfillmentOptions.includes('pickup') && (
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-muted/50 to-primary/5 border border-border/50">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-amber-500/20 flex items-center justify-center">
+                <MapPin className="h-4 w-4 text-primary" />
+              </div>
+              <span className="text-sm text-foreground font-medium">Local Pickup</span>
+            </div>
+          )}
 
-        {fulfillmentOptions.includes('delivery') && (
-          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-3">
-              <Truck className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-foreground">
-                Local Delivery {deliveryRadiusMiles ? `(${deliveryRadiusMiles} mi)` : ''}
+          {fulfillmentOptions.includes('delivery') && (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-muted/50 to-primary/5 border border-border/50">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-amber-500/20 flex items-center justify-center">
+                  <Truck className="h-4 w-4 text-primary" />
+                </div>
+                <span className="text-sm text-foreground font-medium">
+                  Local Delivery {deliveryRadiusMiles ? `(${deliveryRadiusMiles} mi)` : ''}
+                </span>
+              </div>
+              <span className="text-sm font-semibold">
+                {deliveryFee ? `+$${deliveryFee}` : <span className="text-emerald-600">FREE</span>}
               </span>
             </div>
-            <span className="text-sm font-medium">
-              {deliveryFee ? `+$${deliveryFee}` : <span className="text-emerald-600">FREE</span>}
-            </span>
-          </div>
-        )}
+          )}
 
-        {fulfillmentOptions.includes('vendibook_freight') && (
-          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-3">
-              <Package className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-foreground">Nationwide Freight</span>
+          {fulfillmentOptions.includes('vendibook_freight') && (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-muted/50 to-primary/5 border border-border/50">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-amber-500/20 flex items-center justify-center">
+                  <Package className="h-4 w-4 text-primary" />
+                </div>
+                <span className="text-sm text-foreground font-medium">Nationwide Freight</span>
+              </div>
+              <span className="text-sm font-semibold">
+                {isFreightSellerPaid ? <span className="text-emerald-600">FREE</span> : 'Quote at checkout'}
+              </span>
             </div>
-            <span className="text-sm font-medium">
-              {isFreightSellerPaid ? <span className="text-emerald-600">FREE</span> : 'Quote at checkout'}
-            </span>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
-      <Button 
-        onClick={handleStartPurchase}
-        className="w-full" 
-        size="lg"
-        disabled={!priceSale}
-      >
-        Start Purchase
-        <ArrowRight className="w-4 h-4 ml-2" />
-      </Button>
+        <Button 
+          onClick={handleStartPurchase}
+          variant="gradient"
+          className="w-full h-12 text-base" 
+          size="lg"
+          disabled={!priceSale}
+        >
+          Start Purchase
+          <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
 
-      <div className="flex items-center gap-2 justify-center mt-3 text-xs text-muted-foreground">
-        <ShieldCheck className="h-4 w-4 text-emerald-500" />
-        <span>Protected by Vendibook escrow</span>
+        <div className="flex items-center gap-2 justify-center mt-4 text-xs text-muted-foreground p-2 bg-primary/5 rounded-lg border border-primary/10">
+          <ShieldCheck className="h-4 w-4 text-primary" />
+          <span>Protected by Vendibook escrow</span>
+        </div>
       </div>
     </div>
   );
