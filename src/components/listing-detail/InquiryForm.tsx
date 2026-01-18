@@ -4,14 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
-import { ShieldCheck, Loader2, MapPin, Truck, Calculator, AlertCircle, CreditCard, Banknote } from 'lucide-react';
+import { ShieldCheck, Loader2, MapPin, Truck, Calculator, AlertCircle, CreditCard, Banknote, Check, ArrowLeft, Package } from 'lucide-react';
 import { CheckoutOverlay } from '@/components/checkout';
 import { FreightInfoCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
@@ -44,6 +43,7 @@ interface InquiryFormProps {
 }
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
+type CheckoutStep = 'delivery' | 'information';
 
 const InquiryForm = ({ 
   listingId,
@@ -68,6 +68,9 @@ const InquiryForm = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const { estimate, isLoading: isEstimating, error: estimateError, getEstimate, clearEstimate } = useFreightEstimate();
+  
+  // Multi-step state
+  const [currentStep, setCurrentStep] = useState<CheckoutStep>('delivery');
   
   // Customer info
   const [name, setName] = useState(profile?.full_name || '');
@@ -413,6 +416,27 @@ const InquiryForm = ({
 
   return (
     <div data-booking-form className="bg-card border border-border rounded-xl p-6 shadow-card sticky top-24">
+      {/* Step Indicator */}
+      <div className="flex items-center gap-2 mb-4">
+        <div className={cn(
+          "flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium transition-colors",
+          currentStep === 'delivery' 
+            ? "bg-primary text-primary-foreground" 
+            : "bg-primary/20 text-primary"
+        )}>
+          {currentStep === 'information' ? <Check className="w-3.5 h-3.5" /> : '1'}
+        </div>
+        <div className="h-px flex-1 bg-border" />
+        <div className={cn(
+          "flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium transition-colors",
+          currentStep === 'information' 
+            ? "bg-primary text-primary-foreground" 
+            : "bg-muted text-muted-foreground"
+        )}>
+          2
+        </div>
+      </div>
+
       {/* Price Header */}
       <div className="mb-6">
         <span className="text-2xl font-bold text-foreground">
@@ -420,397 +444,523 @@ const InquiryForm = ({
         </span>
         {currentDeliveryFee > 0 && (
           <span className="text-sm text-muted-foreground ml-2">
-            + ${currentDeliveryFee} delivery
+            + ${currentDeliveryFee.toLocaleString()} {fulfillmentSelected === 'vendibook_freight' ? 'freight' : 'delivery'}
           </span>
         )}
       </div>
 
-      {/* Fulfillment Selection */}
-      {fulfillmentOptions.length > 1 && (
-        <div className="mb-6">
-          <Label className="text-sm font-medium mb-3 block">
-            How would you like to receive this?
-          </Label>
-          <RadioGroup
-            value={fulfillmentSelected}
-            onValueChange={(val) => setFulfillmentSelected(val as FulfillmentSelection)}
-            className="space-y-3"
-          >
-            {fulfillmentOptions.includes('vendibook_freight') && (
-              <div className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${
-                fulfillmentSelected === 'vendibook_freight' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-              }`}>
-                <RadioGroupItem value="vendibook_freight" id="sale-vendibook-freight" />
-                <Label htmlFor="sale-vendibook-freight" className="flex items-center gap-2 cursor-pointer flex-1">
-                  <Truck className="h-4 w-4 text-primary" />
-                  <span>Vendibook Freight</span>
-                  {isFreightSellerPaid ? (
-                    <span className="text-xs text-emerald-600 font-medium ml-auto">FREE</span>
-                  ) : hasValidEstimate ? (
-                    <span className="text-xs text-muted-foreground ml-auto">+${freightCost.toFixed(0)}</span>
-                  ) : (
-                    <span className="text-xs text-muted-foreground ml-auto">Enter address for quote</span>
-                  )}
-                </Label>
-              </div>
-            )}
+      {/* ==================== STEP 1: DELIVERY OPTIONS ==================== */}
+      {currentStep === 'delivery' && (
+        <>
+          <h3 className="text-sm font-medium text-foreground mb-4">Delivery Options</h3>
+          
+          <div className="space-y-3 mb-6">
             {fulfillmentOptions.includes('pickup') && (
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary/50 transition-colors cursor-pointer">
-                <RadioGroupItem value="pickup" id="sale-pickup" />
-                <Label htmlFor="sale-pickup" className="flex items-center gap-2 cursor-pointer flex-1">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  <span>Pickup</span>
-                </Label>
-              </div>
-            )}
-            {fulfillmentOptions.includes('delivery') && (
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary/50 transition-colors cursor-pointer">
-                <RadioGroupItem value="delivery" id="sale-delivery" />
-                <Label htmlFor="sale-delivery" className="flex items-center gap-2 cursor-pointer flex-1">
-                  <Truck className="h-4 w-4 text-primary" />
-                  <span>Local Delivery</span>
-                  {deliveryFee && (
-                    <span className="text-xs text-muted-foreground ml-auto">+${deliveryFee}</span>
-                  )}
-                </Label>
-              </div>
-            )}
-          </RadioGroup>
-        </div>
-      )}
-
-      {/* Vendibook Freight Info Card (Pod 2 or Pod 3) */}
-      {fulfillmentSelected === 'vendibook_freight' && (
-        <div className="mb-6">
-          <FreightInfoCard isSellerPaid={isFreightSellerPaid} />
-        </div>
-      )}
-
-      {/* Vendibook Freight Address & Estimate */}
-      {fulfillmentSelected === 'vendibook_freight' && (
-        <div className="mb-6 space-y-4">
-          <div>
-            <Label htmlFor="freightDeliveryAddress" className="text-sm font-medium mb-2 block">
-              Delivery Address *
-            </Label>
-            <AddressAutocomplete
-              id="freightDeliveryAddress"
-              value={deliveryAddress}
-              onChange={(value) => {
-                setDeliveryAddress(value);
-                // Reset validation when user types manually
-                setIsAddressComplete(false);
-                clearEstimate();
-              }}
-              onAddressSelect={(address) => {
-                setDeliveryAddress(address.fullAddress);
-                setIsAddressComplete(address.validation.isComplete);
-                if (address.validation.isComplete) {
-                  setAddressValidationMessage(null);
-                  // Trigger freight estimate for complete addresses
-                  fetchFreightEstimate(address.fullAddress);
-                } else {
-                  setAddressValidationMessage(`Missing: ${address.validation.missingFields.join(', ')}`);
-                  clearEstimate();
-                }
-              }}
-              onValidationChange={(validation) => {
-                if (validation) {
-                  setIsAddressComplete(validation.isComplete);
-                } else {
-                  setIsAddressComplete(false);
-                }
-              }}
-              placeholder="Enter your full delivery address"
-              requireComplete={true}
-            />
-          </div>
-          
-          {/* Freight Estimate Display */}
-          {isEstimating && (
-            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <span className="text-sm text-muted-foreground">Calculating freight estimate...</span>
-            </div>
-          )}
-          
-          {hasValidEstimate && !isEstimating && (
-            <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Calculator className="h-4 w-4 text-primary" />
-                  <span className="font-medium text-sm text-foreground">Freight Estimate</span>
+              <button
+                type="button"
+                onClick={() => setFulfillmentSelected('pickup')}
+                className={cn(
+                  "w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left",
+                  fulfillmentSelected === 'pickup' 
+                    ? "border-primary bg-primary/5 shadow-sm" 
+                    : "border-border hover:border-primary/50 hover:bg-muted/50"
+                )}
+              >
+                <div className={cn(
+                  "flex items-center justify-center w-10 h-10 rounded-lg",
+                  fulfillmentSelected === 'pickup' ? "bg-primary/10" : "bg-muted"
+                )}>
+                  <MapPin className={cn("h-5 w-5", fulfillmentSelected === 'pickup' ? "text-primary" : "text-muted-foreground")} />
                 </div>
-                <InfoTooltip content="This is an estimate only. Final freight cost will be confirmed after carrier pickup scheduling." />
-              </div>
-              
-              <div className="space-y-1.5 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Distance</span>
-                  <span className="text-foreground">{estimate?.distance_miles} miles</span>
+                <div className="flex-1">
+                  <div className="font-medium text-foreground">Local Pickup</div>
+                  <div className="text-sm text-muted-foreground">Pick up at seller's location</div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Rate</span>
-                  <span className="text-foreground">${estimate?.rate_per_mile.toFixed(2)}/mile</span>
-                </div>
-                <div className="flex justify-between font-semibold pt-2 border-t border-border">
-                  <span>{isFreightSellerPaid ? 'Freight (seller pays)' : 'Total Freight'}</span>
-                  <span className={isFreightSellerPaid ? 'text-emerald-600 line-through' : 'text-primary'}>
-                    ${estimate?.total_cost.toFixed(2)}
-                  </span>
-                </div>
-                {isFreightSellerPaid && (
-                  <div className="flex justify-between font-semibold">
-                    <span>You pay</span>
-                    <span className="text-emerald-600">$0.00</span>
+                {fulfillmentSelected === 'pickup' && (
+                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                    <Check className="w-3 h-3 text-primary-foreground" />
                   </div>
                 )}
-              </div>
-              
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-2">
-                <Truck className="h-3 w-3" />
-                <span>Est. {estimate?.estimated_transit_days.min}-{estimate?.estimated_transit_days.max} business days</span>
-              </div>
-            </div>
-          )}
-          
-          {estimateError && !isEstimating && (
-            <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <AlertCircle className="h-4 w-4 text-destructive" />
-              <span className="text-sm text-destructive">{estimateError}</span>
-            </div>
-          )}
-          
-          <div>
-            <Label htmlFor="freightDeliveryInstructions" className="text-sm font-medium mb-2 block">
-              Delivery Instructions (optional)
-            </Label>
-            <Textarea
-              id="freightDeliveryInstructions"
-              placeholder="Dock availability, forklift required, etc."
-              value={deliveryInstructions}
-              onChange={(e) => setDeliveryInstructions(e.target.value)}
-              rows={2}
-              className="resize-none"
-            />
-          </div>
-        </div>
-      )}
+              </button>
+            )}
 
-      {/* Pickup Location Info */}
-      {fulfillmentSelected === 'pickup' && pickupLocation && (
-        <div className="mb-6 p-4 bg-muted/50 rounded-xl">
-          <div className="flex items-center gap-2 mb-2">
-            <MapPin className="h-4 w-4 text-primary" />
-            <span className="font-medium text-sm text-foreground">Pickup Location</span>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {pickupLocation}
-          </p>
-        </div>
-      )}
+            {fulfillmentOptions.includes('delivery') && (
+              <button
+                type="button"
+                onClick={() => setFulfillmentSelected('delivery')}
+                className={cn(
+                  "w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left",
+                  fulfillmentSelected === 'delivery' 
+                    ? "border-primary bg-primary/5 shadow-sm" 
+                    : "border-border hover:border-primary/50 hover:bg-muted/50"
+                )}
+              >
+                <div className={cn(
+                  "flex items-center justify-center w-10 h-10 rounded-lg",
+                  fulfillmentSelected === 'delivery' ? "bg-primary/10" : "bg-muted"
+                )}>
+                  <Truck className={cn("h-5 w-5", fulfillmentSelected === 'delivery' ? "text-primary" : "text-muted-foreground")} />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-foreground">Local Delivery</div>
+                  <div className="text-sm text-muted-foreground">
+                    {deliveryRadiusMiles ? `Within ${deliveryRadiusMiles} miles` : 'Seller delivers to you'}
+                  </div>
+                </div>
+                <div className="text-right">
+                  {deliveryFee ? (
+                    <span className="text-sm font-medium text-foreground">+${deliveryFee}</span>
+                  ) : (
+                    <span className="text-sm font-medium text-emerald-600">FREE</span>
+                  )}
+                </div>
+                {fulfillmentSelected === 'delivery' && (
+                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                    <Check className="w-3 h-3 text-primary-foreground" />
+                  </div>
+                )}
+              </button>
+            )}
 
-      {/* Local Delivery Address Input */}
-      {fulfillmentSelected === 'delivery' && (
-        <div className="mb-6 space-y-4">
-          <div>
-            <Label htmlFor="saleDeliveryAddress" className="text-sm font-medium mb-2 block">
-              Delivery Address *
-            </Label>
-            <Input
-              id="saleDeliveryAddress"
-              placeholder="Enter your delivery address"
-              value={deliveryAddress}
-              onChange={(e) => setDeliveryAddress(e.target.value)}
-            />
-            {deliveryRadiusMiles && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Delivery available within {deliveryRadiusMiles} miles
-              </p>
+            {fulfillmentOptions.includes('vendibook_freight') && (
+              <button
+                type="button"
+                onClick={() => setFulfillmentSelected('vendibook_freight')}
+                className={cn(
+                  "w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left",
+                  fulfillmentSelected === 'vendibook_freight' 
+                    ? "border-primary bg-primary/5 shadow-sm" 
+                    : "border-border hover:border-primary/50 hover:bg-muted/50"
+                )}
+              >
+                <div className={cn(
+                  "flex items-center justify-center w-10 h-10 rounded-lg",
+                  fulfillmentSelected === 'vendibook_freight' ? "bg-primary/10" : "bg-muted"
+                )}>
+                  <Package className={cn("h-5 w-5", fulfillmentSelected === 'vendibook_freight' ? "text-primary" : "text-muted-foreground")} />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-foreground">Vendibook Freight</div>
+                  <div className="text-sm text-muted-foreground">Nationwide shipping with tracking</div>
+                </div>
+                <div className="text-right">
+                  {isFreightSellerPaid ? (
+                    <span className="text-sm font-medium text-emerald-600">FREE</span>
+                  ) : hasValidEstimate ? (
+                    <span className="text-sm font-medium text-foreground">+${freightCost.toFixed(0)}</span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Get quote</span>
+                  )}
+                </div>
+                {fulfillmentSelected === 'vendibook_freight' && (
+                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                    <Check className="w-3 h-3 text-primary-foreground" />
+                  </div>
+                )}
+              </button>
             )}
           </div>
-          <div>
-            <Label htmlFor="saleDeliveryInstructions" className="text-sm font-medium mb-2 block">
-              Delivery Instructions (optional)
-            </Label>
-            <Textarea
-              id="saleDeliveryInstructions"
-              placeholder="Gate code, parking notes, etc."
-              value={deliveryInstructions}
-              onChange={(e) => setDeliveryInstructions(e.target.value)}
-              rows={2}
-              className="resize-none"
+
+          {/* Single option - just show it as info */}
+          {fulfillmentOptions.length === 1 && (
+            <div className="mb-6 p-4 bg-muted/50 rounded-xl">
+              <div className="flex items-center gap-2 mb-1">
+                {fulfillmentOptions[0] === 'pickup' && <MapPin className="h-4 w-4 text-primary" />}
+                {fulfillmentOptions[0] === 'delivery' && <Truck className="h-4 w-4 text-primary" />}
+                {fulfillmentOptions[0] === 'vendibook_freight' && <Package className="h-4 w-4 text-primary" />}
+                <span className="font-medium text-sm text-foreground">
+                  {fulfillmentOptions[0] === 'pickup' && 'Pickup Only'}
+                  {fulfillmentOptions[0] === 'delivery' && 'Delivery Only'}
+                  {fulfillmentOptions[0] === 'vendibook_freight' && 'Vendibook Freight'}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Buy Now Button - goes to step 2 */}
+          <Button 
+            onClick={() => setCurrentStep('information')}
+            className="w-full bg-primary hover:bg-primary/90" 
+            size="lg"
+            disabled={!priceSale}
+          >
+            Buy Now - ${totalPrice.toLocaleString()}
+          </Button>
+
+          <div className="flex items-center gap-2 justify-center mt-3 text-xs text-muted-foreground">
+            <ShieldCheck className="h-4 w-4 text-emerald-500" />
+            <span>Protected by Vendibook escrow</span>
+          </div>
+        </>
+      )}
+
+      {/* ==================== STEP 2: YOUR INFORMATION ==================== */}
+      {currentStep === 'information' && (
+        <>
+          {/* Back Button */}
+          <button
+            type="button"
+            onClick={() => setCurrentStep('delivery')}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to delivery options
+          </button>
+
+          <h3 className="text-sm font-medium text-foreground mb-4">Your Information</h3>
+          {/* Vendibook Freight Info Card */}
+          {fulfillmentSelected === 'vendibook_freight' && (
+            <div className="mb-6">
+              <FreightInfoCard isSellerPaid={isFreightSellerPaid} />
+            </div>
+          )}
+
+          {/* Vendibook Freight Address & Estimate */}
+          {fulfillmentSelected === 'vendibook_freight' && (
+            <div className="mb-6 space-y-4">
+              <div>
+                <Label htmlFor="freightDeliveryAddress" className="text-sm font-medium mb-2 block">
+                  Delivery Address *
+                </Label>
+                <AddressAutocomplete
+                  id="freightDeliveryAddress"
+                  value={deliveryAddress}
+                  onChange={(value) => {
+                    setDeliveryAddress(value);
+                    setIsAddressComplete(false);
+                    clearEstimate();
+                  }}
+                  onAddressSelect={(address) => {
+                    setDeliveryAddress(address.fullAddress);
+                    setIsAddressComplete(address.validation.isComplete);
+                    if (address.validation.isComplete) {
+                      setAddressValidationMessage(null);
+                      fetchFreightEstimate(address.fullAddress);
+                    } else {
+                      setAddressValidationMessage(`Missing: ${address.validation.missingFields.join(', ')}`);
+                      clearEstimate();
+                    }
+                  }}
+                  onValidationChange={(validation) => {
+                    setIsAddressComplete(validation?.isComplete ?? false);
+                  }}
+                  placeholder="Enter your full delivery address"
+                  requireComplete={true}
+                />
+              </div>
+              
+              {/* Freight Estimate Display */}
+              {isEstimating && (
+                <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <span className="text-sm text-muted-foreground">Calculating freight estimate...</span>
+                </div>
+              )}
+              
+              {hasValidEstimate && !isEstimating && (
+                <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Calculator className="h-4 w-4 text-primary" />
+                      <span className="font-medium text-sm text-foreground">Freight Estimate</span>
+                    </div>
+                    <InfoTooltip content="This is an estimate only. Final freight cost will be confirmed after carrier pickup scheduling." />
+                  </div>
+                  
+                  <div className="space-y-1.5 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Distance</span>
+                      <span className="text-foreground">{estimate?.distance_miles} miles</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Rate</span>
+                      <span className="text-foreground">${estimate?.rate_per_mile.toFixed(2)}/mile</span>
+                    </div>
+                    <div className="flex justify-between font-semibold pt-2 border-t border-border">
+                      <span>{isFreightSellerPaid ? 'Freight (seller pays)' : 'Total Freight'}</span>
+                      <span className={isFreightSellerPaid ? 'text-emerald-600 line-through' : 'text-primary'}>
+                        ${estimate?.total_cost.toFixed(2)}
+                      </span>
+                    </div>
+                    {isFreightSellerPaid && (
+                      <div className="flex justify-between font-semibold">
+                        <span>You pay</span>
+                        <span className="text-emerald-600">$0.00</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-2">
+                    <Truck className="h-3 w-3" />
+                    <span>Est. {estimate?.estimated_transit_days.min}-{estimate?.estimated_transit_days.max} business days</span>
+                  </div>
+                </div>
+              )}
+              
+              {estimateError && !isEstimating && (
+                <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <AlertCircle className="h-4 w-4 text-destructive" />
+                  <span className="text-sm text-destructive">{estimateError}</span>
+                </div>
+              )}
+              
+              <div>
+                <Label htmlFor="freightDeliveryInstructions" className="text-sm font-medium mb-2 block">
+                  Delivery Instructions (optional)
+                </Label>
+                <Textarea
+                  id="freightDeliveryInstructions"
+                  placeholder="Dock availability, forklift required, etc."
+                  value={deliveryInstructions}
+                  onChange={(e) => setDeliveryInstructions(e.target.value)}
+                  rows={2}
+                  className="resize-none"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Pickup Location Info */}
+          {fulfillmentSelected === 'pickup' && pickupLocation && (
+            <div className="mb-6 p-4 bg-muted/50 rounded-xl">
+              <div className="flex items-center gap-2 mb-2">
+                <MapPin className="h-4 w-4 text-primary" />
+                <span className="font-medium text-sm text-foreground">Pickup Location</span>
+              </div>
+              <p className="text-sm text-muted-foreground">{pickupLocation}</p>
+            </div>
+          )}
+
+          {/* Local Delivery Address Input */}
+          {fulfillmentSelected === 'delivery' && (
+            <div className="mb-6 space-y-4">
+              <div>
+                <Label htmlFor="saleDeliveryAddress" className="text-sm font-medium mb-2 block">
+                  Delivery Address *
+                </Label>
+                <Input
+                  id="saleDeliveryAddress"
+                  placeholder="Enter your delivery address"
+                  value={deliveryAddress}
+                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                />
+                {deliveryRadiusMiles && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Delivery available within {deliveryRadiusMiles} miles
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="saleDeliveryInstructions" className="text-sm font-medium mb-2 block">
+                  Delivery Instructions (optional)
+                </Label>
+                <Textarea
+                  id="saleDeliveryInstructions"
+                  placeholder="Gate code, parking notes, etc."
+                  value={deliveryInstructions}
+                  onChange={(e) => setDeliveryInstructions(e.target.value)}
+                  rows={2}
+                  className="resize-none"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Customer Information Fields */}
+          <div className="space-y-4 mb-6">
+            <ValidatedInput
+              label="Full Name"
+              value={name}
+              onChange={(value) => updateField('name', value)}
+              onBlur={() => markTouched('name')}
+              error={fieldErrors.name}
+              touched={touchedFields.has('name')}
+              required
+              placeholder="Your name"
+            />
+            
+            <ValidatedInput
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(value) => updateField('email', value)}
+              onBlur={() => markTouched('email')}
+              error={fieldErrors.email}
+              touched={touchedFields.has('email')}
+              required
+              placeholder="Your email"
+            />
+            
+            <ValidatedInput
+              label="Phone Number"
+              type="tel"
+              value={phone}
+              onChange={(value) => updateField('phone', value)}
+              onBlur={() => markTouched('phone')}
+              error={fieldErrors.phone}
+              touched={touchedFields.has('phone')}
+              required
+              formatPhone
+              maxLength={14}
+              placeholder="(555) 123-4567"
             />
           </div>
-        </div>
-      )}
 
-      {/* Customer Information */}
-      <div className="space-y-4 mb-6">
-        <h3 className="text-sm font-medium text-foreground">Your Information</h3>
-        
-        <ValidatedInput
-          label="Full Name"
-          value={name}
-          onChange={(value) => updateField('name', value)}
-          onBlur={() => markTouched('name')}
-          error={fieldErrors.name}
-          touched={touchedFields.has('name')}
-          required
-          placeholder="Your name"
-        />
-        
-        <ValidatedInput
-          label="Email"
-          type="email"
-          value={email}
-          onChange={(value) => updateField('email', value)}
-          onBlur={() => markTouched('email')}
-          error={fieldErrors.email}
-          touched={touchedFields.has('email')}
-          required
-          placeholder="Your email"
-        />
-        
-        <ValidatedInput
-          label="Phone Number"
-          type="tel"
-          value={phone}
-          onChange={(value) => updateField('phone', value)}
-          onBlur={() => markTouched('phone')}
-          error={fieldErrors.phone}
-          touched={touchedFields.has('phone')}
-          required
-          formatPhone
-          maxLength={14}
-          placeholder="(555) 123-4567"
-        />
-      </div>
+          {/* Payment Method Selection */}
+          {hasMultiplePaymentOptions && (
+            <div className="mb-6">
+              <Label className="text-sm font-medium mb-3 block">Payment Method</Label>
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('card')}
+                  className={cn(
+                    "w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left",
+                    paymentMethod === 'card' 
+                      ? "border-primary bg-primary/5 shadow-sm" 
+                      : "border-border hover:border-primary/50 hover:bg-muted/50"
+                  )}
+                >
+                  <div className={cn(
+                    "flex items-center justify-center w-10 h-10 rounded-lg",
+                    paymentMethod === 'card' ? "bg-primary/10" : "bg-muted"
+                  )}>
+                    <CreditCard className={cn("h-5 w-5", paymentMethod === 'card' ? "text-primary" : "text-muted-foreground")} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-foreground">Pay with Card</div>
+                    <div className="text-sm text-muted-foreground">Secure checkout via Stripe</div>
+                  </div>
+                  {paymentMethod === 'card' && (
+                    <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                      <Check className="w-3 h-3 text-primary-foreground" />
+                    </div>
+                  )}
+                </button>
 
-      {/* Payment Method Selection */}
-      {hasMultiplePaymentOptions && (
-        <div className="mb-6">
-          <Label className="text-sm font-medium mb-3 block">
-            How would you like to pay?
-          </Label>
-          <RadioGroup
-            value={paymentMethod}
-            onValueChange={(val) => setPaymentMethod(val as PaymentMethod)}
-            className="space-y-3"
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('cash')}
+                  className={cn(
+                    "w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left",
+                    paymentMethod === 'cash' 
+                      ? "border-primary bg-primary/5 shadow-sm" 
+                      : "border-border hover:border-primary/50 hover:bg-muted/50"
+                  )}
+                >
+                  <div className={cn(
+                    "flex items-center justify-center w-10 h-10 rounded-lg",
+                    paymentMethod === 'cash' ? "bg-emerald-500/10" : "bg-muted"
+                  )}>
+                    <Banknote className={cn("h-5 w-5", paymentMethod === 'cash' ? "text-emerald-600" : "text-muted-foreground")} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-foreground">Pay in Person</div>
+                    <div className="text-sm text-muted-foreground">Cash or check at pickup/delivery</div>
+                  </div>
+                  {paymentMethod === 'cash' && (
+                    <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                      <Check className="w-3 h-3 text-primary-foreground" />
+                    </div>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Cash-only notice */}
+          {onlyCashPayment && (
+            <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+              <div className="flex items-center gap-2 mb-2">
+                <Banknote className="h-4 w-4 text-amber-600" />
+                <span className="font-medium text-sm text-amber-800 dark:text-amber-200">Pay in Person Only</span>
+              </div>
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                This seller only accepts in-person payment (cash or check).
+              </p>
+            </div>
+          )}
+
+          {/* Terms Agreement */}
+          <div className="flex items-start gap-3 mb-6">
+            <Checkbox
+              id="saleTerms"
+              checked={agreedToTerms}
+              onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+              className="mt-0.5"
+            />
+            <Label htmlFor="saleTerms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
+              I agree to the{' '}
+              <a href="/terms" target="_blank" className="text-primary hover:underline">
+                Terms of Service
+              </a>{' '}
+              and understand this is a binding purchase.
+            </Label>
+          </div>
+
+          {/* Price Summary */}
+          <div className="mb-4 p-4 bg-muted/50 rounded-xl space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Price</span>
+              <span className="text-foreground">${priceSale?.toLocaleString()}</span>
+            </div>
+            {currentDeliveryFee > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {fulfillmentSelected === 'vendibook_freight' ? 'Freight' : 'Delivery Fee'}
+                </span>
+                <span className="text-foreground">${currentDeliveryFee.toLocaleString()}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-semibold pt-2 border-t border-border">
+              <span>Total</span>
+              <span className="text-primary">${totalPrice.toLocaleString()}</span>
+            </div>
+          </div>
+
+          {/* Trust Badge before submit */}
+          {paymentMethod === 'card' && (
+            <div className="mb-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+              <span>Protected by Vendibook</span>
+            </div>
+          )}
+
+          {/* Complete Purchase Button */}
+          <Button 
+            onClick={handlePurchase}
+            className="w-full bg-primary hover:bg-primary/90" 
+            size="lg"
+            disabled={isPurchasing || !priceSale}
           >
-            <div className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${
-              paymentMethod === 'card' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-            }`}>
-              <RadioGroupItem value="card" id="payment-card" />
-              <Label htmlFor="payment-card" className="flex items-center gap-2 cursor-pointer flex-1">
-                <CreditCard className="h-4 w-4 text-primary" />
-                <span>Pay with Card</span>
-                <span className="text-xs text-muted-foreground ml-auto">Secure checkout</span>
-              </Label>
+            {isPurchasing ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : !user ? (
+              'Sign in to Purchase'
+            ) : paymentMethod === 'cash' ? (
+              `Request Purchase - $${totalPrice.toLocaleString()}`
+            ) : (
+              `Complete Purchase - $${totalPrice.toLocaleString()}`
+            )}
+          </Button>
+
+          {paymentMethod === 'card' && (
+            <div className="flex items-center gap-2 justify-center mt-3 text-xs text-muted-foreground">
+              <ShieldCheck className="h-4 w-4 text-emerald-500" />
+              <span>Protected by escrow - funds released after confirmation</span>
             </div>
-            <div className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${
-              paymentMethod === 'cash' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-            }`}>
-              <RadioGroupItem value="cash" id="payment-cash" />
-              <Label htmlFor="payment-cash" className="flex items-center gap-2 cursor-pointer flex-1">
-                <Banknote className="h-4 w-4 text-emerald-600" />
-                <span>Pay in Person</span>
-                <span className="text-xs text-muted-foreground ml-auto">Cash or check</span>
-              </Label>
+          )}
+
+          {paymentMethod === 'cash' && (
+            <div className="flex items-center gap-2 justify-center mt-3 text-xs text-muted-foreground">
+              <Banknote className="h-4 w-4 text-amber-500" />
+              <span>Seller will contact you to arrange payment</span>
             </div>
-          </RadioGroup>
-        </div>
-      )}
-
-      {/* Cash-only notice */}
-      {onlyCashPayment && (
-        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
-          <div className="flex items-center gap-2 mb-2">
-            <Banknote className="h-4 w-4 text-amber-600" />
-            <span className="font-medium text-sm text-amber-800 dark:text-amber-200">Pay in Person Only</span>
-          </div>
-          <p className="text-sm text-amber-700 dark:text-amber-300">
-            This seller only accepts in-person payment (cash or check). You'll arrange payment directly with the seller.
-          </p>
-        </div>
-      )}
-
-      {/* Terms Agreement */}
-      <div className="flex items-start gap-3 mb-6">
-        <Checkbox
-          id="saleTerms"
-          checked={agreedToTerms}
-          onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
-          className="mt-0.5"
-        />
-        <Label htmlFor="saleTerms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
-          I agree to the{' '}
-          <a href="/terms" target="_blank" className="text-primary hover:underline">
-            Terms of Service
-          </a>{' '}
-          and understand this is a binding purchase.
-        </Label>
-      </div>
-
-      {/* Price Summary */}
-      <div className="mb-4 p-4 bg-muted/50 rounded-xl space-y-2">
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Price</span>
-          <span className="text-foreground">${priceSale?.toLocaleString()}</span>
-        </div>
-        {currentDeliveryFee > 0 && (
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Delivery Fee</span>
-            <span className="text-foreground">${currentDeliveryFee}</span>
-          </div>
-        )}
-        <div className="flex justify-between font-semibold pt-2 border-t border-border">
-          <span>Total</span>
-          <span className="text-primary">${totalPrice.toLocaleString()}</span>
-        </div>
-      </div>
-
-      {/* Trust Badge before submit */}
-      {paymentMethod === 'card' && (
-        <div className="mb-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-          <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-          <span>Protected by Vendibook</span>
-        </div>
-      )}
-
-      {/* Buy Now Button */}
-      <Button 
-        onClick={handlePurchase}
-        className="w-full bg-primary hover:bg-primary/90" 
-        size="lg"
-        disabled={isPurchasing || !priceSale}
-      >
-        {isPurchasing ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Processing...
-          </>
-        ) : !user ? (
-          'Sign in to Purchase'
-        ) : paymentMethod === 'cash' ? (
-          `Request Purchase - $${totalPrice.toLocaleString()}`
-        ) : (
-          `Buy Now - $${totalPrice.toLocaleString()}`
-        )}
-      </Button>
-
-      {paymentMethod === 'card' && (
-        <div className="flex items-center gap-2 justify-center mt-3 text-xs text-muted-foreground">
-          <ShieldCheck className="h-4 w-4 text-emerald-500" />
-          <span>Protected by escrow - funds released after confirmation</span>
-        </div>
-      )}
-
-      {paymentMethod === 'cash' && (
-        <div className="flex items-center gap-2 justify-center mt-3 text-xs text-muted-foreground">
-          <Banknote className="h-4 w-4 text-amber-500" />
-          <span>Seller will contact you to arrange payment</span>
-        </div>
+          )}
+        </>
       )}
 
       {/* Checkout Overlay */}
