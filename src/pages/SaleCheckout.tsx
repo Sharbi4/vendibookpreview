@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import Footer from '@/components/layout/Footer';
 import { 
   ShieldCheck, Loader2, MapPin, Truck, Calculator, AlertCircle, 
   CreditCard, Banknote, Check, ArrowLeft, Package, Clock, 
-  DollarSign, Handshake, CheckCircle2
+  DollarSign, Handshake, CheckCircle2, AlertTriangle
 } from 'lucide-react';
 import { CheckoutOverlay } from '@/components/checkout';
 import { FreightInfoCard } from '@/components/freight';
@@ -23,6 +23,7 @@ import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { ValidatedInput, validators } from '@/components/ui/validated-input';
 import { AddressAutocomplete } from '@/components/listing-detail/AddressAutocomplete';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
+import { calculateDistance } from '@/lib/geolocation';
 import SEO from '@/components/SEO';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
@@ -51,6 +52,7 @@ const SaleCheckout = () => {
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
   const [isAddressComplete, setIsAddressComplete] = useState(false);
+  const [deliveryCoords, setDeliveryCoords] = useState<[number, number] | null>(null); // [lng, lat]
   
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -125,6 +127,25 @@ const SaleCheckout = () => {
   const isFreightSellerPaid = vendibookFreightEnabled && freightPayer === 'seller';
   const freightCost = estimate?.total_cost ?? 0;
   const hasValidEstimate = estimate !== null && !estimateError && isAddressComplete;
+  const deliveryRadiusMiles = listing?.delivery_radius_miles || null;
+
+  // Calculate distance from listing to delivery address for local delivery
+  const deliveryDistanceInfo = useMemo(() => {
+    if (fulfillmentSelected !== 'delivery' || !deliveryCoords || !listing?.latitude || !listing?.longitude) {
+      return { distance: null, isOutsideRadius: false };
+    }
+    
+    const distance = calculateDistance(
+      listing.latitude,
+      listing.longitude,
+      deliveryCoords[1], // lat
+      deliveryCoords[0]  // lng
+    );
+    
+    const isOutsideRadius = deliveryRadiusMiles ? distance > deliveryRadiusMiles : false;
+    
+    return { distance: Math.round(distance * 10) / 10, isOutsideRadius };
+  }, [fulfillmentSelected, deliveryCoords, listing?.latitude, listing?.longitude, deliveryRadiusMiles]);
 
   // Get available fulfillment options
   const getAvailableFulfillmentOptions = (): FulfillmentSelection[] => {
@@ -484,19 +505,66 @@ const SaleCheckout = () => {
                         
                         {/* Show delivery address input when delivery is selected */}
                         {fulfillmentSelected === 'delivery' && (
-                          <div className="ml-16 p-4 bg-muted/30 rounded-lg border border-border">
-                            <ValidatedInput
-                              id="deliveryAddressStep1"
-                              label="Delivery Address"
-                              value={deliveryAddress}
-                              onChange={setDeliveryAddress}
-                              placeholder="Enter your delivery address"
-                              error={fieldErrors.deliveryAddress}
-                              touched={touchedFields.has('deliveryAddress')}
-                              required
-                            />
+                          <div className="ml-16 p-4 bg-muted/30 rounded-lg border border-border space-y-3">
+                            <div>
+                              <Label htmlFor="deliveryAddressStep1" className="text-sm font-medium mb-2 block">
+                                Delivery Address *
+                              </Label>
+                              <AddressAutocomplete
+                                id="deliveryAddressStep1"
+                                value={deliveryAddress}
+                                onChange={(value) => {
+                                  setDeliveryAddress(value);
+                                  setDeliveryCoords(null);
+                                }}
+                                onAddressSelect={(addr) => {
+                                  setDeliveryAddress(addr.fullAddress);
+                                  setDeliveryCoords(addr.coordinates);
+                                }}
+                                placeholder="Enter your delivery address"
+                              />
+                            </div>
+                            
+                            {/* Distance and radius warning */}
+                            {deliveryDistanceInfo.distance !== null && (
+                              <div className={cn(
+                                "flex items-start gap-2 p-3 rounded-lg text-sm",
+                                deliveryDistanceInfo.isOutsideRadius 
+                                  ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
+                                  : "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800"
+                              )}>
+                                {deliveryDistanceInfo.isOutsideRadius ? (
+                                  <>
+                                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                      <p className="font-medium text-amber-800 dark:text-amber-300">
+                                        Outside delivery zone
+                                      </p>
+                                      <p className="text-amber-700 dark:text-amber-400 text-xs mt-1">
+                                        Your address is {deliveryDistanceInfo.distance} miles away, but the seller only delivers within {deliveryRadiusMiles} miles. 
+                                        You may want to contact the seller or choose a different delivery option.
+                                      </p>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                      <p className="font-medium text-emerald-800 dark:text-emerald-300">
+                                        Within delivery zone
+                                      </p>
+                                      <p className="text-emerald-700 dark:text-emerald-400 text-xs mt-1">
+                                        {deliveryDistanceInfo.distance} miles from seller
+                                        {deliveryRadiusMiles && ` (max ${deliveryRadiusMiles} miles)`}
+                                      </p>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                            
                             {deliveryFee > 0 && (
-                              <div className="mt-3 flex items-center justify-between text-sm p-2 bg-primary/5 rounded-lg">
+                              <div className="flex items-center justify-between text-sm p-2 bg-primary/5 rounded-lg">
                                 <span className="text-muted-foreground">Delivery Fee</span>
                                 <span className="font-semibold text-foreground">+${deliveryFee.toLocaleString()}</span>
                               </div>
