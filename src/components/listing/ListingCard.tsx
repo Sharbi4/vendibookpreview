@@ -8,6 +8,7 @@ import RatingBadge from '@/components/reviews/RatingBadge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import VerificationBadge from '@/components/verification/VerificationBadge';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
+import { FavoriteButton } from '@/components/listing/FavoriteButton';
 
 interface ListingCardProps {
   listing: Listing;
@@ -132,15 +133,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           
           {/* Favorite Button */}
           {!compact && (
-            <button 
-              className="p-2 rounded-full bg-white/80 hover:bg-white transition-colors shadow-sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                // Handle favorite
-              }}
-            >
-              <Heart className="h-4 w-4 text-foreground" />
-            </button>
+            <FavoriteButton listingId={listing.id} size="sm" />
           )}
         </div>
 
