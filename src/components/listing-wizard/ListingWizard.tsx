@@ -26,7 +26,7 @@ import { StepDetails } from './StepDetails';
 import { StepLocation } from './StepLocation';
 import { StepPricing } from './StepPricing';
 import { StepRequiredDocuments } from './StepRequiredDocuments';
-import { StepPhotos } from './StepPhotos';
+import { StepPhotos, VideoUploadProgress } from './StepPhotos';
 import { StepReview } from './StepReview';
 import { StripeConnectModal } from './StripeConnectModal';
 import { PublishSuccessModal } from './PublishSuccessModal';
@@ -85,6 +85,8 @@ export const ListingWizard: React.FC = () => {
   const [dismissedTips, setDismissedTips] = useState<Set<number>>(new Set());
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [draftId, setDraftId] = useState<string | null>(null);
+  const [videoUploadProgress, setVideoUploadProgress] = useState<VideoUploadProgress[]>([]);
+  const [isUploadingVideos, setIsUploadingVideos] = useState(false);
   const hasUnsavedChanges = useRef(false);
   const isNavigatingAway = useRef(false);
   const lastSavedData = useRef<string>('');
@@ -306,24 +308,92 @@ export const ListingWizard: React.FC = () => {
 
   const uploadVideos = async (listingId: string): Promise<string[]> => {
     const urls: string[] = [];
+    const videos = formData.videos;
     
-    for (const file of formData.videos) {
+    // Initialize progress state
+    setVideoUploadProgress(
+      videos.map(file => ({
+        fileName: file.name,
+        progress: 0,
+        status: 'pending' as const,
+      }))
+    );
+    setIsUploadingVideos(true);
+    
+    for (let i = 0; i < videos.length; i++) {
+      const file = videos[i];
       const fileExt = file.name.split('.').pop();
       const fileName = `${user!.id}/${listingId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       
-      const { error: uploadError } = await supabase.storage
-        .from('listing-videos')
-        .upload(fileName, file);
+      // Update status to uploading
+      setVideoUploadProgress(prev => 
+        prev.map((item, idx) => 
+          idx === i ? { ...item, status: 'uploading' as const } : item
+        )
+      );
 
-      if (uploadError) throw uploadError;
+      try {
+        // Use XMLHttpRequest for progress tracking
+        const url = await new Promise<string>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          
+          xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+              const percentComplete = (event.loaded / event.total) * 100;
+              setVideoUploadProgress(prev => 
+                prev.map((item, idx) => 
+                  idx === i ? { ...item, progress: percentComplete } : item
+                )
+              );
+            }
+          });
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('listing-videos')
-        .getPublicUrl(fileName);
+          xhr.addEventListener('load', async () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              const { data: { publicUrl } } = supabase.storage
+                .from('listing-videos')
+                .getPublicUrl(fileName);
+              
+              setVideoUploadProgress(prev => 
+                prev.map((item, idx) => 
+                  idx === i ? { ...item, progress: 100, status: 'complete' as const } : item
+                )
+              );
+              
+              resolve(publicUrl);
+            } else {
+              reject(new Error(`Upload failed with status ${xhr.status}`));
+            }
+          });
 
-      urls.push(publicUrl);
+          xhr.addEventListener('error', () => {
+            reject(new Error('Upload failed'));
+          });
+
+          // Get the upload URL from Supabase
+          const { data: { session } } = supabase.auth.getSession() as any;
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+          const uploadUrl = `${supabaseUrl}/storage/v1/object/listing-videos/${fileName}`;
+
+          xhr.open('POST', uploadUrl);
+          xhr.setRequestHeader('Authorization', `Bearer ${session?.access_token}`);
+          xhr.setRequestHeader('x-upsert', 'true');
+          xhr.send(file);
+        });
+
+        urls.push(url);
+      } catch (error) {
+        console.error('Error uploading video:', error);
+        setVideoUploadProgress(prev => 
+          prev.map((item, idx) => 
+            idx === i ? { ...item, status: 'error' as const } : item
+          )
+        );
+        // Continue with other videos even if one fails
+      }
     }
     
+    setIsUploadingVideos(false);
     return urls;
   };
 
@@ -611,6 +681,8 @@ export const ListingWizard: React.FC = () => {
           <StepPhotos
             formData={formData}
             updateField={updateField}
+            videoUploadProgress={videoUploadProgress}
+            isUploadingVideos={isUploadingVideos}
           />
         );
       case 7:

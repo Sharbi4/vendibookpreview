@@ -1,17 +1,28 @@
 import React, { useRef, useState } from 'react';
-import { Upload, X, Image as ImageIcon, Star, Video, Play } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Star, Video, Play, Loader2 } from 'lucide-react';
 import { ListingFormData } from '@/types/listing';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+
+export interface VideoUploadProgress {
+  fileName: string;
+  progress: number;
+  status: 'pending' | 'uploading' | 'complete' | 'error';
+}
 
 interface StepPhotosProps {
   formData: ListingFormData;
   updateField: <K extends keyof ListingFormData>(field: K, value: ListingFormData[K]) => void;
+  videoUploadProgress?: VideoUploadProgress[];
+  isUploadingVideos?: boolean;
 }
 
 export const StepPhotos: React.FC<StepPhotosProps> = ({
   formData,
   updateField,
+  videoUploadProgress = [],
+  isUploadingVideos = false,
 }) => {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -257,10 +268,48 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
         </div>
 
         {/* Video count indicator */}
-        {totalVideos > 0 && (
+        {totalVideos > 0 && !isUploadingVideos && (
           <div className="flex items-center gap-2 p-3 rounded-xl border text-sm bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800">
             <Video className="w-4 h-4" />
             <span>{totalVideos} video{totalVideos > 1 ? 's' : ''} added</span>
+          </div>
+        )}
+
+        {/* Video Upload Progress */}
+        {isUploadingVideos && videoUploadProgress.length > 0 && (
+          <div className="space-y-3 p-4 rounded-xl border bg-muted/30">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              <span>Uploading videos...</span>
+            </div>
+            {videoUploadProgress.map((item, index) => (
+              <div key={index} className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="truncate max-w-[200px] text-muted-foreground">
+                    {item.fileName}
+                  </span>
+                  <span className={cn(
+                    "font-medium",
+                    item.status === 'complete' && "text-emerald-600",
+                    item.status === 'error' && "text-red-600",
+                    item.status === 'uploading' && "text-primary"
+                  )}>
+                    {item.status === 'complete' && '✓ Done'}
+                    {item.status === 'error' && '✗ Failed'}
+                    {item.status === 'uploading' && `${Math.round(item.progress)}%`}
+                    {item.status === 'pending' && 'Waiting...'}
+                  </span>
+                </div>
+                <Progress 
+                  value={item.progress} 
+                  className={cn(
+                    "h-2",
+                    item.status === 'complete' && "[&>div]:bg-emerald-500",
+                    item.status === 'error' && "[&>div]:bg-red-500"
+                  )}
+                />
+              </div>
+            ))}
           </div>
         )}
 
