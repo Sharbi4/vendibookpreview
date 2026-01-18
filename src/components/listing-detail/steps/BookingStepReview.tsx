@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { Calendar, MapPin, Truck, ShieldCheck, Loader2, CheckCircle2 } from 'lucide-react';
+import { Calendar, MapPin, Truck, ShieldCheck, Loader2, CheckCircle2, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RENTAL_RENTER_FEE_PERCENT } from '@/lib/commissions';
 import { 
@@ -18,6 +18,7 @@ interface BookingStepReviewProps {
   priceDaily: number;
   basePrice: number;
   deliveryFee: number;
+  depositAmount?: number | null;
   fees: {
     subtotal: number;
     renterFee: number;
@@ -38,6 +39,7 @@ const BookingStepReview = ({
   priceDaily,
   basePrice,
   deliveryFee,
+  depositAmount = null,
   fees,
   fulfillmentSelected,
   instantBook,
@@ -45,6 +47,9 @@ const BookingStepReview = ({
   onSubmit,
   onBack,
 }: BookingStepReviewProps) => {
+  const hasDeposit = depositAmount && depositAmount > 0;
+  const totalWithDeposit = fees.customerTotal + (hasDeposit ? depositAmount : 0);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -124,9 +129,37 @@ const BookingStepReview = ({
             <span className="text-foreground">${fees.renterFee.toFixed(2)}</span>
           </div>
           
+          <div className="flex justify-between pt-3 border-t border-border">
+            <span className="font-semibold">Rental Total</span>
+            <span className="font-semibold">${fees.customerTotal.toFixed(2)}</span>
+          </div>
+
+          {/* Security Deposit */}
+          {hasDeposit && (
+            <>
+              <div className="flex justify-between items-center pt-2">
+                <div className="flex items-center gap-2">
+                  <Wallet className="h-4 w-4 text-blue-500" />
+                  <span className="text-muted-foreground">Security Deposit</span>
+                  <span className="text-xs px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+                    Refundable
+                  </span>
+                </div>
+                <span className="text-foreground">${depositAmount.toFixed(2)}</span>
+              </div>
+              <p className="text-xs text-muted-foreground pl-6">
+                Returned after rental if no damage or late return
+              </p>
+            </>
+          )}
+          
           <div className="flex justify-between pt-3 border-t-2 border-primary/20">
-            <span className="font-bold text-lg">Total</span>
-            <span className="font-bold text-lg text-primary">${fees.customerTotal.toFixed(2)}</span>
+            <span className="font-bold text-lg">
+              {hasDeposit ? 'Total Due Today' : 'Total'}
+            </span>
+            <span className="font-bold text-lg text-primary">
+              ${hasDeposit ? totalWithDeposit.toFixed(2) : fees.customerTotal.toFixed(2)}
+            </span>
           </div>
         </div>
       </div>
@@ -151,7 +184,7 @@ const BookingStepReview = ({
           disabled={isSubmitting}
         >
           {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-          {instantBook ? `Pay $${fees.customerTotal.toFixed(2)}` : 'Submit Request'}
+          {instantBook ? `Pay $${(hasDeposit ? totalWithDeposit : fees.customerTotal).toFixed(2)}` : 'Submit Request'}
         </Button>
       </div>
 
@@ -160,7 +193,9 @@ const BookingStepReview = ({
         <ShieldCheck className="h-3.5 w-3.5 text-primary" />
         <span>
           {instantBook
-            ? 'Charged immediately. Full refund if documents not approved.'
+            ? hasDeposit 
+              ? 'Deposit is fully refundable after rental. Full refund if documents not approved.'
+              : 'Charged immediately. Full refund if documents not approved.'
             : 'You won\'t be charged until host approves.'}
         </span>
       </div>

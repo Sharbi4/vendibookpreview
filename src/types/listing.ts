@@ -40,6 +40,8 @@ export interface Listing {
   longitude?: number | null;
   // Instant Book (for rentals)
   instant_book?: boolean;
+  // Security deposit for rentals
+  deposit_amount?: number | null;
   // Vendibook freight fields
   vendibook_freight_enabled?: boolean;
   freight_payer?: FreightPayer | string;
@@ -429,6 +431,8 @@ export interface ListingFormData {
   existingImages: string[];
   // Instant Book (for rentals)
   instant_book: boolean;
+  // Security deposit for rentals
+  deposit_amount: string;
   // Vendibook Freight settings (for sales)
   vendibook_freight_enabled: boolean;
   freight_payer: FreightPayer;

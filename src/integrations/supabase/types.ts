@@ -284,6 +284,11 @@ export type Database = {
           delivery_address: string | null
           delivery_fee_snapshot: number | null
           delivery_instructions: string | null
+          deposit_amount: number | null
+          deposit_charge_id: string | null
+          deposit_refund_notes: string | null
+          deposit_refunded_at: string | null
+          deposit_status: string | null
           document_reminder_sent_at: string | null
           end_date: string
           first_response_at: string | null
@@ -313,6 +318,11 @@ export type Database = {
           delivery_address?: string | null
           delivery_fee_snapshot?: number | null
           delivery_instructions?: string | null
+          deposit_amount?: number | null
+          deposit_charge_id?: string | null
+          deposit_refund_notes?: string | null
+          deposit_refunded_at?: string | null
+          deposit_status?: string | null
           document_reminder_sent_at?: string | null
           end_date: string
           first_response_at?: string | null
@@ -342,6 +352,11 @@ export type Database = {
           delivery_address?: string | null
           delivery_fee_snapshot?: number | null
           delivery_instructions?: string | null
+          deposit_amount?: number | null
+          deposit_charge_id?: string | null
+          deposit_refund_notes?: string | null
+          deposit_refunded_at?: string | null
+          deposit_status?: string | null
           document_reminder_sent_at?: string | null
           end_date?: string
           first_response_at?: string | null
@@ -595,6 +610,7 @@ export type Database = {
           delivery_fee: number | null
           delivery_instructions: string | null
           delivery_radius_miles: number | null
+          deposit_amount: number | null
           description: string
           freight_category: string | null
           freight_payer: string | null
@@ -641,6 +657,7 @@ export type Database = {
           delivery_fee?: number | null
           delivery_instructions?: string | null
           delivery_radius_miles?: number | null
+          deposit_amount?: number | null
           description: string
           freight_category?: string | null
           freight_payer?: string | null
@@ -687,6 +704,7 @@ export type Database = {
           delivery_fee?: number | null
           delivery_instructions?: string | null
           delivery_radius_miles?: number | null
+          deposit_amount?: number | null
           description?: string
           freight_category?: string | null
           freight_payer?: string | null

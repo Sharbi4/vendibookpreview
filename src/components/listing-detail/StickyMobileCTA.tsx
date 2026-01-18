@@ -26,6 +26,7 @@ interface StickyMobileCTAProps {
   deliveryFee?: number | null;
   deliveryRadiusMiles?: number | null;
   listingTitle?: string;
+  depositAmount?: number | null;
 }
 
 export const StickyMobileCTA = ({
@@ -45,6 +46,7 @@ export const StickyMobileCTA = ({
   deliveryFee,
   deliveryRadiusMiles,
   listingTitle = 'Listing',
+  depositAmount = null,
 }: StickyMobileCTAProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -176,6 +178,7 @@ export const StickyMobileCTA = ({
               deliveryRadiusMiles={deliveryRadiusMiles}
               instantBook={instantBook}
               listingTitle={listingTitle}
+              depositAmount={depositAmount}
             />
           </div>
         </DrawerContent>
