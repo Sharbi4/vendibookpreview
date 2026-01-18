@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Search, ShieldCheck, CreditCard, Headphones, FileCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import vendibookLogo from '@/assets/vendibook-logo.png';
+import heroImage from '@/assets/hero-food-truck.jpg';
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -24,71 +25,20 @@ const Hero = () => {
 
   return (
     <section className="relative overflow-hidden pt-2 pb-6 mx-4 mt-4 rounded-3xl">
-      {/* Animated gradient background */}
+      {/* Hero background image */}
       <div 
-        className="absolute inset-0 bg-gradient-to-br from-vendibook-cream via-vendibook-cream/80 to-primary/5"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundSize: '400% 400%',
-          animation: 'gradient-shift 15s ease infinite',
+          backgroundImage: `url(${heroImage})`,
         }}
       />
       
-      {/* Subtle dot pattern overlay */}
-      <div 
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage: `radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)`,
-          backgroundSize: '24px 24px',
-        }}
-      />
+      {/* Dark overlay for text readability */}
+      <div className="absolute inset-0 bg-black/50" />
       
-      {/* Floating orbs with parallax effect */}
+      {/* Subtle gradient overlay */}
       <div 
-        className="absolute w-64 h-64 bg-primary/20 rounded-full blur-3xl animate-pulse transition-transform duration-100 ease-out"
-        style={{ 
-          top: 40,
-          left: '10%',
-          animationDuration: '4s',
-          transform: `translateY(${parallax1}px) translateX(${parallax1 * 0.3}px)`,
-        }} 
-      />
-      <div 
-        className="absolute w-48 h-48 bg-vendibook-orange/20 rounded-full blur-3xl animate-pulse transition-transform duration-100 ease-out"
-        style={{ 
-          bottom: 0,
-          right: '15%',
-          animationDuration: '6s', 
-          animationDelay: '1s',
-          transform: `translateY(${-parallax2}px) translateX(${-parallax2 * 0.5}px)`,
-        }} 
-      />
-      <div 
-        className="absolute w-32 h-32 bg-vendibook-teal/20 rounded-full blur-2xl animate-pulse transition-transform duration-100 ease-out"
-        style={{ 
-          top: '50%',
-          left: '60%',
-          animationDuration: '5s', 
-          animationDelay: '2s',
-          transform: `translateY(${parallax3}px) rotate(${scrollY * 0.02}deg)`,
-        }} 
-      />
-      
-      {/* Additional decorative orbs */}
-      <div 
-        className="absolute w-24 h-24 bg-primary/15 rounded-full blur-2xl transition-transform duration-100 ease-out"
-        style={{ 
-          top: '20%',
-          right: '5%',
-          transform: `translateY(${parallax2 * 1.2}px)`,
-        }} 
-      />
-      <div 
-        className="absolute w-40 h-40 bg-vendibook-orange/15 rounded-full blur-3xl transition-transform duration-100 ease-out"
-        style={{ 
-          bottom: '30%',
-          left: '5%',
-          transform: `translateY(${-parallax1 * 0.8}px)`,
-        }} 
+        className="absolute inset-0 bg-gradient-to-br from-black/30 via-transparent to-primary/20"
       />
       
       <div className="container max-w-5xl mx-auto px-4 relative z-10">
@@ -99,13 +49,13 @@ const Hero = () => {
             <img 
               src={vendibookLogo} 
               alt="Vendibook" 
-              className="h-44 md:h-52 w-auto mix-blend-multiply transition-transform duration-300 hover:scale-105 drop-shadow-sm"
+              className="h-44 md:h-52 w-auto transition-transform duration-300 hover:scale-105 drop-shadow-lg brightness-0 invert"
             />
           </div>
           
           {/* Headline */}
           <h1 
-            className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight animate-fade-in"
+            className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight animate-fade-in"
             style={{ animationDelay: '0.15s', animationFillMode: 'backwards' }}
           >
             The trusted marketplace for mobile food businesses
@@ -113,7 +63,7 @@ const Hero = () => {
           
           {/* Tagline */}
           <p 
-            className="text-base md:text-lg text-muted-foreground mt-3 max-w-xl mx-auto animate-fade-in"
+            className="text-base md:text-lg text-white/90 mt-3 max-w-xl mx-auto animate-fade-in"
             style={{ animationDelay: '0.2s', animationFillMode: 'backwards' }}
           >
             Rent, buy, or sell food trucks, trailers, kitchens, and vendor lots—with verification, secure payments, and compliant workflows.
@@ -138,7 +88,7 @@ const Hero = () => {
               variant="outline"
               size="lg"
               onClick={() => navigate('/host')}
-              className="text-base px-8 py-6 border-2"
+              className="text-base px-8 py-6 border-2 bg-white/10 border-white/30 text-white hover:bg-white/20"
             >
               List Your Asset
             </Button>
@@ -149,37 +99,25 @@ const Hero = () => {
             className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-8 animate-fade-in"
             style={{ animationDelay: '0.6s', animationFillMode: 'backwards' }}
           >
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <ShieldCheck className="h-4 w-4 text-primary" />
+            <div className="flex items-center gap-1.5 text-sm text-white/80">
+              <ShieldCheck className="h-4 w-4 text-white" />
               <span>Verified users</span>
             </div>
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <CreditCard className="h-4 w-4 text-primary" />
+            <div className="flex items-center gap-1.5 text-sm text-white/80">
+              <CreditCard className="h-4 w-4 text-white" />
               <span>Secure payments</span>
             </div>
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <FileCheck className="h-4 w-4 text-primary" />
+            <div className="flex items-center gap-1.5 text-sm text-white/80">
+              <FileCheck className="h-4 w-4 text-white" />
               <span>Document workflows</span>
             </div>
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Headphones className="h-4 w-4 text-primary" />
+            <div className="flex items-center gap-1.5 text-sm text-white/80">
+              <Headphones className="h-4 w-4 text-white" />
               <span>24/7 support</span>
             </div>
           </div>
         </div>
       </div>
-      
-      {/* CSS for gradient animation */}
-      <style>{`
-        @keyframes gradient-shift {
-          0%, 100% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-        }
-      `}</style>
     </section>
   );
 };
