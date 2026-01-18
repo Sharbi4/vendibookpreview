@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History, Zap, Headphones } from 'lucide-react';
+import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History, Zap, Headphones, Mail } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminTransactions } from '@/hooks/useAdminTransactions';
 import { useAdminPendingDocuments, useAdminDocumentStats } from '@/hooks/useAdminDocumentReview';
@@ -19,6 +19,7 @@ import AdminDocumentHistorySection from '@/components/admin/AdminDocumentHistory
 import AdminBulkDocumentActions from '@/components/admin/AdminBulkDocumentActions';
 import InstantBookMonitorCard from '@/components/admin/InstantBookMonitorCard';
 import ConciergeQueueCard from '@/components/admin/ConciergeQueueCard';
+import EmailPreviewCard from '@/components/admin/EmailPreviewCard';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -233,6 +234,10 @@ const AdminDashboard = () => {
               Doc History
             </TabsTrigger>
             <TabsTrigger value="all">All Transactions</TabsTrigger>
+            <TabsTrigger value="emails" className="relative">
+              <Mail className="h-4 w-4 mr-1" />
+              Email Previews
+            </TabsTrigger>
           </TabsList>
 
           {/* Concierge Tab */}
@@ -547,6 +552,11 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Email Previews Tab */}
+          <TabsContent value="emails" className="space-y-4">
+            <EmailPreviewCard />
           </TabsContent>
         </Tabs>
       </main>
