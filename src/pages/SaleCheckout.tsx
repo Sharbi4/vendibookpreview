@@ -1,11 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { addBusinessDays, format } from 'date-fns';
+import { useParams, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useListing } from '@/hooks/useListing';
 import { useToast } from '@/hooks/use-toast';
@@ -13,36 +10,44 @@ import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { 
-  ShieldCheck, Loader2, MapPin, Truck, Calculator, AlertCircle, 
-  CreditCard, Banknote, Check, ArrowLeft, Package, Clock, 
-  DollarSign, Handshake, CheckCircle2, AlertTriangle, Pencil, MessageCircle,
-  ChevronDown, Lock, RotateCcw, HeadphonesIcon
-} from 'lucide-react';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { CheckoutOverlay } from '@/components/checkout';
-import { FreightInfoCard } from '@/components/freight';
-import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { ValidatedInput, validators } from '@/components/ui/validated-input';
-import { AddressAutocomplete } from '@/components/listing-detail/AddressAutocomplete';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { calculateDistance } from '@/lib/geolocation';
 import SEO from '@/components/SEO';
 
+// Premium shared components
+import WizardHeader, { WizardStep } from '@/components/shared/WizardHeader';
+import StickySummary from '@/components/shared/StickySummary';
+
+// Step components
+import { PurchaseStepDelivery, PurchaseStepInfo, PurchaseStepReview } from '@/components/purchase-wizard';
+
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
-type CheckoutStep = 'delivery' | 'information' | 'summary';
+type CheckoutStep = 'delivery' | 'information' | 'review';
+
+const CHECKOUT_STEPS: WizardStep[] = [
+  { step: 1, label: 'Delivery', short: 'Delivery' },
+  { step: 2, label: 'Your Info', short: 'Info' },
+  { step: 3, label: 'Review', short: 'Review' },
+  { step: 4, label: 'Pay', short: 'Pay' },
+];
+
+const getStepNumber = (step: CheckoutStep): number => {
+  switch (step) {
+    case 'delivery': return 1;
+    case 'information': return 2;
+    case 'review': return 3;
+    default: return 1;
+  }
+};
 
 const SaleCheckout = () => {
   const { listingId } = useParams();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  const { listing, host, isLoading: isListingLoading, error: listingError } = useListing(listingId || '');
+  const { listing, isLoading: isListingLoading, error: listingError } = useListing(listingId || '');
   const { estimate, isLoading: isEstimating, error: estimateError, getEstimate, clearEstimate } = useFreightEstimate();
 
   // Multi-step state
@@ -59,21 +64,15 @@ const SaleCheckout = () => {
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
   const [isAddressComplete, setIsAddressComplete] = useState(false);
-  const [deliveryCoords, setDeliveryCoords] = useState<[number, number] | null>(null); // [lng, lat]
+  const [deliveryCoords, setDeliveryCoords] = useState<[number, number] | null>(null);
   
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showCheckoutOverlay, setShowCheckoutOverlay] = useState(false);
   const [addressDebounceTimer, setAddressDebounceTimer] = useState<NodeJS.Timeout | null>(null);
 
-  // Inline validation errors
-  const [fieldErrors, setFieldErrors] = useState<{
-    name?: string;
-    email?: string;
-    phone?: string;
-    address?: string;
-    deliveryAddress?: string;
-  }>({});
+  // Validation
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
 
   // Payment method
@@ -97,7 +96,6 @@ const SaleCheckout = () => {
         setFulfillmentSelected('pickup');
       }
       
-      // Set payment method based on listing options
       if (listing.accept_card_payment) {
         setPaymentMethod('card');
       } else if (listing.accept_cash_payment) {
@@ -136,7 +134,7 @@ const SaleCheckout = () => {
   const hasValidEstimate = estimate !== null && !estimateError && isAddressComplete;
   const deliveryRadiusMiles = listing?.delivery_radius_miles || null;
 
-  // Calculate distance from listing to delivery address for local delivery
+  // Calculate distance from listing to delivery address
   const deliveryDistanceInfo = useMemo(() => {
     if (fulfillmentSelected !== 'delivery' || !deliveryCoords || !listing?.latitude || !listing?.longitude) {
       return { distance: null, isOutsideRadius: false };
@@ -145,8 +143,8 @@ const SaleCheckout = () => {
     const distance = calculateDistance(
       listing.latitude,
       listing.longitude,
-      deliveryCoords[1], // lat
-      deliveryCoords[0]  // lng
+      deliveryCoords[1],
+      deliveryCoords[0]
     );
     
     const isOutsideRadius = deliveryRadiusMiles ? distance > deliveryRadiusMiles : false;
@@ -220,37 +218,38 @@ const SaleCheckout = () => {
   const currentDeliveryFee = getDeliveryFeeForSelection();
   const totalPrice = priceSale + currentDeliveryFee;
 
-  const validateForm = (): string | null => {
-    const nameError = fieldValidators.name(name);
-    const emailError = fieldValidators.email(email);
-    const phoneError = fieldValidators.phone(phone);
-    const addressError = fieldValidators.address(address);
-    
-    let deliveryAddressError: string | undefined;
-    if (fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight') {
-      if (!deliveryAddress.trim()) deliveryAddressError = 'Delivery address is required';
-      else if (fulfillmentSelected === 'vendibook_freight' && !isAddressComplete) {
-        deliveryAddressError = 'Please select a complete address';
+  // Validation
+  const validateStep = (step: CheckoutStep): boolean => {
+    if (step === 'delivery') {
+      if (fulfillmentSelected === 'vendibook_freight' && !hasValidEstimate) {
+        toast({ title: 'Enter delivery address', description: 'Please enter a complete address to get a freight quote.', variant: 'destructive' });
+        return false;
       }
+      if ((fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight') && !deliveryAddress.trim()) {
+        toast({ title: 'Missing address', description: 'Please enter a delivery address.', variant: 'destructive' });
+        return false;
+      }
+      return true;
     }
     
-    setFieldErrors({
-      name: nameError,
-      email: emailError,
-      phone: phoneError,
-      address: addressError,
-      deliveryAddress: deliveryAddressError,
-    });
+    if (step === 'information') {
+      const nameError = fieldValidators.name(name);
+      const emailError = fieldValidators.email(email);
+      const phoneError = fieldValidators.phone(phone);
+      const addressError = fieldValidators.address(address);
+      
+      setFieldErrors({ name: nameError, email: emailError, phone: phoneError, address: addressError });
+      setTouchedFields(new Set(['name', 'email', 'phone', 'address']));
+      
+      const firstError = nameError || emailError || phoneError || addressError;
+      if (firstError) {
+        toast({ title: 'Missing information', description: firstError, variant: 'destructive' });
+        return false;
+      }
+      return true;
+    }
     
-    setTouchedFields(new Set(['name', 'email', 'phone', 'address', 'deliveryAddress']));
-    
-    if (nameError) return nameError;
-    if (addressError) return addressError;
-    if (emailError) return emailError;
-    if (phoneError) return phoneError;
-    if (deliveryAddressError) return deliveryAddressError;
-    if (!agreedToTerms) return 'Please agree to the Terms of Service';
-    return null;
+    return true;
   };
 
   const handlePurchase = async () => {
@@ -261,13 +260,8 @@ const SaleCheckout = () => {
 
     if (!priceSale || !listingId || !listing?.host_id) return;
 
-    const validationError = validateForm();
-    if (validationError) {
-      toast({
-        title: 'Missing information',
-        description: validationError,
-        variant: 'destructive',
-      });
+    if (!agreedToTerms) {
+      toast({ title: 'Terms required', description: 'Please agree to the Terms of Service.', variant: 'destructive' });
       return;
     }
 
@@ -367,6 +361,7 @@ const SaleCheckout = () => {
     }
   };
 
+  // Loading state
   if (isListingLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -375,1203 +370,172 @@ const SaleCheckout = () => {
     );
   }
 
+  // Error state
   if (listingError || !listing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-foreground mb-2">Listing not found</h2>
-          <Button onClick={() => navigate('/browse')}>Browse Listings</Button>
+          <button onClick={() => navigate('/browse')} className="text-primary hover:underline">
+            Browse Listings
+          </button>
         </div>
       </div>
     );
   }
 
   const hasMultiplePaymentOptions = acceptCardPayment && acceptCashPayment;
+  const currentStepNumber = getStepNumber(currentStep);
+
+  // Price lines for sticky summary
+  const priceLines = [
+    { label: 'Item price', amount: priceSale },
+    ...(currentDeliveryFee > 0 ? [{
+      label: fulfillmentSelected === 'vendibook_freight' ? 'Freight' : 'Delivery',
+      amount: currentDeliveryFee,
+      isDelivery: true,
+    }] : []),
+  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
       <Header />
       
-      <main className="flex-1 py-8">
-        <div className="container max-w-4xl mx-auto px-4">
+      <main className="flex-1 py-6">
+        <div className="container max-w-6xl mx-auto px-4">
           {/* Back Button */}
           <button
             onClick={() => navigate(`/listing/${listingId}`)}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to listing
           </button>
 
           <div className="grid lg:grid-cols-5 gap-8">
-            {/* Main Form - Left Side */}
-            <div className="lg:col-span-3 space-y-8">
-              {/* Step Indicator */}
-              <div className="flex items-center gap-2">
-                {/* Step 1 */}
-                <div className={cn(
-                  "flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors",
-                  currentStep === 'delivery' 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-primary/20 text-primary"
-                )}>
-                  {currentStep !== 'delivery' ? <Check className="w-4 h-4" /> : '1'}
-                </div>
-                <span className={cn("text-xs font-medium hidden sm:inline", currentStep === 'delivery' ? "text-foreground" : "text-muted-foreground")}>
-                  Delivery
-                </span>
-                <div className="h-px flex-1 bg-border" />
-                
-                {/* Step 2 */}
-                <div className={cn(
-                  "flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors",
-                  currentStep === 'information' 
-                    ? "bg-primary text-primary-foreground" 
-                    : currentStep === 'summary' 
-                      ? "bg-primary/20 text-primary"
-                      : "bg-muted text-muted-foreground"
-                )}>
-                  {currentStep === 'summary' ? <Check className="w-4 h-4" /> : '2'}
-                </div>
-                <span className={cn("text-xs font-medium hidden sm:inline", currentStep === 'information' ? "text-foreground" : "text-muted-foreground")}>
-                  Your Info
-                </span>
-                <div className="h-px flex-1 bg-border" />
-                
-                {/* Step 3 */}
-                <div className={cn(
-                  "flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors",
-                  currentStep === 'summary' 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-muted text-muted-foreground"
-                )}>
-                  3
-                </div>
-                <span className={cn("text-xs font-medium hidden sm:inline", currentStep === 'summary' ? "text-foreground" : "text-muted-foreground")}>
-                  Review & Pay
-                </span>
-              </div>
+            {/* Main Wizard - Left Side */}
+            <div className="lg:col-span-3">
+              <div className="bg-card border-2 border-border rounded-2xl shadow-xl overflow-hidden">
+                {/* Premium Wizard Header */}
+                <WizardHeader
+                  mode="checkout"
+                  currentStep={currentStepNumber}
+                  totalSteps={4}
+                  steps={CHECKOUT_STEPS}
+                />
 
-              {/* STEP 1: Delivery Options */}
-              {currentStep === 'delivery' && (
-                <div className="bg-card border border-border rounded-xl p-6">
-                  <h2 className="text-lg font-semibold text-foreground mb-4">Delivery Options</h2>
-                  
-                  <div className="space-y-3">
-                    {fulfillmentOptions.includes('pickup') && (
-                      <button
-                        type="button"
-                        onClick={() => setFulfillmentSelected('pickup')}
-                        className={cn(
-                          "w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left",
-                          fulfillmentSelected === 'pickup' 
-                            ? "border-primary bg-primary/5" 
-                            : "border-border hover:border-primary/50"
-                        )}
-                      >
-                        <div className={cn(
-                          "flex items-center justify-center w-12 h-12 rounded-lg",
-                          fulfillmentSelected === 'pickup' ? "bg-primary/10" : "bg-muted"
-                        )}>
-                          <MapPin className={cn("h-6 w-6", fulfillmentSelected === 'pickup' ? "text-primary" : "text-muted-foreground")} />
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-medium text-foreground">Local Pickup</div>
-                          <div className="text-sm text-muted-foreground">Pick up at seller's location</div>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-sm font-medium text-emerald-600">FREE</span>
-                        </div>
-                        {fulfillmentSelected === 'pickup' && (
-                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                            <Check className="w-4 h-4 text-primary-foreground" />
-                          </div>
-                        )}
-                      </button>
-                    )}
-
-                    {fulfillmentOptions.includes('delivery') && (
-                      <div className="space-y-3">
-                        <button
-                          type="button"
-                          onClick={() => setFulfillmentSelected('delivery')}
-                          className={cn(
-                            "w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left",
-                            fulfillmentSelected === 'delivery' 
-                              ? "border-primary bg-primary/5" 
-                              : "border-border hover:border-primary/50"
-                          )}
-                        >
-                          <div className={cn(
-                            "flex items-center justify-center w-12 h-12 rounded-lg",
-                            fulfillmentSelected === 'delivery' ? "bg-primary/10" : "bg-muted"
-                          )}>
-                            <Truck className={cn("h-6 w-6", fulfillmentSelected === 'delivery' ? "text-primary" : "text-muted-foreground")} />
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-medium text-foreground">Local Delivery</div>
-                            <div className="text-sm text-muted-foreground">
-                              {listing.delivery_radius_miles ? `Within ${listing.delivery_radius_miles} miles` : 'Seller delivers to you'}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            {deliveryFee ? (
-                              <span className="text-sm font-medium text-foreground">+${deliveryFee.toLocaleString()}</span>
-                            ) : (
-                              <span className="text-sm font-medium text-emerald-600">FREE</span>
-                            )}
-                          </div>
-                          {fulfillmentSelected === 'delivery' && (
-                            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                              <Check className="w-4 h-4 text-primary-foreground" />
-                            </div>
-                          )}
-                        </button>
-                        
-                        {/* Show delivery address input when delivery is selected */}
-                        {fulfillmentSelected === 'delivery' && (
-                          <div className="ml-16 p-4 bg-muted/30 rounded-lg border border-border space-y-3">
-                            <div>
-                              <Label htmlFor="deliveryAddressStep1" className="text-sm font-medium mb-2 block">
-                                Delivery Address *
-                              </Label>
-                              <AddressAutocomplete
-                                id="deliveryAddressStep1"
-                                value={deliveryAddress}
-                                onChange={(value) => {
-                                  setDeliveryAddress(value);
-                                  setDeliveryCoords(null);
-                                }}
-                                onAddressSelect={(addr) => {
-                                  setDeliveryAddress(addr.fullAddress);
-                                  setDeliveryCoords(addr.coordinates);
-                                }}
-                                placeholder="Enter your delivery address"
-                              />
-                            </div>
-                            
-                            {/* Distance and radius warning */}
-                            {deliveryDistanceInfo.distance !== null && (
-                              <div className={cn(
-                                "flex items-start gap-2 p-3 rounded-lg text-sm",
-                                deliveryDistanceInfo.isOutsideRadius 
-                                  ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
-                                  : "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800"
-                              )}>
-                                {deliveryDistanceInfo.isOutsideRadius ? (
-                                  <>
-                                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
-                                    <div>
-                                      <p className="font-medium text-amber-800 dark:text-amber-300">
-                                        Outside delivery zone
-                                      </p>
-                                      <p className="text-amber-700 dark:text-amber-400 text-xs mt-1">
-                                        Your address is {deliveryDistanceInfo.distance} miles away, but the seller only delivers within {deliveryRadiusMiles} miles. 
-                                        You may want to contact the seller or choose a different delivery option.
-                                      </p>
-                                    </div>
-                                  </>
-                                ) : (
-                                  <>
-                                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
-                                    <div>
-                                      <p className="font-medium text-emerald-800 dark:text-emerald-300">
-                                        Within delivery zone
-                                      </p>
-                                      <p className="text-emerald-700 dark:text-emerald-400 text-xs mt-1">
-                                        {deliveryDistanceInfo.distance} miles from seller
-                                        {deliveryRadiusMiles && ` (max ${deliveryRadiusMiles} miles)`}
-                                      </p>
-                                    </div>
-                                  </>
-                                )}
-                              </div>
-                            )}
-                            
-                            {deliveryFee > 0 && (
-                              <div className="flex items-center justify-between text-sm p-2 bg-primary/5 rounded-lg">
-                                <span className="text-muted-foreground">Delivery Fee</span>
-                                <span className="font-semibold text-foreground">+${deliveryFee.toLocaleString()}</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {fulfillmentOptions.includes('vendibook_freight') && (
-                      <div className="space-y-3">
-                        <button
-                          type="button"
-                          onClick={() => setFulfillmentSelected('vendibook_freight')}
-                          className={cn(
-                            "w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left",
-                            fulfillmentSelected === 'vendibook_freight' 
-                              ? "border-primary bg-primary/5" 
-                              : "border-border hover:border-primary/50"
-                          )}
-                        >
-                          <div className={cn(
-                            "flex items-center justify-center w-12 h-12 rounded-lg",
-                            fulfillmentSelected === 'vendibook_freight' ? "bg-primary/10" : "bg-muted"
-                          )}>
-                            <Package className={cn("h-6 w-6", fulfillmentSelected === 'vendibook_freight' ? "text-primary" : "text-muted-foreground")} />
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-medium text-foreground">Vendibook Freight</div>
-                            <div className="text-sm text-muted-foreground">7-10 days shipping anywhere in the US</div>
-                          </div>
-                          <div className="text-right">
-                            {isFreightSellerPaid ? (
-                              <span className="text-sm font-medium text-emerald-600">FREE</span>
-                            ) : hasValidEstimate ? (
-                              <span className="text-sm font-medium text-foreground">+${freightCost.toLocaleString()}</span>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">Enter address for quote</span>
-                            )}
-                          </div>
-                          {fulfillmentSelected === 'vendibook_freight' && (
-                            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                              <Check className="w-4 h-4 text-primary-foreground" />
-                            </div>
-                          )}
-                        </button>
-                        
-                        {/* Show address input and freight estimate when freight is selected */}
-                        {fulfillmentSelected === 'vendibook_freight' && (
-                          <div className="ml-16 p-4 bg-muted/30 rounded-lg border border-border space-y-4">
-                            {/* Info banner */}
-                            <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
-                              <p className="text-xs text-muted-foreground">
-                                <strong className="text-foreground">How it works:</strong> Enter your address to calculate freight. Within 2 business days after payment, we'll contact you via email or phone to schedule delivery.
-                              </p>
-                            </div>
-                            
-                            <div>
-                              <Label htmlFor="freightAddressStep1" className="text-sm font-medium mb-2 block">
-                                Delivery Address *
-                              </Label>
-                              <AddressAutocomplete
-                                id="freightAddressStep1"
-                                value={deliveryAddress}
-                                onChange={(value) => {
-                                  setDeliveryAddress(value);
-                                  setIsAddressComplete(false);
-                                  clearEstimate();
-                                }}
-                                onAddressSelect={(addr) => {
-                                  setDeliveryAddress(addr.fullAddress);
-                                  setIsAddressComplete(addr.validation.isComplete);
-                                  if (addr.validation.isComplete) {
-                                    fetchFreightEstimate(addr.fullAddress);
-                                  }
-                                }}
-                                onValidationChange={(validation) => {
-                                  setIsAddressComplete(validation?.isComplete ?? false);
-                                }}
-                                placeholder="Enter delivery address for quote"
-                                requireComplete={true}
-                              />
-                            </div>
-                            
-                            {isEstimating && (
-                              <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                                <span className="text-sm text-muted-foreground">Calculating freight rate...</span>
-                              </div>
-                            )}
-                            
-                            {hasValidEstimate && !isEstimating && (
-                              <div className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl">
-                                <div className="flex items-center justify-between mb-3">
-                                  <span className="text-sm font-semibold text-foreground">Freight Quote</span>
-                                  <span className="text-xs text-muted-foreground bg-background/80 px-2 py-0.5 rounded-full">
-                                    ${estimate?.rate_per_mile?.toFixed(2)}/mile
-                                  </span>
-                                </div>
-                                
-                                {/* Premium breakdown */}
-                                <div className="space-y-1.5 text-xs border-t border-primary/10 pt-3 mb-3">
-                                  <div className="flex justify-between text-muted-foreground">
-                                    <span>Distance ({estimate?.distance_miles?.toFixed(0)} mi × $4.50)</span>
-                                    <span>${estimate?.base_cost?.toLocaleString()}</span>
-                                  </div>
-                                  <div className="flex justify-between text-muted-foreground">
-                                    <span>Fuel surcharge (8%)</span>
-                                    <span>${estimate?.fuel_surcharge?.toLocaleString()}</span>
-                                  </div>
-                                  <div className="flex justify-between text-muted-foreground">
-                                    <span>Handling fee</span>
-                                    <span>${estimate?.handling_fee?.toLocaleString()}</span>
-                                  </div>
-                                  <div className="flex justify-between text-muted-foreground pt-1 border-t border-primary/10">
-                                    <span>Subtotal</span>
-                                    <span>${estimate?.subtotal?.toLocaleString()}</span>
-                                  </div>
-                                  <div className="flex justify-between text-muted-foreground">
-                                    <span>Tax ({((estimate?.tax_rate ?? 0) * 100).toFixed(2)}%)</span>
-                                    <span>${estimate?.tax_amount?.toLocaleString()}</span>
-                                  </div>
-                                </div>
-                                
-                                {/* Total */}
-                                <div className="flex items-center justify-between pt-2 border-t border-primary/20">
-                                  <div>
-                                    <span className="text-sm font-semibold text-foreground">Total Freight</span>
-                                    <div className="text-xs text-muted-foreground">
-                                      Est. 7-10 business days
-                                    </div>
-                                  </div>
-                                  <span className={cn(
-                                    "text-xl font-bold",
-                                    isFreightSellerPaid ? "text-emerald-600" : "text-primary"
-                                  )}>
-                                    {isFreightSellerPaid ? 'FREE' : `$${freightCost.toLocaleString()}`}
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-                            
-                            {estimateError && (
-                              <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
-                                <AlertCircle className="h-4 w-4" />
-                                <span>{estimateError}</span>
-                              </div>
-                            )}
-
-                            {/* Delivery Contact Info Notice */}
-                            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                              <p className="text-xs text-amber-800 dark:text-amber-300">
-                                <strong>Shipping contact info:</strong> We'll use your email and phone number from the next step to coordinate delivery scheduling.
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Price Summary for Step 1 */}
-                  <div className="mt-6 pt-4 border-t border-border space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <div className="flex flex-col">
-                        <span className="text-foreground font-medium">{listing?.title}</span>
-                        <span className="text-xs text-muted-foreground">Item #{listing?.id?.slice(0, 8).toUpperCase()}</span>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <span className="text-xs text-muted-foreground">For Sale Price</span>
-                        <span className="text-foreground font-medium">${priceSale.toLocaleString()}</span>
-                      </div>
-                    </div>
-                    {fulfillmentSelected === 'delivery' && deliveryFee > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Delivery fee</span>
-                        <span className="text-foreground">+${deliveryFee.toLocaleString()}</span>
-                      </div>
-                    )}
-                    {fulfillmentSelected === 'vendibook_freight' && hasValidEstimate && !isFreightSellerPaid && (
-                      <>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Freight ({estimate?.distance_miles?.toFixed(0)} mi)</span>
-                          <span className="text-foreground">+${estimate?.base_cost?.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Fuel surcharge</span>
-                          <span className="text-foreground">+${estimate?.fuel_surcharge?.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Handling</span>
-                          <span className="text-foreground">+${estimate?.handling_fee?.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Tax ({((estimate?.tax_rate ?? 0) * 100).toFixed(2)}%)</span>
-                          <span className="text-foreground">+${estimate?.tax_amount?.toLocaleString()}</span>
-                        </div>
-                      </>
-                    )}
-                    {fulfillmentSelected === 'vendibook_freight' && hasValidEstimate && isFreightSellerPaid && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Freight shipping</span>
-                        <span className="text-emerald-600 font-medium">FREE (Seller pays)</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between font-bold text-lg pt-2 border-t border-border">
-                      <span>Total</span>
-                      <span className="text-primary">${totalPrice.toLocaleString()}</span>
-                    </div>
-                  </div>
-
-                  <Button 
-                    onClick={() => setCurrentStep('information')}
-                    className="w-full mt-4" 
-                    size="lg"
-                    disabled={
-                      (fulfillmentSelected === 'vendibook_freight' && !hasValidEstimate && !isFreightSellerPaid) ||
-                      (fulfillmentSelected === 'delivery' && !deliveryAddress.trim()) ||
-                      isEstimating
-                    }
-                  >
-                    {isEstimating ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Calculating...
-                      </>
-                    ) : (
-                      'Continue'
-                    )}
-                  </Button>
-                </div>
-              )}
-
-              {/* STEP 2: Your Information */}
-              {currentStep === 'information' && (
-                <div className="bg-card border border-border rounded-xl p-6">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep('delivery')}
-                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to delivery options
-                  </button>
-
-                  <h2 className="text-lg font-semibold text-foreground mb-6">Your Information</h2>
-                  
-                  <div className="space-y-4">
-                    <ValidatedInput
-                      id="name"
-                      label="Full Name"
-                      value={name}
-                      onChange={setName}
-                      placeholder="John Doe"
-                      error={fieldErrors.name}
-                      touched={touchedFields.has('name')}
-                      required
-                    />
-
-                    <ValidatedInput
-                      id="address"
-                      label="Address"
-                      value={address}
-                      onChange={setAddress}
-                      placeholder="123 Main St, City, State ZIP"
-                      error={fieldErrors.address}
-                      touched={touchedFields.has('address')}
-                      required
-                    />
-
-                    <ValidatedInput
-                      id="email"
-                      label="Email"
-                      type="email"
-                      value={email}
-                      onChange={setEmail}
-                      placeholder="you@example.com"
-                      error={fieldErrors.email}
-                      touched={touchedFields.has('email')}
-                      required
-                    />
-
-                    <ValidatedInput
-                      id="phone"
-                      label="Phone Number"
-                      type="tel"
-                      value={phone}
-                      onChange={setPhone}
-                      placeholder="(555) 123-4567"
-                      formatPhone
-                      error={fieldErrors.phone}
-                      touched={touchedFields.has('phone')}
-                      required
-                    />
-
-                    {/* Delivery Address for delivery/freight */}
-                    {(fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight') && (
-                      <div>
-                        <Label htmlFor="deliveryAddress" className="text-sm font-medium mb-2 block">
-                          Delivery Address *
-                        </Label>
-                        {fulfillmentSelected === 'vendibook_freight' ? (
-                          <AddressAutocomplete
-                            id="deliveryAddress"
-                            value={deliveryAddress}
-                            onChange={(value) => {
-                              setDeliveryAddress(value);
-                              setIsAddressComplete(false);
-                              clearEstimate();
-                            }}
-                            onAddressSelect={(addr) => {
-                              setDeliveryAddress(addr.fullAddress);
-                              setIsAddressComplete(addr.validation.isComplete);
-                              if (addr.validation.isComplete) {
-                                fetchFreightEstimate(addr.fullAddress);
-                              }
-                            }}
-                            onValidationChange={(validation) => {
-                              setIsAddressComplete(validation?.isComplete ?? false);
-                            }}
-                            placeholder="Enter delivery address"
-                            requireComplete={true}
-                          />
-                        ) : (
-                          <ValidatedInput
-                            id="deliveryAddress"
-                            label="Delivery Address"
-                            value={deliveryAddress}
-                            onChange={setDeliveryAddress}
-                            placeholder="Enter delivery address"
-                            error={fieldErrors.deliveryAddress}
-                            touched={touchedFields.has('deliveryAddress')}
-                            required
-                          />
-                        )}
-                      </div>
-                    )}
-
-                    {/* Freight Estimate */}
-                    {fulfillmentSelected === 'vendibook_freight' && (
-                      <>
-                        {isEstimating && (
-                          <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                            <span className="text-sm text-muted-foreground">Calculating freight...</span>
-                          </div>
-                        )}
-                        
-                        {hasValidEstimate && !isEstimating && (
-                          <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-medium">Freight Estimate</span>
-                              <span className={isFreightSellerPaid ? 'text-emerald-600 font-semibold' : 'font-semibold'}>
-                                {isFreightSellerPaid ? 'FREE' : `$${freightCost.toFixed(2)}`}
-                              </span>
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              Est. {estimate?.estimated_transit_days.min}-{estimate?.estimated_transit_days.max} business days
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    )}
-
-                    {/* Delivery Instructions */}
-                    {(fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight') && (
-                      <div>
-                        <Label htmlFor="deliveryInstructions" className="text-sm font-medium mb-2 block">
-                          Delivery Instructions (optional)
-                        </Label>
-                        <Textarea
-                          id="deliveryInstructions"
-                          value={deliveryInstructions}
-                          onChange={(e) => setDeliveryInstructions(e.target.value)}
-                          placeholder="Gate code, parking instructions, etc."
-                          rows={2}
-                        />
-                      </div>
-                    )}
-
-                    {/* Continue Button */}
-                    <Button
-                      onClick={() => {
-                        // Validate fields before moving to summary
-                        const nameError = fieldValidators.name(name);
-                        const emailError = fieldValidators.email(email);
-                        const phoneError = fieldValidators.phone(phone);
-                        const addressError = fieldValidators.address(address);
-                        
-                        let deliveryAddressError: string | undefined;
-                        if (fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight') {
-                          if (!deliveryAddress.trim()) deliveryAddressError = 'Delivery address is required';
-                        }
-                        
-                        if (nameError || emailError || phoneError || addressError || deliveryAddressError) {
-                          setFieldErrors({ name: nameError, email: emailError, phone: phoneError, address: addressError, deliveryAddress: deliveryAddressError });
-                          setTouchedFields(new Set(['name', 'email', 'phone', 'address', 'deliveryAddress']));
-                          toast({
-                            title: 'Missing information',
-                            description: nameError || addressError || emailError || phoneError || deliveryAddressError,
-                            variant: 'destructive',
-                          });
-                          return;
-                        }
-                        
-                        setCurrentStep('summary');
-                      }}
-                      className="w-full"
-                      size="lg"
+                {/* Step Content */}
+                <div className="p-6">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentStep}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.2 }}
                     >
-                      Continue to Review
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 3: Review & Summary */}
-              {currentStep === 'summary' && (
-                <div className="bg-card border border-border rounded-xl p-6">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep('information')}
-                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to your information
-                  </button>
-
-                  <h2 className="text-lg font-semibold text-foreground mb-6">Review Your Order</h2>
-
-                  {/* Listing Info */}
-                  <div className="border border-border rounded-xl p-4 mb-6">
-                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Item</h3>
-                    <div className="flex gap-4">
-                      <img 
-                        src={listing.cover_image_url || listing.image_urls?.[0] || '/placeholder.svg'}
-                        alt={listing.title}
-                        className="w-24 h-24 object-cover rounded-lg"
-                      />
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-foreground">{listing.title}</h4>
-                        <p className="text-sm text-muted-foreground capitalize mt-1">
-                          {listing.category?.replace('_', ' ')}
-                        </p>
-                        <p className="text-lg font-bold text-primary mt-2">${priceSale.toLocaleString()}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Delivery Summary */}
-                  <div className="border border-border rounded-xl p-4 mb-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-medium text-muted-foreground">Delivery Method</h3>
-                      <button
-                        type="button"
-                        onClick={() => setCurrentStep('delivery')}
-                        className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
-                      >
-                        <Pencil className="h-3 w-3" />
-                        Edit
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {fulfillmentSelected === 'pickup' && <MapPin className="h-5 w-5 text-primary" />}
-                      {fulfillmentSelected === 'delivery' && <Truck className="h-5 w-5 text-primary" />}
-                      {fulfillmentSelected === 'vendibook_freight' && <Package className="h-5 w-5 text-primary" />}
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {fulfillmentSelected === 'pickup' && 'Local Pickup'}
-                          {fulfillmentSelected === 'delivery' && 'Local Delivery'}
-                          {fulfillmentSelected === 'vendibook_freight' && 'Vendibook Freight'}
-                        </p>
-                        {fulfillmentSelected === 'vendibook_freight' && (
-                          <p className="text-xs text-muted-foreground">7-10 business days • Anywhere in US</p>
-                        )}
-                        {(fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight') && deliveryAddress && (
-                          <p className="text-sm text-muted-foreground mt-1">{deliveryAddress}</p>
-                        )}
-                      </div>
-                      {currentDeliveryFee > 0 && (
-                        <span className="ml-auto font-medium">+${currentDeliveryFee.toLocaleString()}</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Buyer Info Summary */}
-                  <div className="border border-border rounded-xl p-4 mb-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-medium text-muted-foreground">Your Information</h3>
-                      <button
-                        type="button"
-                        onClick={() => setCurrentStep('information')}
-                        className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
-                      >
-                        <Pencil className="h-3 w-3" />
-                        Edit
-                      </button>
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Name</span>
-                        <span className="font-medium text-foreground">{name}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Email</span>
-                        <span className="font-medium text-foreground">{email}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Phone</span>
-                        <span className="font-medium text-foreground">{phone}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Address</span>
-                        <span className="font-medium text-foreground text-right max-w-[200px]">{address}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* How It Works - Always visible */}
-                  <div className="border border-border rounded-xl p-4 mb-6 bg-muted/30">
-                    <h3 className="text-sm font-medium text-foreground mb-4">How It Works</h3>
-                    <div className="space-y-4">
-                      <div className="flex gap-3">
-                        <div className="flex flex-col items-center">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                            <DollarSign className="h-4 w-4 text-primary" />
-                          </div>
-                          <div className="w-0.5 flex-1 bg-border mt-2" />
-                        </div>
-                        <div className="pb-3">
-                          <h4 className="font-medium text-foreground text-sm">1. Submit Payment Hold</h4>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Your payment is securely held in escrow. Funds are not released to the seller yet.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <div className="flex flex-col items-center">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Handshake className="h-4 w-4 text-primary" />
-                          </div>
-                          <div className="w-0.5 flex-1 bg-border mt-2" />
-                        </div>
-                        <div className="pb-3">
-                          <h4 className="font-medium text-foreground text-sm">2. Meet & Confirm Sale</h4>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Meet the seller, inspect the item, and confirm everything is as described.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <div className="flex flex-col items-center">
-                          <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                          </div>
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-foreground text-sm">3. Funds Released</h4>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Once both buyer and seller confirm, funds are released to the seller. Done!
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Order Summary - Premium */}
-                  <div className="border border-border rounded-2xl overflow-hidden mb-6 bg-gradient-to-br from-card via-card to-muted/30 shadow-lg">
-                    {/* Header */}
-                    <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-5 py-4 border-b border-border/50">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-base font-semibold text-foreground">Order Summary</h3>
-                          <p className="text-xs text-muted-foreground mt-0.5">Review your purchase details</p>
-                        </div>
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
-                          <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                          <span className="text-xs font-medium text-primary">Protected</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-5 space-y-4">
-                      {/* Item Details */}
-                      <div className="flex gap-4 p-3 rounded-xl bg-muted/40 border border-border/50">
-                        {listing?.cover_image_url && (
-                          <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-border/50">
-                            <img 
-                              src={listing.cover_image_url} 
-                              alt={listing.title} 
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-foreground truncate">{listing?.title}</h4>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs px-2 py-0.5 rounded-md bg-muted border border-border text-muted-foreground font-mono">
-                              #{listing?.id?.slice(0, 8).toUpperCase()}
-                            </span>
-                            <span className="text-xs text-muted-foreground capitalize">{listing?.category?.replace('_', ' ')}</span>
-                          </div>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <span className="text-xs text-muted-foreground block">For Sale Price</span>
-                          <span className="text-lg font-bold text-foreground">${priceSale.toLocaleString()}</span>
-                        </div>
-                      </div>
-
-                      {/* Freight Breakdown */}
-                      {fulfillmentSelected === 'delivery' && deliveryFee > 0 && (
-                        <div className="flex justify-between text-sm py-2 border-b border-border/30">
-                          <span className="text-muted-foreground flex items-center gap-2">
-                            <Truck className="h-4 w-4" /> Delivery fee
-                          </span>
-                          <span className="text-foreground font-medium">+${deliveryFee.toLocaleString()}</span>
-                        </div>
-                      )}
-
-                      {fulfillmentSelected === 'vendibook_freight' && hasValidEstimate && !isFreightSellerPaid && (
-                        <div className="space-y-2 py-2 border-t border-border/30">
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                            <Truck className="h-3.5 w-3.5" />
-                            <span>VendiBook Freight · $4.50/mile</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Distance ({estimate?.distance_miles?.toFixed(0)} mi)</span>
-                            <span className="text-foreground">+${estimate?.base_cost?.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Fuel surcharge (8%)</span>
-                            <span className="text-foreground">+${estimate?.fuel_surcharge?.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Handling fee</span>
-                            <span className="text-foreground">+${estimate?.handling_fee?.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between text-sm pb-2 border-b border-border/30">
-                            <span className="text-muted-foreground">Tax ({((estimate?.tax_rate ?? 0) * 100).toFixed(2)}%)</span>
-                            <span className="text-foreground">+${estimate?.tax_amount?.toLocaleString()}</span>
-                          </div>
-                          {/* Estimated Delivery Date */}
-                          <div className="flex items-center justify-between py-3 px-3 mt-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50">
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-emerald-600" />
-                              <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Estimated Delivery</span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-                                {format(addBusinessDays(new Date(), estimate?.estimated_transit_days?.min ?? 7), 'MMM d')} – {format(addBusinessDays(new Date(), estimate?.estimated_transit_days?.max ?? 10), 'MMM d, yyyy')}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {fulfillmentSelected === 'vendibook_freight' && isFreightSellerPaid && (
-                        <div className="flex justify-between text-sm py-2 border-t border-border/30">
-                          <span className="text-muted-foreground flex items-center gap-2">
-                            <Truck className="h-4 w-4" /> Freight shipping
-                          </span>
-                          <span className="text-emerald-600 font-semibold flex items-center gap-1">
-                            <CheckCircle2 className="h-4 w-4" /> FREE
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Grand Total */}
-                      <div className="flex justify-between items-center pt-4 mt-2 border-t-2 border-primary/30">
-                        <div>
-                          <span className="text-lg font-bold text-foreground">Grand Total</span>
-                          <p className="text-xs text-muted-foreground">All fees included</p>
-                        </div>
-                        <span className="text-2xl font-bold text-primary">${totalPrice.toLocaleString()}</span>
-                      </div>
-
-                      {/* What's Included - Collapsible */}
-                      <Collapsible className="mt-4">
-                        <CollapsibleTrigger className="flex items-center justify-between w-full py-3 px-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors group">
-                          <div className="flex items-center gap-2">
-                            <ShieldCheck className="h-4 w-4 text-primary" />
-                            <span className="text-sm font-medium text-foreground">What's Included</span>
-                          </div>
-                          <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className="pt-3 pb-1">
-                          <div className="space-y-3 px-1">
-                            <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
-                                <Lock className="h-4 w-4 text-emerald-600" />
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-medium text-foreground">Secure Escrow Payment</h4>
-                                <p className="text-xs text-muted-foreground mt-0.5">Your funds are held securely until you confirm receipt and satisfaction.</p>
-                              </div>
-                            </div>
-                            <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                                <ShieldCheck className="h-4 w-4 text-blue-600" />
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-medium text-foreground">Buyer Protection Guarantee</h4>
-                                <p className="text-xs text-muted-foreground mt-0.5">Full refund if item doesn't match description or doesn't arrive.</p>
-                              </div>
-                            </div>
-                            <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
-                                <RotateCcw className="h-4 w-4 text-amber-600" />
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-medium text-foreground">Dispute Resolution</h4>
-                                <p className="text-xs text-muted-foreground mt-0.5">Our team mediates any issues between buyers and sellers.</p>
-                              </div>
-                            </div>
-                            <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
-                                <HeadphonesIcon className="h-4 w-4 text-purple-600" />
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-medium text-foreground">Dedicated Support</h4>
-                                <p className="text-xs text-muted-foreground mt-0.5">Real humans available 7 days a week to help with your purchase.</p>
-                              </div>
-                            </div>
-                          </div>
-                        </CollapsibleContent>
-                      </Collapsible>
-                    </div>
-                  </div>
-
-                  {/* Payment Method Selection */}
-                  {hasMultiplePaymentOptions && (
-                    <div className="space-y-3 mb-6">
-                      <Label className="text-sm font-medium">Payment Method</Label>
-                      <div className="grid grid-cols-2 gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setPaymentMethod('card')}
-                          className={cn(
-                            "flex items-center gap-2 p-3 rounded-lg border-2 transition-all",
-                            paymentMethod === 'card' 
-                              ? "border-primary bg-primary/5" 
-                              : "border-border hover:border-primary/50"
-                          )}
-                        >
-                          <CreditCard className={cn("h-5 w-5", paymentMethod === 'card' ? "text-primary" : "text-muted-foreground")} />
-                          <span className="text-sm font-medium">Pay via Card</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPaymentMethod('cash')}
-                          className={cn(
-                            "flex items-center gap-2 p-3 rounded-lg border-2 transition-all",
-                            paymentMethod === 'cash' 
-                              ? "border-primary bg-primary/5" 
-                              : "border-border hover:border-primary/50"
-                          )}
-                        >
-                          <Banknote className={cn("h-5 w-5", paymentMethod === 'cash' ? "text-primary" : "text-muted-foreground")} />
-                          <span className="text-sm font-medium">Pay in Person</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* TOS Agreement */}
-                  <div className="flex items-start gap-3 p-4 border border-border rounded-xl mb-6 bg-muted/30">
-                    <Checkbox
-                      id="terms"
-                      checked={agreedToTerms}
-                      onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
-                    />
-                    <label htmlFor="terms" className="text-sm text-foreground leading-tight">
-                      I agree to the{' '}
-                      <a href="/terms" target="_blank" className="text-primary hover:underline font-medium">
-                        Terms of Service
-                      </a>{' '}
-                      and understand that my payment will be held in escrow until both parties confirm the transaction.
-                    </label>
-                  </div>
-
-                  {/* Next Steps */}
-                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6">
-                     <h3 className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-primary" />
-                      What happens next?
-                    </h3>
-                    {fulfillmentSelected === 'vendibook_freight' ? (
-                      <ul className="text-xs text-muted-foreground space-y-1.5">
-                        <li>• Complete your payment securely via Stripe</li>
-                        <li>• Within 2 business days, we'll contact you via email or phone to schedule delivery</li>
-                        <li>• Your item ships with tracking (7-10 business days)</li>
-                        <li>• Once delivered, confirm receipt and funds are released to the seller</li>
-                      </ul>
-                    ) : (
-                      <ul className="text-xs text-muted-foreground space-y-1.5">
-                        <li>• You'll be redirected to complete your payment securely via Stripe</li>
-                        <li>• The seller will be notified and will confirm the sale</li>
-                        <li>• You'll receive details on pickup/delivery coordination</li>
-                        <li>• After you both confirm, funds are released</li>
-                      </ul>
-                    )}
-                  </div>
-
-                  {/* Freight Contact Notice */}
-                  {fulfillmentSelected === 'vendibook_freight' && (
-                    <div className="border border-primary/30 bg-primary/5 rounded-xl p-4 mb-6">
-                      <h3 className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
-                        <Truck className="h-4 w-4 text-primary" />
-                        Shipping Delivery Contact
-                      </h3>
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        <p>We'll use the following info to schedule your delivery:</p>
-                        <div className="mt-2 p-2 bg-background/50 rounded-lg">
-                          <p><strong>Email:</strong> {email}</p>
-                          <p><strong>Phone:</strong> {phone}</p>
-                        </div>
-                        <p className="mt-2 text-amber-700 dark:text-amber-400">
-                          Make sure this information is correct — we'll reach out within 2 business days after payment.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  <div className="border border-border rounded-xl p-4 mb-6 bg-muted/20">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <MessageCircle className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-sm font-medium text-foreground mb-1">
-                          Have questions before you buy?
-                        </h3>
-                        <p className="text-xs text-muted-foreground mb-3">
-                          Our team is here to help you feel confident about your purchase on Vendibook.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (window.zE) {
-                              try {
-                                window.zE('messenger', 'show');
-                                window.zE('messenger', 'open');
-                              } catch (error) {
-                                // Fallback: navigate to help center
-                                window.open('/help', '_blank');
-                              }
-                            } else {
-                              window.open('/help', '_blank');
+                      {currentStep === 'delivery' && (
+                        <PurchaseStepDelivery
+                          fulfillmentOptions={fulfillmentOptions}
+                          fulfillmentSelected={fulfillmentSelected}
+                          setFulfillmentSelected={setFulfillmentSelected}
+                          deliveryAddress={deliveryAddress}
+                          setDeliveryAddress={setDeliveryAddress}
+                          setDeliveryCoords={setDeliveryCoords}
+                          deliveryFee={deliveryFee}
+                          deliveryRadiusMiles={deliveryRadiusMiles}
+                          deliveryDistanceInfo={deliveryDistanceInfo}
+                          isFreightSellerPaid={isFreightSellerPaid}
+                          freightCost={freightCost}
+                          hasValidEstimate={hasValidEstimate}
+                          isEstimating={isEstimating}
+                          estimateError={estimateError}
+                          estimate={estimate}
+                          isAddressComplete={isAddressComplete}
+                          setIsAddressComplete={setIsAddressComplete}
+                          fetchFreightEstimate={fetchFreightEstimate}
+                          clearEstimate={clearEstimate}
+                          onContinue={() => {
+                            if (validateStep('delivery')) {
+                              setCurrentStep('information');
                             }
                           }}
-                          className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 font-medium transition-colors"
-                        >
-                          <MessageCircle className="h-4 w-4" />
-                          Chat with Support
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                        />
+                      )}
 
-                  {/* Submit */}
-                  <Button
-                    onClick={handlePurchase}
-                    disabled={isPurchasing || !agreedToTerms}
-                    className="w-full"
-                    size="lg"
-                  >
-                    {isPurchasing ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <ShieldCheck className="h-4 w-4 mr-2" />
-                    )}
-                    {paymentMethod === 'cash' 
-                      ? `Submit Cash Request - $${totalPrice.toLocaleString()}`
-                      : `Pay Securely - $${totalPrice.toLocaleString()}`
-                    }
-                  </Button>
+                      {currentStep === 'information' && (
+                        <PurchaseStepInfo
+                          name={name}
+                          setName={setName}
+                          email={email}
+                          setEmail={setEmail}
+                          phone={phone}
+                          setPhone={setPhone}
+                          address={address}
+                          setAddress={setAddress}
+                          deliveryInstructions={deliveryInstructions}
+                          setDeliveryInstructions={setDeliveryInstructions}
+                          fulfillmentSelected={fulfillmentSelected}
+                          fieldErrors={fieldErrors}
+                          touchedFields={touchedFields}
+                          setTouchedFields={setTouchedFields}
+                          onBack={() => setCurrentStep('delivery')}
+                          onContinue={() => {
+                            if (validateStep('information')) {
+                              setCurrentStep('review');
+                            }
+                          }}
+                        />
+                      )}
 
-                  <p className="text-xs text-center text-muted-foreground mt-3">
-                    <ShieldCheck className="inline h-3 w-3 mr-1 text-emerald-500" />
-                    Protected by Vendibook escrow
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Right Side - Summary + Timeline */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Order Summary */}
-              <div className="bg-card border border-border rounded-xl p-5">
-                <h3 className="font-semibold text-foreground mb-4">Order Summary</h3>
-                
-                <div className="flex gap-4 mb-4">
-                  <img 
-                    src={listing.cover_image_url || listing.image_urls?.[0] || '/placeholder.svg'}
-                    alt={listing.title}
-                    className="w-20 h-20 object-cover rounded-lg"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-foreground text-sm line-clamp-2">{listing.title}</h4>
-                    <p className="text-xs text-muted-foreground capitalize mt-1">
-                      {listing.category?.replace('_', ' ')}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-2 pt-4 border-t border-border">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Item price</span>
-                    <span className="text-foreground">${priceSale.toLocaleString()}</span>
-                  </div>
-                  {currentDeliveryFee > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        {fulfillmentSelected === 'vendibook_freight' ? 'Freight' : 'Delivery'}
-                      </span>
-                      <span className="text-foreground">+${currentDeliveryFee.toLocaleString()}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between font-semibold pt-2 border-t border-border">
-                    <span>Total</span>
-                    <span className="text-primary">${totalPrice.toLocaleString()}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 justify-center mt-4 pt-4 border-t border-border text-xs text-muted-foreground">
-                  <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                  <span>Protected by Vendibook escrow</span>
+                      {currentStep === 'review' && (
+                        <PurchaseStepReview
+                          listing={listing}
+                          priceSale={priceSale}
+                          currentDeliveryFee={currentDeliveryFee}
+                          totalPrice={totalPrice}
+                          fulfillmentSelected={fulfillmentSelected}
+                          deliveryAddress={deliveryAddress}
+                          name={name}
+                          email={email}
+                          phone={phone}
+                          address={address}
+                          hasValidEstimate={hasValidEstimate}
+                          estimate={estimate}
+                          paymentMethod={paymentMethod}
+                          setPaymentMethod={setPaymentMethod}
+                          hasMultiplePaymentOptions={hasMultiplePaymentOptions}
+                          agreedToTerms={agreedToTerms}
+                          setAgreedToTerms={setAgreedToTerms}
+                          isPurchasing={isPurchasing}
+                          onBack={() => setCurrentStep('information')}
+                          onEditDelivery={() => setCurrentStep('delivery')}
+                          onEditInfo={() => setCurrentStep('information')}
+                          onSubmit={handlePurchase}
+                        />
+                      )}
+                    </motion.div>
+                  </AnimatePresence>
                 </div>
               </div>
+            </div>
 
-              {/* How It Works Timeline */}
-              <div className="bg-card border border-border rounded-xl p-5">
-                <h3 className="font-semibold text-foreground mb-4">How It Works</h3>
-                
-                <div className="space-y-4">
-                  {/* Step 1 */}
-                  <div className="flex gap-3">
-                    <div className="flex flex-col items-center">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <DollarSign className="h-4 w-4 text-primary" />
-                      </div>
-                      <div className="w-0.5 flex-1 bg-border mt-2" />
-                    </div>
-                    <div className="pb-4">
-                      <h4 className="font-medium text-foreground text-sm">Submit Payment Hold</h4>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Your payment is securely held in escrow. Funds are not released to the seller yet.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Step 2 */}
-                  <div className="flex gap-3">
-                    <div className="flex flex-col items-center">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Handshake className="h-4 w-4 text-primary" />
-                      </div>
-                      <div className="w-0.5 flex-1 bg-border mt-2" />
-                    </div>
-                    <div className="pb-4">
-                      <h4 className="font-medium text-foreground text-sm">Meet & Confirm Sale</h4>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Meet the seller, inspect the item, and confirm everything is as described.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Step 3 */}
-                  <div className="flex gap-3">
-                    <div className="flex flex-col items-center">
-                      <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-foreground text-sm">Funds Released</h4>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Once both buyer and seller confirm, funds are released to the seller. Done!
-                      </p>
-                    </div>
-                  </div>
-                </div>
+            {/* Sticky Summary - Right Side (Desktop Only) */}
+            <div className="lg:col-span-2 hidden lg:block">
+              <div className="sticky top-24">
+                <StickySummary
+                  imageUrl={listing.cover_image_url || listing.image_urls?.[0]}
+                  title={listing.title}
+                  category={listing.category}
+                  itemId={listing.id}
+                  priceLines={priceLines}
+                  totalToday={totalPrice}
+                  fulfillmentType={fulfillmentSelected}
+                  deliveryAddress={deliveryAddress}
+                  mode="checkout"
+                  showWhatsIncluded={currentStep !== 'review'}
+                />
               </div>
             </div>
           </div>
