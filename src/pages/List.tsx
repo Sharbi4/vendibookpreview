@@ -198,50 +198,59 @@ const ListPage: React.FC = () => {
 
         {/* Trust Badges Section */}
         <motion.div 
-          className="bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-emerald-950/30 dark:to-blue-950/20 rounded-2xl p-5 border border-emerald-200 dark:border-emerald-800"
+          className="relative overflow-hidden rounded-2xl border-2 border-primary/20 shadow-xl"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <div className="flex items-center gap-2 mb-4">
-            <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            <h3 className="font-semibold text-sm">Security & Payment Guarantees</h3>
+          {/* Gradient Header */}
+          <div className="relative bg-gradient-to-r from-primary/15 via-amber-500/10 to-yellow-400/5 border-b border-primary/20 px-5 py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/30 to-amber-500/30 flex items-center justify-center shadow-md">
+                <ShieldCheck className="w-5 h-5 text-primary" />
+              </div>
+              <h3 className="font-semibold">Security & Payment Guarantees</h3>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-start gap-2.5 bg-background/60 rounded-xl p-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shrink-0">
-                <Lock className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          
+          {/* White Content Area */}
+          <div className="relative bg-white dark:bg-card p-5">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-start gap-2.5 bg-gradient-to-br from-primary/5 to-amber-500/5 rounded-xl p-3 border border-primary/10">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-amber-500/20 flex items-center justify-center shrink-0">
+                  <Lock className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium">Secure Escrow</p>
+                  <p className="text-[10px] text-muted-foreground">Funds held safely until delivery</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-medium">Secure Escrow</p>
-                <p className="text-[10px] text-muted-foreground">Funds held safely until delivery</p>
+              <div className="flex items-start gap-2.5 bg-gradient-to-br from-primary/5 to-amber-500/5 rounded-xl p-3 border border-primary/10">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-amber-500/20 flex items-center justify-center shrink-0">
+                  <CreditCard className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium">Stripe Powered</p>
+                  <p className="text-[10px] text-muted-foreground">Bank-level encryption</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-start gap-2.5 bg-background/60 rounded-xl p-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center shrink-0">
-                <CreditCard className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <div className="flex items-start gap-2.5 bg-gradient-to-br from-primary/5 to-amber-500/5 rounded-xl p-3 border border-primary/10">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-amber-500/20 flex items-center justify-center shrink-0">
+                  <BadgeCheck className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium">Verified Renters</p>
+                  <p className="text-[10px] text-muted-foreground">ID verification required</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-medium">Stripe Powered</p>
-                <p className="text-[10px] text-muted-foreground">Bank-level encryption</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2.5 bg-background/60 rounded-xl p-3">
-              <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center shrink-0">
-                <BadgeCheck className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <p className="text-xs font-medium">Verified Renters</p>
-                <p className="text-[10px] text-muted-foreground">ID verification required</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2.5 bg-background/60 rounded-xl p-3">
-              <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center shrink-0">
-                <Shield className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-              </div>
-              <div>
-                <p className="text-xs font-medium">Fraud Protection</p>
-                <p className="text-[10px] text-muted-foreground">24/7 transaction monitoring</p>
+              <div className="flex items-start gap-2.5 bg-gradient-to-br from-primary/5 to-amber-500/5 rounded-xl p-3 border border-primary/10">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-amber-500/20 flex items-center justify-center shrink-0">
+                  <Shield className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium">Fraud Protection</p>
+                  <p className="text-[10px] text-muted-foreground">24/7 transaction monitoring</p>
+                </div>
               </div>
             </div>
           </div>
