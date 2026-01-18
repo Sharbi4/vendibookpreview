@@ -487,6 +487,35 @@ export type Database = {
           },
         ]
       }
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_blocked_dates: {
         Row: {
           blocked_date: string
@@ -1420,6 +1449,10 @@ export type Database = {
       get_host_avg_response_time: {
         Args: { host_user_id: string }
         Returns: unknown
+      }
+      get_listing_favorite_count: {
+        Args: { listing_uuid: string }
+        Returns: number
       }
       get_safe_host_profile: {
         Args: { host_user_id: string }

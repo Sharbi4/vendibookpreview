@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Edit2, Eye, Pause, Play, Trash2, Calendar } from 'lucide-react';
+import { Edit2, Eye, Pause, Play, Trash2, Calendar, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CATEGORY_LABELS } from '@/types/listing';
 import AvailabilityCalendar from './AvailabilityCalendar';
+import { useListingFavoriteCount } from '@/hooks/useFavorites';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Listing = Tables<'listings'>;
@@ -37,6 +38,7 @@ const StatusPill = ({ status }: { status: Listing['status'] }) => {
 
 const HostListingCard = ({ listing, onPause, onPublish, onDelete }: HostListingCardProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
+  const { data: favoriteCount = 0 } = useListingFavoriteCount(listing.id);
   
   const displayPrice = listing.mode === 'rent' 
     ? `$${listing.price_daily}/day` 
@@ -88,6 +90,15 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete }: HostListingC
                     <span className="flex items-center gap-1 text-muted-foreground">
                       <Eye className="h-3.5 w-3.5" />
                       {listing.view_count.toLocaleString()} views
+                    </span>
+                  </>
+                )}
+                {favoriteCount > 0 && (
+                  <>
+                    <span className="text-muted-foreground">•</span>
+                    <span className="flex items-center gap-1 text-red-500">
+                      <Heart className="h-3.5 w-3.5 fill-red-500" />
+                      {favoriteCount} saved
                     </span>
                   </>
                 )}
