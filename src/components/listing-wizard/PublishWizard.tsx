@@ -778,23 +778,23 @@ export const PublishWizard: React.FC = () => {
                   </div>
 
                   {/* AI Suggestions Button */}
-                  <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-4 border border-primary/20">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <Sparkles className="w-5 h-5 text-primary" />
+                  <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse pointer-events-none" />
+                    <div className="relative flex items-start gap-3">
+                      <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md">
+                        <Sparkles className="w-5 h-5 text-white" />
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-medium text-foreground mb-1">AI Pricing Assistant</h4>
+                        <h4 className="font-semibold text-foreground mb-1">AI Pricing Assistant</h4>
                         <p className="text-sm text-muted-foreground mb-3">
                           Get smart pricing suggestions based on your listing title, category, and location.
                         </p>
                         <Button
                           type="button"
-                          variant="outline"
                           size="sm"
                           onClick={handleGetSuggestions}
                           disabled={isLoadingSuggestions}
-                          className="border-primary/30 hover:bg-primary/5"
+                          className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
                         >
                           {isLoadingSuggestions ? (
                             <>
@@ -884,14 +884,14 @@ export const PublishWizard: React.FC = () => {
 
                       {/* Payout Estimate for Sales */}
                       {salePayoutEstimate && (
-                        <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-foreground max-w-md">
+                        <div className="bg-card rounded-xl p-4 border border-border max-w-md">
                           <div className="flex items-start gap-3">
-                            <div className="p-2 bg-green-500/10 rounded-lg">
-                              <Wallet className="w-5 h-5 text-green-600" />
+                            <div className="p-2.5 bg-muted rounded-xl">
+                              <Wallet className="w-5 h-5 text-foreground" />
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
-                                <h4 className="font-medium text-foreground">
+                                <h4 className="font-semibold text-foreground">
                                   {vendibookFreightEnabled && freightPayer === 'seller' 
                                     ? 'Seller Payout Estimate (Free Shipping)' 
                                     : 'Estimated Payout'}
@@ -921,9 +921,9 @@ export const PublishWizard: React.FC = () => {
                                 </div>
                               )}
                               
-                              <div className="flex items-center justify-between mt-2 pt-2 border-t border-green-300/30">
+                              <div className="flex items-center justify-between mt-2 pt-2 border-t border-border">
                                 <span className="text-sm font-medium text-foreground">Estimated payout:</span>
-                                <span className="font-semibold text-green-600 text-lg">
+                                <span className="font-semibold text-primary text-lg">
                                   {formatCurrency(salePayoutEstimate.sellerReceives)}
                                 </span>
                               </div>
@@ -1108,19 +1108,19 @@ export const PublishWizard: React.FC = () => {
 
                       {/* Payout Estimate for Rentals */}
                       {(rentalPayoutEstimates.daily || rentalPayoutEstimates.weekly) && (
-                        <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-foreground">
+                        <div className="bg-card rounded-xl p-4 border border-border">
                           <div className="flex items-start gap-3">
-                            <div className="p-2 bg-green-500/10 rounded-lg">
-                              <Wallet className="w-5 h-5 text-green-600" />
+                            <div className="p-2.5 bg-muted rounded-xl">
+                              <Wallet className="w-5 h-5 text-foreground" />
                             </div>
                             <div className="flex-1">
-                              <h4 className="font-medium text-foreground mb-2">Estimated Payout</h4>
+                              <h4 className="font-semibold text-foreground mb-2">Estimated Payout</h4>
                               <div className="space-y-2">
                                 {rentalPayoutEstimates.daily && (
                                   <div className="flex items-center justify-between">
                                     <span className="text-sm text-muted-foreground">Daily rental:</span>
                                     <div className="text-right">
-                                      <span className="font-semibold text-green-600">
+                                      <span className="font-semibold text-primary">
                                         {formatCurrency(rentalPayoutEstimates.daily.hostReceives)}
                                       </span>
                                       <span className="text-xs text-muted-foreground ml-2">
@@ -1133,7 +1133,7 @@ export const PublishWizard: React.FC = () => {
                                   <div className="flex items-center justify-between">
                                     <span className="text-sm text-muted-foreground">Weekly rental:</span>
                                     <div className="text-right">
-                                      <span className="font-semibold text-green-600">
+                                      <span className="font-semibold text-primary">
                                         {formatCurrency(rentalPayoutEstimates.weekly.hostReceives)}
                                       </span>
                                       <span className="text-xs text-muted-foreground ml-2">
@@ -1154,15 +1154,16 @@ export const PublishWizard: React.FC = () => {
 
                       {/* Instant Book Toggle */}
                       <div className="pt-4 border-t">
-                        <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-xl p-4 border border-amber-500/20">
-                          <div className="flex items-start justify-between gap-4">
+                        <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+                          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 pointer-events-none" />
+                          <div className="relative flex items-start justify-between gap-4">
                             <div className="flex items-start gap-3 flex-1">
-                              <div className="p-2 bg-amber-500/10 rounded-lg">
-                                <Zap className="w-5 h-5 text-amber-600" />
+                              <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md">
+                                <Zap className="w-5 h-5 text-white" />
                               </div>
                               <div className="flex-1">
                                 <div className="flex items-center gap-2">
-                                  <h4 className="font-medium text-foreground">Instant Book</h4>
+                                  <h4 className="font-semibold text-foreground">Instant Book</h4>
                                   <InfoTooltip 
                                     content="When enabled, renters can book and pay immediately. Documents are still reviewed - if rejected, the booking is cancelled and payment is fully refunded." 
                                   />
