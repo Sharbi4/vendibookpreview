@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Search, ShieldCheck, CreditCard, Headphones, FileCheck } from 'lucide-react';
+import { ArrowRight, Search, ShieldCheck, CreditCard, Headphones, FileCheck, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 import heroImage from '@/assets/hero-food-truck.jpg';
@@ -63,9 +63,12 @@ const Hero = () => {
           
           {/* Tagline */}
           <p 
-            className="text-base md:text-lg text-white/90 mt-3 max-w-xl mx-auto animate-fade-in"
+            className="text-base md:text-lg text-white/90 mt-3 max-w-xl mx-auto animate-fade-in flex items-center justify-center gap-2"
             style={{ animationDelay: '0.2s', animationFillMode: 'backwards' }}
           >
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-br from-primary via-amber-400 to-yellow-300 shadow-lg">
+              <Sparkles className="w-3 h-3 text-white" />
+            </span>
             Now, accept payments in person or through our secure platform for protection.
           </p>
 
