@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ValidatedInput, validators } from '@/components/ui/validated-input';
 import { 
   User, 
   MapPin, 
@@ -74,6 +75,7 @@ export function BookingInfoModal({
     acknowledgedInsurance: false,
   });
   const [errors, setErrors] = useState<Partial<Record<keyof BookingUserInfo, string>>>({});
+  const [touched, setTouched] = useState<Set<string>>(new Set());
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
   const tosScrollRef = useRef<HTMLDivElement>(null);
 
@@ -83,50 +85,64 @@ export function BookingInfoModal({
       setCurrentStep('info');
       setHasScrolledToBottom(false);
       setErrors({});
+      setTouched(new Set());
     }
   }, [open]);
 
-  // Format phone number as user types: (XXX) XXX-XXXX
-  const formatPhoneNumber = (value: string): string => {
-    // Remove all non-digit characters
-    const digits = value.replace(/\D/g, '');
-    
-    // Apply formatting based on length
-    if (digits.length === 0) return '';
-    if (digits.length <= 3) return `(${digits}`;
-    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+  // Field validators
+  const fieldValidators = {
+    firstName: validators.required('First name is required'),
+    lastName: validators.required('Last name is required'),
+    phoneNumber: validators.compose(
+      validators.required('Phone number is required'),
+      validators.phone('Please enter a valid phone number')
+    ),
+    address1: validators.required('Street address is required'),
+    city: validators.required('City is required'),
+    state: validators.required('State is required'),
+    zipCode: validators.compose(
+      validators.required('ZIP code is required'),
+      validators.zipCode('Invalid ZIP code format')
+    ),
   };
 
   const updateField = <K extends keyof BookingUserInfo>(field: K, value: BookingUserInfo[K]) => {
-    // Apply phone formatting if updating phone number
-    const processedValue = field === 'phoneNumber' && typeof value === 'string' 
-      ? formatPhoneNumber(value) as BookingUserInfo[K]
-      : value;
+    setFormData(prev => ({ ...prev, [field]: value }));
     
-    setFormData(prev => ({ ...prev, [field]: processedValue }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+    // Validate on change if already touched
+    if (touched.has(field)) {
+      const validator = fieldValidators[field as keyof typeof fieldValidators];
+      if (validator && typeof value === 'string') {
+        const error = validator(value);
+        setErrors(prev => ({ ...prev, [field]: error }));
+      }
+    }
+  };
+
+  const markTouched = (field: keyof BookingUserInfo) => {
+    setTouched(prev => new Set(prev).add(field));
+    const validator = fieldValidators[field as keyof typeof fieldValidators];
+    if (validator) {
+      const error = validator(formData[field] as string);
+      setErrors(prev => ({ ...prev, [field]: error }));
     }
   };
 
   const validateInfoStep = (): boolean => {
     const newErrors: Partial<Record<keyof BookingUserInfo, string>> = {};
+    const newTouched = new Set(touched);
     
-    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required';
-    else if (!/^[\d\s\-\(\)\+]{10,}$/.test(formData.phoneNumber.trim())) {
-      newErrors.phoneNumber = 'Please enter a valid phone number';
-    }
-    if (!formData.address1.trim()) newErrors.address1 = 'Street address is required';
-    if (!formData.city.trim()) newErrors.city = 'City is required';
-    if (!formData.state.trim()) newErrors.state = 'State is required';
-    if (!formData.zipCode.trim()) newErrors.zipCode = 'ZIP code is required';
-    else if (!/^\d{5}(-\d{4})?$/.test(formData.zipCode.trim())) {
-      newErrors.zipCode = 'Invalid ZIP code format';
+    const fieldsToValidate: Array<keyof typeof fieldValidators> = [
+      'firstName', 'lastName', 'phoneNumber', 'address1', 'city', 'state', 'zipCode'
+    ];
+    
+    for (const field of fieldsToValidate) {
+      newTouched.add(field);
+      const error = fieldValidators[field](formData[field]);
+      if (error) newErrors[field] = error;
     }
 
+    setTouched(newTouched);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -234,32 +250,26 @@ export function BookingInfoModal({
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="firstName">First Name *</Label>
-                  <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => updateField('firstName', e.target.value)}
-                    placeholder="John"
-                    className={cn(errors.firstName && 'border-destructive')}
-                  />
-                  {errors.firstName && (
-                    <p className="text-xs text-destructive mt-1">{errors.firstName}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Last Name *</Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => updateField('lastName', e.target.value)}
-                    placeholder="Doe"
-                    className={cn(errors.lastName && 'border-destructive')}
-                  />
-                  {errors.lastName && (
-                    <p className="text-xs text-destructive mt-1">{errors.lastName}</p>
-                  )}
-                </div>
+                <ValidatedInput
+                  label="First Name"
+                  value={formData.firstName}
+                  onChange={(value) => updateField('firstName', value)}
+                  onBlur={() => markTouched('firstName')}
+                  error={errors.firstName}
+                  touched={touched.has('firstName')}
+                  required
+                  placeholder="John"
+                />
+                <ValidatedInput
+                  label="Last Name"
+                  value={formData.lastName}
+                  onChange={(value) => updateField('lastName', value)}
+                  onBlur={() => markTouched('lastName')}
+                  error={errors.lastName}
+                  touched={touched.has('lastName')}
+                  required
+                  placeholder="Doe"
+                />
               </div>
 
               <div className="flex items-center gap-2 mt-6 mb-2">
@@ -267,46 +277,41 @@ export function BookingInfoModal({
                 <h3 className="font-semibold">Contact</h3>
               </div>
 
-              <div>
-                <Label htmlFor="phoneNumber">Phone Number *</Label>
-                <Input
-                  id="phoneNumber"
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={(e) => updateField('phoneNumber', e.target.value)}
-                  placeholder="(555) 123-4567"
-                  maxLength={14}
-                  className={cn(errors.phoneNumber && 'border-destructive')}
-                />
-                {errors.phoneNumber && (
-                  <p className="text-xs text-destructive mt-1">{errors.phoneNumber}</p>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  The host may use this to contact you about your booking
-                </p>
-              </div>
+              <ValidatedInput
+                label="Phone Number"
+                value={formData.phoneNumber}
+                onChange={(value) => updateField('phoneNumber', value)}
+                onBlur={() => markTouched('phoneNumber')}
+                error={errors.phoneNumber}
+                touched={touched.has('phoneNumber')}
+                required
+                formatPhone
+                type="tel"
+                maxLength={14}
+                placeholder="(555) 123-4567"
+                helperText="The host may use this to contact you about your booking"
+              />
 
               <div className="flex items-center gap-2 mt-6 mb-2">
                 <MapPin className="h-5 w-5 text-primary" />
                 <h3 className="font-semibold">Address</h3>
               </div>
 
-              <div>
-                <Label htmlFor="address1">Street Address *</Label>
-                <Input
-                  id="address1"
-                  value={formData.address1}
-                  onChange={(e) => updateField('address1', e.target.value)}
-                  placeholder="123 Main Street"
-                  className={cn(errors.address1 && 'border-destructive')}
-                />
-                {errors.address1 && (
-                  <p className="text-xs text-destructive mt-1">{errors.address1}</p>
-                )}
-              </div>
+              <ValidatedInput
+                label="Street Address"
+                value={formData.address1}
+                onChange={(value) => updateField('address1', value)}
+                onBlur={() => markTouched('address1')}
+                error={errors.address1}
+                touched={touched.has('address1')}
+                required
+                placeholder="123 Main Street"
+              />
 
-              <div>
-                <Label htmlFor="address2">Apt, Suite, Unit (optional)</Label>
+              <div className="space-y-1">
+                <Label htmlFor="address2" className="text-sm text-muted-foreground">
+                  Apt, Suite, Unit (optional)
+                </Label>
                 <Input
                   id="address2"
                   value={formData.address2}
@@ -317,44 +322,41 @@ export function BookingInfoModal({
 
               <div className="grid grid-cols-6 gap-3">
                 <div className="col-span-3">
-                  <Label htmlFor="city">City *</Label>
-                  <Input
-                    id="city"
+                  <ValidatedInput
+                    label="City"
                     value={formData.city}
-                    onChange={(e) => updateField('city', e.target.value)}
+                    onChange={(value) => updateField('city', value)}
+                    onBlur={() => markTouched('city')}
+                    error={errors.city}
+                    touched={touched.has('city')}
+                    required
                     placeholder="New York"
-                    className={cn(errors.city && 'border-destructive')}
                   />
-                  {errors.city && (
-                    <p className="text-xs text-destructive mt-1">{errors.city}</p>
-                  )}
                 </div>
                 <div className="col-span-1">
-                  <Label htmlFor="state">State *</Label>
-                  <Input
-                    id="state"
+                  <ValidatedInput
+                    label="State"
                     value={formData.state}
-                    onChange={(e) => updateField('state', e.target.value.toUpperCase().slice(0, 2))}
+                    onChange={(value) => updateField('state', value.toUpperCase().slice(0, 2))}
+                    onBlur={() => markTouched('state')}
+                    error={errors.state}
+                    touched={touched.has('state')}
+                    required
                     placeholder="NY"
                     maxLength={2}
-                    className={cn(errors.state && 'border-destructive')}
                   />
-                  {errors.state && (
-                    <p className="text-xs text-destructive mt-1">{errors.state}</p>
-                  )}
                 </div>
                 <div className="col-span-2">
-                  <Label htmlFor="zipCode">ZIP Code *</Label>
-                  <Input
-                    id="zipCode"
+                  <ValidatedInput
+                    label="ZIP Code"
                     value={formData.zipCode}
-                    onChange={(e) => updateField('zipCode', e.target.value)}
+                    onChange={(value) => updateField('zipCode', value)}
+                    onBlur={() => markTouched('zipCode')}
+                    error={errors.zipCode}
+                    touched={touched.has('zipCode')}
+                    required
                     placeholder="10001"
-                    className={cn(errors.zipCode && 'border-destructive')}
                   />
-                  {errors.zipCode && (
-                    <p className="text-xs text-destructive mt-1">{errors.zipCode}</p>
-                  )}
                 </div>
               </div>
             </div>
