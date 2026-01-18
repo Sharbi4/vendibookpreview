@@ -89,7 +89,8 @@ serve(async (req) => {
         : `💰 Sale Payout Sent - $${formattedAmount} on the way!`;
 
       htmlContent = `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #ffffff;">
+        <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
+        <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #ffffff;">
           <!-- Header with Logo -->
           <div style="text-align: center; margin-bottom: 32px;">
             <img src="https://vendibook.com/images/vendibook-email-logo.png" alt="Vendibook" style="height: 40px; margin-bottom: 16px;">
@@ -186,7 +187,8 @@ serve(async (req) => {
       subject = `⚠️ Payout Issue - Action Required`;
 
       htmlContent = `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #ffffff;">
+        <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
+        <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #ffffff;">
           <!-- Header with Logo -->
           <div style="text-align: center; margin-bottom: 32px;">
             <img src="https://vendibook.com/images/vendibook-email-logo.png" alt="Vendibook" style="height: 40px; margin-bottom: 16px;">
@@ -247,7 +249,8 @@ serve(async (req) => {
       subject = `🕐 Payout Processing - $${formattedAmount}`;
 
       htmlContent = `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #ffffff;">
+        <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
+        <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #ffffff;">
           <div style="text-align: center; margin-bottom: 32px;">
             <img src="https://vendibook.com/images/vendibook-email-logo.png" alt="Vendibook" style="height: 40px; margin-bottom: 16px;">
           </div>

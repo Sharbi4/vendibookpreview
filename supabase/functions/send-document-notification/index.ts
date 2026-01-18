@@ -201,6 +201,7 @@ serve(async (req) => {
           to: host.email,
           subject: `📄 Document Uploaded - ${listingTitle}`,
           html: `
+            <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
             <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
                 <h1 style="color: white; margin: 0; font-size: 22px;">Document Submitted for Review 📄</h1>
@@ -265,6 +266,7 @@ serve(async (req) => {
           to: renter.email,
           subject: `✅ Document Approved - ${listingTitle}`,
           html: `
+            <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
             <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
                 <h1 style="color: white; margin: 0; font-size: 22px;">Document Approved! ✅</h1>
@@ -329,6 +331,7 @@ serve(async (req) => {
               to: renter.email,
               subject: `❌ Booking Cancelled & Refunded - ${listingTitle}`,
               html: `
+                <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
                 <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                   <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
                     <h1 style="color: white; margin: 0; font-size: 22px;">Booking Cancelled & Refunded</h1>

@@ -41,7 +41,8 @@ const getEmailContent = (
       buyer: {
         subject: `Payment Confirmed - ${listingTitle}`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
+          <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Payment Confirmed! 🎉</h1>
             <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
               Your payment of <strong>$${amount.toLocaleString()}</strong> for <strong>${listingTitle}</strong> has been received and is now held in escrow.
@@ -64,7 +65,8 @@ const getEmailContent = (
       seller: {
         subject: `New Sale! Payment Received - ${listingTitle}`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
+          <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">You Made a Sale! 🎉</h1>
             <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
               <strong>${buyerName}</strong> has purchased <strong>${listingTitle}</strong> for <strong>$${amount.toLocaleString()}</strong>.
@@ -94,7 +96,8 @@ const getEmailContent = (
       buyer: {
         subject: `Receipt Confirmed - ${listingTitle}`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
+          <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Receipt Confirmed ✓</h1>
             <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
               You've confirmed receipt of <strong>${listingTitle}</strong>. We're now waiting for the seller to confirm delivery.
@@ -115,7 +118,8 @@ const getEmailContent = (
       seller: {
         subject: `Buyer Confirmed Receipt - ${listingTitle}`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
+          <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Buyer Confirmed Receipt! 🎉</h1>
             <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
               <strong>${buyerName}</strong> has confirmed receipt of <strong>${listingTitle}</strong>.
@@ -137,7 +141,8 @@ const getEmailContent = (
       buyer: {
         subject: `Seller Confirmed Delivery - ${listingTitle}`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
+          <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Seller Confirmed Delivery 📦</h1>
             <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
               The seller has confirmed delivery of <strong>${listingTitle}</strong>.
@@ -157,7 +162,8 @@ const getEmailContent = (
       seller: {
         subject: `Delivery Confirmed - ${listingTitle}`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
+          <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Delivery Confirmed ✓</h1>
             <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
               You've confirmed delivery of <strong>${listingTitle}</strong>. We're now waiting for the buyer to confirm receipt.
@@ -180,7 +186,8 @@ const getEmailContent = (
       buyer: {
         subject: `Transaction Complete - ${listingTitle}`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
+          <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Transaction Complete! 🎉</h1>
             <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
               Your purchase of <strong>${listingTitle}</strong> is now complete. Both parties have confirmed the transaction.
@@ -200,7 +207,8 @@ const getEmailContent = (
       seller: {
         subject: `Payment Released - ${listingTitle}`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
+          <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Payment Released! 💰</h1>
             <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
               Great news! The transaction for <strong>${listingTitle}</strong> is complete and your payment has been released.
@@ -223,7 +231,8 @@ const getEmailContent = (
       buyer: {
         subject: `Transaction Issue - ${listingTitle}`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
+          <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Transaction Issue</h1>
             <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
               There was an issue processing the payout for <strong>${listingTitle}</strong>. Our team is looking into this and will resolve it shortly.
@@ -235,7 +244,8 @@ const getEmailContent = (
       seller: {
         subject: `Payout Issue - ${listingTitle}`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
+          <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #dc2626; font-size: 24px; margin-bottom: 24px;">Payout Issue</h1>
             <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
               There was an issue transferring your payment of <strong>$${sellerPayout.toLocaleString()}</strong> for <strong>${listingTitle}</strong>.
@@ -254,7 +264,8 @@ const getEmailContent = (
       buyer: {
         subject: `Sale Complete - ${listingTitle}`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
+          <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Transaction Complete! 🎉</h1>
             <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
               Your purchase of <strong>${listingTitle}</strong> is now fully complete. The seller has been paid.
@@ -274,7 +285,8 @@ const getEmailContent = (
       seller: {
         subject: `💰 Payout Sent - $${sellerPayout.toLocaleString()} on the way!`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
+          <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #16a34a; font-size: 24px; margin-bottom: 24px;">Your Payout is On Its Way! 💰</h1>
             <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
               Great news! Your payment for <strong>${listingTitle}</strong> has been successfully transferred to your bank account.
@@ -304,7 +316,8 @@ const getEmailContent = (
       buyer: {
         subject: `Purchase Request Submitted - ${listingTitle}`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
+          <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Purchase Request Submitted! 📝</h1>
             <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
               Your request to purchase <strong>${listingTitle}</strong> for <strong>$${amount.toLocaleString()}</strong> (pay in person) has been submitted.
@@ -329,7 +342,8 @@ const getEmailContent = (
       seller: {
         subject: `🔔 New Cash Purchase Request - ${listingTitle}`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
+          <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">New Purchase Request! 🎉</h1>
             <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
               <strong>${buyerName}</strong> wants to purchase <strong>${listingTitle}</strong> for <strong>$${amount.toLocaleString()}</strong> and pay in person.

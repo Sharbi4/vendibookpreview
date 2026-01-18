@@ -192,7 +192,13 @@ const handler = async (req: Request): Promise<Response> => {
       <html>
       <head>
         <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          @font-face {
+            font-family: 'Sofia Pro Soft';
+            src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
+            font-weight: 300;
+            font-style: normal;
+          }
+          body { font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f9fafb; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
           .header { background: #F97316; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
           .content { background: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }
