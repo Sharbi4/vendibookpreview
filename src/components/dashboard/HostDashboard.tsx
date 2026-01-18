@@ -219,14 +219,23 @@ const HostDashboard = () => {
       <GetBookedFasterCard />
 
       {/* F) Host Tools - Minimal link */}
-      <div className="flex items-center justify-between py-3 px-4 rounded-lg bg-card border border-border">
-        <div className="flex items-center gap-2 text-sm">
-          <Wrench className="h-4 w-4 text-muted-foreground" />
-          <span className="text-muted-foreground">Price smarter, write faster, stay compliant.</span>
+      <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-amber-500 shadow-md flex items-center justify-center">
+              <Wrench className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-sm text-foreground font-medium">Price smarter, write faster, stay compliant.</span>
+          </div>
+          <Button 
+            size="sm" 
+            asChild 
+            className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md text-xs"
+          >
+            <Link to="/tools">Open Host Tools</Link>
+          </Button>
         </div>
-        <Button variant="ghost" size="sm" asChild className="text-primary h-7 text-xs">
-          <Link to="/tools">Open Host Tools</Link>
-        </Button>
       </div>
 
       {/* Sales Section */}

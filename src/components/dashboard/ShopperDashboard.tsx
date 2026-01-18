@@ -17,10 +17,11 @@ const ShopperDashboard = () => {
   return (
     <div className="space-y-8">
       {/* Hero Browse CTA */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-primary/15 via-primary/10 to-emerald-500/10 rounded-2xl p-8 border border-primary/20">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+      <div className="relative overflow-hidden rounded-2xl p-8 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+        {/* Animated background */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl" />
         
         <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
@@ -29,7 +30,11 @@ const ShopperDashboard = () => {
               Browse trucks, trailers, kitchens, and lots near you.
             </p>
           </div>
-          <Button asChild size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all hover:scale-105">
+          <Button 
+            asChild 
+            size="lg" 
+            className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-lg shadow-primary/25 transition-all hover:scale-105"
+          >
             <Link to="/search">
               <Store className="h-5 w-5 mr-2" />
               Browse Listings
