@@ -112,14 +112,19 @@ const Dashboard = () => {
         )}
 
         {/* Compact Account Info */}
-        <div className="mt-6 p-4 rounded-xl bg-card border border-border">
-          <div className="flex items-center justify-between mb-3">
+        <div className="relative mt-6 p-4 rounded-xl overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+          {/* Animated background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+          
+          <div className="relative flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-              <Settings className="h-4 w-4 text-muted-foreground" />
+              <div className="p-1.5 bg-gradient-to-br from-primary to-amber-500 rounded-lg">
+                <Settings className="h-3.5 w-3.5 text-white" />
+              </div>
               Account
             </h3>
           </div>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="relative grid gap-3 sm:grid-cols-3">
             <div className="text-sm">
               <span className="text-xs text-muted-foreground block mb-0.5">Email</span>
               <p className="font-medium text-foreground truncate">{user.email}</p>
@@ -130,7 +135,7 @@ const Dashboard = () => {
                 {roles.map((role) => (
                   <span 
                     key={role}
-                    className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full capitalize font-medium"
+                    className="px-2 py-0.5 bg-gradient-to-r from-primary to-amber-500 text-white text-xs rounded-full capitalize font-medium shadow-sm"
                   >
                     {role}
                   </span>
@@ -139,8 +144,14 @@ const Dashboard = () => {
             </div>
             <div className="text-sm">
               <span className="text-xs text-muted-foreground block mb-0.5">Verification</span>
-              <p className={`flex items-center gap-1.5 font-medium text-xs ${isVerified ? 'text-emerald-600' : 'text-amber-600'}`}>
-                {isVerified ? <ShieldCheck className="h-3.5 w-3.5" /> : <Shield className="h-3.5 w-3.5" />}
+              <p className={`flex items-center gap-1.5 font-medium text-xs ${isVerified ? 'text-primary' : 'text-amber-600'}`}>
+                {isVerified ? (
+                  <span className="p-1 bg-gradient-to-br from-primary to-amber-500 rounded-full">
+                    <ShieldCheck className="h-3 w-3 text-white" />
+                  </span>
+                ) : (
+                  <Shield className="h-3.5 w-3.5" />
+                )}
                 {isVerified ? 'Verified' : 'Pending'}
               </p>
             </div>
