@@ -23,6 +23,7 @@ const BookingWithCompliance = ({
   onApprove, 
   onDecline, 
   onCancel,
+  onDepositAction,
   docFilter,
   onComplianceLoad 
 }: {
@@ -30,6 +31,7 @@ const BookingWithCompliance = ({
   onApprove: (id: string, response?: string) => void;
   onDecline: (id: string, response?: string) => void;
   onCancel?: (id: string, reason?: string, refundAmount?: number) => Promise<unknown>;
+  onDepositAction?: (bookingId: string, action: 'refund' | 'partial' | 'forfeit', deductionAmount?: number, notes?: string) => Promise<unknown>;
   docFilter: DocFilterType;
   onComplianceLoad: (bookingId: string, compliance: any) => void;
 }) => {
@@ -59,12 +61,13 @@ const BookingWithCompliance = ({
       onApprove={onApprove}
       onDecline={onDecline}
       onCancel={onCancel}
+      onDepositAction={onDepositAction}
     />
   );
 };
 
 const BookingRequestsSection = () => {
-  const { bookings, isLoading, stats, approveBooking, declineBooking, cancelBooking } = useHostBookings();
+  const { bookings, isLoading, stats, approveBooking, declineBooking, cancelBooking, processDepositRefund } = useHostBookings();
   const [docFilter, setDocFilter] = useState<DocFilterType>('all');
   const [complianceCache, setComplianceCache] = useState<Record<string, any>>({});
 
@@ -107,7 +110,7 @@ const BookingRequestsSection = () => {
     );
   }
 
-  const renderBookings = (bookingList: typeof bookings, showCancel = false) => {
+  const renderBookings = (bookingList: typeof bookings, showCancel = false, showDepositManagement = false) => {
     const filtered = bookingList.map(booking => (
       <BookingWithCompliance
         key={booking.id}
@@ -115,6 +118,7 @@ const BookingRequestsSection = () => {
         onApprove={approveBooking}
         onDecline={declineBooking}
         onCancel={showCancel ? cancelBooking : undefined}
+        onDepositAction={showDepositManagement ? processDepositRefund : undefined}
         docFilter={docFilter}
         onComplianceLoad={handleComplianceLoad}
       />
@@ -266,7 +270,7 @@ const BookingRequestsSection = () => {
           {approvedBookings.length === 0 ? (
             <EmptyState message="No approved bookings yet" />
           ) : (
-            renderBookings(approvedBookings, true)
+            renderBookings(approvedBookings, true, true)
           )}
         </TabsContent>
 
