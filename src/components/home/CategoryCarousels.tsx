@@ -21,25 +21,25 @@ const CATEGORIES: CategoryConfig[] = [
   {
     category: 'vendor_lot',
     title: 'Vendor Lots',
-    icon: <MapPin className="h-5 w-5" />,
+    icon: <MapPin className="h-5 w-5 text-white" />,
     description: 'Parking lots & prime spots available hourly, daily, or monthly for your food business',
   },
   {
     category: 'ghost_kitchen',
     title: 'Ghost Kitchens',
-    icon: <Building2 className="h-5 w-5" />,
+    icon: <Building2 className="h-5 w-5 text-white" />,
     description: 'Commercial kitchen spaces for delivery-only operations',
   },
   {
     category: 'food_trailer',
     title: 'Food Trailers',
-    icon: <Warehouse className="h-5 w-5" />,
+    icon: <Warehouse className="h-5 w-5 text-white" />,
     description: 'Fully equipped trailers ready to roll',
   },
   {
     category: 'food_truck',
     title: 'Food Trucks',
-    icon: <Truck className="h-5 w-5" />,
+    icon: <Truck className="h-5 w-5 text-white" />,
     description: 'Mobile kitchens for your culinary venture',
   },
 ];
@@ -97,7 +97,7 @@ const CategoryCarousel = ({ config, listings, hostVerificationMap, isLoading }: 
       {/* Category Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-lg bg-primary/10 text-primary">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-md">
             {config.icon}
           </div>
           <div>
