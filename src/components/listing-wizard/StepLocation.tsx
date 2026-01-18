@@ -36,7 +36,7 @@ export const StepLocation: React.FC<StepLocationProps> = ({
   if (isStaticLocation) {
     return (
       <div className="space-y-6">
-        <div className="p-4 bg-muted/50 border border-border rounded-xl flex items-start gap-3">
+        <div className="p-4 bg-card border border-border rounded-xl flex items-start gap-3">
           <Info className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
           <p className="text-sm text-muted-foreground">
             This is a fixed on-site location. Customers will come to this address.
@@ -98,7 +98,7 @@ export const StepLocation: React.FC<StepLocationProps> = ({
     <div className="space-y-6">
       {/* Static Location Toggle - Only show for mobile assets that aren't inherently static */}
       {isMobileAsset && !isCategoryStaticLocation && (
-        <div className="p-4 bg-muted/50 rounded-xl border border-border">
+        <div className="p-4 bg-card rounded-xl border border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-start gap-3">
               <Building2 className="w-5 h-5 text-muted-foreground mt-0.5" />
@@ -123,8 +123,8 @@ export const StepLocation: React.FC<StepLocationProps> = ({
       {/* Show static location fields if toggled on */}
       {formData.is_static_location && !isCategoryStaticLocation && (
         <div className="space-y-6 animate-in fade-in-50 duration-200">
-          <div className="p-4 bg-primary/5 rounded-xl flex items-start gap-3 border border-primary/20">
-            <Info className="w-5 h-5 text-primary mt-0.5" />
+          <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-xl flex items-start gap-3 border border-amber-200 dark:border-amber-800">
+            <Info className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" />
             <p className="text-sm text-muted-foreground">
               Since this is a stationary asset, customers will come to this location. Provide the address and access details below.
             </p>

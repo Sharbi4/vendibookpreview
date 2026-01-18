@@ -163,9 +163,9 @@ export const StepPricing: React.FC<StepPricingProps> = ({
   return (
     <div className="space-y-6">
       {/* AI Suggestions Button */}
-      <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-4 border border-primary/20">
+      <div className="bg-card rounded-xl p-4 border border-border">
         <div className="flex items-start gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
+          <div className="p-2 bg-primary/15 rounded-lg">
             <Sparkles className="w-5 h-5 text-primary" />
           </div>
           <div className="flex-1">
@@ -179,7 +179,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
               size="sm"
               onClick={handleGetSuggestions}
               disabled={isLoadingSuggestions}
-              className="border-primary/30 hover:bg-primary/5"
+              className="border-border hover:bg-primary/10 hover:border-primary"
             >
               {isLoadingSuggestions ? (
                 <>
@@ -211,7 +211,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                 <button
                   type="button"
                   onClick={() => applyRentalSuggestion('low')}
-                  className="p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                  className="p-3 rounded-lg border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-left"
                 >
                   <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
                     <TrendingDown className="w-3 h-3" />
@@ -224,7 +224,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                 <button
                   type="button"
                   onClick={() => applyRentalSuggestion('suggested')}
-                  className="p-3 rounded-lg border-2 border-primary bg-primary/5 hover:bg-primary/10 transition-all text-left"
+                  className="p-3 rounded-lg border-2 border-primary bg-primary/10 hover:bg-primary/15 transition-all text-left shadow-sm"
                 >
                   <div className="flex items-center gap-1 text-primary text-xs mb-1">
                     <Target className="w-3 h-3" />
@@ -237,7 +237,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                 <button
                   type="button"
                   onClick={() => applyRentalSuggestion('high')}
-                  className="p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                  className="p-3 rounded-lg border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-left"
                 >
                   <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
                     <TrendingUp className="w-3 h-3" />
@@ -321,10 +321,10 @@ export const StepPricing: React.FC<StepPricingProps> = ({
 
             {/* Payout Estimate for Rentals */}
             {(rentalPayoutEstimates.daily || rentalPayoutEstimates.weekly) && (
-              <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-green-500/20">
+              <div className="bg-emerald-50 dark:bg-emerald-950/40 rounded-xl p-4 border border-emerald-200 dark:border-emerald-800">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-green-500/10 rounded-lg">
-                    <Wallet className="w-5 h-5 text-green-600" />
+                  <div className="p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg">
+                    <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div className="flex-1">
                     <h4 className="font-medium text-foreground mb-2">Estimated Payout</h4>
@@ -333,7 +333,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-muted-foreground">Daily rental:</span>
                           <div className="text-right">
-                            <span className="font-semibold text-green-600">
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                               {formatCurrency(rentalPayoutEstimates.daily.hostReceives)}
                             </span>
                             <span className="text-xs text-muted-foreground ml-2">
@@ -346,7 +346,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-muted-foreground">Weekly rental:</span>
                           <div className="text-right">
-                            <span className="font-semibold text-green-600">
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                               {formatCurrency(rentalPayoutEstimates.weekly.hostReceives)}
                             </span>
                             <span className="text-xs text-muted-foreground ml-2">
@@ -404,11 +404,11 @@ export const StepPricing: React.FC<StepPricingProps> = ({
 
           {/* Instant Book Toggle */}
           <div className="pt-6 border-t">
-            <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-xl p-4 border border-amber-500/20">
+            <div className="bg-amber-50 dark:bg-amber-950/40 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 flex-1">
-                  <div className="p-2 bg-amber-500/10 rounded-lg">
-                    <Zap className="w-5 h-5 text-amber-600" />
+                  <div className="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg">
+                    <Zap className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
@@ -429,9 +429,9 @@ export const StepPricing: React.FC<StepPricingProps> = ({
               </div>
               
               {formData.instant_book && (
-                <div className="mt-4 p-3 bg-amber-500/5 rounded-lg border border-amber-500/10">
+                <div className="mt-4 p-3 bg-amber-100/50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
                   <p className="text-xs text-muted-foreground">
-                    <strong className="text-amber-700">How it works:</strong> Renters pay immediately when booking. 
+                    <strong className="text-amber-700 dark:text-amber-400">How it works:</strong> Renters pay immediately when booking. 
                     Your required documents will still be reviewed. If documents are approved, the booking is confirmed. 
                     If not approved, the booking is automatically cancelled and the renter receives a full refund.
                   </p>
@@ -442,10 +442,10 @@ export const StepPricing: React.FC<StepPricingProps> = ({
 
           {/* Security Deposit */}
           <div className="pt-6 border-t">
-            <div className="bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-xl p-4 border border-blue-500/20">
+            <div className="bg-blue-50 dark:bg-blue-950/40 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-blue-500/10 rounded-lg">
-                  <Wallet className="w-5 h-5 text-blue-600" />
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+                  <Wallet className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
@@ -479,7 +479,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                   </div>
 
                   {parseFloat(formData.deposit_amount) > 0 && (
-                    <div className="mt-4 p-3 bg-blue-500/5 rounded-lg border border-blue-500/10">
+                    <div className="mt-4 p-3 bg-blue-100/50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                       <p className="text-xs text-muted-foreground">
                         <strong className="text-blue-700 dark:text-blue-400">How it works:</strong> The ${parseFloat(formData.deposit_amount).toLocaleString()} deposit is charged when the booking is confirmed. 
                         After the rental ends, you can release the deposit in full or deduct for any damage/late fees.
@@ -505,7 +505,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                 <button
                   type="button"
                   onClick={() => applySaleSuggestion('low')}
-                  className="p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                  className="p-3 rounded-lg border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-left"
                 >
                   <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
                     <TrendingDown className="w-3 h-3" />
@@ -517,7 +517,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                 <button
                   type="button"
                   onClick={() => applySaleSuggestion('suggested')}
-                  className="p-3 rounded-lg border-2 border-primary bg-primary/5 hover:bg-primary/10 transition-all text-left"
+                  className="p-3 rounded-lg border-2 border-primary bg-primary/10 hover:bg-primary/15 transition-all text-left shadow-sm"
                 >
                   <div className="flex items-center gap-1 text-primary text-xs mb-1">
                     <Target className="w-3 h-3" />
@@ -529,7 +529,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                 <button
                   type="button"
                   onClick={() => applySaleSuggestion('high')}
-                  className="p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                  className="p-3 rounded-lg border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-left"
                 >
                   <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
                     <TrendingUp className="w-3 h-3" />
@@ -594,10 +594,10 @@ export const StepPricing: React.FC<StepPricingProps> = ({
 
             {/* Payout Estimate for Sales (Pod 6) */}
             {salePayoutEstimate && (
-              <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-green-500/20 max-w-md">
+              <div className="bg-emerald-50 dark:bg-emerald-950/40 rounded-xl p-4 border border-emerald-200 dark:border-emerald-800 max-w-md">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-green-500/10 rounded-lg">
-                    <Wallet className="w-5 h-5 text-green-600" />
+                  <div className="p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg">
+                    <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
@@ -646,9 +646,9 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                     )}
                     
                     {/* Estimated payout */}
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-green-300/30">
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-emerald-300/50 dark:border-emerald-700/50">
                       <span className="text-sm font-medium text-foreground">Estimated payout:</span>
-                      <span className="font-semibold text-green-600 text-lg">
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400 text-lg">
                         {formatCurrency(salePayoutEstimate.sellerReceives)}
                       </span>
                     </div>
@@ -698,7 +698,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                     Accept secure online payments via Stripe. Funds are deposited to your connected Stripe account after sale confirmation.
                   </p>
                   {formData.accept_card_payment && (
-                    <div className="mt-2 p-2 bg-primary/5 rounded text-xs text-muted-foreground">
+                    <div className="mt-2 p-2 bg-muted rounded border border-border text-xs text-muted-foreground">
                       <Info className="w-3 h-3 inline mr-1" />
                       Requires Stripe Connect setup to receive payments.
                     </div>

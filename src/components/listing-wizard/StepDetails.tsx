@@ -161,7 +161,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
               size="sm"
               onClick={optimizeDescription}
               disabled={isOptimizing || !formData.description || formData.description.length < 10}
-              className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 hover:border-primary/40"
+              className="bg-card border-border hover:border-primary"
             >
               {isOptimizing ? (
                 <>
@@ -228,8 +228,8 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
                       className={cn(
                         "flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all",
                         formData.amenities?.includes(item.id)
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                          ? 'border-primary bg-primary/10 shadow-sm'
+                          : 'border-border bg-card hover:border-primary/50'
                       )}
                     >
                       <Checkbox
@@ -255,7 +255,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
 
       {/* Item Dimensions - Only show for sale listings with mobile assets */}
       {formData.mode === 'sale' && (formData.category === 'food_truck' || formData.category === 'food_trailer') && (
-        <div className="space-y-4 p-4 rounded-xl border border-border bg-muted/30">
+        <div className="space-y-4 p-4 rounded-xl border border-border bg-card">
           <div className="flex items-center gap-2">
             <Package className="h-5 w-5 text-primary" />
             <Label className="text-base font-medium">Item Dimensions</Label>

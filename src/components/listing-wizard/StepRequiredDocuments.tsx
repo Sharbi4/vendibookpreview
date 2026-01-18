@@ -133,9 +133,9 @@ export const StepRequiredDocuments: React.FC<StepRequiredDocumentsProps> = ({
       </div>
 
       {/* Info Banner */}
-      <div className="bg-muted/50 rounded-xl p-4 border border-border">
+      <div className="bg-card rounded-xl p-4 border border-border">
         <div className="flex items-start gap-3">
-          <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+          <Info className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
           <div className="text-sm">
             <p className="text-foreground font-medium mb-1">
               {enabledCount === 0
@@ -220,13 +220,13 @@ export const StepRequiredDocuments: React.FC<StepRequiredDocumentsProps> = ({
                   variant="ghost"
                   className={cn(
                     'w-full justify-between p-4 h-auto rounded-xl border',
-                    isOpen ? 'bg-muted/50 border-primary/20' : 'border-border hover:border-primary/20'
+                    isOpen ? 'bg-muted border-border' : 'border-border bg-card hover:bg-muted/50'
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <span className="font-medium">{group.label}</span>
                     {enabledInGroup > 0 && (
-                      <span className="px-2 py-0.5 text-xs bg-primary/10 text-primary rounded-full">
+                      <span className="px-2 py-0.5 text-xs bg-primary/15 text-primary rounded-full font-medium">
                         {enabledInGroup} selected
                       </span>
                     )}
@@ -251,8 +251,8 @@ export const StepRequiredDocuments: React.FC<StepRequiredDocumentsProps> = ({
                         className={cn(
                           'flex items-start gap-3 p-3 rounded-lg border transition-colors',
                           isEnabled
-                            ? 'bg-primary/5 border-primary/30'
-                            : 'border-border hover:border-muted-foreground/30'
+                            ? 'bg-primary/10 border-primary shadow-sm'
+                            : 'border-border bg-card hover:border-primary/50'
                         )}
                       >
                         <Switch

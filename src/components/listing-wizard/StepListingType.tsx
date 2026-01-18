@@ -41,8 +41,8 @@ export const StepListingType: React.FC<StepListingTypeProps> = ({
               className={cn(
                 "p-6 rounded-xl border-2 text-left transition-all",
                 formData.mode === option.value
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-muted-foreground"
+                  ? "border-primary bg-primary/10 shadow-sm"
+                  : "border-border hover:border-primary/50 bg-card"
               )}
             >
               <div className={cn(
@@ -75,8 +75,8 @@ export const StepListingType: React.FC<StepListingTypeProps> = ({
               className={cn(
                 "p-6 rounded-xl border-2 text-left transition-all",
                 formData.category === option.value
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-muted-foreground"
+                  ? "border-primary bg-primary/10 shadow-sm"
+                  : "border-border hover:border-primary/50 bg-card"
               )}
             >
               <div className={cn(
