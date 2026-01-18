@@ -11,10 +11,11 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
-import { ShieldCheck, Loader2, MapPin, Truck, Calculator, AlertCircle, CreditCard, Banknote, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Loader2, MapPin, Truck, Calculator, AlertCircle, CreditCard, Banknote } from 'lucide-react';
 import { CheckoutOverlay } from '@/components/checkout';
 import { FreightInfoCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { ValidatedInput, validators } from '@/components/ui/validated-input';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import type { FulfillmentType } from '@/types/listing';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
@@ -90,7 +91,7 @@ const InquiryForm = ({
   const [showCheckoutOverlay, setShowCheckoutOverlay] = useState(false);
   const [addressDebounceTimer, setAddressDebounceTimer] = useState<NodeJS.Timeout | null>(null);
 
-  // Inline validation errors
+  // Inline validation errors and touched state
   const [fieldErrors, setFieldErrors] = useState<{
     name?: string;
     email?: string;
@@ -119,6 +120,22 @@ const InquiryForm = ({
   // Get freight cost - use estimate if available, otherwise fallback
   const freightCost = estimate?.total_cost ?? 0;
   const hasValidEstimate = estimate !== null && !estimateError && isAddressComplete;
+
+  // Field validators using shared validators
+  const fieldValidators = {
+    name: validators.compose(
+      validators.required('Full name is required'),
+      validators.minLength(2, 'Name must be at least 2 characters')
+    ),
+    email: validators.compose(
+      validators.required('Email is required'),
+      validators.email('Please enter a valid email address')
+    ),
+    phone: validators.compose(
+      validators.required('Phone number is required'),
+      validators.phone('Please enter a valid phone number (at least 10 digits)')
+    ),
+  };
 
   // Determine available fulfillment options
   const getAvailableFulfillmentOptions = (): FulfillmentSelection[] => {
@@ -201,27 +218,30 @@ const InquiryForm = ({
   const currentDeliveryFee = getDeliveryFeeForSelection();
   const totalPrice = (priceSale || 0) + currentDeliveryFee;
 
-  // RFC 5322 compliant email regex for strict validation
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
-  const phoneRegex = /^[\d\s\-\(\)\+]{10,}$/;
-
-  // Individual field validators
-  const validateName = (value: string): string | undefined => {
-    if (!value.trim()) return 'Full name is required';
-    if (value.trim().length < 2) return 'Name must be at least 2 characters';
-    return undefined;
+  // Handle field updates with validation
+  const updateField = (field: 'name' | 'email' | 'phone', value: string) => {
+    if (field === 'name') setName(value);
+    else if (field === 'email') setEmail(value);
+    else if (field === 'phone') setPhone(value);
+    
+    // Validate on change if already touched
+    if (touchedFields.has(field)) {
+      const validator = fieldValidators[field];
+      if (validator) {
+        const error = validator(value);
+        setFieldErrors(prev => ({ ...prev, [field]: error }));
+      }
+    }
   };
 
-  const validateEmail = (value: string): string | undefined => {
-    if (!value.trim()) return 'Email is required';
-    if (!emailRegex.test(value.trim())) return 'Please enter a valid email address';
-    return undefined;
-  };
-
-  const validatePhone = (value: string): string | undefined => {
-    if (!value.trim()) return 'Phone number is required';
-    if (!phoneRegex.test(value.trim())) return 'Please enter a valid phone number (at least 10 digits)';
-    return undefined;
+  const markTouched = (field: 'name' | 'email' | 'phone') => {
+    setTouchedFields(prev => new Set(prev).add(field));
+    const validator = fieldValidators[field];
+    const value = field === 'name' ? name : field === 'email' ? email : phone;
+    if (validator) {
+      const error = validator(value);
+      setFieldErrors(prev => ({ ...prev, [field]: error }));
+    }
   };
 
   const validateDeliveryAddress = (value: string): string | undefined => {
@@ -234,74 +254,11 @@ const InquiryForm = ({
     return undefined;
   };
 
-  // Handle field blur to mark as touched and validate
-  const handleFieldBlur = (fieldName: string) => {
-    setTouchedFields(prev => new Set(prev).add(fieldName));
-    validateField(fieldName);
-  };
-
-  // Validate a single field and update errors
-  const validateField = (fieldName: string) => {
-    let error: string | undefined;
-    
-    switch (fieldName) {
-      case 'name':
-        error = validateName(name);
-        break;
-      case 'email':
-        error = validateEmail(email);
-        break;
-      case 'phone':
-        error = validatePhone(phone);
-        break;
-      case 'deliveryAddress':
-        error = validateDeliveryAddress(deliveryAddress);
-        break;
-    }
-    
-    setFieldErrors(prev => ({
-      ...prev,
-      [fieldName]: error
-    }));
-    
-    return error;
-  };
-
-  // Format phone number as user types: (XXX) XXX-XXXX
-  const formatPhoneNumber = (value: string): string => {
-    // Remove all non-digit characters
-    const digits = value.replace(/\D/g, '');
-    
-    // Apply formatting based on length
-    if (digits.length === 0) return '';
-    if (digits.length <= 3) return `(${digits}`;
-    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
-  };
-
-  // Validate field on change if already touched
-  const handleFieldChange = (fieldName: string, value: string, setter: (val: string) => void) => {
-    setter(value);
-    if (touchedFields.has(fieldName)) {
-      // Delay validation slightly for better UX
-      setTimeout(() => validateField(fieldName), 100);
-    }
-  };
-
-  // Special handler for phone with auto-formatting
-  const handlePhoneChange = (value: string) => {
-    const formatted = formatPhoneNumber(value);
-    setPhone(formatted);
-    if (touchedFields.has('phone')) {
-      setTimeout(() => validateField('phone'), 100);
-    }
-  };
-
   const validateForm = (): string | null => {
     // Validate all fields and collect errors
-    const nameError = validateName(name);
-    const emailError = validateEmail(email);
-    const phoneError = validatePhone(phone);
+    const nameError = fieldValidators.name(name);
+    const emailError = fieldValidators.email(email);
+    const phoneError = fieldValidators.phone(phone);
     const addressError = validateDeliveryAddress(deliveryAddress);
     
     // Update all field errors
@@ -692,98 +649,42 @@ const InquiryForm = ({
       <div className="space-y-4 mb-6">
         <h3 className="text-sm font-medium text-foreground">Your Information</h3>
         
-        <div>
-          <Label htmlFor="buyerName" className="text-sm text-muted-foreground mb-1 block">
-            Full Name <span className="text-destructive">*</span>
-          </Label>
-          <div className="relative">
-            <Input
-              id="buyerName"
-              placeholder="Your name"
-              value={name}
-              onChange={(e) => handleFieldChange('name', e.target.value, setName)}
-              onBlur={() => handleFieldBlur('name')}
-              className={cn(
-                'pr-10',
-                touchedFields.has('name') && fieldErrors.name && 'border-destructive focus-visible:ring-destructive',
-                touchedFields.has('name') && !fieldErrors.name && name.trim() && 'border-emerald-500 focus-visible:ring-emerald-500'
-              )}
-              required
-            />
-            {touchedFields.has('name') && !fieldErrors.name && name.trim() && (
-              <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
-            )}
-          </div>
-          {touchedFields.has('name') && fieldErrors.name && (
-            <p className="text-xs text-destructive mt-1 flex items-center gap-1">
-              <AlertCircle className="h-3 w-3" />
-              {fieldErrors.name}
-            </p>
-          )}
-        </div>
+        <ValidatedInput
+          label="Full Name"
+          value={name}
+          onChange={(value) => updateField('name', value)}
+          onBlur={() => markTouched('name')}
+          error={fieldErrors.name}
+          touched={touchedFields.has('name')}
+          required
+          placeholder="Your name"
+        />
         
-        <div>
-          <Label htmlFor="buyerEmail" className="text-sm text-muted-foreground mb-1 block">
-            Email <span className="text-destructive">*</span>
-          </Label>
-          <div className="relative">
-            <Input
-              id="buyerEmail"
-              type="email"
-              placeholder="Your email"
-              value={email}
-              onChange={(e) => handleFieldChange('email', e.target.value, setEmail)}
-              onBlur={() => handleFieldBlur('email')}
-              className={cn(
-                'pr-10',
-                touchedFields.has('email') && fieldErrors.email && 'border-destructive focus-visible:ring-destructive',
-                touchedFields.has('email') && !fieldErrors.email && email.trim() && 'border-emerald-500 focus-visible:ring-emerald-500'
-              )}
-              required
-            />
-            {touchedFields.has('email') && !fieldErrors.email && email.trim() && (
-              <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
-            )}
-          </div>
-          {touchedFields.has('email') && fieldErrors.email && (
-            <p className="text-xs text-destructive mt-1 flex items-center gap-1">
-              <AlertCircle className="h-3 w-3" />
-              {fieldErrors.email}
-            </p>
-          )}
-        </div>
+        <ValidatedInput
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(value) => updateField('email', value)}
+          onBlur={() => markTouched('email')}
+          error={fieldErrors.email}
+          touched={touchedFields.has('email')}
+          required
+          placeholder="Your email"
+        />
         
-        <div>
-          <Label htmlFor="buyerPhone" className="text-sm font-medium mb-1 block">
-            Phone Number <span className="text-destructive">*</span>
-          </Label>
-          <div className="relative">
-            <Input
-              id="buyerPhone"
-              type="tel"
-              placeholder="(555) 123-4567"
-              value={phone}
-              onChange={(e) => handlePhoneChange(e.target.value)}
-              onBlur={() => handleFieldBlur('phone')}
-              className={cn(
-                'pr-10',
-                touchedFields.has('phone') && fieldErrors.phone && 'border-destructive focus-visible:ring-destructive',
-                touchedFields.has('phone') && !fieldErrors.phone && phone.trim() && 'border-emerald-500 focus-visible:ring-emerald-500'
-              )}
-              required
-              maxLength={14}
-            />
-            {touchedFields.has('phone') && !fieldErrors.phone && phone.trim() && (
-              <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
-            )}
-          </div>
-          {touchedFields.has('phone') && fieldErrors.phone && (
-            <p className="text-xs text-destructive mt-1 flex items-center gap-1">
-              <AlertCircle className="h-3 w-3" />
-              {fieldErrors.phone}
-            </p>
-          )}
-        </div>
+        <ValidatedInput
+          label="Phone Number"
+          type="tel"
+          value={phone}
+          onChange={(value) => updateField('phone', value)}
+          onBlur={() => markTouched('phone')}
+          error={fieldErrors.phone}
+          touched={touchedFields.has('phone')}
+          required
+          formatPhone
+          maxLength={14}
+          placeholder="(555) 123-4567"
+        />
       </div>
 
       {/* Payment Method Selection */}
