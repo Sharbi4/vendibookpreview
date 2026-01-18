@@ -61,7 +61,7 @@ const SupplySection = () => {
               A safe way to sell or rent your food truck.
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              We built VendiBook to support the food truck community. Whether you're selling your truck, renting it out, or looking for a vendor spot—we've got your back.
+              Now, accept payments in person or through our secure platform for protection.
             </p>
 
             {/* Benefits list */}
