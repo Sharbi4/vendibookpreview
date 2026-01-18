@@ -194,7 +194,38 @@ export const useListingAvailability = (listingId: string) => {
     }
   };
 
-  // Get all booked dates from approved bookings
+  const unblockDateRange = async (startDate: Date, endDate: Date) => {
+    if (!user) return;
+
+    const dates = eachDayOfInterval({ start: startDate, end: endDate });
+    const dateStrings = dates.map(date => format(date, 'yyyy-MM-dd'));
+    
+    try {
+      const { error } = await supabase
+        .from('listing_blocked_dates')
+        .delete()
+        .eq('listing_id', listingId)
+        .eq('host_id', user.id)
+        .in('blocked_date', dateStrings);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Dates unblocked',
+        description: `Dates from ${format(startDate, 'MMM d')} to ${format(endDate, 'MMM d')} are now available.`,
+      });
+      
+      fetchData();
+    } catch (error) {
+      console.error('Error unblocking dates:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to unblock dates. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const getBookedDates = (): Date[] => {
     const dates: Date[] = [];
     bookings.forEach(booking => {
@@ -257,6 +288,7 @@ export const useListingAvailability = (listingId: string) => {
     blockDate,
     unblockDate,
     blockDateRange,
+    unblockDateRange,
     clearAllBlockedDates,
     getBookedDates,
     getPendingDates,

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Lock, CalendarCheck, Clock, Calendar, Info, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Lock, CalendarCheck, Clock, Calendar, Info, Trash2, Unlock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -35,7 +35,10 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
   const [blockReason, setBlockReason] = useState('');
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showBlockUntilDialog, setShowBlockUntilDialog] = useState(false);
+  const [showUnblockRangeDialog, setShowUnblockRangeDialog] = useState(false);
   const [blockUntilDate, setBlockUntilDate] = useState<Date | undefined>(undefined);
+  const [unblockRangeStart, setUnblockRangeStart] = useState<Date | undefined>(undefined);
+  const [unblockRangeEnd, setUnblockRangeEnd] = useState<Date | undefined>(undefined);
   const [isRangeMode, setIsRangeMode] = useState(false);
   const [useAvailabilityWindow, setUseAvailabilityWindow] = useState(!!(availableFrom || availableTo));
 
@@ -45,6 +48,7 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
     blockDate,
     unblockDate,
     blockDateRange,
+    unblockDateRange,
     clearAllBlockedDates,
     isDateBlocked,
     isDateBooked,
@@ -352,6 +356,80 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+          )}
+
+          {blockedDates.length > 0 && (
+            <Popover open={showUnblockRangeDialog} onOpenChange={setShowUnblockRangeDialog}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Unlock className="h-4 w-4" />
+                  Unblock range...
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <div className="p-3 border-b border-border">
+                  <p className="text-sm font-medium">Select date range to unblock:</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {unblockRangeStart && !unblockRangeEnd 
+                      ? `Start: ${format(unblockRangeStart, 'MMM d')} — Select end date`
+                      : unblockRangeStart && unblockRangeEnd
+                      ? `${format(unblockRangeStart, 'MMM d')} to ${format(unblockRangeEnd, 'MMM d')}`
+                      : 'Click to select start date'}
+                  </p>
+                </div>
+                <CalendarComponent
+                  mode="single"
+                  selected={unblockRangeEnd || unblockRangeStart}
+                  onSelect={(date) => {
+                    if (!date) return;
+                    if (!unblockRangeStart) {
+                      setUnblockRangeStart(date);
+                    } else if (!unblockRangeEnd) {
+                      if (isBefore(date, unblockRangeStart)) {
+                        setUnblockRangeEnd(unblockRangeStart);
+                        setUnblockRangeStart(date);
+                      } else {
+                        setUnblockRangeEnd(date);
+                      }
+                    } else {
+                      setUnblockRangeStart(date);
+                      setUnblockRangeEnd(undefined);
+                    }
+                  }}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+                <div className="p-3 border-t border-border flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => {
+                      setUnblockRangeStart(undefined);
+                      setUnblockRangeEnd(undefined);
+                      setShowUnblockRangeDialog(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    className="flex-1"
+                    disabled={!unblockRangeStart || !unblockRangeEnd}
+                    onClick={() => {
+                      if (unblockRangeStart && unblockRangeEnd) {
+                        unblockDateRange(unblockRangeStart, unblockRangeEnd);
+                        setUnblockRangeStart(undefined);
+                        setUnblockRangeEnd(undefined);
+                        setShowUnblockRangeDialog(false);
+                      }
+                    }}
+                  >
+                    Unblock
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           )}
         </div>
 
