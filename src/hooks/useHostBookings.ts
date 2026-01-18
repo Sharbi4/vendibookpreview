@@ -230,6 +230,62 @@ export const useHostBookings = () => {
     }
   };
 
+  const processDepositRefund = async (
+    bookingId: string, 
+    action: 'refund' | 'partial' | 'forfeit', 
+    deductionAmount?: number, 
+    notes?: string
+  ) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('process-deposit-refund', {
+        body: { 
+          booking_id: bookingId,
+          refund_type: action === 'refund' ? 'full' : action,
+          deduction_amount: deductionAmount || 0,
+          notes: notes || '',
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      // Update local state
+      setBookings(prev =>
+        prev.map(b =>
+          b.id === bookingId
+            ? { 
+                ...b, 
+                deposit_status: data.deposit_status,
+                deposit_refund_notes: notes || null,
+                deposit_refunded_at: new Date().toISOString(),
+              }
+            : b
+        )
+      );
+
+      toast({
+        title: action === 'forfeit' 
+          ? 'Deposit Forfeited' 
+          : action === 'partial' 
+            ? 'Partial Deposit Refund Processed' 
+            : 'Deposit Refunded',
+        description: action === 'forfeit'
+          ? 'The security deposit has been forfeited.'
+          : `$${data.refund_amount?.toFixed(2) || '0.00'} has been refunded to the renter.`,
+      });
+
+      return data;
+    } catch (error) {
+      console.error('Error processing deposit:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to process deposit. Please try again.',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
   const stats = {
     pending: bookings.filter(b => b.status === 'pending').length,
     approved: bookings.filter(b => b.status === 'approved').length,
@@ -245,5 +301,6 @@ export const useHostBookings = () => {
     approveBooking: (id: string, response?: string) => respondToBooking(id, 'approved', response),
     declineBooking: (id: string, response?: string) => respondToBooking(id, 'declined', response),
     cancelBooking,
+    processDepositRefund,
   };
 };

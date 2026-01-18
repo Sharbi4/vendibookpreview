@@ -23,6 +23,7 @@ interface CheckoutRequest {
   mode: 'rent' | 'sale';
   amount: number; // Base price in dollars
   delivery_fee?: number;
+  deposit_amount?: number; // Security deposit in dollars (rentals only)
   // Sale-specific fields
   fulfillment_type?: 'pickup' | 'delivery' | 'vendibook_freight';
   delivery_address?: string | null;
@@ -71,6 +72,7 @@ serve(async (req) => {
       mode, 
       amount, 
       delivery_fee = 0,
+      deposit_amount = 0,
       fulfillment_type,
       delivery_address,
       delivery_instructions,
@@ -83,7 +85,7 @@ serve(async (req) => {
     } = body;
     
     logStep("Request received", { 
-      booking_id, listing_id, mode, amount, delivery_fee, fulfillment_type,
+      booking_id, listing_id, mode, amount, delivery_fee, deposit_amount, fulfillment_type,
       vendibook_freight_enabled, freight_payer, freight_cost,
     });
 
@@ -132,24 +134,26 @@ serve(async (req) => {
 
     if (mode === 'rent') {
       // Rentals: Dual-sided commission
-      // Base price + delivery = subtotal
+      // Base price + delivery = subtotal (deposit is separate, refundable)
       const subtotal = amount + delivery_fee;
       
-      // Customer pays: subtotal + 12.9% platform fee
+      // Customer pays: subtotal + 12.9% platform fee + deposit
       const renterFee = subtotal * (RENTAL_RENTER_FEE_PERCENT / 100);
-      customerTotal = Math.round((subtotal + renterFee) * 100);
+      // Deposit is added to total but NOT included in fee calculations
+      customerTotal = Math.round((subtotal + renterFee + deposit_amount) * 100);
       
-      // Host fee: 12.9% of subtotal
+      // Host fee: 12.9% of subtotal (not deposit)
       const hostFee = subtotal * (RENTAL_HOST_FEE_PERCENT / 100);
       
-      // Total platform revenue = renter fee + host fee
+      // Total platform revenue = renter fee + host fee (deposit not included)
       applicationFee = Math.round((renterFee + hostFee) * 100);
       
-      // Host receives subtotal minus their 12.9% fee
+      // Host receives subtotal minus their 12.9% fee (deposit held separately)
       hostReceives = Math.round((subtotal - hostFee) * 100);
       
       logStep("Rental fee calculation", {
         subtotal,
+        deposit_amount,
         renterFee: renterFee.toFixed(2),
         hostFee: hostFee.toFixed(2),
         customerTotal: (customerTotal / 100).toFixed(2),
@@ -216,32 +220,48 @@ serve(async (req) => {
     
     if (mode === 'rent') {
       // Rentals: Direct transfer to host
+      // Build line items - rental + optional deposit
+      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: listing.title,
+              description: `Rental booking${delivery_fee > 0 ? ' (includes delivery)' : ''}`,
+            },
+            // Rental amount without deposit
+            unit_amount: Math.round((amount + delivery_fee + (amount + delivery_fee) * (RENTAL_RENTER_FEE_PERCENT / 100)) * 100),
+            tax_behavior: 'exclusive',
+          },
+          quantity: 1,
+        },
+      ];
+
+      // Add deposit as separate line item if present
+      if (deposit_amount > 0) {
+        lineItems.push({
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Security Deposit (Refundable)',
+              description: 'Refunded after rental if no damage or late return',
+            },
+            unit_amount: Math.round(deposit_amount * 100),
+            tax_behavior: 'exclusive',
+          },
+          quantity: 1,
+        });
+      }
+
       sessionParams = {
         payment_method_types: ['card'],
         mode: 'payment',
         customer: customerId,
         customer_email: customerId ? undefined : user.email,
-        // Save billing address to customer for future tax calculations
         customer_update: customerId ? { address: 'auto' } : undefined,
-        // Enable automatic tax calculation based on customer location
         automatic_tax: { enabled: true },
-        // Collect billing address for accurate tax calculation
         billing_address_collection: 'required',
-        line_items: [
-          {
-            price_data: {
-              currency: 'usd',
-              product_data: {
-                name: listing.title,
-                description: `Rental booking${delivery_fee > 0 ? ' (includes delivery)' : ''}`,
-              },
-              unit_amount: customerTotal,
-              // Mark as taxable - Stripe will calculate based on customer location
-              tax_behavior: 'exclusive',
-            },
-            quantity: 1,
-          },
-        ],
+        line_items: lineItems,
         payment_intent_data: {
           application_fee_amount: applicationFee,
           transfer_data: {
@@ -253,6 +273,7 @@ serve(async (req) => {
             mode,
             buyer_id: user.id,
             host_id: listing.host_id,
+            deposit_amount: deposit_amount.toString(),
           },
         },
         success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
@@ -263,6 +284,7 @@ serve(async (req) => {
           mode,
           buyer_id: user.id,
           host_id: listing.host_id,
+          deposit_amount: deposit_amount.toString(),
         },
       };
     } else {
