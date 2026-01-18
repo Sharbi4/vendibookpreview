@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Lock, CalendarCheck, Clock, Calendar, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Lock, CalendarCheck, Clock, Calendar, Info, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -40,9 +40,11 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
 
   const {
     bookings,
+    blockedDates,
     blockDate,
     unblockDate,
     blockDateRange,
+    clearAllBlockedDates,
     isDateBlocked,
     isDateBooked,
     isDatePending,
@@ -265,7 +267,7 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
         </p>
 
         {/* Quick Actions */}
-        <div className="mb-4">
+        <div className="flex flex-wrap gap-2 mb-4">
           <Popover open={showBlockUntilDialog} onOpenChange={setShowBlockUntilDialog}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="gap-2">
@@ -294,6 +296,18 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
               />
             </PopoverContent>
           </Popover>
+
+          {blockedDates.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={clearAllBlockedDates}
+            >
+              <Trash2 className="h-4 w-4" />
+              Clear all ({blockedDates.length})
+            </Button>
+          )}
         </div>
 
         {/* Range Selection Indicator */}

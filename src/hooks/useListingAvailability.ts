@@ -166,6 +166,34 @@ export const useListingAvailability = (listingId: string) => {
     }
   };
 
+  const clearAllBlockedDates = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('listing_blocked_dates')
+        .delete()
+        .eq('listing_id', listingId)
+        .eq('host_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'All blocked dates cleared',
+        description: 'Your calendar is now open for bookings.',
+      });
+      
+      fetchData();
+    } catch (error) {
+      console.error('Error clearing blocked dates:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to clear blocked dates. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   // Get all booked dates from approved bookings
   const getBookedDates = (): Date[] => {
     const dates: Date[] = [];
@@ -229,6 +257,7 @@ export const useListingAvailability = (listingId: string) => {
     blockDate,
     unblockDate,
     blockDateRange,
+    clearAllBlockedDates,
     getBookedDates,
     getPendingDates,
     isDateBlocked,
