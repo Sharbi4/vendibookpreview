@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Mail, Send, Eye, ChevronDown, Check, Loader2, Edit2, RotateCcw } from 'lucide-react';
+import { Mail, Send, Eye, ChevronDown, Check, Loader2, Edit2, RotateCcw, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -785,6 +785,26 @@ const EmailPreviewCard = () => {
     handleDataChange(key, currentArray);
   };
 
+  const [isSendingDigest, setIsSendingDigest] = useState(false);
+
+  const handleSendDailyDigest = async () => {
+    setIsSendingDigest(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-admin-daily-digest');
+      
+      if (error) throw error;
+      
+      toast.success(
+        `Daily digest sent! Summary: ${data?.summary?.pendingBookings || 0} bookings, ${data?.summary?.pendingDocuments || 0} documents, ${data?.summary?.activeDisputes || 0} disputes`
+      );
+    } catch (error: unknown) {
+      console.error('Error sending daily digest:', error);
+      toast.error('Failed to send daily digest. Check console for details.');
+    } finally {
+      setIsSendingDigest(false);
+    }
+  };
+
   const handleSendTest = async () => {
     if (!testEmail || !currentTemplate) {
       toast.error('Please select a template and enter an email address');
@@ -816,13 +836,34 @@ const EmailPreviewCard = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5 text-primary" />
-            Email Template Preview
-          </CardTitle>
-          <CardDescription>
-            Preview and test email templates before they're sent to users
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5 text-primary" />
+                Email Template Preview
+              </CardTitle>
+              <CardDescription>
+                Preview and test email templates before they're sent to users
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              onClick={handleSendDailyDigest}
+              disabled={isSendingDigest}
+            >
+              {isSendingDigest ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Send Daily Digest Now
+                </>
+              )}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
