@@ -163,23 +163,23 @@ export const StepPricing: React.FC<StepPricingProps> = ({
   return (
     <div className="space-y-6">
       {/* AI Suggestions Button */}
-      <div className="bg-card rounded-xl p-4 border border-border">
-        <div className="flex items-start gap-3">
-          <div className="p-2 bg-primary/15 rounded-lg">
-            <Sparkles className="w-5 h-5 text-primary" />
+      <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse pointer-events-none" />
+        <div className="relative flex items-start gap-3">
+          <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md">
+            <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1">
-            <h4 className="font-medium text-foreground mb-1">AI Pricing Assistant</h4>
+            <h4 className="font-semibold text-foreground mb-1">AI Pricing Assistant</h4>
             <p className="text-sm text-muted-foreground mb-3">
               Get smart pricing suggestions based on your listing details, equipment, and location.
             </p>
             <Button
               type="button"
-              variant="outline"
               size="sm"
               onClick={handleGetSuggestions}
               disabled={isLoadingSuggestions}
-              className="border-border hover:bg-primary/10 hover:border-primary"
+              className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
             >
               {isLoadingSuggestions ? (
                 <>
@@ -321,19 +321,19 @@ export const StepPricing: React.FC<StepPricingProps> = ({
 
             {/* Payout Estimate for Rentals */}
             {(rentalPayoutEstimates.daily || rentalPayoutEstimates.weekly) && (
-              <div className="bg-emerald-50 dark:bg-emerald-950/40 rounded-xl p-4 border border-emerald-200 dark:border-emerald-800">
+              <div className="bg-card rounded-xl p-4 border border-border">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg">
-                    <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <div className="p-2.5 bg-muted rounded-xl">
+                    <Wallet className="w-5 h-5 text-foreground" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-medium text-foreground mb-2">Estimated Payout</h4>
+                    <h4 className="font-semibold text-foreground mb-2">Estimated Payout</h4>
                     <div className="space-y-2">
                       {rentalPayoutEstimates.daily && (
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-muted-foreground">Daily rental:</span>
                           <div className="text-right">
-                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                            <span className="font-semibold text-primary">
                               {formatCurrency(rentalPayoutEstimates.daily.hostReceives)}
                             </span>
                             <span className="text-xs text-muted-foreground ml-2">
@@ -346,7 +346,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-muted-foreground">Weekly rental:</span>
                           <div className="text-right">
-                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                            <span className="font-semibold text-primary">
                               {formatCurrency(rentalPayoutEstimates.weekly.hostReceives)}
                             </span>
                             <span className="text-xs text-muted-foreground ml-2">
@@ -404,15 +404,16 @@ export const StepPricing: React.FC<StepPricingProps> = ({
 
           {/* Instant Book Toggle */}
           <div className="pt-6 border-t">
-            <div className="bg-amber-50 dark:bg-amber-950/40 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
-              <div className="flex items-start justify-between gap-4">
+            <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 pointer-events-none" />
+              <div className="relative flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 flex-1">
-                  <div className="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg">
-                    <Zap className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md">
+                    <Zap className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-medium text-foreground">Instant Book</h4>
+                      <h4 className="font-semibold text-foreground">Instant Book</h4>
                       <InfoTooltip 
                         content="When enabled, renters can book and pay immediately. Documents are still reviewed - if rejected, the booking is cancelled and payment is fully refunded." 
                       />
@@ -429,9 +430,9 @@ export const StepPricing: React.FC<StepPricingProps> = ({
               </div>
               
               {formData.instant_book && (
-                <div className="mt-4 p-3 bg-amber-100/50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                <div className="mt-4 p-3 bg-card rounded-lg border border-border">
                   <p className="text-xs text-muted-foreground">
-                    <strong className="text-amber-700 dark:text-amber-400">How it works:</strong> Renters pay immediately when booking. 
+                    <strong className="text-primary">How it works:</strong> Renters pay immediately when booking. 
                     Your required documents will still be reviewed. If documents are approved, the booking is confirmed. 
                     If not approved, the booking is automatically cancelled and the renter receives a full refund.
                   </p>
@@ -442,14 +443,14 @@ export const StepPricing: React.FC<StepPricingProps> = ({
 
           {/* Security Deposit */}
           <div className="pt-6 border-t">
-            <div className="bg-blue-50 dark:bg-blue-950/40 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+            <div className="bg-card rounded-xl p-4 border border-border">
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
-                  <Wallet className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <div className="p-2.5 bg-muted rounded-xl">
+                  <Wallet className="w-5 h-5 text-foreground" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-medium text-foreground">Security Deposit</h4>
+                    <h4 className="font-semibold text-foreground">Security Deposit</h4>
                     <InfoTooltip 
                       content="A refundable security deposit is charged at booking and returned after the rental ends without damage or delays." 
                     />
@@ -479,9 +480,9 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                   </div>
 
                   {parseFloat(formData.deposit_amount) > 0 && (
-                    <div className="mt-4 p-3 bg-blue-100/50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div className="mt-4 p-3 bg-muted rounded-lg border border-border">
                       <p className="text-xs text-muted-foreground">
-                        <strong className="text-blue-700 dark:text-blue-400">How it works:</strong> The ${parseFloat(formData.deposit_amount).toLocaleString()} deposit is charged when the booking is confirmed. 
+                        <strong className="text-primary">How it works:</strong> The ${parseFloat(formData.deposit_amount).toLocaleString()} deposit is charged when the booking is confirmed. 
                         After the rental ends, you can release the deposit in full or deduct for any damage/late fees.
                       </p>
                     </div>
