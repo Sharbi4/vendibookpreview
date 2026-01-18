@@ -1,9 +1,6 @@
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { 
   Search, 
-  PlusSquare, 
-  Info, 
-  LifeBuoy, 
   LayoutDashboard, 
   MessageSquare, 
   User, 
@@ -116,42 +113,11 @@ const MobileMenu = ({
               <Button
                 variant="default"
                 className="w-full justify-start gap-3 h-12 rounded-xl text-base font-medium"
-                onClick={() => handleNavigation('/browse')}
+                onClick={() => handleNavigation('/search')}
               >
                 <Search className="h-5 w-5" />
-                Browse Listings
+                Search
               </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start gap-3 h-12 rounded-xl text-base font-medium border-primary/30 hover:bg-primary/5"
-                onClick={() => handleNavigation('/host')}
-              >
-                <PlusSquare className="h-5 w-5 text-primary" />
-                List Your Asset
-              </Button>
-            </div>
-
-            {/* Marketplace Section */}
-            <div className="px-5 pt-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Marketplace
-              </p>
-              <nav className="space-y-0.5">
-                <MenuLink
-                  to="/how-it-works"
-                  icon={Info}
-                  label="How It Works"
-                  isActive={isActive('/how-it-works')}
-                  onClick={() => handleNavigation('/how-it-works')}
-                />
-                <MenuLink
-                  to="/help"
-                  icon={LifeBuoy}
-                  label="Help Center"
-                  isActive={isActive('/help')}
-                  onClick={() => handleNavigation('/help')}
-                />
-              </nav>
             </div>
 
             {/* Account Section */}

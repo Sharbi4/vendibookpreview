@@ -397,32 +397,9 @@ const Header = () => {
           </button>
         </div>
 
-        {/* Desktop Navigation - Simplified two-sided journeys */}
+        {/* Desktop Navigation - Simplified */}
         <nav className="hidden md:flex items-center gap-5">
-          <Link 
-            to="/browse" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Browse Listings
-          </Link>
-          <Link 
-            to="/host" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            List Your Asset
-          </Link>
-          <Link 
-            to="/how-it-works" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            How It Works
-          </Link>
-          <Link 
-            to="/help" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Help
-          </Link>
+          {/* Navigation items removed */}
         </nav>
 
         {/* Desktop Actions */}
