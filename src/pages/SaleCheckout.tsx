@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { addBusinessDays, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -1224,6 +1225,18 @@ const SaleCheckout = () => {
                           <div className="flex justify-between text-sm pb-2 border-b border-border/30">
                             <span className="text-muted-foreground">Tax ({((estimate?.tax_rate ?? 0) * 100).toFixed(2)}%)</span>
                             <span className="text-foreground">+${estimate?.tax_amount?.toLocaleString()}</span>
+                          </div>
+                          {/* Estimated Delivery Date */}
+                          <div className="flex items-center justify-between py-3 px-3 mt-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50">
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-emerald-600" />
+                              <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Estimated Delivery</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                                {format(addBusinessDays(new Date(), estimate?.estimated_transit_days?.min ?? 7), 'MMM d')} – {format(addBusinessDays(new Date(), estimate?.estimated_transit_days?.max ?? 10), 'MMM d, yyyy')}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       )}
