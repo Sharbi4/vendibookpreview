@@ -5,13 +5,38 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+interface PricingRequest {
+  title: string;
+  category: string;
+  location?: string;
+  mode: "rent" | "sale";
+  description?: string;
+  amenities?: string[];
+  highlights?: string[];
+  dimensions?: {
+    length?: number;
+    width?: number;
+    height?: number;
+    weight?: number;
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { title, category, location, mode } = await req.json();
+    const { 
+      title, 
+      category, 
+      location, 
+      mode,
+      description,
+      amenities,
+      highlights,
+      dimensions
+    }: PricingRequest = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -28,20 +53,63 @@ serve(async (req) => {
     const categoryLabel = categoryLabels[category] || category;
     const isRental = mode === "rent";
 
-    const systemPrompt = `You are an expert pricing advisor for the mobile food business marketplace. You help hosts set competitive prices for their ${categoryLabel} listings based on market data and location insights.
+    // Build dynamic context from all available listing data
+    const listingDetails: string[] = [];
+    
+    if (description) {
+      listingDetails.push(`Description: "${description.slice(0, 500)}"`);
+    }
+    
+    if (amenities && amenities.length > 0) {
+      listingDetails.push(`Equipment/Amenities: ${amenities.join(", ")}`);
+    }
+    
+    if (highlights && highlights.length > 0) {
+      listingDetails.push(`Key Features: ${highlights.join(", ")}`);
+    }
+    
+    if (dimensions) {
+      const dimParts: string[] = [];
+      if (dimensions.length) dimParts.push(`${dimensions.length}" length`);
+      if (dimensions.width) dimParts.push(`${dimensions.width}" width`);
+      if (dimensions.height) dimParts.push(`${dimensions.height}" height`);
+      if (dimensions.weight) dimParts.push(`${dimensions.weight} lbs`);
+      if (dimParts.length > 0) {
+        listingDetails.push(`Dimensions: ${dimParts.join(", ")}`);
+      }
+    }
 
-Always respond with a valid JSON object containing pricing suggestions. Be realistic and base suggestions on typical market rates for the food service industry.`;
+    const additionalContext = listingDetails.length > 0 
+      ? `\n\nAdditional Details:\n${listingDetails.join("\n")}`
+      : "";
+
+    const systemPrompt = `You are an expert pricing advisor for VendiBook, a mobile food business marketplace. You help hosts set competitive prices for their ${categoryLabel} listings.
+
+Your pricing should be data-driven and consider:
+- Equipment quality and included amenities (more equipment = higher value)
+- Size and capacity of the unit
+- Location/market factors (urban areas typically command higher prices)
+- Condition indicators from the description
+- Comparable market rates for the food service industry
+
+Be realistic and specific in your reasoning. Reference actual details from the listing when explaining your suggestions.`;
 
     const userPrompt = isRental
-      ? `Suggest rental pricing for this listing:
+      ? `Analyze this rental listing and suggest competitive pricing:
+
+LISTING DETAILS:
 - Title: "${title}"
 - Category: ${categoryLabel}
 - Location: ${location || "Not specified"}
-- Type: Rental
+- Type: Rental${additionalContext}
 
-Provide realistic daily and weekly rental rates. Consider that weekly rates typically offer a 10-20% discount compared to 7x daily rate.
+PRICING GUIDELINES:
+- Daily rates for ${categoryLabel}s typically range from $150-$500+ depending on equipment
+- Weekly rates should offer 15-25% discount vs 7x daily rate
+- Premium equipment, commercial-grade appliances, and turnkey setups command higher prices
+- Location in high-traffic urban areas justifies 10-20% premium
 
-Respond with ONLY this JSON format (no markdown, no explanation):
+Respond with ONLY this JSON format (no markdown):
 {
   "daily_low": number,
   "daily_suggested": number,
@@ -49,23 +117,36 @@ Respond with ONLY this JSON format (no markdown, no explanation):
   "weekly_low": number,
   "weekly_suggested": number,
   "weekly_high": number,
-  "reasoning": "Brief explanation of pricing factors"
+  "reasoning": "2-3 sentence explanation referencing specific listing details that influenced pricing",
+  "confidence": "low" | "medium" | "high",
+  "factors": ["factor1", "factor2", "factor3"]
 }`
-      : `Suggest sale pricing for this listing:
+      : `Analyze this sale listing and suggest competitive pricing:
+
+LISTING DETAILS:
 - Title: "${title}"
 - Category: ${categoryLabel}
 - Location: ${location || "Not specified"}
-- Type: Sale
+- Type: Sale${additionalContext}
 
-Provide realistic sale price ranges based on typical market values.
+PRICING GUIDELINES:
+- ${categoryLabel} sale prices vary widely based on age, condition, and equipment
+- Entry-level/older units: $15,000-$40,000
+- Mid-range/good condition: $40,000-$80,000
+- Premium/turnkey operations: $80,000-$150,000+
+- Custom builds and specialized equipment can exceed these ranges
 
-Respond with ONLY this JSON format (no markdown, no explanation):
+Respond with ONLY this JSON format (no markdown):
 {
   "sale_low": number,
   "sale_suggested": number,
   "sale_high": number,
-  "reasoning": "Brief explanation of pricing factors"
+  "reasoning": "2-3 sentence explanation referencing specific listing details that influenced pricing",
+  "confidence": "low" | "medium" | "high",
+  "factors": ["factor1", "factor2", "factor3"]
 }`;
+
+    console.log("Generating pricing suggestions for:", { title, category, location, mode, hasDescription: !!description, amenitiesCount: amenities?.length || 0 });
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -114,6 +195,12 @@ Respond with ONLY this JSON format (no markdown, no explanation):
     }
 
     const suggestions = JSON.parse(jsonMatch[0]);
+    
+    console.log("Pricing suggestions generated:", { 
+      mode, 
+      confidence: suggestions.confidence,
+      factors: suggestions.factors 
+    });
 
     return new Response(JSON.stringify(suggestions), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

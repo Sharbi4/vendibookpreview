@@ -31,6 +31,8 @@ interface RentalSuggestions {
   weekly_suggested: number;
   weekly_high: number;
   reasoning: string;
+  confidence?: 'low' | 'medium' | 'high';
+  factors?: string[];
 }
 
 interface SaleSuggestions {
@@ -38,6 +40,8 @@ interface SaleSuggestions {
   sale_suggested: number;
   sale_high: number;
   reasoning: string;
+  confidence?: 'low' | 'medium' | 'high';
+  factors?: string[];
 }
 
 export const StepPricing: React.FC<StepPricingProps> = ({
@@ -99,6 +103,15 @@ export const StepPricing: React.FC<StepPricingProps> = ({
           category: formData.category,
           location: getLocation(),
           mode: formData.mode,
+          description: formData.description,
+          amenities: formData.amenities,
+          highlights: formData.highlights,
+          dimensions: {
+            length: formData.length_inches ? Number(formData.length_inches) : undefined,
+            width: formData.width_inches ? Number(formData.width_inches) : undefined,
+            height: formData.height_inches ? Number(formData.height_inches) : undefined,
+            weight: formData.weight_lbs ? Number(formData.weight_lbs) : undefined,
+          },
         },
       });
 
@@ -158,7 +171,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
           <div className="flex-1">
             <h4 className="font-medium text-foreground mb-1">AI Pricing Assistant</h4>
             <p className="text-sm text-muted-foreground mb-3">
-              Get smart pricing suggestions based on your listing title, category, and location.
+              Get smart pricing suggestions based on your listing details, equipment, and location.
             </p>
             <Button
               type="button"
@@ -234,6 +247,26 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                   <div className="text-xs text-muted-foreground">${rentalSuggestions.weekly_high}/week</div>
                 </button>
               </div>
+
+              {/* Confidence and Factors */}
+              {rentalSuggestions.confidence && (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className={`px-2 py-0.5 rounded-full font-medium ${
+                    rentalSuggestions.confidence === 'high' 
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                      : rentalSuggestions.confidence === 'medium'
+                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                      : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                  }`}>
+                    {rentalSuggestions.confidence} confidence
+                  </span>
+                  {rentalSuggestions.factors && rentalSuggestions.factors.length > 0 && (
+                    <span className="text-muted-foreground">
+                      Based on: {rentalSuggestions.factors.slice(0, 3).join(', ')}
+                    </span>
+                  )}
+                </div>
+              )}
               
               <p className="text-sm text-muted-foreground italic">
                 {rentalSuggestions.reasoning}
@@ -454,6 +487,26 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                   <div className="font-semibold text-foreground">${saleSuggestions.sale_high.toLocaleString()}</div>
                 </button>
               </div>
+
+              {/* Confidence and Factors */}
+              {saleSuggestions.confidence && (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className={`px-2 py-0.5 rounded-full font-medium ${
+                    saleSuggestions.confidence === 'high' 
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                      : saleSuggestions.confidence === 'medium'
+                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                      : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                  }`}>
+                    {saleSuggestions.confidence} confidence
+                  </span>
+                  {saleSuggestions.factors && saleSuggestions.factors.length > 0 && (
+                    <span className="text-muted-foreground">
+                      Based on: {saleSuggestions.factors.slice(0, 3).join(', ')}
+                    </span>
+                  )}
+                </div>
+              )}
               
               <p className="text-sm text-muted-foreground italic">
                 {saleSuggestions.reasoning}
