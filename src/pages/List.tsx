@@ -157,7 +157,7 @@ const ListPage: React.FC = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-0.5">
                     <p className="font-bold text-lg">Import a listing</p>
-                    <Badge className="text-xs bg-gradient-to-r from-primary/20 to-amber-500/20 text-primary border-primary/30">
+                    <Badge className="text-xs bg-gradient-to-r from-primary to-amber-500 text-white border-0">
                       <Sparkles className="w-3 h-3 mr-1" />
                       AI-powered
                     </Badge>
