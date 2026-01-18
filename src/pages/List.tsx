@@ -17,7 +17,9 @@ import {
   Lock,
   CreditCard,
   ShieldCheck,
-  BadgeCheck
+  BadgeCheck,
+  FileEdit,
+  ImageIcon
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { QuickStartWizard } from '@/components/listing-wizard/QuickStartWizard';
@@ -28,6 +30,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import vendibookIcon from '@/assets/vendibook-icon.png';
+import { useHostListings } from '@/hooks/useHostListings';
 
 type ListingMode = 'choose' | 'import' | 'scratch';
 
@@ -46,8 +49,12 @@ const tips = [
 const ListPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
+  const { listings, isLoading: listingsLoading } = useHostListings();
   const [mode, setMode] = useState<ListingMode>('choose');
   const [currentTip, setCurrentTip] = useState(0);
+
+  // Filter drafts
+  const drafts = listings.filter(l => l.status === 'draft');
 
   useEffect(() => {
     trackEvent({
@@ -93,6 +100,67 @@ const ListPage: React.FC = () => {
     // Enhanced choose mode
     return (
       <div className="space-y-8">
+        {/* Drafts Section - show only if user has drafts */}
+        {user && drafts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <FileEdit className="w-4 h-4 text-muted-foreground" />
+                <h3 className="font-semibold text-sm">Your Drafts</h3>
+                <Badge variant="secondary" className="text-xs">
+                  {drafts.length}
+                </Badge>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {drafts.slice(0, 3).map((draft) => (
+                <Card
+                  key={draft.id}
+                  className="cursor-pointer transition-all hover:shadow-md hover:border-primary/30 group"
+                  onClick={() => navigate(`/edit-listing/${draft.id}`)}
+                >
+                  <CardContent className="flex items-center gap-3 p-3">
+                    {draft.cover_image_url ? (
+                      <img
+                        src={draft.cover_image_url}
+                        alt={draft.title}
+                        className="w-12 h-12 rounded-lg object-cover shrink-0"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                        <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">
+                        {draft.title || 'Untitled Draft'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {draft.category?.replace('_', ' ') || 'No category'} • {draft.mode === 'rent' ? 'For Rent' : 'For Sale'}
+                      </p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                  </CardContent>
+                </Card>
+              ))}
+              {drafts.length > 3 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-xs text-muted-foreground"
+                  onClick={() => navigate('/dashboard')}
+                >
+                  View all {drafts.length} drafts
+                </Button>
+              )}
+            </div>
+          </motion.div>
+        )}
+
         {/* Hero section */}
         <motion.div 
           className="text-center"
