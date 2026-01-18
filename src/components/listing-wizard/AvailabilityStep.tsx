@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Lock, CalendarCheck, Clock, Calendar, Info, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -322,15 +323,35 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
           </Popover>
 
           {blockedDates.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={clearAllBlockedDates}
-            >
-              <Trash2 className="h-4 w-4" />
-              Clear all ({blockedDates.length})
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Clear all ({blockedDates.length})
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear all blocked dates?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will remove all {blockedDates.length} manually blocked date{blockedDates.length !== 1 ? 's' : ''} from your calendar. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={clearAllBlockedDates}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Clear all
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </div>
 
