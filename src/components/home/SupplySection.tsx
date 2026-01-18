@@ -68,8 +68,8 @@ const SupplySection = () => {
             <ul className="space-y-4 mb-8">
               {benefits.map((benefit, index) => (
                 <li key={index} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <benefit.icon className="h-4 w-4 text-primary" />
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center flex-shrink-0 shadow-md">
+                    <benefit.icon className="h-5 w-5 text-white" />
                   </div>
                   <span className="text-foreground">{benefit.text}</span>
                 </li>
@@ -108,25 +108,28 @@ const SupplySection = () => {
           </div>
 
           {/* Right: AI Tools callout */}
-          <div className="bg-card rounded-2xl p-8 border border-border shadow-lg">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2.5 rounded-xl bg-primary/10">
-                <Sparkles className="h-5 w-5 text-primary" />
+          <div className="relative overflow-hidden bg-card rounded-2xl p-8 border-2 border-primary/30 shadow-lg bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+            {/* Animated background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+            
+            <div className="relative flex items-center gap-3 mb-4">
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary to-amber-500 shadow-md">
+                <Sparkles className="h-5 w-5 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-foreground">Free AI Tools for Hosts</h3>
             </div>
             
-            <p className="text-muted-foreground mb-6">
+            <p className="relative text-muted-foreground mb-6">
               Get an edge with our AI-powered tools—optimize pricing, find permits, and create listings that convert.
             </p>
 
-            <ul className="space-y-3 mb-6">
+            <ul className="relative space-y-3 mb-6">
               {[
                 'PricePilot — Data-backed pricing suggestions',
                 'PermitPath — Find permits for any city',
                 'Listing Studio — Generate pro descriptions',
               ].map((tool, index) => (
-                <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                <li key={index} className="flex items-start gap-2 text-sm text-foreground">
                   <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                   {tool}
                 </li>
@@ -136,7 +139,7 @@ const SupplySection = () => {
             <Button
               variant="outline"
               onClick={() => navigate('/tools')}
-              className="gap-2"
+              className="relative gap-2 border-primary/30 hover:bg-gradient-to-r hover:from-primary/10 hover:to-amber-500/10"
             >
               Explore Host Tools
               <ArrowRight className="h-4 w-4" />

@@ -28,7 +28,7 @@ const steps: Step[] = [
 
 const HowItWorks = () => {
   return (
-    <section className="py-12 md:py-16 bg-muted/30">
+    <section className="py-12 md:py-16 bg-gradient-to-br from-primary/5 via-background to-amber-500/5">
       <div className="container max-w-4xl mx-auto px-4">
         <div className="text-center mb-10">
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
@@ -43,22 +43,32 @@ const HowItWorks = () => {
           {steps.map((step, index) => {
             const Icon = step.icon;
             return (
-              <div key={index} className="text-center group">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full 
-                                bg-primary/10 mb-3 transition-transform duration-300
-                                group-hover:scale-110">
-                  <Icon className="h-6 w-6 text-primary" strokeWidth={1.5} />
+              <div 
+                key={index} 
+                className="relative overflow-hidden text-center group p-6 rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-amber-500/5 to-yellow-400/5"
+              >
+                {/* Animated background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                <div className="relative inline-flex items-center justify-center w-12 h-12 rounded-xl 
+                                bg-gradient-to-br from-primary to-amber-500 mb-3 transition-transform duration-300
+                                group-hover:scale-110 shadow-md">
+                  <Icon className="h-5 w-5 text-white" strokeWidth={2} />
                 </div>
-                <div className="text-xs font-medium text-primary mb-1">Step {index + 1}</div>
-                <h3 className="text-base font-semibold text-foreground mb-1">{step.title}</h3>
-                <p className="text-muted-foreground text-sm">{step.description}</p>
+                <div className="relative text-xs font-medium text-primary mb-1">Step {index + 1}</div>
+                <h3 className="relative text-base font-semibold text-foreground mb-1">{step.title}</h3>
+                <p className="relative text-muted-foreground text-sm">{step.description}</p>
               </div>
             );
           })}
         </div>
 
         <div className="text-center">
-          <Button variant="outline" asChild>
+          <Button 
+            variant="outline" 
+            asChild
+            className="border-primary/30 hover:bg-gradient-to-r hover:from-primary/10 hover:to-amber-500/10"
+          >
             <Link to="/how-it-works" className="gap-2">
               See how it works
               <ArrowRight className="h-4 w-4" />

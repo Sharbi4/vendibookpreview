@@ -58,21 +58,24 @@ const PaymentsSection = () => {
         {/* Two Column Layout */}
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-20">
           {/* Left: Payment Security */}
-          <div className="bg-card rounded-2xl p-8 lg:p-10 border border-border/50 shadow-xl">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-primary/10 rounded-xl">
-                <Lock className="h-6 w-6 text-primary" />
+          <div className="relative overflow-hidden bg-card rounded-2xl p-8 lg:p-10 border-2 border-primary/30 shadow-xl bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+            {/* Animated background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+            
+            <div className="relative flex items-center gap-3 mb-6">
+              <div className="p-3 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md">
+                <Lock className="h-6 w-6 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-foreground">How Transactions Work</h3>
             </div>
             
-            <p className="text-muted-foreground mb-8 leading-relaxed">
+            <p className="relative text-muted-foreground mb-8 leading-relaxed">
               When you book on VendiBook, your payment is held securely in escrow. 
               Funds are only released to the host after your booking is complete—giving 
               both parties complete peace of mind.
             </p>
 
-            <ul className="space-y-4">
+            <ul className="relative space-y-4">
               {securityFeatures.map((feature, index) => (
                 <li key={index} className="flex items-start gap-3">
                   <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
@@ -81,7 +84,7 @@ const PaymentsSection = () => {
               ))}
             </ul>
 
-            <div className="mt-8 pt-6 border-t border-border">
+            <div className="relative mt-8 pt-6 border-t border-border/50">
               <div className="flex items-center gap-4">
                 <img 
                   src="/stripe-badge.png" 
@@ -105,10 +108,10 @@ const PaymentsSection = () => {
               {values.map((value, index) => (
                 <div 
                   key={index} 
-                  className="flex gap-4 p-6 rounded-xl bg-card border border-border/50 hover:shadow-lg transition-all duration-300"
+                  className="relative overflow-hidden flex gap-4 p-6 rounded-xl bg-card border-2 border-primary/20 hover:border-primary/30 hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-primary/5 via-transparent to-amber-500/5"
                 >
-                  <div className="p-3 bg-primary/10 rounded-xl h-fit">
-                    <value.icon className="h-6 w-6 text-primary" />
+                  <div className="p-3 bg-gradient-to-br from-primary to-amber-500 rounded-xl h-fit shadow-md">
+                    <value.icon className="h-6 w-6 text-white" />
                   </div>
                   <div>
                     <h4 className="font-semibold text-foreground text-lg mb-2">{value.title}</h4>

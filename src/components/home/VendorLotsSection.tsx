@@ -62,10 +62,10 @@ const VendorLotsSection = () => {
             {benefits.map((benefit, index) => (
               <div 
                 key={index}
-                className="flex gap-4 p-6 bg-card rounded-xl border border-border/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+                className="relative overflow-hidden flex gap-4 p-6 bg-card rounded-xl border-2 border-primary/20 hover:border-primary/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-gradient-to-br from-primary/5 via-transparent to-amber-500/5"
               >
-                <div className="p-3 bg-primary/10 rounded-xl h-fit flex-shrink-0">
-                  <benefit.icon className="h-6 w-6 text-primary" />
+                <div className="p-3 bg-gradient-to-br from-primary to-amber-500 rounded-xl h-fit flex-shrink-0 shadow-md">
+                  <benefit.icon className="h-6 w-6 text-white" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground text-lg mb-2">{benefit.title}</h3>
@@ -76,16 +76,19 @@ const VendorLotsSection = () => {
           </div>
 
           {/* Right: CTA Card */}
-          <div className="bg-card rounded-2xl p-8 lg:p-10 border border-border shadow-xl">
-            <h3 className="text-2xl font-bold text-foreground mb-4">
+          <div className="relative overflow-hidden bg-card rounded-2xl p-8 lg:p-10 border-2 border-primary/30 shadow-xl bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+            {/* Animated background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+            
+            <h3 className="relative text-2xl font-bold text-foreground mb-4">
               Start Hosting Today
             </h3>
-            <p className="text-muted-foreground mb-6">
+            <p className="relative text-muted-foreground mb-6">
               Join hundreds of lot owners who are already earning with VendiBook. 
               Listing is free—you only pay a small commission when you get booked.
             </p>
 
-            <ul className="space-y-3 mb-8">
+            <ul className="relative space-y-3 mb-8">
               {features.map((feature, index) => (
                 <li key={index} className="flex items-center gap-3">
                   <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
@@ -94,7 +97,7 @@ const VendorLotsSection = () => {
               ))}
             </ul>
 
-            <div className="space-y-4">
+            <div className="relative space-y-4">
               <Button 
                 variant="gradient-premium" 
                 size="lg" 
@@ -107,14 +110,14 @@ const VendorLotsSection = () => {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="w-full"
+                className="w-full border-primary/30 hover:bg-gradient-to-r hover:from-primary/10 hover:to-amber-500/10"
                 onClick={() => navigate('/vendor-lots')}
               >
                 Browse Vendor Lots
               </Button>
             </div>
 
-            <p className="text-xs text-muted-foreground text-center mt-6">
+            <p className="relative text-xs text-muted-foreground text-center mt-6">
               No credit card required. Get started in under 5 minutes.
             </p>
           </div>
