@@ -1,8 +1,13 @@
 import { format } from 'date-fns';
-import { Calendar, MapPin, Truck, ShieldCheck, Loader2, Lock, CheckCircle2, ArrowRight, RotateCcw, HeadphonesIcon, ChevronDown } from 'lucide-react';
+import { Calendar, MapPin, Truck, ShieldCheck, Loader2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { RENTAL_RENTER_FEE_PERCENT } from '@/lib/commissions';
+import { 
+  WhatsIncluded, 
+  WhatHappensNext, 
+  getBookingInstantSteps, 
+  getBookingRequestSteps 
+} from '@/components/shared';
 import type { FulfillmentSelection } from '../BookingWizard';
 
 interface BookingStepReviewProps {
@@ -126,79 +131,13 @@ const BookingStepReview = ({
         </div>
       </div>
 
-      {/* What's Included - Collapsible */}
-      <Collapsible className="border border-border rounded-xl overflow-hidden">
-        <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/30 transition-colors group">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">What's Included</span>
-          </div>
-          <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
-        </CollapsibleTrigger>
-        <CollapsibleContent className="px-4 pb-4">
-          <div className="space-y-3 pt-2">
-            <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
-                <Lock className="h-3.5 w-3.5 text-emerald-600" />
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-foreground">Secure Payment</h4>
-                <p className="text-xs text-muted-foreground">Protected by Stripe encryption</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-foreground">Booking Protection</h4>
-                <p className="text-xs text-muted-foreground">Full refund if host cancels</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
-                <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-foreground">Dispute Resolution</h4>
-                <p className="text-xs text-muted-foreground">We mediate any issues</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
-                <HeadphonesIcon className="h-3.5 w-3.5 text-purple-600" />
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-foreground">7-Day Support</h4>
-                <p className="text-xs text-muted-foreground">Real humans available to help</p>
-              </div>
-            </div>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+      {/* What's Included */}
+      <WhatsIncluded mode="booking" />
 
       {/* What happens next */}
-      <div className="p-4 bg-muted/50 rounded-xl">
-        <h4 className="font-semibold text-foreground text-sm mb-3 flex items-center gap-2">
-          <ArrowRight className="h-4 w-4 text-primary" />
-          What happens next?
-        </h4>
-        <div className="space-y-2 text-sm text-muted-foreground">
-          {instantBook ? (
-            <>
-              <p>1. Complete payment securely via Stripe</p>
-              <p>2. Receive instant booking confirmation</p>
-              <p>3. Get pickup/delivery details via messages</p>
-            </>
-          ) : (
-            <>
-              <p>1. Your request goes to the host for review</p>
-              <p>2. Host responds within 24-48 hours</p>
-              <p>3. If approved, you'll be prompted to pay</p>
-            </>
-          )}
-        </div>
-      </div>
+      <WhatHappensNext
+        steps={instantBook ? getBookingInstantSteps() : getBookingRequestSteps()}
+      />
 
       {/* Actions */}
       <div className="flex gap-3">
