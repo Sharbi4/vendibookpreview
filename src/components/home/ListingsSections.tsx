@@ -93,8 +93,8 @@ const ListingsSections = () => {
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-emerald-500/10 rounded-lg">
-                  <DollarSign className="h-5 w-5 text-emerald-600" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-md">
+                  <DollarSign className="h-5 w-5 text-white" />
                 </div>
                 <h2 className="text-xl font-bold text-foreground">For Sale</h2>
                 <span className="text-sm text-muted-foreground">
@@ -129,8 +129,8 @@ const ListingsSections = () => {
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Key className="h-5 w-5 text-primary" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-md">
+                  <Key className="h-5 w-5 text-white" />
                 </div>
                 <h2 className="text-xl font-bold text-foreground">For Rent</h2>
                 <span className="text-sm text-muted-foreground">
