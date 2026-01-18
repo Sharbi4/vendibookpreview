@@ -8,7 +8,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 // Lazy load below-the-fold components for faster initial load
 const FeaturedListings = lazy(() => import('@/components/home/FeaturedListings'));
-const HowItWorks = lazy(() => import('@/components/home/HowItWorks'));
 const SupplySection = lazy(() => import('@/components/home/SupplySection'));
 const ReviewsSection = lazy(() => import('@/components/home/ReviewsSection'));
 const CategoryCarousels = lazy(() => import('@/components/home/CategoryCarousels'));
@@ -52,10 +51,7 @@ const Index = () => {
           {/* 2. Listings Grid (Demand) */}
           <FeaturedListings />
           
-          {/* 3. How It Works (4 steps, lightweight) */}
-          <HowItWorks />
-          
-          {/* 4. Supply Section (Owners/Hosts + AI tools callout) */}
+          {/* 3. Supply Section (Owners/Hosts + AI tools callout) */}
           <SupplySection />
           
           {/* 5. Social Proof */}
