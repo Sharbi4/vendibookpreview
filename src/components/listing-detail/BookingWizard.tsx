@@ -288,7 +288,9 @@ const BookingWizard = ({
   };
 
   return (
-    <div className="bg-card border-2 border-border rounded-2xl shadow-xl overflow-hidden">
+    <div className="relative overflow-hidden bg-gradient-to-br from-background to-primary/5 border-2 border-primary/20 rounded-2xl shadow-xl">
+      {/* Subtle animated background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-amber-500/5 to-yellow-400/5 opacity-50" />
       {/* Premium Wizard Header */}
       <WizardHeader
         mode="booking"
