@@ -268,6 +268,30 @@ export const AvailabilityStep: React.FC<AvailabilityStepProps> = ({
 
         {/* Quick Actions */}
         <div className="flex flex-wrap gap-2 mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const today = startOfDay(new Date());
+              const endDate = addDays(today, 6);
+              blockDateRange(today, endDate, 'Blocked for 7 days');
+            }}
+          >
+            Block next 7 days
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const today = startOfDay(new Date());
+              const endDate = addDays(today, 29);
+              blockDateRange(today, endDate, 'Blocked for 30 days');
+            }}
+          >
+            Block next 30 days
+          </Button>
+
           <Popover open={showBlockUntilDialog} onOpenChange={setShowBlockUntilDialog}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="gap-2">
