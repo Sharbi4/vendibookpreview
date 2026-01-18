@@ -15,7 +15,7 @@ import Footer from '@/components/layout/Footer';
 import { 
   ShieldCheck, Loader2, MapPin, Truck, Calculator, AlertCircle, 
   CreditCard, Banknote, Check, ArrowLeft, Package, Clock, 
-  DollarSign, Handshake, CheckCircle2, AlertTriangle, Pencil
+  DollarSign, Handshake, CheckCircle2, AlertTriangle, Pencil, MessageCircle
 } from 'lucide-react';
 import { CheckoutOverlay } from '@/components/checkout';
 import { FreightInfoCard } from '@/components/freight';
@@ -1167,6 +1167,43 @@ const SaleCheckout = () => {
                       <li>• You'll receive details on pickup/delivery coordination</li>
                       <li>• After you both confirm, funds are released</li>
                     </ul>
+                  </div>
+
+                  {/* Questions CTA */}
+                  <div className="border border-border rounded-xl p-4 mb-6 bg-muted/20">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <MessageCircle className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-medium text-foreground mb-1">
+                          Have questions before you buy?
+                        </h3>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          Our team is here to help you feel confident about your purchase on Vendibook.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.zE) {
+                              try {
+                                window.zE('messenger', 'show');
+                                window.zE('messenger', 'open');
+                              } catch (error) {
+                                // Fallback: navigate to help center
+                                window.open('/help', '_blank');
+                              }
+                            } else {
+                              window.open('/help', '_blank');
+                            }
+                          }}
+                          className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 font-medium transition-colors"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                          Chat with Support
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Submit */}
