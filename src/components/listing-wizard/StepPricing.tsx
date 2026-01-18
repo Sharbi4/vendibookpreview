@@ -593,77 +593,59 @@ export const StepPricing: React.FC<StepPricingProps> = ({
               </p>
             </div>
 
-            {/* Payout Estimate for Sales (Pod 6) */}
-            {salePayoutEstimate && (
-              <div className="bg-emerald-50 dark:bg-emerald-950/40 rounded-xl p-4 border border-emerald-200 dark:border-emerald-800 max-w-md">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg">
-                    <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            {/* Payout Estimate for Sales - Only show when card payment is enabled */}
+            {salePayoutEstimate && formData.accept_card_payment && (
+              <div className="rounded-lg p-3 border border-border/60 bg-muted/30 max-w-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <Wallet className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-foreground">
+                    {formData.vendibook_freight_enabled && formData.freight_payer === 'seller' 
+                      ? 'Payout Estimate (Free Shipping)' 
+                      : 'Estimated Payout'}
+                  </span>
+                </div>
+                
+                <div className="space-y-1 text-sm">
+                  {/* Item price */}
+                  <div className="flex items-center justify-between text-muted-foreground">
+                    <span>Item price</span>
+                    <span>{formatCurrency(salePayoutEstimate.salePrice)}</span>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h4 className="font-medium text-foreground">
-                        {formData.vendibook_freight_enabled && formData.freight_payer === 'seller' 
-                          ? 'Seller Payout Estimate (Free Shipping)' 
-                          : 'Estimated Payout'}
-                      </h4>
-                      {formData.vendibook_freight_enabled && formData.freight_payer === 'seller' && (
+                  
+                  {/* Platform fee - small and transparent */}
+                  <div className="flex items-center justify-between text-xs text-muted-foreground/70">
+                    <span>Platform fee ({SALE_SELLER_FEE_PERCENT}%)</span>
+                    <span>-{formatCurrency(salePayoutEstimate.sellerFee)}</span>
+                  </div>
+                  
+                  {/* Freight deduction (seller-paid) */}
+                  {salePayoutEstimate.freightDeduction > 0 && (
+                    <div className="flex items-center justify-between text-xs text-muted-foreground/70">
+                      <span className="flex items-center gap-1">
+                        Freight (seller-paid)
                         <InfoTooltip
-                          content="Freight is deducted because the seller is covering shipping. Commission is calculated per platform rules."
+                          content="Free shipping is a seller-paid incentive. Freight is deducted from your earnings."
+                          iconClassName="h-3 w-3"
                         />
-                      )}
-                    </div>
-                    
-                    {/* Item price */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Item price:</span>
-                      <span className="text-sm text-foreground">
-                        {formatCurrency(salePayoutEstimate.salePrice)}
                       </span>
+                      <span>-{formatCurrency(salePayoutEstimate.freightDeduction)}</span>
                     </div>
-                    
-                    {/* Platform commission */}
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-sm text-muted-foreground">Platform commission:</span>
-                      <span className="text-sm text-destructive">
-                        -{formatCurrency(salePayoutEstimate.sellerFee)}
-                      </span>
-                    </div>
-                    
-                    {/* Freight deduction (seller-paid) */}
-                    {salePayoutEstimate.freightDeduction > 0 && (
-                      <div className="flex items-center justify-between mt-1">
-                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                          Freight (seller-paid):
-                          <InfoTooltip
-                            content="Free shipping is a seller-paid incentive. Vendibook still facilitates the shipment; the freight amount is deducted from the seller's earnings."
-                            iconClassName="h-3 w-3"
-                          />
-                        </span>
-                        <span className="text-sm text-destructive">
-                          -{formatCurrency(salePayoutEstimate.freightDeduction)}
-                        </span>
-                      </div>
-                    )}
-                    
-                    {/* Estimated payout */}
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-emerald-300/50 dark:border-emerald-700/50">
-                      <span className="text-sm font-medium text-foreground">Estimated payout:</span>
-                      <span className="font-semibold text-emerald-600 dark:text-emerald-400 text-lg">
-                        {formatCurrency(salePayoutEstimate.sellerReceives)}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-start gap-1.5 mt-3 text-xs text-muted-foreground">
-                      <Info className="w-3 h-3 mt-0.5 shrink-0" />
-                      <span>
-                        Platform fee is {SALE_SELLER_FEE_PERCENT}% of the sale price
-                        {formData.vendibook_freight_enabled && formData.freight_payer === 'seller' && 
-                          '. Freight estimate shown is approximate.'}
-                      </span>
-                    </div>
+                  )}
+                  
+                  {/* Estimated payout */}
+                  <div className="flex items-center justify-between pt-1.5 mt-1 border-t border-border/50">
+                    <span className="text-foreground font-medium">You receive</span>
+                    <span className="font-semibold text-primary">
+                      {formatCurrency(salePayoutEstimate.sellerReceives)}
+                    </span>
                   </div>
                 </div>
+                
+                {formData.vendibook_freight_enabled && formData.freight_payer === 'seller' && (
+                  <p className="text-[10px] text-muted-foreground/60 mt-2">
+                    Freight estimate is approximate
+                  </p>
+                )}
               </div>
             )}
           </div>
