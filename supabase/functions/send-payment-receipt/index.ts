@@ -144,7 +144,9 @@ const handler = async (req: Request): Promise<Response> => {
             
             <!-- Header -->
             <div style="text-align: center; margin-bottom: 32px;">
-              <img src="${logoUrl}" alt="VendiBook" style="height: 48px; margin-bottom: 8px;" />
+              <div style="display: inline-block; background-color: #ffffff; padding: 16px 24px; border-radius: 12px; margin-bottom: 8px;">
+                <img src="${logoUrl}" alt="VendiBook" style="height: 96px;" />
+              </div>
               <p style="color: #6B7280; font-size: 13px; margin: 0;">Your Mobile Food Business Marketplace</p>
             </div>
             
