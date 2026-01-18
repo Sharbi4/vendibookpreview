@@ -1826,27 +1826,39 @@ export const PublishWizard: React.FC = () => {
                   </div>
 
                   {isOnboardingComplete ? (
-                    <div className="p-4 rounded-lg border border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                        <Check className="w-5 h-5 text-emerald-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-emerald-800 dark:text-emerald-200">Stripe connected</p>
-                        <p className="text-sm text-emerald-600 dark:text-emerald-400">You're ready to receive payments</p>
+                    <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+                      <div className="relative flex items-center gap-3">
+                        <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md flex items-center justify-center">
+                          <Check className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground">Stripe connected</p>
+                          <p className="text-sm text-muted-foreground">You're ready to receive payments</p>
+                        </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="p-6 rounded-xl border border-border bg-muted/30 text-center">
-                      <CreditCard className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                      <h3 className="font-semibold text-foreground mb-2">Set up payouts</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Connect your Stripe account to get paid when you receive bookings or sales.
-                      </p>
-                      <Button onClick={handleStripeConnect} disabled={isConnecting}>
-                        {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                        Connect Stripe
-                        <ExternalLink className="w-4 h-4 ml-2" />
-                      </Button>
+                    <div className="relative overflow-hidden rounded-xl p-6 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10 text-center">
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+                      <div className="relative">
+                        <div className="w-14 h-14 mx-auto mb-4 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md flex items-center justify-center">
+                          <CreditCard className="w-7 h-7 text-white" />
+                        </div>
+                        <h3 className="font-semibold text-foreground mb-2">Set up payouts</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Connect your Stripe account to get paid when you receive bookings or sales.
+                        </p>
+                        <Button 
+                          onClick={handleStripeConnect} 
+                          disabled={isConnecting}
+                          className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
+                        >
+                          {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                          Connect Stripe
+                          <ExternalLink className="w-4 h-4 ml-2" />
+                        </Button>
+                      </div>
                     </div>
                   )}
 
