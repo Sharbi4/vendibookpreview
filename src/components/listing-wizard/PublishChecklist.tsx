@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Check, Circle, Camera, DollarSign, Calendar, FileText, CreditCard, MapPin, ChevronRight, Clock, Sparkles } from 'lucide-react';
+import { Check, Circle, Camera, DollarSign, Calendar, FileText, CreditCard, MapPin, ChevronRight, Clock, Sparkles, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -228,6 +228,8 @@ export const createChecklistItems = (
     descriptionLength?: number;
     locationSet?: string;
     requiresStripe?: boolean; // true if card payment is enabled
+    hasDocuments?: boolean; // true if documents step was configured
+    documentsCount?: number; // number of required documents set
   },
   currentStep: string
 ): ChecklistItem[] => {
@@ -318,6 +320,21 @@ export const createChecklistItems = (
       benefit: 'Clear logistics build renter confidence',
     },
   );
+
+  // Add documents step for rental listings
+  if (formState.isRental) {
+    items.push({
+      id: 'documents',
+      label: 'Required Documents',
+      icon: <Shield className="w-4 h-4" />,
+      completed: formState.hasDocuments ?? true, // Optional step, defaults to complete
+      required: false,
+      current: currentStep === 'documents',
+      statusHint: formState.documentsCount ? `${formState.documentsCount} required` : 'None set',
+      timeEstimate: '~2 min',
+      benefit: 'Ensure renters have proper credentials',
+    });
+  }
 
   // Only add Stripe requirement if card payment is enabled
   const stripeRequired = formState.requiresStripe !== false;

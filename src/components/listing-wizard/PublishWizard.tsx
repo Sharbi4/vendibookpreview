@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, Sparkles, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, Sparkles, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle, Shield, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,6 +22,19 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { supabase } from '@/integrations/supabase/client';
 import { CATEGORY_LABELS, ListingCategory, FreightPayer, AMENITIES_BY_CATEGORY, FREIGHT_CATEGORY_LABELS, FreightCategory, FulfillmentType, isMobileAsset, isStaticLocation as isStaticLocationFn, MODE_LABELS } from '@/types/listing';
+import {
+  DocumentType,
+  DocumentDeadlineType,
+  RequiredDocumentSetting,
+  DOCUMENT_TYPE_LABELS,
+  DOCUMENT_TYPE_DESCRIPTIONS,
+  DEADLINE_TYPE_LABELS,
+  DEADLINE_TYPE_DESCRIPTIONS,
+  DOCUMENT_GROUPS,
+  DEFAULT_DOCUMENTS_BY_CATEGORY,
+} from '@/types/documents';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { LocationSearchInput } from '@/components/search/LocationSearchInput';
 import { AvailabilityStep } from './AvailabilityStep';
 import { PublishChecklist, createChecklistItems } from './PublishChecklist';
@@ -41,7 +54,7 @@ import {
   SALE_SELLER_FEE_PERCENT,
 } from '@/lib/commissions';
 
-type PublishStep = 'photos' | 'pricing' | 'details' | 'location' | 'availability' | 'rules' | 'stripe' | 'review';
+type PublishStep = 'photos' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'stripe' | 'review';
 
 interface ListingData {
   id: string;
@@ -174,6 +187,12 @@ export const PublishWizard: React.FC = () => {
   const [availableFrom, setAvailableFrom] = useState<string | null>(null);
   const [availableTo, setAvailableTo] = useState<string | null>(null);
 
+  // Required documents step state (for rentals)
+  const [requiredDocuments, setRequiredDocuments] = useState<RequiredDocumentSetting[]>([]);
+  const [globalDeadline, setGlobalDeadline] = useState<DocumentDeadlineType>('before_approval');
+  const [deadlineHours, setDeadlineHours] = useState<number>(48);
+  const [openDocGroups, setOpenDocGroups] = useState<string[]>(['Identity & Legal']);
+
   useEffect(() => {
     const fetchListing = async () => {
       if (!listingId) return;
@@ -235,6 +254,45 @@ export const PublishWizard: React.FC = () => {
       // Availability fields
       setAvailableFrom(data.available_from || null);
       setAvailableTo(data.available_to || null);
+
+      // Load required documents for rental listings
+      if (data.mode === 'rent') {
+        const { data: docsData } = await supabase
+          .from('listing_required_documents')
+          .select('*')
+          .eq('listing_id', listingId);
+
+        if (docsData && docsData.length > 0) {
+          // Map existing documents
+          const loadedDocs: RequiredDocumentSetting[] = docsData.map(d => ({
+            document_type: d.document_type as DocumentType,
+            is_required: d.is_required,
+            deadline_type: d.deadline_type as DocumentDeadlineType,
+            deadline_offset_hours: d.deadline_offset_hours || undefined,
+            description: d.description || undefined,
+          }));
+          setRequiredDocuments(loadedDocs);
+          // Set global deadline from first document
+          if (docsData[0]) {
+            setGlobalDeadline(docsData[0].deadline_type as DocumentDeadlineType);
+            if (docsData[0].deadline_offset_hours) {
+              setDeadlineHours(docsData[0].deadline_offset_hours);
+            }
+          }
+        } else {
+          // Initialize with defaults based on category
+          const defaults = DEFAULT_DOCUMENTS_BY_CATEGORY[data.category as ListingCategory] || [];
+          const allDocTypes: DocumentType[] = DOCUMENT_GROUPS.flatMap(g => g.documents);
+          const initialDocs: RequiredDocumentSetting[] = allDocTypes.map(docType => ({
+            document_type: docType,
+            is_required: defaults.includes(docType),
+            deadline_type: 'before_approval' as DocumentDeadlineType,
+            deadline_offset_hours: undefined,
+          }));
+          setRequiredDocuments(initialDocs);
+        }
+      }
+
       setIsLoading(false);
     };
 
@@ -615,6 +673,34 @@ export const PublishWizard: React.FC = () => {
           available_from: availableFrom || null,
           available_to: availableTo || null,
         };
+      } else if (step === 'documents') {
+        // Save required documents to the database
+        const enabledDocs = requiredDocuments.filter(d => d.is_required);
+        
+        // Delete existing documents first
+        await supabase
+          .from('listing_required_documents')
+          .delete()
+          .eq('listing_id', listing.id);
+
+        // Insert new documents
+        if (enabledDocs.length > 0) {
+          const docsToInsert = enabledDocs.map(doc => ({
+            listing_id: listing.id,
+            document_type: doc.document_type,
+            is_required: true,
+            deadline_type: doc.deadline_type,
+            deadline_offset_hours: doc.deadline_offset_hours || null,
+            description: doc.description || null,
+          }));
+
+          const { error: insertError } = await supabase
+            .from('listing_required_documents')
+            .insert(docsToInsert);
+
+          if (insertError) throw insertError;
+        }
+        // No listing update needed, just proceed to next step
       }
 
       if (Object.keys(updateData).length > 0) {
@@ -629,12 +715,12 @@ export const PublishWizard: React.FC = () => {
         setListing(prev => prev ? { ...prev, ...updateData } : null);
       }
 
-      // Move to next step - rental listings have availability step after pricing
+      // Move to next step - rental listings have availability and documents steps
       // Skip stripe step if card payment is not enabled (cash-only sales)
       const isRentalListing = listing.mode === 'rent';
       const skipStripeStep = listing.mode === 'sale' && !acceptCardPayment;
       const baseSteps: PublishStep[] = isRentalListing
-        ? ['photos', 'pricing', 'availability', 'details', 'location', 'stripe', 'review']
+        ? ['photos', 'pricing', 'availability', 'details', 'location', 'documents', 'stripe', 'review']
         : ['photos', 'pricing', 'details', 'location', 'stripe', 'review'];
       const steps = skipStripeStep ? baseSteps.filter(s => s !== 'stripe') : baseSteps;
       const currentIndex = steps.indexOf(step);
@@ -699,6 +785,7 @@ export const PublishWizard: React.FC = () => {
   const totalPhotoCount = existingImages.length + images.length;
   // Stripe is only required if card payment is enabled (not cash-only)
   const requiresStripe = acceptCardPayment;
+  const enabledDocsCount = requiredDocuments.filter(d => d.is_required).length;
   const checklistState = {
     hasPhotos: totalPhotoCount >= 3,
     hasPricing: listing?.mode === 'sale' ? !!priceSale : !!priceDaily,
@@ -713,6 +800,8 @@ export const PublishWizard: React.FC = () => {
     isRental: listing?.mode === 'rent',
     photoCount: totalPhotoCount,
     requiresStripe, // Pass whether Stripe is required
+    hasDocuments: true, // Documents step is optional, always "complete"
+    documentsCount: enabledDocsCount,
   };
 
   const checklistItems = createChecklistItems(checklistState, step);
@@ -1931,6 +2020,195 @@ export const PublishWizard: React.FC = () => {
                 </div>
               )}
 
+              {/* Step: Required Documents (Rental only) */}
+              {step === 'documents' && listing.mode === 'rent' && (
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Shield className="w-5 h-5 text-primary" />
+                      <h2 className="text-xl font-bold text-foreground">Required Documents</h2>
+                    </div>
+                    <p className="text-muted-foreground">
+                      Specify which documents renters must provide and when they must be submitted.
+                    </p>
+                  </div>
+
+                  {/* Info Banner */}
+                  <div className="bg-card rounded-xl p-4 border border-border">
+                    <div className="flex items-start gap-3">
+                      <Info className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+                      <div className="text-sm">
+                        <p className="text-foreground font-medium mb-1">
+                          {enabledDocsCount === 0
+                            ? 'No documents required'
+                            : `${enabledDocsCount} document${enabledDocsCount > 1 ? 's' : ''} required`}
+                        </p>
+                        <p className="text-muted-foreground">
+                          These documents are required from renters to complete or confirm a booking.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Deadline Selection */}
+                  <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-primary" />
+                      <h4 className="font-medium">When are documents required?</h4>
+                    </div>
+
+                    <RadioGroup
+                      value={globalDeadline}
+                      onValueChange={(value) => {
+                        const deadline = value as DocumentDeadlineType;
+                        setGlobalDeadline(deadline);
+                        setRequiredDocuments(prev =>
+                          prev.map(d => ({
+                            ...d,
+                            deadline_type: deadline,
+                            deadline_offset_hours: deadline === 'after_approval_deadline' ? deadlineHours : undefined,
+                          }))
+                        );
+                      }}
+                      className="space-y-3"
+                    >
+                      {(Object.keys(DEADLINE_TYPE_LABELS) as DocumentDeadlineType[]).map((deadline) => (
+                        <div key={deadline} className="flex items-start gap-3">
+                          <RadioGroupItem value={deadline} id={deadline} className="mt-1" />
+                          <div className="flex-1">
+                            <Label htmlFor={deadline} className="font-medium cursor-pointer">
+                              {DEADLINE_TYPE_LABELS[deadline]}
+                            </Label>
+                            <p className="text-sm text-muted-foreground">
+                              {DEADLINE_TYPE_DESCRIPTIONS[deadline]}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </RadioGroup>
+
+                    {globalDeadline === 'after_approval_deadline' && (
+                      <div className="flex items-center gap-3 pt-2 pl-6">
+                        <Label htmlFor="deadline_hours" className="text-sm whitespace-nowrap">
+                          Submit at least
+                        </Label>
+                        <Input
+                          id="deadline_hours"
+                          type="number"
+                          min="1"
+                          max="168"
+                          value={deadlineHours}
+                          onChange={(e) => {
+                            const hours = parseInt(e.target.value) || 48;
+                            setDeadlineHours(hours);
+                            setRequiredDocuments(prev =>
+                              prev.map(d => ({
+                                ...d,
+                                deadline_offset_hours: hours,
+                              }))
+                            );
+                          }}
+                          className="w-20"
+                        />
+                        <span className="text-sm text-muted-foreground">hours before booking start</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Document Groups */}
+                  <div className="space-y-3">
+                    {DOCUMENT_GROUPS.map((group) => {
+                      const groupDocs = requiredDocuments.filter(d => 
+                        group.documents.includes(d.document_type)
+                      );
+                      const enabledInGroup = groupDocs.filter(d => d.is_required).length;
+                      const isOpen = openDocGroups.includes(group.label);
+
+                      return (
+                        <Collapsible
+                          key={group.label}
+                          open={isOpen}
+                          onOpenChange={() => {
+                            setOpenDocGroups(prev =>
+                              prev.includes(group.label)
+                                ? prev.filter(g => g !== group.label)
+                                : [...prev, group.label]
+                            );
+                          }}
+                        >
+                          <CollapsibleTrigger className="w-full">
+                            <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors">
+                              <div className="flex items-center gap-3">
+                                <FileText className="w-4 h-4 text-muted-foreground" />
+                                <span className="font-medium text-foreground">{group.label}</span>
+                                {enabledInGroup > 0 && (
+                                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                                    {enabledInGroup} selected
+                                  </span>
+                                )}
+                              </div>
+                              {isOpen ? (
+                                <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                              )}
+                            </div>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <div className="mt-2 space-y-2 pl-4">
+                              {group.documents.map((docType) => {
+                                const doc = requiredDocuments.find(d => d.document_type === docType);
+                                return (
+                                  <div
+                                    key={docType}
+                                    className={cn(
+                                      "flex items-start gap-3 p-3 rounded-lg border transition-colors",
+                                      doc?.is_required
+                                        ? "border-primary/30 bg-primary/5"
+                                        : "border-border bg-card"
+                                    )}
+                                  >
+                                    <Switch
+                                      checked={doc?.is_required || false}
+                                      onCheckedChange={() => {
+                                        setRequiredDocuments(prev =>
+                                          prev.map(d =>
+                                            d.document_type === docType
+                                              ? { ...d, is_required: !d.is_required }
+                                              : d
+                                          )
+                                        );
+                                      }}
+                                    />
+                                    <div className="flex-1">
+                                      <Label className="font-medium cursor-pointer">
+                                        {DOCUMENT_TYPE_LABELS[docType]}
+                                      </Label>
+                                      <p className="text-sm text-muted-foreground">
+                                        {DOCUMENT_TYPE_DESCRIPTIONS[docType]}
+                                      </p>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => setStep('location')}>Back</Button>
+                    <Button onClick={saveStep} disabled={isSaving}>
+                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      Continue
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Step: Stripe - Only shown if card payment is enabled */}
               {step === 'stripe' && (
                 <div className="space-y-6">
@@ -1995,7 +2273,7 @@ export const PublishWizard: React.FC = () => {
                   )}
 
                   <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setStep('location')}>Back</Button>
+                    <Button variant="outline" onClick={() => setStep(listing.mode === 'rent' ? 'documents' : 'location')}>Back</Button>
                     <Button 
                       onClick={() => setStep('review')} 
                       disabled={acceptCardPayment && !isOnboardingComplete}
