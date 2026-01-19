@@ -2943,7 +2943,96 @@ When you accept an offer, the buyer is prompted to complete payment.
 Once buyer confirms receipt, funds are released to your account (minus platform fee).`
       }
     ],
-    relatedArticles: ['pricing-guidance', 'closing-shipping']
+    relatedArticles: ['pricing-guidance', 'closing-shipping', 'sell-food-truck-online']
+  },
+  {
+    slug: 'sell-food-truck-online',
+    title: 'How to Sell Your Food Truck Online',
+    description: 'A step-by-step guide to listing and selling your food truck on Vendibook\'s marketplace.',
+    category: 'Buying & Selling',
+    categorySlug: 'buying-selling',
+    featured: true,
+    sections: [
+      {
+        id: 'overview',
+        title: 'Why Sell on Vendibook?',
+        content: `Vendibook is built specifically for mobile food assets. Unlike generic marketplaces, we connect you with serious buyers who are actively looking for food trucks, trailers, and commercial kitchen equipment.
+
+**What you get:**
+- Verified buyers who reduce tire-kickers
+- Secure checkout with escrow-style protection
+- Dashboard to manage inquiries and confirmations
+- Optional freight coordination
+- 24/7 support
+
+Ready to get started? [List your food truck for sale →](/sell-my-food-truck)`
+      },
+      {
+        id: 'pricing',
+        title: 'How to Price Your Food Truck',
+        content: `Pricing correctly is key to selling faster. Use our free tools to find the right price:
+
+**Pricing Calculator**
+Get a quick estimate based on category, condition, and market signals. [Open the Pricing Calculator →](/pricing-calculator)
+
+**PricePilot (AI Suggestions)**
+Let our AI scan comparable listings and suggest a competitive price range with confidence cues. [Get AI Pricing Suggestions →](/tools/pricepilot)
+
+**Tips for Pricing:**
+- Research similar trucks sold recently
+- Factor in age, mileage, equipment, and condition
+- Be realistic—overpricing leads to longer listing times
+- You can always adjust your price after listing`
+      },
+      {
+        id: 'listing-steps',
+        title: 'Creating Your Listing',
+        content: `**Step 1: Gather Photos**
+Take at least 10 high-quality photos showing:
+- All exterior angles
+- Interior cooking area
+- Each piece of equipment
+- Any wear or damage (honesty builds trust)
+
+**Step 2: Write Your Description**
+Include year, make, model, dimensions, and a complete equipment list. Mention recent maintenance or upgrades.
+
+**Step 3: Set Your Terms**
+Choose pickup only, local delivery, or freight options. Set your asking price.
+
+**Step 4: Publish**
+Review your listing and go live. Your truck will appear in search results immediately.
+
+[Start your listing now →](/list?mode=sale)`
+      },
+      {
+        id: 'after-checkout',
+        title: 'What Happens After a Buyer Checks Out?',
+        content: `When a buyer completes checkout:
+
+1. You'll see the sale in your dashboard
+2. Click "Confirm Sale" to lock in next steps
+3. Coordinate pickup or freight based on what was selected
+4. Funds are released after you confirm the handoff
+
+**Important:** Never release assets before confirming the sale in your dashboard. This protects both you and the buyer.`
+      },
+      {
+        id: 'fees',
+        title: 'Fees and Payouts',
+        content: `**Seller Commission:** 12.9% of the sale price
+
+Buyers don't pay a platform fee (though shipping/freight may apply if selected).
+
+**Payouts:**
+- Processed via Stripe Connect
+- Funds released after transaction confirmation
+- Deposited to your linked bank account
+
+[Learn more about selling →](/sell-my-food-truck)`
+      }
+    ],
+    relatedArticles: ['selling-end-to-end', 'pricing-guidance', 'closing-shipping']
   },
   {
     slug: 'pricing-guidance',
