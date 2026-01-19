@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Check, Circle, Camera, DollarSign, Calendar, FileText, CreditCard, MapPin, ChevronRight, Clock, Sparkles, Shield } from 'lucide-react';
+import { Check, Circle, Camera, DollarSign, Calendar, FileText, CreditCard, MapPin, ChevronRight, Clock, Sparkles, Shield, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -351,6 +351,20 @@ export const createChecklistItems = (
       benefit: 'Get paid directly to your bank account',
     });
   }
+
+  // Add review step at the end - always shown, required, completed when all other required items are done
+  const allOtherRequiredComplete = items.filter(i => i.required).every(i => i.completed);
+  items.push({
+    id: 'review',
+    label: 'Review Listing',
+    icon: <Eye className="w-4 h-4" />,
+    completed: allOtherRequiredComplete && currentStep === 'review',
+    required: true,
+    current: currentStep === 'review',
+    statusHint: allOtherRequiredComplete ? 'Ready' : 'Pending',
+    timeEstimate: '~1 min',
+    benefit: 'Preview your listing before publishing',
+  });
 
   return items;
 };
