@@ -644,9 +644,17 @@ export const PublishWizard: React.FC = () => {
         setExistingImages(imageUrls);
         setImages([]);
       } else if (step === 'pricing') {
+        // Helper function to safely parse price values
+        const safeParsePrice = (value: string): number | null => {
+          if (!value || !value.trim()) return null;
+          const cleaned = value.replace(/[^0-9.]/g, '');
+          const parsed = parseFloat(cleaned);
+          return isNaN(parsed) || parsed <= 0 ? null : parsed;
+        };
+        
         if (listing.mode === 'sale') {
           updateData = {
-            price_sale: parseFloat(priceSale) || null,
+            price_sale: safeParsePrice(priceSale),
             vendibook_freight_enabled: vendibookFreightEnabled,
             freight_payer: freightPayer,
             accept_card_payment: acceptCardPayment,
@@ -655,10 +663,10 @@ export const PublishWizard: React.FC = () => {
           };
         } else {
           updateData = {
-            price_daily: parseFloat(priceDaily) || null,
-            price_weekly: parseFloat(priceWeekly) || null,
+            price_daily: safeParsePrice(priceDaily),
+            price_weekly: safeParsePrice(priceWeekly),
             instant_book: instantBook,
-            deposit_amount: parseFloat(depositAmount) || null,
+            deposit_amount: safeParsePrice(depositAmount),
           };
         }
       } else if (step === 'details') {

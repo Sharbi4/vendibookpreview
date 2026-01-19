@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Heart, MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck } from 'lucide-react';
+import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck } from 'lucide-react';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -46,9 +46,22 @@ const popularAmenityIcons: Record<string, { icon: React.ElementType; label: stri
 };
 
 const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook, canDeliverToUser, distanceMiles, compact = false }: ListingCardProps) => {
-  const price = listing.mode === 'rent' 
-    ? `$${listing.price_daily}/day`
-    : `$${listing.price_sale?.toLocaleString()}`;
+  // Safely format price with proper null handling
+  const formatListingPrice = () => {
+    if (listing.mode === 'rent') {
+      if (listing.price_daily && listing.price_daily > 0) {
+        return `$${listing.price_daily.toLocaleString()}/day`;
+      }
+      return 'Price TBD';
+    }
+    // Sale mode
+    if (listing.price_sale && listing.price_sale > 0) {
+      return `$${listing.price_sale.toLocaleString()}`;
+    }
+    return 'Price TBD';
+  };
+  
+  const price = formatListingPrice();
 
   const modeLabel = listing.mode === 'rent' ? 'For Rent' : 'For Sale';
   const modeColor = listing.mode === 'rent' ? 'bg-primary' : 'bg-emerald-500';

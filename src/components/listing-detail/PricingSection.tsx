@@ -30,16 +30,21 @@ const PricingSection = ({
 
       {isRental ? (
         <div className="space-y-2">
-          {priceDaily && (
+          {priceDaily && priceDaily > 0 ? (
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Daily rate</span>
-              <span className="font-medium">${priceDaily}/day</span>
+              <span className="font-medium">${priceDaily.toLocaleString()}/day</span>
+            </div>
+          ) : (
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Daily rate</span>
+              <span className="font-medium text-muted-foreground">Price TBD</span>
             </div>
           )}
-          {priceWeekly && (
+          {priceWeekly && priceWeekly > 0 && (
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Weekly rate</span>
-              <span className="font-medium">${priceWeekly}/week</span>
+              <span className="font-medium">${priceWeekly.toLocaleString()}/week</span>
             </div>
           )}
           {hasDelivery && deliveryFee && (
@@ -56,7 +61,9 @@ const PricingSection = ({
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Sale price</span>
-            <span className="font-semibold text-lg">${priceSale?.toLocaleString()}</span>
+            <span className="font-semibold text-lg">
+              {priceSale && priceSale > 0 ? `$${priceSale.toLocaleString()}` : 'Price TBD'}
+            </span>
           </div>
           {hasDelivery && deliveryFee && (
             <div className="flex justify-between items-center">
