@@ -69,7 +69,7 @@ const SaleCheckout = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showCheckoutOverlay, setShowCheckoutOverlay] = useState(false);
-  const [addressDebounceTimer, setAddressDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  
 
   // Validation
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
@@ -131,7 +131,8 @@ const SaleCheckout = () => {
   const acceptCashPayment = listing?.accept_cash_payment ?? false;
   const isFreightSellerPaid = vendibookFreightEnabled && freightPayer === 'seller';
   const freightCost = estimate?.total_cost ?? 0;
-  const hasValidEstimate = estimate !== null && !estimateError && isAddressComplete;
+  // hasValidEstimate is true when we have a successful estimate (regardless of isAddressComplete)
+  const hasValidEstimate = estimate !== null && estimate.total_cost > 0 && !estimateError;
   const deliveryRadiusMiles = listing?.delivery_radius_miles || null;
 
   // Calculate distance from listing to delivery address
@@ -186,23 +187,12 @@ const SaleCheckout = () => {
     });
   }, [listing, getEstimate, clearEstimate]);
 
+  // Clear estimate when switching away from freight
   useEffect(() => {
     if (fulfillmentSelected !== 'vendibook_freight') {
       clearEstimate();
-      return;
     }
-    
-    if (addressDebounceTimer) clearTimeout(addressDebounceTimer);
-    
-    const timer = setTimeout(() => {
-      if (deliveryAddress.trim().length >= 10) {
-        fetchFreightEstimate(deliveryAddress);
-      }
-    }, 800);
-    
-    setAddressDebounceTimer(timer);
-    return () => { if (timer) clearTimeout(timer); };
-  }, [deliveryAddress, fulfillmentSelected]);
+  }, [fulfillmentSelected, clearEstimate]);
 
   // Calculate prices
   const getDeliveryFeeForSelection = (): number => {
