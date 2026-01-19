@@ -796,8 +796,10 @@ export const ListingWizard: React.FC = () => {
               <h1 className="font-semibold">Create Listing</h1>
             </div>
           </div>
-          {/* Stripe Connect Status Banner - Early awareness */}
-          <StripeConnectBanner className="mb-4" variant="compact" />
+          {/* Stripe Connect Status Banner - Only show when online payment is needed */}
+          {(formData.mode === 'rent' || formData.accept_card_payment) && (
+            <StripeConnectBanner className="mb-4" variant="compact" />
+          )}
           <WizardProgress
             currentStep={currentStep}
             steps={STEPS}
