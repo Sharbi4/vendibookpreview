@@ -302,15 +302,38 @@ const SaleTransactionCard = ({
 
             {/* Escrow Status Banner */}
             {['paid', 'buyer_confirmed', 'seller_confirmed'].includes(transaction.status) && (
-              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
-                <div className="flex items-start gap-2">
-                  <ShieldCheck className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-2 border-blue-300 dark:border-blue-700 rounded-lg p-4 mb-4 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full">
+                    <ShieldCheck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                      Payment in Escrow
+                    <p className="text-sm font-semibold text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                      🔒 Funds Held Securely by VendiBook
                     </p>
-                    <p className="text-xs text-blue-600/80 dark:text-blue-300/80 mt-0.5">
-                      ${transaction.amount.toLocaleString()} is held securely until both parties confirm the transaction is complete.
+                    <p className="text-xs text-blue-600/90 dark:text-blue-300/90 mt-1">
+                      ${transaction.amount.toLocaleString()} is protected in escrow. {role === 'buyer' 
+                        ? 'Confirm receipt to release payment to seller.' 
+                        : 'Funds will be released after both parties confirm.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Funds Released Banner for completed transactions */}
+            {transaction.status === 'completed' && transaction.payout_completed_at && (
+              <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 border-2 border-emerald-300 dark:border-emerald-700 rounded-lg p-4 mb-4 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0 bg-emerald-100 dark:bg-emerald-900/50 p-2 rounded-full">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-200 flex items-center gap-2">
+                      ✅ {role === 'seller' ? 'Funds Released to Your Account' : 'Payment Released to Seller'}
+                    </p>
+                    <p className="text-xs text-emerald-600/90 dark:text-emerald-300/90 mt-1">
+                      Transaction completed on {format(new Date(transaction.payout_completed_at), 'MMM d, yyyy')}
                     </p>
                   </div>
                 </div>
