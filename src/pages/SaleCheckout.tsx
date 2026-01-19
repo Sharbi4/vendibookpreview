@@ -343,7 +343,12 @@ const SaleCheckout = () => {
       if (data.error) throw new Error(data.error);
 
       trackFormSubmitConversion({ form_type: 'purchase', listing_id: listingId });
-      window.location.href = data.url;
+      // Open Stripe checkout in new tab (works better in iframe environments)
+      const stripeWindow = window.open(data.url, '_blank');
+      if (!stripeWindow) {
+        // Fallback to redirect if popup blocked
+        window.location.href = data.url;
+      }
     } catch (error) {
       setShowCheckoutOverlay(false);
       toast({
