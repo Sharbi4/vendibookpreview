@@ -836,6 +836,7 @@ export type Database = {
           id: string
           message_email: boolean
           message_inapp: boolean
+          push_enabled: boolean
           sale_email: boolean
           sale_inapp: boolean
           updated_at: string
@@ -854,6 +855,7 @@ export type Database = {
           id?: string
           message_email?: boolean
           message_inapp?: boolean
+          push_enabled?: boolean
           sale_email?: boolean
           sale_inapp?: boolean
           updated_at?: string
@@ -872,6 +874,7 @@ export type Database = {
           id?: string
           message_email?: boolean
           message_inapp?: boolean
+          push_enabled?: boolean
           sale_email?: boolean
           sale_inapp?: boolean
           updated_at?: string
