@@ -124,8 +124,8 @@ const HostDashboard = () => {
         </TabsList>
 
         <TabsContent value="listings" className="mt-0">
-          <div className="p-4 rounded-xl bg-card border border-border">
-            <div className="flex items-center justify-between mb-4">
+          <div className="rounded-2xl border-0 shadow-xl bg-card overflow-hidden">
+            <div className="flex items-center justify-between p-4 bg-muted/30 border-b border-border">
               <h3 className="text-sm font-semibold text-foreground">My Listings</h3>
               <Button variant="outline" size="sm" asChild className="h-8 text-xs">
                 <Link to="/create-listing">
@@ -135,37 +135,41 @@ const HostDashboard = () => {
               </Button>
             </div>
 
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : listings.length === 0 ? (
-              <div className="py-8 text-center">
-                <Truck className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
-                <p className="text-sm font-medium text-foreground mb-1">No listings yet</p>
-                <p className="text-xs text-muted-foreground mb-4">
-                  Create a listing to start earning.
-                </p>
-                <Button asChild size="sm">
-                  <Link to="/create-listing">
-                    <Plus className="h-3.5 w-3.5 mr-1.5" />
-                    New Listing
-                  </Link>
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {listings.map((listing) => (
-                  <HostListingCard
-                    key={listing.id}
-                    listing={listing}
-                    onPause={pauseListing}
-                    onPublish={handlePublish}
-                    onDelete={deleteListing}
-                  />
-                ))}
-              </div>
-            )}
+            <div className="p-4">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : listings.length === 0 ? (
+                <div className="py-8 text-center">
+                  <div className="w-12 h-12 rounded-xl bg-muted mx-auto mb-3 flex items-center justify-center">
+                    <Truck className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground mb-1">No listings yet</p>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Create a listing to start earning.
+                  </p>
+                  <Button asChild size="sm">
+                    <Link to="/create-listing">
+                      <Plus className="h-3.5 w-3.5 mr-1.5" />
+                      New Listing
+                    </Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {listings.map((listing) => (
+                    <HostListingCard
+                      key={listing.id}
+                      listing={listing}
+                      onPause={pauseListing}
+                      onPublish={handlePublish}
+                      onDelete={deleteListing}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </TabsContent>
 
