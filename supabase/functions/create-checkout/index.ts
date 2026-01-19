@@ -71,8 +71,8 @@ serve(async (req) => {
       listing_id, 
       mode, 
       amount, 
-      delivery_fee = 0,
-      deposit_amount = 0,
+      delivery_fee: rawDeliveryFee,
+      deposit_amount: rawDepositAmount,
       fulfillment_type,
       delivery_address,
       delivery_instructions,
@@ -81,8 +81,13 @@ serve(async (req) => {
       buyer_phone,
       vendibook_freight_enabled = false,
       freight_payer = 'buyer',
-      freight_cost = 0,
+      freight_cost: rawFreightCost,
     } = body;
+    
+    // Handle null values from request body (null !== undefined, so defaults don't apply)
+    const delivery_fee = rawDeliveryFee ?? 0;
+    const deposit_amount = rawDepositAmount ?? 0;
+    const freight_cost = rawFreightCost ?? 0;
     
     logStep("Request received", { 
       booking_id, listing_id, mode, amount, delivery_fee, deposit_amount, fulfillment_type,
