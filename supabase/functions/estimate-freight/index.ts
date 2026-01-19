@@ -10,12 +10,20 @@ const logStep = (step: string, details?: any) => {
 };
 
 interface FreightEstimateRequest {
-  originAddress: string;
-  destinationAddress: string;
+  // Support both camelCase and snake_case
+  originAddress?: string;
+  origin_address?: string;
+  destinationAddress?: string;
+  destination_address?: string;
   lengthInches?: number;
+  length_inches?: number;
   widthInches?: number;
+  width_inches?: number;
   heightInches?: number;
+  height_inches?: number;
   weightLbs?: number;
+  weight_lbs?: number;
+  item_category?: string;
 }
 
 interface FreightEstimateResponse {
@@ -159,7 +167,13 @@ const handler = async (req: Request): Promise<Response> => {
     const body: FreightEstimateRequest = await req.json();
     logStep("Request body", body);
 
-    const { originAddress, destinationAddress, lengthInches, widthInches, heightInches, weightLbs } = body;
+    // Support both camelCase and snake_case parameter names
+    const originAddress = body.originAddress || body.origin_address;
+    const destinationAddress = body.destinationAddress || body.destination_address;
+    const lengthInches = body.lengthInches || body.length_inches;
+    const widthInches = body.widthInches || body.width_inches;
+    const heightInches = body.heightInches || body.height_inches;
+    const weightLbs = body.weightLbs || body.weight_lbs;
 
     if (!originAddress || !destinationAddress) {
       return new Response(
