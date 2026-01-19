@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp, Camera, Calendar, DollarSign, MessageSquare, Sparkles, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
-import { cn } from '@/lib/utils';
 
 interface Tip {
   id: string;
@@ -118,17 +118,14 @@ export const GetBookedFasterCard = () => {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-      {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
-      
+    <Card className="border-0 shadow-xl">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="relative w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors"
+        className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors rounded-t-xl"
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-amber-500 shadow-md flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-white" />
+          <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground shadow-lg flex items-center justify-center">
+            <Sparkles className="h-5 w-5" />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-foreground">Get booked faster</h3>
@@ -136,46 +133,42 @@ export const GetBookedFasterCard = () => {
           </div>
         </div>
         {isExpanded ? (
-          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          <ChevronUp className="h-5 w-5 text-muted-foreground" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          <ChevronDown className="h-5 w-5 text-muted-foreground" />
         )}
       </button>
 
       {isExpanded && (
-        <div className="relative px-4 pb-4 space-y-3">
+        <CardContent className="pt-0 pb-4 px-4 space-y-3">
           {tips.map((tip) => {
             const Icon = tip.icon;
             return (
               <div
                 key={tip.id}
-                className="flex items-start gap-3 p-3 bg-card/80 backdrop-blur-sm rounded-lg border border-border"
+                className="flex items-start gap-3 p-4 bg-muted/50 rounded-xl"
               >
-                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                  <Icon className="h-4 w-4 text-foreground" />
+                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
+                  <Icon className="h-5 w-5 text-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">{tip.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{tip.description}</p>
                 </div>
                 {tip.actionTo && (
-                  <Button 
-                    size="sm" 
-                    asChild 
-                    className="flex-shrink-0 h-7 text-xs bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
-                  >
+                  <Button size="sm" asChild className="flex-shrink-0 h-8 text-xs gap-1">
                     <Link to={tip.actionTo}>
                       {tip.actionLabel}
-                      <ArrowRight className="h-3 w-3 ml-1" />
+                      <ArrowRight className="h-3 w-3" />
                     </Link>
                   </Button>
                 )}
               </div>
             );
           })}
-        </div>
+        </CardContent>
       )}
-    </div>
+    </Card>
   );
 };
 
