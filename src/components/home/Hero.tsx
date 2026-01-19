@@ -71,10 +71,10 @@ const Hero = () => {
                 <Sparkles className="w-3 h-3" />
                 New
               </span>
-              <span className="font-semibold text-white text-sm md:text-base">Accept Payments</span>
+              <span className="font-semibold text-white text-sm md:text-base">Accepting Payments!</span>
             </span>
             <p className="text-base md:text-lg text-white/90">
-              in person or through our secure platform.
+              In person or through our secure platform.
             </p>
           </div>
 
