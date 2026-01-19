@@ -686,6 +686,7 @@ export type Database = {
           price_daily: number | null
           price_sale: number | null
           price_weekly: number | null
+          proof_notary_enabled: boolean | null
           published_at: string | null
           rental_buffer_days: number | null
           status: Database["public"]["Enums"]["listing_status"]
@@ -734,6 +735,7 @@ export type Database = {
           price_daily?: number | null
           price_sale?: number | null
           price_weekly?: number | null
+          proof_notary_enabled?: boolean | null
           published_at?: string | null
           rental_buffer_days?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
@@ -782,6 +784,7 @@ export type Database = {
           price_daily?: number | null
           price_sale?: number | null
           price_weekly?: number | null
+          proof_notary_enabled?: boolean | null
           published_at?: string | null
           rental_buffer_days?: number | null
           status?: Database["public"]["Enums"]["listing_status"]

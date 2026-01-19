@@ -18,6 +18,7 @@ import {
 import { FreightSettingsCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { StripeConnectBanner } from './StripeConnectBanner';
+import { ProofNotaryCard } from './ProofNotaryCard';
 
 interface StepPricingProps {
   formData: ListingFormData;
@@ -734,6 +735,14 @@ export const StepPricing: React.FC<StepPricingProps> = ({
               payer={formData.freight_payer}
               onEnabledChange={(enabled) => updateField('vendibook_freight_enabled', enabled)}
               onPayerChange={(payer) => updateField('freight_payer', payer)}
+            />
+          </div>
+
+          {/* Proof Notary Add-On */}
+          <div className="pt-6 border-t">
+            <ProofNotaryCard
+              enabled={formData.proof_notary_enabled}
+              onEnabledChange={(enabled) => updateField('proof_notary_enabled', enabled)}
             />
           </div>
         </>

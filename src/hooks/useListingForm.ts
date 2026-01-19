@@ -42,6 +42,8 @@ const initialFormData: ListingFormData = {
   // Payment method preferences (for sales) - both enabled by default
   accept_cash_payment: true,
   accept_card_payment: true,
+  // Proof Notary add-on (for sales)
+  proof_notary_enabled: false,
 };
 
 const TOTAL_STEPS = 7;

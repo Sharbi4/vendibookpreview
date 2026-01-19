@@ -32,6 +32,7 @@ import { getGuestDraft, clearGuestDraft } from '@/lib/guestDraft';
 import { cn } from '@/lib/utils';
 import { FreightSettingsCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { ProofNotaryCard } from './ProofNotaryCard';
 import {
   calculateRentalFees,
   calculateSaleFees,
@@ -63,6 +64,7 @@ interface ListingData {
   freight_payer: FreightPayer;
   accept_card_payment: boolean;
   accept_cash_payment: boolean;
+  proof_notary_enabled: boolean;
   highlights: string[] | null;
   amenities: string[] | null;
   weight_lbs: number | null;
@@ -132,6 +134,7 @@ export const PublishWizard: React.FC = () => {
   const [freightPayer, setFreightPayer] = useState<FreightPayer>('buyer');
   const [acceptCardPayment, setAcceptCardPayment] = useState(true);
   const [acceptCashPayment, setAcceptCashPayment] = useState(false);
+  const [proofNotaryEnabled, setProofNotaryEnabled] = useState(false);
   
   // AI suggestions state
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
@@ -206,6 +209,7 @@ export const PublishWizard: React.FC = () => {
       setFreightPayer((data.freight_payer as FreightPayer) || 'buyer');
       setAcceptCardPayment(data.accept_card_payment ?? true);
       setAcceptCashPayment(data.accept_cash_payment ?? false);
+      setProofNotaryEnabled(data.proof_notary_enabled ?? false);
       // Set details step fields
       setHighlights(data.highlights || []);
       setAmenities(data.amenities || []);
@@ -567,6 +571,7 @@ export const PublishWizard: React.FC = () => {
             freight_payer: freightPayer,
             accept_card_payment: acceptCardPayment,
             accept_cash_payment: acceptCashPayment,
+            proof_notary_enabled: proofNotaryEnabled,
           };
         } else {
           updateData = {
@@ -1056,6 +1061,14 @@ export const PublishWizard: React.FC = () => {
                           payer={freightPayer}
                           onEnabledChange={(enabled) => setVendibookFreightEnabled(enabled)}
                           onPayerChange={(payer) => setFreightPayer(payer)}
+                        />
+                      </div>
+
+                      {/* Proof Notary Add-On */}
+                      <div className="pt-6 border-t">
+                        <ProofNotaryCard
+                          enabled={proofNotaryEnabled}
+                          onEnabledChange={(enabled) => setProofNotaryEnabled(enabled)}
                         />
                       </div>
                     </>

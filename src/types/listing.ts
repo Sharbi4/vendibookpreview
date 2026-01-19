@@ -456,6 +456,8 @@ export interface ListingFormData {
   // Payment method preferences (for sales)
   accept_cash_payment: boolean;
   accept_card_payment: boolean;
+  // Proof Notary add-on (for sales)
+  proof_notary_enabled: boolean;
 }
 
 export const CATEGORY_LABELS: Record<ListingCategory, string> = {

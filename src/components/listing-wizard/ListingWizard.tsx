@@ -545,6 +545,8 @@ export const ListingWizard: React.FC = () => {
         // Payment method preferences (for sales)
         accept_cash_payment: formData.mode === 'sale' ? formData.accept_cash_payment : false,
         accept_card_payment: formData.mode === 'sale' ? formData.accept_card_payment : true,
+        // Proof Notary add-on (for sales)
+        proof_notary_enabled: formData.mode === 'sale' ? formData.proof_notary_enabled : false,
       };
 
       const { data: listing, error: insertError } = await supabase
