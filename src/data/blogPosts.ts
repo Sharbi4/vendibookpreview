@@ -20,8 +20,9 @@ export const BLOG_CATEGORIES = [
   { slug: 'industry-insights', label: 'Industry Insights', description: 'Trends, data, and market analysis' },
   { slug: 'business-tips', label: 'Business Tips', description: 'Grow and manage your mobile food business' },
   { slug: 'success-stories', label: 'Success Stories', description: 'Learn from thriving food entrepreneurs' },
-  { slug: 'equipment-guides', label: 'Equipment Guides', description: 'Buy, maintain, and upgrade your assets' },
+  { slug: 'equipment-guides', label: 'Equipment Guides', description: 'Buy, sell, maintain, and upgrade your assets' },
   { slug: 'permits-regulations', label: 'Permits & Regulations', description: 'Navigate licensing and compliance' },
+  { slug: 'selling-guide', label: 'Selling Your Asset', description: 'Expert guides for selling trucks, trailers & equipment' },
 ];
 
 export const BLOG_POSTS: BlogPost[] = [
@@ -381,6 +382,226 @@ Vendibook listings include information about local permit requirements to help y
     category: 'permits-regulations',
     tags: ['permits', 'regulations', 'compliance', 'licensing'],
     readingTime: 8,
+  },
+  {
+    slug: 'sell-my-food-truck-valuation-guide-2026',
+    title: 'How to Sell Your Food Truck in 2026: The Ultimate Valuation & Exit Guide',
+    description: 'Stop guessing your truck\'s value. Discover the 2026 resale market trends, calculate your truck\'s true worth, and learn why listing on specialized platforms like Vendibook gets you 20% higher offers.',
+    excerpt: 'The US food truck industry is projected to hit $5.77 billion by 2029. With new custom builds now taking 6-8 months and costing upwards of $150,000, smart entrepreneurs are looking for your used truck.',
+    content: `
+<p class="text-lg text-muted-foreground mb-6"><em>By The Vendibook Team | Estimated Read Time: 9 Minutes</em></p>
+
+<p class="text-lg mb-6">The US food truck industry is projected to hit <strong>$5.77 billion by 2029</strong>, growing at a steady 7.4% annually. But here is the statistic that matters most to you right now: <strong>the demand for compliant, turnkey used trucks has arguably never been higher.</strong></p>
+
+<p class="mb-6">With new custom builds now taking 6-8 months and costing upwards of $150,000, smart entrepreneurs are looking for your used truck to start their business immediately.</p>
+
+<p class="mb-8">If you are typing "sell my food truck" into search engines, you are likely ready to move on. But are you leaving money on the table? This guide digs into the deep research of valuation, depreciation, and how to position your rig on <a href="/sell-my-food-truck" class="text-primary underline font-medium">Vendibook</a> to sell for top dollar.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">1. The "Compliance Premium": Why Your Truck is Worth More Than You Think</h2>
+
+<p class="mb-4">In 2026, buyers aren't just buying wheels; they are <strong>buying speed to market</strong>.</p>
+
+<p class="mb-4">A generic truck on Craigslist might sit for months. But a truck that is "code-ready" for strict cities like Los Angeles, Austin, or Portland commands a premium.</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li><strong>The Fire Suppression Factor:</strong> Does your truck have an up-to-date Ansul system? Buyers know that installing this new costs $3,000–$5,000. If yours is inspected and tagged, add that value directly to your asking price.</li>
+<li><strong>The "Blue Sticker" Value:</strong> If your truck already has a valid insignia from the Department of Housing and Community Development (in CA) or Labor & Industries (in WA), highlight this immediately. It is the "Golden Ticket" for buyers.</li>
+</ul>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">2. The Valuation Math: Depreciation vs. Equipment</h2>
+
+<p class="mb-4">Unlike a car, a food truck is two assets in one: the <strong>vehicle</strong> (which depreciates) and the <strong>kitchen</strong> (which holds value).</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li><strong>Vehicle Depreciation:</strong> Heavy trucks (~13,000 lbs) typically depreciate 15-25% annually.</li>
+<li><strong>Kitchen Value:</strong> High-end equipment (Vulcan, Frymaster) retains value if well-maintained.</li>
+</ul>
+
+<div class="bg-muted p-6 rounded-lg mb-8">
+<h3 class="font-bold mb-3">The "Vendibook Formula" for a Quick Check:</h3>
+<p class="font-mono text-sm mb-2"><strong>Estimated Value = (Original Vehicle Cost × Depreciation Factor) + (Kitchen Equipment Replacement Value × 0.6)</strong></p>
+<p class="text-sm text-muted-foreground mt-4"><em>Note: This is a rough estimate. For a true market comparison, <a href="/search?mode=sale" class="text-primary underline">search active listings on Vendibook</a> to see what similar trucks in your region are actually listing for.</em></p>
+</div>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">3. Watch What Your Buyers Are Watching</h2>
+
+<p class="mb-4">Today's buyers are educated. They are watching YouTube channels like Custom Trailer Pros or UpFlip to learn how to spot a lemon. You need to watch these too, so you can address their fears before they even ask.</p>
+
+<p class="mb-4"><strong>Watch this video on "Red Flags" so you can fix them before listing:</strong></p>
+
+<div class="aspect-video mb-6">
+<iframe width="100%" height="100%" src="https://www.youtube.com/embed/zyYSknT6wZY" title="How to Buy a Food Truck: Avoid Scammers & Find a Great Deal" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="rounded-lg"></iframe>
+</div>
+
+<div class="bg-primary/5 border-l-4 border-primary p-4 mb-8">
+<h4 class="font-bold mb-2">Your Seller's Advantage:</h4>
+<p>When you list on Vendibook, preempt their questions. In your description, write: <em>"Passed chassis inspection Jan 2026. No rust on wheel wells. Generator serviced every 200 hours."</em></p>
+</div>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">4. Where to List: The "Tire Kicker" Problem</h2>
+
+<p class="mb-4">You have three main options to sell your asset. Choose wisely.</p>
+
+<div class="overflow-x-auto mb-8">
+<table class="w-full border-collapse border border-border">
+<thead>
+<tr class="bg-muted">
+<th class="border border-border p-3 text-left">Platform</th>
+<th class="border border-border p-3 text-left">Audience</th>
+<th class="border border-border p-3 text-left">Pros</th>
+<th class="border border-border p-3 text-left">Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="border border-border p-3">Facebook Marketplace</td>
+<td class="border border-border p-3">General Public</td>
+<td class="border border-border p-3">Free</td>
+<td class="border border-border p-3">Flooded with "Is this available?" messages from people with no funding.</td>
+</tr>
+<tr>
+<td class="border border-border p-3">eBay</td>
+<td class="border border-border p-3">Global</td>
+<td class="border border-border p-3">Huge reach</td>
+<td class="border border-border p-3">High fees; listing format is not designed for complex kitchen specs.</td>
+</tr>
+<tr class="bg-primary/5">
+<td class="border border-border p-3 font-bold">Vendibook</td>
+<td class="border border-border p-3">Professionals</td>
+<td class="border border-border p-3">100% Targeted. Users are here specifically to buy/sell mobile businesses.</td>
+<td class="border border-border p-3">Buyers are savvy—you need to know your truck's specs.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">5. The "Tech Pack": Your Secret Weapon</h2>
+
+<p class="mb-4">Serious buyers need financing. Banks need paperwork.</p>
+
+<p class="mb-4">To sell your truck in under 30 days, create a digital "Tech Pack" (Google Drive folder) that you can send to serious leads from Vendibook. Include:</p>
+
+<ul class="list-disc pl-6 mb-8 space-y-2">
+<li><strong>The Build Sheet:</strong> Who built it? (Cruising Kitchens, Prestige, etc.)</li>
+<li><strong>Equipment Manuals:</strong> PDF copies for the fridge, fryer, and flat top.</li>
+<li><strong>Maintenance Log:</strong> Proof that you changed the generator oil.</li>
+</ul>
+
+<div class="bg-accent p-6 rounded-lg text-center">
+<h3 class="text-xl font-bold mb-3">Ready to Exit?</h3>
+<p class="mb-4">Don't let your truck become a "stale listing."</p>
+<p class="mb-4"><a href="/list?mode=sale" class="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90">List your truck on Vendibook today →</a></p>
+<p class="text-sm text-muted-foreground">Get in front of serious entrepreneurs who are funded and ready to buy.</p>
+</div>
+    `,
+    author: 'Vendibook Team',
+    authorRole: 'Editorial',
+    datePublished: '2026-01-15',
+    dateModified: '2026-01-19',
+    category: 'equipment-guides',
+    tags: ['sell my food truck', 'food truck valuation', 'sell food truck', 'used food truck for sale', 'food truck blue book'],
+    image: '/images/taco-truck-hero.png',
+    readingTime: 9,
+    featured: true,
+  },
+  {
+    slug: 'sell-my-food-trailer-vs-truck-resale-value',
+    title: 'Food Truck vs. Food Trailer: Which Sells Faster? (And How to Price Yours)',
+    description: 'Selling a food trailer? It might sell faster than a truck. Learn the pros/cons of selling trailers vs. trucks, specific resale tips for 2026, and how to list on Vendibook.',
+    excerpt: 'While food trucks have the "cool factor," the data shows a massive surge in demand for food trailers. If you\'re looking to sell, you\'re in a seller\'s market—if you know how to position it.',
+    content: `
+<p class="text-lg text-muted-foreground mb-6"><em>By The Vendibook Team</em></p>
+
+<p class="text-lg mb-6">One of the most common questions we get at Vendibook is: <strong>"Is it harder to sell a trailer than a truck?"</strong></p>
+
+<p class="mb-6">The answer in 2026 might surprise you. While food trucks have the "cool factor," the data shows a <strong>massive surge in demand for food trailers</strong>. Why? Because smart operators are realizing that if a food truck's engine dies, the business stops. If a trailer's towing vehicle dies, you just rent another truck.</p>
+
+<p class="mb-8">If you are looking to <a href="/sell-my-food-truck" class="text-primary underline font-medium">"sell my food trailer,"</a> you are in a seller's market—if you know how to position it.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">1. The "Stationary" Selling Point</h2>
+
+<p class="mb-4">Trailers are often purchased by owners who plan to park in one spot (like a food park or brewery).</p>
+
+<div class="bg-primary/5 border-l-4 border-primary p-4 mb-6">
+<h4 class="font-bold mb-2">The Selling Tip:</h4>
+<p>When listing your trailer on Vendibook, highlight the interior space. Trailers often have <strong>2-3 feet more usable kitchen space</strong> than trucks because there is no driver's cab.</p>
+</div>
+
+<p class="mb-4"><strong>Keywords to use in your listing:</strong></p>
+<ul class="list-disc pl-6 mb-8 space-y-2">
+<li>"Spacious kitchen"</li>
+<li>"Low insurance costs"</li>
+<li>"Zero engine maintenance"</li>
+</ul>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">2. Know Your City: The "Tow-Ready" Requirement</h2>
+
+<p class="mb-4">Regulations vary wildly across the US.</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-3">
+<li><strong>Austin, TX:</strong> Known as the food trailer capital. Buyers here look for trailers that are "skirted" (wheels covered) and have specific grey water connections.</li>
+<li><strong>Florida:</strong> Hurricanes matter. Buyers want to know your trailer is heavy enough not to flip in high winds but light enough to tow quickly.</li>
+</ul>
+
+<h3 class="text-xl font-semibold mb-4">Deep Dive Video:</h3>
+<p class="mb-4">Check out this interview with Goodies Soul Kitchen (via UpFlip). He discusses the logistics of starting small. Your trailer is the perfect entry point for someone like him.</p>
+
+<div class="aspect-video mb-8">
+<iframe width="100%" height="100%" src="https://www.youtube.com/embed/ZCKHrWnbpto" title="How to Start a Food Truck with Less Than $10K Out of Pocket by UpFlip" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="rounded-lg"></iframe>
+</div>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">3. Pricing Your Trailer</h2>
+
+<p class="mb-4">Because trailers lack an engine, their depreciation is purely based on the <strong>shell condition</strong> and <strong>kitchen equipment</strong>.</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-3">
+<li><strong>Pro:</strong> A 10-year-old trailer can be worth just as much as a 2-year-old one if the siding is clean and the roof doesn't leak.</li>
+<li><strong>Con:</strong> You cannot rely on "low mileage" to boost the price. You must rely on "cleanliness."</li>
+</ul>
+
+<div class="bg-muted p-6 rounded-lg mb-8">
+<h3 class="font-bold mb-3">The "Vendibook" Photo Strategy for Trailers:</h3>
+<p class="mb-4">Since the buyer has to tow it, your photos must prove roadworthiness.</p>
+<ul class="list-disc pl-6 space-y-2">
+<li><strong>The Tongue:</strong> Show the hitch clearly (2 5/16" ball? Pintle hitch?)</li>
+<li><strong>The Axles:</strong> Close-ups of the tires and axles.</li>
+<li><strong>The Electric:</strong> Show the 50-amp plug.</li>
+</ul>
+</div>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">4. Why Vendibook is the Trailer Superstore</h2>
+
+<p class="mb-4">General vehicle sites (like AutoTrader) don't know what a "concession window" is. Facebook Marketplace treats your $50,000 commercial kitchen like a camper.</p>
+
+<p class="mb-4"><strong>Vendibook categorizes your listing correctly.</strong> We let you specify:</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li>Fresh Water Tank Size</li>
+<li>Hood System Dimensions</li>
+<li>Generator Type</li>
+</ul>
+
+<p class="mb-8">This detail filters out the bad leads and brings you buyers who know exactly what they need.</p>
+
+<div class="bg-accent p-6 rounded-lg text-center mb-8">
+<h3 class="text-xl font-bold mb-3">Thinking of Selling?</h3>
+<p class="mb-4">Your trailer could be the start of someone else's American Dream.</p>
+<p><a href="/list?mode=sale" class="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90">Create your listing on Vendibook now →</a></p>
+</div>
+
+<div class="border border-border rounded-lg p-6">
+<h3 class="font-bold mb-3">Related Reading:</h3>
+<p>For a deeper look at valuation formulas and depreciation math, check out our <a href="/blog/sell-my-food-truck-valuation-guide-2026" class="text-primary underline font-medium">Ultimate Valuation Guide →</a></p>
+</div>
+    `,
+    author: 'Vendibook Team',
+    authorRole: 'Editorial',
+    datePublished: '2026-01-18',
+    category: 'equipment-guides',
+    tags: ['sell my food trailer', 'food trailer for sale', 'trailer vs truck', 'food truck resale', 'sell food trailer'],
+    image: '/images/taco-truck-hero.png',
+    readingTime: 7,
+    featured: true,
   },
 ];
 
