@@ -212,8 +212,8 @@ const SellMyFoodTruck = () => {
     },
     {
       icon: Percent,
-      title: "Transparent fees",
-      description: "12.9% seller commission on completed sales."
+      title: "Flexible payment options",
+      description: "Pay in person for free, or use our secure platform (12.9%) for extra protection."
     }
   ];
 
@@ -333,39 +333,12 @@ const SellMyFoodTruck = () => {
                 </p>
               </motion.div>
               
-              <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+              <div className="max-w-md mx-auto">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.1 }}
-                >
-                  <Card className="h-full hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2.5 rounded-lg bg-primary/10">
-                          <Calculator className="h-5 w-5 text-primary" />
-                        </div>
-                        <h3 className="font-semibold text-lg">Pricing Calculator</h3>
-                      </div>
-                      <p className="text-muted-foreground text-sm mb-4">
-                        Quick estimate based on category, condition, and market signals.
-                      </p>
-                      <Button variant="outline" asChild className="w-full">
-                        <Link to="/pricing-calculator">
-                          Open Calculator
-                          <ChevronRight className="ml-1 h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-                
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
                 >
                   <Card className="h-full hover:shadow-md transition-shadow border-primary/20">
                     <CardContent className="p-6">
@@ -533,10 +506,39 @@ const SellMyFoodTruck = () => {
                 transition={{ duration: 0.5 }}
                 className="max-w-2xl mx-auto text-center"
               >
-                <h2 className="text-2xl md:text-3xl font-bold mb-4">Simple pricing</h2>
-                <p className="text-muted-foreground mb-6">
-                  For sales, sellers pay a <strong className="text-foreground">12.9% commission</strong> on the sale price. Buyers don't pay a platform fee.
+                <h2 className="text-2xl md:text-3xl font-bold mb-4">Flexible payment options</h2>
+                <p className="text-muted-foreground mb-4">
+                  You choose how you get paid.
                 </p>
+                
+                <div className="grid sm:grid-cols-2 gap-4 text-left mb-6">
+                  <Card className="bg-background border-green-500/20">
+                    <CardContent className="p-4 flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-green-500/10 shrink-0">
+                        <CreditCard className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm mb-1">Pay in Person</h4>
+                        <p className="text-xs text-muted-foreground">
+                          Handle payment directly with the buyer — <strong className="text-green-600">completely free</strong>.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-background border-primary/20">
+                    <CardContent className="p-4 flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                        <ShieldCheck className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm mb-1">Secure Platform Payment</h4>
+                        <p className="text-xs text-muted-foreground">
+                          Use our secure checkout for <strong className="text-foreground">extra protection</strong> — 12.9% seller commission.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
                 
                 <div className="grid sm:grid-cols-2 gap-4 text-left mb-6">
                   <Card className="bg-background">
