@@ -257,6 +257,7 @@ serve(async (req) => {
             .single();
 
           const buyerId = session.metadata?.buyer_id;
+          const sellerId = session.metadata?.seller_id;
           const buyerEmail = session.customer_email || session.customer_details?.email;
           
           // Get buyer profile for name
@@ -270,6 +271,123 @@ serve(async (req) => {
             if (buyerProfile?.full_name) {
               buyerName = buyerProfile.full_name;
             }
+          }
+
+          // ========== CREATE SALE TRANSACTION RECORD ==========
+          // Check if transaction already exists (idempotency)
+          const { data: existingTx } = await supabaseClient
+            .from("sale_transactions")
+            .select("id")
+            .eq("checkout_session_id", session.id)
+            .maybeSingle();
+
+          let transactionId: string | null = existingTx?.id || null;
+
+          if (!existingTx && buyerId && sellerId) {
+            // Calculate amounts from session metadata
+            const amount = session.amount_total ? session.amount_total / 100 : 0;
+            const platformFeeStr = session.metadata?.platform_fee;
+            const sellerPayoutStr = session.metadata?.seller_payout;
+            const platformFee = platformFeeStr ? Number(platformFeeStr) : amount * 0.15;
+            const sellerPayout = sellerPayoutStr ? Number(sellerPayoutStr) : amount - platformFee;
+            
+            // Get fulfillment data from metadata
+            const fulfillmentType = session.metadata?.fulfillment_type || 'pickup';
+            const deliveryAddress = session.metadata?.delivery_address || null;
+            const deliveryInstructions = session.metadata?.delivery_instructions || null;
+            const deliveryFeeStr = session.metadata?.delivery_fee;
+            const deliveryFee = deliveryFeeStr ? Number(deliveryFeeStr) : 0;
+            const freightCostStr = session.metadata?.freight_cost;
+            const freightCost = freightCostStr ? Number(freightCostStr) : 0;
+            const buyerNameMeta = session.metadata?.buyer_name || null;
+            const buyerEmailMeta = session.metadata?.buyer_email || buyerEmail || null;
+            const buyerPhone = session.metadata?.buyer_phone || null;
+            
+            const paymentIntentIdForTx = typeof session.payment_intent === 'string' 
+              ? session.payment_intent 
+              : session.payment_intent?.id;
+
+            const { data: newTx, error: txError } = await supabaseClient
+              .from("sale_transactions")
+              .insert({
+                listing_id: listingId,
+                buyer_id: buyerId,
+                seller_id: sellerId,
+                amount: amount,
+                platform_fee: platformFee,
+                seller_payout: sellerPayout,
+                payment_intent_id: paymentIntentIdForTx,
+                checkout_session_id: session.id,
+                status: 'paid',
+                fulfillment_type: fulfillmentType,
+                delivery_address: deliveryAddress,
+                delivery_instructions: deliveryInstructions,
+                delivery_fee: deliveryFee,
+                freight_cost: freightCost,
+                buyer_name: buyerNameMeta,
+                buyer_email: buyerEmailMeta,
+                buyer_phone: buyerPhone,
+              })
+              .select("id")
+              .single();
+
+            if (txError) {
+              logStep("ERROR: Failed to create sale transaction", { error: txError.message });
+            } else {
+              transactionId = newTx.id;
+              logStep("Sale transaction created", { transactionId, amount, buyerId, sellerId });
+
+              // Create in-app notification for buyer
+              try {
+                await supabaseClient.from("notifications").insert({
+                  user_id: buyerId,
+                  type: "purchase",
+                  title: "Purchase Confirmed",
+                  message: `Your payment of $${amount.toFixed(2)} for "${listing?.title || 'item'}" has been confirmed. View your purchase in Transactions.`,
+                  link: "/transactions?tab=purchases",
+                });
+                logStep("In-app notification created for buyer", { buyerId });
+              } catch (notifError) {
+                logStep("WARNING: Failed to create buyer notification", { error: String(notifError) });
+              }
+
+              // Create in-app notification for seller
+              try {
+                await supabaseClient.from("notifications").insert({
+                  user_id: sellerId,
+                  type: "sale",
+                  title: "New Sale!",
+                  message: `Someone purchased "${listing?.title || 'your item'}" for $${amount.toFixed(2)}. View it in your Transactions.`,
+                  link: "/transactions?tab=purchases",
+                });
+                logStep("In-app notification created for seller", { sellerId });
+              } catch (notifError) {
+                logStep("WARNING: Failed to create seller notification", { error: String(notifError) });
+              }
+
+              // Send sale notification email (fire and forget)
+              try {
+                await fetch(
+                  `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-sale-notification`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+                    },
+                    body: JSON.stringify({
+                      transaction_id: transactionId,
+                      notification_type: 'payment_received',
+                    }),
+                  }
+                );
+                logStep("Sale notification email triggered");
+              } catch (saleNotifyError) {
+                logStep("WARNING: Failed to trigger sale notification", { error: String(saleNotifyError) });
+              }
+            }
+          } else if (existingTx) {
+            logStep("Sale transaction already exists", { transactionId: existingTx.id });
           }
 
           // Send payment receipt email for escrow sale
@@ -328,6 +446,7 @@ serve(async (req) => {
                   buyer_id: session.metadata?.buyer_id,
                   seller_id: session.metadata?.seller_id,
                   amount: session.amount_total ? session.amount_total / 100 : null,
+                  transaction_id: transactionId,
                 },
               },
             });
