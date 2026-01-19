@@ -274,11 +274,8 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
 
   return (
     <>
-      <div className="relative overflow-hidden rounded-xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10 card-hover">
-        {/* Animated background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
-        
-        <div className="relative flex flex-col sm:flex-row">
+      <div className="overflow-hidden rounded-xl border-0 shadow-xl bg-card">
+        <div className="flex flex-col sm:flex-row">
           {/* Listing Image */}
           <div className="sm:w-40 h-32 sm:h-auto flex-shrink-0">
             <img
@@ -289,7 +286,7 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
           </div>
 
           {/* Content */}
-          <div className="relative flex-1 p-4">
+          <div className="flex-1 p-4">
             <div className="flex items-start justify-between gap-2 mb-3">
               <div>
                 <h3 className="font-semibold text-foreground line-clamp-1">
@@ -439,7 +436,7 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
             )}
 
             {/* Actions */}
-            <div className="flex items-center gap-2 pt-3 border-t border-primary/20">
+            <div className="flex items-center gap-2 pt-3 border-t border-border">
               {isPending && (
                 <>
                   <Button

@@ -162,11 +162,9 @@ const SaleTransactionCard = ({
   };
 
   return (
-    <Card className="relative overflow-hidden hover:shadow-md transition-shadow border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-      {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow border-0 shadow-xl bg-card">
       
-      <CardContent className="relative p-0">
+      <CardContent className="p-0">
         <div className="flex flex-col sm:flex-row">
           {/* Image */}
           <div className="w-full sm:w-48 h-32 sm:h-auto flex-shrink-0">
@@ -302,7 +300,7 @@ const SaleTransactionCard = ({
 
             {/* Escrow Status Banner */}
             {['paid', 'buyer_confirmed', 'seller_confirmed'].includes(transaction.status) && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-2 border-blue-300 dark:border-blue-700 rounded-lg p-4 mb-4 shadow-sm">
+              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-4">
                 <div className="flex items-center gap-3">
                   <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full">
                     <ShieldCheck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -323,7 +321,7 @@ const SaleTransactionCard = ({
             
             {/* Funds Released Banner for completed transactions */}
             {transaction.status === 'completed' && transaction.payout_completed_at && (
-              <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 border-2 border-emerald-300 dark:border-emerald-700 rounded-lg p-4 mb-4 shadow-sm">
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-700 rounded-lg p-4 mb-4">
                 <div className="flex items-center gap-3">
                   <div className="flex-shrink-0 bg-emerald-100 dark:bg-emerald-900/50 p-2 rounded-full">
                     <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
@@ -342,7 +340,7 @@ const SaleTransactionCard = ({
 
             {/* Tracking Status for Buyers */}
             {showTrackingSection && (
-              <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mb-4">
+              <div className="bg-muted/50 border border-border rounded-lg p-3 mb-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <Package className="h-4 w-4 text-primary" />
