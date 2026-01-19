@@ -54,7 +54,7 @@ const Browse = () => {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
-                  <Link to="/how-it-works">How It Works</Link>
+                  <Link to="/how-it-works">Learn More</Link>
                 </Button>
               </div>
               <p className="text-sm text-muted-foreground">Free to browse · No hidden fees · Pay only when you book</p>
