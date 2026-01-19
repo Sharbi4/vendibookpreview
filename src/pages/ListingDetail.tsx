@@ -253,6 +253,7 @@ const ListingDetail = () => {
                 <InquiryForm
                   listingId={listing.id}
                   hostId={listing.host_id}
+                  listingTitle={listing.title}
                   priceSale={listing.price_sale}
                   fulfillmentType={listing.fulfillment_type}
                   deliveryFee={listing.delivery_fee}
