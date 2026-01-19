@@ -22,6 +22,7 @@ interface WizardHeaderProps {
   onHelpClick?: () => void;
   listingTitle?: string;
   priceDaily?: number | null;
+  priceWeekly?: number | null;
 }
 
 const WizardHeader = ({
@@ -33,6 +34,7 @@ const WizardHeader = ({
   onHelpClick,
   listingTitle,
   priceDaily,
+  priceWeekly,
 }: WizardHeaderProps) => {
   return (
     <div className="relative bg-gradient-to-r from-primary/15 via-amber-500/10 to-yellow-400/5 border-b border-primary/20">
@@ -41,11 +43,18 @@ const WizardHeader = ({
         {listingTitle ? (
           <div className="mb-2">
             <h2 className="font-semibold text-base text-foreground line-clamp-2">{listingTitle}</h2>
-            {priceDaily && (
-              <span className="text-lg font-bold bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent">
-                ${priceDaily}/day
-              </span>
-            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              {priceDaily && (
+                <span className="text-lg font-bold bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent">
+                  ${priceDaily}/day
+                </span>
+              )}
+              {priceWeekly && (
+                <span className="text-sm text-muted-foreground">
+                  · ${priceWeekly}/week
+                </span>
+              )}
+            </div>
           </div>
         ) : (
           <div className="flex items-center gap-2 mb-2">
