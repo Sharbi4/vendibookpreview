@@ -353,7 +353,7 @@ const HowItWorks = () => {
                 </div>
 
                 {/* Fees */}
-                <div className="bg-card border border-border rounded-xl p-6">
+                <div className="bg-card border border-border rounded-xl p-6 mb-8">
                   <h4 className="font-semibold text-foreground mb-4">Transparent fees</h4>
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-center justify-between">
@@ -368,6 +368,18 @@ const HowItWorks = () => {
                       <span>Optional add-ons (Freight, Proof Notary) shown clearly before purchase</span>
                     </li>
                   </ul>
+                </div>
+
+                {/* Inline CTA for mobile and desktop */}
+                <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-xl p-6 lg:hidden">
+                  <h4 className="font-bold text-foreground mb-2">Ready to sell?</h4>
+                  <p className="text-sm text-muted-foreground mb-4">Create a for-sale listing and reach buyers locally or nationwide.</p>
+                  <Button className="w-full gap-2" asChild>
+                    <Link to="/create-listing?mode=sale">
+                      <DollarSign className="h-4 w-4" />
+                      Create For-Sale Listing
+                    </Link>
+                  </Button>
                 </div>
               </div>
 
@@ -388,7 +400,7 @@ const HowItWorks = () => {
                       'Publish',
                     ]}
                     ctaText="Create For-Sale Listing"
-                    ctaHref="/host"
+                    ctaHref="/create-listing?mode=sale"
                     secondaryText="View example listing"
                     secondaryHref="/search?mode=sale"
                     reassurance="Most listings go live in minutes. You stay in control of the deal."
@@ -508,7 +520,7 @@ const HowItWorks = () => {
                 </div>
 
                 {/* Fees */}
-                <div className="bg-card border border-border rounded-xl p-6">
+                <div className="bg-card border border-border rounded-xl p-6 mb-8">
                   <h4 className="font-semibold text-foreground mb-4">Clear fees at checkout</h4>
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-center justify-between">
@@ -523,6 +535,18 @@ const HowItWorks = () => {
                       <span>Everything is shown clearly before confirmation</span>
                     </li>
                   </ul>
+                </div>
+
+                {/* Inline CTA for mobile and desktop */}
+                <div className="bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 rounded-xl p-6 lg:hidden">
+                  <h4 className="font-bold text-foreground mb-2">Ready to rent out your asset?</h4>
+                  <p className="text-sm text-muted-foreground mb-4">Create a rental listing and start earning on your schedule.</p>
+                  <Button className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700" asChild>
+                    <Link to="/create-listing?mode=rent">
+                      <CalendarDays className="h-4 w-4" />
+                      Create Rental Listing
+                    </Link>
+                  </Button>
                 </div>
               </div>
 
@@ -542,7 +566,7 @@ const HowItWorks = () => {
                       'Document requirements (optional)',
                     ]}
                     ctaText="Create Rental Listing"
-                    ctaHref="/host"
+                    ctaHref="/create-listing?mode=rent"
                     secondaryText="View example rental listing"
                     secondaryHref="/search?mode=rent"
                     reassurance="Approve renters only when you're comfortable."
@@ -622,7 +646,7 @@ const HowItWorks = () => {
                 </div>
 
                 {/* Expectations */}
-                <div className="mb-12">
+                <div className="mb-8">
                   <h3 className="text-xl font-bold text-foreground mb-4">Set expectations for safe operations</h3>
                   <p className="text-muted-foreground mb-4">Use your listing to communicate:</p>
                   <ul className="space-y-2 text-sm text-muted-foreground">
@@ -644,6 +668,18 @@ const HowItWorks = () => {
                     </li>
                   </ul>
                 </div>
+
+                {/* Inline CTA for mobile and desktop */}
+                <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 rounded-xl p-6 lg:hidden">
+                  <h4 className="font-bold text-foreground mb-2">Ready to list your space?</h4>
+                  <p className="text-sm text-muted-foreground mb-4">Create a vendor lot listing and start earning from your property.</p>
+                  <Button className="w-full gap-2 bg-amber-600 hover:bg-amber-700" asChild>
+                    <Link to="/create-listing?category=vendor_lot">
+                      <MapPin className="h-4 w-4" />
+                      Create Vendor Lot Listing
+                    </Link>
+                  </Button>
+                </div>
               </div>
 
               {/* Sticky Sidebar Modal */}
@@ -662,7 +698,7 @@ const HowItWorks = () => {
                       'Amenities + rules',
                     ]}
                     ctaText="Create Vendor Lot Listing"
-                    ctaHref="/host"
+                    ctaHref="/create-listing?category=vendor_lot"
                     secondaryText="Contact Us to Partner"
                     secondaryHref="/contact"
                     reassurance="Clear listings attract better vendors and better repeat bookings."
@@ -787,7 +823,7 @@ const HowItWorks = () => {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button size="lg" className="bg-primary hover:bg-primary/90 text-white gap-2" asChild>
-                  <Link to="/host">
+                  <Link to="/create-listing?mode=sale">
                     <DollarSign className="h-5 w-5" />
                     Sell an Asset
                   </Link>
@@ -798,7 +834,7 @@ const HowItWorks = () => {
                   className="bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-2"
                   asChild
                 >
-                  <Link to="/host">
+                  <Link to="/create-listing?mode=rent">
                     <CalendarDays className="h-5 w-5" />
                     Rent Out an Asset
                   </Link>
@@ -809,7 +845,7 @@ const HowItWorks = () => {
                   className="bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-2"
                   asChild
                 >
-                  <Link to="/host">
+                  <Link to="/create-listing?category=vendor_lot">
                     <MapPin className="h-5 w-5" />
                     List a Vendor Lot
                   </Link>
