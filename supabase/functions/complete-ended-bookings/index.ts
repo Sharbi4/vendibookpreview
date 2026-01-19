@@ -128,16 +128,15 @@ serve(async (req) => {
     } else if (payoutEligibleBookings && payoutEligibleBookings.length > 0) {
       for (const booking of payoutEligibleBookings) {
         try {
-          // Check if there's an active dispute
-          const { data: disputes } = await supabaseClient
-            .from('sale_transactions')
-            .select('id, status')
-            .eq('booking_id', booking.id)
-            .eq('status', 'disputed')
-            .limit(1);
+          // Check if there's an active dispute on the booking itself
+          const { data: bookingWithDispute } = await supabaseClient
+            .from('booking_requests')
+            .select('dispute_status')
+            .eq('id', booking.id)
+            .single();
 
-          if (disputes && disputes.length > 0) {
-            logStep("Booking has active dispute - skipping payout", { bookingId: booking.id });
+          if (bookingWithDispute?.dispute_status && bookingWithDispute.dispute_status !== 'closed') {
+            logStep("Booking has active dispute - skipping payout", { bookingId: booking.id, disputeStatus: bookingWithDispute.dispute_status });
             continue;
           }
 
@@ -243,16 +242,15 @@ serve(async (req) => {
     } else if (depositEligibleBookings && depositEligibleBookings.length > 0) {
       for (const booking of depositEligibleBookings) {
         try {
-          // Check if there's an active dispute
-          const { data: disputes } = await supabaseClient
-            .from('sale_transactions')
-            .select('id, status')
-            .eq('booking_id', booking.id)
-            .eq('status', 'disputed')
-            .limit(1);
+          // Check if there's an active dispute on the booking itself
+          const { data: bookingWithDispute } = await supabaseClient
+            .from('booking_requests')
+            .select('dispute_status')
+            .eq('id', booking.id)
+            .single();
 
-          if (disputes && disputes.length > 0) {
-            logStep("Booking has active dispute - skipping deposit refund", { bookingId: booking.id });
+          if (bookingWithDispute?.dispute_status && bookingWithDispute.dispute_status !== 'closed') {
+            logStep("Booking has active dispute - skipping deposit refund", { bookingId: booking.id, disputeStatus: bookingWithDispute.dispute_status });
             continue;
           }
 
