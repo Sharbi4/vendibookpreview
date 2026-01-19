@@ -102,6 +102,77 @@ const SellMyFoodTruck = () => {
     ]
   };
 
+  // HowTo schema for selling process
+  const howToSchema = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "How to Sell Your Food Truck on Vendibook",
+    "description": "A step-by-step guide to selling your food truck, trailer, or commercial kitchen equipment on Vendibook's marketplace.",
+    "totalTime": "PT30M",
+    "step": [
+      {
+        "@type": "HowToStep",
+        "position": 1,
+        "name": "Create your listing",
+        "text": "Add photos, specs, equipment, and your terms to create a compelling listing.",
+        "url": "https://vendibook.com/list?mode=sale"
+      },
+      {
+        "@type": "HowToStep",
+        "position": 2,
+        "name": "Get verified",
+        "text": "Complete identity verification to build trust with buyers and help them move faster.",
+        "url": "https://vendibook.com/verify-identity"
+      },
+      {
+        "@type": "HowToStep",
+        "position": 3,
+        "name": "Confirm the sale and handoff",
+        "text": "When a buyer checks out, confirm the sale in your dashboard and coordinate pickup or freight.",
+        "url": "https://vendibook.com/dashboard"
+      }
+    ]
+  };
+
+  // Service schema for better rich results
+  const serviceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Food Truck Sales Marketplace",
+    "description": "Sell your food truck, trailer, or commercial kitchen with verified buyers, secure checkout, and transparent fees.",
+    "provider": {
+      "@type": "Organization",
+      "name": "Vendibook",
+      "url": "https://vendibook.com"
+    },
+    "serviceType": "Marketplace",
+    "areaServed": {
+      "@type": "Country",
+      "name": "United States"
+    },
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "For Sale Listings",
+      "itemListElement": [
+        {
+          "@type": "OfferCatalog",
+          "name": "Food Trucks for Sale",
+          "itemListElement": []
+        },
+        {
+          "@type": "OfferCatalog",
+          "name": "Food Trailers for Sale",
+          "itemListElement": []
+        },
+        {
+          "@type": "OfferCatalog",
+          "name": "Ghost Kitchens for Sale",
+          "itemListElement": []
+        }
+      ]
+    }
+  };
+
   const benefits = [
     {
       icon: Truck,
@@ -161,7 +232,7 @@ const SellMyFoodTruck = () => {
         canonical="https://vendibook.com/sell-my-food-truck"
         type="website"
       />
-      <JsonLd schema={[faqSchema, breadcrumbSchema]} />
+      <JsonLd schema={[faqSchema, breadcrumbSchema, howToSchema, serviceSchema]} />
       
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
