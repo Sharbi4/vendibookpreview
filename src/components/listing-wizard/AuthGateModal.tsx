@@ -45,6 +45,15 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
         if (error) throw error;
 
         if (data.user) {
+          // Send welcome email to new user (don't block on failure)
+          supabase.functions.invoke('send-welcome-email', {
+            body: {
+              email,
+              fullName: null,
+              role: 'host',
+            },
+          }).catch(err => console.error('Failed to send welcome email:', err));
+
           // Send admin notification for new user signup (don't block on failure)
           supabase.functions.invoke('send-admin-notification', {
             body: {
