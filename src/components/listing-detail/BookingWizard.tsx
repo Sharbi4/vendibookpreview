@@ -356,6 +356,7 @@ const BookingWizard = ({
         instantBook={instantBook}
         listingTitle={listingTitle}
         priceDaily={priceDaily}
+        priceWeekly={priceWeekly}
       />
 
       {/* Step content with animations */}
