@@ -1,0 +1,78 @@
+import { format } from 'date-fns';
+import { User, Shield, CheckCircle2, BadgeCheck, CreditCard } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import type { AdminUser } from '@/hooks/useAdminUsers';
+
+interface AdminUsersListCardProps {
+  user: AdminUser;
+}
+
+const AdminUsersListCard = ({ user }: AdminUsersListCardProps) => {
+  const getInitials = (name: string | null) => {
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  return (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardContent className="p-4">
+        <div className="flex items-center gap-4">
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={user.avatar_url || undefined} alt={user.full_name || 'User'} />
+            <AvatarFallback className="bg-primary/10 text-primary">
+              {getInitials(user.full_name || user.display_name)}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-semibold text-foreground truncate">
+                {user.full_name || user.display_name || 'Unnamed User'}
+              </span>
+              {user.roles.includes('admin') && (
+                <Badge variant="default" className="bg-primary text-xs">
+                  <Shield className="h-3 w-3 mr-1" />
+                  Admin
+                </Badge>
+              )}
+              {user.roles.includes('host') && (
+                <Badge variant="secondary" className="text-xs">
+                  Host
+                </Badge>
+              )}
+              {user.identity_verified && (
+                <Badge variant="outline" className="text-emerald-600 border-emerald-200 bg-emerald-50 text-xs">
+                  <BadgeCheck className="h-3 w-3 mr-1" />
+                  Verified
+                </Badge>
+              )}
+              {user.stripe_onboarding_complete && (
+                <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50 text-xs">
+                  <CreditCard className="h-3 w-3 mr-1" />
+                  Stripe
+                </Badge>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground truncate">{user.email || 'No email'}</p>
+          </div>
+
+          <div className="text-right text-sm text-muted-foreground hidden sm:block">
+            <p>Joined</p>
+            <p className="font-medium text-foreground">
+              {format(new Date(user.created_at), 'MMM d, yyyy')}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default AdminUsersListCard;
