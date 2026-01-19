@@ -93,7 +93,7 @@ const Hero = () => {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => navigate('/host')}
+              onClick={() => navigate('/list')}
               className="text-base px-8 py-6 border-2 bg-white/10 border-white/30 text-white hover:bg-white/20"
             >
               List Your Asset
