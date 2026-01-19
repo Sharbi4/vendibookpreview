@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import Hero from '@/components/home/Hero';
+import AnnouncementBanner from '@/components/home/AnnouncementBanner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
@@ -49,6 +50,7 @@ const Index = () => {
       />
       <JsonLd schema={[generateOrganizationSchema(), generateWebSiteSchema()]} />
       <Header />
+      <AnnouncementBanner />
       
       <main className="flex-1">
         {/* 1. Hero - above the fold */}
