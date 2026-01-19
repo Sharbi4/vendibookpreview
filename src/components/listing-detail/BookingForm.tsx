@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Loader2, MapPin, Truck, Building, Info, UserCheck, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { StripeLogo } from '@/components/ui/StripeLogo';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
@@ -758,9 +759,16 @@ const BookingForm = ({
       )}
 
       {/* Trust Badge before submit */}
-      <div className="mb-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-        <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-        <span>Protected by Vendibook</span>
+      <div className="mb-4 flex items-center justify-center gap-3 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5">
+          <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+          <span>Protected by Vendibook</span>
+        </div>
+        <span className="text-border">•</span>
+        <div className="flex items-center gap-1.5">
+          <span>Powered by</span>
+          <StripeLogo size="xs" />
+        </div>
       </div>
 
       {/* Submit Button */}
