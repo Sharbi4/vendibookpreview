@@ -137,8 +137,8 @@ const InquiryForm = ({
         </Button>
 
         {priceSale && isAffirmEligible(priceSale) && (
-          <div className="flex justify-center mt-3">
-            <AffirmBadge price={priceSale} />
+          <div className="mt-3">
+            <AffirmBadge price={priceSale} className="w-full justify-center py-2" />
           </div>
         )}
 
