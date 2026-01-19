@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import VerificationBadge from '@/components/verification/VerificationBadge';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 import { FavoriteButton } from '@/components/listing/FavoriteButton';
+import { AffirmBadge } from '@/components/ui/AffirmBadge';
 
 interface ListingCardProps {
   listing: Listing;
@@ -232,14 +233,20 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         </div>
 
         {/* Price */}
-        <p className={cn("text-foreground", compact ? "text-sm" : "")}>
-          <span className="font-bold">{price}</span>
-          {!compact && listing.mode === 'rent' && listing.price_weekly && (
-            <span className="text-sm text-muted-foreground ml-2">
-              · ${listing.price_weekly}/week
-            </span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className={cn("text-foreground", compact ? "text-sm" : "")}>
+            <span className="font-bold">{price}</span>
+            {!compact && listing.mode === 'rent' && listing.price_weekly && (
+              <span className="text-sm text-muted-foreground ml-2">
+                · ${listing.price_weekly}/week
+              </span>
+            )}
+          </p>
+          {/* Affirm badge for eligible sale listings */}
+          {!compact && listing.mode === 'sale' && listing.price_sale && (
+            <AffirmBadge price={listing.price_sale} />
           )}
-        </p>
+        </div>
       </div>
     </Link>
   );
