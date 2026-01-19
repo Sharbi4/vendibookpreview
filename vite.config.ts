@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.png", "favicon.svg", "images/vendibook-email-logo.png"],
+      includeAssets: ["favicon.png", "app-icon-512.png", "pwa-512x512.png", "images/vendibook-email-logo.png"],
 
       // Use ONE service worker (/sw.js) for both PWA caching + push notifications
       strategies: "injectManifest",
