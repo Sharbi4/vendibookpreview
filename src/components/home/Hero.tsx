@@ -99,29 +99,6 @@ const Hero = () => {
               List Your Asset
             </Button>
           </div>
-
-          {/* Trust badges */}
-          <div 
-            className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-8 animate-fade-in"
-            style={{ animationDelay: '0.6s', animationFillMode: 'backwards' }}
-          >
-            <div className="flex items-center gap-1.5 text-sm text-white/80">
-              <ShieldCheck className="h-4 w-4 text-white" />
-              <span>Verified users</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-sm text-white/80">
-              <CreditCard className="h-4 w-4 text-white" />
-              <span>Secure payments</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-sm text-white/80">
-              <FileCheck className="h-4 w-4 text-white" />
-              <span>Document workflows</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-sm text-white/80">
-              <Headphones className="h-4 w-4 text-white" />
-              <span>24/7 support</span>
-            </div>
-          </div>
         </div>
       </div>
     </section>
