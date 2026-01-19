@@ -53,10 +53,10 @@ const BookingStepReview = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="border-b border-primary/10 pb-4">
+      <div className="border-b border-border pb-4">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-md transition-transform duration-300 hover:scale-105">
-            <CheckCircle2 className="h-5 w-5 text-white" />
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+            <CheckCircle2 className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-foreground">
@@ -70,15 +70,14 @@ const BookingStepReview = ({
       </div>
 
       {/* Booking summary card */}
-      <div className="relative overflow-hidden border-2 border-primary/20 rounded-xl">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-amber-500/5 to-yellow-400/5 opacity-50" />
-        <div className="relative bg-gradient-to-r from-primary/15 via-amber-500/10 to-yellow-400/5 px-4 py-3 border-b border-primary/10">
+      <div className="border border-border rounded-xl overflow-hidden">
+        <div className="bg-muted/30 px-4 py-3 border-b border-border">
           <p className="font-semibold text-foreground line-clamp-1">{listingTitle}</p>
         </div>
         
-        <div className="relative p-4 space-y-3">
+        <div className="p-4 space-y-3">
           <div className="flex items-center gap-3 text-sm">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-amber-500/20 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Calendar className="h-4 w-4 text-primary" />
             </div>
             <div>
@@ -90,7 +89,7 @@ const BookingStepReview = ({
           </div>
 
           <div className="flex items-center gap-3 text-sm">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-amber-500/20 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               {fulfillmentSelected === 'delivery' ? (
                 <Truck className="h-4 w-4 text-primary" />
               ) : (
@@ -105,11 +104,10 @@ const BookingStepReview = ({
       </div>
 
       {/* Price breakdown */}
-      <div className="relative overflow-hidden border-2 border-primary/20 rounded-xl p-4 space-y-3">
-        <div className="absolute inset-0 bg-gradient-to-br from-background to-primary/5" />
-        <h4 className="relative font-semibold text-foreground text-sm">Price Breakdown</h4>
+      <div className="border border-border rounded-xl p-4 space-y-3">
+        <h4 className="font-semibold text-foreground text-sm">Price Breakdown</h4>
         
-        <div className="relative space-y-2 text-sm">
+        <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">
               ${priceDaily} × {rentalDays} day{rentalDays > 1 ? 's' : ''}
@@ -155,11 +153,11 @@ const BookingStepReview = ({
             </>
           )}
           
-          <div className="flex justify-between pt-3 border-t-2 border-primary/30">
+          <div className="flex justify-between pt-3 border-t-2 border-border">
             <span className="font-bold text-lg">
               {hasDeposit ? 'Total Due Today' : 'Total'}
             </span>
-            <span className="font-bold text-lg bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent">
+            <span className="font-bold text-lg text-primary">
               ${hasDeposit ? totalWithDeposit.toFixed(2) : fees.customerTotal.toFixed(2)}
             </span>
           </div>

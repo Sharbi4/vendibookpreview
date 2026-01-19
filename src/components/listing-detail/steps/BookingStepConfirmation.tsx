@@ -49,7 +49,7 @@ const BookingStepConfirmation = ({
   }, []);
 
   return (
-    <div className="bg-gradient-to-br from-card via-card to-emerald-50/30 dark:to-emerald-950/10 border-2 border-emerald-200 dark:border-emerald-800/50 rounded-2xl overflow-hidden shadow-xl">
+    <div className="rounded-2xl border-0 shadow-xl bg-card overflow-hidden">
       {/* Success Header */}
       <div className="pt-8 pb-6 px-6 text-center">
         <div className="relative w-20 h-20 mx-auto mb-4">
@@ -193,7 +193,7 @@ const BookingStepConfirmation = ({
         )}
 
         {/* Trust badge */}
-        <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mb-6 p-3 bg-primary/5 rounded-lg border border-primary/10">
+        <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mb-6 p-3 bg-muted/30 rounded-lg border border-border">
           <ShieldCheck className="h-4 w-4 text-primary" />
           <span>Protected by VendiBook's Booking Guarantee</span>
         </div>
