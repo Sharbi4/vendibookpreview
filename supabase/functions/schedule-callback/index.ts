@@ -45,8 +45,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     const ZENDESK_API_KEY = Deno.env.get("ZENDESK_API_KEY");
-    const ZENDESK_SUBDOMAIN = Deno.env.get("ZENDESK_SUBDOMAIN") || "vendibook";
-    const ZENDESK_EMAIL = Deno.env.get("ZENDESK_EMAIL") || "support@vendibook1.zendesk.com";
+    const rawSubdomain = Deno.env.get("ZENDESK_SUBDOMAIN") || "vendibook1";
+    // Extract just the subdomain in case the full domain was provided
+    const ZENDESK_SUBDOMAIN = rawSubdomain.replace(/\.zendesk\.com.*$/i, '').trim();
+    const ZENDESK_EMAIL = Deno.env.get("ZENDESK_EMAIL") || "shawnnaharbin@vendibook.com";
 
     if (!RESEND_API_KEY) {
       throw new Error("RESEND_API_KEY is not configured");
