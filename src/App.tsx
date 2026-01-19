@@ -61,6 +61,8 @@ const FAQ = lazy(() => import("./pages/FAQ"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const VendiAISuite = lazy(() => import("./pages/VendiAISuite"));
 const Browse = lazy(() => import("./pages/Browse"));
+const SellMyFoodTruck = lazy(() => import("./pages/SellMyFoodTruck"));
+const PricingCalculator = lazy(() => import("./pages/PricingCalculator"));
 const ListingPublished = lazy(() => import("./pages/ListingPublished"));
 const Cities = lazy(() => import("./pages/Cities"));
 const SaleCheckout = lazy(() => import("./pages/SaleCheckout"));
@@ -179,6 +181,12 @@ const AnimatedRoutes = () => {
           
           {/* SEO article page - separate purpose from tools hub */}
           <Route path="/vendi-ai-suite" element={<PageTransition><VendiAISuite /></PageTransition>} />
+          
+          {/* Seller landing page */}
+          <Route path="/sell-my-food-truck" element={<PageTransition><SellMyFoodTruck /></PageTransition>} />
+          
+          {/* Pricing Calculator */}
+          <Route path="/pricing-calculator" element={<PageTransition><PricingCalculator /></PageTransition>} />
           
           {/* Blog */}
           <Route path="/blog" element={<PageTransition><Blog /></PageTransition>} />
