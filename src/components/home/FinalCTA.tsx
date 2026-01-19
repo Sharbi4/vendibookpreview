@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Search } from 'lucide-react';
+import { ArrowRight, Search, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 const FinalCTA = () => {
   const navigate = useNavigate();
@@ -15,9 +15,13 @@ const FinalCTA = () => {
             <Search className="h-5 w-5" />
             Search Listings
           </Button>
-          <Button variant="outline" size="lg" onClick={() => navigate('/host')} className="px-8 gap-2">
+          <Button variant="outline" size="lg" onClick={() => navigate('/list')} className="px-8 gap-2">
             List an Asset
             <ArrowRight className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="lg" onClick={() => navigate('/how-it-works')} className="px-8 gap-2">
+            <BookOpen className="h-5 w-5" />
+            Learn More
           </Button>
         </div>
       </div>
