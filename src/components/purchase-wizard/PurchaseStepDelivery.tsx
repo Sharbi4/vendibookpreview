@@ -224,15 +224,6 @@ const PurchaseStepDelivery = ({
                 </div>
                 <div className="text-sm text-muted-foreground">Nationwide shipping • 7–10 business days • Scheduling included</div>
               </div>
-              <div className="text-right">
-                {isFreightSellerPaid ? (
-                  <span className="text-sm font-semibold text-emerald-600">FREE</span>
-                ) : hasValidEstimate ? (
-                  <span className="text-sm font-semibold text-foreground">+${freightCost.toLocaleString()}</span>
-                ) : (
-                  <span className="text-xs text-muted-foreground">Enter address for quote</span>
-                )}
-              </div>
               {fulfillmentSelected === 'vendibook_freight' && (
                 <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
                   <Check className="w-4 h-4 text-primary-foreground" />
@@ -270,48 +261,14 @@ const PurchaseStepDelivery = ({
                 {isEstimating && (
                   <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-sm text-muted-foreground">Calculating freight rate...</span>
+                    <span className="text-sm text-muted-foreground">Verifying delivery address...</span>
                   </div>
                 )}
 
                 {hasValidEstimate && !isEstimating && (
-                  <div className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-semibold text-foreground">Freight Quote</span>
-                      <span className="text-xs text-muted-foreground bg-background/80 px-2 py-0.5 rounded-full">
-                        $4.50/mile
-                      </span>
-                    </div>
-
-                    <div className="space-y-1.5 text-xs border-t border-primary/10 pt-3 mb-3">
-                      <div className="flex justify-between text-muted-foreground">
-                        <span>Distance ({estimate?.distance_miles?.toFixed(0)} mi × $4.50)</span>
-                        <span>${estimate?.base_cost?.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-muted-foreground">
-                        <span>Fuel surcharge (8%)</span>
-                        <span>${estimate?.fuel_surcharge?.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-muted-foreground">
-                        <span>Handling fee</span>
-                        <span>${estimate?.handling_fee?.toLocaleString()}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-primary/20">
-                      <div>
-                        <span className="text-sm font-semibold text-foreground">Total Freight</span>
-                        <div className="text-xs text-muted-foreground">
-                          Est. delivery: 7–10 business days
-                        </div>
-                      </div>
-                      <span className={cn(
-                        "text-xl font-bold",
-                        isFreightSellerPaid ? "text-emerald-600" : "text-primary"
-                      )}>
-                        {isFreightSellerPaid ? 'FREE' : `$${freightCost.toLocaleString()}`}
-                      </span>
-                    </div>
+                  <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-sm text-emerald-700 dark:text-emerald-300">Address verified • Ready to continue</span>
                   </div>
                 )}
 
