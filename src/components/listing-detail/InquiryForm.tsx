@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, MapPin, Truck, Package, ArrowRight } from 'lucide-react';
 import type { FulfillmentType } from '@/types/listing';
 import { StripeLogo } from '@/components/ui/StripeLogo';
+import { AffirmBadge, isAffirmEligible } from '@/components/ui/AffirmBadge';
 
 interface InquiryFormProps {
   listingId: string;
@@ -68,9 +69,14 @@ const InquiryForm = ({
           </div>
           <span className="font-semibold text-sm text-foreground">Secure Purchase</span>
         </div>
-        <span className="text-2xl font-bold bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent">
-          ${priceSale?.toLocaleString()}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-2xl font-bold bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent">
+            ${priceSale?.toLocaleString()}
+          </span>
+          {priceSale && isAffirmEligible(priceSale) && (
+            <AffirmBadge price={priceSale} className="text-xs" />
+          )}
+        </div>
       </div>
 
       {/* Content section with white background */}
