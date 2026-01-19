@@ -15,7 +15,9 @@ import {
   Percent,
   Info,
   ArrowRight,
-  ChevronRight
+  ChevronRight,
+  FileCheck,
+  MapPin
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -56,7 +58,11 @@ const SellMyFoodTruck = () => {
     },
     {
       question: "Do you offer shipping or freight?",
-      answer: "When available, freight can be coordinated through third parties. Some sellers offer pickup only, others offer freight options."
+      answer: "Yes. We offer nationwide freight coordination across the 48 contiguous U.S. states. Sellers can enable freight on their listings, and buyers can get an instant estimate at checkout."
+    },
+    {
+      question: "Can I get a notarized sale receipt?",
+      answer: "Yes. As an optional add-on, you can use Proof Notary to notarize your sale receipt remotely and online. This adds an extra layer of legal protection for both parties."
     },
     {
       question: "How do payouts work?",
@@ -191,8 +197,13 @@ const SellMyFoodTruck = () => {
     },
     {
       icon: Package,
-      title: "Freight options",
-      description: "Offer pickup or coordinate freight when available."
+      title: "Nationwide freight",
+      description: "Ship across the 48 contiguous U.S. states with coordinated freight."
+    },
+    {
+      icon: FileCheck,
+      title: "Notarized receipts",
+      description: "Optional Proof Notary add-on for remote, online notarization."
     },
     {
       icon: LayoutDashboard,
@@ -291,7 +302,11 @@ const SellMyFoodTruck = () => {
                   </span>
                   <span className="flex items-center gap-1.5">
                     <Package className="h-4 w-4 text-primary" />
-                    Optional freight coordination
+                    Nationwide freight
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <FileCheck className="h-4 w-4 text-primary" />
+                    Notarized receipts
                   </span>
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4 text-primary" />
@@ -519,19 +534,38 @@ const SellMyFoodTruck = () => {
                 className="max-w-2xl mx-auto text-center"
               >
                 <h2 className="text-2xl md:text-3xl font-bold mb-4">Simple pricing</h2>
-                <p className="text-muted-foreground mb-4">
-                  For sales, sellers pay a <strong className="text-foreground">12.9% commission</strong> on the sale price. Buyers don't pay a platform fee. Shipping/freight may apply if selected.
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button className="ml-1 align-middle">
-                        <Info className="h-4 w-4 text-muted-foreground/70 hover:text-muted-foreground transition-colors inline" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs text-sm">
-                      Freight is optional and coordinated through third parties when offered.
-                    </TooltipContent>
-                  </Tooltip>
+                <p className="text-muted-foreground mb-6">
+                  For sales, sellers pay a <strong className="text-foreground">12.9% commission</strong> on the sale price. Buyers don't pay a platform fee.
                 </p>
+                
+                <div className="grid sm:grid-cols-2 gap-4 text-left mb-6">
+                  <Card className="bg-background">
+                    <CardContent className="p-4 flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                        <Package className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm mb-1">Nationwide Freight</h4>
+                        <p className="text-xs text-muted-foreground">
+                          Coordinate shipping across the 48 contiguous U.S. states. Freight cost is calculated at checkout based on distance and item specs.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-background">
+                    <CardContent className="p-4 flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                        <FileCheck className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm mb-1">Proof Notary (Optional)</h4>
+                        <p className="text-xs text-muted-foreground">
+                          Add remote, online notarization for your sale receipt. Extra legal protection for both buyer and seller.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
                 <Button variant="outline" size="sm" asChild>
                   <Link to="/pricing-calculator">
                     See fee breakdown
