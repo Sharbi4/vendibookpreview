@@ -171,13 +171,18 @@ const SaleCheckout = () => {
 
   // Freight estimation
   const fetchFreightEstimate = useCallback(async (destinationAddress: string) => {
-    if (!listing?.address || !destinationAddress.trim() || destinationAddress.length < 10) {
+    const originText =
+      listing?.address ??
+      listing?.pickup_location_text ??
+      (listing?.latitude && listing?.longitude ? `${listing.latitude},${listing.longitude}` : null);
+
+    if (!originText || !destinationAddress.trim() || destinationAddress.trim().length < 10) {
       clearEstimate();
       return;
     }
-    
+
     await getEstimate({
-      origin_address: listing.address,
+      origin_address: originText,
       destination_address: destinationAddress.trim(),
       weight_lbs: listing.weight_lbs || 5000,
       length_inches: listing.length_inches || 240,
