@@ -1,21 +1,27 @@
-import { CheckCircle2, Calendar, MessageCircle, ArrowRight, Clock, ShieldCheck, Sparkles, PartyPopper } from 'lucide-react';
+import { CheckCircle2, Calendar, MessageCircle, ArrowRight, Clock, ShieldCheck, Sparkles, PartyPopper, FileText, Upload, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
+import { useListingRequiredDocuments } from '@/hooks/useRequiredDocuments';
+import { DOCUMENT_TYPE_LABELS } from '@/types/documents';
 
 interface BookingStepConfirmationProps {
   instantBook: boolean;
   bookingId: string | null;
   listingTitle: string;
+  listingId?: string;
 }
 
 const BookingStepConfirmation = ({
   instantBook,
   bookingId,
   listingTitle,
+  listingId,
 }: BookingStepConfirmationProps) => {
   const confettiFired = useRef(false);
+  const { data: requiredDocuments } = useListingRequiredDocuments(listingId);
+  const hasDocuments = requiredDocuments && requiredDocuments.length > 0;
 
   useEffect(() => {
     if (confettiFired.current) return;
@@ -136,6 +142,55 @@ const BookingStepConfirmation = ({
             )}
           </div>
         </div>
+
+        {/* Documents Required Section */}
+        {hasDocuments && instantBook && (
+          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-xl p-4 mb-6">
+            <div className="flex items-start gap-3 mb-3">
+              <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
+                <FileText className="h-4 w-4 text-amber-600" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-foreground text-sm">Documents Required</h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Please upload the following documents to complete your booking
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2 mb-4">
+              {requiredDocuments.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="flex items-center justify-between bg-white dark:bg-card rounded-lg px-3 py-2 border border-amber-100 dark:border-amber-900/30"
+                >
+                  <div className="flex items-center gap-2">
+                    <Upload className="h-3.5 w-3.5 text-amber-600" />
+                    <span className="text-sm font-medium text-foreground">
+                      {DOCUMENT_TYPE_LABELS[doc.document_type] || doc.document_type}
+                    </span>
+                  </div>
+                  <span className="text-xs text-amber-600 font-medium">Required</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-start gap-2 p-2.5 bg-white/50 dark:bg-card/50 rounded-lg border border-amber-100 dark:border-amber-900/30 mb-3">
+              <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-muted-foreground">
+                Documents are reviewed by our team and typically approved within <strong className="text-foreground">30 minutes</strong>. 
+                You'll receive a notification once approved.
+              </p>
+            </div>
+
+            <Button variant="outline" asChild className="w-full border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/20">
+              <Link to="/dashboard">
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Documents Now
+              </Link>
+            </Button>
+          </div>
+        )}
 
         {/* Trust badge */}
         <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mb-6 p-3 bg-primary/5 rounded-lg border border-primary/10">
