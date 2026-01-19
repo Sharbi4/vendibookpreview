@@ -1049,18 +1049,23 @@ const FilterContent = ({
             onLocationSelect={onLocationSelect}
             selectedCoordinates={locationCoords}
             placeholder="City, state, or zip code"
+            showRadiusSelector
+            radius={searchRadius}
+            onRadiusChange={onRadiusChange}
           />
         </div>
       </div>
 
-      {/* Radius Filter */}
-      <div className="max-w-xs">
-        <RadiusFilter
-          radius={searchRadius}
-          onChange={onRadiusChange}
-          disabled={!locationCoords}
-        />
-      </div>
+      {/* Radius Filter - only show when no inline radius (i.e. no location selected) */}
+      {!locationCoords && (
+        <div className="max-w-xs">
+          <RadiusFilter
+            radius={searchRadius}
+            onChange={onRadiusChange}
+            disabled={!locationCoords}
+          />
+        </div>
+      )}
 
       {/* Date Range Filter */}
       <div className="max-w-xs">
