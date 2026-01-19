@@ -251,13 +251,27 @@ export const ImportListingWizard: React.FC = () => {
   };
 
   const handleCreateDraft = async () => {
-    if (!formData.method) return;
+    if (!formData.method) {
+      toast({
+        title: 'Please select an import method',
+        variant: 'destructive',
+      });
+      return;
+    }
     
     setIsProcessing(true);
-    trackImportContentSubmitted();
+    
+    try {
+      trackImportContentSubmitted();
+    } catch (e) {
+      // Analytics should not block the flow
+      console.warn('Analytics tracking failed:', e);
+    }
 
     try {
-      let extractedData: Partial<ImportFormData> = {};
+      let extractedData: Partial<ImportFormData> = {
+        autoFilledFields: new Set(),
+      };
 
       // Process based on method
       if (formData.method === 'url') {
@@ -267,30 +281,36 @@ export const ImportListingWizard: React.FC = () => {
           extractedData = extractInfoFromText(formData.text);
         }
       } else if (formData.method === 'text') {
-        extractedData = extractInfoFromText(formData.text);
+        if (formData.text.trim()) {
+          extractedData = extractInfoFromText(formData.text);
+        }
       }
       // For photos-only, we just proceed with empty extraction
 
-      // Merge extracted data with form data
+      // Safely merge extracted data with form data
       setFormData(prev => ({
         ...prev,
-        ...extractedData,
-        title: extractedData.title || prev.title,
+        title: extractedData.title || prev.title || '',
         category: extractedData.category || prev.category,
         mode: extractedData.mode || prev.mode,
-        location: extractedData.location || prev.location,
-        price: extractedData.price || prev.price,
-        highlights: extractedData.highlights || prev.highlights,
-        autoFilledFields: extractedData.autoFilledFields || prev.autoFilledFields,
+        location: extractedData.location || prev.location || '',
+        price: extractedData.price || prev.price || '',
+        highlights: extractedData.highlights || prev.highlights || [],
+        autoFilledFields: extractedData.autoFilledFields || new Set(),
       }));
 
-      trackImportReviewViewed();
+      try {
+        trackImportReviewViewed();
+      } catch (e) {
+        console.warn('Analytics tracking failed:', e);
+      }
+      
       setStep('review');
     } catch (error) {
       console.error('Error processing import:', error);
       toast({
         title: 'Error processing content',
-        description: 'Please try again or enter details manually.',
+        description: error instanceof Error ? error.message : 'Please try again or enter details manually.',
         variant: 'destructive',
       });
     } finally {
@@ -300,15 +320,24 @@ export const ImportListingWizard: React.FC = () => {
 
   const handleSaveDraft = async () => {
     if (!user) {
-      toast({ title: 'Please log in to continue', variant: 'destructive' });
+      toast({ 
+        title: 'Please log in to continue', 
+        description: 'You need to be signed in to create a listing.',
+        variant: 'destructive' 
+      });
       return;
     }
 
-    // Validate minimum required fields
-    if (!formData.category || !formData.mode || !formData.location.trim()) {
+    // Validate minimum required fields with specific messages
+    const missingFields: string[] = [];
+    if (!formData.category) missingFields.push('category');
+    if (!formData.mode) missingFields.push('listing type');
+    if (!formData.location || !formData.location.trim()) missingFields.push('location');
+
+    if (missingFields.length > 0) {
       toast({
         title: 'Missing required fields',
-        description: 'Please fill in category, listing type, and location.',
+        description: `Please fill in: ${missingFields.join(', ')}.`,
         variant: 'destructive',
       });
       return;
@@ -322,8 +351,26 @@ export const ImportListingWizard: React.FC = () => {
         ? 'on_site' 
         : 'pickup';
 
-      // Generate title if missing
-      const title = formData.title.trim() || `My ${CATEGORY_LABELS[formData.category]}`;
+      // Generate title if missing - safely access CATEGORY_LABELS
+      const categoryLabel = formData.category && CATEGORY_LABELS[formData.category] 
+        ? CATEGORY_LABELS[formData.category] 
+        : 'Listing';
+      const title = formData.title?.trim() || `My ${categoryLabel}`;
+
+      // Parse price safely
+      let priceDaily: number | null = null;
+      let priceSale: number | null = null;
+      
+      if (formData.price && formData.price.trim()) {
+        const parsedPrice = parseFloat(formData.price.replace(/[^0-9.]/g, ''));
+        if (!isNaN(parsedPrice) && parsedPrice > 0) {
+          if (formData.mode === 'rent') {
+            priceDaily = parsedPrice;
+          } else if (formData.mode === 'sale') {
+            priceSale = parsedPrice;
+          }
+        }
+      }
 
       // Create the draft listing
       const { data: listing, error: insertError } = await supabase
@@ -334,61 +381,87 @@ export const ImportListingWizard: React.FC = () => {
           category: formData.category,
           status: 'draft',
           title,
-          description: formData.text.trim() || '',
-          highlights: formData.highlights,
+          description: formData.text?.trim() || '',
+          highlights: Array.isArray(formData.highlights) ? formData.highlights : [],
           fulfillment_type: fulfillmentType,
-          address: formData.location || null,
-          pickup_location_text: formData.location || null,
-          price_daily: formData.mode === 'rent' && formData.price ? parseFloat(formData.price) : null,
-          price_sale: formData.mode === 'sale' && formData.price ? parseFloat(formData.price) : null,
+          address: formData.location?.trim() || null,
+          pickup_location_text: formData.location?.trim() || null,
+          price_daily: priceDaily,
+          price_sale: priceSale,
         } as any)
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        throw new Error(insertError.message || 'Failed to create listing');
+      }
+
+      if (!listing || !listing.id) {
+        throw new Error('Failed to create listing - no listing ID returned');
+      }
 
       // Upload photos if any
-      if (formData.photos.length > 0) {
+      if (formData.photos && formData.photos.length > 0) {
         const uploadedUrls: string[] = [];
 
         for (const photo of formData.photos) {
-          const fileExt = photo.name.split('.').pop();
-          const fileName = `${listing.id}/${crypto.randomUUID()}.${fileExt}`;
-          
-          const { error: uploadError } = await supabase.storage
-            .from('listings')
-            .upload(fileName, photo);
-
-          if (!uploadError) {
-            const { data: publicUrl } = supabase.storage
+          try {
+            const fileExt = photo.name.split('.').pop() || 'jpg';
+            const fileName = `${listing.id}/${crypto.randomUUID()}.${fileExt}`;
+            
+            const { error: uploadError } = await supabase.storage
               .from('listings')
-              .getPublicUrl(fileName);
-            uploadedUrls.push(publicUrl.publicUrl);
+              .upload(fileName, photo);
+
+            if (!uploadError) {
+              const { data: publicUrl } = supabase.storage
+                .from('listings')
+                .getPublicUrl(fileName);
+              if (publicUrl?.publicUrl) {
+                uploadedUrls.push(publicUrl.publicUrl);
+              }
+            } else {
+              console.warn('Photo upload error:', uploadError);
+            }
+          } catch (photoError) {
+            console.warn('Error uploading photo:', photoError);
+            // Continue with other photos
           }
         }
 
-        // Update listing with image URLs
+        // Update listing with image URLs if any were uploaded
         if (uploadedUrls.length > 0) {
-          await supabase
+          const { error: updateError } = await supabase
             .from('listings')
             .update({
               cover_image_url: uploadedUrls[0],
               image_urls: uploadedUrls,
             })
             .eq('id', listing.id);
+          
+          if (updateError) {
+            console.warn('Error updating listing with images:', updateError);
+            // Don't throw - listing was created, images can be added later
+          }
         }
       }
 
-      // Track success
-      trackDraftCreatedFromImport(formData.method || 'unknown');
+      // Track success - don't let analytics errors block the flow
+      try {
+        trackDraftCreatedFromImport(formData.method || 'unknown');
+      } catch (e) {
+        console.warn('Analytics tracking failed:', e);
+      }
       
       setCreatedListingId(listing.id);
       setStep('success');
     } catch (error) {
       console.error('Error creating draft:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
       toast({
         title: 'Error creating draft',
-        description: 'Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
