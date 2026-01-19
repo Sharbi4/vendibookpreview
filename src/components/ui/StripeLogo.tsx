@@ -1,4 +1,4 @@
-import stripeLogo from '@/assets/stripe-logo.png';
+import stripeLogo from '@/assets/stripe-icon.png';
 import { cn } from '@/lib/utils';
 
 interface StripeLogoProps {
