@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { getGuestDraft, clearGuestDraft } from '@/lib/guestDraft';
 
 interface AuthGateModalProps {
   open: boolean;
@@ -26,6 +27,38 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Claim guest draft by linking it to the authenticated user
+  const claimGuestDraft = async (userId: string) => {
+    const guestDraft = getGuestDraft();
+    
+    // Use either the stored guest draft or the draftId prop
+    const listingId = draftId || guestDraft?.listingId;
+    const token = guestDraft?.token;
+    
+    if (!listingId) return;
+
+    try {
+      // Update the listing to claim it for this user
+      const { error } = await supabase
+        .from('listings')
+        .update({ 
+          host_id: userId,
+          guest_draft_token: null 
+        })
+        .eq('id', listingId)
+        .is('host_id', null); // Only claim if not already claimed
+
+      if (error) {
+        console.error('Failed to claim draft:', error);
+      } else {
+        console.log('Successfully claimed draft listing:', listingId);
+        clearGuestDraft();
+      }
+    } catch (err) {
+      console.error('Error claiming guest draft:', err);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
@@ -45,6 +78,19 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
         if (error) throw error;
 
         if (data.user) {
+          // Add host role for new user
+          try {
+            await supabase.from('user_roles').insert({
+              user_id: data.user.id,
+              role: 'host',
+            });
+          } catch (err) {
+            console.error('Failed to add host role:', err);
+          }
+
+          // Claim the guest draft for this user
+          await claimGuestDraft(data.user.id);
+
           // Send welcome email to new user (don't block on failure)
           supabase.functions.invoke('send-welcome-email', {
             body: {
@@ -83,6 +129,9 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
         if (error) throw error;
 
         if (data.user) {
+          // Claim the guest draft for this user (in case they started as guest)
+          await claimGuestDraft(data.user.id);
+
           toast({
             title: 'Welcome back!',
             description: 'Your draft is saved. Continue where you left off.',
