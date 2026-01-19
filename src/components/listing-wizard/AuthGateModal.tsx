@@ -45,6 +45,20 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
         if (error) throw error;
 
         if (data.user) {
+          // Send admin notification for new user signup (don't block on failure)
+          supabase.functions.invoke('send-admin-notification', {
+            body: {
+              type: 'new_user',
+              data: {
+                email,
+                full_name: null,
+                role: 'host',
+                user_id: data.user.id,
+                source: 'listing_wizard',
+              },
+            },
+          }).catch(err => console.error('Failed to send admin notification:', err));
+
           toast({
             title: 'Account created!',
             description: 'Your draft is saved. Continue where you left off.',
