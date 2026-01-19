@@ -103,13 +103,13 @@ const HowItWorks = () => {
 
               {/* Jump Buttons */}
               <div className="flex flex-wrap gap-3 justify-center mb-10">
-                <Button size="lg" className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
+                <Button size="lg" className="bg-foreground hover:bg-foreground/90 text-background shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
                   <a href="#sell">Sell</a>
                 </Button>
-                <Button size="lg" className="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
+                <Button size="lg" className="bg-foreground hover:bg-foreground/90 text-background shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
                   <a href="#rent">Rent</a>
                 </Button>
-                <Button size="lg" className="bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-700 hover:to-yellow-600 text-white shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
+                <Button size="lg" className="bg-foreground hover:bg-foreground/90 text-background shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
                   <a href="#lots">Vendor Lots</a>
                 </Button>
                 <Button size="lg" variant="secondary" className="gap-2 hover:scale-105 transition-all" asChild>
