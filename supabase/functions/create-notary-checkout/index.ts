@@ -55,8 +55,13 @@ serve(async (req) => {
       .eq("id", listing_id)
       .single();
 
+    logStep("Listing query result", { 
+      listing: listing ? { id: listing.id, title: listing.title } : null, 
+      error: listingError?.message || null 
+    });
+
     if (listingError || !listing) {
-      throw new Error("Listing not found");
+      throw new Error(`Listing not found: ${listingError?.message || 'No data returned'}`);
     }
 
     if (listing.host_id !== user.id) {
