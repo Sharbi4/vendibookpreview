@@ -86,7 +86,7 @@ const HowItWorks = () => {
 
       <main className="flex-1">
         {/* ==================== HERO ==================== */}
-        <section className="py-16 md:py-24 bg-gradient-to-br from-primary/5 via-background to-background">
+        <section className="py-16 md:py-24 bg-muted/30">
           <div className="container">
             <div className="max-w-3xl mx-auto text-center">
               <p className="text-sm font-medium text-primary mb-3 tracking-wide uppercase">
@@ -159,9 +159,9 @@ const HowItWorks = () => {
               {/* Main Content */}
               <div>
                 <div className="mb-10">
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/20 to-amber-500/20 text-primary text-sm font-medium mb-4">
-                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center">
-                      <DollarSign className="h-3.5 w-3.5 text-white" />
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+                    <div className="w-6 h-6 rounded-lg bg-primary flex items-center justify-center">
+                      <DollarSign className="h-3.5 w-3.5 text-primary-foreground" />
                     </div>
                     For Sellers
                   </div>
@@ -176,7 +176,7 @@ const HowItWorks = () => {
                 {/* Step 1: Payment Options */}
                 <div className="mb-12">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 text-white flex items-center justify-center font-bold shadow-md">
+                    <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-md">
                       1
                     </div>
                     <h3 className="text-xl font-bold text-foreground">Choose how you get paid</h3>
@@ -244,7 +244,7 @@ const HowItWorks = () => {
                 {/* Step 2: Proof Notary */}
                 <div className="mb-12">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 text-white flex items-center justify-center font-bold shadow-md">
+                    <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-md">
                       2
                     </div>
                     <h3 className="text-xl font-bold text-foreground">Optional paid add-on: Notarized sale receipt with Proof Notary</h3>
@@ -296,7 +296,7 @@ const HowItWorks = () => {
                 {/* Step 3: Freight */}
                 <div className="mb-12">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 text-white flex items-center justify-center font-bold shadow-md">
+                    <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-md">
                       3
                     </div>
                     <h3 className="text-xl font-bold text-foreground">Reach buyers across the United States with Vendibook Freight</h3>
@@ -377,11 +377,10 @@ const HowItWorks = () => {
                 </div>
 
                 {/* Inline CTA for mobile and desktop */}
-                <div className="relative overflow-hidden bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-2 border-primary/20 rounded-xl p-6 lg:hidden group hover:border-primary/40 transition-all">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-amber-500/5 to-yellow-400/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <h4 className="relative font-bold text-foreground mb-2">Ready to sell?</h4>
-                  <p className="relative text-sm text-muted-foreground mb-4">Create a for-sale listing and reach buyers locally or nationwide.</p>
-                  <Button variant="gradient" className="relative w-full gap-2 shadow-md hover:shadow-lg transition-all" asChild>
+                <div className="bg-muted/50 border border-border rounded-xl p-6 lg:hidden">
+                  <h4 className="font-bold text-foreground mb-2">Ready to sell?</h4>
+                  <p className="text-sm text-muted-foreground mb-4">Create a for-sale listing and reach buyers locally or nationwide.</p>
+                  <Button className="w-full gap-2 shadow-md hover:shadow-lg transition-all" asChild>
                     <Link to="/create-listing?mode=sale">
                       <ArrowRight className="h-4 w-4" />
                       Create For-Sale Listing
@@ -425,9 +424,9 @@ const HowItWorks = () => {
               {/* Main Content */}
               <div>
                 <div className="mb-10">
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-700 dark:text-emerald-400 text-sm font-medium mb-4">
-                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-                      <CalendarDays className="h-3.5 w-3.5 text-white" />
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+                    <div className="w-6 h-6 rounded-lg bg-primary flex items-center justify-center">
+                      <CalendarDays className="h-3.5 w-3.5 text-primary-foreground" />
                     </div>
                     For Hosts
                   </div>
@@ -547,11 +546,10 @@ const HowItWorks = () => {
                 </div>
 
                 {/* Inline CTA for mobile and desktop */}
-                <div className="relative overflow-hidden bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border-2 border-emerald-500/20 rounded-xl p-6 lg:hidden group hover:border-emerald-500/40 transition-all">
-                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-emerald-400/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <h4 className="relative font-bold text-foreground mb-2">Ready to rent out your asset?</h4>
-                  <p className="relative text-sm text-muted-foreground mb-4">Create a rental listing and start earning on your schedule.</p>
-                  <Button className="relative w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 gap-2 shadow-md hover:shadow-lg transition-all" asChild>
+                <div className="bg-muted/50 border border-border rounded-xl p-6 lg:hidden">
+                  <h4 className="font-bold text-foreground mb-2">Ready to rent out your asset?</h4>
+                  <p className="text-sm text-muted-foreground mb-4">Create a rental listing and start earning on your schedule.</p>
+                  <Button className="w-full gap-2 shadow-md hover:shadow-lg transition-all" asChild>
                     <Link to="/create-listing?mode=rent">
                       <ArrowRight className="h-4 w-4" />
                       Create Rental Listing
@@ -595,9 +593,9 @@ const HowItWorks = () => {
               {/* Main Content */}
               <div>
                 <div className="mb-10">
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-700 dark:text-amber-400 text-sm font-medium mb-4">
-                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center">
-                      <MapPin className="h-3.5 w-3.5 text-white" />
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+                    <div className="w-6 h-6 rounded-lg bg-primary flex items-center justify-center">
+                      <MapPin className="h-3.5 w-3.5 text-primary-foreground" />
                     </div>
                     For Property Owners
                   </div>
@@ -682,11 +680,10 @@ const HowItWorks = () => {
                 </div>
 
                 {/* Inline CTA for mobile and desktop */}
-                <div className="relative overflow-hidden bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-2 border-amber-500/20 rounded-xl p-6 lg:hidden group hover:border-amber-500/40 transition-all">
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-yellow-500/5 to-amber-400/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <h4 className="relative font-bold text-foreground mb-2">Ready to list your space?</h4>
-                  <p className="relative text-sm text-muted-foreground mb-4">Create a vendor lot listing and start earning from your property.</p>
-                  <Button className="relative w-full bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-700 hover:to-yellow-600 gap-2 shadow-md hover:shadow-lg transition-all" asChild>
+                <div className="bg-muted/50 border border-border rounded-xl p-6 lg:hidden">
+                  <h4 className="font-bold text-foreground mb-2">Ready to list your space?</h4>
+                  <p className="text-sm text-muted-foreground mb-4">Create a vendor lot listing and start earning from your property.</p>
+                  <Button className="w-full gap-2 shadow-md hover:shadow-lg transition-all" asChild>
                     <Link to="/create-listing?category=vendor_lot">
                       <ArrowRight className="h-4 w-4" />
                       Create Vendor Lot Listing
@@ -728,9 +725,9 @@ const HowItWorks = () => {
           <div className="container">
             <div className="max-w-4xl mx-auto">
               <div className="text-center mb-12">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/20 to-amber-500/20 text-primary text-sm font-medium mb-4">
-                  <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center">
-                    <Sparkles className="h-3.5 w-3.5 text-white" />
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+                  <div className="w-6 h-6 rounded-lg bg-primary flex items-center justify-center">
+                    <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
                   </div>
                   Free for Everyone
                 </div>
@@ -770,19 +767,19 @@ const HowItWorks = () => {
               </div>
 
               <div className="flex flex-wrap justify-center gap-3">
-                <Button size="lg" variant="gradient" className="gap-2 shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
+                <Button size="lg" className="gap-2 shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
                   <Link to="/tools">
                     <Sparkles className="h-4 w-4" />
                     Explore Free Tools
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" className="gap-2 border-2 hover:scale-105 transition-all" asChild>
+                <Button size="lg" variant="outline" className="gap-2 border border-border hover:scale-105 transition-all" asChild>
                   <Link to="/help">
                     <Headphones className="h-4 w-4" />
                     Visit Help Center
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" className="gap-2 border-2 hover:scale-105 transition-all" asChild>
+                <Button size="lg" variant="outline" className="gap-2 border border-border hover:scale-105 transition-all" asChild>
                   <Link to="/contact">
                     <ArrowRight className="h-4 w-4" />
                     Contact Support
@@ -809,37 +806,33 @@ const HowItWorks = () => {
               </p>
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-                <div className="relative overflow-hidden bg-card border-2 border-primary/20 rounded-xl p-5 text-left group hover:border-primary/40 transition-colors">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-amber-500/5 to-yellow-400/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center mb-3 shadow-md">
-                    <ShieldCheck className="h-5 w-5 text-white" />
+                <div className="bg-card border border-border rounded-xl p-5 text-left hover:shadow-md transition-shadow">
+                  <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center mb-3 shadow-md">
+                    <ShieldCheck className="h-5 w-5 text-primary-foreground" />
                   </div>
-                  <h4 className="relative font-semibold text-foreground mb-1">Trust</h4>
-                  <p className="relative text-sm text-muted-foreground">Verified users and clear records</p>
+                  <h4 className="font-semibold text-foreground mb-1">Trust</h4>
+                  <p className="text-sm text-muted-foreground">Verified users and clear records</p>
                 </div>
-                <div className="relative overflow-hidden bg-card border-2 border-primary/20 rounded-xl p-5 text-left group hover:border-primary/40 transition-colors">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-amber-500/5 to-yellow-400/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center mb-3 shadow-md">
-                    <Lightbulb className="h-5 w-5 text-white" />
+                <div className="bg-card border border-border rounded-xl p-5 text-left hover:shadow-md transition-shadow">
+                  <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center mb-3 shadow-md">
+                    <Lightbulb className="h-5 w-5 text-primary-foreground" />
                   </div>
-                  <h4 className="relative font-semibold text-foreground mb-1">Clarity</h4>
-                  <p className="relative text-sm text-muted-foreground">Steps that explain what happens next</p>
+                  <h4 className="font-semibold text-foreground mb-1">Clarity</h4>
+                  <p className="text-sm text-muted-foreground">Steps that explain what happens next</p>
                 </div>
-                <div className="relative overflow-hidden bg-card border-2 border-primary/20 rounded-xl p-5 text-left group hover:border-primary/40 transition-colors">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-amber-500/5 to-yellow-400/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center mb-3 shadow-md">
-                    <Users className="h-5 w-5 text-white" />
+                <div className="bg-card border border-border rounded-xl p-5 text-left hover:shadow-md transition-shadow">
+                  <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center mb-3 shadow-md">
+                    <Users className="h-5 w-5 text-primary-foreground" />
                   </div>
-                  <h4 className="relative font-semibold text-foreground mb-1">Control</h4>
-                  <p className="relative text-sm text-muted-foreground">You set terms, requirements, and availability</p>
+                  <h4 className="font-semibold text-foreground mb-1">Control</h4>
+                  <p className="text-sm text-muted-foreground">You set terms, requirements, and availability</p>
                 </div>
-                <div className="relative overflow-hidden bg-card border-2 border-primary/20 rounded-xl p-5 text-left group hover:border-primary/40 transition-colors">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-amber-500/5 to-yellow-400/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center mb-3 shadow-md">
-                    <Headphones className="h-5 w-5 text-white" />
+                <div className="bg-card border border-border rounded-xl p-5 text-left hover:shadow-md transition-shadow">
+                  <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center mb-3 shadow-md">
+                    <Headphones className="h-5 w-5 text-primary-foreground" />
                   </div>
-                  <h4 className="relative font-semibold text-foreground mb-1">Support</h4>
-                  <p className="relative text-sm text-muted-foreground">Help when you need it</p>
+                  <h4 className="font-semibold text-foreground mb-1">Support</h4>
+                  <p className="text-sm text-muted-foreground">Help when you need it</p>
                 </div>
               </div>
             </div>
@@ -855,7 +848,7 @@ const HowItWorks = () => {
               </h2>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" variant="gradient" className="gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-105" asChild>
+                <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-105" asChild>
                   <Link to="/create-listing?mode=sale">
                     <DollarSign className="h-4 w-4" />
                     Sell an Asset
@@ -1042,16 +1035,15 @@ interface ToolCardProps {
 const ToolCard = ({ icon, title, description, href }: ToolCardProps) => (
   <Link
     to={href}
-    className="relative overflow-hidden block bg-card border-2 border-primary/20 rounded-xl p-5 hover:border-primary/40 hover:shadow-md transition-all group"
+    className="block bg-card border border-border rounded-xl p-5 hover:shadow-md transition-all group"
   >
-    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-amber-500/5 to-yellow-400/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-    <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center mb-4 shadow-md group-hover:scale-105 transition-transform">
-      <span className="text-white">{icon}</span>
+    <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4 shadow-md group-hover:scale-105 transition-transform">
+      <span className="text-primary-foreground">{icon}</span>
     </div>
-    <h4 className="relative font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+    <h4 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
       {title}
     </h4>
-    <p className="relative text-sm text-muted-foreground">{description}</p>
+    <p className="text-sm text-muted-foreground">{description}</p>
   </Link>
 );
 
