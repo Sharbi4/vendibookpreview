@@ -296,6 +296,7 @@ export type Database = {
           end_date: string
           first_response_at: string | null
           fulfillment_selected: string | null
+          host_confirmed_at: string | null
           host_id: string
           host_nudge_sent_at: string | null
           host_response: string | null
@@ -310,6 +311,7 @@ export type Database = {
           payout_processed_at: string | null
           payout_transfer_id: string | null
           responded_at: string | null
+          shopper_confirmed_at: string | null
           shopper_id: string
           start_date: string
           status: Database["public"]["Enums"]["booking_status"]
@@ -336,6 +338,7 @@ export type Database = {
           end_date: string
           first_response_at?: string | null
           fulfillment_selected?: string | null
+          host_confirmed_at?: string | null
           host_id: string
           host_nudge_sent_at?: string | null
           host_response?: string | null
@@ -350,6 +353,7 @@ export type Database = {
           payout_processed_at?: string | null
           payout_transfer_id?: string | null
           responded_at?: string | null
+          shopper_confirmed_at?: string | null
           shopper_id: string
           start_date: string
           status?: Database["public"]["Enums"]["booking_status"]
@@ -376,6 +380,7 @@ export type Database = {
           end_date?: string
           first_response_at?: string | null
           fulfillment_selected?: string | null
+          host_confirmed_at?: string | null
           host_id?: string
           host_nudge_sent_at?: string | null
           host_response?: string | null
@@ -390,6 +395,7 @@ export type Database = {
           payout_processed_at?: string | null
           payout_transfer_id?: string | null
           responded_at?: string | null
+          shopper_confirmed_at?: string | null
           shopper_id?: string
           start_date?: string
           status?: Database["public"]["Enums"]["booking_status"]
