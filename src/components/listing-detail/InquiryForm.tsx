@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, MapPin, Truck, Package, ArrowRight } from 'lucide-react';
 import type { FulfillmentType } from '@/types/listing';
+import { StripeLogo } from '@/components/ui/StripeLogo';
 
 interface InquiryFormProps {
   listingId: string;
@@ -128,9 +129,16 @@ const InquiryForm = ({
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
 
-        <div className="flex items-center gap-2 justify-center mt-4 text-xs text-muted-foreground p-2 bg-primary/5 rounded-lg border border-primary/10">
-          <ShieldCheck className="h-4 w-4 text-primary" />
-          <span>Protected by Vendibook escrow</span>
+        <div className="flex items-center gap-3 justify-center mt-4 text-xs text-muted-foreground p-2 bg-primary/5 rounded-lg border border-primary/10">
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            <span>Vendibook escrow</span>
+          </div>
+          <span className="text-border">•</span>
+          <div className="flex items-center gap-1.5">
+            <span>Powered by</span>
+            <StripeLogo size="xs" />
+          </div>
         </div>
       </div>
     </div>
