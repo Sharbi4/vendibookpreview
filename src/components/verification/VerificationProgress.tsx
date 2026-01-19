@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Shield, Building2, ChevronRight, Loader2 } from 'lucide-react';
+import { Check, Shield, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,24 +62,23 @@ const VerificationProgress = () => {
   }
 
   return (
-    <div className="relative overflow-hidden p-4 rounded-xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-      {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
-      
-      <div className="relative flex items-center justify-between mb-1">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-gradient-to-br from-primary to-amber-500 rounded-lg shadow-md">
-            <Shield className="h-3.5 w-3.5 text-white" />
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
+            <Shield className="h-5 w-5" />
           </div>
-          <span className="text-sm font-medium text-foreground">Trust & Verification</span>
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">Trust & Verification</h3>
+            <p className="text-xs text-muted-foreground">Complete these steps to unlock all features.</p>
+          </div>
         </div>
-        <span className="text-xs font-semibold text-primary">
-          {completedSteps} of {steps.length} complete
+        <span className="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+          {completedSteps} of {steps.length}
         </span>
       </div>
-      <p className="relative text-xs text-muted-foreground mb-3">Complete these steps to unlock all features.</p>
 
-      <div className="relative space-y-2">
+      <div className="space-y-2">
         {steps.map((step) => {
           const isNext = !step.isComplete && steps.slice(0, steps.indexOf(step)).every(s => s.isComplete);
           
@@ -87,26 +86,26 @@ const VerificationProgress = () => {
             <div
               key={step.id}
               className={cn(
-                "flex items-center justify-between py-2 px-3 rounded-lg bg-card/60 backdrop-blur-sm",
+                "flex items-center justify-between py-3 px-4 rounded-xl bg-muted/50",
                 step.isComplete && "opacity-70",
-                isNext && "bg-card border border-primary/50 shadow-sm"
+                isNext && "bg-card border border-primary/30 shadow-sm"
               )}
             >
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-3">
                 <div className={cn(
-                  "w-5 h-5 rounded-full flex items-center justify-center",
+                  "w-6 h-6 rounded-full flex items-center justify-center",
                   step.isComplete 
-                    ? "bg-gradient-to-br from-primary to-amber-500" 
+                    ? "bg-primary" 
                     : "bg-muted border border-border"
                 )}>
                   {step.isComplete ? (
-                    <Check className="h-3 w-3 text-white" strokeWidth={2.5} />
+                    <Check className="h-3.5 w-3.5 text-primary-foreground" strokeWidth={2.5} />
                   ) : (
-                    <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
+                    <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
                   )}
                 </div>
                 <span className={cn(
-                  "text-sm",
+                  "text-sm font-medium",
                   step.isComplete ? "text-muted-foreground line-through" : "text-foreground"
                 )}>
                   {step.title}
@@ -118,14 +117,14 @@ const VerificationProgress = () => {
                   size="sm"
                   onClick={step.action}
                   disabled={step.isLoading}
-                  className="h-7 text-xs gap-1 bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
+                  className="h-8 text-xs gap-1.5"
                 >
                   {step.isLoading ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
                     <>
                       {step.actionLabel}
-                      <ChevronRight className="h-3 w-3" />
+                      <ChevronRight className="h-3.5 w-3.5" />
                     </>
                   )}
                 </Button>
