@@ -320,19 +320,25 @@ export const ListingWizard: React.FC = () => {
     
     for (let i = 0; i < formData.images.length; i++) {
       const file = formData.images[i];
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `${user!.id}/${listingId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       
-      const { error: uploadError } = await supabase.storage
+      console.log(`[Upload] Uploading image ${i + 1}/${formData.images.length}: ${file.name} (${file.size} bytes)`);
+      
+      const { error: uploadError, data: uploadData } = await supabase.storage
         .from('listing-images')
         .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: true, // Use upsert to handle potential duplicate names
+          contentType: file.type || 'image/jpeg',
         });
 
       if (uploadError) {
+        console.error(`[Upload] Failed to upload ${file.name}:`, uploadError);
         throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`);
       }
+
+      console.log(`[Upload] Successfully uploaded ${file.name}`, uploadData);
 
       const { data: { publicUrl } } = supabase.storage
         .from('listing-images')
