@@ -20,6 +20,8 @@ interface WizardHeaderProps {
   steps: WizardStep[];
   instantBook?: boolean;
   onHelpClick?: () => void;
+  listingTitle?: string;
+  priceDaily?: number | null;
 }
 
 const WizardHeader = ({
@@ -29,21 +31,34 @@ const WizardHeader = ({
   steps,
   instantBook = false,
   onHelpClick,
+  listingTitle,
+  priceDaily,
 }: WizardHeaderProps) => {
   return (
     <div className="relative bg-gradient-to-r from-primary/15 via-amber-500/10 to-yellow-400/5 border-b border-primary/20">
-      {/* Top bar */}
-      <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-sm">
-            <ShieldCheck className="h-3.5 w-3.5 text-white" />
+      {/* Top bar with title and price */}
+      <div className="px-4 sm:px-6 py-3">
+        {listingTitle ? (
+          <div className="mb-2">
+            <h2 className="font-semibold text-base text-foreground line-clamp-2">{listingTitle}</h2>
+            {priceDaily && (
+              <span className="text-lg font-bold bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent">
+                ${priceDaily}/day
+              </span>
+            )}
           </div>
-          <span className="font-semibold text-sm text-foreground">
-            {mode === 'checkout' ? 'Secure Checkout' : 'Secure Booking'}
-          </span>
-        </div>
+        ) : (
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-sm">
+              <ShieldCheck className="h-3.5 w-3.5 text-white" />
+            </div>
+            <span className="font-semibold text-sm text-foreground">
+              {mode === 'checkout' ? 'Secure Checkout' : 'Secure Booking'}
+            </span>
+          </div>
+        )}
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Trust badge */}
           <div className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800/50">
             <ShieldCheck className="h-3 w-3 text-emerald-600" />
@@ -60,10 +75,10 @@ const WizardHeader = ({
           <Popover>
             <PopoverTrigger asChild>
               <button 
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
                 onClick={onHelpClick}
               >
-                <HelpCircle className="h-3.5 w-3.5" />
+                <HelpCircle className="h-3.5 w-3.5 shrink-0" />
                 <span className="hidden sm:inline">Need help?</span>
               </button>
             </PopoverTrigger>
