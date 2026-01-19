@@ -137,9 +137,14 @@ const InquiryForm = ({
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
 
-        {priceSale && isAffirmEligible(priceSale) && (
-          <div className="mt-3">
-            <AffirmBadge price={priceSale} className="w-full justify-center py-2" />
+        {priceSale && (isAffirmEligible(priceSale) || isAfterpayEligible(priceSale)) && (
+          <div className="mt-3 flex flex-col gap-2">
+            {isAffirmEligible(priceSale) && (
+              <AffirmBadge price={priceSale} className="w-full justify-center py-2" />
+            )}
+            {isAfterpayEligible(priceSale) && (
+              <AfterpayBadge price={priceSale} className="w-full justify-center py-2" />
+            )}
           </div>
         )}
 
