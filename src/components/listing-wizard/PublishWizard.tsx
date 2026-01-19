@@ -630,10 +630,13 @@ export const PublishWizard: React.FC = () => {
       }
 
       // Move to next step - rental listings have availability step after pricing
+      // Skip stripe step if card payment is not enabled (cash-only sales)
       const isRentalListing = listing.mode === 'rent';
-      const steps: PublishStep[] = isRentalListing
+      const skipStripeStep = listing.mode === 'sale' && !acceptCardPayment;
+      const baseSteps: PublishStep[] = isRentalListing
         ? ['photos', 'pricing', 'availability', 'details', 'location', 'stripe', 'review']
         : ['photos', 'pricing', 'details', 'location', 'stripe', 'review'];
+      const steps = skipStripeStep ? baseSteps.filter(s => s !== 'stripe') : baseSteps;
       const currentIndex = steps.indexOf(step);
       if (currentIndex < steps.length - 1) {
         setStep(steps[currentIndex + 1]);
@@ -1928,54 +1931,75 @@ export const PublishWizard: React.FC = () => {
                 </div>
               )}
 
-              {/* Step: Stripe */}
+              {/* Step: Stripe - Only shown if card payment is enabled */}
               {step === 'stripe' && (
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-xl font-bold text-foreground mb-2">Connect Stripe</h2>
-                    <p className="text-muted-foreground">Required to receive payments.</p>
+                    <p className="text-muted-foreground">
+                      {acceptCardPayment ? 'Required to receive card payments.' : 'Optional for cash-only listings.'}
+                    </p>
                   </div>
 
-                  {isOnboardingComplete ? (
-                    <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
-                      <div className="relative flex items-center gap-3">
-                        <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md flex items-center justify-center">
-                          <Check className="w-5 h-5 text-white" />
+                  {!acceptCardPayment && (
+                    <div className="relative overflow-hidden rounded-xl p-4 border-2 border-muted bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-muted rounded-xl flex items-center justify-center">
+                          <Banknote className="w-5 h-5 text-green-600" />
                         </div>
                         <div>
-                          <p className="font-semibold text-foreground">Stripe connected</p>
-                          <p className="text-sm text-muted-foreground">You're ready to receive payments</p>
+                          <p className="font-semibold text-foreground">Cash-only listing</p>
+                          <p className="text-sm text-muted-foreground">Stripe is not required since you're only accepting in-person payments.</p>
                         </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="relative overflow-hidden rounded-xl p-6 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10 text-center">
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
-                      <div className="relative">
-                        <div className="w-14 h-14 mx-auto mb-4 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md flex items-center justify-center">
-                          <CreditCard className="w-7 h-7 text-white" />
-                        </div>
-                        <h3 className="font-semibold text-foreground mb-2">Set up payouts</h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Connect your Stripe account to get paid when you receive bookings or sales.
-                        </p>
-                        <Button 
-                          onClick={handleStripeConnect} 
-                          disabled={isConnecting}
-                          className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
-                        >
-                          {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                          Connect Stripe
-                          <ExternalLink className="w-4 h-4 ml-2" />
-                        </Button>
                       </div>
                     </div>
                   )}
 
+                  {acceptCardPayment && (
+                    isOnboardingComplete ? (
+                      <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+                        <div className="relative flex items-center gap-3">
+                          <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md flex items-center justify-center">
+                            <Check className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-foreground">Stripe connected</p>
+                            <p className="text-sm text-muted-foreground">You're ready to receive payments</p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="relative overflow-hidden rounded-xl p-6 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10 text-center">
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+                        <div className="relative">
+                          <div className="w-14 h-14 mx-auto mb-4 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md flex items-center justify-center">
+                            <CreditCard className="w-7 h-7 text-white" />
+                          </div>
+                          <h3 className="font-semibold text-foreground mb-2">Set up payouts</h3>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Connect your Stripe account to get paid when you receive bookings or sales.
+                          </p>
+                          <Button 
+                            onClick={handleStripeConnect} 
+                            disabled={isConnecting}
+                            className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
+                          >
+                            {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                            Connect Stripe
+                            <ExternalLink className="w-4 h-4 ml-2" />
+                          </Button>
+                        </div>
+                      </div>
+                    )
+                  )}
+
                   <div className="flex gap-3">
                     <Button variant="outline" onClick={() => setStep('location')}>Back</Button>
-                    <Button onClick={() => setStep('review')} disabled={!isOnboardingComplete}>
+                    <Button 
+                      onClick={() => setStep('review')} 
+                      disabled={acceptCardPayment && !isOnboardingComplete}
+                    >
                       Continue
                       <ChevronRight className="w-4 h-4 ml-2" />
                     </Button>
