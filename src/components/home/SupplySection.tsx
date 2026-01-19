@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Shield, Sparkles, CheckCircle2, CreditCard, ShieldCheck, Users, Heart } from 'lucide-react';
+import { ArrowRight, Shield, Sparkles, CheckCircle2, CreditCard, ShieldCheck, Users, Heart, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackCityListModuleViewed, trackCityListClicked } from '@/lib/analytics';
 import supplyFoodTruck from '@/assets/supply-food-truck.jpg';
@@ -84,16 +84,27 @@ const SupplySection = () => {
               ))}
             </ul>
 
-            {/* Primary CTA */}
-            <Button
-              variant="gradient-premium"
-              size="lg"
-              onClick={() => navigate('/host')}
-              className="gap-2 mb-6"
-            >
-              List Your Asset
-              <ArrowRight className="h-5 w-5" />
-            </Button>
+            {/* Primary CTAs */}
+            <div className="flex flex-wrap gap-3 mb-6">
+              <Button
+                variant="gradient-premium"
+                size="lg"
+                onClick={() => navigate('/list')}
+                className="gap-2"
+              >
+                List Your Asset
+                <ArrowRight className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => navigate('/how-it-works')}
+                className="gap-2"
+              >
+                <BookOpen className="h-5 w-5" />
+                Learn More
+              </Button>
+            </div>
 
             {/* City module - compact secondary routing */}
             <div ref={moduleRef} className="pt-4 border-t border-border/50">
