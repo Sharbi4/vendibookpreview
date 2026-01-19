@@ -55,9 +55,17 @@ export const StepRequiredDocuments: React.FC<StepRequiredDocumentsProps> = ({
 
   // Sync documents to form data when they change
   useEffect(() => {
-    const enabledDocs = documents.filter(d => d.is_required);
-    updateField('required_documents' as any, enabledDocs);
-  }, [documents]);
+    const enabledDocs = documents
+      .filter(d => d.is_required)
+      .map(d => ({
+        document_type: d.document_type as string,
+        is_required: d.is_required,
+        deadline_type: d.deadline_type as string,
+        deadline_offset_hours: d.deadline_offset_hours,
+        description: d.description,
+      }));
+    updateField('required_documents', enabledDocs);
+  }, [documents, updateField]);
 
   const toggleDocument = (docType: DocumentType) => {
     setDocuments(prev =>
