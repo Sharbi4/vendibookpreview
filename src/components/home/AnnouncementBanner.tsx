@@ -9,7 +9,7 @@ const AnnouncementBanner = () => {
           New
         </span>
         <span className="font-medium text-foreground text-sm md:text-base">
-          Accepting payments in person or through our secure platform!
+          Accept payments in-person or through our secure platform.
         </span>
       </div>
     </div>
