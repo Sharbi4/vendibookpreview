@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { User, Shield, CheckCircle2, BadgeCheck, CreditCard } from 'lucide-react';
+import { Shield, BadgeCheck, CreditCard, List } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -63,11 +63,22 @@ const AdminUsersListCard = ({ user }: AdminUsersListCardProps) => {
             <p className="text-sm text-muted-foreground truncate">{user.email || 'No email'}</p>
           </div>
 
-          <div className="text-right text-sm text-muted-foreground hidden sm:block">
-            <p>Joined</p>
-            <p className="font-medium text-foreground">
-              {format(new Date(user.created_at), 'MMM d, yyyy')}
-            </p>
+          <div className="flex items-center gap-6">
+            {user.listing_count > 0 && (
+              <div className="text-center text-sm hidden sm:block">
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <List className="h-3.5 w-3.5" />
+                  <span>Listings</span>
+                </div>
+                <p className="font-semibold text-foreground">{user.listing_count}</p>
+              </div>
+            )}
+            <div className="text-right text-sm text-muted-foreground hidden sm:block">
+              <p>Joined</p>
+              <p className="font-medium text-foreground">
+                {format(new Date(user.created_at), 'MMM d, yyyy')}
+              </p>
+            </div>
           </div>
         </div>
       </CardContent>
