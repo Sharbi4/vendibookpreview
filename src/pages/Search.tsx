@@ -21,7 +21,6 @@ import { CategoryInfoModal } from '@/components/categories/CategoryGuide';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
@@ -1167,22 +1166,42 @@ const FilterContent = ({
       <div className="space-y-3">
         <Label className="text-sm font-medium flex items-center gap-2">
           <DollarSign className="h-4 w-4" />
-          Minimum Price
+          Price Range
         </Label>
-        <div className="px-2">
-          <Slider
-            value={[priceRange[0]]}
-            min={0}
-            max={10000}
-            step={50}
-            onValueChange={(value) => onPriceRangeChange([value[0], priceRange[1]])}
-            className="my-4"
-          />
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>${priceRange[0].toLocaleString()}</span>
-            <span>No max</span>
+        <div className="flex items-center gap-2 max-w-xs">
+          <div className="relative flex-1">
+            <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="number"
+              placeholder="Min"
+              value={priceRange[0] === 0 ? '' : priceRange[0]}
+              onChange={(e) => {
+                const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                onPriceRangeChange([value, priceRange[1]]);
+              }}
+              className="pl-8 h-9"
+              min={0}
+            />
+          </div>
+          <span className="text-muted-foreground text-sm">to</span>
+          <div className="relative flex-1">
+            <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="number"
+              placeholder="No max"
+              value={priceRange[1] === Infinity ? '' : priceRange[1]}
+              onChange={(e) => {
+                const value = e.target.value === '' ? Infinity : parseInt(e.target.value);
+                onPriceRangeChange([priceRange[0], value]);
+              }}
+              className="pl-8 h-9"
+              min={0}
+            />
           </div>
         </div>
+        <p className="text-xs text-muted-foreground">
+          {mode === 'rent' ? 'Daily rental price' : mode === 'sale' ? 'Sale price' : 'Price per day or sale price'}
+        </p>
       </div>
     </div>
   );
