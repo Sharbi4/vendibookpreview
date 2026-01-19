@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { MapPin, DollarSign, Tag, Calendar, Check, AlertCircle, CreditCard } from 'lucide-react';
 import { ListingFormData, CATEGORY_LABELS, MODE_LABELS } from '@/types/listing';
 import { cn } from '@/lib/utils';
@@ -16,15 +16,35 @@ export const StepReview: React.FC<StepReviewProps> = ({
   isStripeConnected,
   requiresStripeConnect = true,
 }) => {
+  // Track object URL for cleanup
+  const previewUrlRef = useRef<string | null>(null);
+
   const previewImage = useMemo(() => {
+    // Clean up previous object URL if it exists
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+
     if (formData.images.length > 0) {
-      return URL.createObjectURL(formData.images[0]);
+      const url = URL.createObjectURL(formData.images[0]);
+      previewUrlRef.current = url;
+      return url;
     }
     if (formData.existingImages.length > 0) {
       return formData.existingImages[0];
     }
     return null;
   }, [formData.images, formData.existingImages]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+    };
+  }, []);
 
   const formatPrice = (price: string | null | undefined) => {
     if (!price) return null;

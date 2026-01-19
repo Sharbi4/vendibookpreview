@@ -88,6 +88,47 @@ export const ListingWizard: React.FC = () => {
   const [isUploadingVideos, setIsUploadingVideos] = useState(false);
   const hasUnsavedChanges = useRef(false);
   const lastSavedData = useRef<string>('');
+  
+  // Track preview image URLs to properly clean up object URLs
+  const previewImageUrlsRef = useRef<Map<File, string>>(new Map());
+  
+  // Generate preview URLs for images with proper cleanup
+  const previewImageUrls = React.useMemo(() => {
+    const urls: string[] = [];
+    const urlMap = previewImageUrlsRef.current;
+    
+    // Clean up URLs for files no longer in formData
+    for (const [file, url] of urlMap.entries()) {
+      if (!formData.images.includes(file)) {
+        URL.revokeObjectURL(url);
+        urlMap.delete(file);
+      }
+    }
+    
+    // Create URLs for current files
+    for (const file of formData.images) {
+      if (!urlMap.has(file)) {
+        urlMap.set(file, URL.createObjectURL(file));
+      }
+      urls.push(urlMap.get(file)!);
+    }
+    
+    return urls;
+  }, [formData.images]);
+  
+  // Add existing images to the preview URLs
+  const allPreviewImageUrls = React.useMemo(() => {
+    return [...previewImageUrls, ...formData.existingImages];
+  }, [previewImageUrls, formData.existingImages]);
+  
+  // Cleanup all preview URLs on unmount
+  useEffect(() => {
+    return () => {
+      for (const url of previewImageUrlsRef.current.values()) {
+        URL.revokeObjectURL(url);
+      }
+    };
+  }, []);
 
   // Check if user has made progress
   const hasProgress = formData.mode || formData.category || formData.title || 
@@ -1046,7 +1087,7 @@ export const ListingWizard: React.FC = () => {
           description: formData.description,
           category: formData.category!,
           mode: formData.mode as 'rent' | 'sale',
-          images: formData.images.map(file => URL.createObjectURL(file)),
+          images: allPreviewImageUrls,
           priceDaily: formData.price_daily,
           priceWeekly: formData.price_weekly,
           priceSale: formData.price_sale,
