@@ -114,7 +114,7 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete }: HostListingC
                 </Link>
               </Button>
               <Button variant="outline" size="sm" asChild className="bg-card/80 backdrop-blur-sm">
-                <Link to={`/edit-listing/${listing.id}`}>
+                <Link to={`/create-listing/${listing.id}`}>
                   <Edit2 className="h-4 w-4 mr-1" />
                   Edit
                 </Link>

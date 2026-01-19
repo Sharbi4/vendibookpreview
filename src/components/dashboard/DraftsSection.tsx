@@ -117,7 +117,7 @@ const DraftsSection = ({ drafts, onDelete }: DraftsSectionProps) => {
                 asChild
                 className="h-8 text-xs text-primary hover:text-primary"
               >
-                <Link to={`/edit-listing/${draft.id}`}>
+                <Link to={`/create-listing/${draft.id}`}>
                   Continue
                   <ArrowRight className="h-3 w-3 ml-1" />
                 </Link>

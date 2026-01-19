@@ -354,7 +354,7 @@ const ListPage: React.FC = () => {
               <div
                 key={draft.id}
                 className="group flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                onClick={() => navigate(`/edit-listing/${draft.id}`)}
+                onClick={() => navigate(`/create-listing/${draft.id}`)}
               >
                 {draft.cover_image_url ? (
                   <img
