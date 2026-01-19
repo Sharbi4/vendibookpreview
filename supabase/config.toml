@@ -149,3 +149,6 @@ verify_jwt = false
 
 [functions.send-admin-daily-digest]
 verify_jwt = false
+
+[functions.create-notary-checkout]
+verify_jwt = false

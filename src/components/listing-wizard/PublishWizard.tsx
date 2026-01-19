@@ -768,6 +768,48 @@ export const PublishWizard: React.FC = () => {
     setIsSaving(true);
 
     try {
+      // If Proof Notary is enabled for a sale listing, redirect to Stripe checkout for the $45 fee
+      if (listing.mode === 'sale' && proofNotaryEnabled) {
+        // Save the proof_notary_enabled state first
+        await supabase
+          .from('listings')
+          .update({ proof_notary_enabled: true })
+          .eq('id', listing.id);
+
+        // Get session for auth
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData.session) {
+          toast({ title: 'Please sign in to continue', variant: 'destructive' });
+          setIsSaving(false);
+          return;
+        }
+
+        // Create notary checkout session
+        const { data, error } = await supabase.functions.invoke('create-notary-checkout', {
+          headers: {
+            Authorization: `Bearer ${sessionData.session.access_token}`,
+          },
+          body: { listing_id: listing.id },
+        });
+
+        if (error) throw error;
+
+        if (data?.url) {
+          // Open Stripe checkout in new tab (same pattern as other Stripe checkouts)
+          const newWindow = window.open(data.url, '_blank');
+          if (!newWindow) {
+            // Fallback if popup blocked
+            window.location.href = data.url;
+          }
+        } else {
+          throw new Error('No checkout URL returned');
+        }
+        
+        setIsSaving(false);
+        return; // Exit early - webhook will handle publishing after payment
+      }
+
+      // Standard publish flow (no notary fee)
       const { error } = await supabase
         .from('listings')
         .update({
