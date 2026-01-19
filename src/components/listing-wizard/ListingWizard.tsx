@@ -758,7 +758,7 @@ export const ListingWizard: React.FC = () => {
   };
 
   const completedSteps = Array.from({ length: 7 }, (_, i) => i + 1)
-    .filter(step => step < currentStep && validateStep(step));
+    .filter(step => (step < currentStep || step === currentStep) && validateStep(step));
 
   return (
     <div className="min-h-screen bg-background">
