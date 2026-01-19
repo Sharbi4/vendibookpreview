@@ -686,8 +686,9 @@ export const PublishWizard: React.FC = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   // Checklist state
+  const totalPhotoCount = existingImages.length + images.length;
   const checklistState = {
-    hasPhotos: existingImages.length >= 3 || images.length >= 3 || (existingImages.length + images.length) >= 3,
+    hasPhotos: totalPhotoCount >= 3,
     hasPricing: listing?.mode === 'sale' ? !!priceSale : !!priceDaily,
     hasAvailability: true, // Optional
     hasDescription: title.length > 0 && description.length > 0,
@@ -698,6 +699,7 @@ export const PublishWizard: React.FC = () => {
     ) : false,
     hasStripe: isOnboardingComplete,
     isRental: listing?.mode === 'rent',
+    photoCount: totalPhotoCount,
   };
 
   const checklistItems = createChecklistItems(checklistState, step);
