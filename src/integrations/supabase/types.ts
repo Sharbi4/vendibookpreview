@@ -824,6 +824,8 @@ export type Database = {
       }
       notification_preferences: {
         Row: {
+          booking_email: boolean
+          booking_inapp: boolean
           booking_request_email: boolean
           booking_request_inapp: boolean
           booking_response_email: boolean
@@ -843,6 +845,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          booking_email?: boolean
+          booking_inapp?: boolean
           booking_request_email?: boolean
           booking_request_inapp?: boolean
           booking_response_email?: boolean
@@ -862,6 +866,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          booking_email?: boolean
+          booking_inapp?: boolean
           booking_request_email?: boolean
           booking_request_inapp?: boolean
           booking_response_email?: boolean
