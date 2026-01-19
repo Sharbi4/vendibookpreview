@@ -9,6 +9,7 @@ import StripeStatusCard from './StripeStatusCard';
 import HostListingCard from './HostListingCard';
 import BookingRequestsSection from './BookingRequestsSection';
 import SellerSalesSection from './SellerSalesSection';
+import DraftsSection from './DraftsSection';
 import { EnhancedAnalytics } from './EnhancedAnalytics';
 import { RevenueAnalyticsCard } from './RevenueAnalyticsCard';
 import { GetBookedFasterCard } from './GetBookedFasterCard';
@@ -18,7 +19,7 @@ import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { useListingAnalytics } from '@/hooks/useListingAnalytics';
 import { useRevenueAnalytics } from '@/hooks/useRevenueAnalytics';
 import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectModal';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 const HostDashboard = () => {
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing } = useHostListings();
@@ -27,6 +28,12 @@ const HostDashboard = () => {
   const { analytics, isLoading: analyticsLoading } = useListingAnalytics();
   const { analytics: revenueAnalytics, isLoading: revenueLoading } = useRevenueAnalytics();
   const [showStripeModal, setShowStripeModal] = useState(false);
+
+  // Filter drafts for the DraftsSection
+  const draftListings = useMemo(() => 
+    listings.filter(l => l.status === 'draft'),
+    [listings]
+  );
 
   const handleConnectStripe = async () => {
     await connectStripe();
@@ -88,6 +95,11 @@ const HostDashboard = () => {
           subtext="This month"
         />
       </div>
+
+      {/* Resume Drafts Section */}
+      {!isLoading && draftListings.length > 0 && (
+        <DraftsSection drafts={draftListings} onDelete={deleteListing} />
+      )}
 
       {/* C) Listings Module - Primary work area */}
       <Tabs defaultValue="listings" className="w-full">
