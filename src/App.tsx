@@ -53,6 +53,7 @@ const ConceptLab = lazy(() => import("./pages/tools/ConceptLab"));
 const MarketRadar = lazy(() => import("./pages/tools/MarketRadar"));
 const MarketingStudio = lazy(() => import("./pages/tools/MarketingStudio"));
 const OrderTracking = lazy(() => import("./pages/OrderTracking"));
+const Transactions = lazy(() => import("./pages/Transactions"));
 const HostOnboarding = lazy(() => import("./pages/HostOnboarding"));
 const Install = lazy(() => import("./pages/Install"));
 const VendorLots = lazy(() => import("./pages/VendorLots"));
@@ -169,6 +170,7 @@ const AnimatedRoutes = () => {
           <Route path="/checkout/:listingId" element={<PageTransition><SaleCheckout /></PageTransition>} />
           
           <Route path="/order-tracking/:transactionId" element={<PageTransition><OrderTracking /></PageTransition>} />
+          <Route path="/transactions" element={<PageTransition><Transactions /></PageTransition>} />
           <Route path="/host" element={<PageTransition><HostOnboarding /></PageTransition>} />
           <Route path="/install" element={<PageTransition><Install /></PageTransition>} />
           <Route path="/vendor-lots" element={<PageTransition><VendorLots /></PageTransition>} />
