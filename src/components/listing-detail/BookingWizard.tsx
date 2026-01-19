@@ -317,6 +317,7 @@ const BookingWizard = ({
         instantBook={instantBook}
         bookingId={bookingId}
         listingTitle={listingTitle}
+        listingId={listingId}
       />
     );
   }
