@@ -169,11 +169,26 @@ const handler = async (req: Request): Promise<Response> => {
         to: ["support@vendibook.com"],
         subject: `📞 Scheduled Callback: ${escapedName} - ${formattedDate} at ${scheduledTime} EST`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); padding: 20px; border-radius: 12px 12px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 24px;">📞 Callback Scheduled</h1>
-            </div>
-            <div style="background: #f9f9f9; padding: 20px; border-radius: 0 0 12px 12px;">
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              @font-face {
+                font-family: 'Sofia Pro Soft';
+                src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
+                font-weight: 300;
+                font-style: normal;
+              }
+            </style>
+          </head>
+          <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); padding: 20px; border-radius: 12px 12px 0 0;">
+                <h1 style="color: white; margin: 0; font-size: 24px;">📞 Callback Scheduled</h1>
+              </div>
+              <div style="background: #f9f9f9; padding: 20px; border-radius: 0 0 12px 12px;">
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
                   <td style="padding: 10px 0; border-bottom: 1px solid #eee; font-weight: bold; width: 120px;">Name:</td>
@@ -200,6 +215,8 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
             </div>
           </div>
+          </body>
+          </html>
         `,
       });
       logStep("Support notification email sent");
