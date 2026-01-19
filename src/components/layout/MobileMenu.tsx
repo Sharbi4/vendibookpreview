@@ -7,7 +7,10 @@ import {
   ShieldCheck, 
   LogOut,
   X,
-  ChevronRight
+  ChevronRight,
+  BookOpen,
+  Phone,
+  HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -158,6 +161,38 @@ const MobileMenu = ({
                       accent
                     />
                   )}
+                </nav>
+              </div>
+            )}
+
+            {/* Quick Links (when not logged in) */}
+            {!user && (
+              <div className="px-5 pt-6">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Quick Links
+                </p>
+                <nav className="space-y-0.5">
+                  <MenuLink
+                    to="/how-it-works"
+                    icon={BookOpen}
+                    label="Learn More"
+                    isActive={isActive('/how-it-works')}
+                    onClick={() => handleNavigation('/how-it-works')}
+                  />
+                  <MenuLink
+                    to="/contact"
+                    icon={Phone}
+                    label="Contact Us"
+                    isActive={isActive('/contact')}
+                    onClick={() => handleNavigation('/contact')}
+                  />
+                  <MenuLink
+                    to="/help"
+                    icon={HelpCircle}
+                    label="Help Center"
+                    isActive={isActive('/help')}
+                    onClick={() => handleNavigation('/help')}
+                  />
                 </nav>
               </div>
             )}
