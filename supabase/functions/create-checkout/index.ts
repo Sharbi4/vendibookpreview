@@ -259,7 +259,8 @@ serve(async (req) => {
       }
 
       sessionParams = {
-        payment_method_types: ['card'],
+        // For rentals: offer card + buy-now-pay-later options
+        payment_method_types: ['card', 'klarna', 'afterpay_clearpay'],
         mode: 'payment',
         customer: customerId,
         customer_email: customerId ? undefined : user.email,
