@@ -773,26 +773,110 @@ export const PublishWizard: React.FC = () => {
     // Stripe is only required if card payment is enabled
     const stripeRequired = acceptCardPayment;
     if (!listing || (stripeRequired && !isOnboardingComplete)) return;
+
+    // Helper to safely parse currency / formatted strings
+    const safeParsePrice = (value: string): number | null => {
+      if (!value || !value.trim()) return null;
+      const cleaned = value.replace(/[^0-9.]/g, '');
+      const parsed = parseFloat(cleaned);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+    };
+
     setIsSaving(true);
 
     try {
-      // If Proof Notary is enabled for a sale listing, redirect to Stripe checkout for the $45 fee
+      // Persist ALL current in-memory fields before publishing.
+      // Users can jump directly to Review; without this, the DB may still contain placeholders.
+      let imageUrlsToSave = existingImages;
+      if (images.length > 0) {
+        // Uploading requires auth.
+        if (!user) {
+          if (isGuestDraft) setShowAuthModal(true);
+          toast({
+            title: 'Sign in to upload photos',
+            description: 'Please sign in to add photos to this listing.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        imageUrlsToSave = await uploadImages();
+        setExistingImages(imageUrlsToSave);
+        setImages([]);
+      }
+
+      // Determine if category-based static or manually toggled
+      const categoryIsStatic = isStaticLocationFn(listing.category);
+      const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation)
+        ? 'on_site'
+        : (fulfillmentType || 'pickup');
+
+      const baseUpdateData: any = {
+        // Media
+        image_urls: imageUrlsToSave,
+        cover_image_url: imageUrlsToSave?.[0] || null,
+
+        // Details
+        title,
+        description,
+        highlights,
+        amenities,
+        weight_lbs: parseFloat(weightLbs) || null,
+        length_inches: parseFloat(lengthInches) || null,
+        width_inches: parseFloat(widthInches) || null,
+        height_inches: parseFloat(heightInches) || null,
+        freight_category: freightCategory,
+
+        // Location
+        fulfillment_type: effectiveFulfillmentType,
+        pickup_location_text: pickupLocationText || null,
+        address: address || null,
+        delivery_fee: parseFloat(deliveryFee) || null,
+        delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
+        pickup_instructions: pickupInstructions || null,
+        delivery_instructions: deliveryInstructions || null,
+        access_instructions: accessInstructions || null,
+        hours_of_access: hoursOfAccess || null,
+        location_notes: locationNotes || null,
+
+        // Availability (optional)
+        available_from: availableFrom || null,
+        available_to: availableTo || null,
+      };
+
+      const pricingUpdateData: any = listing.mode === 'sale'
+        ? {
+            price_sale: safeParsePrice(priceSale),
+            vendibook_freight_enabled: vendibookFreightEnabled,
+            freight_payer: freightPayer,
+            accept_card_payment: acceptCardPayment,
+            accept_cash_payment: acceptCashPayment,
+            proof_notary_enabled: proofNotaryEnabled,
+          }
+        : {
+            price_daily: safeParsePrice(priceDaily),
+            price_weekly: safeParsePrice(priceWeekly),
+            instant_book: instantBook,
+            deposit_amount: safeParsePrice(depositAmount),
+          };
+
+      // If Proof Notary is enabled for a sale listing, redirect to checkout for the $45 fee.
+      // IMPORTANT: persist everything first; webhook will publish after payment.
       if (listing.mode === 'sale' && proofNotaryEnabled) {
-        // Save the proof_notary_enabled state first
-        await supabase
+        const { error: persistError } = await supabase
           .from('listings')
-          .update({ proof_notary_enabled: true })
+          .update({ ...baseUpdateData, ...pricingUpdateData })
           .eq('id', listing.id);
+
+        if (persistError) throw persistError;
 
         // Get session for auth
         const { data: sessionData } = await supabase.auth.getSession();
         if (!sessionData.session) {
           toast({ title: 'Please sign in to continue', variant: 'destructive' });
-          setIsSaving(false);
           return;
         }
 
-        // Create notary checkout session
         const { data, error } = await supabase.functions.invoke('create-notary-checkout', {
           headers: {
             Authorization: `Bearer ${sessionData.session.access_token}`,
@@ -801,19 +885,11 @@ export const PublishWizard: React.FC = () => {
         });
 
         if (error) throw error;
+        if (!data?.url) throw new Error('No checkout URL returned');
 
-        if (data?.url) {
-          // Open Stripe checkout in new tab (same pattern as other Stripe checkouts)
-          const newWindow = window.open(data.url, '_blank');
-          if (!newWindow) {
-            // Fallback if popup blocked
-            window.location.href = data.url;
-          }
-        } else {
-          throw new Error('No checkout URL returned');
-        }
-        
-        setIsSaving(false);
+        const newWindow = window.open(data.url, '_blank');
+        if (!newWindow) window.location.href = data.url;
+
         return; // Exit early - webhook will handle publishing after payment
       }
 
@@ -821,6 +897,8 @@ export const PublishWizard: React.FC = () => {
       const { error } = await supabase
         .from('listings')
         .update({
+          ...baseUpdateData,
+          ...pricingUpdateData,
           status: 'published',
           published_at: new Date().toISOString(),
         })
@@ -834,7 +912,11 @@ export const PublishWizard: React.FC = () => {
       setShowSuccessModal(true);
     } catch (error) {
       console.error('Error publishing:', error);
-      toast({ title: 'Error publishing', variant: 'destructive' });
+      toast({
+        title: 'Error publishing',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setIsSaving(false);
     }
