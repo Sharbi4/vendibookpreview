@@ -9,8 +9,10 @@ import {
   X,
   ChevronRight,
   BookOpen,
-  Phone,
-  HelpCircle
+  HelpCircle,
+  MessagesSquare,
+  Plus,
+  FileQuestion
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -165,37 +167,49 @@ const MobileMenu = ({
               </div>
             )}
 
-            {/* Quick Links (when not logged in) */}
-            {!user && (
-              <div className="px-5 pt-6">
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                  Quick Links
-                </p>
-                <nav className="space-y-0.5">
-                  <MenuLink
-                    to="/how-it-works"
-                    icon={BookOpen}
-                    label="Learn More"
-                    isActive={isActive('/how-it-works')}
-                    onClick={() => handleNavigation('/how-it-works')}
-                  />
-                  <MenuLink
-                    to="/contact"
-                    icon={Phone}
-                    label="Contact Us"
-                    isActive={isActive('/contact')}
-                    onClick={() => handleNavigation('/contact')}
-                  />
-                  <MenuLink
-                    to="/help"
-                    icon={HelpCircle}
-                    label="Help Center"
-                    isActive={isActive('/help')}
-                    onClick={() => handleNavigation('/help')}
-                  />
-                </nav>
-              </div>
-            )}
+            {/* Quick Links */}
+            <div className="px-5 pt-6">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Quick Links
+              </p>
+              <nav className="space-y-0.5">
+                <MenuLink
+                  to="/list"
+                  icon={Plus}
+                  label="Create a Listing"
+                  isActive={isActive('/list')}
+                  onClick={() => handleNavigation('/list')}
+                />
+                <MenuLink
+                  to="/how-it-works"
+                  icon={BookOpen}
+                  label="Learn More"
+                  isActive={isActive('/how-it-works')}
+                  onClick={() => handleNavigation('/how-it-works')}
+                />
+                <MenuLink
+                  to="/help"
+                  icon={HelpCircle}
+                  label="Help Center"
+                  isActive={isActive('/help')}
+                  onClick={() => handleNavigation('/help')}
+                />
+                <MenuLink
+                  to="/faq"
+                  icon={FileQuestion}
+                  label="FAQ"
+                  isActive={isActive('/faq')}
+                  onClick={() => handleNavigation('/faq')}
+                />
+                <MenuLink
+                  to="/contact"
+                  icon={MessagesSquare}
+                  label="Chat With Us"
+                  isActive={isActive('/contact')}
+                  onClick={() => handleNavigation('/contact')}
+                />
+              </nav>
+            </div>
 
             {/* Verify Identity (if not verified) */}
             {user && !isVerified && (
