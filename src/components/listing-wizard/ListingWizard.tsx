@@ -470,9 +470,22 @@ export const ListingWizard: React.FC = () => {
     }
 
     if (publish && !canPublish()) {
+      // Provide specific feedback about what's missing
+      const missingFields: string[] = [];
+      if (!formData.title || formData.title.trim().length < 5) missingFields.push('title (min 5 characters)');
+      if (!formData.description || formData.description.trim().length === 0) missingFields.push('description');
+      if (!formData.address && !formData.pickup_location_text) missingFields.push('location');
+      if (formData.mode === 'sale' && (!formData.price_sale || parseFloat(formData.price_sale) <= 0)) missingFields.push('sale price');
+      if (formData.mode === 'rent' && (!formData.price_daily || parseFloat(formData.price_daily) <= 0)) missingFields.push('daily rate');
+      if (formData.mode === 'sale' && !formData.accept_cash_payment && !formData.accept_card_payment) missingFields.push('payment method');
+      const totalPhotos = formData.images.length + formData.existingImages.length;
+      if (totalPhotos < 3) missingFields.push(`photos (${totalPhotos}/3 minimum)`);
+      
       toast({ 
         title: 'Cannot publish', 
-        description: 'Please complete all required fields.',
+        description: missingFields.length > 0 
+          ? `Please complete: ${missingFields.slice(0, 3).join(', ')}${missingFields.length > 3 ? ` and ${missingFields.length - 3} more` : ''}`
+          : 'Please complete all required fields.',
         variant: 'destructive' 
       });
       return;
@@ -655,11 +668,24 @@ export const ListingWizard: React.FC = () => {
         });
         navigate('/dashboard');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving listing:', error);
+      
+      // User-friendly error messages
+      let errorMessage = 'Please try again.';
+      if (error?.message?.includes('network') || error?.message?.includes('fetch')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (error?.message?.includes('storage') || error?.message?.includes('upload')) {
+        errorMessage = 'Failed to upload images. Please try again with smaller files.';
+      } else if (error?.message?.includes('duplicate') || error?.code === '23505') {
+        errorMessage = 'A listing with this information already exists.';
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: 'Error saving listing',
-        description: 'Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

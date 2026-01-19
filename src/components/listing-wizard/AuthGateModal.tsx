@@ -6,6 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { z } from 'zod';
+
+// Validation schema
+const authSchema = z.object({
+  email: z.string().trim().email('Please enter a valid email').max(255),
+  password: z.string().min(8, 'Password must be at least 8 characters').max(72),
+});
 
 interface AuthGateModalProps {
   open: boolean;
@@ -25,10 +32,33 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  const validateForm = (): boolean => {
+    try {
+      authSchema.parse({ email: email.trim(), password });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: { email?: string; password?: string } = {};
+        error.errors.forEach((err) => {
+          const field = err.path[0] as 'email' | 'password';
+          newErrors[field] = err.message;
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+    
+    // Validate before submitting
+    if (!validateForm()) return;
+    
+    const trimmedEmail = email.trim().toLowerCase();
 
     setIsLoading(true);
 
@@ -69,7 +99,7 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
           // Send welcome email to new user (don't block on failure)
           supabase.functions.invoke('send-welcome-email', {
             body: {
-              email,
+              email: trimmedEmail,
               fullName: null,
               role: 'host',
             },
@@ -80,7 +110,7 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
             body: {
               type: 'new_user',
               data: {
-                email,
+                email: trimmedEmail,
                 full_name: null,
                 role: 'host',
                 user_id: data.user.id,
@@ -97,7 +127,7 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
+          email: trimmedEmail,
           password,
         });
 
@@ -114,8 +144,8 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
       
-      // Handle specific error cases
-      if (errorMessage.includes('User already registered')) {
+      // Handle specific error cases with user-friendly messages
+      if (errorMessage.includes('User already registered') || errorMessage.includes('already exists')) {
         toast({
           title: 'Email already registered',
           description: 'Try signing in instead.',
@@ -126,6 +156,12 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
         toast({
           title: 'Invalid credentials',
           description: 'Check your email and password.',
+          variant: 'destructive',
+        });
+      } else if (errorMessage.includes('rate limit') || errorMessage.includes('too many')) {
+        toast({
+          title: 'Too many attempts',
+          description: 'Please wait a few minutes before trying again.',
           variant: 'destructive',
         });
       } else {
@@ -162,9 +198,16 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
               type="email"
               placeholder="you@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
+              }}
+              className={errors.email ? 'border-destructive' : ''}
               required
             />
+            {errors.email && (
+              <p className="text-sm text-destructive">{errors.email}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -174,10 +217,20 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
               type="password"
               placeholder="••••••••"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              minLength={6}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (errors.password) setErrors(prev => ({ ...prev, password: undefined }));
+              }}
+              className={errors.password ? 'border-destructive' : ''}
+              minLength={8}
               required
             />
+            {errors.password && (
+              <p className="text-sm text-destructive">{errors.password}</p>
+            )}
+            {mode === 'signup' && !errors.password && (
+              <p className="text-xs text-muted-foreground">Minimum 8 characters</p>
+            )}
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
