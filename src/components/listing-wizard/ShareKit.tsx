@@ -276,128 +276,205 @@ ${hashtags}`;
 
       const pageWidth = 8.5;
       const pageHeight = 11;
-      const margin = 0.75;
+      const margin = 0.5;
       const contentWidth = pageWidth - margin * 2;
 
       // Brand colors
-      const primaryColor: [number, number, number] = [255, 81, 36]; // #FF5124
+      const primaryOrange: [number, number, number] = [255, 81, 36]; // #FF5124
+      const primaryDark: [number, number, number] = [234, 88, 12]; // #EA580C
       const darkColor: [number, number, number] = [26, 26, 26];
       const grayColor: [number, number, number] = [100, 100, 100];
+      const lightGray: [number, number, number] = [245, 245, 245];
 
-      // Header bar
-      pdf.setFillColor(...primaryColor);
-      pdf.rect(0, 0, pageWidth, 1.2, 'F');
-
-      // Vendibook logo text
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(28);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('VendiBook', margin, 0.8);
-
-      // Tagline
-      pdf.setFontSize(12);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('Book food trucks & trailers', margin + 2.8, 0.8);
-
-      let yPos = 1.6;
-
-      // Main headline
-      pdf.setTextColor(...darkColor);
-      pdf.setFontSize(32);
-      pdf.setFont('helvetica', 'bold');
+      // === DYNAMIC HEADER WITH DIAGONAL STRIPE ===
+      // Main orange header
+      pdf.setFillColor(...primaryOrange);
+      pdf.rect(0, 0, pageWidth, 1.8, 'F');
       
-      const headlineText = listing.mode === 'rent' ? 'RENT THIS' : 'FOR SALE';
-      pdf.text(headlineText, pageWidth / 2, yPos, { align: 'center' });
-      yPos += 0.5;
+      // Decorative diagonal accent stripe
+      pdf.setFillColor(...primaryDark);
+      pdf.triangle(pageWidth - 3, 0, pageWidth, 0, pageWidth, 1.2, 'F');
+      
+      // Small decorative dots
+      pdf.setFillColor(255, 255, 255);
+      pdf.circle(0.4, 0.4, 0.08, 'F');
+      pdf.circle(0.65, 0.55, 0.05, 'F');
+      pdf.circle(0.3, 0.7, 0.06, 'F');
 
-      // Category badge
-      pdf.setFillColor(...primaryColor);
-      const categoryText = categoryLabel.toUpperCase();
-      const categoryWidth = pdf.getTextWidth(categoryText) * 0.05 + 0.4;
-      pdf.roundedRect((pageWidth - categoryWidth) / 2, yPos - 0.15, categoryWidth, 0.35, 0.1, 0.1, 'F');
+      // Vendibook logo text with shadow effect
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(36);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('VendiBook', margin + 0.02, 0.72);
       pdf.setTextColor(255, 255, 255);
+      pdf.text('VendiBook', margin, 0.7);
+
+      // Tagline with modern styling
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(255, 255, 255);
+      pdf.text('THE MARKETPLACE FOR MOBILE FOOD', margin, 1.1);
+
+      // Mode badge in header (RENT or SALE)
+      const modeBadgeText = listing.mode === 'rent' ? '🔥 FOR RENT' : '💰 FOR SALE';
+      pdf.setFillColor(255, 255, 255);
+      const modeBadgeWidth = 1.6;
+      pdf.roundedRect(pageWidth - margin - modeBadgeWidth, 0.45, modeBadgeWidth, 0.4, 0.1, 0.1, 'F');
+      pdf.setTextColor(...primaryOrange);
       pdf.setFontSize(14);
       pdf.setFont('helvetica', 'bold');
-      pdf.text(categoryText, pageWidth / 2, yPos + 0.08, { align: 'center' });
-      yPos += 0.6;
+      pdf.text(modeBadgeText, pageWidth - margin - modeBadgeWidth + 0.2, 0.72);
 
-      // Title
-      pdf.setTextColor(...darkColor);
-      pdf.setFontSize(22);
+      let yPos = 2.2;
+
+      // === MAIN CONTENT CARD ===
+      // Card background with subtle shadow effect
+      pdf.setFillColor(250, 250, 250);
+      pdf.roundedRect(margin + 0.05, yPos - 0.1 + 0.05, contentWidth, 4.8, 0.15, 0.15, 'F');
+      pdf.setFillColor(255, 255, 255);
+      pdf.roundedRect(margin, yPos - 0.1, contentWidth, 4.8, 0.15, 0.15, 'F');
+      pdf.setDrawColor(230, 230, 230);
+      pdf.setLineWidth(0.01);
+      pdf.roundedRect(margin, yPos - 0.1, contentWidth, 4.8, 0.15, 0.15, 'S');
+
+      // Category pill
+      pdf.setFillColor(...primaryOrange);
+      const categoryText = categoryLabel.toUpperCase();
+      pdf.setFontSize(10);
+      const categoryWidth = pdf.getTextWidth(categoryText) * 0.04 + 0.35;
+      pdf.roundedRect(margin + 0.25, yPos, categoryWidth, 0.28, 0.08, 0.08, 'F');
+      pdf.setTextColor(255, 255, 255);
       pdf.setFont('helvetica', 'bold');
-      const titleLines = pdf.splitTextToSize(listing.title, contentWidth);
-      pdf.text(titleLines, pageWidth / 2, yPos, { align: 'center' });
-      yPos += titleLines.length * 0.35 + 0.3;
+      pdf.text(categoryText, margin + 0.25 + 0.15, yPos + 0.19);
+      yPos += 0.55;
 
-      // Location
+      // Title - Large and bold
+      pdf.setTextColor(...darkColor);
+      pdf.setFontSize(26);
+      pdf.setFont('helvetica', 'bold');
+      const titleLines = pdf.splitTextToSize(listing.title, contentWidth - 0.5);
+      titleLines.slice(0, 2).forEach((line: string, i: number) => {
+        pdf.text(line, margin + 0.25, yPos + i * 0.4);
+      });
+      yPos += Math.min(titleLines.length, 2) * 0.4 + 0.25;
+
+      // Location with icon
       if (locationShort) {
         pdf.setTextColor(...grayColor);
-        pdf.setFontSize(14);
+        pdf.setFontSize(13);
         pdf.setFont('helvetica', 'normal');
-        pdf.text(`📍 ${locationShort}`, pageWidth / 2, yPos, { align: 'center' });
+        pdf.text(`📍 ${locationShort}`, margin + 0.25, yPos);
         yPos += 0.4;
       }
 
-      // Price box
-      if (priceText) {
-        yPos += 0.2;
-        pdf.setFillColor(250, 250, 250);
-        pdf.roundedRect(margin + 0.5, yPos - 0.15, contentWidth - 1, 0.7, 0.1, 0.1, 'F');
-        pdf.setTextColor(...primaryColor);
-        pdf.setFontSize(28);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text(priceText, pageWidth / 2, yPos + 0.35, { align: 'center' });
-        yPos += 1;
-      }
-
-      // Highlights
-      if (listing.highlights && listing.highlights.length > 0) {
-        pdf.setTextColor(...darkColor);
-        pdf.setFontSize(12);
-        pdf.setFont('helvetica', 'normal');
-        
-        listing.highlights.slice(0, 4).forEach((highlight) => {
-          pdf.text(`✓ ${highlight}`, pageWidth / 2, yPos, { align: 'center' });
-          yPos += 0.35;
-        });
-        yPos += 0.2;
-      }
-
-      // QR Code section
-      yPos = Math.max(yPos + 0.3, 7);
-      
-      // QR code background box
-      const qrBoxWidth = 3.5;
-      const qrBoxHeight = 3.2;
-      pdf.setFillColor(248, 248, 248);
-      pdf.roundedRect((pageWidth - qrBoxWidth) / 2, yPos - 0.2, qrBoxWidth, qrBoxHeight, 0.15, 0.15, 'F');
+      // Divider line
+      yPos += 0.1;
       pdf.setDrawColor(230, 230, 230);
-      pdf.roundedRect((pageWidth - qrBoxWidth) / 2, yPos - 0.2, qrBoxWidth, qrBoxHeight, 0.15, 0.15, 'S');
-
-      // QR Code
-      const qrSize = 2;
-      const qrX = (pageWidth - qrSize) / 2;
-      pdf.addImage(qrCodeDataUrl, 'PNG', qrX, yPos, qrSize, qrSize);
-      yPos += qrSize + 0.25;
-
-      // Scan instruction
-      pdf.setTextColor(...darkColor);
-      pdf.setFontSize(14);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('SCAN TO VIEW & BOOK', pageWidth / 2, yPos, { align: 'center' });
+      pdf.setLineWidth(0.015);
+      pdf.line(margin + 0.25, yPos, margin + contentWidth - 0.25, yPos);
       yPos += 0.35;
 
+      // === PRICE SECTION - Big and Bold ===
+      if (priceText) {
+        // Price background
+        pdf.setFillColor(...lightGray);
+        pdf.roundedRect(margin + 0.25, yPos - 0.15, contentWidth - 0.5, 0.8, 0.1, 0.1, 'F');
+        
+        pdf.setTextColor(...primaryOrange);
+        pdf.setFontSize(38);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(priceText, margin + 0.45, yPos + 0.45);
+        
+        if (listing.mode === 'rent') {
+          pdf.setTextColor(...grayColor);
+          pdf.setFontSize(14);
+          pdf.setFont('helvetica', 'normal');
+          pdf.text('starting rate', margin + 0.45 + pdf.getTextWidth(priceText) * 0.11 + 0.15, yPos + 0.45);
+        }
+        yPos += 1.05;
+      }
+
+      // === HIGHLIGHTS SECTION ===
+      if (listing.highlights && listing.highlights.length > 0) {
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(...darkColor);
+        pdf.text('WHAT YOU GET:', margin + 0.25, yPos);
+        yPos += 0.3;
+        
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(12);
+        listing.highlights.slice(0, 4).forEach((highlight) => {
+          pdf.setFillColor(...primaryOrange);
+          pdf.circle(margin + 0.35, yPos - 0.05, 0.06, 'F');
+          pdf.setTextColor(...darkColor);
+          pdf.text(highlight, margin + 0.55, yPos);
+          yPos += 0.32;
+        });
+      }
+
+      // === QR CODE SECTION ===
+      yPos = 7.2;
+      
+      // QR section background
+      pdf.setFillColor(...lightGray);
+      pdf.roundedRect(margin, yPos - 0.25, contentWidth, 2.8, 0.15, 0.15, 'F');
+      
+      // Decorative corner accents
+      pdf.setFillColor(...primaryOrange);
+      pdf.triangle(margin, yPos - 0.25, margin + 0.3, yPos - 0.25, margin, yPos + 0.05, 'F');
+      pdf.triangle(margin + contentWidth, yPos - 0.25, margin + contentWidth - 0.3, yPos - 0.25, margin + contentWidth, yPos + 0.05, 'F');
+
+      // "SCAN TO BOOK" text
+      pdf.setTextColor(...darkColor);
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('SCAN TO VIEW & BOOK INSTANTLY', pageWidth / 2, yPos + 0.15, { align: 'center' });
+
+      // QR Code with white background
+      const qrSize = 1.8;
+      const qrX = (pageWidth - qrSize) / 2;
+      const qrY = yPos + 0.35;
+      
+      // White background for QR
+      pdf.setFillColor(255, 255, 255);
+      pdf.roundedRect(qrX - 0.15, qrY - 0.1, qrSize + 0.3, qrSize + 0.25, 0.1, 0.1, 'F');
+      pdf.setDrawColor(...primaryOrange);
+      pdf.setLineWidth(0.03);
+      pdf.roundedRect(qrX - 0.15, qrY - 0.1, qrSize + 0.3, qrSize + 0.25, 0.1, 0.1, 'S');
+      
+      // QR Code
+      pdf.addImage(qrCodeDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
+
+      // URL below QR
       pdf.setTextColor(...grayColor);
       pdf.setFontSize(10);
       pdf.setFont('helvetica', 'normal');
-      pdf.text('vendibook.com', pageWidth / 2, yPos, { align: 'center' });
+      pdf.text('vendibook.com', pageWidth / 2, yPos + 2.45, { align: 'center' });
 
-      // Footer
-      pdf.setFillColor(...primaryColor);
-      pdf.rect(0, pageHeight - 0.5, pageWidth, 0.5, 'F');
+      // === FOOTER ===
+      // Footer background with gradient effect (simulated with two rectangles)
+      pdf.setFillColor(...primaryDark);
+      pdf.rect(0, pageHeight - 0.7, pageWidth, 0.7, 'F');
+      pdf.setFillColor(...primaryOrange);
+      pdf.rect(0, pageHeight - 0.7, pageWidth * 0.6, 0.7, 'F');
+      
+      // Diagonal transition
+      pdf.setFillColor(...primaryDark);
+      pdf.triangle(pageWidth * 0.5, pageHeight - 0.7, pageWidth * 0.7, pageHeight - 0.7, pageWidth * 0.7, pageHeight, 'F');
+      
       pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Questions?', margin + 0.2, pageHeight - 0.38);
+      pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(10);
-      pdf.text('Questions? Call 1-877-8-VENDI-2 | support@vendibook.com', pageWidth / 2, pageHeight - 0.18, { align: 'center' });
+      pdf.text('1-877-8-VENDI-2  •  support@vendibook.com', margin + 0.2, pageHeight - 0.18);
+      
+      // Vendibook text on right side of footer
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('VendiBook', pageWidth - margin - 0.2, pageHeight - 0.28, { align: 'right' });
 
       // Save
       pdf.save(`vendibook-flyer-${listing.id}.pdf`);
@@ -715,24 +792,47 @@ ${hashtags}`;
       </Card>
 
       {/* Card 4: Print Flyer */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <FileText className="w-5 h-5" />
             Print flyer
+            <Badge variant="secondary" className="text-[10px] ml-auto">Pro quality</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-20 rounded-lg bg-muted border-2 border-dashed border-border flex flex-col items-center justify-center shrink-0">
-              <QrCode className="w-6 h-6 text-muted-foreground mb-1" />
-              <span className="text-[8px] text-muted-foreground font-medium">PDF</span>
+          <div className="flex items-start gap-4">
+            {/* Dynamic Flyer Preview */}
+            <div className="w-20 h-28 rounded-lg overflow-hidden shadow-lg border border-border shrink-0 relative bg-white">
+              {/* Header stripe */}
+              <div className="h-5 bg-gradient-to-r from-primary to-primary/80 relative">
+                <div className="absolute right-0 top-0 w-0 h-0 border-t-[20px] border-t-primary/60 border-l-[20px] border-l-transparent" />
+                <span className="text-[4px] text-white font-bold absolute left-1 top-1.5">VendiBook</span>
+              </div>
+              {/* Content */}
+              <div className="p-1.5 space-y-1">
+                <div className="bg-primary/10 rounded px-1 py-0.5 inline-block">
+                  <span className="text-[3px] text-primary font-bold">{categoryLabel.toUpperCase()}</span>
+                </div>
+                <div className="text-[4px] font-bold text-foreground line-clamp-2 leading-tight">
+                  {listing.title}
+                </div>
+                {priceText && (
+                  <div className="text-[5px] font-bold text-primary">{priceText}</div>
+                )}
+              </div>
+              {/* QR placeholder */}
+              <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-8 h-8 bg-muted rounded flex items-center justify-center">
+                <QrCode className="w-5 h-5 text-muted-foreground" />
+              </div>
+              {/* Footer */}
+              <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-primary to-primary/70" />
             </div>
             <div className="flex-1">
-              <p className="text-sm text-muted-foreground mb-2">
-                Print-ready flyer with QR code, listing details, and Vendibook branding. Perfect for events or display on your truck.
+              <p className="text-sm text-muted-foreground mb-3">
+                Eye-catching print-ready flyer with your listing details, QR code, and professional Vendibook branding. Perfect for events, windows, or display on your truck.
               </p>
-              <Button variant="outline" size="sm" onClick={handleDownloadPdfFlyer}>
+              <Button onClick={handleDownloadPdfFlyer} className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white">
                 <Download className="w-4 h-4 mr-2" />
                 Download PDF flyer
               </Button>
