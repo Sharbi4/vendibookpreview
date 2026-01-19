@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { useConversationMessages, ConversationMessage } from '@/hooks/useConversationMessages';
@@ -184,7 +184,7 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto p-4" ref={scrollRef}>
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-8">
             <p className="text-muted-foreground">
@@ -222,7 +222,7 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
             })}
           </div>
         )}
-      </ScrollArea>
+      </div>
 
       {/* PII Warning */}
       {piiError && (
