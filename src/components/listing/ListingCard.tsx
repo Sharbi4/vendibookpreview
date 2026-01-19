@@ -10,6 +10,7 @@ import VerificationBadge from '@/components/verification/VerificationBadge';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 import { FavoriteButton } from '@/components/listing/FavoriteButton';
 import { AffirmBadge } from '@/components/ui/AffirmBadge';
+import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 
 interface ListingCardProps {
   listing: Listing;
@@ -242,9 +243,12 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
               </span>
             )}
           </p>
-          {/* Affirm badge for eligible sale listings */}
+          {/* BNPL badges for eligible sale listings */}
           {!compact && listing.mode === 'sale' && listing.price_sale && (
-            <AffirmBadge price={listing.price_sale} />
+            <>
+              <AfterpayBadge price={listing.price_sale} />
+              <AffirmBadge price={listing.price_sale} />
+            </>
           )}
         </div>
       </div>
