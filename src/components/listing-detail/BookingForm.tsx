@@ -519,19 +519,23 @@ const BookingForm = ({
             className="space-y-3"
           >
             {fulfillmentOptions.includes('pickup') && (
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary/50 transition-colors cursor-pointer">
+              <div className="flex items-center space-x-3 p-3 rounded-xl bg-muted/30 border border-border hover:border-primary/50 transition-colors cursor-pointer">
                 <RadioGroupItem value="pickup" id="pickup" />
                 <Label htmlFor="pickup" className="flex items-center gap-2 cursor-pointer flex-1">
-                  <MapPin className="h-4 w-4 text-primary" />
+                  <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
+                    <MapPin className="h-4 w-4" />
+                  </div>
                   <span>Pickup</span>
                 </Label>
               </div>
             )}
             {fulfillmentOptions.includes('delivery') && (
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary/50 transition-colors cursor-pointer">
+              <div className="flex items-center space-x-3 p-3 rounded-xl bg-muted/30 border border-border hover:border-primary/50 transition-colors cursor-pointer">
                 <RadioGroupItem value="delivery" id="delivery" />
                 <Label htmlFor="delivery" className="flex items-center gap-2 cursor-pointer flex-1">
-                  <Truck className="h-4 w-4 text-primary" />
+                  <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
+                    <Truck className="h-4 w-4" />
+                  </div>
                   <span>Delivery</span>
                   {deliveryFee && (
                     <span className="text-xs text-muted-foreground ml-auto">
@@ -547,9 +551,11 @@ const BookingForm = ({
 
       {/* Pickup Details - Read Only */}
       {isMobileAsset && fulfillmentSelected === 'pickup' && (
-        <div className="mb-6 p-4 bg-muted/50 rounded-xl">
+        <div className="mb-6 p-4 bg-muted/30 rounded-xl border border-border">
           <div className="flex items-center gap-2 mb-2">
-            <MapPin className="h-4 w-4 text-primary" />
+            <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
+              <MapPin className="h-4 w-4" />
+            </div>
             <span className="font-medium text-sm text-foreground">Pickup Location</span>
           </div>
           <p className="text-sm text-muted-foreground">
@@ -598,8 +604,10 @@ const BookingForm = ({
             />
           </div>
           {deliveryFee && (
-            <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg">
-              <Truck className="h-4 w-4 text-primary" />
+            <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-xl border border-border">
+              <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
+                <Truck className="h-4 w-4" />
+              </div>
               <span className="text-sm text-foreground">
                 Delivery fee: <strong>${deliveryFee}</strong>
               </span>
@@ -611,39 +619,49 @@ const BookingForm = ({
       {/* Static Location Info - Read Only */}
       {isStaticLocation && (
         <div className="mb-6">
-          <Alert className="bg-muted/50 border-primary/20">
-            <Building className="h-4 w-4" />
-            <AlertDescription>
-              This is a fixed on-site location. Access is provided at the address below.
-            </AlertDescription>
-          </Alert>
+          <div className="p-4 bg-muted/30 rounded-xl border border-border mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
+                <Building className="h-4 w-4" />
+              </div>
+              <span className="text-sm text-foreground">
+                This is a fixed on-site location. Access is provided at the address below.
+              </span>
+            </div>
+          </div>
           
-          <div className="mt-4 p-4 bg-muted/50 rounded-xl space-y-3">
+          <div className="p-4 bg-muted/30 rounded-xl border border-border space-y-3">
             {address && (
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <MapPin className="h-4 w-4 text-primary" />
+                  <div className="w-6 h-6 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
+                    <MapPin className="h-3 w-3" />
+                  </div>
                   <span className="font-medium text-sm text-foreground">Address</span>
                 </div>
-                <p className="text-sm text-muted-foreground">{address}</p>
+                <p className="text-sm text-muted-foreground ml-8">{address}</p>
               </div>
             )}
             {hoursOfAccess && (
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <Calendar className="h-4 w-4 text-primary" />
+                  <div className="w-6 h-6 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
+                    <Calendar className="h-3 w-3" />
+                  </div>
                   <span className="font-medium text-sm text-foreground">Hours of Access</span>
                 </div>
-                <p className="text-sm text-muted-foreground">{hoursOfAccess}</p>
+                <p className="text-sm text-muted-foreground ml-8">{hoursOfAccess}</p>
               </div>
             )}
             {accessInstructions && (
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <Info className="h-4 w-4 text-primary" />
+                  <div className="w-6 h-6 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
+                    <Info className="h-3 w-3" />
+                  </div>
                   <span className="font-medium text-sm text-foreground">Access Instructions</span>
                 </div>
-                <p className="text-sm text-muted-foreground">{accessInstructions}</p>
+                <p className="text-sm text-muted-foreground ml-8">{accessInstructions}</p>
               </div>
             )}
           </div>
@@ -755,21 +773,23 @@ const BookingForm = ({
 
       {/* Instant Book Badge */}
       {instantBook && (
-        <div className="mb-4 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+        <div className="mb-4 p-3 bg-muted/30 border border-border rounded-xl">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Instant Book</span>
+            <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
+              <CheckCircle2 className="h-4 w-4" />
+            </div>
+            <span className="text-sm font-medium text-foreground">Instant Book</span>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-2 ml-10">
             Book immediately and pay now. Your booking is confirmed once documents are approved.
           </p>
         </div>
       )}
 
       {/* Trust Badge before submit */}
-      <div className="mb-4 flex items-center justify-center gap-3 text-xs text-muted-foreground">
+      <div className="mb-4 flex items-center justify-center gap-3 text-xs text-muted-foreground p-3 bg-muted/30 rounded-xl border border-border">
         <div className="flex items-center gap-1.5">
-          <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+          <ShieldCheck className="h-4 w-4 text-primary" />
           <span>Protected by Vendibook</span>
         </div>
         <span className="text-border">•</span>
@@ -781,8 +801,7 @@ const BookingForm = ({
 
       {/* Submit Button */}
       <Button 
-        variant="gradient"
-        className="w-full" 
+        className="w-full bg-primary hover:bg-primary/90" 
         size="lg"
         onClick={handleSubmit}
         disabled={isSubmitting || rentalDays <= 0 || !isListingAvailable || !userInfo}
