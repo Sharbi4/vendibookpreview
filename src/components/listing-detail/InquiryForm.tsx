@@ -4,6 +4,7 @@ import { ShieldCheck, MapPin, Truck, Package, ArrowRight } from 'lucide-react';
 import type { FulfillmentType } from '@/types/listing';
 import { StripeLogo } from '@/components/ui/StripeLogo';
 import { AffirmBadge, isAffirmEligible } from '@/components/ui/AffirmBadge';
+import { AfterpayBadge, isAfterpayEligible } from '@/components/ui/AfterpayBadge';
 
 interface InquiryFormProps {
   listingId: string;
@@ -73,6 +74,9 @@ const InquiryForm = ({
           <span className="text-2xl font-bold bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent">
             ${priceSale?.toLocaleString()}
           </span>
+          {priceSale && isAfterpayEligible(priceSale) && (
+            <AfterpayBadge price={priceSale} className="text-xs" />
+          )}
           {priceSale && isAffirmEligible(priceSale) && (
             <AffirmBadge price={priceSale} className="text-xs" />
           )}
