@@ -7,10 +7,12 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
 import { useBookingDraft } from '@/hooks/useBookingDraft';
+import { useListingRequiredDocuments } from '@/hooks/useRequiredDocuments';
 import { calculateRentalFees } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
+import type { DocumentType } from '@/types/documents';
 import type { TablesInsert } from '@/integrations/supabase/types';
 
 // Shared components
@@ -19,11 +21,19 @@ import { WizardHeader, type WizardStep } from '@/components/shared';
 // Step components
 import BookingStepDates from './steps/BookingStepDates';
 import BookingStepRequirements from './steps/BookingStepRequirements';
+import BookingStepDocumentUpload from './steps/BookingStepDocumentUpload';
 import BookingStepDetails from './steps/BookingStepDetails';
 import BookingStepReview from './steps/BookingStepReview';
 import BookingStepConfirmation from './steps/BookingStepConfirmation';
 
 import type { BookingUserInfo } from '@/components/booking';
+
+// Type for files staged for upload
+interface StagedFile {
+  documentType: DocumentType;
+  file: File;
+  preview?: string;
+}
 
 export interface BookingWizardProps {
   listingId: string;
@@ -65,12 +75,19 @@ const BookingWizard = ({
   const { toast } = useToast();
   const { isDateUnavailable } = useBlockedDates({ listingId });
   const { draft, saveDraft, clearDraft, isLoaded: draftLoaded } = useBookingDraft({ listingId });
+  
+  // Check if listing has required documents
+  const { data: requiredDocs } = useListingRequiredDocuments(listingId);
+  const hasRequiredDocs = requiredDocs && requiredDocs.length > 0;
 
-  // Wizard state
+  // Wizard state - add extra step for document upload if documents are required
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
+  
+  // Document upload state
+  const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([]);
 
   // Form state - initialize from draft if available
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -100,7 +117,9 @@ const BookingWizard = ({
   }, [startDate, endDate, fulfillmentSelected, deliveryAddress, message, saveDraft, draftLoaded]);
 
   const isMobileAsset = category === 'food_truck' || category === 'food_trailer';
-  const totalSteps = instantBook ? 4 : 4;
+  // Steps: 1=Dates, 2=Requirements, 3=DocUpload (if needed), 4=Details, 5=Review
+  // If no docs required: 1=Dates, 2=Requirements, 3=Details, 4=Review
+  const totalSteps = hasRequiredDocs ? 5 : 4;
 
   // Calculate pricing
   const rentalDays = startDate && endDate ? differenceInDays(endDate, startDate) : 0;
@@ -302,12 +321,20 @@ const BookingWizard = ({
     );
   }
 
-  const stepLabels: WizardStep[] = [
-    { step: 1, label: 'Select Dates', short: 'Dates' },
-    { step: 2, label: 'Requirements', short: 'Docs' },
-    { step: 3, label: 'Details', short: 'Details' },
-    { step: 4, label: 'Review', short: 'Review' },
-  ];
+  const stepLabels: WizardStep[] = hasRequiredDocs
+    ? [
+        { step: 1, label: 'Select Dates', short: 'Dates' },
+        { step: 2, label: 'Requirements', short: 'Info' },
+        { step: 3, label: 'Upload Docs', short: 'Upload' },
+        { step: 4, label: 'Details', short: 'Details' },
+        { step: 5, label: 'Review', short: 'Review' },
+      ]
+    : [
+        { step: 1, label: 'Select Dates', short: 'Dates' },
+        { step: 2, label: 'Requirements', short: 'Docs' },
+        { step: 3, label: 'Details', short: 'Details' },
+        { step: 4, label: 'Review', short: 'Review' },
+      ];
 
   const stepVariants = {
     enter: { opacity: 0, x: 20 },
