@@ -62,7 +62,7 @@ const footerSections: FooterSection[] = [
 ];
 
 const socialLinks = [
-  { icon: Facebook, href: 'https://facebook.com/vendibook', label: 'Facebook' },
+  { icon: Facebook, href: 'https://www.facebook.com/people/Vendibook/61575463393177/', label: 'Facebook' },
   { icon: Instagram, href: 'https://instagram.com/vendibook', label: 'Instagram' },
   { icon: Twitter, href: 'https://twitter.com/vendibook', label: 'Twitter' },
   { icon: Linkedin, href: 'https://linkedin.com/company/vendibook', label: 'LinkedIn' },
