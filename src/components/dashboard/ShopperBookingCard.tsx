@@ -198,11 +198,23 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
 
   const handlePayNow = async () => {
     if (!listing) return;
-    
+
+    const isInIframe = (() => {
+      try {
+        return window.self !== window.top;
+      } catch {
+        return true;
+      }
+    })();
+
+    // If we're in an iframe (Lovable preview), Stripe Checkout won't render in-frame.
+    // Open a blank tab synchronously to avoid popup blockers, then navigate it once we have the URL.
+    const checkoutWindow = isInIframe ? window.open('about:blank', '_blank') : null;
+
     setIsProcessingPayment(true);
     setShowPriceBreakdown(false);
     setShowCheckoutOverlay(true);
-    
+
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
@@ -217,13 +229,33 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      if (data?.url) {
-        // Redirect in same tab for smoother UX
-        onPaymentInitiated?.();
-        window.location.href = data.url;
+      if (!data?.url) throw new Error('Failed to create checkout session');
+
+      onPaymentInitiated?.();
+
+      // Hide overlay since we're not navigating away when opening in a new tab.
+      setShowCheckoutOverlay(false);
+
+      if (checkoutWindow) {
+        checkoutWindow.location.href = data.url;
+        return;
       }
+
+      if (isInIframe) {
+        // Popup blocked: attempt to escape the iframe.
+        try {
+          window.top?.location.assign(data.url);
+        } catch {
+          window.location.assign(data.url);
+        }
+        return;
+      }
+
+      // Not in iframe: keep the smoother same-tab flow.
+      window.location.href = data.url;
     } catch (error) {
       console.error('Payment error:', error);
+      if (checkoutWindow) checkoutWindow.close();
       setShowCheckoutOverlay(false);
       toast({
         title: 'Payment Error',

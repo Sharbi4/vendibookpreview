@@ -190,6 +190,17 @@ const BookingWizard = ({
       return;
     }
 
+    const isInIframe = (() => {
+      try {
+        return window.self !== window.top;
+      } catch {
+        return true;
+      }
+    })();
+
+    // For Instant Book: open a blank tab BEFORE any awaits to avoid popup blockers in iframe environments.
+    const checkoutWindow = instantBook && isInIframe ? window.open('about:blank', '_blank') : null;
+
     setIsSubmitting(true);
 
     try {
@@ -238,6 +249,22 @@ const BookingWizard = ({
 
         trackFormSubmitConversion({ form_type: 'instant_book', listing_id: listingId });
         clearDraft(); // Clear saved draft on successful submission
+
+        if (checkoutWindow) {
+          checkoutWindow.location.href = checkoutData.url;
+          return;
+        }
+
+        if (isInIframe) {
+          // Popup blocked: attempt to escape the iframe.
+          try {
+            window.top?.location.assign(checkoutData.url);
+          } catch {
+            window.location.assign(checkoutData.url);
+          }
+          return;
+        }
+
         window.location.href = checkoutData.url;
         return;
       }
@@ -252,6 +279,7 @@ const BookingWizard = ({
       clearDraft(); // Clear saved draft on successful submission
       setBookingComplete(true);
     } catch (error) {
+      if (checkoutWindow) checkoutWindow.close();
       console.error('Error submitting booking:', error);
       toast({
         title: 'Error',
