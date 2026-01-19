@@ -13,7 +13,8 @@ import {
   MessagesSquare,
   Plus,
   FileQuestion,
-  Wrench
+  Wrench,
+  Receipt
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -146,6 +147,13 @@ const MobileMenu = ({
                     label="Messages"
                     isActive={isActive('/messages')}
                     onClick={() => handleNavigation('/messages')}
+                  />
+                  <MenuLink
+                    to="/transactions"
+                    icon={Receipt}
+                    label="Transactions"
+                    isActive={isActive('/transactions')}
+                    onClick={() => handleNavigation('/transactions')}
                   />
                   <MenuLink
                     to="/account"
