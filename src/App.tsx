@@ -9,6 +9,7 @@ import CookieConsent from "@/components/CookieConsent";
 import ScrollToTop from "@/components/ScrollToTop";
 import ZendeskWidget from "@/components/ZendeskWidget";
 import PageTransition from "@/components/PageTransition";
+import { usePageTracking } from "@/hooks/usePageTracking";
 import { AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 
@@ -108,6 +109,9 @@ const PageLoader = () => (
 // Animated Routes wrapper component
 const AnimatedRoutes = () => {
   const location = useLocation();
+
+  // Track page views with Google Analytics
+  usePageTracking();
 
   return (
     <AnimatePresence mode="wait" initial={false}>
