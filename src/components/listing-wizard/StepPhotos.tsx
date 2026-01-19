@@ -26,9 +26,71 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
 }) => {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
   const [dragOver, setDragOver] = useState(false);
+  
+  // Track object URLs to prevent memory leaks
+  const imagePreviewUrlsRef = useRef<Map<File, string>>(new Map());
+  const videoPreviewUrlsRef = useRef<Map<File, string>>(new Map());
+
+  // Generate previews from formData.images - sync with form state
+  const imagePreviews = React.useMemo(() => {
+    const urls: string[] = [];
+    const urlMap = imagePreviewUrlsRef.current;
+    
+    // Clean up URLs for files no longer in formData
+    for (const [file, url] of urlMap.entries()) {
+      if (!formData.images.includes(file)) {
+        URL.revokeObjectURL(url);
+        urlMap.delete(file);
+      }
+    }
+    
+    // Create URLs for current files
+    for (const file of formData.images) {
+      if (!urlMap.has(file)) {
+        urlMap.set(file, URL.createObjectURL(file));
+      }
+      urls.push(urlMap.get(file)!);
+    }
+    
+    return urls;
+  }, [formData.images]);
+
+  // Generate previews from formData.videos - sync with form state
+  const videoPreviews = React.useMemo(() => {
+    const urls: string[] = [];
+    const urlMap = videoPreviewUrlsRef.current;
+    
+    // Clean up URLs for files no longer in formData
+    for (const [file, url] of urlMap.entries()) {
+      if (!formData.videos.includes(file)) {
+        URL.revokeObjectURL(url);
+        urlMap.delete(file);
+      }
+    }
+    
+    // Create URLs for current files
+    for (const file of formData.videos) {
+      if (!urlMap.has(file)) {
+        urlMap.set(file, URL.createObjectURL(file));
+      }
+      urls.push(urlMap.get(file)!);
+    }
+    
+    return urls;
+  }, [formData.videos]);
+
+  // Cleanup all URLs on unmount
+  React.useEffect(() => {
+    return () => {
+      for (const url of imagePreviewUrlsRef.current.values()) {
+        URL.revokeObjectURL(url);
+      }
+      for (const url of videoPreviewUrlsRef.current.values()) {
+        URL.revokeObjectURL(url);
+      }
+    };
+  }, []);
 
   const handleImageSelect = (files: FileList | null) => {
     if (!files) return;
@@ -39,11 +101,7 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
 
     if (newFiles.length === 0) return;
 
-    // Create previews
-    const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-    setImagePreviews(prev => [...prev, ...newPreviews]);
-
-    // Update form data
+    // Update form data - previews will be generated automatically via useMemo
     updateField('images', [...formData.images, ...newFiles]);
   };
 
@@ -57,36 +115,22 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
 
     if (newFiles.length === 0) return;
 
-    // Create previews
-    const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-    setVideoPreviews(prev => [...prev, ...newPreviews]);
-
-    // Update form data
+    // Update form data - previews will be generated automatically via useMemo
     updateField('videos', [...formData.videos, ...newFiles]);
   };
 
   const removeImage = (index: number) => {
-    // Revoke object URL to prevent memory leaks
-    URL.revokeObjectURL(imagePreviews[index]);
-    
-    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    // URL cleanup handled by useMemo when file is removed from formData
     updateField('images', formData.images.filter((_, i) => i !== index));
   };
 
   const removeVideo = (index: number) => {
-    URL.revokeObjectURL(videoPreviews[index]);
-    
-    setVideoPreviews(prev => prev.filter((_, i) => i !== index));
+    // URL cleanup handled by useMemo when file is removed from formData
     updateField('videos', formData.videos.filter((_, i) => i !== index));
   };
 
   const moveImageToFirst = (index: number) => {
     if (index === 0) return;
-
-    const newPreviews = [...imagePreviews];
-    const [moved] = newPreviews.splice(index, 1);
-    newPreviews.unshift(moved);
-    setImagePreviews(newPreviews);
 
     const newImages = [...formData.images];
     const [movedImage] = newImages.splice(index, 1);
@@ -372,7 +416,7 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
             ))}
 
             {/* Existing videos from edit mode */}
-            {formData.existingVideos.map((url, index) => (
+            {formData.existingVideos.map((url) => (
               <div
                 key={url}
                 className="relative aspect-video rounded-xl overflow-hidden bg-muted group"
