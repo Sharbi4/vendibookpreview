@@ -24,13 +24,15 @@ const SellerSalesSection = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="rounded-2xl border-0 shadow-xl bg-card overflow-hidden">
+      <div className="bg-muted/30 border-b border-border p-6">
         <h2 className="text-xl font-bold text-foreground mb-2">My Sales</h2>
         <p className="text-muted-foreground text-sm">
           Track and confirm your sales. Funds are released after both parties confirm.
         </p>
       </div>
+      
+      <div className="p-6 space-y-6">
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -165,6 +167,7 @@ const SellerSalesSection = () => {
           )}
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 };
