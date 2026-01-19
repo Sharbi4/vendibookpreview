@@ -319,10 +319,14 @@ export const ListingWizard: React.FC = () => {
 
   const uploadImages = async (listingId: string): Promise<string[]> => {
     const urls: string[] = [];
+    console.log('uploadImages called for listing:', listingId, 'with', formData.images.length, 'images');
     
-    for (const file of formData.images) {
+    for (let i = 0; i < formData.images.length; i++) {
+      const file = formData.images[i];
       const fileExt = file.name.split('.').pop();
       const fileName = `${user!.id}/${listingId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      
+      console.log(`Uploading image ${i + 1}/${formData.images.length}: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
       
       try {
         const { error: uploadError } = await supabase.storage
@@ -333,7 +337,7 @@ export const ListingWizard: React.FC = () => {
           });
 
         if (uploadError) {
-          console.error('Image upload error:', uploadError);
+          console.error('Image upload error for', file.name, ':', uploadError);
           throw uploadError;
         }
 
@@ -341,13 +345,15 @@ export const ListingWizard: React.FC = () => {
           .from('listing-images')
           .getPublicUrl(fileName);
 
+        console.log(`Image ${i + 1} uploaded successfully:`, publicUrl);
         urls.push(publicUrl);
       } catch (error) {
-        console.error('Failed to upload image:', error);
+        console.error('Failed to upload image:', file.name, error);
         throw error;
       }
     }
     
+    console.log('All images uploaded, total URLs:', urls.length);
     return urls;
   };
 
@@ -460,17 +466,28 @@ export const ListingWizard: React.FC = () => {
     (formData.mode === 'sale' && formData.accept_card_payment);
 
   const saveListing = async (publish: boolean) => {
+    console.log('saveListing called, publish:', publish);
+    console.log('formData:', { 
+      mode: formData.mode, 
+      category: formData.category, 
+      title: formData.title,
+      imagesCount: formData.images.length,
+      existingImagesCount: formData.existingImages.length
+    });
+
     if (!user) {
       toast({ title: 'Please sign in', variant: 'destructive' });
       return;
     }
 
     if (publish && requiresStripeConnect && !isOnboardingComplete) {
+      console.log('Stripe Connect required but not complete, showing modal');
       setShowStripeModal(true);
       return;
     }
 
     if (publish && !canPublish()) {
+      console.log('Cannot publish, validation failed');
       toast({ 
         title: 'Cannot publish', 
         description: 'Please complete all required fields.',
@@ -480,6 +497,7 @@ export const ListingWizard: React.FC = () => {
     }
 
     setIsSaving(true);
+    console.log('Starting listing save/publish process...');
 
     try {
       // Geocode address to get coordinates
@@ -554,7 +572,11 @@ export const ListingWizard: React.FC = () => {
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Listing insert error:', insertError);
+        throw insertError;
+      }
+      console.log('Listing created successfully:', listing.id);
 
       // Upload images and videos
       let coverImageUrl: string | null = null;
@@ -562,12 +584,16 @@ export const ListingWizard: React.FC = () => {
       let videoUrls: string[] = [];
 
       if (formData.images.length > 0) {
+        console.log('Uploading', formData.images.length, 'images...');
         imageUrls = await uploadImages(listing.id);
         coverImageUrl = imageUrls[0] || null;
+        console.log('Images uploaded successfully:', imageUrls.length);
       }
 
       if (formData.videos.length > 0) {
+        console.log('Uploading', formData.videos.length, 'videos...');
         videoUrls = await uploadVideos(listing.id);
+        console.log('Videos uploaded successfully:', videoUrls.length);
       }
 
       // Update listing with media URLs
