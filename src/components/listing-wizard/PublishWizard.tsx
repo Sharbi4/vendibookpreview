@@ -303,14 +303,23 @@ export const PublishWizard: React.FC = () => {
   const handleAuthSuccess = async (userId: string) => {
     if (!listing || !listingId) return;
 
-    // Ensure we actually have an authenticated session before attempting the claim.
-    // (On signup flows that require email confirmation, there may be a user but no session yet.)
-    const { data: sessionData } = await supabase.auth.getSession();
-    const sessionUserId = sessionData.session?.user?.id;
-    if (!sessionUserId || sessionUserId !== userId) {
+    // Supabase auth can take a beat to persist the session after sign-up.
+    // If we run the claim immediately, the DB request may still be anonymous and fail RLS.
+    const waitForSessionUser = async (): Promise<boolean> => {
+      for (let i = 0; i < 10; i++) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const sessionUserId = sessionData.session?.user?.id;
+        if (sessionUserId && sessionUserId === userId) return true;
+        await new Promise((r) => setTimeout(r, 200));
+      }
+      return false;
+    };
+
+    const hasSession = await waitForSessionUser();
+    if (!hasSession) {
       toast({
         title: 'Please sign in to claim your draft',
-        description: 'If you just signed up, finish email confirmation first, then sign in here.',
+        description: 'Your account was created, but you’re not signed in yet. Please sign in and we’ll claim the draft automatically.',
         variant: 'destructive',
       });
       return;
@@ -345,7 +354,7 @@ export const PublishWizard: React.FC = () => {
       console.error('Error claiming draft:', error);
       toast({
         title: 'Error claiming draft',
-        description: 'Please try again.',
+        description: error instanceof Error ? error.message : 'Please try again.',
         variant: 'destructive',
       });
     }
