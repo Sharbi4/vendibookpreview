@@ -79,7 +79,7 @@ const HowItWorks = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="How Vendibook Works | Sell, Rent & List Mobile Food Assets"
+        title="Learn More | Vendibook - Sell, Rent & List Mobile Food Assets"
         description="Learn how to sell, rent, or list vendor lots on Vendibook. Verified accounts, secure payments, document workflows, and nationwide freight."
       />
       <Header />

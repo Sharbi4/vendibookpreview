@@ -15,7 +15,7 @@ const footerSections: FooterSection[] = [
   {
     title: 'Vendibook',
     links: [
-      { label: 'How It Works', href: '/how-it-works' },
+      { label: 'Learn More', href: '/how-it-works' },
       { label: 'Help Center', href: '/help' },
       { label: 'Contact Us', href: '/contact' },
     ],
