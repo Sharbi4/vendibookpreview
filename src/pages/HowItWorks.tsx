@@ -103,21 +103,21 @@ const HowItWorks = () => {
 
               {/* Jump Buttons */}
               <div className="flex flex-wrap gap-3 justify-center mb-10">
-                <Button size="lg" variant="gradient" className="gap-2 shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
+                <Button size="lg" className="gap-2 bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
                   <a href="#sell">
                     <DollarSign className="h-4 w-4" />
                     Sell
                   </a>
                 </Button>
-                <Button size="lg" variant="outline" className="gap-2 border-2 border-emerald-500/30 hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all hover:scale-105" asChild>
+                <Button size="lg" className="gap-2 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
                   <a href="#rent">
-                    <CalendarDays className="h-4 w-4 text-emerald-600" />
+                    <CalendarDays className="h-4 w-4" />
                     Rent
                   </a>
                 </Button>
-                <Button size="lg" variant="outline" className="gap-2 border-2 border-amber-500/30 hover:bg-amber-500/10 hover:border-amber-500/50 transition-all hover:scale-105" asChild>
+                <Button size="lg" className="gap-2 bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-700 hover:to-yellow-600 text-white shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
                   <a href="#lots">
-                    <MapPin className="h-4 w-4 text-amber-600" />
+                    <MapPin className="h-4 w-4" />
                     Vendor Lots
                   </a>
                 </Button>
