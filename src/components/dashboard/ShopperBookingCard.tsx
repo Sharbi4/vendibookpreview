@@ -25,6 +25,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import InstantBookTimeline from './InstantBookTimeline';
+import BookingPhaseIndicator, { getBookingPhase } from './BookingPhaseIndicator';
+import BookingConfirmationSection from './BookingConfirmationSection';
 import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
@@ -176,6 +178,24 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
   const hasDeposit = (depositAmount ?? 0) > 0;
   const rentalEnded = isPast(parseISO(booking.end_date));
 
+  // Confirmation tracking
+  const hostConfirmedAt = (booking as any).host_confirmed_at as string | null;
+  const shopperConfirmedAt = (booking as any).shopper_confirmed_at as string | null;
+  const disputeStatus = (booking as any).dispute_status as string | null;
+
+  // Get booking phase for status display
+  const bookingPhase = getBookingPhase({
+    startDate: booking.start_date,
+    endDate: booking.end_date,
+    status: booking.status,
+    paymentStatus,
+    hostConfirmedAt,
+    shopperConfirmedAt,
+    disputeStatus,
+  });
+
+  const showConfirmationSection = bookingPhase === 'ended_awaiting_confirmation' && !shopperConfirmedAt;
+
   const handlePayNow = async () => {
     if (!listing) return;
     
@@ -266,6 +286,21 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
                 documentsRejected={hasRejectedDocs}
                 bookingConfirmed={bookingConfirmed}
                 bookingCancelled={bookingCancelled}
+              />
+            </div>
+          )}
+
+          {/* Booking Phase Indicator - Show for approved bookings */}
+          {isApproved && isPaid && (
+            <div className="mb-3">
+              <BookingPhaseIndicator
+                startDate={booking.start_date}
+                endDate={booking.end_date}
+                status={booking.status}
+                paymentStatus={paymentStatus}
+                hostConfirmedAt={hostConfirmedAt}
+                shopperConfirmedAt={shopperConfirmedAt}
+                disputeStatus={disputeStatus}
               />
             </div>
           )}
@@ -365,6 +400,19 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
             <div className="bg-muted/50 rounded-lg p-3 mb-3">
               <p className="text-xs text-muted-foreground mb-1">Host response:</p>
               <p className="text-sm text-foreground">{booking.host_response}</p>
+            </div>
+          )}
+
+          {/* Booking End Confirmation Section */}
+          {showConfirmationSection && (
+            <div className="mb-3">
+              <BookingConfirmationSection
+                bookingId={booking.id}
+                isHost={false}
+                hostConfirmedAt={hostConfirmedAt}
+                shopperConfirmedAt={shopperConfirmedAt}
+                disputeStatus={disputeStatus}
+              />
             </div>
           )}
 

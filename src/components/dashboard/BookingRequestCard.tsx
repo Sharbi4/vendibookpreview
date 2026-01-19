@@ -19,6 +19,8 @@ import { MessageDialog } from '@/components/messaging/MessageDialog';
 import { HostDocumentReviewSection } from '@/components/documents/HostDocumentReviewSection';
 import { useDocumentComplianceStatus } from '@/hooks/useRequiredDocuments';
 import InstantBookTimeline from './InstantBookTimeline';
+import BookingPhaseIndicator, { getBookingPhase } from './BookingPhaseIndicator';
+import BookingConfirmationSection from './BookingConfirmationSection';
 
 interface BookingRequestCardProps {
   booking: {
@@ -35,6 +37,9 @@ interface BookingRequestCardProps {
     deposit_amount?: number | null;
     deposit_status?: string | null;
     deposit_refund_notes?: string | null;
+    host_confirmed_at?: string | null;
+    shopper_confirmed_at?: string | null;
+    dispute_status?: string | null;
     listing?: {
       id?: string;
       title: string;
@@ -200,6 +205,24 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
     depositStatus === 'charged' && 
     onDepositAction;
 
+  // Confirmation tracking
+  const hostConfirmedAt = booking.host_confirmed_at || null;
+  const shopperConfirmedAt = booking.shopper_confirmed_at || null;
+  const disputeStatus = booking.dispute_status || null;
+
+  // Get booking phase for status display
+  const bookingPhase = getBookingPhase({
+    startDate: booking.start_date,
+    endDate: booking.end_date,
+    status: booking.status,
+    paymentStatus: booking.payment_status,
+    hostConfirmedAt,
+    shopperConfirmedAt,
+    disputeStatus,
+  });
+
+  const showConfirmationSection = bookingPhase === 'ended_awaiting_confirmation' && !hostConfirmedAt;
+
   const handleCancelBooking = async () => {
     if (!onCancel) return;
     
@@ -304,6 +327,22 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
                 />
               </div>
             )}
+
+            {/* Booking Phase Indicator - Show for approved paid bookings */}
+            {isApproved && isPaid && (
+              <div className="mb-3">
+                <BookingPhaseIndicator
+                  startDate={booking.start_date}
+                  endDate={booking.end_date}
+                  status={booking.status}
+                  paymentStatus={booking.payment_status}
+                  hostConfirmedAt={hostConfirmedAt}
+                  shopperConfirmedAt={shopperConfirmedAt}
+                  disputeStatus={disputeStatus}
+                />
+              </div>
+            )}
+
             <div className="flex items-center gap-3 mb-3 p-3 bg-muted/50 rounded-lg">
               <Avatar className="h-10 w-10">
                 <AvatarImage src={booking.shopper?.avatar_url || undefined} />
@@ -382,6 +421,19 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
                   bookingId={booking.id}
                   defaultOpen={hasPendingDocReviews}
                   isInstantBook={booking.is_instant_book === true}
+                />
+              </div>
+            )}
+
+            {/* Booking End Confirmation Section */}
+            {showConfirmationSection && (
+              <div className="mb-3">
+                <BookingConfirmationSection
+                  bookingId={booking.id}
+                  isHost={true}
+                  hostConfirmedAt={hostConfirmedAt}
+                  shopperConfirmedAt={shopperConfirmedAt}
+                  disputeStatus={disputeStatus}
                 />
               </div>
             )}
