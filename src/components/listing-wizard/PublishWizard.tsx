@@ -319,7 +319,7 @@ export const PublishWizard: React.FC = () => {
     if (!hasSession) {
       toast({
         title: 'Please sign in to claim your draft',
-        description: 'Your account was created, but you’re not signed in yet. Please sign in and we’ll claim the draft automatically.',
+        description: "Your account was created, but you're not signed in yet. Please sign in and we'll claim the draft automatically.",
         variant: 'destructive',
       });
       return;
@@ -329,17 +329,87 @@ export const PublishWizard: React.FC = () => {
     if (!guestDraft || guestDraft.listingId !== listingId) return;
 
     try {
-      // Claim the draft by setting the host_id
+      // Helper to safely parse currency / formatted strings
+      const safeParsePrice = (value: string): number | null => {
+        if (!value || !value.trim()) return null;
+        const cleaned = value.replace(/[^0-9.]/g, '');
+        const parsed = parseFloat(cleaned);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+      };
+
+      // Determine effective fulfillment type
+      const categoryIsStatic = isStaticLocationFn(listing.category);
+      const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation)
+        ? 'on_site'
+        : (fulfillmentType || listing.fulfillment_type || 'pickup');
+
+      // Build the update payload with ALL current in-memory form data
+      // This ensures title, description, photos, prices etc. are not lost during auth
+      const updateData: any = {
+        // Claim ownership
+        host_id: userId,
+        guest_draft_token: null,
+
+        // Details - preserve user's edits
+        title: title || listing.title,
+        description: description || listing.description,
+        highlights: highlights.length > 0 ? highlights : (listing.highlights || []),
+        amenities: amenities.length > 0 ? amenities : (listing.amenities || []),
+
+        // Dimensions (for sale listings)
+        weight_lbs: parseFloat(weightLbs) || listing.weight_lbs || null,
+        length_inches: parseFloat(lengthInches) || listing.length_inches || null,
+        width_inches: parseFloat(widthInches) || listing.width_inches || null,
+        height_inches: parseFloat(heightInches) || listing.height_inches || null,
+        freight_category: freightCategory || listing.freight_category || null,
+
+        // Location
+        fulfillment_type: effectiveFulfillmentType,
+        pickup_location_text: pickupLocationText || listing.pickup_location_text || null,
+        address: address || listing.address || null,
+        delivery_fee: parseFloat(deliveryFee) || listing.delivery_fee || null,
+        delivery_radius_miles: parseFloat(deliveryRadiusMiles) || listing.delivery_radius_miles || null,
+        pickup_instructions: pickupInstructions || listing.pickup_instructions || null,
+        delivery_instructions: deliveryInstructions || listing.delivery_instructions || null,
+        access_instructions: accessInstructions || listing.access_instructions || null,
+        hours_of_access: hoursOfAccess || listing.hours_of_access || null,
+        location_notes: locationNotes || listing.location_notes || null,
+
+        // Availability
+        available_from: availableFrom || listing.available_from || null,
+        available_to: availableTo || listing.available_to || null,
+
+        // Existing images (new uploads require auth so we only save existingImages here)
+        image_urls: existingImages.length > 0 ? existingImages : (listing.image_urls || []),
+        cover_image_url: existingImages.length > 0 ? existingImages[0] : (listing.cover_image_url || null),
+      };
+
+      // Add pricing fields based on mode
+      if (listing.mode === 'sale') {
+        updateData.price_sale = safeParsePrice(priceSale) || listing.price_sale || null;
+        updateData.vendibook_freight_enabled = vendibookFreightEnabled;
+        updateData.freight_payer = freightPayer;
+        updateData.accept_card_payment = acceptCardPayment;
+        updateData.accept_cash_payment = acceptCashPayment;
+        updateData.proof_notary_enabled = proofNotaryEnabled;
+      } else {
+        updateData.price_daily = safeParsePrice(priceDaily) || listing.price_daily || null;
+        updateData.price_weekly = safeParsePrice(priceWeekly) || listing.price_weekly || null;
+        updateData.instant_book = instantBook;
+        updateData.deposit_amount = safeParsePrice(depositAmount) || listing.deposit_amount || null;
+      }
+
+      // Claim the draft and persist all in-memory form data
       const { error } = await supabase
         .from('listings')
-        .update({
-          host_id: userId,
-          guest_draft_token: null, // Clear the token after claiming
-        })
+        .update(updateData)
         .eq('id', listingId)
         .eq('guest_draft_token', guestDraft.token);
 
       if (error) throw error;
+
+      // Update local listing state with persisted data
+      setListing(prev => prev ? { ...prev, ...updateData } : null);
 
       // Clear localStorage
       clearGuestDraft();
@@ -348,7 +418,7 @@ export const PublishWizard: React.FC = () => {
 
       toast({
         title: 'Draft claimed!',
-        description: 'Your listing is now saved to your account.',
+        description: 'Your listing and all changes are now saved to your account.',
       });
     } catch (error) {
       console.error('Error claiming draft:', error);
