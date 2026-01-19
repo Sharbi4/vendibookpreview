@@ -145,6 +145,8 @@ export const ListingWizard: React.FC = () => {
         available_from: formData.available_from || null,
         available_to: formData.available_to || null,
         instant_book: formData.mode === 'rent' ? formData.instant_book : false,
+        // Security deposit for rentals
+        deposit_amount: formData.mode === 'rent' && formData.deposit_amount ? parseFloat(formData.deposit_amount) : null,
       };
 
       if (draftId) {
@@ -271,6 +273,8 @@ export const ListingWizard: React.FC = () => {
         available_from: formData.available_from || null,
         available_to: formData.available_to || null,
         instant_book: formData.mode === 'rent' ? formData.instant_book : false,
+        // Security deposit for rentals
+        deposit_amount: formData.mode === 'rent' && formData.deposit_amount ? parseFloat(formData.deposit_amount) : null,
       };
 
       if (draftId) {
