@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Calendar, CheckCircle2, Clock, XCircle, Store, Loader2, ShoppingBag, TrendingUp } from 'lucide-react';
+import { Calendar, CheckCircle2, Clock, XCircle, Store, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EnhancedStatCard from './EnhancedStatCard';
 import ShopperBookingCard from './ShopperBookingCard';
@@ -17,31 +18,28 @@ const ShopperDashboard = () => {
   return (
     <div className="space-y-8">
       {/* Hero Browse CTA */}
-      <div className="relative overflow-hidden rounded-2xl p-8 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-        {/* Animated background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
-        <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl" />
-        
-        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">Find your next rental</h2>
-            <p className="text-muted-foreground max-w-md">
-              Browse trucks, trailers, kitchens, and lots near you.
-            </p>
+      <Card className="border-0 shadow-xl">
+        <CardContent className="p-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
+                <Store className="h-7 w-7" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-foreground mb-1">Find your next rental</h2>
+                <p className="text-muted-foreground">
+                  Browse trucks, trailers, kitchens, and lots near you.
+                </p>
+              </div>
+            </div>
+            <Button asChild size="lg">
+              <Link to="/search">
+                Browse Listings
+              </Link>
+            </Button>
           </div>
-          <Button 
-            asChild 
-            size="lg" 
-            className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-lg shadow-primary/25 transition-all hover:scale-105"
-          >
-            <Link to="/search">
-              <Store className="h-5 w-5 mr-2" />
-              Browse Listings
-            </Link>
-          </Button>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Enhanced Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -75,24 +73,33 @@ const ShopperDashboard = () => {
 
       {/* Bookings Tabs */}
       <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6 bg-muted/50 p-1 rounded-xl">
-          <TabsTrigger value="pending" className="relative rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+        <TabsList className="grid w-full grid-cols-3 mb-6 p-1.5 h-auto bg-card border border-border rounded-2xl shadow-sm">
+          <TabsTrigger 
+            value="pending" 
+            className="relative flex items-center justify-center gap-2 py-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200"
+          >
             Pending
             {stats.pending > 0 && (
-              <span className="ml-2 px-2 py-0.5 text-xs bg-amber-500 text-white rounded-full animate-pulse">
+              <span className="px-2 py-0.5 text-xs bg-amber-500 text-white rounded-full">
                 {stats.pending}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="approved" className="relative rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsTrigger 
+            value="approved" 
+            className="relative flex items-center justify-center gap-2 py-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200"
+          >
             Approved
             {stats.approved > 0 && (
-              <span className="ml-2 px-2 py-0.5 text-xs bg-emerald-500 text-white rounded-full">
+              <span className="px-2 py-0.5 text-xs bg-emerald-500 text-white rounded-full">
                 {stats.approved}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="past" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsTrigger 
+            value="past" 
+            className="flex items-center justify-center gap-2 py-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200"
+          >
             Past
           </TabsTrigger>
         </TabsList>
@@ -104,17 +111,20 @@ const ShopperDashboard = () => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : pendingBookings.length === 0 ? (
-            <div className="relative overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl p-12 text-center border border-border/50">
-              <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-              <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h4 className="font-semibold text-foreground text-lg mb-2">No pending requests</h4>
-              <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-                Requests awaiting host response appear here.
-              </p>
-              <Button asChild size="lg" className="shadow-lg">
-                <Link to="/search">Browse Listings</Link>
-              </Button>
-            </div>
+            <Card className="border-0 shadow-xl">
+              <CardContent className="p-12 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                  <Clock className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h4 className="font-semibold text-foreground text-lg mb-2">No pending requests</h4>
+                <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                  Requests awaiting host response appear here.
+                </p>
+                <Button asChild size="lg">
+                  <Link to="/search">Browse Listings</Link>
+                </Button>
+              </CardContent>
+            </Card>
           ) : (
             <div className="space-y-4">
               {pendingBookings.map((booking, index) => (
@@ -141,14 +151,17 @@ const ShopperDashboard = () => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : approvedBookings.length === 0 ? (
-            <div className="relative overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl p-12 text-center border border-border/50">
-              <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-              <CheckCircle2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h4 className="font-semibold text-foreground text-lg mb-2">No confirmed bookings</h4>
-              <p className="text-muted-foreground max-w-sm mx-auto">
-                Confirmed bookings appear here.
-              </p>
-            </div>
+            <Card className="border-0 shadow-xl">
+              <CardContent className="p-12 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h4 className="font-semibold text-foreground text-lg mb-2">No confirmed bookings</h4>
+                <p className="text-muted-foreground max-w-sm mx-auto">
+                  Confirmed bookings appear here.
+                </p>
+              </CardContent>
+            </Card>
           ) : (
             <div className="space-y-4">
               {approvedBookings.map((booking, index) => (
@@ -175,14 +188,17 @@ const ShopperDashboard = () => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : pastBookings.length === 0 ? (
-            <div className="relative overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl p-12 text-center border border-border/50">
-              <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-              <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h4 className="font-semibold text-foreground text-lg mb-2">No past bookings</h4>
-              <p className="text-muted-foreground max-w-sm mx-auto">
-                Completed and cancelled bookings appear here.
-              </p>
-            </div>
+            <Card className="border-0 shadow-xl">
+              <CardContent className="p-12 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h4 className="font-semibold text-foreground text-lg mb-2">No past bookings</h4>
+                <p className="text-muted-foreground max-w-sm mx-auto">
+                  Completed and cancelled bookings appear here.
+                </p>
+              </CardContent>
+            </Card>
           ) : (
             <div className="space-y-4">
               {pastBookings.map((booking, index) => (
