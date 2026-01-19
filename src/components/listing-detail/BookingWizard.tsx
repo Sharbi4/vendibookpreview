@@ -354,6 +354,8 @@ const BookingWizard = ({
         totalSteps={totalSteps}
         steps={stepLabels}
         instantBook={instantBook}
+        listingTitle={listingTitle}
+        priceDaily={priceDaily}
       />
 
       {/* Step content with animations */}
