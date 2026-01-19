@@ -126,6 +126,7 @@ const browseTopics = [
   { title: 'Buying & Selling', icon: ShoppingCart, articles: [
     { label: 'How buying works', slug: 'buying-end-to-end' },
     { label: 'Selling your asset', slug: 'selling-end-to-end' },
+    { label: 'How to sell your food truck online', slug: 'sell-food-truck-online' },
     { label: 'Freight & shipping', slug: 'shipping-freight' },
   ]},
   { title: 'Payments, Deposits & Payouts', icon: CreditCard, articles: [

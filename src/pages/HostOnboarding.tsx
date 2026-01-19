@@ -190,7 +190,11 @@ const HostOnboarding = () => {
                   <a href="#how-it-works">See How It Works</a>
                 </Button>
               </div>
-              <div className="mb-4">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
+                <Link to="/sell-my-food-truck" className="text-sm text-primary hover:underline font-medium">
+                  Sell a food truck →
+                </Link>
+                <span className="hidden sm:inline text-muted-foreground">·</span>
                 <Link to="/tools" className="text-sm text-primary hover:underline font-medium">
                   Explore Host Tools →
                 </Link>

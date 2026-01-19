@@ -99,6 +99,19 @@ const Hero = () => {
               List Your Asset
             </Button>
           </div>
+          
+          {/* Secondary Link */}
+          <div 
+            className="mt-4 animate-fade-in"
+            style={{ animationDelay: '0.5s', animationFillMode: 'backwards' }}
+          >
+            <button
+              onClick={() => navigate('/sell-my-food-truck')}
+              className="text-sm text-white/80 hover:text-white underline underline-offset-4 transition-colors"
+            >
+              Sell my food truck
+            </button>
+          </div>
         </div>
       </div>
     </section>

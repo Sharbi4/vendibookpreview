@@ -24,6 +24,7 @@ const footerSections: FooterSection[] = [
     title: 'Browse',
     links: [
       { label: 'All Listings', href: '/search' },
+      { label: 'Buy a Food Truck', href: '/search?mode=sale' },
       { label: 'Browse by City', href: '/cities' },
       { label: 'Food Trucks', href: '/search?category=food_truck' },
       { label: 'Food Trailers', href: '/search?category=food_trailer' },
@@ -35,7 +36,7 @@ const footerSections: FooterSection[] = [
     title: 'List & Earn',
     links: [
       { label: 'List Your Asset', href: '/host' },
-      { label: 'Sell Your Asset', href: '/host?mode=sell' },
+      { label: 'Sell My Food Truck', href: '/sell-my-food-truck' },
       { label: 'Host FAQ', href: '/faq' },
       { label: 'Insurance Info', href: '/insurance' },
     ],
