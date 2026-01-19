@@ -430,8 +430,8 @@ const PaymentSuccess = () => {
 
                   <div className="space-y-3">
                     <Button asChild className="w-full bg-primary hover:bg-primary/90" size="lg">
-                      <Link to="/dashboard">
-                        Go to My Purchases
+                      <Link to="/transactions?tab=purchases">
+                        View My Purchases
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
@@ -657,7 +657,7 @@ const PaymentSuccess = () => {
 
                   <div className="space-y-3">
                     <Button asChild className="w-full bg-primary hover:bg-primary/90" size="lg">
-                      <Link to="/dashboard">
+                      <Link to="/transactions?tab=bookings">
                         View My Bookings
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { Loader2, Calendar, ShoppingBag, ArrowLeft, Package, Receipt } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -13,10 +13,15 @@ import SaleTransactionCard from '@/components/dashboard/SaleTransactionCard';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 import { useHostBookings } from '@/hooks/useHostBookings';
 import { useBuyerSaleTransactions, useSellerSaleTransactions } from '@/hooks/useSaleTransactions';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const TransactionsPage = () => {
   const { user, isLoading: authLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState('bookings');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') === 'purchases' ? 'purchases' : 'bookings';
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const { toast } = useToast();
 
   // Shopper bookings (as renter)
   const { 
@@ -44,6 +49,7 @@ const TransactionsPage = () => {
     raiseDispute: raiseBuyerDispute,
     isConfirming: isBuyerConfirming,
     isDisputing: isBuyerDisputing,
+    refetch: refetchBuyerTransactions,
   } = useBuyerSaleTransactions(user?.id);
 
   // Seller sale transactions
@@ -54,7 +60,65 @@ const TransactionsPage = () => {
     raiseDispute: raiseSellerDispute,
     isConfirming: isSellerConfirming,
     isDisputing: isSellerDisputing,
+    refetch: refetchSellerTransactions,
   } = useSellerSaleTransactions(user?.id);
+
+  // Realtime subscriptions for sale transactions
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('transactions-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'sale_transactions',
+          filter: `buyer_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('[Realtime] Buyer transaction update:', payload.eventType);
+          if (payload.eventType === 'INSERT') {
+            toast({
+              title: '🛒 New Purchase',
+              description: 'Your purchase has been recorded successfully!',
+            });
+          }
+          refetchBuyerTransactions();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'sale_transactions',
+          filter: `seller_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('[Realtime] Seller transaction update:', payload.eventType);
+          if (payload.eventType === 'INSERT') {
+            toast({
+              title: '💰 New Sale',
+              description: 'You have a new sale! Check the details.',
+            });
+          }
+          refetchSellerTransactions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, refetchBuyerTransactions, refetchSellerTransactions, toast]);
+
+  // Handle tab change and sync with URL
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setSearchParams({ tab: value });
+  };
 
   // Redirect if not authenticated
   if (!authLoading && !user) {
@@ -102,7 +166,7 @@ const TransactionsPage = () => {
           </div>
 
           {/* Main Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="w-full max-w-md grid grid-cols-2 mb-6">
               <TabsTrigger value="bookings" className="gap-2">
                 <Calendar className="h-4 w-4" />
