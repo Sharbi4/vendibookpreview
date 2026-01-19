@@ -267,7 +267,7 @@ const SellMyFoodTruck = () => {
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
-                  <Button size="lg" asChild className="text-base">
+                  <Button size="lg" asChild className="text-base bg-foreground text-background hover:bg-foreground/90">
                     <Link to="/list?mode=sale">
                       List for Sale
                       <ArrowRight className="ml-2 h-4 w-4" />
