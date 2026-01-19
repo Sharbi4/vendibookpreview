@@ -16,6 +16,8 @@ import CallbackScheduler from '@/components/support/CallbackScheduler';
 import TicketStatusTracker from '@/components/support/TicketStatusTracker';
 import SocialContactOptions from '@/components/support/SocialContactOptions';
 import FeaturedArticles from '@/components/support/FeaturedArticles';
+import { trackFormSubmit } from '@/lib/analytics';
+import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
@@ -77,12 +79,15 @@ const Contact = () => {
       if (error) throw error;
 
       setIsSuccess(true);
+      trackFormSubmit('contact', true);
+      trackFormSubmitConversion({ form_type: 'contact' });
       toast({
         title: 'Message sent!',
         description: 'We have received your message and will get back to you soon.',
       });
     } catch (error) {
       console.error('Contact form error:', error);
+      trackFormSubmit('contact', false, { error: 'submission_failed' });
       toast({
         title: 'Something went wrong',
         description: 'Please try again or email us directly at support@vendibook.com',

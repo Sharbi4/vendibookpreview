@@ -5,6 +5,7 @@ import type { FulfillmentType } from '@/types/listing';
 import { StripeLogo } from '@/components/ui/StripeLogo';
 import { AffirmBadge, isAffirmEligible } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge, isAfterpayEligible } from '@/components/ui/AfterpayBadge';
+import { trackCTAClick } from '@/lib/analytics';
 
 interface InquiryFormProps {
   listingId: string;
@@ -56,6 +57,7 @@ const InquiryForm = ({
   const isFreightSellerPaid = vendibookFreightEnabled && freightPayer === 'seller';
 
   const handleStartPurchase = () => {
+    trackCTAClick('start_purchase', 'inquiry_form');
     navigate(`/checkout/${listingId}`);
   };
 

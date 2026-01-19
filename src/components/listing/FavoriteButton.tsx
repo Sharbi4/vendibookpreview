@@ -4,14 +4,16 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { trackListingFavorited, trackListingUnfavorited } from '@/lib/analytics';
 
 interface FavoriteButtonProps {
   listingId: string;
+  category?: string;
   className?: string;
   size?: 'sm' | 'default';
 }
 
-export const FavoriteButton = ({ listingId, className, size = 'default' }: FavoriteButtonProps) => {
+export const FavoriteButton = ({ listingId, category, className, size = 'default' }: FavoriteButtonProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { isFavorite, toggleFavorite, isToggling } = useFavorites();
@@ -25,6 +27,13 @@ export const FavoriteButton = ({ listingId, className, size = 'default' }: Favor
     if (!user) {
       navigate('/auth?redirect=' + encodeURIComponent(window.location.pathname));
       return;
+    }
+    
+    // Track before toggling
+    if (isFav) {
+      trackListingUnfavorited(listingId);
+    } else {
+      trackListingFavorited(listingId, category || 'unknown');
     }
     
     toggleFavorite(listingId);

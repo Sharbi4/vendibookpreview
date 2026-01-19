@@ -426,6 +426,296 @@ export const trackFooterCitiesClicked = (): void => {
   });
 };
 
+// ========== Button Click Events ==========
+export const trackButtonClick = (buttonName: string, location: string, metadata?: Record<string, unknown>): void => {
+  trackEvent({
+    category: 'Engagement',
+    action: 'button_click',
+    label: buttonName,
+    metadata: { location, ...metadata },
+  });
+};
+
+export const trackCTAClick = (ctaName: string, location: string): void => {
+  trackEvent({
+    category: 'Conversion',
+    action: 'cta_click',
+    label: ctaName,
+    metadata: { location },
+  });
+};
+
+export const trackHeroCTAClick = (ctaType: 'browse' | 'list'): void => {
+  trackEvent({
+    category: 'Conversion',
+    action: 'hero_cta_click',
+    label: ctaType,
+  });
+};
+
+// ========== Navigation Events ==========
+export const trackNavigationClick = (destination: string, source: string): void => {
+  trackEvent({
+    category: 'Navigation',
+    action: 'nav_click',
+    label: destination,
+    metadata: { source },
+  });
+};
+
+export const trackFooterLinkClick = (linkName: string): void => {
+  trackEvent({
+    category: 'Navigation',
+    action: 'footer_link_click',
+    label: linkName,
+  });
+};
+
+// ========== Form Events ==========
+export const trackFormStart = (formName: string): void => {
+  trackEvent({
+    category: 'Forms',
+    action: 'form_start',
+    label: formName,
+  });
+};
+
+export const trackFormSubmit = (formName: string, success: boolean, metadata?: Record<string, unknown>): void => {
+  trackEvent({
+    category: 'Forms',
+    action: success ? 'form_submit_success' : 'form_submit_error',
+    label: formName,
+    metadata,
+  });
+};
+
+export const trackFormFieldFocus = (formName: string, fieldName: string): void => {
+  trackEvent({
+    category: 'Forms',
+    action: 'field_focus',
+    label: `${formName}_${fieldName}`,
+  });
+};
+
+export const trackFormError = (formName: string, errorField: string, errorMessage: string): void => {
+  trackEvent({
+    category: 'Forms',
+    action: 'form_error',
+    label: formName,
+    metadata: { field: errorField, error: errorMessage },
+  });
+};
+
+// ========== Auth Events ==========
+export const trackLoginAttempt = (method: string): void => {
+  trackEvent({
+    category: 'Auth',
+    action: 'login_attempt',
+    label: method,
+  });
+};
+
+export const trackLoginSuccess = (method: string): void => {
+  trackEvent({
+    category: 'Auth',
+    action: 'login_success',
+    label: method,
+  });
+};
+
+export const trackLoginError = (method: string, errorType: string): void => {
+  trackEvent({
+    category: 'Auth',
+    action: 'login_error',
+    label: method,
+    metadata: { error_type: errorType },
+  });
+};
+
+export const trackSignupAttempt = (role: string): void => {
+  trackEvent({
+    category: 'Auth',
+    action: 'signup_attempt',
+    label: role,
+  });
+};
+
+export const trackSignupError = (role: string, errorType: string): void => {
+  trackEvent({
+    category: 'Auth',
+    action: 'signup_error',
+    label: role,
+    metadata: { error_type: errorType },
+  });
+};
+
+export const trackPasswordResetRequest = (): void => {
+  trackEvent({
+    category: 'Auth',
+    action: 'password_reset_request',
+  });
+};
+
+export const trackLogout = (): void => {
+  trackEvent({
+    category: 'Auth',
+    action: 'logout',
+  });
+};
+
+// ========== Listing Interaction Events ==========
+export const trackListingCardClick = (listingId: string, category: string, source: string): void => {
+  trackEvent({
+    category: 'Discovery',
+    action: 'listing_card_click',
+    label: category,
+    metadata: { listing_id: listingId, source },
+  });
+};
+
+export const trackListingFavorited = (listingId: string, category: string): void => {
+  trackEvent({
+    category: 'Engagement',
+    action: 'listing_favorited',
+    label: category,
+    metadata: { listing_id: listingId },
+  });
+};
+
+export const trackListingUnfavorited = (listingId: string): void => {
+  trackEvent({
+    category: 'Engagement',
+    action: 'listing_unfavorited',
+    metadata: { listing_id: listingId },
+  });
+};
+
+export const trackListingShare = (listingId: string, method: string): void => {
+  trackEvent({
+    category: 'Engagement',
+    action: 'listing_share',
+    label: method,
+    metadata: { listing_id: listingId },
+  });
+};
+
+export const trackPhotoGalleryOpen = (listingId: string): void => {
+  trackEvent({
+    category: 'Engagement',
+    action: 'photo_gallery_open',
+    metadata: { listing_id: listingId },
+  });
+};
+
+export const trackPhotoGalleryNavigation = (listingId: string, direction: 'next' | 'prev'): void => {
+  trackEvent({
+    category: 'Engagement',
+    action: 'photo_gallery_nav',
+    label: direction,
+    metadata: { listing_id: listingId },
+  });
+};
+
+// ========== Booking Events ==========
+export const trackBookingFormOpen = (listingId: string, isInstantBook: boolean): void => {
+  trackEvent({
+    category: 'Conversion',
+    action: 'booking_form_open',
+    metadata: { listing_id: listingId, instant_book: isInstantBook },
+  });
+};
+
+export const trackBookingDateSelected = (listingId: string, dateType: 'start' | 'end'): void => {
+  trackEvent({
+    category: 'Conversion',
+    action: 'booking_date_selected',
+    label: dateType,
+    metadata: { listing_id: listingId },
+  });
+};
+
+export const trackBookingCheckoutStarted = (listingId: string, totalPrice: number): void => {
+  trackEvent({
+    category: 'Conversion',
+    action: 'booking_checkout_started',
+    value: totalPrice,
+    metadata: { listing_id: listingId },
+  });
+};
+
+// ========== Search Events ==========
+export const trackSearchPerformed = (query: string, filters: Record<string, unknown>, resultCount: number): void => {
+  trackEvent({
+    category: 'Search',
+    action: 'search_performed',
+    label: query || 'no_query',
+    value: resultCount,
+    metadata: filters,
+  });
+};
+
+export const trackSearchFilterApplied = (filterType: string, filterValue: string): void => {
+  trackEvent({
+    category: 'Search',
+    action: 'filter_applied',
+    label: filterType,
+    metadata: { value: filterValue },
+  });
+};
+
+export const trackSearchNoResults = (query: string, filters: Record<string, unknown>): void => {
+  trackEvent({
+    category: 'Search',
+    action: 'no_results',
+    label: query || 'no_query',
+    metadata: filters,
+  });
+};
+
+// ========== Message Events ==========
+export const trackMessageSent = (conversationType: 'booking' | 'inquiry'): void => {
+  trackEvent({
+    category: 'Engagement',
+    action: 'message_sent',
+    label: conversationType,
+  });
+};
+
+export const trackHostContacted = (listingId: string): void => {
+  trackEvent({
+    category: 'Conversion',
+    action: 'host_contacted',
+    metadata: { listing_id: listingId },
+  });
+};
+
+// ========== Error Tracking ==========
+export const trackError = (errorType: string, errorMessage: string, context?: Record<string, unknown>): void => {
+  trackEvent({
+    category: 'Error',
+    action: 'error_occurred',
+    label: errorType,
+    metadata: { message: errorMessage, ...context },
+  });
+};
+
+// ========== Scroll/Visibility Events ==========
+export const trackSectionViewed = (sectionName: string): void => {
+  trackEvent({
+    category: 'Engagement',
+    action: 'section_viewed',
+    label: sectionName,
+  });
+};
+
+export const trackScrollDepth = (depth: 25 | 50 | 75 | 100): void => {
+  trackEvent({
+    category: 'Engagement',
+    action: 'scroll_depth',
+    value: depth,
+  });
+};
+
 // Generic analytics exports for other parts of the app
 export { trackEvent };
 export type { AnalyticsEvent };
