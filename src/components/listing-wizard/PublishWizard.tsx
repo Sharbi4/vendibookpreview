@@ -851,7 +851,27 @@ export const PublishWizard: React.FC = () => {
   const handlePublish = async () => {
     // Stripe is only required if card payment is enabled
     const stripeRequired = acceptCardPayment;
-    if (!listing || (stripeRequired && !isOnboardingComplete)) return;
+    if (!listing) return;
+
+    // Validate all required fields before publishing
+    const validationErrors = getValidationErrors();
+    if (validationErrors.length > 0) {
+      toast({
+        title: 'Cannot publish yet',
+        description: validationErrors[0], // Show first error
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (stripeRequired && !isOnboardingComplete) {
+      toast({
+        title: 'Connect Stripe to receive payments',
+        description: 'You need to complete Stripe onboarding before publishing.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     // Helper to safely parse currency / formatted strings
     const safeParsePrice = (value: string): number | null => {
@@ -1014,16 +1034,37 @@ export const PublishWizard: React.FC = () => {
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
-  // Checklist state
+  // Checklist state - with proper validation
   const totalPhotoCount = existingImages.length + images.length;
   // Stripe is only required if card payment is enabled (not cash-only)
   const requiresStripe = acceptCardPayment;
   const enabledDocsCount = requiredDocuments.filter(d => d.is_required).length;
+
+  // Helper to properly validate price input
+  const isValidPrice = (value: string): boolean => {
+    if (!value || !value.trim()) return false;
+    const cleaned = value.replace(/[^0-9.]/g, '');
+    const parsed = parseFloat(cleaned);
+    return !isNaN(parsed) && parsed > 0;
+  };
+
+  // Minimum description length
+  const MIN_DESCRIPTION_LENGTH = 50;
+  const MIN_TITLE_LENGTH = 5;
+
+  const hasPricing = listing?.mode === 'sale' 
+    ? isValidPrice(priceSale) 
+    : isValidPrice(priceDaily);
+  
+  const hasValidTitle = title.trim().length >= MIN_TITLE_LENGTH;
+  const hasValidDescription = description.trim().length >= MIN_DESCRIPTION_LENGTH;
+  const hasDescription = hasValidTitle && hasValidDescription;
+
   const checklistState = {
     hasPhotos: totalPhotoCount >= 3,
-    hasPricing: listing?.mode === 'sale' ? !!priceSale : !!priceDaily,
+    hasPricing,
     hasAvailability: true, // Optional
-    hasDescription: title.length > 0 && description.length > 0,
+    hasDescription,
     hasLocation: listing ? (
       isStaticLocationFn(listing.category) || isStaticLocation
         ? !!(address && accessInstructions)
@@ -1035,10 +1076,26 @@ export const PublishWizard: React.FC = () => {
     requiresStripe, // Pass whether Stripe is required
     hasDocuments: true, // Documents step is optional, always "complete"
     documentsCount: enabledDocsCount,
+    descriptionLength: description.trim().length,
+    priceSet: listing?.mode === 'sale' 
+      ? (isValidPrice(priceSale) ? `$${parseFloat(priceSale.replace(/[^0-9.]/g, '')).toLocaleString()}` : undefined)
+      : (isValidPrice(priceDaily) ? `$${parseFloat(priceDaily.replace(/[^0-9.]/g, ''))}/day` : undefined),
   };
 
   const checklistItems = createChecklistItems(checklistState, step);
   const canPublish = checklistItems.filter(i => i.required).every(i => i.completed);
+
+  // Collect validation errors for publish attempt
+  const getValidationErrors = (): string[] => {
+    const errors: string[] = [];
+    if (totalPhotoCount < 3) errors.push(`Add at least 3 photos (currently ${totalPhotoCount})`);
+    if (!hasPricing) errors.push(listing?.mode === 'sale' ? 'Set a sale price greater than $0' : 'Set a daily rate greater than $0');
+    if (!hasValidTitle) errors.push(`Title must be at least ${MIN_TITLE_LENGTH} characters`);
+    if (!hasValidDescription) errors.push(`Description must be at least ${MIN_DESCRIPTION_LENGTH} characters (currently ${description.trim().length})`);
+    if (!checklistState.hasLocation) errors.push('Complete the location and logistics section');
+    if (requiresStripe && !isOnboardingComplete) errors.push('Connect Stripe to receive payments');
+    return errors;
+  };
 
   if (isLoading) {
     return (
@@ -1253,7 +1310,9 @@ export const PublishWizard: React.FC = () => {
 
                       {/* Sale Price Input */}
                       <div className="space-y-2">
-                        <Label htmlFor="priceSale" className="text-base font-medium">Asking Price *</Label>
+                        <Label htmlFor="priceSale" className="text-base font-medium">
+                          Asking Price <span className="text-destructive">*</span>
+                        </Label>
                         <div className="relative max-w-sm">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                           <Input
@@ -1262,9 +1321,15 @@ export const PublishWizard: React.FC = () => {
                             placeholder="0"
                             value={priceSale}
                             onChange={(e) => setPriceSale(e.target.value)}
-                            className="pl-8 text-xl"
+                            className={cn(
+                              "pl-8 text-xl",
+                              priceSale && !isValidPrice(priceSale) && "border-destructive focus-visible:ring-destructive"
+                            )}
                           />
                         </div>
+                        {priceSale && !isValidPrice(priceSale) && (
+                          <p className="text-sm text-destructive">Please enter a valid price greater than $0</p>
+                        )}
                       </div>
 
                       {/* Payout Estimate for Sales */}
@@ -1470,7 +1535,9 @@ export const PublishWizard: React.FC = () => {
                       {/* Rental Pricing Inputs */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="priceDaily" className="text-base font-medium">Daily Rate *</Label>
+                          <Label htmlFor="priceDaily" className="text-base font-medium">
+                            Daily Rate <span className="text-destructive">*</span>
+                          </Label>
                           <div className="relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                             <Input
@@ -1479,9 +1546,15 @@ export const PublishWizard: React.FC = () => {
                               placeholder="0"
                               value={priceDaily}
                               onChange={(e) => setPriceDaily(e.target.value)}
-                              className="pl-8 text-lg"
+                              className={cn(
+                                "pl-8 text-lg",
+                                priceDaily && !isValidPrice(priceDaily) && "border-destructive focus-visible:ring-destructive"
+                              )}
                             />
                           </div>
+                          {priceDaily && !isValidPrice(priceDaily) && (
+                            <p className="text-sm text-destructive">Enter a valid daily rate greater than $0</p>
+                          )}
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="priceWeekly" className="text-base font-medium">Weekly Rate (optional)</Label>
@@ -1631,7 +1704,7 @@ export const PublishWizard: React.FC = () => {
                     <Button variant="outline" onClick={() => setStep('photos')}>Back</Button>
                     <Button 
                       onClick={saveStep} 
-                      disabled={isSaving || (listing.mode === 'sale' ? (!priceSale || (!acceptCardPayment && !acceptCashPayment)) : !priceDaily)}
+                      disabled={isSaving || (listing.mode === 'sale' ? (!isValidPrice(priceSale) || (!acceptCardPayment && !acceptCashPayment)) : !isValidPrice(priceDaily))}
                     >
                       {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                       Continue
@@ -1683,25 +1756,43 @@ export const PublishWizard: React.FC = () => {
                   {/* Title */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <Label htmlFor="title" className="text-base font-medium">Listing Title</Label>
-                      <span className="text-sm text-muted-foreground">{title.length}/80</span>
+                      <Label htmlFor="title" className="text-base font-medium">
+                        Listing Title <span className="text-destructive">*</span>
+                      </Label>
+                      <span className={cn(
+                        "text-sm",
+                        title.trim().length < MIN_TITLE_LENGTH ? "text-destructive" : "text-muted-foreground"
+                      )}>
+                        {title.length}/80
+                      </span>
                     </div>
                     <Input
                       id="title"
                       value={title}
                       onChange={(e) => setTitle(e.target.value.slice(0, 80))}
                       placeholder="e.g., 2022 Fully Equipped Taco Truck"
-                      className="text-lg"
+                      className={cn(
+                        "text-lg",
+                        title.length > 0 && title.trim().length < MIN_TITLE_LENGTH && "border-destructive focus-visible:ring-destructive"
+                      )}
                     />
-                    <p className="text-sm text-muted-foreground">
-                      Make it catchy and descriptive. Include key details like year, type, or specialty.
-                    </p>
+                    {title.length > 0 && title.trim().length < MIN_TITLE_LENGTH ? (
+                      <p className="text-sm text-destructive">
+                        Title must be at least {MIN_TITLE_LENGTH} characters ({MIN_TITLE_LENGTH - title.trim().length} more needed)
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Make it catchy and descriptive. Include key details like year, type, or specialty.
+                      </p>
+                    )}
                   </div>
 
                   {/* Description with AI Optimize */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <Label htmlFor="description" className="text-base font-medium">Description</Label>
+                      <Label htmlFor="description" className="text-base font-medium">
+                        Description <span className="text-destructive">*</span>
+                      </Label>
                       <div className="flex items-center gap-2">
                         {showOptimized && originalDescription && (
                           <Button
@@ -1752,19 +1843,37 @@ export const PublishWizard: React.FC = () => {
                       }}
                       placeholder="Describe your listing in detail. What makes it special? What equipment is included? What's the condition?"
                       rows={6}
-                      className="resize-none"
+                      className={cn(
+                        "resize-none",
+                        description.length > 0 && description.trim().length < MIN_DESCRIPTION_LENGTH && "border-destructive focus-visible:ring-destructive"
+                      )}
                     />
                     
                     <div className="flex items-start justify-between gap-4">
-                      <p className="text-sm text-muted-foreground">
-                        Be detailed! {listing.mode === 'rent' ? 'Renters' : 'Buyers'} want to know everything about your asset.
-                      </p>
-                      {!showOptimized && description.length >= 10 && (
-                        <p className="text-xs text-muted-foreground/70 whitespace-nowrap">
-                          ✨ Tip: Click AI Optimize for a professional rewrite
-                        </p>
-                      )}
+                      <div className="flex-1">
+                        {description.length > 0 && description.trim().length < MIN_DESCRIPTION_LENGTH ? (
+                          <p className="text-sm text-destructive">
+                            Description must be at least {MIN_DESCRIPTION_LENGTH} characters ({MIN_DESCRIPTION_LENGTH - description.trim().length} more needed)
+                          </p>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            Be detailed! {listing.mode === 'rent' ? 'Renters' : 'Buyers'} want to know everything about your asset.
+                          </p>
+                        )}
+                      </div>
+                      <span className={cn(
+                        "text-sm whitespace-nowrap",
+                        description.trim().length < MIN_DESCRIPTION_LENGTH ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"
+                      )}>
+                        {description.trim().length}/{MIN_DESCRIPTION_LENGTH}+ chars
+                      </span>
                     </div>
+                    
+                    {!showOptimized && description.length >= 10 && description.trim().length >= MIN_DESCRIPTION_LENGTH && (
+                      <p className="text-xs text-muted-foreground/70">
+                        ✨ Tip: Click AI Optimize for a professional rewrite
+                      </p>
+                    )}
                   </div>
 
                   {/* Amenities - Category specific */}
