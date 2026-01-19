@@ -92,23 +92,49 @@ serve(async (req) => {
             .eq("id", bookingData?.shopper_id)
             .single();
 
-          // Update booking with payment info
+          // Get deposit amount from metadata
+          const depositAmount = session.metadata?.deposit_amount ? parseFloat(session.metadata.deposit_amount) : 0;
+          const paymentIntentId = typeof session.payment_intent === 'string' 
+            ? session.payment_intent 
+            : session.payment_intent?.id;
+          
+          // Get the charge ID from the payment intent for deposit tracking
+          let depositChargeId: string | null = null;
+          if (depositAmount > 0 && paymentIntentId) {
+            try {
+              const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+              if (paymentIntent.latest_charge) {
+                depositChargeId = typeof paymentIntent.latest_charge === 'string' 
+                  ? paymentIntent.latest_charge 
+                  : paymentIntent.latest_charge.id;
+              }
+              logStep("Retrieved charge ID for deposit", { depositChargeId, depositAmount });
+            } catch (chargeError) {
+              logStep("WARNING: Could not retrieve charge ID", { error: String(chargeError) });
+            }
+          }
+
+          // Update booking with payment info and deposit tracking
           const { error: updateError } = await supabaseClient
             .from("booking_requests")
             .update({
               payment_status: "paid",
               checkout_session_id: session.id,
-              payment_intent_id: typeof session.payment_intent === 'string' 
-                ? session.payment_intent 
-                : session.payment_intent?.id,
+              payment_intent_id: paymentIntentId,
               paid_at: new Date().toISOString(),
+              // Security deposit tracking - set to 'charged' when payment is made
+              ...(depositAmount > 0 && {
+                deposit_amount: depositAmount,
+                deposit_status: 'charged',
+                deposit_charge_id: depositChargeId,
+              }),
             })
             .eq("id", bookingId);
 
           if (updateError) {
             logStep("ERROR: Failed to update booking", { error: updateError.message, bookingId });
           } else {
-            logStep("Booking marked as paid", { bookingId });
+            logStep("Booking marked as paid", { bookingId, depositAmount, depositChargeId });
 
             const listingTitle = bookingData?.listings?.title || "your booking";
 
