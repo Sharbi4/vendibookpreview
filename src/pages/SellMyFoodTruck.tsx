@@ -40,31 +40,31 @@ const SellMyFoodTruck = () => {
   const faqs = [
     {
       question: "How do I sell my food truck on Vendibook?",
-      answer: "Create a free listing with photos, specs, and your asking price. Once published, verified buyers can view your listing, ask questions, and make a purchase through secure checkout."
+      answer: "Create a for-sale listing, add photos and details, and publish. You'll manage inquiries and confirmations from your dashboard."
     },
     {
       question: "How do I know what to price it at?",
-      answer: "Use our Pricing Calculator for a quick estimate based on category and condition. For deeper insights, try PricePilot—our AI tool that scans comparable listings and suggests a competitive price range."
+      answer: "Start with the Pricing Calculator for a quick estimate, then use PricePilot for AI-based comps and a recommended range. Update your price anytime."
     },
     {
       question: "What happens after the buyer checks out?",
-      answer: "You'll see the sale in your dashboard with a 'Confirm Sale' button. Once you confirm, you coordinate pickup or freight with the buyer. Payout is initiated after confirmation."
+      answer: "You'll see the sale in your dashboard and confirm it to lock in next steps. Then you'll coordinate pickup or freight based on what was selected."
     },
     {
       question: "Can I sell a food trailer or equipment too?",
-      answer: "Yes. Vendibook supports food trucks, food trailers, ghost kitchens, vendor lots, and related mobile food equipment."
+      answer: "Yes. List trailers, trucks, kitchens, equipment, and more — all in one marketplace."
     },
     {
       question: "Do you offer shipping or freight?",
-      answer: "Freight coordination is optional and available through third-party partners when offered on your listing. You can also choose pickup-only if preferred."
+      answer: "When available, freight can be coordinated through third parties. Some sellers offer pickup only, others offer freight options."
     },
     {
       question: "How do payouts work?",
-      answer: "After you confirm the sale in your dashboard, payout is processed to your connected Stripe account. Most payouts arrive within 2–5 business days."
+      answer: "Payments are handled securely online. Payout timing depends on confirmation and the transaction flow shown in your dashboard."
     },
     {
       question: "What if there's a dispute?",
-      answer: "Both buyers and sellers can open a dispute from the transaction card in their dashboard. Our support team reviews the case and works toward a fair resolution."
+      answer: "Our support team helps document the issue and follow the dispute process so both sides have a clear path to resolution."
     }
   ];
 
@@ -139,12 +139,12 @@ const SellMyFoodTruck = () => {
     {
       number: "1",
       title: "Create your listing",
-      description: "Add photos, equipment list, and your terms."
+      description: "Add photos, specs, equipment, and your terms."
     },
     {
       number: "2",
       title: "Get verified",
-      description: "Verified profiles help buyers move faster."
+      description: "Verified profiles help buyers move faster and build trust."
     },
     {
       number: "3",
@@ -243,7 +243,7 @@ const SellMyFoodTruck = () => {
               >
                 <h2 className="text-2xl md:text-3xl font-bold mb-3">Price it right, faster.</h2>
                 <p className="text-muted-foreground max-w-xl mx-auto">
-                  Use our Pricing Calculator for a quick range, or let PricePilot scan comps and suggest a strong ask based on your specs.
+                  Use our Pricing Calculator for a quick range, or let PricePilot scan comps and suggest a strong ask based on your specs. You're always in control — adjust anytime.
                 </p>
               </motion.div>
               
@@ -287,10 +287,10 @@ const SellMyFoodTruck = () => {
                         <div className="p-2.5 rounded-lg bg-amber-500/10">
                           <Sparkles className="h-5 w-5 text-amber-600" />
                         </div>
-                        <h3 className="font-semibold text-lg">PricePilot (AI Pricing)</h3>
+                        <h3 className="font-semibold text-lg">PricePilot (AI Pricing Suggestions)</h3>
                       </div>
                       <p className="text-muted-foreground text-sm mb-4">
-                        Find comparable listings and get a recommended price range with confidence cues.
+                        Comparable listings + a recommended price range with confidence cues.
                       </p>
                       <Button asChild className="w-full">
                         <Link to="/tools/pricepilot">
@@ -303,9 +303,6 @@ const SellMyFoodTruck = () => {
                 </motion.div>
               </div>
               
-              <p className="text-center text-sm text-muted-foreground mt-6">
-                You stay in control. You can edit your price anytime.
-              </p>
             </div>
           </section>
 
@@ -353,7 +350,7 @@ const SellMyFoodTruck = () => {
                   <CardContent className="p-4 flex items-start gap-3">
                     <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                     <p className="text-sm">
-                      <strong>Next step clarity:</strong> After checkout, you'll see a "Confirm Sale" button on the sale card in your dashboard.
+                      After checkout, you'll see a "Confirm Sale" button on the sale card in your dashboard.
                     </p>
                   </CardContent>
                 </Card>
@@ -371,7 +368,7 @@ const SellMyFoodTruck = () => {
                 transition={{ duration: 0.5 }}
                 className="text-center mb-12"
               >
-                <h2 className="text-2xl md:text-3xl font-bold">Why Vendibook works for sellers</h2>
+                <h2 className="text-2xl md:text-3xl font-bold">Built for sellers who want less back-and-forth.</h2>
               </motion.div>
               
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
@@ -452,7 +449,7 @@ const SellMyFoodTruck = () => {
               >
                 <h2 className="text-2xl md:text-3xl font-bold mb-4">Simple pricing</h2>
                 <p className="text-muted-foreground mb-4">
-                  For sales, sellers pay a <strong className="text-foreground">12.9% commission</strong> on the sale price. Buyers don't pay a platform fee (shipping/freight may apply if selected).
+                  For sales, sellers pay a <strong className="text-foreground">12.9% commission</strong> on the sale price. Buyers don't pay a platform fee. Shipping/freight may apply if selected.
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button className="ml-1 align-middle">
