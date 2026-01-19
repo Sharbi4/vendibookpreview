@@ -64,6 +64,10 @@ const ListingPublished = lazy(() => import("./pages/ListingPublished"));
 const Cities = lazy(() => import("./pages/Cities"));
 const SaleCheckout = lazy(() => import("./pages/SaleCheckout"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
+const BlogCategory = lazy(() => import("./pages/BlogCategory"));
+const DynamicCityPage = lazy(() => import("./pages/DynamicCityPage"));
 
 // City landing pages - direct imports since they're lightweight wrappers
 import {
@@ -174,8 +178,16 @@ const AnimatedRoutes = () => {
           {/* SEO article page - separate purpose from tools hub */}
           <Route path="/vendi-ai-suite" element={<PageTransition><VendiAISuite /></PageTransition>} />
           
+          {/* Blog */}
+          <Route path="/blog" element={<PageTransition><Blog /></PageTransition>} />
+          <Route path="/blog/:slug" element={<PageTransition><BlogPost /></PageTransition>} />
+          <Route path="/blog/category/:category" element={<PageTransition><BlogCategory /></PageTransition>} />
+          
           {/* Cities hub page */}
           <Route path="/cities" element={<PageTransition><Cities /></PageTransition>} />
+          
+          {/* Dynamic city SEO pages */}
+          <Route path="/:citySlug" element={<PageTransition><DynamicCityPage /></PageTransition>} />
           
           {/* City landing pages */}
           <Route path="/houston/list" element={<PageTransition><HoustonList /></PageTransition>} />
