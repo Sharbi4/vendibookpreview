@@ -12,7 +12,8 @@ import {
   HelpCircle,
   MessagesSquare,
   Plus,
-  FileQuestion
+  FileQuestion,
+  Wrench
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -207,6 +208,13 @@ const MobileMenu = ({
                   label="Chat With Us"
                   isActive={isActive('/contact')}
                   onClick={() => handleNavigation('/contact')}
+                />
+                <MenuLink
+                  to="/tools"
+                  icon={Wrench}
+                  label="Tools"
+                  isActive={isActive('/tools')}
+                  onClick={() => handleNavigation('/tools')}
                 />
               </nav>
             </div>
