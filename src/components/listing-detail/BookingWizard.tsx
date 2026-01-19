@@ -344,9 +344,7 @@ const BookingWizard = ({
   };
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-background to-primary/5 border-2 border-primary/20 rounded-2xl shadow-xl">
-      {/* Subtle animated background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-amber-500/5 to-yellow-400/5 opacity-50" />
+    <div className="rounded-2xl border-0 shadow-xl bg-card overflow-hidden">
       {/* Premium Wizard Header */}
       <WizardHeader
         mode="booking"
@@ -360,7 +358,7 @@ const BookingWizard = ({
       />
 
       {/* Step content with animations */}
-      <div className="relative bg-white dark:bg-card p-6">
+      <div className="p-6">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}

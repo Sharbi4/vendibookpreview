@@ -37,7 +37,7 @@ const WizardHeader = ({
   priceWeekly,
 }: WizardHeaderProps) => {
   return (
-    <div className="relative bg-gradient-to-r from-primary/15 via-amber-500/10 to-yellow-400/5 border-b border-primary/20">
+    <div className="bg-muted/30 border-b border-border">
       {/* Top bar with title and price */}
       <div className="px-4 sm:px-6 py-3">
         {listingTitle ? (
@@ -45,7 +45,7 @@ const WizardHeader = ({
             <h2 className="font-semibold text-base text-foreground line-clamp-2">{listingTitle}</h2>
             <div className="flex items-center gap-2 flex-wrap">
               {priceDaily && (
-                <span className="text-lg font-bold bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent">
+                <span className="text-lg font-bold text-primary">
                   ${priceDaily}/day
                 </span>
               )}
@@ -58,8 +58,8 @@ const WizardHeader = ({
           </div>
         ) : (
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-sm">
-              <ShieldCheck className="h-3.5 w-3.5 text-white" />
+            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
+              <ShieldCheck className="h-3.5 w-3.5 text-primary-foreground" />
             </div>
             <span className="font-semibold text-sm text-foreground">
               {mode === 'checkout' ? 'Secure Checkout' : 'Secure Booking'}
