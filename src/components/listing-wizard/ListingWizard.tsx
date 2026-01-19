@@ -324,17 +324,28 @@ export const ListingWizard: React.FC = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user!.id}/${listingId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       
-      const { error: uploadError, data } = await supabase.storage
-        .from('listing-images')
-        .upload(fileName, file);
+      try {
+        const { error: uploadError } = await supabase.storage
+          .from('listing-images')
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
-      if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('Image upload error:', uploadError);
+          throw uploadError;
+        }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('listing-images')
-        .getPublicUrl(fileName);
+        const { data: { publicUrl } } = supabase.storage
+          .from('listing-images')
+          .getPublicUrl(fileName);
 
-      urls.push(publicUrl);
+        urls.push(publicUrl);
+      } catch (error) {
+        console.error('Failed to upload image:', error);
+        throw error;
+      }
     }
     
     return urls;
@@ -404,15 +415,28 @@ export const ListingWizard: React.FC = () => {
             reject(new Error('Upload failed'));
           });
 
-          // Get the upload URL from Supabase
-          const { data: { session } } = supabase.auth.getSession() as any;
-          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-          const uploadUrl = `${supabaseUrl}/storage/v1/object/listing-videos/${fileName}`;
+          // Get the upload URL from Supabase - properly await the session
+          (async () => {
+            try {
+              const { data: sessionData } = await supabase.auth.getSession();
+              const session = sessionData?.session;
+              
+              if (!session?.access_token) {
+                reject(new Error('No authentication session found'));
+                return;
+              }
+              
+              const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+              const uploadUrl = `${supabaseUrl}/storage/v1/object/listing-videos/${fileName}`;
 
-          xhr.open('POST', uploadUrl);
-          xhr.setRequestHeader('Authorization', `Bearer ${session?.access_token}`);
-          xhr.setRequestHeader('x-upsert', 'true');
-          xhr.send(file);
+              xhr.open('POST', uploadUrl);
+              xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+              xhr.setRequestHeader('x-upsert', 'true');
+              xhr.send(file);
+            } catch (err) {
+              reject(err);
+            }
+          })();
         });
 
         urls.push(url);
