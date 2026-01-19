@@ -316,7 +316,10 @@ serve(async (req) => {
       }
       
       sessionParams = {
-        payment_method_types: ['card'],
+        // For sales: offer multiple payment options including ACH for large purchases
+        // ACH has lower fees (0.8% capped at $5) - great for expensive items
+        // Klarna and Afterpay offer buy-now-pay-later options
+        payment_method_types: ['card', 'us_bank_account', 'klarna', 'afterpay_clearpay'],
         mode: 'payment',
         customer: customerId,
         customer_email: customerId ? undefined : user.email,
