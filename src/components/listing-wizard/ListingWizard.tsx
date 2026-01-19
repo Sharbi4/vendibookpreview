@@ -515,11 +515,15 @@ export const ListingWizard: React.FC = () => {
       }
 
       // Create listing first to get ID for image uploads
+      // For sale listings with Proof Notary enabled, we save as draft first
+      // The webhook will publish after successful notary payment
+      const shouldPublishDirectly = publish && !(formData.mode === 'sale' && formData.proof_notary_enabled);
+      
       const listingData = {
         host_id: user.id,
         mode: formData.mode!,
         category: formData.category!,
-        status: publish ? 'published' : 'draft',
+        status: shouldPublishDirectly ? 'published' : 'draft',
         title: formData.title,
         description: formData.description,
         highlights: formData.highlights,
@@ -539,7 +543,7 @@ export const ListingWizard: React.FC = () => {
         price_sale: formData.price_sale ? parseFloat(formData.price_sale) : null,
         available_from: formData.available_from || null,
         available_to: formData.available_to || null,
-        published_at: publish ? new Date().toISOString() : null,
+        published_at: shouldPublishDirectly ? new Date().toISOString() : null,
         latitude,
         longitude,
         // Instant Book (for rentals)
@@ -622,6 +626,50 @@ export const ListingWizard: React.FC = () => {
       }
 
       if (publish) {
+        // Handle Proof Notary checkout for sale listings
+        if (formData.mode === 'sale' && formData.proof_notary_enabled) {
+          // Get session for auth
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (!sessionData.session) {
+            toast({ title: 'Please sign in to continue', variant: 'destructive' });
+            setIsSaving(false);
+            return;
+          }
+
+          // Create notary checkout session
+          const { data, error } = await supabase.functions.invoke('create-notary-checkout', {
+            headers: {
+              Authorization: `Bearer ${sessionData.session.access_token}`,
+            },
+            body: { listing_id: listing.id },
+          });
+
+          if (error) {
+            console.error('Failed to create notary checkout:', error);
+            toast({
+              title: 'Failed to create checkout',
+              description: error.message || 'Please try again.',
+              variant: 'destructive',
+            });
+            return;
+          }
+
+          if (data?.url) {
+            // Clear unsaved changes flag before redirecting
+            hasUnsavedChanges.current = false;
+            // Redirect to Stripe checkout - open in new tab with fallback
+            const checkoutWindow = window.open(data.url, '_blank');
+            if (!checkoutWindow) {
+              window.location.href = data.url;
+            }
+            toast({
+              title: 'Redirecting to checkout...',
+              description: 'Complete the $45 notary fee payment to publish your listing.',
+            });
+            return;
+          }
+        }
+
         // Format price for email
         const formatPrice = () => {
           if (formData.mode === 'rent') {
