@@ -179,7 +179,7 @@ const TransactionsPage = () => {
         description="View all your bookings and purchases in one place."
       />
       <Header />
-      <main className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+      <main className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8 max-w-5xl">
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">

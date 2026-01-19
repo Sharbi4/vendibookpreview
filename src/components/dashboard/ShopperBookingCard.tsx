@@ -267,11 +267,8 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
     }
   };
   return (
-    <div className="relative overflow-hidden rounded-xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-      {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
-      
-      <div className="relative flex flex-col sm:flex-row">
+    <div className="overflow-hidden rounded-xl border-0 shadow-xl bg-card">
+      <div className="flex flex-col sm:flex-row">
         {/* Image */}
         <div className="sm:w-40 h-32 sm:h-auto flex-shrink-0">
           <img
@@ -282,7 +279,7 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
         </div>
 
         {/* Content */}
-        <div className="relative flex-1 p-4">
+        <div className="flex-1 p-4">
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex-1 min-w-0">
               <Link 
@@ -449,7 +446,7 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
           )}
 
           {/* Actions */}
-          <div className="flex items-center gap-2 pt-3 border-t border-primary/20">
+          <div className="flex items-center gap-2 pt-3 border-t border-border">
             <Button variant="outline" size="sm" asChild className="bg-card/80 backdrop-blur-sm">
               <Link to={`/listing/${listing?.id}`}>
                 <ExternalLink className="h-4 w-4 mr-1" />
