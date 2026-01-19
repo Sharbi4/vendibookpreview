@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
 import { LocationSearchInput } from './LocationSearchInput';
+import { trackSearchStarted } from '@/lib/analytics';
 
 interface SearchBarProps {
   onSearch?: (query: string, dateRange?: DateRange, location?: { name: string; coordinates: [number, number] } | null) => void;
@@ -24,6 +25,9 @@ const SearchBar = ({ onSearch, className, compact = false }: SearchBarProps) => 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Track search event
+    trackSearchStarted(query || selectedLocation?.name);
     
     if (onSearch) {
       onSearch(query, dateRange, selectedLocation);

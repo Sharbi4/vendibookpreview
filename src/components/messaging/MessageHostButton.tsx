@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useConversations } from '@/hooks/useConversations';
 import { useToast } from '@/hooks/use-toast';
+import { trackHostContacted } from '@/lib/analytics';
 
 interface MessageHostButtonProps {
   listingId: string;
@@ -56,6 +57,7 @@ const MessageHostButton = ({
     try {
       const conversationId = await getOrCreateConversation(listingId, hostId);
       if (conversationId) {
+        trackHostContacted(listingId);
         navigate(`/messages/${conversationId}`);
       }
     } finally {

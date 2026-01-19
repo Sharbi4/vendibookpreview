@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 import Header from '@/components/layout/Header';
-import { trackSignupCompleted } from '@/lib/analytics';
+import { trackSignupCompleted, trackLoginAttempt, trackLoginSuccess, trackLoginError, trackSignupAttempt, trackSignupError, trackPasswordResetRequest } from '@/lib/analytics';
 import { trackSignupConversion } from '@/lib/gtagConversions';
 
 const authSchema = z.object({
@@ -138,6 +138,7 @@ const Auth = () => {
 
     try {
       if (mode === 'forgot') {
+        trackPasswordResetRequest();
         const { error } = await resetPassword(trimmedEmail);
         if (error) {
           // Avoid revealing if email exists
@@ -157,22 +158,29 @@ const Auth = () => {
           setEmail('');
         }
       } else if (mode === 'signup') {
+        trackSignupAttempt(selectedRole);
         const { error } = await signUp(trimmedEmail, password, trimmedFullName, selectedRole);
         if (error) {
-          // User-friendly error messages
+          // Determine error type for analytics
+          let errorType = 'unknown';
           let errorTitle = 'Sign up failed';
           let errorDesc = error.message;
           
           if (error.message.includes('already registered') || error.message.includes('already exists')) {
+            errorType = 'email_exists';
             errorTitle = 'Account exists';
             errorDesc = 'This email is already registered. Please sign in instead.';
           } else if (error.message.includes('rate limit') || error.message.includes('too many')) {
+            errorType = 'rate_limit';
             errorTitle = 'Too many attempts';
             errorDesc = 'Please wait a few minutes before trying again.';
           } else if (error.message.includes('invalid') && error.message.includes('email')) {
+            errorType = 'invalid_email';
             errorTitle = 'Invalid email';
             errorDesc = 'Please check your email address and try again.';
           }
+          
+          trackSignupError(selectedRole, errorType);
           
           toast({
             title: errorTitle,
@@ -195,16 +203,22 @@ const Auth = () => {
           setMode('verify');
         }
       } else {
+        trackLoginAttempt('email');
         const { error } = await signIn(trimmedEmail, password);
         if (error) {
-          // User-friendly error for sign in failures
+          // Determine error type for analytics
+          let errorType = 'invalid_credentials';
           let errorDesc = 'Invalid email or password. Please try again.';
           
           if (error.message.includes('rate limit') || error.message.includes('too many')) {
+            errorType = 'rate_limit';
             errorDesc = 'Too many attempts. Please wait a few minutes before trying again.';
           } else if (error.message.includes('not confirmed') || error.message.includes('verify')) {
+            errorType = 'email_not_verified';
             errorDesc = 'Please verify your email before signing in. Check your inbox.';
           }
+          
+          trackLoginError('email', errorType);
           
           toast({
             title: 'Sign in failed',
@@ -212,6 +226,7 @@ const Auth = () => {
             variant: 'destructive',
           });
         } else {
+          trackLoginSuccess('email');
           toast({
             title: 'Welcome back!',
             description: 'You have signed in successfully.',

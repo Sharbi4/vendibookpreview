@@ -23,6 +23,7 @@ import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { calculateRentalFees, RENTAL_RENTER_FEE_PERCENT } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
+import { trackBookingFormOpen, trackBookingDateSelected, trackRequestStarted, trackRequestSubmitted, trackFormSubmit } from '@/lib/analytics';
 
 interface BookingFormProps {
   listingId: string;
@@ -236,6 +237,9 @@ const BookingForm = ({
       return;
     }
 
+    // Track booking request started
+    trackRequestStarted(listingId);
+
     const validationError = validateForm();
     if (validationError) {
       toast({
@@ -307,6 +311,8 @@ const BookingForm = ({
 
         // Track conversion before redirect
         trackFormSubmitConversion({ form_type: 'instant_book', listing_id: listingId });
+        trackRequestSubmitted(listingId, true);
+        trackFormSubmit('instant_book', true, { listing_id: listingId, total_price: fees.customerTotal });
 
         if (checkoutWindow) {
           checkoutWindow.location.href = checkoutData.url;
@@ -335,6 +341,8 @@ const BookingForm = ({
 
       // Track conversion for booking request
       trackFormSubmitConversion({ form_type: 'booking_request', listing_id: listingId });
+      trackRequestSubmitted(listingId, false);
+      trackFormSubmit('booking_request', true, { listing_id: listingId, instant_book: false });
 
       setShowConfirmation(true);
 

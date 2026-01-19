@@ -11,6 +11,7 @@ import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 import { FavoriteButton } from '@/components/listing/FavoriteButton';
 import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
+import { trackListingCardClick } from '@/lib/analytics';
 
 interface ListingCardProps {
   listing: Listing;
@@ -62,7 +63,11 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
     .slice(0, maxAmenities);
 
   return (
-    <Link to={`/listing/${listing.id}`} className={cn("group cursor-pointer card-hover block", className)}>
+    <Link 
+      to={`/listing/${listing.id}`} 
+      className={cn("group cursor-pointer card-hover block", className)}
+      onClick={() => trackListingCardClick(listing.id, listing.category, 'listing_card')}
+    >
       {/* Image Container */}
       <div className={cn(
         "relative overflow-hidden rounded-xl bg-muted",
@@ -135,7 +140,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           
           {/* Favorite Button */}
           {!compact && (
-            <FavoriteButton listingId={listing.id} size="sm" />
+            <FavoriteButton listingId={listing.id} category={listing.category} size="sm" />
           )}
         </div>
 

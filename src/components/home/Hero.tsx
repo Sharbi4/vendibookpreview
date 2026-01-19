@@ -4,6 +4,7 @@ import { ArrowRight, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 import heroImage from '@/assets/hero-food-truck.jpg';
+import { trackHeroCTAClick } from '@/lib/analytics';
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -71,7 +72,10 @@ const Hero = () => {
             <Button
               variant="gradient-premium"
               size="lg"
-              onClick={() => navigate('/search')}
+              onClick={() => {
+                trackHeroCTAClick('browse');
+                navigate('/search');
+              }}
               className="text-base px-8 py-6"
             >
               <Search className="mr-2 h-5 w-5" />
@@ -81,7 +85,10 @@ const Hero = () => {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => navigate('/list')}
+              onClick={() => {
+                trackHeroCTAClick('list');
+                navigate('/list');
+              }}
               className="text-base px-8 py-6 border-2 bg-white/10 border-white/30 text-white hover:bg-white/20"
             >
               List Your Asset
