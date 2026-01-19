@@ -19,6 +19,7 @@ import RequirementsModal from '@/components/listing-detail/RequirementsModal';
 import CollapsibleDescription from '@/components/listing-detail/CollapsibleDescription';
 import QuickHighlights from '@/components/listing-detail/QuickHighlights';
 import PricingSection from '@/components/listing-detail/PricingSection';
+import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
 import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
 import CompactTrustSection from '@/components/trust/CompactTrustSection';
 import CancellationPolicyCard from '@/components/trust/CancellationPolicyCard';
@@ -181,6 +182,14 @@ const ListingDetail = () => {
                 <h3 className="text-sm font-semibold text-foreground mb-2">About</h3>
                 <CollapsibleDescription description={listing.description} />
               </div>
+
+              {/* Section 2.5: Amenities */}
+              {listing.amenities && listing.amenities.length > 0 && (
+                <AmenitiesSection
+                  category={listing.category}
+                  amenities={listing.amenities}
+                />
+              )}
 
               {/* Section 3: Pricing & Fees */}
               <div className="p-4 bg-muted/30 rounded-xl">
