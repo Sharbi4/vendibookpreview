@@ -246,20 +246,49 @@ export const ListingWizard: React.FC = () => {
 
     setIsSaving(true);
     try {
-      // Minimal draft save
-      const { error } = await supabase
-        .from('listings')
-        .insert({
-          host_id: user.id,
-          mode: formData.mode,
-          category: formData.category,
-          status: 'draft',
-          title: formData.title || 'Untitled Draft',
-          description: formData.description || '',
-          fulfillment_type: formData.fulfillment_type || 'on_site',
-        } as any);
+      const draftData = {
+        host_id: user.id,
+        mode: formData.mode,
+        category: formData.category,
+        status: 'draft' as const,
+        title: formData.title || 'Untitled Draft',
+        description: formData.description || '',
+        fulfillment_type: formData.fulfillment_type || 'on_site',
+        address: formData.address || null,
+        price_daily: formData.price_daily ? parseFloat(formData.price_daily) : null,
+        price_weekly: formData.price_weekly ? parseFloat(formData.price_weekly) : null,
+        price_sale: formData.price_sale ? parseFloat(formData.price_sale) : null,
+        highlights: formData.highlights || [],
+        amenities: formData.amenities || [],
+        pickup_location_text: formData.pickup_location_text || null,
+        delivery_fee: formData.delivery_fee ? parseFloat(formData.delivery_fee) : null,
+        delivery_radius_miles: formData.delivery_radius_miles ? parseInt(formData.delivery_radius_miles) : null,
+        pickup_instructions: formData.pickup_instructions || null,
+        delivery_instructions: formData.delivery_instructions || null,
+        access_instructions: formData.access_instructions || null,
+        hours_of_access: formData.hours_of_access || null,
+        location_notes: formData.location_notes || null,
+        available_from: formData.available_from || null,
+        available_to: formData.available_to || null,
+        instant_book: formData.mode === 'rent' ? formData.instant_book : false,
+      };
 
-      if (error) throw error;
+      if (draftId) {
+        // Update existing draft
+        const { error } = await supabase
+          .from('listings')
+          .update(draftData as any)
+          .eq('id', draftId);
+        
+        if (error) throw error;
+      } else {
+        // Create new draft
+        const { error } = await supabase
+          .from('listings')
+          .insert(draftData as any);
+
+        if (error) throw error;
+      }
 
       toast({
         title: 'Draft saved!',
@@ -267,6 +296,7 @@ export const ListingWizard: React.FC = () => {
       });
       
       hasUnsavedChanges.current = false;
+      lastSavedData.current = getSerializedFormData();
       setShowExitDialog(false);
       if (blocker.state === 'blocked') {
         blocker.proceed();
