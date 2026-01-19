@@ -49,7 +49,7 @@ const SupplySection = () => {
   };
 
   return (
-    <section className="py-16 md:py-20 bg-gradient-to-br from-primary/5 via-background to-accent/5">
+    <section className="py-16 md:py-20 bg-muted/30">
       <div className="container max-w-6xl mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left: Content */}
@@ -65,7 +65,7 @@ const SupplySection = () => {
               <img 
                 src={supplyFoodTruck} 
                 alt="Food truck owner" 
-                className="w-24 h-24 md:w-32 md:h-32 rounded-xl object-cover shadow-lg flex-shrink-0 border-2 border-primary/20"
+                className="w-24 h-24 md:w-32 md:h-32 rounded-xl object-cover shadow-lg flex-shrink-0 border-2 border-border"
               />
               <p className="text-lg text-muted-foreground">
                 We built VendiBook to support the food truck community. Whether you're selling your truck, renting it out, or looking for a vendor spot—we've got your back.
@@ -76,8 +76,8 @@ const SupplySection = () => {
             <ul className="space-y-4 mb-8">
               {benefits.map((benefit, index) => (
                 <li key={index} className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center flex-shrink-0 shadow-md">
-                    <benefit.icon className="h-5 w-5 text-white" />
+                  <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-md">
+                    <benefit.icon className="h-5 w-5 text-primary-foreground" />
                   </div>
                   <span className="text-foreground">{benefit.text}</span>
                 </li>
@@ -127,22 +127,19 @@ const SupplySection = () => {
           </div>
 
           {/* Right: AI Tools callout */}
-          <div className="relative overflow-hidden bg-card rounded-2xl p-8 border-2 border-primary/30 shadow-lg bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-            {/* Animated background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
-            
-            <div className="relative flex items-center gap-3 mb-4">
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary to-amber-500 shadow-md">
-                <Sparkles className="h-5 w-5 text-white" />
+          <div className="rounded-2xl border-0 shadow-xl bg-card p-8 overflow-hidden">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2.5 rounded-xl bg-primary shadow-md">
+                <Sparkles className="h-5 w-5 text-primary-foreground" />
               </div>
               <h3 className="text-xl font-semibold text-foreground">Free AI Tools for Hosts</h3>
             </div>
             
-            <p className="relative text-muted-foreground mb-6">
+            <p className="text-muted-foreground mb-6">
               Get an edge with our AI-powered tools—optimize pricing, find permits, and create listings that convert.
             </p>
 
-            <ul className="relative space-y-3 mb-6">
+            <ul className="space-y-3 mb-6">
               {[
                 'PricePilot — Data-backed pricing suggestions',
                 'PermitPath — Find permits for any city',
@@ -158,7 +155,7 @@ const SupplySection = () => {
             <Button
               variant="outline"
               onClick={() => navigate('/tools')}
-              className="relative gap-2 border-primary/30 hover:bg-gradient-to-r hover:from-primary/10 hover:to-amber-500/10"
+              className="gap-2 border-border hover:bg-muted/50"
             >
               Explore Host Tools
               <ArrowRight className="h-4 w-4" />
