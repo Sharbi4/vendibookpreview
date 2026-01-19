@@ -5,7 +5,8 @@ import Footer from '@/components/layout/Footer';
 import Hero from '@/components/home/Hero';
 import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
-
+import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
+import JsonLd from '@/components/JsonLd';
 // Lazy load below-the-fold components for faster initial load
 const ListingsSections = lazy(() => import('@/components/home/ListingsSections'));
 const SupplySection = lazy(() => import('@/components/home/SupplySection'));
@@ -41,6 +42,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Vendibook | Rent or Buy Food Trucks, Trailers & Ghost Kitchens"
+        description="The marketplace for mobile food entrepreneurs. Rent or buy food trucks, food trailers, ghost kitchens, and vendor lots across the United States."
+        canonical="/"
+      />
+      <JsonLd schema={[generateOrganizationSchema(), generateWebSiteSchema()]} />
       <Header />
       
       <main className="flex-1">
