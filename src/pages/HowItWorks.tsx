@@ -103,18 +103,27 @@ const HowItWorks = () => {
 
               {/* Jump Buttons */}
               <div className="flex flex-wrap gap-3 justify-center mb-10">
-                <Button size="lg" asChild>
-                  <a href="#sell">Sell</a>
+                <Button size="lg" variant="gradient" className="gap-2 shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
+                  <a href="#sell">
+                    <DollarSign className="h-4 w-4" />
+                    Sell
+                  </a>
                 </Button>
-                <Button size="lg" variant="outline" asChild>
-                  <a href="#rent">Rent</a>
+                <Button size="lg" variant="outline" className="gap-2 border-2 border-emerald-500/30 hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all hover:scale-105" asChild>
+                  <a href="#rent">
+                    <CalendarDays className="h-4 w-4 text-emerald-600" />
+                    Rent
+                  </a>
                 </Button>
-                <Button size="lg" variant="outline" asChild>
-                  <a href="#lots">Vendor Lots</a>
+                <Button size="lg" variant="outline" className="gap-2 border-2 border-amber-500/30 hover:bg-amber-500/10 hover:border-amber-500/50 transition-all hover:scale-105" asChild>
+                  <a href="#lots">
+                    <MapPin className="h-4 w-4 text-amber-600" />
+                    Vendor Lots
+                  </a>
                 </Button>
-                <Button size="lg" variant="secondary" asChild>
+                <Button size="lg" variant="secondary" className="gap-2 hover:scale-105 transition-all" asChild>
                   <a href="#tools">
-                    <Sparkles className="h-4 w-4 mr-2" />
+                    <Sparkles className="h-4 w-4" />
                     Free Tools
                   </a>
                 </Button>
@@ -176,7 +185,7 @@ const HowItWorks = () => {
                 {/* Step 1: Payment Options */}
                 <div className="mb-12">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 text-white flex items-center justify-center font-bold shadow-md">
                       1
                     </div>
                     <h3 className="text-xl font-bold text-foreground">Choose how you get paid</h3>
@@ -244,7 +253,7 @@ const HowItWorks = () => {
                 {/* Step 2: Proof Notary */}
                 <div className="mb-12">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 text-white flex items-center justify-center font-bold shadow-md">
                       2
                     </div>
                     <h3 className="text-xl font-bold text-foreground">Optional paid add-on: Notarized sale receipt with Proof Notary</h3>
@@ -296,7 +305,7 @@ const HowItWorks = () => {
                 {/* Step 3: Freight */}
                 <div className="mb-12">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 text-white flex items-center justify-center font-bold shadow-md">
                       3
                     </div>
                     <h3 className="text-xl font-bold text-foreground">Reach buyers across the United States with Vendibook Freight</h3>
@@ -373,11 +382,13 @@ const HowItWorks = () => {
                 </div>
 
                 {/* Inline CTA for mobile and desktop */}
-                <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-xl p-6 lg:hidden">
-                  <h4 className="font-bold text-foreground mb-2">Ready to sell?</h4>
-                  <p className="text-sm text-muted-foreground mb-4">Create a for-sale listing and reach buyers locally or nationwide.</p>
-                  <Button className="w-full" asChild>
+                <div className="relative overflow-hidden bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-2 border-primary/20 rounded-xl p-6 lg:hidden group hover:border-primary/40 transition-all">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-amber-500/5 to-yellow-400/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <h4 className="relative font-bold text-foreground mb-2">Ready to sell?</h4>
+                  <p className="relative text-sm text-muted-foreground mb-4">Create a for-sale listing and reach buyers locally or nationwide.</p>
+                  <Button variant="gradient" className="relative w-full gap-2 shadow-md hover:shadow-lg transition-all" asChild>
                     <Link to="/create-listing?mode=sale">
+                      <ArrowRight className="h-4 w-4" />
                       Create For-Sale Listing
                     </Link>
                   </Button>
@@ -541,11 +552,13 @@ const HowItWorks = () => {
                 </div>
 
                 {/* Inline CTA for mobile and desktop */}
-                <div className="bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 rounded-xl p-6 lg:hidden">
-                  <h4 className="font-bold text-foreground mb-2">Ready to rent out your asset?</h4>
-                  <p className="text-sm text-muted-foreground mb-4">Create a rental listing and start earning on your schedule.</p>
-                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700" asChild>
+                <div className="relative overflow-hidden bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border-2 border-emerald-500/20 rounded-xl p-6 lg:hidden group hover:border-emerald-500/40 transition-all">
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-emerald-400/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <h4 className="relative font-bold text-foreground mb-2">Ready to rent out your asset?</h4>
+                  <p className="relative text-sm text-muted-foreground mb-4">Create a rental listing and start earning on your schedule.</p>
+                  <Button className="relative w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 gap-2 shadow-md hover:shadow-lg transition-all" asChild>
                     <Link to="/create-listing?mode=rent">
+                      <ArrowRight className="h-4 w-4" />
                       Create Rental Listing
                     </Link>
                   </Button>
@@ -674,11 +687,13 @@ const HowItWorks = () => {
                 </div>
 
                 {/* Inline CTA for mobile and desktop */}
-                <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 rounded-xl p-6 lg:hidden">
-                  <h4 className="font-bold text-foreground mb-2">Ready to list your space?</h4>
-                  <p className="text-sm text-muted-foreground mb-4">Create a vendor lot listing and start earning from your property.</p>
-                  <Button className="w-full bg-amber-600 hover:bg-amber-700" asChild>
+                <div className="relative overflow-hidden bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-2 border-amber-500/20 rounded-xl p-6 lg:hidden group hover:border-amber-500/40 transition-all">
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-yellow-500/5 to-amber-400/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <h4 className="relative font-bold text-foreground mb-2">Ready to list your space?</h4>
+                  <p className="relative text-sm text-muted-foreground mb-4">Create a vendor lot listing and start earning from your property.</p>
+                  <Button className="relative w-full bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-700 hover:to-yellow-600 gap-2 shadow-md hover:shadow-lg transition-all" asChild>
                     <Link to="/create-listing?category=vendor_lot">
+                      <ArrowRight className="h-4 w-4" />
                       Create Vendor Lot Listing
                     </Link>
                   </Button>
@@ -760,17 +775,23 @@ const HowItWorks = () => {
               </div>
 
               <div className="flex flex-wrap justify-center gap-3">
-                <Button size="lg" asChild>
-                  <Link to="/tools" className="gap-2">
+                <Button size="lg" variant="gradient" className="gap-2 shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
+                  <Link to="/tools">
                     <Sparkles className="h-4 w-4" />
                     Explore Free Tools
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" asChild>
-                  <Link to="/help">Visit Help Center</Link>
+                <Button size="lg" variant="outline" className="gap-2 border-2 hover:scale-105 transition-all" asChild>
+                  <Link to="/help">
+                    <Headphones className="h-4 w-4" />
+                    Visit Help Center
+                  </Link>
                 </Button>
-                <Button size="lg" variant="outline" asChild>
-                  <Link to="/contact">Contact Support</Link>
+                <Button size="lg" variant="outline" className="gap-2 border-2 hover:scale-105 transition-all" asChild>
+                  <Link to="/contact">
+                    <ArrowRight className="h-4 w-4" />
+                    Contact Support
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -839,28 +860,31 @@ const HowItWorks = () => {
               </h2>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 text-white" asChild>
+                <Button size="lg" variant="gradient" className="gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-105" asChild>
                   <Link to="/create-listing?mode=sale">
+                    <DollarSign className="h-4 w-4" />
                     Sell an Asset
                   </Link>
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  className="bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
+                  className="gap-2 bg-transparent border-2 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:scale-105 transition-all"
                   asChild
                 >
                   <Link to="/create-listing?mode=rent">
+                    <CalendarDays className="h-4 w-4" />
                     Rent Out an Asset
                   </Link>
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  className="bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
+                  className="gap-2 bg-transparent border-2 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:scale-105 transition-all"
                   asChild
                 >
                   <Link to="/create-listing?category=vendor_lot">
+                    <MapPin className="h-4 w-4" />
                     List a Vendor Lot
                   </Link>
                 </Button>
@@ -889,8 +913,8 @@ const TrustBadge = ({ icon, label, tooltip }: TrustBadgeProps) => (
   <TooltipProvider delayDuration={200}>
     <Tooltip>
       <TooltipTrigger asChild>
-        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors cursor-help">
-          {icon}
+        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border-2 border-border text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all cursor-help group">
+          <span className="text-primary group-hover:scale-110 transition-transform">{icon}</span>
           <span>{label}</span>
           <Info className="h-3.5 w-3.5 text-muted-foreground/70" />
         </button>
@@ -910,9 +934,9 @@ interface InfoPopupProps {
 const InfoPopup = ({ trigger, content }: InfoPopupProps) => (
   <Dialog>
     <DialogTrigger asChild>
-      <button className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline mt-2">
-        <HelpCircle className="h-4 w-4" />
-        {trigger}
+      <button className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 mt-2 px-3 py-1.5 rounded-lg hover:bg-primary/10 transition-all group">
+        <HelpCircle className="h-4 w-4 group-hover:scale-110 transition-transform" />
+        <span className="group-hover:underline">{trigger}</span>
       </button>
     </DialogTrigger>
     <DialogContent className="sm:max-w-md">
@@ -981,8 +1005,11 @@ const StickyActionCard = ({
           </ol>
         </div>
 
-        <Button className={cn('w-full mb-2', buttonClasses[accent])} asChild>
-          <Link to={ctaHref}>{ctaText}</Link>
+        <Button className={cn('w-full mb-2 gap-2 shadow-md hover:shadow-lg transition-all', buttonClasses[accent])} asChild>
+          <Link to={ctaHref}>
+            <ArrowRight className="h-4 w-4" />
+            {ctaText}
+          </Link>
         </Button>
 
         <Link
