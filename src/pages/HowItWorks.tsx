@@ -359,7 +359,11 @@ const HowItWorks = () => {
                   <h4 className="font-semibold text-foreground mb-4">Transparent fees</h4>
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Sales: seller commission</span>
+                      <span className="text-muted-foreground">Sales: Pay in person</span>
+                      <span className="font-medium text-emerald-600">Free</span>
+                    </li>
+                    <li className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Sales: Payment via Stripe (credit, debit, or ACH)</span>
                       <span className="font-medium text-foreground">12.9%</span>
                     </li>
                     <li className="flex items-center justify-between">
