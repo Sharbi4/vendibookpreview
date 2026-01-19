@@ -393,9 +393,14 @@ const Header = () => {
           </button>
         </div>
 
-        {/* Desktop Navigation - Simplified */}
+        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-5">
-          {/* Navigation items removed */}
+          <Link 
+            to="/how-it-works" 
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Learn More
+          </Link>
         </nav>
 
         {/* Desktop Actions */}
