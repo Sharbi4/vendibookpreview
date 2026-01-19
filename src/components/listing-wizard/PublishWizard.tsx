@@ -651,7 +651,9 @@ export const PublishWizard: React.FC = () => {
   };
 
   const handlePublish = async () => {
-    if (!listing || !isOnboardingComplete) return;
+    // Stripe is only required if card payment is enabled
+    const stripeRequired = acceptCardPayment;
+    if (!listing || (stripeRequired && !isOnboardingComplete)) return;
     setIsSaving(true);
 
     try {
@@ -692,6 +694,8 @@ export const PublishWizard: React.FC = () => {
 
   // Checklist state
   const totalPhotoCount = existingImages.length + images.length;
+  // Stripe is only required if card payment is enabled (not cash-only)
+  const requiresStripe = acceptCardPayment;
   const checklistState = {
     hasPhotos: totalPhotoCount >= 3,
     hasPricing: listing?.mode === 'sale' ? !!priceSale : !!priceDaily,
@@ -705,6 +709,7 @@ export const PublishWizard: React.FC = () => {
     hasStripe: isOnboardingComplete,
     isRental: listing?.mode === 'rent',
     photoCount: totalPhotoCount,
+    requiresStripe, // Pass whether Stripe is required
   };
 
   const checklistItems = createChecklistItems(checklistState, step);

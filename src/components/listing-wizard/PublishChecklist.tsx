@@ -227,6 +227,7 @@ export const createChecklistItems = (
     priceSet?: string;
     descriptionLength?: number;
     locationSet?: string;
+    requiresStripe?: boolean; // true if card payment is enabled
   },
   currentStep: string
 ): ChecklistItem[] => {
@@ -316,7 +317,12 @@ export const createChecklistItems = (
       timeEstimate: '~2 min',
       benefit: 'Clear logistics build renter confidence',
     },
-    {
+  );
+
+  // Only add Stripe requirement if card payment is enabled
+  const stripeRequired = formState.requiresStripe !== false;
+  if (stripeRequired) {
+    items.push({
       id: 'stripe',
       label: 'Payout Setup (Stripe)',
       icon: <CreditCard className="w-4 h-4" />,
@@ -326,8 +332,8 @@ export const createChecklistItems = (
       statusHint: formState.hasStripe ? 'Connected' : 'Not connected',
       timeEstimate: '~5 min',
       benefit: 'Get paid directly to your bank account',
-    }
-  );
+    });
+  }
 
   return items;
 };
