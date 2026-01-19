@@ -11,6 +11,7 @@ export interface AdminUser {
   identity_verified: boolean | null;
   stripe_onboarding_complete: boolean | null;
   roles: string[];
+  listing_count: number;
 }
 
 export const useAdminUsers = () => {
@@ -32,6 +33,13 @@ export const useAdminUsers = () => {
 
       if (rolesError) throw rolesError;
 
+      // Fetch listing counts per host
+      const { data: listings, error: listingsError } = await supabase
+        .from('listings')
+        .select('host_id');
+
+      if (listingsError) throw listingsError;
+
       // Map roles to users
       const rolesMap = new Map<string, string[]>();
       roles?.forEach((r) => {
@@ -40,9 +48,18 @@ export const useAdminUsers = () => {
         rolesMap.set(r.user_id, existing);
       });
 
+      // Count listings per user
+      const listingCountMap = new Map<string, number>();
+      listings?.forEach((l) => {
+        if (l.host_id) {
+          listingCountMap.set(l.host_id, (listingCountMap.get(l.host_id) || 0) + 1);
+        }
+      });
+
       const users: AdminUser[] = (profiles || []).map((p) => ({
         ...p,
         roles: rolesMap.get(p.id) || [],
+        listing_count: listingCountMap.get(p.id) || 0,
       }));
 
       return users;
