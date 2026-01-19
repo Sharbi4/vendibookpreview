@@ -9,6 +9,8 @@ interface HostProfile {
   avatar_url: string | null;
   identity_verified: boolean | null;
   created_at: string;
+  display_name?: string | null;
+  business_name?: string | null;
 }
 
 export const useListing = (listingId: string | undefined) => {
@@ -40,15 +42,22 @@ export const useListing = (listingId: string | undefined) => {
         if (listingData) {
           setListing(listingData);
 
-          // Fetch host profile
-          const { data: hostData, error: hostError } = await supabase
-            .from('profiles')
-            .select('full_name, avatar_url, identity_verified, created_at')
-            .eq('id', listingData.host_id)
-            .maybeSingle();
+          // Fetch host profile using the RPC function for public access
+          if (listingData.host_id) {
+            const { data: hostData, error: hostError } = await supabase
+              .rpc('get_safe_host_profile', { host_user_id: listingData.host_id });
 
-          if (!hostError && hostData) {
-            setHost(hostData);
+            if (!hostError && hostData && hostData.length > 0) {
+              const profile = hostData[0];
+              setHost({
+                full_name: profile.full_name,
+                avatar_url: profile.avatar_url,
+                identity_verified: profile.identity_verified,
+                created_at: profile.created_at,
+                display_name: profile.display_name,
+                business_name: profile.business_name,
+              });
+            }
           }
         } else {
           setError('Listing not found');
