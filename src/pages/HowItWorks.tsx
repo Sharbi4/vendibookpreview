@@ -159,8 +159,10 @@ const HowItWorks = () => {
               {/* Main Content */}
               <div>
                 <div className="mb-10">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-                    <DollarSign className="h-4 w-4" />
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/20 to-amber-500/20 text-primary text-sm font-medium mb-4">
+                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center">
+                      <DollarSign className="h-3.5 w-3.5 text-white" />
+                    </div>
                     For Sellers
                   </div>
                   <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -418,8 +420,10 @@ const HowItWorks = () => {
               {/* Main Content */}
               <div>
                 <div className="mb-10">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-sm font-medium mb-4">
-                    <CalendarDays className="h-4 w-4" />
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-700 dark:text-emerald-400 text-sm font-medium mb-4">
+                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                      <CalendarDays className="h-3.5 w-3.5 text-white" />
+                    </div>
                     For Hosts
                   </div>
                   <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -585,8 +589,10 @@ const HowItWorks = () => {
               {/* Main Content */}
               <div>
                 <div className="mb-10">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-sm font-medium mb-4">
-                    <MapPin className="h-4 w-4" />
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-700 dark:text-amber-400 text-sm font-medium mb-4">
+                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center">
+                      <MapPin className="h-3.5 w-3.5 text-white" />
+                    </div>
                     For Property Owners
                   </div>
                   <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -715,8 +721,10 @@ const HowItWorks = () => {
           <div className="container">
             <div className="max-w-4xl mx-auto">
               <div className="text-center mb-12">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-sm font-medium mb-4">
-                  <Sparkles className="h-4 w-4" />
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/20 to-amber-500/20 text-primary text-sm font-medium mb-4">
+                  <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center">
+                    <Sparkles className="h-3.5 w-3.5 text-white" />
+                  </div>
                   Free for Everyone
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -729,25 +737,25 @@ const HowItWorks = () => {
 
               <div className="grid sm:grid-cols-2 gap-4 mb-10">
                 <ToolCard
-                  icon={<CircleDollarSign className="h-6 w-6" />}
+                  icon={<CircleDollarSign className="h-5 w-5" />}
                   title="Pricing Support"
                   description="Get guidance to price with more confidence and avoid leaving money on the table."
                   href="/tools/price-pilot"
                 />
                 <ToolCard
-                  icon={<FileCheck className="h-6 w-6" />}
+                  icon={<FileCheck className="h-5 w-5" />}
                   title="Permits & Requirements Guidance"
                   description="Starting points to research what you may need to operate in a city or state."
                   href="/tools/permit-path"
                 />
                 <ToolCard
-                  icon={<Lightbulb className="h-6 w-6" />}
+                  icon={<Lightbulb className="h-5 w-5" />}
                   title="Listing Templates & Tips"
                   description="Simple frameworks to create clearer listings that build trust faster."
                   href="/tools/listing-studio"
                 />
                 <ToolCard
-                  icon={<Headphones className="h-6 w-6" />}
+                  icon={<Headphones className="h-5 w-5" />}
                   title="Help Center + 24/7 Chat"
                   description="Answers fast, plus support if something goes wrong."
                   href="/help"
@@ -788,25 +796,37 @@ const HowItWorks = () => {
               </p>
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-                <div className="bg-card border border-border rounded-xl p-5 text-left">
-                  <ShieldCheck className="h-6 w-6 text-primary mb-3" />
-                  <h4 className="font-semibold text-foreground mb-1">Trust</h4>
-                  <p className="text-sm text-muted-foreground">Verified users and clear records</p>
+                <div className="relative overflow-hidden bg-card border-2 border-primary/20 rounded-xl p-5 text-left group hover:border-primary/40 transition-colors">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-amber-500/5 to-yellow-400/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center mb-3 shadow-md">
+                    <ShieldCheck className="h-5 w-5 text-white" />
+                  </div>
+                  <h4 className="relative font-semibold text-foreground mb-1">Trust</h4>
+                  <p className="relative text-sm text-muted-foreground">Verified users and clear records</p>
                 </div>
-                <div className="bg-card border border-border rounded-xl p-5 text-left">
-                  <Lightbulb className="h-6 w-6 text-primary mb-3" />
-                  <h4 className="font-semibold text-foreground mb-1">Clarity</h4>
-                  <p className="text-sm text-muted-foreground">Steps that explain what happens next</p>
+                <div className="relative overflow-hidden bg-card border-2 border-primary/20 rounded-xl p-5 text-left group hover:border-primary/40 transition-colors">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-amber-500/5 to-yellow-400/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center mb-3 shadow-md">
+                    <Lightbulb className="h-5 w-5 text-white" />
+                  </div>
+                  <h4 className="relative font-semibold text-foreground mb-1">Clarity</h4>
+                  <p className="relative text-sm text-muted-foreground">Steps that explain what happens next</p>
                 </div>
-                <div className="bg-card border border-border rounded-xl p-5 text-left">
-                  <Users className="h-6 w-6 text-primary mb-3" />
-                  <h4 className="font-semibold text-foreground mb-1">Control</h4>
-                  <p className="text-sm text-muted-foreground">You set terms, requirements, and availability</p>
+                <div className="relative overflow-hidden bg-card border-2 border-primary/20 rounded-xl p-5 text-left group hover:border-primary/40 transition-colors">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-amber-500/5 to-yellow-400/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center mb-3 shadow-md">
+                    <Users className="h-5 w-5 text-white" />
+                  </div>
+                  <h4 className="relative font-semibold text-foreground mb-1">Control</h4>
+                  <p className="relative text-sm text-muted-foreground">You set terms, requirements, and availability</p>
                 </div>
-                <div className="bg-card border border-border rounded-xl p-5 text-left">
-                  <Headphones className="h-6 w-6 text-primary mb-3" />
-                  <h4 className="font-semibold text-foreground mb-1">Support</h4>
-                  <p className="text-sm text-muted-foreground">Help when you need it</p>
+                <div className="relative overflow-hidden bg-card border-2 border-primary/20 rounded-xl p-5 text-left group hover:border-primary/40 transition-colors">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-amber-500/5 to-yellow-400/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center mb-3 shadow-md">
+                    <Headphones className="h-5 w-5 text-white" />
+                  </div>
+                  <h4 className="relative font-semibold text-foreground mb-1">Support</h4>
+                  <p className="relative text-sm text-muted-foreground">Help when you need it</p>
                 </div>
               </div>
             </div>
@@ -1006,15 +1026,16 @@ interface ToolCardProps {
 const ToolCard = ({ icon, title, description, href }: ToolCardProps) => (
   <Link
     to={href}
-    className="block bg-card border border-border rounded-xl p-5 hover:border-primary/30 hover:shadow-md transition-all group"
+    className="relative overflow-hidden block bg-card border-2 border-primary/20 rounded-xl p-5 hover:border-primary/40 hover:shadow-md transition-all group"
   >
-    <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 flex items-center justify-center mb-4">
-      {icon}
+    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-amber-500/5 to-yellow-400/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+    <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center mb-4 shadow-md group-hover:scale-105 transition-transform">
+      <span className="text-white">{icon}</span>
     </div>
-    <h4 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+    <h4 className="relative font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
       {title}
     </h4>
-    <p className="text-sm text-muted-foreground">{description}</p>
+    <p className="relative text-sm text-muted-foreground">{description}</p>
   </Link>
 );
 
