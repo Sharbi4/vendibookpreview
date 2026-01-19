@@ -292,7 +292,11 @@ export type Database = {
           dispute_opened_at: string | null
           dispute_reason: string | null
           dispute_status: string | null
+          document_rejection_reason: string | null
           document_reminder_sent_at: string | null
+          document_review_status: string | null
+          documents_approved_at: string | null
+          documents_approved_by: string | null
           end_date: string
           first_response_at: string | null
           fulfillment_selected: string | null
@@ -334,7 +338,11 @@ export type Database = {
           dispute_opened_at?: string | null
           dispute_reason?: string | null
           dispute_status?: string | null
+          document_rejection_reason?: string | null
           document_reminder_sent_at?: string | null
+          document_review_status?: string | null
+          documents_approved_at?: string | null
+          documents_approved_by?: string | null
           end_date: string
           first_response_at?: string | null
           fulfillment_selected?: string | null
@@ -376,7 +384,11 @@ export type Database = {
           dispute_opened_at?: string | null
           dispute_reason?: string | null
           dispute_status?: string | null
+          document_rejection_reason?: string | null
           document_reminder_sent_at?: string | null
+          document_review_status?: string | null
+          documents_approved_at?: string | null
+          documents_approved_by?: string | null
           end_date?: string
           first_response_at?: string | null
           fulfillment_selected?: string | null
