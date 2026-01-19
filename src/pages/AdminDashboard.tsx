@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History, Zap, Headphones, Mail } from 'lucide-react';
+import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History, Zap, Headphones, Mail, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminTransactions } from '@/hooks/useAdminTransactions';
 import { useAdminPendingDocuments, useAdminDocumentStats } from '@/hooks/useAdminDocumentReview';
 import { useAdminInstantBookings, useAdminInstantBookStats } from '@/hooks/useAdminInstantBookings';
 import { useAdminAssetRequests } from '@/hooks/useAssetRequests';
+import { useAdminUsers, useAdminUserStats } from '@/hooks/useAdminUsers';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 import DisputeResolutionCard from '@/components/admin/DisputeResolutionCard';
 import TrackingManagementCard from '@/components/admin/TrackingManagementCard';
 import AdminDocumentReviewCard from '@/components/admin/AdminDocumentReviewCard';
@@ -20,6 +22,7 @@ import AdminBulkDocumentActions from '@/components/admin/AdminBulkDocumentAction
 import InstantBookMonitorCard from '@/components/admin/InstantBookMonitorCard';
 import ConciergeQueueCard from '@/components/admin/ConciergeQueueCard';
 import EmailPreviewCard from '@/components/admin/EmailPreviewCard';
+import AdminUsersListCard from '@/components/admin/AdminUsersListCard';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -44,7 +47,10 @@ const AdminDashboard = () => {
   const { data: instantBookings, isLoading: instantBookLoading } = useAdminInstantBookings();
   const instantBookStats = useAdminInstantBookStats();
   const { allRequests, isLoading: conciergeLoading, updateStatus, isUpdating: conciergeUpdating, stats: conciergeStats } = useAdminAssetRequests();
+  const { data: users, isLoading: usersLoading } = useAdminUsers();
+  const userStats = useAdminUserStats(users);
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
+  const [userSearch, setUserSearch] = useState('');
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -237,6 +243,13 @@ const AdminDashboard = () => {
             <TabsTrigger value="emails" className="relative">
               <Mail className="h-4 w-4 mr-1" />
               Email Previews
+            </TabsTrigger>
+            <TabsTrigger value="users" className="relative">
+              <Users className="h-4 w-4 mr-1" />
+              Users
+              <Badge variant="secondary" className="ml-2 h-5 px-1.5">
+                {userStats.total}
+              </Badge>
             </TabsTrigger>
           </TabsList>
 
@@ -557,6 +570,84 @@ const AdminDashboard = () => {
           {/* Email Previews Tab */}
           <TabsContent value="emails" className="space-y-4">
             <EmailPreviewCard />
+          </TabsContent>
+
+          {/* Users Tab */}
+          <TabsContent value="users" className="space-y-4">
+            {usersLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} className="h-20" />
+                ))}
+              </div>
+            ) : !users || users.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground">No Users</h3>
+                  <p className="text-muted-foreground">No users have registered yet.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {/* Summary Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <Card>
+                    <CardContent className="pt-4 pb-4">
+                      <p className="text-sm text-muted-foreground">Total Users</p>
+                      <p className="text-2xl font-bold">{userStats.total}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-4">
+                      <p className="text-sm text-muted-foreground">Hosts</p>
+                      <p className="text-2xl font-bold text-primary">{userStats.hosts}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-4">
+                      <p className="text-sm text-muted-foreground">Verified</p>
+                      <p className="text-2xl font-bold text-emerald-600">{userStats.verified}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-4">
+                      <p className="text-sm text-muted-foreground">Stripe Connected</p>
+                      <p className="text-2xl font-bold text-blue-600">{userStats.stripeConnected}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-4">
+                      <p className="text-sm text-muted-foreground">Admins</p>
+                      <p className="text-2xl font-bold text-primary">{userStats.admins}</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Search */}
+                <Input
+                  placeholder="Search by name or email..."
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  className="max-w-md"
+                />
+
+                {/* User Cards */}
+                {users
+                  .filter((u) => {
+                    if (!userSearch) return true;
+                    const search = userSearch.toLowerCase();
+                    return (
+                      u.full_name?.toLowerCase().includes(search) ||
+                      u.display_name?.toLowerCase().includes(search) ||
+                      u.email?.toLowerCase().includes(search)
+                    );
+                  })
+                  .map((user) => (
+                    <AdminUsersListCard key={user.id} user={user} />
+                  ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </main>
