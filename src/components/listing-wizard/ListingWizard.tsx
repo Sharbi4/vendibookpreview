@@ -854,6 +854,18 @@ export const ListingWizard: React.FC = () => {
                 Preview
               </Button>
             )}
+            
+            {/* Skip to Review button - show when not on review step */}
+            {currentStep < 7 && (
+              <Button
+                variant="ghost"
+                onClick={() => goToStep(7)}
+                className="text-muted-foreground"
+              >
+                <Check className="w-4 h-4 mr-2" />
+                Review
+              </Button>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
