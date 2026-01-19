@@ -194,6 +194,113 @@ export const PublishWizard: React.FC = () => {
   const [deadlineHours, setDeadlineHours] = useState<number>(48);
   const [openDocGroups, setOpenDocGroups] = useState<string[]>(['Identity & Legal']);
 
+  // Auto-save guest draft fields (title, description, pricing) periodically
+  // This uses RLS policy "Allow guest draft updates with token"
+  const saveGuestDraftFields = async () => {
+    if (!isGuestDraft || !listing || !listingId) return;
+    
+    const guestDraft = getGuestDraft();
+    if (!guestDraft || guestDraft.listingId !== listingId) return;
+
+    try {
+      const safeParsePrice = (value: string): number | null => {
+        if (!value || !value.trim()) return null;
+        const cleaned = value.replace(/[^0-9.]/g, '');
+        const parsed = parseFloat(cleaned);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+      };
+
+      const updateData: Record<string, unknown> = {
+        title: title || listing.title,
+        description: description || listing.description,
+        highlights: highlights.length > 0 ? highlights : (listing.highlights || []),
+        amenities: amenities.length > 0 ? amenities : (listing.amenities || []),
+        // Dimensions
+        weight_lbs: parseFloat(weightLbs) || listing.weight_lbs || null,
+        length_inches: parseFloat(lengthInches) || listing.length_inches || null,
+        width_inches: parseFloat(widthInches) || listing.width_inches || null,
+        height_inches: parseFloat(heightInches) || listing.height_inches || null,
+        freight_category: freightCategory || listing.freight_category || null,
+      };
+
+      // Add pricing based on mode
+      if (listing.mode === 'sale') {
+        updateData.price_sale = safeParsePrice(priceSale);
+        updateData.vendibook_freight_enabled = vendibookFreightEnabled;
+        updateData.freight_payer = freightPayer;
+        updateData.accept_card_payment = acceptCardPayment;
+        updateData.accept_cash_payment = acceptCashPayment;
+        updateData.proof_notary_enabled = proofNotaryEnabled;
+      } else {
+        updateData.price_daily = safeParsePrice(priceDaily);
+        updateData.price_weekly = safeParsePrice(priceWeekly);
+        updateData.instant_book = instantBook;
+        updateData.deposit_amount = safeParsePrice(depositAmount);
+      }
+
+      // Add location fields
+      const categoryIsStatic = isStaticLocationFn(listing.category);
+      const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation) ? 'on_site' : (fulfillmentType || listing.fulfillment_type || 'pickup');
+      
+      updateData.fulfillment_type = effectiveFulfillmentType;
+      updateData.pickup_location_text = pickupLocationText || listing.pickup_location_text || null;
+      updateData.address = address || listing.address || null;
+      updateData.delivery_fee = parseFloat(deliveryFee) || listing.delivery_fee || null;
+      updateData.delivery_radius_miles = parseFloat(deliveryRadiusMiles) || listing.delivery_radius_miles || null;
+      updateData.pickup_instructions = pickupInstructions || listing.pickup_instructions || null;
+      updateData.delivery_instructions = deliveryInstructions || listing.delivery_instructions || null;
+      updateData.access_instructions = accessInstructions || listing.access_instructions || null;
+      updateData.hours_of_access = hoursOfAccess || listing.hours_of_access || null;
+      updateData.location_notes = locationNotes || listing.location_notes || null;
+
+      // Availability
+      updateData.available_from = availableFrom || listing.available_from || null;
+      updateData.available_to = availableTo || listing.available_to || null;
+
+      const { error } = await supabase
+        .from('listings')
+        .update(updateData)
+        .eq('id', listingId);
+
+      if (error) {
+        console.warn('Guest draft auto-save failed:', error.message);
+      } else {
+        console.log('Guest draft auto-saved successfully');
+      }
+    } catch (err) {
+      console.warn('Guest draft auto-save error:', err);
+    }
+  };
+
+  // Auto-save guest draft on step change and periodically (every 30s)
+  useEffect(() => {
+    if (!isGuestDraft || !listing) return;
+
+    // Save when step changes
+    saveGuestDraftFields();
+
+    // Set up periodic auto-save
+    const interval = setInterval(() => {
+      saveGuestDraftFields();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, isGuestDraft, listing?.id]);
+
+  // Also save guest draft when user is about to leave the page
+  useEffect(() => {
+    if (!isGuestDraft || !listing) return;
+
+    const handleBeforeUnload = () => {
+      saveGuestDraftFields();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isGuestDraft, listing?.id, title, description, priceSale, priceDaily, priceWeekly]);
+
   useEffect(() => {
     const fetchListing = async () => {
       if (!listingId) return;
@@ -439,14 +546,34 @@ export const PublishWizard: React.FC = () => {
     }
   };
 
-  // Gate check for Details step - require auth before saving
+  // For guest drafts, save data to DB before progressing
+  // Auth is only required for publishing, not for step navigation
+  const handleGuestStepSave = async () => {
+    if (isGuestDraft && !user) {
+      // Save guest draft fields to database (RLS allows this with token)
+      await saveGuestDraftFields();
+    }
+  };
+
+  // Allow guests to navigate steps freely; auth is gated at publish
   const handleDetailsSave = async () => {
-    if (!user && isGuestDraft) {
-      // Show auth modal instead of saving
-      setShowAuthModal(true);
+    if (isGuestDraft && !user) {
+      // Save guest draft data and proceed to next step
+      await saveGuestDraftFields();
+      // Move to next step manually
+      const isRentalListing = listing?.mode === 'rent';
+      const skipStripeStep = listing?.mode === 'sale' && !acceptCardPayment;
+      const baseSteps: PublishStep[] = isRentalListing
+        ? ['photos', 'pricing', 'availability', 'details', 'location', 'documents', 'stripe', 'review']
+        : ['photos', 'pricing', 'details', 'location', 'stripe', 'review'];
+      const steps = skipStripeStep ? baseSteps.filter(s => s !== 'stripe') : baseSteps;
+      const currentIndex = steps.indexOf(step);
+      if (currentIndex < steps.length - 1) {
+        setStep(steps[currentIndex + 1]);
+      }
       return;
     }
-    // Proceed with normal save
+    // Proceed with normal save for authenticated users
     await saveStep();
   };
 
@@ -701,27 +828,31 @@ export const PublishWizard: React.FC = () => {
     try {
       let updateData: any = {};
 
-      if (step === 'photos' && images.length > 0) {
-        // Guest drafts can access the wizard without auth, but uploads require auth.
-        if (!user) {
-          if (isGuestDraft) {
-            setShowAuthModal(true);
+      if (step === 'photos') {
+        if (images.length > 0) {
+          // Guest drafts can access the wizard without auth, but uploads require auth.
+          if (!user) {
+            if (isGuestDraft) {
+              setShowAuthModal(true);
+            }
+            toast({
+              title: 'Sign in to upload photos',
+              description: 'Please sign in to add photos to this listing.',
+              variant: 'destructive',
+            });
+            setIsSaving(false);
+            return;
           }
-          toast({
-            title: 'Sign in to upload photos',
-            description: 'Please sign in to add photos to this listing.',
-            variant: 'destructive',
-          });
-          return;
-        }
 
-        const imageUrls = await uploadImages();
-        updateData = {
-          image_urls: imageUrls,
-          cover_image_url: imageUrls[0] || null,
-        };
-        setExistingImages(imageUrls);
-        setImages([]);
+          const imageUrls = await uploadImages();
+          updateData = {
+            image_urls: imageUrls,
+            cover_image_url: imageUrls[0] || null,
+          };
+          setExistingImages(imageUrls);
+          setImages([]);
+        }
+        // Allow proceeding without photos (guests can add later after auth)
       } else if (step === 'pricing') {
         // Helper function to safely parse price values
         const safeParsePrice = (value: string): number | null => {
