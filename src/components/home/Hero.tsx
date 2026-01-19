@@ -61,19 +61,6 @@ const Hero = () => {
             The trusted marketplace for mobile food businesses
           </h1>
           
-          {/* Tagline */}
-          <div 
-            className="mt-3 max-w-xl mx-auto animate-fade-in text-center"
-            style={{ animationDelay: '0.2s', animationFillMode: 'backwards' }}
-          >
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full border-2 border-white/40 bg-white/10 backdrop-blur-sm">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-primary via-amber-400 to-yellow-300 shadow-lg text-xs font-bold text-white uppercase tracking-wide animate-pulse">
-                <Sparkles className="w-3 h-3" />
-                New
-              </span>
-              <span className="font-semibold text-white text-sm md:text-base">Accept payments in person or through our secure platform!</span>
-            </span>
-          </div>
 
           {/* CTA Buttons */}
           <div 
