@@ -46,12 +46,13 @@ export const useBlockedDates = ({ listingId }: UseBlockedDatesOptions) => {
           setBlockedDates(blockedData.map(d => parseISO(d.blocked_date)));
         }
 
-        // Fetch approved bookings
+        // Fetch approved bookings that are paid (confirmed)
         const { data: bookingData } = await supabase
           .from('booking_requests')
-          .select('start_date, end_date, status')
+          .select('start_date, end_date, status, payment_status')
           .eq('listing_id', listingId)
-          .eq('status', 'approved');
+          .in('status', ['approved', 'completed'])
+          .eq('payment_status', 'paid');
 
         if (bookingData) {
           const dates: Date[] = [];
