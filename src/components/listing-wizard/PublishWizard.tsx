@@ -130,6 +130,7 @@ export const PublishWizard: React.FC = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isGuestDraft, setIsGuestDraft] = useState(false);
+  const [isClaimingDraft, setIsClaimingDraft] = useState(false);
 
   // Form fields
   const [images, setImages] = useState<File[]>([]);
@@ -303,6 +304,8 @@ export const PublishWizard: React.FC = () => {
   const handleAuthSuccess = async (userId: string) => {
     if (!listing || !listingId) return;
 
+    setIsClaimingDraft(true);
+
     // Supabase auth can take a beat to persist the session after sign-up.
     // If we run the claim immediately, the DB request may still be anonymous and fail RLS.
     const waitForSessionUser = async (): Promise<boolean> => {
@@ -317,6 +320,7 @@ export const PublishWizard: React.FC = () => {
 
     const hasSession = await waitForSessionUser();
     if (!hasSession) {
+      setIsClaimingDraft(false);
       toast({
         title: 'Please sign in to claim your draft',
         description: "Your account was created, but you're not signed in yet. Please sign in and we'll claim the draft automatically.",
@@ -326,7 +330,10 @@ export const PublishWizard: React.FC = () => {
     }
 
     const guestDraft = getGuestDraft();
-    if (!guestDraft || guestDraft.listingId !== listingId) return;
+    if (!guestDraft || guestDraft.listingId !== listingId) {
+      setIsClaimingDraft(false);
+      return;
+    }
 
     try {
       // Helper to safely parse currency / formatted strings
@@ -427,6 +434,8 @@ export const PublishWizard: React.FC = () => {
         description: error instanceof Error ? error.message : 'Please try again.',
         variant: 'destructive',
       });
+    } finally {
+      setIsClaimingDraft(false);
     }
   };
 
@@ -1043,6 +1052,14 @@ export const PublishWizard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Claiming draft overlay */}
+      {isClaimingDraft && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center gap-4">
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          <p className="text-lg font-medium text-foreground">Saving your draft...</p>
+          <p className="text-sm text-muted-foreground">Syncing your changes to your account</p>
+        </div>
+      )}
       {/* Header */}
       <div className="border-b bg-card sticky top-0 z-10">
         <div className="container max-w-4xl mx-auto px-4 py-4">
