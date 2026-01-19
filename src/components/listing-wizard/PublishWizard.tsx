@@ -490,17 +490,36 @@ export const PublishWizard: React.FC = () => {
   };
 
   const uploadImages = async (): Promise<string[]> => {
-    const urls: string[] = [...existingImages];
-    
-    for (const file of images) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user!.id}/${listingId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('listing-images')
-        .upload(fileName, file);
+    if (!user) {
+      throw new Error('Please sign in to upload photos.');
+    }
+    if (!listingId) {
+      throw new Error('Missing listing id.');
+    }
 
-      if (uploadError) throw uploadError;
+    const urls: string[] = [...existingImages];
+
+    for (let i = 0; i < images.length; i++) {
+      const file = images[i];
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${user.id}/${listingId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      console.log(`[Upload] Uploading image ${i + 1}/${images.length}: ${file.name} (${file.size} bytes)`);
+
+      const { error: uploadError, data: uploadData } = await supabase.storage
+        .from('listing-images')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type || 'image/jpeg',
+        });
+
+      if (uploadError) {
+        console.error(`[Upload] Failed to upload ${file.name}:`, uploadError);
+        throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`);
+      }
+
+      console.log(`[Upload] Successfully uploaded ${file.name}`, uploadData);
 
       const { data: { publicUrl } } = supabase.storage
         .from('listing-images')
@@ -508,7 +527,7 @@ export const PublishWizard: React.FC = () => {
 
       urls.push(publicUrl);
     }
-    
+
     return urls;
   };
 
@@ -520,6 +539,19 @@ export const PublishWizard: React.FC = () => {
       let updateData: any = {};
 
       if (step === 'photos' && images.length > 0) {
+        // Guest drafts can access the wizard without auth, but uploads require auth.
+        if (!user) {
+          if (isGuestDraft) {
+            setShowAuthModal(true);
+          }
+          toast({
+            title: 'Sign in to upload photos',
+            description: 'Please sign in to add photos to this listing.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
         const imageUrls = await uploadImages();
         updateData = {
           image_urls: imageUrls,
@@ -529,7 +561,7 @@ export const PublishWizard: React.FC = () => {
         setImages([]);
       } else if (step === 'pricing') {
         if (listing.mode === 'sale') {
-          updateData = { 
+          updateData = {
             price_sale: parseFloat(priceSale) || null,
             vendibook_freight_enabled: vendibookFreightEnabled,
             freight_payer: freightPayer,
@@ -545,8 +577,8 @@ export const PublishWizard: React.FC = () => {
           };
         }
       } else if (step === 'details') {
-        updateData = { 
-          title, 
+        updateData = {
+          title,
           description,
           highlights,
           amenities,
@@ -560,7 +592,7 @@ export const PublishWizard: React.FC = () => {
         // Determine if category-based static or manually toggled
         const categoryIsStatic = isStaticLocationFn(listing.category);
         const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation) ? 'on_site' : (fulfillmentType || 'pickup');
-        
+
         updateData = {
           fulfillment_type: effectiveFulfillmentType,
           pickup_location_text: pickupLocationText || null,
@@ -587,14 +619,14 @@ export const PublishWizard: React.FC = () => {
           .eq('id', listing.id);
 
         if (error) throw error;
-        
+
         // Update local state
         setListing(prev => prev ? { ...prev, ...updateData } : null);
       }
 
       // Move to next step - rental listings have availability step after pricing
       const isRentalListing = listing.mode === 'rent';
-      const steps: PublishStep[] = isRentalListing 
+      const steps: PublishStep[] = isRentalListing
         ? ['photos', 'pricing', 'availability', 'details', 'location', 'stripe', 'review']
         : ['photos', 'pricing', 'details', 'location', 'stripe', 'review'];
       const currentIndex = steps.indexOf(step);
@@ -603,7 +635,11 @@ export const PublishWizard: React.FC = () => {
       }
     } catch (error) {
       console.error('Error saving:', error);
-      toast({ title: 'Error saving', variant: 'destructive' });
+      toast({
+        title: 'Error saving',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setIsSaving(false);
     }
