@@ -183,7 +183,7 @@ const HowItWorks = () => {
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-4">
-                    <Card className="border-2 border-border">
+                    <Card className="border border-border bg-muted/30">
                       <CardContent className="p-5">
                         <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
                           <Users className="h-5 w-5 text-primary" />
@@ -191,43 +191,43 @@ const HowItWorks = () => {
                         </h4>
                         <ul className="space-y-2 text-sm text-muted-foreground">
                           <li className="flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                            <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                             Best for local deals
                           </li>
                           <li className="flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                            <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                             Coordinate pickup with the buyer
                           </li>
                           <li className="flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                            <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                             Accept payment your way
                           </li>
                           <li className="flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                            <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                             Keep everything organized in your dashboard
                           </li>
                         </ul>
                       </CardContent>
                     </Card>
 
-                    <Card className="border-2 border-primary/30 bg-primary/5">
+                    <Card className="border border-border bg-muted/30">
                       <CardContent className="p-5">
                         <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
                           <CreditCard className="h-5 w-5 text-primary" />
                           Secure online checkout
-                          <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">Optional</span>
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Optional</span>
                         </h4>
                         <ul className="space-y-2 text-sm text-muted-foreground">
                           <li className="flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                            <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                             Buyer pays securely online through Vendibook
                           </li>
                           <li className="flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                            <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                             Cleaner transaction record and clearer next steps
                           </li>
                           <li className="flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                            <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                             Ideal for higher-value assets and out-of-town buyers
                           </li>
                         </ul>
@@ -254,7 +254,7 @@ const HowItWorks = () => {
                     For high-ticket sales, paperwork matters. You can add Proof Notary to notarize the sale receipt remotely and online.
                   </p>
 
-                  <Card className="border border-border mb-4">
+                  <Card className="border border-border bg-muted/30 mb-4">
                     <CardContent className="p-5">
                       <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
                         <Stamp className="h-5 w-5 text-primary" />
@@ -262,19 +262,19 @@ const HowItWorks = () => {
                       </h4>
                       <ul className="grid sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
                         <li className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                          <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                           Remote notarization (no in-person appointment)
                         </li>
                         <li className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                          <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                           Verified signing process
                         </li>
                         <li className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                          <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                           Time-stamped audit trail
                         </li>
                         <li className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                          <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                           Extra confidence for buyers, lenders, and ownership transfer
                         </li>
                       </ul>
@@ -307,7 +307,7 @@ const HowItWorks = () => {
                   </p>
 
                   <div className="grid md:grid-cols-2 gap-4 mb-4">
-                    <Card className="border border-border">
+                    <Card className="border border-border bg-muted/30">
                       <CardContent className="p-5">
                         <h4 className="font-semibold text-foreground mb-2">Buyer-paid freight</h4>
                         <p className="text-sm text-muted-foreground">
@@ -315,7 +315,7 @@ const HowItWorks = () => {
                         </p>
                       </CardContent>
                     </Card>
-                    <Card className="border border-border">
+                    <Card className="border border-border bg-muted/30">
                       <CardContent className="p-5">
                         <h4 className="font-semibold text-foreground mb-2">Seller-provided freight</h4>
                         <p className="text-sm text-muted-foreground">
@@ -325,7 +325,7 @@ const HowItWorks = () => {
                     </Card>
                   </div>
 
-                  <Card className="border border-border mb-4">
+                  <Card className="border border-border bg-muted/30 mb-4">
                     <CardContent className="p-5">
                       <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
                         <Package className="h-5 w-5 text-primary" />
@@ -333,15 +333,15 @@ const HowItWorks = () => {
                       </h4>
                       <ul className="space-y-2 text-sm text-muted-foreground">
                         <li className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                          <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                           Freight coordination across the 48 contiguous U.S. states
                         </li>
                         <li className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                          <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                           Pickup readiness instructions for the seller
                         </li>
                         <li className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                          <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                           Delivery scheduling updates for the buyer via email
                         </li>
                       </ul>
@@ -355,12 +355,12 @@ const HowItWorks = () => {
                 </div>
 
                 {/* Fees */}
-                <div className="bg-card border border-border rounded-xl p-6 mb-8">
+                <div className="bg-muted/30 border border-border rounded-xl p-6 mb-8">
                   <h4 className="font-semibold text-foreground mb-4">Transparent fees</h4>
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-center justify-between">
                       <span className="text-muted-foreground">Sales: Pay in person</span>
-                      <span className="font-medium text-emerald-600">Free</span>
+                      <span className="font-medium text-primary">Free</span>
                     </li>
                     <li className="flex items-center justify-between">
                       <span className="text-muted-foreground">Sales: Payment via Stripe (credit, debit, or ACH)</span>
@@ -444,23 +444,23 @@ const HowItWorks = () => {
                   <p className="text-muted-foreground mb-4">You're in control:</p>
                   <ul className="grid sm:grid-cols-2 gap-2 text-sm text-muted-foreground mb-4">
                     <li className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       Availability calendar
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       Daily/weekly rates
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       Minimum rental periods
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       Pickup/delivery instructions
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       Optional recurring rentals for steady income
                     </li>
                   </ul>
@@ -475,7 +475,7 @@ const HowItWorks = () => {
                 <div className="mb-12">
                   <h3 className="text-xl font-bold text-foreground mb-4">
                     Require documents before approval
-                    <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full ml-2">
+                    <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full ml-2">
                       Optional, recommended
                     </span>
                   </h3>
@@ -483,7 +483,7 @@ const HowItWorks = () => {
                     You can request documents and review them before confirming a rental.
                   </p>
 
-                  <Card className="border border-border mb-4">
+                  <Card className="border border-border bg-muted/30 mb-4">
                     <CardContent className="p-5">
                       <h4 className="font-semibold text-foreground mb-3">Common examples</h4>
                       <ul className="grid sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
@@ -528,7 +528,7 @@ const HowItWorks = () => {
                 </div>
 
                 {/* Fees */}
-                <div className="bg-card border border-border rounded-xl p-6 mb-8">
+                <div className="bg-muted/30 border border-border rounded-xl p-6 mb-8">
                   <h4 className="font-semibold text-foreground mb-4">Clear fees at checkout</h4>
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-center justify-between">
@@ -611,10 +611,10 @@ const HowItWorks = () => {
                 <div className="mb-12">
                   <h3 className="text-xl font-bold text-foreground mb-4">List by the hour or by the day</h3>
                   <div className="grid md:grid-cols-2 gap-4 mb-4">
-                    <Card className="border border-border">
+                    <Card className="border border-border bg-muted/30">
                       <CardContent className="p-5">
                         <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-                          <Clock className="h-5 w-5 text-amber-600" />
+                          <Clock className="h-5 w-5 text-primary" />
                           Hourly
                         </h4>
                         <p className="text-sm text-muted-foreground">
@@ -622,10 +622,10 @@ const HowItWorks = () => {
                         </p>
                       </CardContent>
                     </Card>
-                    <Card className="border border-border">
+                    <Card className="border border-border bg-muted/30">
                       <CardContent className="p-5">
                         <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-                          <CalendarDays className="h-5 w-5 text-amber-600" />
+                          <CalendarDays className="h-5 w-5 text-primary" />
                           Daily
                         </h4>
                         <p className="text-sm text-muted-foreground">
@@ -661,19 +661,19 @@ const HowItWorks = () => {
                   <p className="text-muted-foreground mb-4">Use your listing to communicate:</p>
                   <ul className="space-y-2 text-sm text-muted-foreground">
                     <li className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       Setup areas and parking guidelines
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       Operating hours and cleanup expectations
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       Any requirements (insurance, permits, noise limits)
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       What's allowed and what's not
                     </li>
                   </ul>
@@ -959,20 +959,8 @@ const StickyActionCard = ({
   reassurance,
   accent = 'primary',
 }: StickyActionCardProps) => {
-  const accentClasses = {
-    primary: 'border-primary/20 bg-primary/5',
-    emerald: 'border-emerald-500/20 bg-emerald-50 dark:bg-emerald-950/20',
-    amber: 'border-amber-500/20 bg-amber-50 dark:bg-amber-950/20',
-  };
-
-  const buttonClasses = {
-    primary: '',
-    emerald: 'bg-emerald-600 hover:bg-emerald-700',
-    amber: 'bg-amber-600 hover:bg-amber-700',
-  };
-
   return (
-    <Card className={cn('border-2', accentClasses[accent])}>
+    <Card className="border-0 shadow-xl bg-card rounded-2xl">
       <CardContent className="p-6">
         <h3 className="text-lg font-bold text-foreground mb-1">{title}</h3>
         <p className="text-sm text-muted-foreground mb-5">{subtitle}</p>
@@ -993,7 +981,7 @@ const StickyActionCard = ({
           </ol>
         </div>
 
-        <Button className={cn('w-full mb-2 gap-2 shadow-md hover:shadow-lg transition-all', buttonClasses[accent])} asChild>
+        <Button className="w-full mb-2 gap-2 shadow-md hover:shadow-lg transition-all" asChild>
           <Link to={ctaHref}>
             <ArrowRight className="h-4 w-4" />
             {ctaText}
@@ -1019,7 +1007,7 @@ interface AmenityBadgeProps {
 }
 
 const AmenityBadge = ({ icon, label }: AmenityBadgeProps) => (
-  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-medium">
+  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
     {icon}
     {label}
   </span>
