@@ -124,16 +124,38 @@ export const useConversationMessages = (conversationId: string | undefined) => {
     }
 
     setIsSending(true);
+    
+    // Create optimistic message
+    const optimisticMessage: ConversationMessage = {
+      id: `temp-${Date.now()}`,
+      conversation_id: conversationId,
+      sender_id: user.id,
+      message: messageText.trim(),
+      read_at: null,
+      created_at: new Date().toISOString(),
+      pii_blocked: false,
+    };
+    
+    // Optimistically add the message to the UI
+    setMessages((prev) => [...prev, optimisticMessage]);
+    
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('conversation_messages')
         .insert({
           conversation_id: conversationId,
           sender_id: user.id,
           message: messageText.trim(),
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Replace optimistic message with real one
+      setMessages((prev) => 
+        prev.map((msg) => (msg.id === optimisticMessage.id ? data : msg))
+      );
 
       // Update conversation's last_message_at
       await supabase
@@ -144,6 +166,8 @@ export const useConversationMessages = (conversationId: string | undefined) => {
       return { success: true };
     } catch (error) {
       console.error('Error sending message:', error);
+      // Remove optimistic message on error
+      setMessages((prev) => prev.filter((msg) => msg.id !== optimisticMessage.id));
       toast({
         title: 'Error',
         description: 'Failed to send message. Please try again.',
