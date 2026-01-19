@@ -294,10 +294,6 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
   const totalVideos = allVideos.length;
   const minPhotos = 3;
   const photosNeeded = Math.max(0, minPhotos - totalPhotos);
-  
-  // Count successful vs failed
-  const readyCount = formData.images.filter(f => !getImageState(f) || getImageState(f)?.status === 'ready').length;
-  const errorCount = formData.images.filter(f => getImageState(f)?.status === 'error').length;
 
   return (
     <div className="space-y-8">
@@ -311,55 +307,30 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
           </p>
         </div>
 
-        {/* Quality indicator with detailed counts */}
-        {totalPhotos > 0 && (
+        {/* Simple progress indicator */}
+        {(totalPhotos > 0 || photosNeeded > 0) && (
           <div className={cn(
-            "flex items-center justify-between gap-2 p-3 rounded-xl border text-sm",
-            totalPhotos >= minPhotos && errorCount === 0
+            "flex items-center gap-2 p-3 rounded-xl border text-sm",
+            totalPhotos >= minPhotos
               ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
-              : errorCount > 0
-              ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800"
               : "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800"
           )}>
-            <div className="flex items-center gap-2">
-              {totalPhotos >= minPhotos && errorCount === 0 ? (
-                <>
-                  <CheckCircle className="w-4 h-4" />
-                  <span>{totalPhotos} photos added — looking great!</span>
-                </>
-              ) : errorCount > 0 ? (
-                <>
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{errorCount} photo{errorCount > 1 ? 's' : ''} failed validation</span>
-                </>
-              ) : (
-                <>
-                  <Upload className="w-4 h-4" />
-                  <span>Add {photosNeeded} more photo{photosNeeded > 1 ? 's' : ''} to continue</span>
-                </>
-              )}
-            </div>
-            
-            {/* Detailed counter */}
-            <div className="flex items-center gap-2 text-xs">
-              {readyCount > 0 && (
-                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                  <CheckCircle className="w-3 h-3" />
-                  {readyCount} ready
-                </span>
-              )}
-              {formData.existingImages.length > 0 && (
-                <span className="text-muted-foreground">
-                  +{formData.existingImages.length} saved
-                </span>
-              )}
-              {errorCount > 0 && (
-                <span className="flex items-center gap-1 text-red-600">
-                  <AlertCircle className="w-3 h-3" />
-                  {errorCount} failed
-                </span>
-              )}
-            </div>
+            {totalPhotos >= minPhotos ? (
+              <>
+                <CheckCircle className="w-4 h-4" />
+                <span>{totalPhotos} photo{totalPhotos !== 1 ? 's' : ''} — ready to publish</span>
+              </>
+            ) : totalPhotos > 0 ? (
+              <>
+                <Upload className="w-4 h-4" />
+                <span>{totalPhotos} of {minPhotos} photos added — add {photosNeeded} more</span>
+              </>
+            ) : (
+              <>
+                <ImageIcon className="w-4 h-4" />
+                <span>Add at least {minPhotos} photos to continue</span>
+              </>
+            )}
           </div>
         )}
 
@@ -449,13 +420,6 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
                     <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
                       <Star className="w-3 h-3" />
                       Cover
-                    </div>
-                  )}
-                  
-                  {/* Ready badge */}
-                  {!hasError && state?.status === 'ready' && index !== 0 && (
-                    <div className="absolute top-2 right-2">
-                      <CheckCircle className="w-5 h-5 text-emerald-500 drop-shadow-md" />
                     </div>
                   )}
 
