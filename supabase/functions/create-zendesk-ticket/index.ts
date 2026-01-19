@@ -53,12 +53,16 @@ const handler = async (req: Request): Promise<Response> => {
     logStep("Function started");
 
     const ZENDESK_API_KEY = Deno.env.get("ZENDESK_API_KEY");
-    const ZENDESK_SUBDOMAIN = Deno.env.get("ZENDESK_SUBDOMAIN") || "vendibook";
+    const rawSubdomain = Deno.env.get("ZENDESK_SUBDOMAIN") || "vendibook1";
+    // Extract just the subdomain in case the full domain was provided
+    const ZENDESK_SUBDOMAIN = rawSubdomain.replace(/\.zendesk\.com.*$/i, '').trim();
     const ZENDESK_EMAIL = Deno.env.get("ZENDESK_EMAIL") || "support@vendibook1.zendesk.com";
 
     if (!ZENDESK_API_KEY) {
       throw new Error("ZENDESK_API_KEY is not configured");
     }
+    
+    logStep("Zendesk config", { subdomain: ZENDESK_SUBDOMAIN, email: ZENDESK_EMAIL });
 
     const data: ZendeskTicketRequest = await req.json();
     
