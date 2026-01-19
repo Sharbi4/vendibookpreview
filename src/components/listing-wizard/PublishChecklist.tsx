@@ -64,12 +64,9 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
   }, [allRequiredComplete]);
 
   return (
-    <div className={cn("relative overflow-hidden rounded-xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10", className)}>
-      {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
-      
+    <div className={cn("relative overflow-hidden rounded-2xl border-0 shadow-xl bg-card", className)}>
       {/* Header */}
-      <div className="relative p-4 pb-3">
+      <div className="relative bg-muted/30 border-b border-border p-4 pb-3">
         <div className="flex items-center justify-between mb-1">
           <h3 className="font-semibold text-foreground">Launch Your Listing</h3>
           <span className="text-xs text-primary font-semibold">
@@ -84,10 +81,10 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
       
       {/* Do This Next Spotlight */}
       {nextStep && !allRequiredComplete && (
-        <div className="relative mx-4 mb-3 p-3 bg-card/80 backdrop-blur-sm border border-border rounded-lg">
+        <div className="relative mx-4 mt-4 mb-3 p-3 bg-muted/30 border border-border rounded-xl">
           <div className="flex items-center gap-1.5 mb-2">
-            <div className="p-1 bg-gradient-to-br from-primary to-amber-500 rounded-md">
-              <Sparkles className="w-3 h-3 text-white" />
+            <div className="p-1 bg-primary rounded-md">
+              <Sparkles className="w-3 h-3 text-primary-foreground" />
             </div>
             <span className="text-[10px] font-semibold text-primary uppercase tracking-wide">Do this next</span>
           </div>
@@ -107,7 +104,7 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
               )}
               <Button 
                 size="sm" 
-                className="h-7 text-xs px-3 bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
+                className="h-7 text-xs px-3"
                 onClick={() => onItemClick?.(nextStep.id)}
               >
                 Start
@@ -126,20 +123,20 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
               key={item.id}
               onClick={() => onItemClick?.(item.id)}
               className={cn(
-                "w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-all bg-card/60 backdrop-blur-sm",
+                "w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all bg-muted/30",
                 item.current
-                  ? "bg-card border border-primary/50 shadow-sm"
+                  ? "bg-muted border border-border shadow-sm"
                   : item.completed
-                  ? "hover:bg-card/80"
-                  : "hover:bg-card/80"
+                  ? "hover:bg-muted/50"
+                  : "hover:bg-muted/50"
               )}
             >
               <div
                 className={cn(
                   "w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors",
                   item.completed
-                    ? "bg-gradient-to-br from-primary to-amber-500 text-white"
-                    : "bg-muted text-muted-foreground"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted-foreground/20 text-muted-foreground"
                 )}
               >
                 {item.completed ? (
@@ -182,14 +179,9 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
       </div>
       
       {/* Footer with Publish Button */}
-      <div className="relative p-4 pt-2 border-t border-primary/20">
+      <div className="relative p-4 pt-2 border-t border-border">
         <Button 
-          className={cn(
-            "w-full",
-            allRequiredComplete 
-              ? "bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
-              : ""
-          )}
+          className="w-full"
           disabled={!allRequiredComplete}
           variant={allRequiredComplete ? "default" : "secondary"}
         >
