@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, MapPin, Truck, Package, ArrowRight } from 'lucide-react';
+import { ShieldCheck, MapPin, Truck, Package, ArrowRight, Calendar } from 'lucide-react';
 import type { FulfillmentType } from '@/types/listing';
 import { StripeLogo } from '@/components/ui/StripeLogo';
 import { AffirmBadge, isAffirmEligible } from '@/components/ui/AffirmBadge';
@@ -9,6 +9,7 @@ import { AfterpayBadge, isAfterpayEligible } from '@/components/ui/AfterpayBadge
 interface InquiryFormProps {
   listingId: string;
   hostId: string;
+  listingTitle: string;
   priceSale: number | null;
   fulfillmentType?: FulfillmentType;
   deliveryFee?: number | null;
@@ -28,6 +29,7 @@ interface InquiryFormProps {
 
 const InquiryForm = ({ 
   listingId,
+  listingTitle,
   priceSale,
   fulfillmentType = 'pickup',
   deliveryFee,
@@ -64,13 +66,8 @@ const InquiryForm = ({
       
       {/* Header section with gradient */}
       <div className="relative bg-gradient-to-r from-primary/15 via-amber-500/10 to-yellow-400/5 border-b border-primary/20 px-6 py-4">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-sm">
-            <ShieldCheck className="h-3.5 w-3.5 text-white" />
-          </div>
-          <span className="font-semibold text-sm text-foreground">Secure Purchase</span>
-        </div>
-        <div className="flex items-center gap-3">
+        <h2 className="font-semibold text-base text-foreground line-clamp-2 mb-2">{listingTitle}</h2>
+        <div className="flex items-center gap-3 flex-wrap">
           <span className="text-2xl font-bold bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent">
             ${priceSale?.toLocaleString()}
           </span>
@@ -78,6 +75,12 @@ const InquiryForm = ({
             <AfterpayBadge price={priceSale} className="text-xs" />
           )}
         </div>
+        {vendibookFreightEnabled && (
+          <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground">
+            <Calendar className="h-3.5 w-3.5" />
+            <span>Est. delivery: 7-10 business days</span>
+          </div>
+        )}
       </div>
 
       {/* Content section with white background */}
