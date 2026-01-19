@@ -20,7 +20,14 @@ const QuickHighlights = ({
 }: QuickHighlightsProps) => {
   const items: { icon: React.ReactNode; text: string }[] = [];
 
-  // Add fulfillment type
+  // Add fulfillment type based on what's available
+  if (fulfillmentType === 'on_site') {
+    items.push({
+      icon: <Users className="h-4 w-4" />,
+      text: 'On-site access',
+    });
+  }
+
   if (fulfillmentType === 'delivery' || fulfillmentType === 'both') {
     items.push({
       icon: <Truck className="h-4 w-4" />,
