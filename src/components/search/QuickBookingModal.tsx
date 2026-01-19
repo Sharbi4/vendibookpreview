@@ -162,11 +162,22 @@ const QuickBookingModal = ({
       return;
     }
 
+    const isInIframe = (() => {
+      try {
+        return window.self !== window.top;
+      } catch {
+        return true;
+      }
+    })();
+
     setIsSubmitting(true);
 
     try {
       const isInstantBook = listing.instant_book === true;
-      
+
+      // For Instant Book: open a blank tab BEFORE any awaits to avoid popup blockers in iframe environments.
+      const checkoutWindow = isInstantBook && isInIframe ? window.open('about:blank', '_blank') : null;
+
       const bookingData: TablesInsert<'booking_requests'> = {
         listing_id: listing.id,
         host_id: listing.host_id,
@@ -210,10 +221,25 @@ const QuickBookingModal = ({
 
         if (checkoutError) throw checkoutError;
 
-        if (checkoutData?.url) {
-          window.location.href = checkoutData.url;
+        if (!checkoutData?.url) throw new Error('Failed to create checkout session');
+
+        if (checkoutWindow) {
+          checkoutWindow.location.href = checkoutData.url;
           return;
         }
+
+        if (isInIframe) {
+          // Popup blocked: attempt to escape the iframe.
+          try {
+            window.top?.location.assign(checkoutData.url);
+          } catch {
+            window.location.assign(checkoutData.url);
+          }
+          return;
+        }
+
+        window.location.href = checkoutData.url;
+        return;
       }
 
       // For regular bookings, send notification and show confirmation

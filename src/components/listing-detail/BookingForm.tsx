@@ -245,8 +245,19 @@ const BookingForm = ({
       return;
     }
 
+    const isInIframe = (() => {
+      try {
+        return window.self !== window.top;
+      } catch {
+        return true;
+      }
+    })();
+
+    // For Instant Book: open a blank tab BEFORE any awaits to avoid popup blockers in iframe environments.
+    const checkoutWindow = instantBook && isInIframe ? window.open('about:blank', '_blank') : null;
+
     setIsSubmitting(true);
-    
+
     try {
       const bookingData: TablesInsert<'booking_requests'> = {
         listing_id: listingId,
@@ -296,7 +307,22 @@ const BookingForm = ({
         // Track conversion before redirect
         trackFormSubmitConversion({ form_type: 'instant_book', listing_id: listingId });
 
-        // Redirect to Stripe Checkout
+        if (checkoutWindow) {
+          checkoutWindow.location.href = checkoutData.url;
+          return;
+        }
+
+        if (isInIframe) {
+          // Popup blocked: attempt to escape the iframe.
+          try {
+            window.top?.location.assign(checkoutData.url);
+          } catch {
+            window.location.assign(checkoutData.url);
+          }
+          return;
+        }
+
+        // Not in iframe: keep the smoother same-tab flow.
         window.location.href = checkoutData.url;
         return;
       }
