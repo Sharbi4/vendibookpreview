@@ -66,16 +66,13 @@ const Hero = () => {
             className="mt-3 max-w-xl mx-auto animate-fade-in text-center"
             style={{ animationDelay: '0.2s', animationFillMode: 'backwards' }}
           >
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border-2 border-white/40 bg-white/10 backdrop-blur-sm mb-2">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full border-2 border-white/40 bg-white/10 backdrop-blur-sm">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-primary via-amber-400 to-yellow-300 shadow-lg text-xs font-bold text-white uppercase tracking-wide animate-pulse">
                 <Sparkles className="w-3 h-3" />
                 New
               </span>
-              <span className="font-semibold text-white text-sm md:text-base">Accepting Payments!</span>
+              <span className="font-semibold text-white text-sm md:text-base">Accept payments in person or through our secure platform!</span>
             </span>
-            <p className="text-base md:text-lg text-white/90">
-              In person or through our secure platform.
-            </p>
           </div>
 
           {/* CTA Buttons */}
