@@ -366,7 +366,7 @@ const BookingForm = ({
 
   if (showConfirmation) {
     return (
-      <div className="bg-card border border-border rounded-xl p-6 shadow-card sticky top-24">
+      <div className="rounded-2xl border-0 shadow-xl bg-card p-6 sticky top-24">
         <div className="text-center py-4">
           <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <Calendar className="h-8 w-8 text-primary" />
@@ -390,7 +390,7 @@ const BookingForm = ({
   }
 
   return (
-    <div data-booking-form className="bg-card border border-border rounded-xl p-6 shadow-card sticky top-24">
+    <div data-booking-form className="rounded-2xl border-0 shadow-xl bg-card p-6 sticky top-24">
       {/* Price Header with placeholder breakdown hint */}
       <div className="mb-6">
         <div className="flex items-baseline gap-2">
