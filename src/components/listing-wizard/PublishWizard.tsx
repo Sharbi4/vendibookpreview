@@ -303,6 +303,19 @@ export const PublishWizard: React.FC = () => {
   const handleAuthSuccess = async (userId: string) => {
     if (!listing || !listingId) return;
 
+    // Ensure we actually have an authenticated session before attempting the claim.
+    // (On signup flows that require email confirmation, there may be a user but no session yet.)
+    const { data: sessionData } = await supabase.auth.getSession();
+    const sessionUserId = sessionData.session?.user?.id;
+    if (!sessionUserId || sessionUserId !== userId) {
+      toast({
+        title: 'Please sign in to claim your draft',
+        description: 'If you just signed up, finish email confirmation first, then sign in here.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const guestDraft = getGuestDraft();
     if (!guestDraft || guestDraft.listingId !== listingId) return;
 
@@ -310,7 +323,7 @@ export const PublishWizard: React.FC = () => {
       // Claim the draft by setting the host_id
       const { error } = await supabase
         .from('listings')
-        .update({ 
+        .update({
           host_id: userId,
           guest_draft_token: null, // Clear the token after claiming
         })
