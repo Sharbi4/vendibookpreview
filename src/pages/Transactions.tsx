@@ -63,7 +63,7 @@ const TransactionsPage = () => {
     refetch: refetchSellerTransactions,
   } = useSellerSaleTransactions(user?.id);
 
-  // Realtime subscriptions for sale transactions
+  // Realtime subscriptions for sale transactions and booking updates
   useEffect(() => {
     if (!user) return;
 
@@ -107,12 +107,45 @@ const TransactionsPage = () => {
           refetchSellerTransactions();
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'booking_requests',
+          filter: `shopper_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('[Realtime] Shopper booking update:', payload.eventType);
+          const newData = payload.new as any;
+          if (payload.eventType === 'UPDATE' && newData?.status === 'completed') {
+            toast({
+              title: '✅ Booking Completed',
+              description: 'Your rental has been marked as completed!',
+            });
+          }
+          refetchShopperBookings();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'booking_requests',
+          filter: `host_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('[Realtime] Host booking update:', payload.eventType);
+          // Refetch handled by useHostBookings but we can add toasts for status changes
+        }
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, refetchBuyerTransactions, refetchSellerTransactions, toast]);
+  }, [user, refetchBuyerTransactions, refetchSellerTransactions, refetchShopperBookings, toast]);
 
   // Handle tab change and sync with URL
   const handleTabChange = (value: string) => {
