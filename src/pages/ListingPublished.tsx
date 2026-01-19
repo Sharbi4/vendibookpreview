@@ -1,19 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Loader2, CheckCircle2, Stamp } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ShareKit, ShareKitListing } from '@/components/listing-wizard/ShareKit';
 import { ListingCategory, ListingMode } from '@/types/listing';
+import { useToast } from '@/hooks/use-toast';
 
 const ListingPublished: React.FC = () => {
-  const { listingId } = useParams<{ listingId: string }>();
+  const [searchParams] = useSearchParams();
+  const listingIdFromParams = useParams<{ listingId: string }>().listingId;
+  // Support both route param and query param for listing_id
+  const listingId = listingIdFromParams || searchParams.get('listing_id');
+  const notaryPaid = searchParams.get('notary_paid') === 'true';
+  const { toast } = useToast();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   
   const [listing, setListing] = useState<ShareKitListing | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Show toast for notary payment success
+    if (notaryPaid) {
+      toast({
+        title: "Notary Fee Paid",
+        description: "Your $45 Proof Notary add-on has been activated. Your listing is now live!",
+      });
+    }
+  }, [notaryPaid, toast]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -122,6 +138,28 @@ const ListingPublished: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Notary Payment Success Banner */}
+      {notaryPaid && (
+        <div className="bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-200 dark:border-emerald-800">
+          <div className="container max-w-2xl mx-auto px-4 py-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-900">
+                <Stamp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <p className="font-medium text-emerald-800 dark:text-emerald-200">
+                  Proof Notary Add-On Activated
+                </p>
+                <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                  Your $45 notary fee has been charged. Both parties will receive notarization links when the sale completes.
+                </p>
+              </div>
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 ml-auto" />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Share Kit */}
       <div className="container max-w-2xl mx-auto px-4 py-12">

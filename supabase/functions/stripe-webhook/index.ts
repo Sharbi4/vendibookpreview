@@ -75,6 +75,88 @@ serve(async (req) => {
         const listingId = session.metadata?.listing_id;
         const mode = session.metadata?.mode;
         const isEscrow = session.metadata?.escrow === 'true';
+        const paymentType = session.metadata?.type;
+
+        // Handle Proof Notary payment - publish listing after successful payment
+        if (paymentType === 'proof_notary' && listingId && session.payment_status === "paid") {
+          logStep("Processing Proof Notary payment", { listingId });
+          
+          const paymentIntentId = typeof session.payment_intent === 'string' 
+            ? session.payment_intent 
+            : session.payment_intent?.id;
+
+          // Update listing to published status
+          const { error: updateError } = await supabaseClient
+            .from("listings")
+            .update({
+              status: 'published',
+              published_at: new Date().toISOString(),
+            })
+            .eq("id", listingId);
+
+          if (updateError) {
+            logStep("ERROR: Failed to publish listing after notary payment", { 
+              error: updateError.message, 
+              listingId 
+            });
+          } else {
+            logStep("Listing published after notary payment", { listingId });
+
+            // Get listing details for notification
+            const { data: listingData } = await supabaseClient
+              .from("listings")
+              .select("title, host_id")
+              .eq("id", listingId)
+              .single();
+
+            if (listingData) {
+              // Create notification for host
+              try {
+                await supabaseClient.from("notifications").insert({
+                  user_id: listingData.host_id,
+                  type: "listing",
+                  title: "Listing Published!",
+                  message: `Your listing "${listingData.title}" is now live with Proof Notary protection. The $45 notary fee has been charged.`,
+                  link: `/listing/${listingId}`,
+                });
+                logStep("Notification created for host", { hostId: listingData.host_id });
+              } catch (notifError) {
+                logStep("WARNING: Failed to create notification", { error: String(notifError) });
+              }
+
+              // Trigger listing live email
+              try {
+                const emailResponse = await fetch(
+                  `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-listing-live-email`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+                    },
+                    body: JSON.stringify({
+                      listing_id: listingId,
+                    }),
+                  }
+                );
+                
+                if (emailResponse.ok) {
+                  logStep("Listing live email triggered", { listingId });
+                } else {
+                  logStep("WARNING: Failed to trigger listing live email", { 
+                    status: emailResponse.status 
+                  });
+                }
+              } catch (emailError) {
+                logStep("WARNING: Error triggering listing live email", { 
+                  error: String(emailError) 
+                });
+              }
+            }
+          }
+          
+          break;
+        }
 
         // Handle rental bookings
         if (bookingId && session.payment_status === "paid") {
