@@ -14,10 +14,25 @@ import { trackSignupCompleted } from '@/lib/analytics';
 import { trackSignupConversion } from '@/lib/gtagConversions';
 
 const authSchema = z.object({
-  email: z.string().email('Please enter a valid email'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  fullName: z.string().min(2, 'Name must be at least 2 characters').optional(),
+  email: z.string().trim().email('Please enter a valid email').max(255, 'Email is too long'),
+  password: z.string().min(8, 'Password must be at least 8 characters').max(72, 'Password is too long'),
+  fullName: z.string().trim().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long').optional(),
 });
+
+// Password strength helper
+const getPasswordStrength = (password: string): { score: number; label: string; color: string } => {
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+  if (/\d/.test(password)) score++;
+  if (/[^a-zA-Z0-9]/.test(password)) score++;
+  
+  if (score <= 1) return { score, label: 'Weak', color: 'bg-destructive' };
+  if (score <= 2) return { score, label: 'Fair', color: 'bg-yellow-500' };
+  if (score <= 3) return { score, label: 'Good', color: 'bg-blue-500' };
+  return { score, label: 'Strong', color: 'bg-green-500' };
+};
 
 type AuthMode = 'signin' | 'signup' | 'forgot' | 'verify';
 type RoleType = 'host' | 'shopper';
@@ -111,18 +126,27 @@ const Auth = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Trim inputs before validation
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedFullName = fullName.trim();
+    setEmail(trimmedEmail);
+    setFullName(trimmedFullName);
+    
     if (!validateForm()) return;
 
     setIsSubmitting(true);
 
     try {
       if (mode === 'forgot') {
-        const { error } = await resetPassword(email);
+        const { error } = await resetPassword(trimmedEmail);
         if (error) {
+          // Avoid revealing if email exists
+          const safeMessage = error.message.toLowerCase().includes('not found') 
+            ? 'If an account exists with this email, you will receive a reset link.'
+            : error.message;
           toast({
-            title: 'Request failed',
-            description: error.message,
-            variant: 'destructive',
+            title: 'Request processed',
+            description: safeMessage,
           });
         } else {
           toast({
@@ -133,21 +157,28 @@ const Auth = () => {
           setEmail('');
         }
       } else if (mode === 'signup') {
-        const { error } = await signUp(email, password, fullName, selectedRole);
+        const { error } = await signUp(trimmedEmail, password, trimmedFullName, selectedRole);
         if (error) {
-          if (error.message.includes('already registered')) {
-            toast({
-              title: 'Account exists',
-              description: 'This email is already registered. Please sign in instead.',
-              variant: 'destructive',
-            });
-          } else {
-            toast({
-              title: 'Sign up failed',
-              description: error.message,
-              variant: 'destructive',
-            });
+          // User-friendly error messages
+          let errorTitle = 'Sign up failed';
+          let errorDesc = error.message;
+          
+          if (error.message.includes('already registered') || error.message.includes('already exists')) {
+            errorTitle = 'Account exists';
+            errorDesc = 'This email is already registered. Please sign in instead.';
+          } else if (error.message.includes('rate limit') || error.message.includes('too many')) {
+            errorTitle = 'Too many attempts';
+            errorDesc = 'Please wait a few minutes before trying again.';
+          } else if (error.message.includes('invalid') && error.message.includes('email')) {
+            errorTitle = 'Invalid email';
+            errorDesc = 'Please check your email address and try again.';
           }
+          
+          toast({
+            title: errorTitle,
+            description: errorDesc,
+            variant: 'destructive',
+          });
         } else {
           // Track signup completion
           trackSignupCompleted(selectedRole);
@@ -164,11 +195,20 @@ const Auth = () => {
           setMode('verify');
         }
       } else {
-        const { error } = await signIn(email, password);
+        const { error } = await signIn(trimmedEmail, password);
         if (error) {
+          // User-friendly error for sign in failures
+          let errorDesc = 'Invalid email or password. Please try again.';
+          
+          if (error.message.includes('rate limit') || error.message.includes('too many')) {
+            errorDesc = 'Too many attempts. Please wait a few minutes before trying again.';
+          } else if (error.message.includes('not confirmed') || error.message.includes('verify')) {
+            errorDesc = 'Please verify your email before signing in. Check your inbox.';
+          }
+          
           toast({
             title: 'Sign in failed',
-            description: 'Invalid email or password. Please try again.',
+            description: errorDesc,
             variant: 'destructive',
           });
         } else {
@@ -334,6 +374,28 @@ const Auth = () => {
                   </div>
                   {errors.password && (
                     <p className="text-sm text-destructive">{errors.password}</p>
+                  )}
+                  {/* Password strength indicator for signup */}
+                  {mode === 'signup' && password.length > 0 && (
+                    <div className="space-y-1">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((level) => {
+                          const strength = getPasswordStrength(password);
+                          return (
+                            <div
+                              key={level}
+                              className={`h-1 flex-1 rounded-full transition-colors ${
+                                level <= strength.score ? strength.color : 'bg-muted'
+                              }`}
+                            />
+                          );
+                        })}
+                      </div>
+                      <p className={`text-xs ${getPasswordStrength(password).color.replace('bg-', 'text-')}`}>
+                        {getPasswordStrength(password).label}
+                        {getPasswordStrength(password).score < 3 && ' — try adding numbers & special characters'}
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
