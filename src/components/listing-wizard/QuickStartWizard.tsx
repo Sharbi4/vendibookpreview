@@ -127,6 +127,22 @@ export const QuickStartWizard: React.FC = () => {
       // Generate guest token for anonymous draft OR use user id
       const guestToken = user ? null : generateDraftToken();
 
+      // If authenticated user, ensure they have host role before creating listing
+      if (user) {
+        const { data: existingRole } = await supabase
+          .from('user_roles')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('role', 'host')
+          .maybeSingle();
+
+        if (!existingRole) {
+          await supabase
+            .from('user_roles')
+            .insert({ user_id: user.id, role: 'host' });
+        }
+      }
+
       // Create minimal draft listing (anonymous or authenticated)
       const { data: listing, error } = await supabase
         .from('listings')
