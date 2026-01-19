@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, Phone, ShieldCheck, Clock, TrendingUp, Mic, MicOff, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, ShieldCheck, Clock, TrendingUp, Mic, MicOff, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -498,13 +498,21 @@ const Header = () => {
 
         {/* Mobile Actions - hide when search is open */}
         <div className={`flex md:hidden items-center gap-1 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-          <a
-            href="tel:+18778836342"
+          <button
+            onClick={() => {
+              if (window.zE) {
+                try {
+                  window.zE('messenger', 'open');
+                } catch (error) {
+                  console.debug('Zendesk messenger open:', error);
+                }
+              }
+            }}
             className="inline-flex items-center justify-center h-9 w-9 rounded-full text-primary hover:bg-primary/10 transition-colors"
-            aria-label="Call customer support"
+            aria-label="Open live chat"
           >
-            <Phone className="h-5 w-5" />
-          </a>
+            <MessageCircle className="h-5 w-5" />
+          </button>
           {user && <NotificationCenter />}
           <Button 
             variant="ghost" 
