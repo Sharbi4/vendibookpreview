@@ -58,6 +58,7 @@ interface ListingData {
   available_from: string | null;
   available_to: string | null;
   instant_book: boolean;
+  deposit_amount: number | null;
   vendibook_freight_enabled: boolean;
   freight_payer: FreightPayer;
   accept_card_payment: boolean;
@@ -124,6 +125,7 @@ export const PublishWizard: React.FC = () => {
   const [priceWeekly, setPriceWeekly] = useState('');
   const [priceSale, setPriceSale] = useState('');
   const [instantBook, setInstantBook] = useState(false);
+  const [depositAmount, setDepositAmount] = useState('');
   
   // New pricing fields
   const [vendibookFreightEnabled, setVendibookFreightEnabled] = useState(false);
@@ -198,6 +200,7 @@ export const PublishWizard: React.FC = () => {
       setPriceWeekly(data.price_weekly?.toString() || '');
       setPriceSale(data.price_sale?.toString() || '');
       setInstantBook(data.instant_book || false);
+      setDepositAmount(data.deposit_amount?.toString() || '');
       setExistingImages(data.image_urls || []);
       setVendibookFreightEnabled(data.vendibook_freight_enabled || false);
       setFreightPayer((data.freight_payer as FreightPayer) || 'buyer');
@@ -538,6 +541,7 @@ export const PublishWizard: React.FC = () => {
             price_daily: parseFloat(priceDaily) || null,
             price_weekly: parseFloat(priceWeekly) || null,
             instant_book: instantBook,
+            deposit_amount: parseFloat(depositAmount) || null,
           };
         }
       } else if (step === 'details') {
@@ -1177,6 +1181,57 @@ export const PublishWizard: React.FC = () => {
                               checked={instantBook}
                               onCheckedChange={(checked) => setInstantBook(checked)}
                             />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Security Deposit */}
+                      <div className="pt-4 border-t">
+                        <div className="bg-card rounded-xl p-4 border border-border">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2.5 bg-muted rounded-xl">
+                              <Wallet className="w-5 h-5 text-foreground" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-semibold text-foreground">Security Deposit</h4>
+                                <InfoTooltip 
+                                  content="A refundable security deposit is charged at booking and returned after the rental ends without damage or delays." 
+                                />
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-3">
+                                Protect your equipment with a refundable deposit. Returned in full if no damage or late returns.
+                              </p>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="depositAmount" className="text-sm">Deposit Amount (Optional)</Label>
+                                <div className="relative max-w-xs">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                  <Input
+                                    id="depositAmount"
+                                    type="number"
+                                    min="0"
+                                    step="50"
+                                    value={depositAmount}
+                                    onChange={(e) => setDepositAmount(e.target.value)}
+                                    placeholder="0.00"
+                                    className="pl-7"
+                                  />
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  Leave blank for no deposit. Typical deposits are $200-$1,000 depending on equipment value.
+                                </p>
+                              </div>
+
+                              {parseFloat(depositAmount) > 0 && (
+                                <div className="mt-4 p-3 bg-muted rounded-lg border border-border">
+                                  <p className="text-xs text-muted-foreground">
+                                    <strong className="text-primary">How it works:</strong> The ${parseFloat(depositAmount).toLocaleString()} deposit is charged when the booking is confirmed. 
+                                    After the rental ends, you can release the deposit in full or deduct for any damage/late fees.
+                                  </p>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
