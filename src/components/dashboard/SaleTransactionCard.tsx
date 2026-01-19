@@ -300,6 +300,23 @@ const SaleTransactionCard = ({
               </div>
             )}
 
+            {/* Escrow Status Banner */}
+            {['paid', 'buyer_confirmed', 'seller_confirmed'].includes(transaction.status) && (
+              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
+                <div className="flex items-start gap-2">
+                  <ShieldCheck className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      Payment in Escrow
+                    </p>
+                    <p className="text-xs text-blue-600/80 dark:text-blue-300/80 mt-0.5">
+                      ${transaction.amount.toLocaleString()} is held securely until both parties confirm the transaction is complete.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Tracking Status for Buyers */}
             {showTrackingSection && (
               <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mb-4">
