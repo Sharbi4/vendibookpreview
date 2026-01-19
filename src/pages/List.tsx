@@ -13,11 +13,6 @@ import {
   TrendingUp,
   Star,
   ChevronRight,
-  Lightbulb,
-  Lock,
-  CreditCard,
-  ShieldCheck,
-  BadgeCheck,
   FileEdit,
   ImageIcon,
   Trash2
@@ -52,18 +47,12 @@ const benefits = [
   { icon: Clock, text: 'List in 5 minutes', subtext: 'AI-assisted creation' },
 ];
 
-const tips = [
-  'Clear photos increase bookings by 40%',
-  'Complete profiles get 2x more inquiries',
-  'Competitive pricing fills your calendar faster',
-];
 
 const ListPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
   const { listings, isLoading: listingsLoading, deleteListing } = useHostListings();
   const [mode, setMode] = useState<ListingMode>('choose');
-  const [currentTip, setCurrentTip] = useState(0);
 
   // Filter drafts
   const drafts = listings.filter(l => l.status === 'draft');
@@ -75,14 +64,6 @@ const ListPage: React.FC = () => {
     });
   }, []);
 
-  // Rotate tips
-  useEffect(() => {
-    if (mode !== 'choose') return;
-    const interval = setInterval(() => {
-      setCurrentTip((prev) => (prev + 1) % tips.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [mode]);
 
   if (isLoading) {
     return (
@@ -213,94 +194,6 @@ const ListPage: React.FC = () => {
           </div>
         </motion.div>
 
-
-        {/* Trust Badges Section */}
-        <motion.div 
-          className="overflow-hidden rounded-2xl border-0 shadow-xl bg-card"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          {/* Header */}
-          <div className="bg-muted/30 border-b border-border px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-md">
-                <ShieldCheck className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <h3 className="font-semibold">Security & Payment Guarantees</h3>
-            </div>
-          </div>
-          
-          {/* Content Area */}
-          <div className="p-5">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-start gap-2.5 bg-muted/30 rounded-xl p-3 border border-border">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Lock className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs font-medium">Secure Escrow</p>
-                  <p className="text-[10px] text-muted-foreground">Funds held safely until delivery</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2.5 bg-muted/30 rounded-xl p-3 border border-border">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <CreditCard className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs font-medium">Stripe Powered</p>
-                  <p className="text-[10px] text-muted-foreground">Bank-level encryption</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2.5 bg-muted/30 rounded-xl p-3 border border-border">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <BadgeCheck className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs font-medium">Verified Renters</p>
-                  <p className="text-[10px] text-muted-foreground">ID verification required</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2.5 bg-muted/30 rounded-xl p-3 border border-border">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Shield className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs font-medium">Fraud Protection</p>
-                  <p className="text-[10px] text-muted-foreground">24/7 transaction monitoring</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Rotating tips */}
-        <motion.div 
-          className="overflow-hidden rounded-2xl border-0 shadow-lg bg-card"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <div className="bg-muted/30 border-b border-border px-5 py-3">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 shadow-md">
-                <Lightbulb className="w-4 h-4 text-primary" />
-              </div>
-              <p className="text-sm font-semibold">Pro tip</p>
-            </div>
-          </div>
-          <div className="px-5 py-4">
-            <motion.p 
-              key={currentTip}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              className="text-sm text-muted-foreground"
-            >
-              {tips[currentTip]}
-            </motion.p>
-          </div>
-        </motion.div>
 
         {/* Trust indicators */}
         <motion.div 
