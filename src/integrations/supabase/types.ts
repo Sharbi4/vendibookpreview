@@ -289,6 +289,9 @@ export type Database = {
           deposit_refund_notes: string | null
           deposit_refunded_at: string | null
           deposit_status: string | null
+          dispute_opened_at: string | null
+          dispute_reason: string | null
+          dispute_status: string | null
           document_reminder_sent_at: string | null
           end_date: string
           first_response_at: string | null
@@ -326,6 +329,9 @@ export type Database = {
           deposit_refund_notes?: string | null
           deposit_refunded_at?: string | null
           deposit_status?: string | null
+          dispute_opened_at?: string | null
+          dispute_reason?: string | null
+          dispute_status?: string | null
           document_reminder_sent_at?: string | null
           end_date: string
           first_response_at?: string | null
@@ -363,6 +369,9 @@ export type Database = {
           deposit_refund_notes?: string | null
           deposit_refunded_at?: string | null
           deposit_status?: string | null
+          dispute_opened_at?: string | null
+          dispute_reason?: string | null
+          dispute_status?: string | null
           document_reminder_sent_at?: string | null
           end_date?: string
           first_response_at?: string | null
