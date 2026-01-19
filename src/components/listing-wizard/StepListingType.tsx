@@ -39,15 +39,15 @@ export const StepListingType: React.FC<StepListingTypeProps> = ({
               type="button"
               onClick={() => updateField('mode', option.value)}
               className={cn(
-                "p-6 rounded-xl border-2 text-left transition-all",
+                "p-6 rounded-2xl border-0 shadow-xl text-left transition-all bg-card",
                 formData.mode === option.value
-                  ? "border-primary bg-primary/10 shadow-sm"
-                  : "border-border hover:border-primary/50 bg-card"
+                  ? "ring-2 ring-primary"
+                  : "hover:shadow-2xl"
               )}
             >
               <div className={cn(
-                "mb-3",
-                formData.mode === option.value ? "text-primary" : "text-muted-foreground"
+                "w-12 h-12 rounded-xl flex items-center justify-center mb-3",
+                formData.mode === option.value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
               )}>
                 {option.icon}
               </div>
@@ -73,15 +73,15 @@ export const StepListingType: React.FC<StepListingTypeProps> = ({
               type="button"
               onClick={() => updateCategory(option.value)}
               className={cn(
-                "p-6 rounded-xl border-2 text-left transition-all",
+                "p-6 rounded-2xl border-0 shadow-xl text-left transition-all bg-card",
                 formData.category === option.value
-                  ? "border-primary bg-primary/10 shadow-sm"
-                  : "border-border hover:border-primary/50 bg-card"
+                  ? "ring-2 ring-primary"
+                  : "hover:shadow-2xl"
               )}
             >
               <div className={cn(
-                "mb-3",
-                formData.category === option.value ? "text-primary" : "text-muted-foreground"
+                "w-12 h-12 rounded-xl flex items-center justify-center mb-3",
+                formData.category === option.value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
               )}>
                 {option.icon}
               </div>
