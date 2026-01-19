@@ -17,6 +17,7 @@ import {
 } from '@/lib/commissions';
 import { FreightSettingsCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { StripeConnectBanner } from './StripeConnectBanner';
 
 interface StepPricingProps {
   formData: ListingFormData;
@@ -681,9 +682,8 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                     Accept secure online payments via Stripe. Funds are deposited to your connected Stripe account after sale confirmation.
                   </p>
                   {formData.accept_card_payment && (
-                    <div className="mt-2 p-2 bg-muted rounded border border-border text-xs text-muted-foreground">
-                      <Info className="w-3 h-3 inline mr-1" />
-                      Requires Stripe Connect setup to receive payments.
+                    <div className="mt-3">
+                      <StripeConnectBanner variant="compact" />
                     </div>
                   )}
                 </div>
