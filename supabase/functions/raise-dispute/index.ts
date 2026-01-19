@@ -154,26 +154,43 @@ serve(async (req) => {
           to: [raiserEmail],
           subject: `Dispute Submitted - ${listingTitle}`,
           html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Dispute Submitted</h1>
-              <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
-                Your dispute for <strong>${listingTitle}</strong> has been submitted and is under review.
-              </p>
-              <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin: 24px 0;">
-                <h3 style="color: #92400e; margin: 0 0 12px;">Your Reason</h3>
-                <p style="color: #78350f; margin: 0;">${reason}</p>
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                @font-face {
+                  font-family: 'Sofia Pro Soft';
+                  src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
+                  font-weight: 300;
+                  font-style: normal;
+                }
+              </style>
+            </head>
+            <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
+              <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Dispute Submitted</h1>
+                <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+                  Your dispute for <strong>${listingTitle}</strong> has been submitted and is under review.
+                </p>
+                <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin: 24px 0;">
+                  <h3 style="color: #92400e; margin: 0 0 12px;">Your Reason</h3>
+                  <p style="color: #78350f; margin: 0;">${reason}</p>
+                </div>
+                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
+                  <h3 style="color: #1a1a1a; margin: 0 0 12px;">What Happens Next?</h3>
+                  <ul style="color: #4a4a4a; margin: 0; padding-left: 20px; line-height: 1.8;">
+                    <li>Payment will remain in escrow until the dispute is resolved</li>
+                    <li>We've notified ${otherParty} about this dispute</li>
+                    <li>Our team will review and may contact both parties</li>
+                    <li>Resolution typically takes 3-5 business days</li>
+                  </ul>
+                </div>
+                <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong></p>
               </div>
-              <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
-                <h3 style="color: #1a1a1a; margin: 0 0 12px;">What Happens Next?</h3>
-                <ul style="color: #4a4a4a; margin: 0; padding-left: 20px; line-height: 1.8;">
-                  <li>Payment will remain in escrow until the dispute is resolved</li>
-                  <li>We've notified ${otherParty} about this dispute</li>
-                  <li>Our team will review and may contact both parties</li>
-                  <li>Resolution typically takes 3-5 business days</li>
-                </ul>
-              </div>
-              <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong></p>
-            </div>
+            </body>
+            </html>
           `,
         }).catch(err => logStep("Raiser email failed", { error: err.message }))
       );
@@ -188,26 +205,43 @@ serve(async (req) => {
           to: [otherEmail],
           subject: `Dispute Raised - ${listingTitle}`,
           html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h1 style="color: #dc2626; font-size: 24px; margin-bottom: 24px;">Dispute Raised</h1>
-              <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
-                <strong>${disputeRaiser}</strong> has raised a dispute for the transaction involving <strong>${listingTitle}</strong>.
-              </p>
-              <div style="background: #fef2f2; border-radius: 12px; padding: 20px; margin: 24px 0;">
-                <h3 style="color: #991b1b; margin: 0 0 12px;">Dispute Reason</h3>
-                <p style="color: #7f1d1d; margin: 0;">${reason}</p>
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                @font-face {
+                  font-family: 'Sofia Pro Soft';
+                  src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
+                  font-weight: 300;
+                  font-style: normal;
+                }
+              </style>
+            </head>
+            <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
+              <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h1 style="color: #dc2626; font-size: 24px; margin-bottom: 24px;">Dispute Raised</h1>
+                <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+                  <strong>${disputeRaiser}</strong> has raised a dispute for the transaction involving <strong>${listingTitle}</strong>.
+                </p>
+                <div style="background: #fef2f2; border-radius: 12px; padding: 20px; margin: 24px 0;">
+                  <h3 style="color: #991b1b; margin: 0 0 12px;">Dispute Reason</h3>
+                  <p style="color: #7f1d1d; margin: 0;">${reason}</p>
+                </div>
+                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
+                  <h3 style="color: #1a1a1a; margin: 0 0 12px;">What This Means</h3>
+                  <ul style="color: #4a4a4a; margin: 0; padding-left: 20px; line-height: 1.8;">
+                    <li>Payment is now held pending dispute resolution</li>
+                    <li>No funds will be released until this is resolved</li>
+                    <li>Our team may contact you for more information</li>
+                    <li>You can respond via your dashboard or by contacting support</li>
+                  </ul>
+                </div>
+                <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong></p>
               </div>
-              <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
-                <h3 style="color: #1a1a1a; margin: 0 0 12px;">What This Means</h3>
-                <ul style="color: #4a4a4a; margin: 0; padding-left: 20px; line-height: 1.8;">
-                  <li>Payment is now held pending dispute resolution</li>
-                  <li>No funds will be released until this is resolved</li>
-                  <li>Our team may contact you for more information</li>
-                  <li>You can respond via your dashboard or by contacting support</li>
-                </ul>
-              </div>
-              <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong></p>
-            </div>
+            </body>
+            </html>
           `,
         }).catch(err => logStep("Other party email failed", { error: err.message }))
       );
@@ -220,27 +254,44 @@ serve(async (req) => {
         to: ["support@vendibook.com"],
         subject: `[ACTION REQUIRED] New Dispute - ${listingTitle}`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h1 style="color: #dc2626; font-size: 24px; margin-bottom: 24px;">New Dispute Requires Attention</h1>
-            <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
-              <table style="width: 100%; color: #4a4a4a;">
-                <tr><td style="padding: 8px 0; font-weight: 600;">Transaction ID:</td><td>${transaction_id}</td></tr>
-                <tr><td style="padding: 8px 0; font-weight: 600;">Listing:</td><td>${listingTitle}</td></tr>
-                <tr><td style="padding: 8px 0; font-weight: 600;">Raised By:</td><td>${disputeRaiser} (${role})</td></tr>
-                <tr><td style="padding: 8px 0; font-weight: 600;">Amount:</td><td>$${Number(transaction.amount).toLocaleString()}</td></tr>
-                <tr><td style="padding: 8px 0; font-weight: 600;">Seller Payout:</td><td>$${Number(transaction.seller_payout).toLocaleString()}</td></tr>
-              </table>
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              @font-face {
+                font-family: 'Sofia Pro Soft';
+                src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
+                font-weight: 300;
+                font-style: normal;
+              }
+            </style>
+          </head>
+          <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h1 style="color: #dc2626; font-size: 24px; margin-bottom: 24px;">New Dispute Requires Attention</h1>
+              <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
+                <table style="width: 100%; color: #4a4a4a;">
+                  <tr><td style="padding: 8px 0; font-weight: 600;">Transaction ID:</td><td>${transaction_id}</td></tr>
+                  <tr><td style="padding: 8px 0; font-weight: 600;">Listing:</td><td>${listingTitle}</td></tr>
+                  <tr><td style="padding: 8px 0; font-weight: 600;">Raised By:</td><td>${disputeRaiser} (${role})</td></tr>
+                  <tr><td style="padding: 8px 0; font-weight: 600;">Amount:</td><td>$${Number(transaction.amount).toLocaleString()}</td></tr>
+                  <tr><td style="padding: 8px 0; font-weight: 600;">Seller Payout:</td><td>$${Number(transaction.seller_payout).toLocaleString()}</td></tr>
+                </table>
+              </div>
+              <div style="background: #fef2f2; border-radius: 12px; padding: 20px; margin: 24px 0;">
+                <h3 style="color: #991b1b; margin: 0 0 12px;">Dispute Reason</h3>
+                <p style="color: #7f1d1d; margin: 0;">${reason}</p>
+              </div>
+              <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
+                <h3 style="color: #1a1a1a; margin: 0 0 12px;">Parties</h3>
+                <p style="margin: 8px 0;"><strong>Buyer:</strong> ${buyerName} (${buyerEmail || 'No email'})</p>
+                <p style="margin: 8px 0;"><strong>Seller:</strong> ${sellerName} (${sellerEmail || 'No email'})</p>
+              </div>
             </div>
-            <div style="background: #fef2f2; border-radius: 12px; padding: 20px; margin: 24px 0;">
-              <h3 style="color: #991b1b; margin: 0 0 12px;">Dispute Reason</h3>
-              <p style="color: #7f1d1d; margin: 0;">${reason}</p>
-            </div>
-            <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
-              <h3 style="color: #1a1a1a; margin: 0 0 12px;">Parties</h3>
-              <p style="margin: 8px 0;"><strong>Buyer:</strong> ${buyerName} (${buyerEmail || 'No email'})</p>
-              <p style="margin: 8px 0;"><strong>Seller:</strong> ${sellerName} (${sellerEmail || 'No email'})</p>
-            </div>
-          </div>
+          </body>
+          </html>
         `,
       }).catch(err => logStep("Admin email failed", { error: err.message }))
     );

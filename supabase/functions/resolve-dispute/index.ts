@@ -332,13 +332,30 @@ serve(async (req) => {
           to: transaction.buyer.email,
           subject: "Dispute Resolved - VendiBook",
           html: `
-            <h2>Your Dispute Has Been Resolved</h2>
-            <p>Hi ${transaction.buyer.full_name || "there"},</p>
-            <p>Our team has reviewed your dispute and made a decision.</p>
-            <p><strong>Resolution:</strong> ${resolutionText}</p>
-            ${admin_notes ? `<p><strong>Admin Notes:</strong> ${admin_notes}</p>` : ""}
-            <p>If you have any questions, please contact our support team.</p>
-            <p>Best regards,<br>The VendiBook Team</p>
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                @font-face {
+                  font-family: 'Sofia Pro Soft';
+                  src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
+                  font-weight: 300;
+                  font-style: normal;
+                }
+              </style>
+            </head>
+            <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2>Your Dispute Has Been Resolved</h2>
+              <p>Hi ${transaction.buyer.full_name || "there"},</p>
+              <p>Our team has reviewed your dispute and made a decision.</p>
+              <p><strong>Resolution:</strong> ${resolutionText}</p>
+              ${admin_notes ? `<p><strong>Admin Notes:</strong> ${admin_notes}</p>` : ""}
+              <p>If you have any questions, please contact our support team.</p>
+              <p>Best regards,<br>The VendiBook Team</p>
+            </body>
+            </html>
           `,
         });
 
@@ -348,13 +365,30 @@ serve(async (req) => {
           to: transaction.seller.email,
           subject: "Dispute Resolved - VendiBook",
           html: `
-            <h2>A Dispute Has Been Resolved</h2>
-            <p>Hi ${transaction.seller.full_name || "there"},</p>
-            <p>Our team has reviewed the dispute on one of your transactions and made a decision.</p>
-            <p><strong>Resolution:</strong> ${resolutionText}</p>
-            ${admin_notes ? `<p><strong>Admin Notes:</strong> ${admin_notes}</p>` : ""}
-            <p>If you have any questions, please contact our support team.</p>
-            <p>Best regards,<br>The VendiBook Team</p>
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                @font-face {
+                  font-family: 'Sofia Pro Soft';
+                  src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
+                  font-weight: 300;
+                  font-style: normal;
+                }
+              </style>
+            </head>
+            <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2>A Dispute Has Been Resolved</h2>
+              <p>Hi ${transaction.seller.full_name || "there"},</p>
+              <p>Our team has reviewed the dispute on one of your transactions and made a decision.</p>
+              <p><strong>Resolution:</strong> ${resolutionText}</p>
+              ${admin_notes ? `<p><strong>Admin Notes:</strong> ${admin_notes}</p>` : ""}
+              <p>If you have any questions, please contact our support team.</p>
+              <p>Best regards,<br>The VendiBook Team</p>
+            </body>
+            </html>
           `,
         });
 
