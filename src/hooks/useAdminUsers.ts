@@ -12,6 +12,7 @@ export interface AdminUser {
   stripe_onboarding_complete: boolean | null;
   roles: string[];
   listing_count: number;
+  draft_count: number;
 }
 
 export const useAdminUsers = () => {
@@ -33,10 +34,10 @@ export const useAdminUsers = () => {
 
       if (rolesError) throw rolesError;
 
-      // Fetch listing counts per host
+      // Fetch listing counts per host with status
       const { data: listings, error: listingsError } = await supabase
         .from('listings')
-        .select('host_id');
+        .select('host_id, status');
 
       if (listingsError) throw listingsError;
 
@@ -48,11 +49,15 @@ export const useAdminUsers = () => {
         rolesMap.set(r.user_id, existing);
       });
 
-      // Count listings per user
+      // Count listings and drafts per user
       const listingCountMap = new Map<string, number>();
+      const draftCountMap = new Map<string, number>();
       listings?.forEach((l) => {
         if (l.host_id) {
           listingCountMap.set(l.host_id, (listingCountMap.get(l.host_id) || 0) + 1);
+          if (l.status === 'draft') {
+            draftCountMap.set(l.host_id, (draftCountMap.get(l.host_id) || 0) + 1);
+          }
         }
       });
 
@@ -60,6 +65,7 @@ export const useAdminUsers = () => {
         ...p,
         roles: rolesMap.get(p.id) || [],
         listing_count: listingCountMap.get(p.id) || 0,
+        draft_count: draftCountMap.get(p.id) || 0,
       }));
 
       return users;

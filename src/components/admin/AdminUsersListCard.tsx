@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { Shield, BadgeCheck, CreditCard, List } from 'lucide-react';
+import { Shield, BadgeCheck, CreditCard, List, FileEdit } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -64,6 +64,15 @@ const AdminUsersListCard = ({ user }: AdminUsersListCardProps) => {
           </div>
 
           <div className="flex items-center gap-6">
+            {user.draft_count > 0 && (
+              <div className="text-center text-sm hidden sm:block">
+                <div className="flex items-center gap-1 text-amber-600">
+                  <FileEdit className="h-3.5 w-3.5" />
+                  <span>Drafts</span>
+                </div>
+                <p className="font-semibold text-amber-600">{user.draft_count}</p>
+              </div>
+            )}
             {user.listing_count > 0 && (
               <div className="text-center text-sm hidden sm:block">
                 <div className="flex items-center gap-1 text-muted-foreground">
