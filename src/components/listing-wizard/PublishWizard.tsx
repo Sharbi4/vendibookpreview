@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, Sparkles, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle, Shield, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, Sparkles, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle, Shield, Clock, ChevronDown, ChevronUp, GripVertical, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -136,6 +136,8 @@ export const PublishWizard: React.FC = () => {
   // Form fields
   const [images, setImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [photoDraggedIndex, setPhotoDraggedIndex] = useState<number | null>(null);
+  const [photoDragOverIndex, setPhotoDragOverIndex] = useState<number | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priceDaily, setPriceDaily] = useState('');
@@ -780,6 +782,94 @@ export const PublishWizard: React.FC = () => {
     setExistingImages(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Photo drag-and-drop reordering
+  const allPhotos = useMemo(() => {
+    return [
+      ...existingImages.map((url, i) => ({ type: 'existing' as const, url, index: i })),
+      ...images.map((file, i) => ({ type: 'new' as const, file, index: i })),
+    ];
+  }, [existingImages, images]);
+
+  const handlePhotoDragStart = (e: React.DragEvent, globalIndex: number) => {
+    setPhotoDraggedIndex(globalIndex);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handlePhotoDragEnd = () => {
+    setPhotoDraggedIndex(null);
+    setPhotoDragOverIndex(null);
+  };
+
+  const handlePhotoDragOver = (e: React.DragEvent, globalIndex: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setPhotoDragOverIndex(globalIndex);
+  };
+
+  const handlePhotoDragLeave = () => {
+    setPhotoDragOverIndex(null);
+  };
+
+  const handlePhotoDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    if (photoDraggedIndex === null || photoDraggedIndex === targetIndex) {
+      setPhotoDraggedIndex(null);
+      setPhotoDragOverIndex(null);
+      return;
+    }
+
+    // Reorder the combined array
+    const reordered = [...allPhotos];
+    const [moved] = reordered.splice(photoDraggedIndex, 1);
+    reordered.splice(targetIndex, 0, moved);
+
+    // Split back into existing and new images
+    const newExisting: string[] = [];
+    const newImages: File[] = [];
+    reordered.forEach(item => {
+      if (item.type === 'existing') {
+        newExisting.push(item.url);
+      } else {
+        newImages.push(item.file);
+      }
+    });
+
+    setExistingImages(newExisting);
+    setImages(newImages);
+    setPhotoDraggedIndex(null);
+    setPhotoDragOverIndex(null);
+  };
+
+  const movePhotoToFirst = (globalIndex: number) => {
+    if (globalIndex === 0) return;
+    
+    const reordered = [...allPhotos];
+    const [moved] = reordered.splice(globalIndex, 1);
+    reordered.unshift(moved);
+
+    const newExisting: string[] = [];
+    const newImages: File[] = [];
+    reordered.forEach(item => {
+      if (item.type === 'existing') {
+        newExisting.push(item.url);
+      } else {
+        newImages.push(item.file);
+      }
+    });
+
+    setExistingImages(newExisting);
+    setImages(newImages);
+  };
+
+  const removePhotoByGlobalIndex = (globalIndex: number) => {
+    const item = allPhotos[globalIndex];
+    if (item.type === 'existing') {
+      removeExistingImage(item.index);
+    } else {
+      removeImage(item.index);
+    }
+  };
+
   const uploadImages = async (): Promise<string[]> => {
     if (!user) {
       throw new Error('Please sign in to upload photos.');
@@ -1314,33 +1404,77 @@ export const PublishWizard: React.FC = () => {
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-xl font-bold text-foreground mb-2">Add photos</h2>
-                    <p className="text-muted-foreground">Upload at least 3 photos. 5+ recommended.</p>
+                    <p className="text-muted-foreground">
+                      Upload at least 3 photos. 5+ recommended. <span className="font-medium text-foreground">Drag to reorder</span> — first image is your cover.
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {existingImages.map((url, index) => (
-                      <div key={`existing-${index}`} className="relative aspect-[4/3] rounded-lg overflow-hidden">
-                        <img src={url} alt="" className="w-full h-full object-cover" />
-                        <button
-                          onClick={() => removeExistingImage(index)}
-                          className="absolute top-2 right-2 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center text-sm hover:bg-black/70"
+                    {allPhotos.map((item, globalIndex) => {
+                      const isDragging = photoDraggedIndex === globalIndex;
+                      const isDragOver = photoDragOverIndex === globalIndex;
+                      const isCover = globalIndex === 0;
+                      const imgSrc = item.type === 'existing' ? item.url : URL.createObjectURL(item.file);
+
+                      return (
+                        <div
+                          key={item.type === 'existing' ? `existing-${item.index}` : `new-${item.index}`}
+                          draggable
+                          onDragStart={(e) => handlePhotoDragStart(e, globalIndex)}
+                          onDragEnd={handlePhotoDragEnd}
+                          onDragOver={(e) => handlePhotoDragOver(e, globalIndex)}
+                          onDragLeave={handlePhotoDragLeave}
+                          onDrop={(e) => handlePhotoDrop(e, globalIndex)}
+                          className={cn(
+                            "relative aspect-[4/3] rounded-xl overflow-hidden group cursor-grab active:cursor-grabbing transition-all",
+                            isDragging && "opacity-50 scale-95",
+                            isDragOver && "ring-2 ring-primary ring-offset-2"
+                          )}
                         >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                    {images.map((file, index) => (
-                      <div key={`new-${index}`} className="relative aspect-[4/3] rounded-lg overflow-hidden">
-                        <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
-                        <button
-                          onClick={() => removeImage(index)}
-                          className="absolute top-2 right-2 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center text-sm hover:bg-black/70"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                    <label className="aspect-[4/3] rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
+                          <img src={imgSrc} alt="" className="w-full h-full object-cover" />
+                          
+                          {/* Cover badge */}
+                          {isCover && (
+                            <div className="absolute top-2 left-2 px-2 py-1 bg-primary text-primary-foreground rounded-md text-xs font-medium flex items-center gap-1">
+                              <Star className="w-3 h-3" />
+                              Cover
+                            </div>
+                          )}
+
+                          {/* Saved badge for existing images */}
+                          {item.type === 'existing' && !isCover && (
+                            <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/50 text-white rounded text-xs">
+                              Saved
+                            </div>
+                          )}
+
+                          {/* Drag handle */}
+                          <div className="absolute top-2 right-10 p-1.5 rounded-lg bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                            <GripVertical className="w-4 h-4" />
+                          </div>
+
+                          {/* Remove button */}
+                          <button
+                            onClick={() => removePhotoByGlobalIndex(globalIndex)}
+                            className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+
+                          {/* Make cover button */}
+                          {!isCover && (
+                            <button
+                              onClick={() => movePhotoToFirst(globalIndex)}
+                              className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white rounded-md text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 flex items-center gap-1"
+                            >
+                              <Star className="w-3 h-3" />
+                              Cover
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                    <label className="aspect-[4/3] rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
                       <Camera className="w-8 h-8 text-muted-foreground mb-2" />
                       <span className="text-sm text-muted-foreground">Add photo</span>
                       <input
@@ -1353,7 +1487,7 @@ export const PublishWizard: React.FC = () => {
                     </label>
                   </div>
 
-                  <Button onClick={saveStep} disabled={isSaving || (existingImages.length + images.length) < 3}>
+                  <Button onClick={saveStep} disabled={isSaving || allPhotos.length < 3}>
                     {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                     Continue
                     <ChevronRight className="w-4 h-4 ml-2" />
