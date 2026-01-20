@@ -10,7 +10,7 @@ const corsHeaders = {
 // Commission rates
 const RENTAL_HOST_FEE_PERCENT = 12.9; // 12.9% from host
 const RENTAL_RENTER_FEE_PERCENT = 12.9; // 12.9% platform fee from renter
-const SALE_SELLER_FEE_PERCENT = 15; // 15% from seller on sales
+const SALE_SELLER_FEE_PERCENT = 12.9; // 12.9% from seller on sales
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
