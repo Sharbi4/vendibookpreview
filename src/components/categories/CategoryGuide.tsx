@@ -45,7 +45,7 @@ export const CATEGORY_DEFINITIONS: CategoryDefinition[] = [
     bestFor: ['Events and catering', 'Daily street vending', 'Pop-ups and festivals'],
     example: 'Book a truck for a weekend event, or list your truck to earn on off-days.',
     browseHref: '/search?category=food_truck',
-    listHref: '/create-listing?category=food_truck',
+    listHref: '/list',
   },
   {
     key: 'food_trailer',
@@ -55,7 +55,7 @@ export const CATEGORY_DEFINITIONS: CategoryDefinition[] = [
     bestFor: ['New operators starting out', 'Long-term lot setups', 'Seasonal operations'],
     example: 'Rent a trailer for a month, or sell a used trailer when upgrading.',
     browseHref: '/search?category=food_trailer',
-    listHref: '/create-listing?category=food_trailer',
+    listHref: '/list',
   },
   {
     key: 'ghost_kitchen',
@@ -65,7 +65,7 @@ export const CATEGORY_DEFINITIONS: CategoryDefinition[] = [
     bestFor: ['Delivery-only concepts', 'Catering prep', 'Commissary needs'],
     example: 'Rent prep time in a kitchen for your delivery brand.',
     browseHref: '/search?category=ghost_kitchen',
-    listHref: '/create-listing?category=ghost_kitchen',
+    listHref: '/list',
   },
   {
     key: 'vendor_lot',
@@ -75,7 +75,7 @@ export const CATEGORY_DEFINITIONS: CategoryDefinition[] = [
     bestFor: ['Consistent daily locations', 'Vendor events and markets', 'Food truck parks'],
     example: 'Book a vendor spot for the weekend, or list your lot to host vendors.',
     browseHref: '/search?category=vendor_lot',
-    listHref: '/create-listing?category=vendor_lot',
+    listHref: '/list',
   },
 ];
 
@@ -99,9 +99,7 @@ export function CategoryGuide({
     const browseHref = citySlug 
       ? `/search?category=${category.key}&location=${citySlug}` 
       : category.browseHref;
-    const listHref = citySlug 
-      ? `/create-listing?category=${category.key}&city=${citySlug}` 
-      : category.listHref;
+    const listHref = '/list';
     return { browseHref, listHref };
   };
 

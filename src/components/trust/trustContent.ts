@@ -67,7 +67,7 @@ export const trustTiles: TrustTile[] = [
         { question: 'How long does verification take?', answer: 'Most verifications complete in under 2 minutes. In rare cases, manual review may take up to 24 hours.' },
         { question: 'What if my verification fails?', answer: 'You can retry with a different ID or contact support. Common issues include blurry photos, expired IDs, or mismatched names.' }
       ],
-      primaryCta: { label: 'Learn More', href: '/how-it-works', requiresAuth: true, authLabel: 'Start Listing', authHref: '/create-listing' },
+      primaryCta: { label: 'Learn More', href: '/how-it-works', requiresAuth: true, authLabel: 'Start Listing', authHref: '/list' },
       secondaryCta: { label: 'Contact Support', href: '/contact' }
     }
   },
@@ -93,7 +93,7 @@ export const trustTiles: TrustTile[] = [
         { question: 'Are fees included in the listed price?', answer: 'Yes. The price you see includes platform fees. Payment processing fees are transparent and shown at checkout.' },
         { question: 'Is my card information stored?', answer: 'Card details are stored securely by Stripe (not Vendibook) if you opt to save your card. You can manage or delete saved cards anytime.' }
       ],
-      primaryCta: { label: 'Learn More', href: '/how-it-works', requiresAuth: true, authLabel: 'Start Listing', authHref: '/create-listing' },
+      primaryCta: { label: 'Learn More', href: '/how-it-works', requiresAuth: true, authLabel: 'Start Listing', authHref: '/list' },
       secondaryCta: { label: 'Contact Support', href: '/contact' }
     }
   },
@@ -120,7 +120,7 @@ export const trustTiles: TrustTile[] = [
         { question: 'What if the buyer does not confirm?', answer: 'If no dispute is raised within the acceptance window, funds auto-release to the host. Buyers are notified before the window closes.' },
         { question: 'What if there is damage during a rental?', answer: 'Hosts must file a damage claim within 24 hours of return, with photo evidence. Vendibook reviews and may hold or adjust the payout accordingly.' }
       ],
-      primaryCta: { label: 'Learn More', href: '/how-it-works', requiresAuth: true, authLabel: 'Start Listing', authHref: '/create-listing' },
+      primaryCta: { label: 'Learn More', href: '/how-it-works', requiresAuth: true, authLabel: 'Start Listing', authHref: '/list' },
       secondaryCta: { label: 'Contact Support', href: '/contact' }
     }
   },
@@ -146,7 +146,7 @@ export const trustTiles: TrustTile[] = [
         { question: 'Can I list without documents?', answer: 'Some listings require documents before publishing (e.g., food trucks need food handler cards). Others allow listing but show limited trust badges until documents are verified.' },
         { question: 'How do I update expired documents?', answer: 'Go to your dashboard, remove the expired document, and upload the new version. Re-verification typically takes 24-48 hours.' }
       ],
-      primaryCta: { label: 'Verify Documents', href: '/dashboard', requiresAuth: true, authLabel: 'Start Listing', authHref: '/create-listing' },
+      primaryCta: { label: 'Verify Documents', href: '/dashboard', requiresAuth: true, authLabel: 'Start Listing', authHref: '/list' },
       secondaryCta: { label: 'Contact Support', href: '/contact' }
     }
   },

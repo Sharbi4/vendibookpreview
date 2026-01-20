@@ -330,7 +330,7 @@ const Install = () => {
                   <Link to="/search">Browse Listings</Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
-                  <Link to="/create-listing">List Your Asset</Link>
+                  <Link to="/list">List Your Asset</Link>
                 </Button>
               </div>
             </div>

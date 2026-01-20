@@ -197,7 +197,7 @@ const generateEmailHtml = (unsubscribeToken: string, userEmail: string, hasLogo:
                           <p style="margin: 0 0 12px; color: ${COLORS.gray}; font-size: 14px; line-height: 1.5;">
                             Got a food truck, trailer, or kitchen sitting idle? List it and start earning today with secure Stripe payments.
                           </p>
-                          <a href="${BASE_URL}/create-listing" style="color: ${COLORS.primary}; text-decoration: none; font-size: 14px; font-weight: 600;">
+                          <a href="${BASE_URL}/list" style="color: ${COLORS.primary}; text-decoration: none; font-size: 14px; font-weight: 600;">
                             Create Listing →
                           </a>
                         </td>

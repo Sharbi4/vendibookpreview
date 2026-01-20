@@ -67,14 +67,7 @@ export function CitySupplyPage({ city, assetType }: CitySupplyPageProps) {
   }, [city.slug, assetType]);
 
   const handleStartListing = () => {
-    const params = new URLSearchParams({
-      city: city.name,
-      src: 'city_list',
-    });
-    if (assetType) {
-      params.set('category', ASSET_TYPES[assetType].category);
-    }
-    navigate(`/create-listing?${params.toString()}`);
+    navigate('/list');
   };
 
   const headline = assetType 
