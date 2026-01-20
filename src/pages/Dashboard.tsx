@@ -20,7 +20,8 @@ import {
   Heart,
   Sparkles,
   ArrowRight,
-  Mail
+  Mail,
+  Calendar
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -73,7 +74,27 @@ const Dashboard = () => {
             </div>
 
             {/* Quick Action Cards */}
-            <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
+            <div className="grid grid-cols-5 gap-3 max-w-3xl mx-auto">
+              <Link to="/transactions?tab=bookings">
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer">
+                  <CardContent className="p-4 text-center">
+                    <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform shadow-lg">
+                      <Calendar className="h-6 w-6" />
+                    </div>
+                    <p className="text-sm font-medium text-foreground">Bookings</p>
+                  </CardContent>
+                </Card>
+              </Link>
+              <Link to="/transactions?tab=purchases">
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer">
+                  <CardContent className="p-4 text-center">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform shadow-lg">
+                      <ShoppingBag className="h-6 w-6" />
+                    </div>
+                    <p className="text-sm font-medium text-foreground">Purchases</p>
+                  </CardContent>
+                </Card>
+              </Link>
               <Link to="/favorites">
                 <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer">
                   <CardContent className="p-4 text-center">
