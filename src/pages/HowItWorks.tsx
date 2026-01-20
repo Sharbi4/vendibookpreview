@@ -684,7 +684,7 @@ const HowItWorks = () => {
                   <h4 className="font-bold text-foreground mb-2">Ready to list your space?</h4>
                   <p className="text-sm text-muted-foreground mb-4">Create a vendor lot listing and start earning from your property.</p>
                   <Button className="w-full gap-2 shadow-md hover:shadow-lg transition-all" asChild>
-                    <Link to="/create-listing?category=vendor_lot">
+                    <Link to="/list">
                       <ArrowRight className="h-4 w-4" />
                       Create Vendor Lot Listing
                     </Link>
@@ -708,7 +708,7 @@ const HowItWorks = () => {
                       'Amenities + rules',
                     ]}
                     ctaText="Create Vendor Lot Listing"
-                    ctaHref="/create-listing?category=vendor_lot"
+                    ctaHref="/list"
                     secondaryText="Contact Us to Partner"
                     secondaryHref="/contact"
                     reassurance="Clear listings attract better vendors and better repeat bookings."
