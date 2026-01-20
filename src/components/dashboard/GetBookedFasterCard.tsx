@@ -103,7 +103,7 @@ export const GetBookedFasterCard = () => {
         title: 'Review your pricing',
         description: 'Use our AI tool to find the optimal price',
         actionLabel: 'Check pricing',
-        actionTo: '/tools/price-pilot',
+        actionTo: '/tools/pricepilot',
         priority: 4,
       });
     }
