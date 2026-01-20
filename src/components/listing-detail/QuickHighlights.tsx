@@ -1,4 +1,4 @@
-import { Truck, Zap, FileCheck, Users, Clock, Package } from 'lucide-react';
+import { Truck, Zap, FileCheck, Users, Clock, Package, Scale, Ruler } from 'lucide-react';
 import type { FulfillmentType, ListingCategory } from '@/types/listing';
 
 interface QuickHighlightsProps {
@@ -8,6 +8,12 @@ interface QuickHighlightsProps {
   instantBook?: boolean;
   deliveryFee?: number | null;
   hoursOfAccess?: string | null;
+  // Dimensions for sale listings
+  weightLbs?: number | null;
+  lengthInches?: number | null;
+  widthInches?: number | null;
+  heightInches?: number | null;
+  isRental?: boolean;
 }
 
 const QuickHighlights = ({
@@ -17,6 +23,11 @@ const QuickHighlights = ({
   instantBook,
   deliveryFee,
   hoursOfAccess,
+  weightLbs,
+  lengthInches,
+  widthInches,
+  heightInches,
+  isRental = true,
 }: QuickHighlightsProps) => {
   const items: { icon: React.ReactNode; text: string }[] = [];
 
@@ -56,6 +67,35 @@ const QuickHighlights = ({
       icon: <Clock className="h-4 w-4" />,
       text: hoursOfAccess,
     });
+  }
+
+  // Add dimensions for sale listings (food trucks/trailers)
+  if (!isRental && (category === 'food_truck' || category === 'food_trailer')) {
+    // Weight
+    if (weightLbs) {
+      items.push({
+        icon: <Scale className="h-4 w-4" />,
+        text: `${weightLbs.toLocaleString()} lbs`,
+      });
+    }
+
+    // Dimensions (L x W x H)
+    if (lengthInches && widthInches && heightInches) {
+      // Convert to feet for readability
+      const lengthFt = Math.round(lengthInches / 12);
+      const widthFt = Math.round(widthInches / 12);
+      const heightFt = Math.round(heightInches / 12);
+      items.push({
+        icon: <Ruler className="h-4 w-4" />,
+        text: `${lengthFt}' × ${widthFt}' × ${heightFt}' (L×W×H)`,
+      });
+    } else if (lengthInches) {
+      const lengthFt = Math.round(lengthInches / 12);
+      items.push({
+        icon: <Ruler className="h-4 w-4" />,
+        text: `${lengthFt}' long`,
+      });
+    }
   }
 
   // Add first 3 highlights from listing
