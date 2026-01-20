@@ -81,20 +81,22 @@ export const HostOnboardingCard = () => {
   const nextStep = steps.find(s => !s.isComplete);
 
   return (
-    <Card className="relative overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-      {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
-      
-      <CardHeader className="relative pb-3">
+    <Card className="border-0 shadow-xl overflow-hidden">
+      <CardHeader className="pb-3 bg-muted/30 border-b border-border">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold">Get Started</CardTitle>
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground shadow-lg flex items-center justify-center">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+            Get Started
+          </CardTitle>
           <span className="text-sm font-semibold text-primary">
             {completedSteps}/{steps.length} complete
           </span>
         </div>
-        <Progress value={progress} className="h-2 mt-2" />
+        <Progress value={progress} className="h-2 mt-3" />
       </CardHeader>
-      <CardContent className="relative space-y-4">
+      <CardContent className="space-y-3 pt-4">
         {steps.map((step, index) => {
           const Icon = step.icon;
           const isNext = step.id === nextStep?.id;
@@ -103,25 +105,25 @@ export const HostOnboardingCard = () => {
             <div
               key={step.id}
               className={cn(
-                "flex items-start gap-3 p-3 rounded-lg transition-colors bg-card/60 backdrop-blur-sm",
-                isNext && "bg-card border border-primary/50 shadow-sm",
+                "flex items-start gap-3 p-3 rounded-xl transition-colors bg-muted/30 border border-border",
+                isNext && "bg-card border-primary/50 shadow-sm",
                 step.isComplete && "opacity-60"
               )}
             >
               <div className={cn(
-                "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
+                "flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center",
                 step.isComplete 
-                  ? "bg-gradient-to-br from-primary to-amber-500" 
+                  ? "bg-primary text-primary-foreground" 
                   : isNext 
-                    ? "bg-gradient-to-br from-primary to-amber-500"
+                    ? "bg-primary text-primary-foreground"
                     : "bg-muted"
               )}>
                 {step.isComplete ? (
-                  <CheckCircle2 className="h-5 w-5 text-white" />
+                  <CheckCircle2 className="h-5 w-5" />
                 ) : (
                   <Icon className={cn(
                     "h-4 w-4",
-                    isNext ? "text-white" : "text-muted-foreground"
+                    isNext ? "text-primary-foreground" : "text-muted-foreground"
                   )} />
                 )}
               </div>
@@ -144,7 +146,7 @@ export const HostOnboardingCard = () => {
                     <Button 
                       size="sm" 
                       asChild 
-                      className="gap-1 bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
+                      className="gap-1 rounded-xl shadow-lg"
                     >
                       <Link to={step.action.to}>
                         {step.action.label}
@@ -156,7 +158,7 @@ export const HostOnboardingCard = () => {
                       size="sm" 
                       onClick={step.action.onClick}
                       disabled={isConnecting}
-                      className="gap-1 bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
+                      className="gap-1 rounded-xl shadow-lg"
                     >
                       {step.action.label}
                       <ArrowRight className="h-3 w-3" />

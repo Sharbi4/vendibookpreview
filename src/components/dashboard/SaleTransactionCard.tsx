@@ -162,7 +162,7 @@ const SaleTransactionCard = ({
   };
 
   return (
-    <Card className="overflow-hidden hover:bg-muted/50 transition-colors rounded-xl border border-border bg-muted/30">
+    <Card className="overflow-hidden hover:shadow-2xl transition-all rounded-2xl border-0 shadow-xl bg-card">
       
       <CardContent className="p-0">
         <div className="flex flex-col sm:flex-row">

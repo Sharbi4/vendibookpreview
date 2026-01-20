@@ -118,13 +118,13 @@ export const GetBookedFasterCard = () => {
   }
 
   return (
-    <Card className="border-0 shadow-xl">
+    <Card className="border-0 shadow-xl rounded-2xl">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors rounded-t-xl"
+        className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/30 transition-colors rounded-t-2xl"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground shadow-lg flex items-center justify-center">
+          <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground shadow-lg flex items-center justify-center">
             <Sparkles className="h-5 w-5" />
           </div>
           <div>
@@ -146,7 +146,7 @@ export const GetBookedFasterCard = () => {
             return (
               <div
                 key={tip.id}
-                className="flex items-start gap-3 p-4 bg-muted/50 rounded-xl"
+                className="flex items-start gap-3 p-4 bg-muted/30 rounded-xl border border-border"
               >
                 <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
                   <Icon className="h-5 w-5 text-foreground" />

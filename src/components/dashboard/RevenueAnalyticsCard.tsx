@@ -79,8 +79,8 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
       {/* Revenue Header with Stripe */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#635bff]/20 to-[#635bff]/5 flex items-center justify-center">
-            <DollarSign className="h-6 w-6 text-[#635bff]" />
+          <div className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
+            <DollarSign className="h-6 w-6" />
           </div>
           <div>
             <h3 className="text-lg font-semibold">Revenue Analytics</h3>
@@ -95,92 +95,82 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
       {/* Revenue Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Earnings */}
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#635bff]/10 via-[#635bff]/5 to-transparent p-5 border border-[#635bff]/20 group hover:shadow-lg transition-all">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-[#635bff]/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform" />
-          <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-[#635bff]/20 flex items-center justify-center">
-                <DollarSign className="h-5 w-5 text-[#635bff]" />
-              </div>
-              {analytics.revenueTrend !== 0 && (
-                <span className={cn(
-                  "text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1",
-                  analytics.revenueTrend > 0 ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-600"
-                )}>
-                  <TrendingUp className={cn("h-3 w-3", analytics.revenueTrend < 0 && "rotate-180")} />
-                  {Math.abs(analytics.revenueTrend)}%
-                </span>
-              )}
+        <div className="rounded-2xl bg-card p-5 border-0 shadow-lg hover:shadow-xl transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#635bff]/10 flex items-center justify-center">
+              <DollarSign className="h-5 w-5 text-[#635bff]" />
             </div>
-            <p className="text-2xl font-bold text-foreground">
-              {formatCurrency(analytics.totalEarnings)}
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">Total Earnings</p>
+            {analytics.revenueTrend !== 0 && (
+              <span className={cn(
+                "text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1",
+                analytics.revenueTrend > 0 ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-600"
+              )}>
+                <TrendingUp className={cn("h-3 w-3", analytics.revenueTrend < 0 && "rotate-180")} />
+                {Math.abs(analytics.revenueTrend)}%
+              </span>
+            )}
           </div>
+          <p className="text-2xl font-bold text-foreground">
+            {formatCurrency(analytics.totalEarnings)}
+          </p>
+          <p className="text-sm text-muted-foreground mt-1">Total Earnings</p>
         </div>
 
         {/* Paid Out */}
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent p-5 border border-emerald-500/20 group hover:shadow-lg transition-all">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform" />
-          <div className="relative">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center mb-3">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">
-              {formatCurrency(analytics.totalPaidOut)}
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">Paid Out</p>
+        <div className="rounded-2xl bg-card p-5 border-0 shadow-lg hover:shadow-xl transition-all">
+          <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-3">
+            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           </div>
+          <p className="text-2xl font-bold text-foreground">
+            {formatCurrency(analytics.totalPaidOut)}
+          </p>
+          <p className="text-sm text-muted-foreground mt-1">Paid Out</p>
         </div>
 
         {/* Pending Payout */}
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-5 border border-amber-500/20 group hover:shadow-lg transition-all">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform" />
-          <div className="relative">
-            <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center mb-3">
-              <Clock className="h-5 w-5 text-amber-600" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">
-              {formatCurrency(analytics.pendingPayout)}
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">Pending Payout</p>
+        <div className="rounded-2xl bg-card p-5 border-0 shadow-lg hover:shadow-xl transition-all">
+          <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
+            <Clock className="h-5 w-5 text-primary" />
           </div>
+          <p className="text-2xl font-bold text-foreground">
+            {formatCurrency(analytics.pendingPayout)}
+          </p>
+          <p className="text-sm text-muted-foreground mt-1">Pending Payout</p>
         </div>
 
         {/* Average Order Value */}
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent p-5 border border-purple-500/20 group hover:shadow-lg transition-all">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform" />
-          <div className="relative">
-            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center mb-3">
-              <Wallet className="h-5 w-5 text-purple-600" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">
-              {formatCurrency(analytics.averageOrderValue)}
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">Avg Order Value</p>
+        <div className="rounded-2xl bg-card p-5 border-0 shadow-lg hover:shadow-xl transition-all">
+          <div className="w-10 h-10 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-3">
+            <Wallet className="h-5 w-5 text-purple-600" />
           </div>
+          <p className="text-2xl font-bold text-foreground">
+            {formatCurrency(analytics.averageOrderValue)}
+          </p>
+          <p className="text-sm text-muted-foreground mt-1">Avg Order Value</p>
         </div>
       </div>
 
       {/* Charts Row */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Monthly Revenue Chart */}
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-card to-card/80">
-          <CardHeader className="pb-2">
+        <Card className="border-0 shadow-xl">
+          <CardHeader className="pb-2 bg-muted/30 border-b border-border">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-[#635bff]" />
+              <div className="w-8 h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
+                <TrendingUp className="h-4 w-4" />
+              </div>
               Monthly Revenue Trend
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             {analytics.monthlyRevenue.length > 0 ? (
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={analytics.monthlyRevenue}>
                     <defs>
                       <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#635bff" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#635bff" stopOpacity={0} />
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <XAxis
@@ -208,7 +198,7 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
                     <Area
                       type="monotone"
                       dataKey="revenue"
-                      stroke="#635bff"
+                      stroke="hsl(var(--primary))"
                       strokeWidth={2.5}
                       fill="url(#revenueGradient)"
                       dot={false}
@@ -218,7 +208,7 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-64 flex items-center justify-center text-muted-foreground text-sm">
+              <div className="h-64 flex items-center justify-center text-muted-foreground text-sm bg-muted/30 rounded-xl">
                 No revenue data yet
               </div>
             )}
@@ -226,14 +216,16 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
         </Card>
 
         {/* Revenue vs Payouts Bar Chart */}
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-card to-card/80">
-          <CardHeader className="pb-2">
+        <Card className="border-0 shadow-xl">
+          <CardHeader className="pb-2 bg-muted/30 border-b border-border">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-[#635bff]" />
+              <div className="w-8 h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
+                <Wallet className="h-4 w-4" />
+              </div>
               Revenue vs Payouts
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             {analytics.monthlyRevenue.length > 0 ? (
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
@@ -255,7 +247,7 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
                       contentStyle={{
                         backgroundColor: 'hsl(var(--card))',
                         border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
+                        borderRadius: '12px',
                       }}
                       formatter={(value: number, name: string) => [
                         formatCurrencyFull(value),
@@ -267,7 +259,7 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
                     />
                     <Bar 
                       dataKey="revenue" 
-                      fill="#635bff" 
+                      fill="hsl(var(--primary))" 
                       radius={[4, 4, 0, 0]}
                       maxBarSize={30}
                     />
@@ -281,7 +273,7 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-64 flex items-center justify-center text-muted-foreground text-sm">
+              <div className="h-64 flex items-center justify-center text-muted-foreground text-sm bg-muted/30 rounded-xl">
                 No payout data yet
               </div>
             )}
@@ -298,27 +290,29 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
       />
 
       {/* Payout History */}
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-card to-card/80">
-        <CardHeader className="pb-3">
+      <Card className="border-0 shadow-xl">
+        <CardHeader className="pb-3 bg-muted/30 border-b border-border">
           <CardTitle className="text-base font-semibold flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <ArrowUpRight className="h-4 w-4 text-[#635bff]" />
+              <div className="w-8 h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
+                <ArrowUpRight className="h-4 w-4" />
+              </div>
               Recent Transactions
             </div>
             <StripeLogo size="sm" />
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           {analytics.payoutHistory.length > 0 ? (
             <div className="space-y-3">
               {analytics.payoutHistory.map((payout) => (
                 <div
                   key={payout.id}
-                  className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-muted/50 to-transparent hover:from-muted transition-all group"
+                  className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border hover:border-primary/30 transition-all"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#635bff]/10 flex items-center justify-center">
-                      <DollarSign className="h-5 w-5 text-[#635bff]" />
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <DollarSign className="h-5 w-5 text-primary" />
                     </div>
                     <div>
                       <p className="text-sm font-medium truncate max-w-[200px]">
@@ -351,7 +345,7 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground text-sm">
+            <div className="text-center py-8 text-muted-foreground text-sm bg-muted/30 rounded-xl">
               No transactions yet
             </div>
           )}

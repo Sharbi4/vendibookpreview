@@ -25,48 +25,38 @@ export const AIInsightsCard = () => {
     switch (type) {
       case 'success':
         return {
-          bg: 'bg-gradient-to-br from-emerald-500/10 to-emerald-500/5',
+          bg: 'bg-emerald-500/10',
           border: 'border-emerald-500/20',
           icon: 'text-emerald-600',
-          glow: 'bg-emerald-500/20',
         };
       case 'warning':
         return {
-          bg: 'bg-gradient-to-br from-amber-500/10 to-amber-500/5',
+          bg: 'bg-amber-500/10',
           border: 'border-amber-500/20',
           icon: 'text-amber-600',
-          glow: 'bg-amber-500/20',
         };
       case 'tip':
         return {
-          bg: 'bg-gradient-to-br from-blue-500/10 to-blue-500/5',
+          bg: 'bg-blue-500/10',
           border: 'border-blue-500/20',
           icon: 'text-blue-600',
-          glow: 'bg-blue-500/20',
         };
       case 'opportunity':
         return {
-          bg: 'bg-gradient-to-br from-purple-500/10 to-purple-500/5',
+          bg: 'bg-purple-500/10',
           border: 'border-purple-500/20',
           icon: 'text-purple-600',
-          glow: 'bg-purple-500/20',
         };
     }
   };
 
   return (
-    <Card className="relative overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10 shadow-lg">
-      {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
-      
-      <CardHeader className="relative pb-3">
+    <Card className="border-0 shadow-xl overflow-hidden">
+      <CardHeader className="pb-3 bg-muted/30 border-b border-border">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary to-amber-500 rounded-full blur-md opacity-50 animate-pulse" />
-              <div className="relative p-1.5 bg-gradient-to-br from-primary to-amber-500 rounded-lg shadow-md">
-                <Sparkles className="h-4 w-4 text-white" />
-              </div>
+            <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground shadow-lg flex items-center justify-center">
+              <Sparkles className="h-5 w-5" />
             </div>
             AI Insights
             <span className="text-xs font-normal text-primary bg-primary/10 px-2 py-0.5 rounded-full ml-2">
@@ -84,7 +74,7 @@ export const AIInsightsCard = () => {
               size="sm" 
               onClick={refresh}
               disabled={isLoading}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 rounded-xl"
             >
               <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
             </Button>
@@ -118,22 +108,22 @@ export const AIInsightsCard = () => {
         )}
       </CardHeader>
       
-      <CardContent className="relative space-y-3">
+      <CardContent className="space-y-3 pt-4">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8 gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="text-sm text-muted-foreground">Analyzing your data with AI...</p>
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center py-6 gap-3">
+          <div className="flex flex-col items-center justify-center py-6 gap-3 bg-muted/30 rounded-xl">
             <AlertCircle className="h-8 w-8 text-destructive" />
             <p className="text-sm text-muted-foreground text-center">{error}</p>
-            <Button variant="outline" size="sm" onClick={refresh}>
+            <Button variant="outline" size="sm" onClick={refresh} className="rounded-xl">
               Try Again
             </Button>
           </div>
         ) : insights.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-6 gap-3">
+          <div className="flex flex-col items-center justify-center py-6 gap-3 bg-muted/30 rounded-xl">
             <Sparkles className="h-8 w-8 text-muted-foreground" />
             <p className="text-sm text-muted-foreground text-center">
               No insights available yet. Create listings to start receiving AI-powered recommendations.
@@ -146,7 +136,7 @@ export const AIInsightsCard = () => {
               <div
                 key={index}
                 className={cn(
-                  "relative overflow-hidden rounded-xl p-4 border transition-all duration-300 hover:scale-[1.01] hover:shadow-md animate-fade-in",
+                  "rounded-xl p-4 border transition-all duration-300 hover:shadow-md animate-fade-in",
                   styles.bg,
                   styles.border
                 )}
@@ -154,15 +144,9 @@ export const AIInsightsCard = () => {
                   animationDelay: `${index * 100}ms`,
                 }}
               >
-                {/* Glow effect */}
-                <div className={cn(
-                  "absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 opacity-50",
-                  styles.glow
-                )} />
-                
-                <div className="relative flex gap-3">
+                <div className="flex gap-3">
                   <div className={cn(
-                    "flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center",
+                    "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center",
                     styles.bg,
                     styles.icon
                   )}>
