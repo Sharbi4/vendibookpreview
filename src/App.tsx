@@ -124,7 +124,7 @@ const AnimatedRoutes = () => {
           <Route path="/activation" element={<PageTransition><Activation /></PageTransition>} />
           <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
           <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
-          <Route path="/create-listing" element={<PageTransition><CreateListing /></PageTransition>} />
+          <Route path="/create-listing" element={<Navigate to="/list" replace />} />
           <Route path="/listing/:id" element={<PageTransition><ListingDetail /></PageTransition>} />
           {/* Profile routes */}
           <Route path="/profile" element={<Navigate to="/account" replace />} />
