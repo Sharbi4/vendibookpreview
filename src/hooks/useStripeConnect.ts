@@ -43,7 +43,7 @@ export const useStripeConnect = () => {
     checkStatus();
   }, [checkStatus]);
 
-  const connectStripe = async () => {
+  const connectStripe = async (returnPath?: string) => {
     if (!session?.access_token) return;
 
     // Open window immediately to avoid popup blocker
@@ -55,6 +55,7 @@ export const useStripeConnect = () => {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
+        body: { returnPath: returnPath || window.location.pathname },
       });
 
       if (error) throw error;

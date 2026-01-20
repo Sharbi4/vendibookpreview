@@ -1084,7 +1084,7 @@ const Account = () => {
                     : 'Connect Stripe to receive payments for bookings and sales.'}
                 </p>
                 {!stripeConnected && (
-                  <Button size="sm" onClick={connectStripe} disabled={isConnecting}>
+                  <Button size="sm" onClick={() => connectStripe('/account')} disabled={isConnecting}>
                     {isConnecting ? (
                       <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Connecting...</>
                     ) : (
