@@ -744,7 +744,7 @@ const HowItWorks = () => {
                   icon={<CircleDollarSign className="h-5 w-5" />}
                   title="Pricing Support"
                   description="Get guidance to price with more confidence and avoid leaving money on the table."
-                  href="/tools/price-pilot"
+                  href="/tools/pricepilot"
                 />
                 <ToolCard
                   icon={<FileCheck className="h-5 w-5" />}
