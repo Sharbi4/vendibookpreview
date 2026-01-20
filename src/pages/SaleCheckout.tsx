@@ -503,6 +503,8 @@ const SaleCheckout = () => {
                           address={address}
                           hasValidEstimate={hasValidEstimate}
                           estimate={estimate}
+                          isFreightSellerPaid={isFreightSellerPaid}
+                          freightCost={freightCost}
                           paymentMethod={paymentMethod}
                           setPaymentMethod={setPaymentMethod}
                           hasMultiplePaymentOptions={hasMultiplePaymentOptions}
