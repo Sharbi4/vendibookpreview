@@ -8,6 +8,8 @@ interface WizardProgressProps {
   steps: string[];
   onStepClick?: (step: number) => void;
   completedSteps?: number[];
+  /** If true, only allow navigation to completed steps (prevents skipping ahead) */
+  restrictNavigation?: boolean;
 }
 
 // Estimated time per step in minutes
@@ -26,6 +28,7 @@ export const WizardProgress: React.FC<WizardProgressProps> = ({
   steps,
   onStepClick,
   completedSteps = [],
+  restrictNavigation = false,
 }) => {
   // Calculate progress percentage based on completed steps
   const totalSteps = steps.length;
@@ -73,26 +76,39 @@ export const WizardProgress: React.FC<WizardProgressProps> = ({
           return (
             <React.Fragment key={step}>
               <div className="flex flex-col items-center">
-                <button
-                  type="button"
-                  onClick={() => onStepClick?.(stepNumber)}
-                  disabled={!onStepClick}
-                  className={cn(
-                    "w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all text-sm",
-                    isCompleted || isPast
-                      ? "bg-primary text-primary-foreground"
-                      : isCurrent
-                      ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
-                      : "bg-muted text-muted-foreground",
-                    onStepClick && "cursor-pointer hover:opacity-80"
-                  )}
-                >
-                  {isCompleted || isPast ? (
-                    <Check className="w-4 h-4" />
-                  ) : (
-                    stepNumber
-                  )}
-                </button>
+                {(() => {
+                  // Determine if this step is clickable
+                  const canNavigate = onStepClick && (
+                    !restrictNavigation || // No restriction = all steps clickable
+                    isCompleted || // Completed steps are always clickable
+                    isPast || // Past steps are always clickable
+                    stepNumber === currentStep // Current step is clickable
+                  );
+                  
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => canNavigate && onStepClick?.(stepNumber)}
+                      disabled={!canNavigate}
+                      className={cn(
+                        "w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all text-sm",
+                        isCompleted || isPast
+                          ? "bg-primary text-primary-foreground"
+                          : isCurrent
+                          ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
+                          : "bg-muted text-muted-foreground",
+                        canNavigate && "cursor-pointer hover:opacity-80",
+                        !canNavigate && "cursor-not-allowed opacity-60"
+                      )}
+                    >
+                      {isCompleted || isPast ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        stepNumber
+                      )}
+                    </button>
+                  );
+                })()}
                 <span
                   className={cn(
                     "text-[10px] mt-1.5 text-center max-w-[60px] leading-tight hidden sm:block",
