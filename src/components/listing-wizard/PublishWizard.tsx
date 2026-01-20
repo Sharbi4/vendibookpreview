@@ -2905,8 +2905,8 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Stripe Connect Panel */}
-                  {!isOnboardingComplete && (
+                  {/* Stripe Connect Panel - Only show if card payments are enabled */}
+                  {requiresStripe && !isOnboardingComplete && (
                     <div className="p-5 rounded-xl border-2 border-[#635bff]/30 bg-[#635bff]/5">
                       <div className="flex items-start gap-3">
                         <img src={stripeWordmark} alt="Stripe" className="w-12 h-auto mt-0.5" />
@@ -2959,7 +2959,7 @@ export const PublishWizard: React.FC = () => {
                     </Button>
                     <Button 
                       onClick={() => setShowPublishDialog(true)} 
-                      disabled={isSaving || !canPublish || !isOnboardingComplete}
+                      disabled={isSaving || !canPublish || (requiresStripe && !isOnboardingComplete)}
                       className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
                     >
                       <Send className="w-4 h-4 mr-2" />
