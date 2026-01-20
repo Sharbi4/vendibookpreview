@@ -118,7 +118,7 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
   // Loading state
   if (stripeLoading || listingsLoading || bookingsLoading) {
     return (
-      <div className="flex items-center justify-center py-4 rounded-xl bg-card border border-border">
+      <div className="flex items-center justify-center py-4 rounded-2xl bg-card border-0 shadow-xl">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
@@ -132,10 +132,10 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
   const Icon = nextStep.icon;
 
   return (
-    <Card className="border-0 shadow-xl">
+    <Card className="border-0 shadow-xl rounded-2xl">
       <CardContent className="p-4">
         <div className="flex items-center gap-4">
-          <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary text-primary-foreground shadow-lg flex items-center justify-center">
+          <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-primary text-primary-foreground shadow-lg flex items-center justify-center">
             <Icon className="h-6 w-6" />
           </div>
           
