@@ -27,14 +27,11 @@ const StripeStatusCard = ({
   }
 
   return (
-    <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-      {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
-      
-      <div className="relative flex items-center justify-between">
+    <div className="overflow-hidden rounded-2xl p-4 border-0 shadow-xl bg-card">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md flex items-center justify-center">
-            <Check className="h-5 w-5 text-white" strokeWidth={2.5} />
+          <div className="w-10 h-10 bg-primary rounded-2xl shadow-lg flex items-center justify-center">
+            <Check className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
@@ -48,7 +45,7 @@ const StripeStatusCard = ({
           <Button 
             onClick={onOpenDashboard}
             size="sm"
-            className="h-8 text-xs gap-1.5 bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
+            className="h-8 text-xs gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground border-0 shadow-lg rounded-xl"
             disabled={isOpeningDashboard}
           >
             {isOpeningDashboard ? (
