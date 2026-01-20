@@ -52,15 +52,12 @@ export const PayoutScheduleCard = ({
   const recentPastPayouts = pastPayouts.slice(0, 5);
 
   return (
-    <Card className="relative overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10 shadow-lg">
-      {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
-      
-      <CardHeader className="relative pb-3 border-b border-primary/20">
+    <Card className="border-0 shadow-xl overflow-hidden">
+      <CardHeader className="pb-3 bg-muted/30 border-b border-border">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-md">
-              <Calendar className="h-4 w-4 text-white" />
+            <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
+              <Calendar className="h-5 w-5" />
             </div>
             Payout Schedule
           </CardTitle>
@@ -72,7 +69,7 @@ export const PayoutScheduleCard = ({
                 size="sm" 
                 onClick={onOpenStripeDashboard}
                 disabled={isOpeningDashboard}
-                className="text-xs bg-card/80 backdrop-blur-sm"
+                className="text-xs rounded-xl"
               >
                 {isOpeningDashboard ? (
                   <Loader2 className="h-3 w-3 animate-spin mr-1" />
@@ -84,14 +81,14 @@ export const PayoutScheduleCard = ({
         </div>
       </CardHeader>
       
-      <CardContent className="relative p-0">
+      <CardContent className="p-0">
         {/* Next Payout Banner */}
         {pendingPayout > 0 && (
-          <div className="p-4 bg-gradient-to-r from-primary/10 via-amber-500/10 to-transparent border-b border-primary/20">
+          <div className="p-4 bg-muted/30 border-b border-border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-md">
-                  <Wallet className="h-6 w-6 text-white" />
+                <div className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
+                  <Wallet className="h-6 w-6" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -113,7 +110,7 @@ export const PayoutScheduleCard = ({
                 </div>
               </div>
               <div className="text-right">
-                <Badge variant="outline" className="bg-[#635bff]/10 text-[#635bff] border-[#635bff]/20">
+                <Badge variant="outline" className="bg-[#635bff]/10 text-[#635bff] border-[#635bff]/20 rounded-xl">
                   <Clock className="h-3 w-3 mr-1" />
                   Est. {format(estimatedNextPayout, 'MMM d')}
                 </Badge>
@@ -125,10 +122,10 @@ export const PayoutScheduleCard = ({
         {/* Upcoming Payouts */}
         <div className="p-4">
           <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <Clock className="h-4 w-4 text-amber-500" />
+            <Clock className="h-4 w-4 text-primary" />
             Upcoming Payouts
             {upcomingPayouts.length > 0 && (
-              <Badge variant="secondary" className="ml-auto">
+              <Badge variant="secondary" className="ml-auto rounded-xl">
                 {upcomingPayouts.length} pending
               </Badge>
             )}
@@ -139,10 +136,10 @@ export const PayoutScheduleCard = ({
               {upcomingPayouts.slice(0, 3).map((payout) => (
                 <div
                   key={payout.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-amber-500/5 to-transparent border border-amber-500/10 hover:border-amber-500/20 transition-all"
+                  className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border hover:border-primary/30 transition-all"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                     <div>
                       <p className="text-sm font-medium truncate max-w-[180px]">
                         {payout.listing_title}
@@ -156,7 +153,7 @@ export const PayoutScheduleCard = ({
                     <p className="text-sm font-semibold text-foreground">
                       {formatCurrency(payout.seller_payout)}
                     </p>
-                    <p className="text-xs text-amber-600">Processing</p>
+                    <p className="text-xs text-primary">Processing</p>
                   </div>
                 </div>
               ))}
@@ -167,7 +164,7 @@ export const PayoutScheduleCard = ({
               )}
             </div>
           ) : (
-            <div className="text-center py-6 text-muted-foreground text-sm bg-muted/30 rounded-lg">
+            <div className="text-center py-6 text-muted-foreground text-sm bg-muted/30 rounded-xl border border-border">
               <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
               No pending payouts
             </div>
@@ -176,7 +173,7 @@ export const PayoutScheduleCard = ({
 
         {/* Divider */}
         <div className="px-4">
-          <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+          <div className="h-px bg-border" />
         </div>
 
         {/* Past Payouts */}
@@ -185,7 +182,7 @@ export const PayoutScheduleCard = ({
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
             Recent Payouts
             {recentPastPayouts.length > 0 && (
-              <Badge variant="secondary" className="ml-auto bg-emerald-500/10 text-emerald-600 border-0">
+              <Badge variant="secondary" className="ml-auto bg-emerald-500/10 text-emerald-600 border-0 rounded-xl">
                 {pastPayouts.length} completed
               </Badge>
             )}
@@ -196,7 +193,7 @@ export const PayoutScheduleCard = ({
               {recentPastPayouts.map((payout) => (
                 <div
                   key={payout.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-emerald-500/5 to-transparent border border-emerald-500/10 hover:border-emerald-500/20 transition-all"
+                  className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border hover:border-emerald-500/30 transition-all"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
@@ -218,7 +215,7 @@ export const PayoutScheduleCard = ({
               ))}
             </div>
           ) : (
-            <div className="text-center py-6 text-muted-foreground text-sm bg-muted/30 rounded-lg">
+            <div className="text-center py-6 text-muted-foreground text-sm bg-muted/30 rounded-xl border border-border">
               <CheckCircle2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
               No completed payouts yet
             </div>
@@ -230,7 +227,7 @@ export const PayoutScheduleCard = ({
           <div className="p-4 pt-0">
             <Button 
               variant="outline" 
-              className="w-full group hover:bg-[#635bff]/5 hover:border-[#635bff]/30"
+              className="w-full group hover:bg-[#635bff]/5 hover:border-[#635bff]/30 rounded-xl"
               onClick={onOpenStripeDashboard}
               disabled={isOpeningDashboard}
             >
