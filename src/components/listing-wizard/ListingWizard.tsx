@@ -680,6 +680,24 @@ export const ListingWizard: React.FC = () => {
           if (data?.url) {
             // Clear unsaved changes flag before redirecting
             hasUnsavedChanges.current = false;
+            
+            // Set up listener for cross-tab communication before opening checkout
+            const handleCheckoutComplete = (event: MessageEvent) => {
+              if (event.data?.type === 'notary-checkout-complete' && event.data?.listingId === listing.id) {
+                // Navigate to the success page
+                window.location.href = event.data.url || `/listing-published?listing_id=${listing.id}&notary_paid=true`;
+              }
+            };
+            
+            try {
+              const channel = new BroadcastChannel('notary-checkout');
+              channel.onmessage = handleCheckoutComplete;
+              // Store channel reference to clean up later if needed
+              (window as any).__notaryCheckoutChannel = channel;
+            } catch (e) {
+              console.log('BroadcastChannel not supported');
+            }
+            
             // Redirect to Stripe checkout - open in new tab with fallback
             const checkoutWindow = window.open(data.url, '_blank');
             if (!checkoutWindow) {
