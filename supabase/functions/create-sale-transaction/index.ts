@@ -102,14 +102,9 @@ serve(async (req) => {
     // Get payment intent details
     const paymentIntent = session.payment_intent as Stripe.PaymentIntent;
     
-    // Calculate amounts
+    // Calculate amounts - commission is 12.9%
+    const SALE_SELLER_FEE_PERCENT = 12.9;
     const amount = session.amount_total ? session.amount_total / 100 : 0;
-    const platformFee = paymentIntent.metadata?.platform_fee 
-      ? Number(paymentIntent.metadata.platform_fee) / 100 
-      : amount * 0.15;
-    const sellerPayout = paymentIntent.metadata?.seller_payout 
-      ? Number(paymentIntent.metadata.seller_payout) / 100 
-      : amount - platformFee;
     
     // Get fulfillment data from payment intent metadata
     const fulfillmentType = paymentIntent.metadata?.fulfillment_type || 'pickup';
@@ -132,11 +127,25 @@ serve(async (req) => {
       ? Number(paymentIntent.metadata.seller_freight_deduction) 
       : 0;
     
-    logStep("Freight metadata", {
+    // Platform fee = 12.9% of sale price (from metadata or calculated)
+    const platformFee = paymentIntent.metadata?.platform_fee 
+      ? Number(paymentIntent.metadata.platform_fee) / 100 
+      : amount * (SALE_SELLER_FEE_PERCENT / 100);
+    
+    // Seller payout = amount - platform fee - freight (if seller pays)
+    // Use metadata if available (already calculated in checkout), otherwise calculate
+    const sellerPayout = paymentIntent.metadata?.seller_payout 
+      ? Number(paymentIntent.metadata.seller_payout) / 100 
+      : amount - platformFee - sellerFreightDeduction;
+    
+    logStep("Fee calculation", {
+      amount,
+      platformFee,
+      sellerPayout,
+      sellerFreightDeduction,
       vendibookFreightEnabled,
       freightPayer,
       freightCost,
-      sellerFreightDeduction,
     });
 
     // Create the sale transaction record
