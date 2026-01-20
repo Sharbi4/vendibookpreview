@@ -224,6 +224,15 @@ const PurchaseStepDelivery = ({
                 </div>
                 <div className="text-sm text-muted-foreground">Nationwide shipping • 7–10 business days • Scheduling included</div>
               </div>
+              <div className="text-right">
+                {isFreightSellerPaid ? (
+                  <span className="text-sm font-semibold text-emerald-600">FREE</span>
+                ) : hasValidEstimate && freightCost > 0 ? (
+                  <span className="text-sm font-semibold text-foreground">+${freightCost.toLocaleString()}</span>
+                ) : (
+                  <span className="text-xs text-muted-foreground">Enter address for quote</span>
+                )}
+              </div>
               {fulfillmentSelected === 'vendibook_freight' && (
                 <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
                   <Check className="w-4 h-4 text-primary-foreground" />
@@ -266,9 +275,18 @@ const PurchaseStepDelivery = ({
                 )}
 
                 {hasValidEstimate && !isEstimating && (
-                  <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    <span className="text-sm text-emerald-700 dark:text-emerald-300">Address verified • Ready to continue</span>
+                  <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-sm text-emerald-700 dark:text-emerald-300">
+                        {isFreightSellerPaid ? 'Free shipping — seller pays freight' : 'Quote ready'}
+                      </span>
+                    </div>
+                    {!isFreightSellerPaid && freightCost > 0 && (
+                      <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                        ${freightCost.toLocaleString()}
+                      </span>
+                    )}
                   </div>
                 )}
 

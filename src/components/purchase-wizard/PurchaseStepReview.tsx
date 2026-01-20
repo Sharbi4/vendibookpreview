@@ -27,6 +27,8 @@ interface PurchaseStepReviewProps {
   // Freight details
   hasValidEstimate: boolean;
   estimate: any;
+  isFreightSellerPaid?: boolean;
+  freightCost?: number;
   // Payment
   paymentMethod: 'card' | 'cash';
   setPaymentMethod: (value: 'card' | 'cash') => void;
@@ -54,6 +56,8 @@ const PurchaseStepReview = ({
   address,
   hasValidEstimate,
   estimate,
+  isFreightSellerPaid = false,
+  freightCost = 0,
   paymentMethod,
   setPaymentMethod,
   hasMultiplePaymentOptions,
@@ -146,9 +150,19 @@ const PurchaseStepReview = ({
               <p className="text-sm text-muted-foreground mt-1">{deliveryAddress}</p>
             )}
           </div>
-          {currentDeliveryFee > 0 && (
-            <span className="font-medium">+${currentDeliveryFee.toLocaleString()}</span>
-          )}
+          <div className="text-right">
+            {fulfillmentSelected === 'vendibook_freight' ? (
+              isFreightSellerPaid ? (
+                <span className="text-sm font-semibold text-emerald-600">Free Shipping</span>
+              ) : currentDeliveryFee > 0 ? (
+                <span className="font-medium">+${currentDeliveryFee.toLocaleString()}</span>
+              ) : null
+            ) : currentDeliveryFee > 0 ? (
+              <span className="font-medium">+${currentDeliveryFee.toLocaleString()}</span>
+            ) : fulfillmentSelected === 'pickup' ? (
+              <span className="text-sm font-semibold text-emerald-600">FREE</span>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -252,11 +266,26 @@ const PurchaseStepReview = ({
             <span className="text-muted-foreground">Item price</span>
             <span className="text-foreground font-medium">${priceSale.toLocaleString()}</span>
           </div>
-          {currentDeliveryFee > 0 && (
+          {/* Show freight line - either with cost or as free shipping */}
+          {fulfillmentSelected === 'vendibook_freight' && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground flex items-center gap-1.5">
+                <Package className="h-3.5 w-3.5" />
+                VendiBook Freight
+              </span>
+              {isFreightSellerPaid ? (
+                <span className="text-emerald-600 font-medium">FREE</span>
+              ) : (
+                <span className="text-foreground font-medium">+${currentDeliveryFee.toLocaleString()}</span>
+              )}
+            </div>
+          )}
+          {/* Show regular delivery fee for non-freight */}
+          {fulfillmentSelected === 'delivery' && currentDeliveryFee > 0 && (
             <div className="flex justify-between">
               <span className="text-muted-foreground flex items-center gap-1.5">
                 <Truck className="h-3.5 w-3.5" />
-                {fulfillmentSelected === 'vendibook_freight' ? 'Freight' : 'Delivery'}
+                Delivery
               </span>
               <span className="text-foreground font-medium">+${currentDeliveryFee.toLocaleString()}</span>
             </div>
