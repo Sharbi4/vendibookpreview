@@ -28,8 +28,23 @@ const ListingPublished: React.FC = () => {
         title: "Notary Fee Paid",
         description: "Your $45 Proof Notary add-on has been activated. Your listing is now live!",
       });
+      
+      // Broadcast to other tabs that notary checkout is complete
+      // This allows the original wizard tab to navigate to this page
+      try {
+        const channel = new BroadcastChannel('notary-checkout');
+        channel.postMessage({
+          type: 'notary-checkout-complete',
+          listingId: listingId,
+          url: window.location.href,
+        });
+        channel.close();
+      } catch (e) {
+        // BroadcastChannel not supported in some browsers, silently fail
+        console.log('BroadcastChannel not supported');
+      }
     }
-  }, [notaryPaid, toast]);
+  }, [notaryPaid, listingId, toast]);
 
   useEffect(() => {
     if (!authLoading && !user) {
