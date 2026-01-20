@@ -74,54 +74,54 @@ const Dashboard = () => {
             </div>
 
             {/* Quick Action Cards */}
-            <div className="grid grid-cols-5 gap-3 max-w-3xl mx-auto">
+            <div className="grid grid-cols-5 gap-2 sm:gap-3 max-w-3xl mx-auto px-2 sm:px-0">
               <Link to="/transactions?tab=bookings">
                 <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer">
-                  <CardContent className="p-4 text-center">
-                    <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform shadow-lg">
-                      <Calendar className="h-6 w-6" />
+                  <CardContent className="p-2 sm:p-4 text-center">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-primary text-white flex items-center justify-center mx-auto mb-1.5 sm:mb-3 group-hover:scale-105 transition-transform shadow-lg">
+                      <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
-                    <p className="text-sm font-medium text-foreground">Bookings</p>
+                    <p className="text-xs sm:text-sm font-medium text-foreground">Bookings</p>
                   </CardContent>
                 </Card>
               </Link>
               <Link to="/transactions?tab=purchases">
                 <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer">
-                  <CardContent className="p-4 text-center">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform shadow-lg">
-                      <ShoppingBag className="h-6 w-6" />
+                  <CardContent className="p-2 sm:p-4 text-center">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-500 text-white flex items-center justify-center mx-auto mb-1.5 sm:mb-3 group-hover:scale-105 transition-transform shadow-lg">
+                      <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
-                    <p className="text-sm font-medium text-foreground">Purchases</p>
+                    <p className="text-xs sm:text-sm font-medium text-foreground">Purchases</p>
                   </CardContent>
                 </Card>
               </Link>
               <Link to="/favorites">
                 <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer">
-                  <CardContent className="p-4 text-center">
-                    <div className="w-12 h-12 rounded-2xl bg-pink-500 text-white flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform shadow-lg">
-                      <Heart className="h-6 w-6" />
+                  <CardContent className="p-2 sm:p-4 text-center">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-pink-500 text-white flex items-center justify-center mx-auto mb-1.5 sm:mb-3 group-hover:scale-105 transition-transform shadow-lg">
+                      <Heart className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
-                    <p className="text-sm font-medium text-foreground">Favorites</p>
+                    <p className="text-xs sm:text-sm font-medium text-foreground">Favorites</p>
                   </CardContent>
                 </Card>
               </Link>
               <Link to="/account">
                 <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer">
-                  <CardContent className="p-4 text-center">
-                    <div className="w-12 h-12 rounded-2xl bg-blue-500 text-white flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform shadow-lg">
-                      <User className="h-6 w-6" />
+                  <CardContent className="p-2 sm:p-4 text-center">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-500 text-white flex items-center justify-center mx-auto mb-1.5 sm:mb-3 group-hover:scale-105 transition-transform shadow-lg">
+                      <User className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
-                    <p className="text-sm font-medium text-foreground">Account</p>
+                    <p className="text-xs sm:text-sm font-medium text-foreground">Account</p>
                   </CardContent>
                 </Card>
               </Link>
               <Link to="/notification-preferences">
                 <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer">
-                  <CardContent className="p-4 text-center">
-                    <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform shadow-lg">
-                      <Bell className="h-6 w-6" />
+                  <CardContent className="p-2 sm:p-4 text-center">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-500 text-white flex items-center justify-center mx-auto mb-1.5 sm:mb-3 group-hover:scale-105 transition-transform shadow-lg">
+                      <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
-                    <p className="text-sm font-medium text-foreground">Notifications</p>
+                    <p className="text-xs sm:text-sm font-medium text-foreground">Notifications</p>
                   </CardContent>
                 </Card>
               </Link>
