@@ -74,54 +74,54 @@ const Dashboard = () => {
             </div>
 
             {/* Quick Action Cards */}
-            <div className="grid grid-cols-5 gap-2 sm:gap-3 max-w-3xl mx-auto px-2 sm:px-0">
-              <Link to="/transactions?tab=bookings">
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer">
-                  <CardContent className="p-2 sm:p-4 text-center">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-primary text-white flex items-center justify-center mx-auto mb-1.5 sm:mb-3 group-hover:scale-105 transition-transform shadow-lg">
-                      <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
+            <div className="grid grid-cols-5 gap-1.5 sm:gap-3 max-w-3xl mx-auto px-1 sm:px-0">
+              <Link to="/transactions?tab=bookings" className="min-w-0">
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer overflow-hidden">
+                  <CardContent className="p-1.5 sm:p-4 text-center">
+                    <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-primary text-white flex items-center justify-center mx-auto mb-1 sm:mb-3 group-hover:scale-105 transition-transform shadow-lg">
+                      <Calendar className="h-4 w-4 sm:h-6 sm:w-6" />
                     </div>
-                    <p className="text-xs sm:text-sm font-medium text-foreground">Bookings</p>
+                    <p className="text-[10px] sm:text-sm font-medium text-foreground truncate">Bookings</p>
                   </CardContent>
                 </Card>
               </Link>
-              <Link to="/transactions?tab=purchases">
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer">
-                  <CardContent className="p-2 sm:p-4 text-center">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-500 text-white flex items-center justify-center mx-auto mb-1.5 sm:mb-3 group-hover:scale-105 transition-transform shadow-lg">
-                      <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6" />
+              <Link to="/transactions?tab=purchases" className="min-w-0">
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer overflow-hidden">
+                  <CardContent className="p-1.5 sm:p-4 text-center">
+                    <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-emerald-500 text-white flex items-center justify-center mx-auto mb-1 sm:mb-3 group-hover:scale-105 transition-transform shadow-lg">
+                      <ShoppingBag className="h-4 w-4 sm:h-6 sm:w-6" />
                     </div>
-                    <p className="text-xs sm:text-sm font-medium text-foreground">Purchases</p>
+                    <p className="text-[10px] sm:text-sm font-medium text-foreground truncate">Purchases</p>
                   </CardContent>
                 </Card>
               </Link>
-              <Link to="/favorites">
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer">
-                  <CardContent className="p-2 sm:p-4 text-center">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-pink-500 text-white flex items-center justify-center mx-auto mb-1.5 sm:mb-3 group-hover:scale-105 transition-transform shadow-lg">
-                      <Heart className="h-5 w-5 sm:h-6 sm:w-6" />
+              <Link to="/favorites" className="min-w-0">
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer overflow-hidden">
+                  <CardContent className="p-1.5 sm:p-4 text-center">
+                    <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-pink-500 text-white flex items-center justify-center mx-auto mb-1 sm:mb-3 group-hover:scale-105 transition-transform shadow-lg">
+                      <Heart className="h-4 w-4 sm:h-6 sm:w-6" />
                     </div>
-                    <p className="text-xs sm:text-sm font-medium text-foreground">Favorites</p>
+                    <p className="text-[10px] sm:text-sm font-medium text-foreground truncate">Favorites</p>
                   </CardContent>
                 </Card>
               </Link>
-              <Link to="/account">
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer">
-                  <CardContent className="p-2 sm:p-4 text-center">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-500 text-white flex items-center justify-center mx-auto mb-1.5 sm:mb-3 group-hover:scale-105 transition-transform shadow-lg">
-                      <User className="h-5 w-5 sm:h-6 sm:w-6" />
+              <Link to="/account" className="min-w-0">
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer overflow-hidden">
+                  <CardContent className="p-1.5 sm:p-4 text-center">
+                    <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-blue-500 text-white flex items-center justify-center mx-auto mb-1 sm:mb-3 group-hover:scale-105 transition-transform shadow-lg">
+                      <User className="h-4 w-4 sm:h-6 sm:w-6" />
                     </div>
-                    <p className="text-xs sm:text-sm font-medium text-foreground">Account</p>
+                    <p className="text-[10px] sm:text-sm font-medium text-foreground truncate">Account</p>
                   </CardContent>
                 </Card>
               </Link>
-              <Link to="/notification-preferences">
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer">
-                  <CardContent className="p-2 sm:p-4 text-center">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-500 text-white flex items-center justify-center mx-auto mb-1.5 sm:mb-3 group-hover:scale-105 transition-transform shadow-lg">
-                      <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
+              <Link to="/notification-preferences" className="min-w-0">
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer overflow-hidden">
+                  <CardContent className="p-1.5 sm:p-4 text-center">
+                    <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-amber-500 text-white flex items-center justify-center mx-auto mb-1 sm:mb-3 group-hover:scale-105 transition-transform shadow-lg">
+                      <Bell className="h-4 w-4 sm:h-6 sm:w-6" />
                     </div>
-                    <p className="text-xs sm:text-sm font-medium text-foreground">Notifications</p>
+                    <p className="text-[10px] sm:text-sm font-medium text-foreground truncate">Alerts</p>
                   </CardContent>
                 </Card>
               </Link>
