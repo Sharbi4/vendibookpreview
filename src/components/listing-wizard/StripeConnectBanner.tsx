@@ -55,7 +55,7 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
         </div>
         <Button 
           size="sm" 
-          onClick={connectStripe}
+          onClick={() => connectStripe()}
           disabled={isConnecting}
           className="h-7 text-xs gap-1 bg-[#635bff] hover:bg-[#5147e6] text-white border-0"
         >
@@ -93,7 +93,7 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
           </p>
           <Button 
             size="sm" 
-            onClick={connectStripe}
+            onClick={() => connectStripe()}
             disabled={isConnecting}
             className="mt-3 gap-1 bg-[#635bff] hover:bg-[#5147e6] text-white"
           >

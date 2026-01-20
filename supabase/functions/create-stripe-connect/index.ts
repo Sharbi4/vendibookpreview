@@ -20,6 +20,18 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
+    // Parse request body for optional returnPath
+    let returnPath = "/list";
+    try {
+      const body = await req.json();
+      if (body?.returnPath) {
+        returnPath = body.returnPath;
+      }
+    } catch {
+      // No body or invalid JSON, use default
+    }
+    logStep("Return path", { returnPath });
+
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
@@ -81,8 +93,8 @@ serve(async (req) => {
     // Create account link for onboarding
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: `${origin}/dashboard?stripe=refresh`,
-      return_url: `${origin}/dashboard?stripe=complete`,
+      refresh_url: `${origin}${returnPath}?stripe=refresh`,
+      return_url: `${origin}${returnPath}?stripe=complete`,
       type: "account_onboarding",
     });
 
