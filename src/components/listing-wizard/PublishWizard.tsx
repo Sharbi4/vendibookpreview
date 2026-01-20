@@ -46,6 +46,7 @@ import { cn } from '@/lib/utils';
 import { FreightSettingsCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { ProofNotaryCard } from './ProofNotaryCard';
+import stripeWordmark from '@/assets/stripe-wordmark-blurple.png';
 import {
   calculateRentalFees,
   calculateSaleFees,
@@ -2729,22 +2730,22 @@ export const PublishWizard: React.FC = () => {
                         </div>
                       </div>
                     ) : (
-                      <div className="relative overflow-hidden rounded-xl p-6 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10 text-center">
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+                      <div className="relative overflow-hidden rounded-xl p-6 border-2 border-[#635bff]/30 bg-[#635bff]/5 text-center">
                         <div className="relative">
-                          <div className="w-14 h-14 mx-auto mb-4 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md flex items-center justify-center">
-                            <CreditCard className="w-7 h-7 text-white" />
+                          <div className="w-14 h-14 mx-auto mb-4 bg-[#635bff] rounded-xl shadow-md flex items-center justify-center">
+                            <img src={stripeWordmark} alt="Stripe" className="h-6 w-auto brightness-0 invert" />
                           </div>
                           <h3 className="font-semibold text-foreground mb-2">Set up payouts</h3>
                           <p className="text-sm text-muted-foreground mb-4">
-                            Connect your Stripe account to get paid when you receive bookings or sales.
+                            Connect to get paid from your listings when you receive bookings or sales.
                           </p>
                           <Button 
                             onClick={handleStripeConnect} 
                             disabled={isConnecting}
-                            className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
+                            className="bg-[#635bff] hover:bg-[#5147e6] text-white border-0 shadow-md"
                           >
                             {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                            <img src={stripeWordmark} alt="" className="h-4 w-auto brightness-0 invert mr-2" />
                             Connect Stripe
                             <ExternalLink className="w-4 h-4 ml-2" />
                           </Button>
@@ -2886,18 +2887,18 @@ export const PublishWizard: React.FC = () => {
 
                   {/* Stripe Connect Panel */}
                   {!isOnboardingComplete && (
-                    <div className="p-5 rounded-xl border-2 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
+                    <div className="p-5 rounded-xl border-2 border-[#635bff]/30 bg-[#635bff]/5">
                       <div className="flex items-start gap-3">
-                        <CreditCard className="w-6 h-6 text-amber-600 mt-0.5" />
+                        <img src={stripeWordmark} alt="Stripe" className="w-12 h-auto mt-0.5" />
                         <div className="flex-1">
-                          <h3 className="font-semibold text-amber-800 dark:text-amber-200 mb-1">
-                            Connect Stripe to get paid
+                          <h3 className="font-semibold text-foreground mb-1">
+                            Connect to get paid from your listings
                           </h3>
-                          <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+                          <p className="text-sm text-muted-foreground mb-3">
                             To go live and receive payments, you need to connect your Stripe account. Takes about 2 minutes.
                           </p>
                           <div className="flex flex-wrap gap-2">
-                            <Button size="sm" onClick={handleStripeConnect} disabled={isConnecting}>
+                            <Button size="sm" onClick={handleStripeConnect} disabled={isConnecting} className="bg-[#635bff] hover:bg-[#5147e6] text-white">
                               {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                               Connect Stripe (2 min)
                             </Button>
