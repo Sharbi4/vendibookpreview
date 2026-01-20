@@ -7,7 +7,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   X, MapPin, Zap, Check, DollarSign, Truck, Calendar, 
-  ShieldCheck, Star, Clock, Package, Building2, LayoutGrid, FileText 
+  ShieldCheck, Star, Clock, Package, Building2, LayoutGrid, FileText,
+  Scale, Ruler, CreditCard, Banknote
 } from 'lucide-react';
 import { CATEGORY_LABELS, MODE_LABELS, ListingCategory, FulfillmentType } from '@/types/listing';
 import { cn } from '@/lib/utils';
@@ -33,6 +34,16 @@ interface ListingPreviewModalProps {
     fulfillmentType: FulfillmentType | null;
     deliveryFee: string;
     deliveryRadiusMiles: string;
+    depositAmount?: string;
+    weightLbs?: string;
+    lengthInches?: string;
+    widthInches?: string;
+    heightInches?: string;
+    hoursOfAccess?: string;
+    availableFrom?: string;
+    availableTo?: string;
+    acceptCardPayment?: boolean;
+    acceptCashPayment?: boolean;
   };
   host?: {
     name: string;
@@ -51,6 +62,7 @@ export const ListingPreviewModal: React.FC<ListingPreviewModalProps> = ({
   const [activeTab, setActiveTab] = useState<'card' | 'detail'>('card');
   
   const location = listing.address || listing.pickupLocationText || 'Location not specified';
+  const locationShort = location?.split(',').slice(-2).join(',').trim() || location;
   const priceDisplay = listing.mode === 'sale' 
     ? `$${parseFloat(listing.priceSale || '0').toLocaleString()}`
     : `$${parseFloat(listing.priceDaily || '0').toLocaleString()}/day`;
@@ -58,6 +70,21 @@ export const ListingPreviewModal: React.FC<ListingPreviewModalProps> = ({
   const hostInitials = host?.name
     ? host.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : 'HO';
+
+  const isRental = listing.mode === 'rent';
+  const showDimensions = (listing.category === 'food_truck' || listing.category === 'food_trailer') && 
+    (listing.weightLbs || listing.lengthInches);
+
+  // Format dimensions as feet
+  const formatDimension = (inches: string | undefined) => {
+    if (!inches) return null;
+    const ft = Math.round(parseFloat(inches) / 12);
+    return `${ft}'`;
+  };
+
+  const dimensionsDisplay = showDimensions && listing.lengthInches && listing.widthInches && listing.heightInches
+    ? `${formatDimension(listing.lengthInches)} × ${formatDimension(listing.widthInches)} × ${formatDimension(listing.heightInches)}`
+    : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -164,96 +191,109 @@ export const ListingPreviewModal: React.FC<ListingPreviewModalProps> = ({
 
               {/* Content */}
               <div className="p-6 space-y-6">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                  <div className="flex-1">
-                    <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                {/* Header - Matching ListingDetail layout */}
+                <div className="space-y-3">
+                  {/* Badges */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="secondary" className="text-xs">
                       {CATEGORY_LABELS[listing.category]}
-                    </span>
-                    <h1 className="text-2xl font-bold text-foreground mt-1">
-                      {listing.title || 'Untitled Listing'}
-                    </h1>
-                    <div className="flex items-center gap-2 text-muted-foreground mt-2">
-                      <MapPin className="w-4 h-4" />
-                      <span>{location}</span>
-                    </div>
+                    </Badge>
+                    <Badge variant={isRental ? 'default' : 'outline'} className="text-xs">
+                      For {isRental ? 'Rent' : 'Sale'}
+                    </Badge>
+                    {listing.instantBook && isRental && (
+                      <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
+                        Instant Book
+                      </Badge>
+                    )}
                   </div>
                   
-                  {/* Price Card */}
-                  <div className="bg-card border border-border rounded-xl p-4 md:min-w-[180px]">
-                    <div className="text-2xl font-bold text-primary">
-                      {priceDisplay}
-                    </div>
-                    {listing.mode === 'rent' && listing.priceWeekly && (
-                      <div className="text-sm text-muted-foreground mt-1">
-                        ${parseFloat(listing.priceWeekly).toLocaleString()}/week
-                      </div>
-                    )}
-                    {listing.instantBook && listing.mode === 'rent' && (
-                      <div className="flex items-center gap-1.5 text-emerald-600 text-sm mt-2">
-                        <Zap className="w-4 h-4" />
-                        <span className="font-medium">Instant Book</span>
-                      </div>
-                    )}
+                  {/* Title */}
+                  <h1 className="text-xl md:text-2xl font-bold text-foreground">
+                    {listing.title || 'Untitled Listing'}
+                  </h1>
+                  
+                  {/* Location */}
+                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <MapPin className="h-4 w-4" />
+                    <span>{locationShort}</span>
                   </div>
                 </div>
 
-                {/* Quick Highlights */}
-                <div className="flex flex-wrap gap-2">
-                  {listing.fulfillmentType && (
-                    <Badge variant="secondary" className="gap-1.5">
-                      {listing.fulfillmentType === 'delivery' ? <Truck className="w-3 h-3" /> : 
-                       listing.fulfillmentType === 'on_site' ? <Building2 className="w-3 h-3" /> : 
-                       <MapPin className="w-3 h-3" />}
-                      {listing.fulfillmentType === 'pickup' ? 'Pickup' : 
-                       listing.fulfillmentType === 'delivery' ? 'Delivery' : 
-                       listing.fulfillmentType === 'both' ? 'Pickup & Delivery' : 'On-site'}
-                    </Badge>
-                  )}
-                  {listing.deliveryFee && parseFloat(listing.deliveryFee) > 0 && (
-                    <Badge variant="secondary" className="gap-1.5">
-                      <Truck className="w-3 h-3" />
-                      ${listing.deliveryFee} delivery
-                    </Badge>
-                  )}
-                  {listing.deliveryRadiusMiles && (
-                    <Badge variant="secondary" className="gap-1.5">
-                      <MapPin className="w-3 h-3" />
-                      {listing.deliveryRadiusMiles} mi radius
-                    </Badge>
-                  )}
+                {/* Quick Highlights - Matching ListingDetail */}
+                <div className="p-4 bg-muted/30 rounded-xl">
+                  <div className="flex flex-wrap gap-2">
+                    {listing.fulfillmentType && (
+                      <Badge variant="secondary" className="gap-1.5">
+                        {listing.fulfillmentType === 'delivery' ? <Truck className="w-3 h-3" /> : 
+                         listing.fulfillmentType === 'on_site' ? <Building2 className="w-3 h-3" /> : 
+                         <MapPin className="w-3 h-3" />}
+                        {listing.fulfillmentType === 'pickup' ? 'Pickup' : 
+                         listing.fulfillmentType === 'delivery' ? 'Delivery' : 
+                         listing.fulfillmentType === 'both' ? 'Pickup & Delivery' : 'On-site Access'}
+                      </Badge>
+                    )}
+                    {listing.instantBook && isRental && (
+                      <Badge variant="secondary" className="gap-1.5 bg-emerald-50 text-emerald-700 border-emerald-200">
+                        <Zap className="w-3 h-3" />
+                        Instant Book
+                      </Badge>
+                    )}
+                    {listing.deliveryFee && parseFloat(listing.deliveryFee) > 0 && (
+                      <Badge variant="secondary" className="gap-1.5">
+                        <Truck className="w-3 h-3" />
+                        ${listing.deliveryFee} delivery
+                      </Badge>
+                    )}
+                    {listing.deliveryRadiusMiles && (
+                      <Badge variant="secondary" className="gap-1.5">
+                        <MapPin className="w-3 h-3" />
+                        {listing.deliveryRadiusMiles} mi radius
+                      </Badge>
+                    )}
+                    {listing.hoursOfAccess && (
+                      <Badge variant="secondary" className="gap-1.5">
+                        <Clock className="w-3 h-3" />
+                        {listing.hoursOfAccess}
+                      </Badge>
+                    )}
+                    {showDimensions && listing.weightLbs && (
+                      <Badge variant="secondary" className="gap-1.5">
+                        <Scale className="w-3 h-3" />
+                        {parseFloat(listing.weightLbs).toLocaleString()} lbs
+                      </Badge>
+                    )}
+                    {dimensionsDisplay && (
+                      <Badge variant="secondary" className="gap-1.5">
+                        <Ruler className="w-3 h-3" />
+                        {dimensionsDisplay}
+                      </Badge>
+                    )}
+                    {/* Host Highlights */}
+                    {listing.highlights.slice(0, 3).map((highlight, i) => (
+                      <Badge key={i} variant="secondary" className="gap-1.5">
+                        <Check className="w-3 h-3 text-primary" />
+                        {highlight}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Description */}
                 <div>
-                  <h3 className="font-semibold text-foreground mb-2">Description</h3>
-                  <p className="text-muted-foreground whitespace-pre-wrap">
+                  <h3 className="text-sm font-semibold text-foreground mb-2">About</h3>
+                  <p className="text-muted-foreground whitespace-pre-wrap text-sm leading-relaxed">
                     {listing.description || 'No description provided.'}
                   </p>
                 </div>
 
-                {/* Highlights */}
-                {listing.highlights.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-3">Highlights</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {listing.highlights.map((highlight, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm">
-                          <Check className="w-4 h-4 text-primary shrink-0" />
-                          <span>{highlight}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Amenities */}
                 {listing.amenities.length > 0 && (
                   <div>
-                    <h3 className="font-semibold text-foreground mb-3">Features & Amenities</h3>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Features & Amenities</h3>
                     <div className="flex flex-wrap gap-2">
                       {listing.amenities.map((amenity, i) => (
-                        <Badge key={i} variant="outline" className="capitalize">
+                        <Badge key={i} variant="outline" className="capitalize text-xs">
                           {amenity.replace(/_/g, ' ')}
                         </Badge>
                       ))}
@@ -261,8 +301,8 @@ export const ListingPreviewModal: React.FC<ListingPreviewModalProps> = ({
                   </div>
                 )}
 
-                {/* Pricing Section */}
-                <div className="border-t pt-6">
+                {/* Pricing Section - Matching ListingDetail */}
+                <div className="p-4 bg-muted/30 rounded-xl">
                   <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-primary" />
                     Pricing
@@ -272,26 +312,35 @@ export const ListingPreviewModal: React.FC<ListingPreviewModalProps> = ({
                       <>
                         {listing.priceDaily && (
                           <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Daily rate</span>
+                            <span className="text-muted-foreground text-sm">Daily rate</span>
                             <span className="font-medium">${parseFloat(listing.priceDaily).toLocaleString()}/day</span>
                           </div>
                         )}
                         {listing.priceWeekly && (
                           <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Weekly rate</span>
+                            <span className="text-muted-foreground text-sm">Weekly rate</span>
                             <span className="font-medium">${parseFloat(listing.priceWeekly).toLocaleString()}/week</span>
+                          </div>
+                        )}
+                        {listing.depositAmount && parseFloat(listing.depositAmount) > 0 && (
+                          <div className="flex justify-between items-center pt-2 border-t">
+                            <span className="text-muted-foreground text-sm flex items-center gap-1.5">
+                              <ShieldCheck className="w-3.5 h-3.5" />
+                              Security deposit
+                            </span>
+                            <span className="font-medium">${parseFloat(listing.depositAmount).toLocaleString()}</span>
                           </div>
                         )}
                       </>
                     ) : (
                       <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Sale price</span>
+                        <span className="text-muted-foreground text-sm">Sale price</span>
                         <span className="font-semibold text-lg">${parseFloat(listing.priceSale || '0').toLocaleString()}</span>
                       </div>
                     )}
                     {listing.deliveryFee && parseFloat(listing.deliveryFee) > 0 && (
                       <div className="flex justify-between items-center pt-2 border-t">
-                        <span className="text-muted-foreground flex items-center gap-1.5">
+                        <span className="text-muted-foreground text-sm flex items-center gap-1.5">
                           <Truck className="w-3.5 h-3.5" />
                           Delivery fee
                         </span>
@@ -299,7 +348,52 @@ export const ListingPreviewModal: React.FC<ListingPreviewModalProps> = ({
                       </div>
                     )}
                   </div>
+
+                  {/* Payment Methods */}
+                  {(listing.acceptCardPayment || listing.acceptCashPayment) && (
+                    <div className="mt-4 pt-3 border-t">
+                      <p className="text-xs text-muted-foreground mb-2">Accepted payment methods</p>
+                      <div className="flex gap-2">
+                        {listing.acceptCardPayment && (
+                          <Badge variant="outline" className="text-xs gap-1">
+                            <CreditCard className="w-3 h-3" />
+                            Card
+                          </Badge>
+                        )}
+                        {listing.acceptCashPayment && (
+                          <Badge variant="outline" className="text-xs gap-1">
+                            <Banknote className="w-3 h-3" />
+                            Cash
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
+
+                {/* Availability - Rentals Only */}
+                {isRental && (listing.availableFrom || listing.availableTo) && (
+                  <div className="p-4 bg-muted/30 rounded-xl">
+                    <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-primary" />
+                      Availability
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      {listing.availableFrom && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Available from</span>
+                          <span className="font-medium">{new Date(listing.availableFrom).toLocaleDateString()}</span>
+                        </div>
+                      )}
+                      {listing.availableTo && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Available until</span>
+                          <span className="font-medium">{new Date(listing.availableTo).toLocaleDateString()}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Host Card Preview */}
                 {host && (

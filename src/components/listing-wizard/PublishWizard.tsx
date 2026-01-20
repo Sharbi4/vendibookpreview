@@ -3054,6 +3054,16 @@ export const PublishWizard: React.FC = () => {
             fulfillmentType,
             deliveryFee,
             deliveryRadiusMiles,
+            depositAmount,
+            weightLbs,
+            lengthInches,
+            widthInches,
+            heightInches,
+            hoursOfAccess,
+            availableFrom: availableFrom || undefined,
+            availableTo: availableTo || undefined,
+            acceptCardPayment,
+            acceptCashPayment,
           }}
           host={user ? {
             name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'You',
