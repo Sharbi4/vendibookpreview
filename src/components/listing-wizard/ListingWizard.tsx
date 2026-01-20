@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useBlocker } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Save, Send, Loader2, Cloud, Check, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -245,33 +245,17 @@ export const ListingWizard: React.FC = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [showSuccessModal]);
 
-  // React Router navigation blocker
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      hasUnsavedChanges.current && 
-      !showSuccessModal &&
-      currentLocation.pathname !== nextLocation.pathname
-  );
-
-  // Show exit dialog when blocker is triggered
-  useEffect(() => {
-    if (blocker.state === 'blocked') {
-      setShowExitDialog(true);
-    }
-  }, [blocker.state]);
+  // Note: useBlocker requires data router which is not used in this app
+  // The beforeunload handler above handles browser navigation warnings
+  // In-app navigation is handled via manual exit dialog triggers
 
   const handleConfirmExit = () => {
     setShowExitDialog(false);
-    if (blocker.state === 'blocked') {
-      blocker.proceed();
-    }
+    navigate('/dashboard');
   };
 
   const handleCancelExit = () => {
     setShowExitDialog(false);
-    if (blocker.state === 'blocked') {
-      blocker.reset();
-    }
   };
 
   const handleSaveAndExit = async () => {
@@ -341,9 +325,7 @@ export const ListingWizard: React.FC = () => {
       hasUnsavedChanges.current = false;
       lastSavedData.current = getSerializedFormData();
       setShowExitDialog(false);
-      if (blocker.state === 'blocked') {
-        blocker.proceed();
-      }
+      navigate('/dashboard');
     } catch (error) {
       console.error('Error saving draft:', error);
       toast({
