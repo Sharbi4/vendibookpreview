@@ -64,6 +64,13 @@ const ListPage: React.FC = () => {
     });
   }, []);
 
+  // Scroll to top when mode changes (user starts import or scratch wizard)
+  useEffect(() => {
+    if (mode !== 'choose') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [mode]);
+
 
   if (isLoading) {
     return (
