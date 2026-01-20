@@ -187,8 +187,13 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
           id="description"
           value={formData.description}
           onChange={(e) => {
-            updateField('description', e.target.value);
+            const newValue = e.target.value;
+            console.log('[StepDetails] Description onChange - updating to:', newValue.substring(0, 50) + (newValue.length > 50 ? '...' : ''));
+            updateField('description', newValue);
             if (showOptimized) setShowOptimized(false);
+          }}
+          onBlur={() => {
+            console.log('[StepDetails] Description onBlur - current value length:', formData.description.length);
           }}
           placeholder="Describe your listing in detail. What makes it special? What equipment is included? What's the condition?"
           rows={6}
