@@ -2717,16 +2717,16 @@ export const PublishWizard: React.FC = () => {
 
                   {acceptCardPayment && (
                     isOnboardingComplete ? (
-                      <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+                      <div className="relative overflow-hidden rounded-xl p-4 border-2 border-[#635bff]/30 bg-[#635bff]/5">
                         <div className="relative flex items-center gap-3">
-                          <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md flex items-center justify-center">
+                          <div className="p-2.5 bg-[#635bff] rounded-xl shadow-md flex items-center justify-center">
                             <Check className="w-5 h-5 text-white" />
                           </div>
-                          <div>
-                            <p className="font-semibold text-foreground">Stripe connected</p>
-                            <p className="text-sm text-muted-foreground">You're ready to receive payments</p>
+                          <div className="flex items-center gap-2">
+                            <img src={stripeWordmark} alt="Stripe" className="h-5 w-auto" />
+                            <span className="font-semibold text-foreground">connected</span>
                           </div>
+                          <p className="text-sm text-muted-foreground ml-auto">You're ready to receive payments</p>
                         </div>
                       </div>
                     ) : (
