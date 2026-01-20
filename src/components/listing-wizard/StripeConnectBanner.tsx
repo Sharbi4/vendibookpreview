@@ -1,7 +1,8 @@
-import { CreditCard, CheckCircle2, ArrowRight, Loader2 } from 'lucide-react';
+import { CheckCircle2, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { cn } from '@/lib/utils';
+import stripeWordmark from '@/assets/stripe-wordmark-blurple.png';
 
 interface StripeConnectBannerProps {
   className?: string;
@@ -43,21 +44,20 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
   if (variant === 'compact') {
     return (
       <div className={cn(
-        "flex items-center justify-between gap-3 px-3 py-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg",
+        "flex items-center justify-between gap-3 px-3 py-2 bg-[#635bff]/5 border border-[#635bff]/20 rounded-lg",
         className
       )}>
         <div className="flex items-center gap-2">
-          <CreditCard className="h-4 w-4 text-amber-600 flex-shrink-0" />
-          <span className="text-sm text-amber-700 dark:text-amber-400">
-            {hasAccountStarted ? 'Complete Stripe setup to publish' : 'Connect Stripe to publish listings'}
+          <img src={stripeWordmark} alt="Stripe" className="h-4 w-auto" />
+          <span className="text-sm text-[#635bff] dark:text-[#a8a4ff]">
+            {hasAccountStarted ? 'Complete setup to get paid' : 'Connect to get paid from your listings'}
           </span>
         </div>
         <Button 
           size="sm" 
-          variant="outline" 
           onClick={connectStripe}
           disabled={isConnecting}
-          className="h-7 text-xs gap-1 border-amber-300 hover:bg-amber-100 dark:border-amber-700 dark:hover:bg-amber-900/50"
+          className="h-7 text-xs gap-1 bg-[#635bff] hover:bg-[#5147e6] text-white border-0"
         >
           {isConnecting ? (
             <Loader2 className="h-3 w-3 animate-spin" />
@@ -75,16 +75,16 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
   // Full variant with more details
   return (
     <div className={cn(
-      "p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-200 dark:border-amber-800 rounded-xl",
+      "p-4 bg-[#635bff]/5 border border-[#635bff]/20 rounded-xl",
       className
     )}>
       <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 w-10 h-10 bg-amber-100 dark:bg-amber-900/50 rounded-lg flex items-center justify-center">
-          <CreditCard className="h-5 w-5 text-amber-600" />
+        <div className="flex-shrink-0 w-10 h-10 bg-[#635bff]/10 rounded-lg flex items-center justify-center">
+          <img src={stripeWordmark} alt="Stripe" className="h-5 w-auto" />
         </div>
         <div className="flex-1">
           <h4 className="font-medium text-foreground">
-            {hasAccountStarted ? 'Complete Your Stripe Setup' : 'Connect Stripe to Get Paid'}
+            {hasAccountStarted ? 'Complete Your Stripe Setup' : 'Connect to Get Paid from Your Listings'}
           </h4>
           <p className="text-sm text-muted-foreground mt-1">
             {hasAccountStarted 
@@ -95,7 +95,7 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
             size="sm" 
             onClick={connectStripe}
             disabled={isConnecting}
-            className="mt-3 gap-1"
+            className="mt-3 gap-1 bg-[#635bff] hover:bg-[#5147e6] text-white"
           >
             {isConnecting ? (
               <>
@@ -104,7 +104,8 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
               </>
             ) : (
               <>
-                {hasAccountStarted ? 'Complete Setup' : 'Connect Stripe'}
+                <img src={stripeWordmark} alt="" className="h-4 w-auto brightness-0 invert" />
+                {hasAccountStarted ? 'Complete Setup' : 'Connect'}
                 <ArrowRight className="h-4 w-4" />
               </>
             )}
