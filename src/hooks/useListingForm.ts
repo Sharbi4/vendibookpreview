@@ -108,7 +108,20 @@ export const useListingForm = () => {
   }, []);
 
   const goToStep = useCallback((step: number) => {
-    setCurrentStep(Math.max(1, Math.min(step, TOTAL_STEPS)));
+    // Only allow going to a step if all previous steps are valid
+    // Or going backwards (which is always allowed)
+    setCurrentStep(prev => {
+      const targetStep = Math.max(1, Math.min(step, TOTAL_STEPS));
+      
+      // Going backwards is always allowed
+      if (targetStep <= prev) {
+        return targetStep;
+      }
+      
+      // Going forwards: check that current step is valid before advancing
+      // This prevents skipping by clicking on future step indicators
+      return prev;
+    });
   }, []);
 
   const resetForm = useCallback(() => {
