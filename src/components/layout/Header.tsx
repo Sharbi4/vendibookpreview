@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, ShieldCheck, Clock, TrendingUp, Mic, MicOff, ChevronDown, CheckCircle2, Receipt } from 'lucide-react';
+import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, ShieldCheck, Clock, TrendingUp, Mic, MicOff, ChevronDown, CheckCircle2, Receipt, Heart, Calendar, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -439,14 +439,23 @@ const Header = () => {
                   <LayoutDashboard className="h-4 w-4 mr-2" />
                   Dashboard
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/transactions?tab=bookings')}>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Bookings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/transactions?tab=purchases')}>
+                  <ShoppingBag className="h-4 w-4 mr-2" />
+                  Purchases
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/favorites')}>
+                  <Heart className="h-4 w-4 mr-2" />
+                  Favorites
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/messages')}>
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Messages
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/transactions')}>
-                  <Receipt className="h-4 w-4 mr-2" />
-                  Transactions
-                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate('/account')}>
                   <User className="h-4 w-4 mr-2" />
                   My Account
