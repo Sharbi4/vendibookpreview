@@ -440,6 +440,28 @@ serve(async (req) => {
     const buyerName = transaction.buyer_name || buyerProfile?.full_name || 'Buyer';
     const sellerName = sellerProfile?.full_name || 'Seller';
 
+    // Fetch notification preferences for buyer and seller
+    const { data: buyerPrefs } = await supabaseClient
+      .from('notification_preferences')
+      .select('*')
+      .eq('user_id', transaction.buyer_id)
+      .maybeSingle();
+
+    const { data: sellerPrefs } = await supabaseClient
+      .from('notification_preferences')
+      .select('*')
+      .eq('user_id', transaction.seller_id)
+      .maybeSingle();
+
+    // Check email preferences - default to true if no preferences exist
+    const buyerWantsSaleEmail = buyerPrefs?.sale_email !== false;
+    const sellerWantsSaleEmail = sellerPrefs?.sale_email !== false;
+
+    logStep("Notification preferences loaded", { 
+      buyerWantsSaleEmail, 
+      sellerWantsSaleEmail 
+    });
+
     logStep("Fetched data", { 
       buyerEmail, 
       sellerEmail, 
@@ -459,8 +481,8 @@ serve(async (req) => {
 
     const emailPromises = [];
 
-    // Send to buyer
-    if (buyerEmail) {
+    // Send to buyer - only if buyer wants sale email notifications
+    if (buyerEmail && buyerWantsSaleEmail) {
       const buyerContent = getEmailContent(notification_type, 'buyer', emailData);
       emailPromises.push(
         resend.emails.send({
@@ -476,10 +498,12 @@ serve(async (req) => {
           return { role: 'buyer', success: false, error: err.message };
         })
       );
+    } else if (buyerEmail && !buyerWantsSaleEmail) {
+      logStep("Buyer email skipped due to preferences", { buyer_id: transaction.buyer_id });
     }
 
-    // Send to seller
-    if (sellerEmail) {
+    // Send to seller - only if seller wants sale email notifications
+    if (sellerEmail && sellerWantsSaleEmail) {
       const sellerContent = getEmailContent(notification_type, 'seller', emailData);
       emailPromises.push(
         resend.emails.send({
@@ -495,6 +519,8 @@ serve(async (req) => {
           return { role: 'seller', success: false, error: err.message };
         })
       );
+    } else if (sellerEmail && !sellerWantsSaleEmail) {
+      logStep("Seller email skipped due to preferences", { seller_id: transaction.seller_id });
     }
 
     const results = await Promise.all(emailPromises);
