@@ -102,7 +102,7 @@ const VendorLotsSection = () => {
                 variant="gradient-premium" 
                 size="lg" 
                 className="w-full"
-                onClick={() => navigate('/create-listing')}
+                onClick={() => navigate('/list')}
               >
                 List Your Lot
                 <ArrowRight className="ml-2 h-5 w-5" />

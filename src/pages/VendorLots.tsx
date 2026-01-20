@@ -407,7 +407,7 @@ const VendorLots = () => {
                     <Button 
                       variant="outline" 
                       size="lg"
-                      onClick={() => navigate('/create-listing')}
+                      onClick={() => navigate('/list')}
                     >
                       List Your Lot
                     </Button>
@@ -627,7 +627,7 @@ const VendorLots = () => {
                   List it on VendiBook and connect with food vendors looking for prime locations.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button variant="gradient-premium" size="lg" onClick={() => navigate('/create-listing')}>
+                  <Button variant="gradient-premium" size="lg" onClick={() => navigate('/list')}>
                     List Your Lot
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>

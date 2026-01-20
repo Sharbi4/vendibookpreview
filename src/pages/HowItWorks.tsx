@@ -381,7 +381,7 @@ const HowItWorks = () => {
                   <h4 className="font-bold text-foreground mb-2">Ready to sell?</h4>
                   <p className="text-sm text-muted-foreground mb-4">Create a for-sale listing and reach buyers locally or nationwide.</p>
                   <Button className="w-full gap-2 shadow-md hover:shadow-lg transition-all" asChild>
-                    <Link to="/create-listing?mode=sale">
+                    <Link to="/list">
                       <ArrowRight className="h-4 w-4" />
                       Create For-Sale Listing
                     </Link>
@@ -406,7 +406,7 @@ const HowItWorks = () => {
                       'Publish',
                     ]}
                     ctaText="Create For-Sale Listing"
-                    ctaHref="/create-listing?mode=sale"
+                    ctaHref="/list"
                     secondaryText="View example listing"
                     secondaryHref="/search?mode=sale"
                     reassurance="Most listings go live in minutes. You stay in control of the deal."
@@ -550,7 +550,7 @@ const HowItWorks = () => {
                   <h4 className="font-bold text-foreground mb-2">Ready to rent out your asset?</h4>
                   <p className="text-sm text-muted-foreground mb-4">Create a rental listing and start earning on your schedule.</p>
                   <Button className="w-full gap-2 shadow-md hover:shadow-lg transition-all" asChild>
-                    <Link to="/create-listing?mode=rent">
+                    <Link to="/list">
                       <ArrowRight className="h-4 w-4" />
                       Create Rental Listing
                     </Link>
@@ -574,7 +574,7 @@ const HowItWorks = () => {
                       'Document requirements (optional)',
                     ]}
                     ctaText="Create Rental Listing"
-                    ctaHref="/create-listing?mode=rent"
+                    ctaHref="/list"
                     secondaryText="View example rental listing"
                     secondaryHref="/search?mode=rent"
                     reassurance="Approve renters only when you're comfortable."
@@ -849,7 +849,7 @@ const HowItWorks = () => {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-105" asChild>
-                  <Link to="/create-listing?mode=sale">
+                  <Link to="/list">
                     <DollarSign className="h-4 w-4" />
                     Sell an Asset
                   </Link>
@@ -860,7 +860,7 @@ const HowItWorks = () => {
                   className="gap-2 bg-transparent border-2 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:scale-105 transition-all"
                   asChild
                 >
-                  <Link to="/create-listing?mode=rent">
+                  <Link to="/list">
                     <CalendarDays className="h-4 w-4" />
                     Rent Out an Asset
                   </Link>
@@ -871,7 +871,7 @@ const HowItWorks = () => {
                   className="gap-2 bg-transparent border-2 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:scale-105 transition-all"
                   asChild
                 >
-                  <Link to="/create-listing?category=vendor_lot">
+                  <Link to="/list">
                     <MapPin className="h-4 w-4" />
                     List a Vendor Lot
                   </Link>

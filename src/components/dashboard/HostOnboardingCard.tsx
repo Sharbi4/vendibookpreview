@@ -53,7 +53,7 @@ export const HostOnboardingCard = () => {
       isComplete: hasListing,
       action: !hasListing ? {
         label: 'Create Listing',
-        to: '/create-listing',
+        to: '/list',
       } : undefined,
     },
     {
