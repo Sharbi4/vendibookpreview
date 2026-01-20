@@ -174,6 +174,11 @@ const ListingDetail = () => {
                   instantBook={listing.instant_book || false}
                   deliveryFee={listing.delivery_fee}
                   hoursOfAccess={listing.hours_of_access}
+                  weightLbs={listing.weight_lbs}
+                  lengthInches={listing.length_inches}
+                  widthInches={listing.width_inches}
+                  heightInches={listing.height_inches}
+                  isRental={isRental}
                 />
               </div>
 
