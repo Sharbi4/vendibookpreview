@@ -49,14 +49,24 @@ const initialFormData: ListingFormData = {
 const TOTAL_STEPS = 7;
 
 export const useListingForm = () => {
-  const [formData, setFormData] = useState<ListingFormData>(initialFormData);
+  const [formData, setFormData] = useState<ListingFormData>(() => {
+    console.log('[useListingForm] Initializing form data - this should only happen once per mount');
+    return initialFormData;
+  });
   const [currentStep, setCurrentStep] = useState(1);
 
   const updateField = useCallback(<K extends keyof ListingFormData>(
     field: K,
     value: ListingFormData[K]
   ) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    console.log('[useListingForm] updateField called:', field, 
+      typeof value === 'string' ? (value.length > 30 ? value.substring(0, 30) + '...' : value) : value
+    );
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      console.log('[useListingForm] Form data updated, description length:', newData.description?.length || 0);
+      return newData;
+    });
   }, []);
 
   const updateCategory = useCallback((category: ListingCategory) => {
