@@ -139,12 +139,42 @@ serve(async (req) => {
     // Create short booking reference ID (first 8 chars uppercase)
     const bookingRef = booking.id.substring(0, 8).toUpperCase();
 
+    // Fetch notification preferences for host and shopper
+    const { data: hostPrefs } = await supabaseClient
+      .from("notification_preferences")
+      .select("*")
+      .eq("user_id", booking.host_id)
+      .maybeSingle();
+
+    const { data: shopperPrefs } = await supabaseClient
+      .from("notification_preferences")
+      .select("*")
+      .eq("user_id", booking.shopper_id)
+      .maybeSingle();
+
+    // Check email preferences - default to true if no preferences exist
+    const hostWantsBookingRequestEmail = hostPrefs?.booking_request_email !== false;
+    const hostWantsBookingResponseEmail = hostPrefs?.booking_response_email !== false;
+    const shopperWantsBookingRequestEmail = shopperPrefs?.booking_request_email !== false;
+    const shopperWantsBookingResponseEmail = shopperPrefs?.booking_response_email !== false;
+
+    // Check in-app preferences
+    const hostWantsBookingRequestInapp = hostPrefs?.booking_request_inapp !== false;
+    const shopperWantsBookingResponseInapp = shopperPrefs?.booking_response_inapp !== false;
+
+    logStep("Notification preferences loaded", { 
+      hostWantsBookingRequestEmail, 
+      shopperWantsBookingRequestEmail,
+      hostWantsBookingResponseEmail,
+      shopperWantsBookingResponseEmail 
+    });
+
     const emails: { to: string; subject: string; html: string }[] = [];
     const inAppNotifications: { user_id: string; type: string; title: string; message: string; link: string }[] = [];
 
     if (event_type === "submitted") {
-      // Email to host about new booking request
-      if (host?.email) {
+      // Email to host about new booking request - only if host wants email notifications
+      if (host?.email && hostWantsBookingRequestEmail) {
         emails.push({
           to: host.email,
           subject: `New Booking Request #${bookingRef} - ${listingTitle}`,
@@ -169,21 +199,28 @@ serve(async (req) => {
                 View Booking Request
               </a>
             </div>
+            <p style="color: #888; font-size: 12px; margin-top: 20px;">
+              <a href="https://vendibookpreview.lovable.app/notification-preferences" style="color: #FF5124; text-decoration: none;">Manage notification preferences</a>
+            </p>
           `),
         });
+      } else if (host?.email && !hostWantsBookingRequestEmail) {
+        logStep("Host email skipped due to preferences", { host_id: booking.host_id });
       }
       
-      // In-app notification to host
-      inAppNotifications.push({
-        user_id: booking.host_id,
-        type: "booking_request",
-        title: `New Booking Request #${bookingRef}`,
-        message: `${shopper?.full_name || "Someone"} requested to book ${listingTitle} from ${startDate} to ${endDate}`,
-        link: "/dashboard",
-      });
+      // In-app notification to host - only if host wants in-app notifications
+      if (hostWantsBookingRequestInapp) {
+        inAppNotifications.push({
+          user_id: booking.host_id,
+          type: "booking_request",
+          title: `New Booking Request #${bookingRef}`,
+          message: `${shopper?.full_name || "Someone"} requested to book ${listingTitle} from ${startDate} to ${endDate}`,
+          link: "/dashboard",
+        });
+      }
 
-      // Confirmation email to shopper
-      if (shopper?.email) {
+      // Confirmation email to shopper - only if shopper wants email notifications
+      if (shopper?.email && shopperWantsBookingRequestEmail) {
         emails.push({
           to: shopper.email,
           subject: `Booking Request #${bookingRef} Submitted - ${listingTitle}`,
@@ -209,8 +246,13 @@ serve(async (req) => {
                 View Booking Status
               </a>
             </div>
+            <p style="color: #888; font-size: 12px; margin-top: 20px;">
+              <a href="https://vendibookpreview.lovable.app/notification-preferences" style="color: #FF5124; text-decoration: none;">Manage notification preferences</a>
+            </p>
           `),
         });
+      } else if (shopper?.email && !shopperWantsBookingRequestEmail) {
+        logStep("Shopper email skipped due to preferences", { shopper_id: booking.shopper_id });
       }
     } else if (event_type === "approved") {
       // Send branded booking confirmation email to shopper
