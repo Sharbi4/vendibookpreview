@@ -750,7 +750,7 @@ const HowItWorks = () => {
                   icon={<FileCheck className="h-5 w-5" />}
                   title="Permits & Requirements Guidance"
                   description="Starting points to research what you may need to operate in a city or state."
-                  href="/tools/permit-path"
+                  href="/tools/permitpath"
                 />
                 <ToolCard
                   icon={<Lightbulb className="h-5 w-5" />}
