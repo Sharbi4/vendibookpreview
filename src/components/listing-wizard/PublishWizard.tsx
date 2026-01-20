@@ -1274,17 +1274,20 @@ export const PublishWizard: React.FC = () => {
             <PublishChecklist
               items={checklistItems}
               onItemClick={(id) => setStep(id as PublishStep)}
+              onPublishClick={() => setShowPublishDialog(true)}
               className="sticky top-24"
             />
           </div>
 
           {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* Mobile Checklist */}
+            {/* Mobile Checklist - hide publish button when on review step to avoid duplicate */}
             <div className="lg:hidden mb-6">
               <PublishChecklist
                 items={checklistItems}
                 onItemClick={(id) => setStep(id as PublishStep)}
+                onPublishClick={() => setShowPublishDialog(true)}
+                hidePublishButton={step === 'review'}
               />
             </div>
 

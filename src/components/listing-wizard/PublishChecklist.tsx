@@ -21,12 +21,16 @@ export interface ChecklistItem {
 interface PublishChecklistProps {
   items: ChecklistItem[];
   onItemClick?: (id: string) => void;
+  onPublishClick?: () => void;
+  hidePublishButton?: boolean;
   className?: string;
 }
 
 export const PublishChecklist: React.FC<PublishChecklistProps> = ({
   items,
   onItemClick,
+  onPublishClick,
+  hidePublishButton = false,
   className,
 }) => {
   const completedCount = items.filter(i => i.completed).length;
@@ -178,29 +182,32 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
         </div>
       </div>
       
-      {/* Footer with Publish Button */}
-      <div className="relative p-4 pt-2 border-t border-border">
-        <Button 
-          className="w-full"
-          disabled={!allRequiredComplete}
-          variant={allRequiredComplete ? "default" : "secondary"}
-        >
-          {allRequiredComplete ? (
-            <>
-              <Sparkles className="w-4 h-4 mr-2" />
-              Publish Listing
-            </>
-          ) : (
-            "Publish Listing"
-          )}
-        </Button>
-        <p className="text-[11px] text-center text-muted-foreground mt-2">
-          {allRequiredComplete 
-            ? "You're ready to publish" 
-            : `Finish ${requiredItems.length - requiredCompleted} essential${requiredItems.length - requiredCompleted > 1 ? 's' : ''} to go live`
-          }
-        </p>
-      </div>
+      {/* Footer with Publish Button - hidden when hidePublishButton is true */}
+      {!hidePublishButton && (
+        <div className="relative p-4 pt-2 border-t border-border">
+          <Button 
+            className="w-full"
+            disabled={!allRequiredComplete}
+            variant={allRequiredComplete ? "default" : "secondary"}
+            onClick={onPublishClick}
+          >
+            {allRequiredComplete ? (
+              <>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Publish Listing
+              </>
+            ) : (
+              "Publish Listing"
+            )}
+          </Button>
+          <p className="text-[11px] text-center text-muted-foreground mt-2">
+            {allRequiredComplete 
+              ? "You're ready to publish" 
+              : `Finish ${requiredItems.length - requiredCompleted} essential${requiredItems.length - requiredCompleted > 1 ? 's' : ''} to go live`
+            }
+          </p>
+        </div>
+      )}
     </div>
   );
 };
