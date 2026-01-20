@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback } from 'react';
-import { Upload, X, Image as ImageIcon, Star, Video, Play, Loader2, CheckCircle, AlertCircle, RotateCcw } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Star, Video, Play, Loader2, CheckCircle, AlertCircle, RotateCcw, GripVertical } from 'lucide-react';
 import { ListingFormData } from '@/types/listing';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,10 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
   const [dragOver, setDragOver] = useState(false);
   const [imageStates, setImageStates] = useState<Map<File, ImageUploadState>>(new Map());
   const [isProcessingImages, setIsProcessingImages] = useState(false);
+  
+  // Drag reorder state
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   
   // Track object URLs to prevent memory leaks
   const imagePreviewUrlsRef = useRef<Map<File, string>>(new Map());
@@ -248,6 +252,65 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
     toast({ title: 'Cover photo updated' });
   }, [formData.images, toast, updateField]);
 
+  // Drag and drop reorder handlers
+  const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
+    e.stopPropagation();
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
+    // Add a slight delay to show the dragging state
+    setTimeout(() => {
+      const target = e.target as HTMLElement;
+      target.style.opacity = '0.5';
+    }, 0);
+  }, []);
+
+  const handleDragEnd = useCallback((e: React.DragEvent) => {
+    e.stopPropagation();
+    const target = e.target as HTMLElement;
+    target.style.opacity = '1';
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  }, []);
+
+  const handleDragOverImage = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (draggedIndex !== null && draggedIndex !== index) {
+      setDragOverIndex(index);
+    }
+  }, [draggedIndex]);
+
+  const handleDragLeaveImage = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverIndex(null);
+  }, []);
+
+  const handleDropImage = useCallback((e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const newImages = [...formData.images];
+    const [movedImage] = newImages.splice(draggedIndex, 1);
+    newImages.splice(dropIndex, 0, movedImage);
+    updateField('images', newImages);
+    
+    // Show toast if cover photo changed
+    if (draggedIndex === 0 || dropIndex === 0) {
+      toast({ title: 'Cover photo updated' });
+    }
+    
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  }, [draggedIndex, formData.images, toast, updateField]);
+
   // Retry failed image
   const retryImage = useCallback((file: File) => {
     const validation = validateImageFile(file);
@@ -302,7 +365,7 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
         <div>
           <h3 className="text-lg font-semibold mb-2">Add Photos</h3>
           <p className="text-sm text-muted-foreground">
-            Upload high-quality photos. The first image will be your cover photo.
+            Upload high-quality photos. <span className="font-medium text-foreground">Drag to reorder</span> — first image is your cover.
             <span className="font-medium text-foreground"> Minimum {minPhotos} photos required.</span>
           </p>
         </div>
@@ -377,13 +440,23 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
               const state = getImageState(file);
               const preview = imagePreviews[index];
               const hasError = state?.status === 'error';
+              const isDragging = draggedIndex === index;
+              const isDragOver = dragOverIndex === index;
               
               return (
                 <div
                   key={preview || file.name}
+                  draggable={!hasError}
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={(e) => handleDragOverImage(e, index)}
+                  onDragLeave={handleDragLeaveImage}
+                  onDrop={(e) => handleDropImage(e, index)}
                   className={cn(
-                    "relative aspect-square rounded-xl overflow-hidden group bg-muted",
-                    hasError && "ring-2 ring-red-500"
+                    "relative aspect-square rounded-xl overflow-hidden group bg-muted cursor-grab active:cursor-grabbing transition-all",
+                    hasError && "ring-2 ring-red-500 cursor-default",
+                    isDragging && "opacity-50 scale-95",
+                    isDragOver && "ring-2 ring-primary ring-offset-2"
                   )}
                 >
                   {preview && (
@@ -391,10 +464,17 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
                       src={preview}
                       alt={`Upload ${index + 1}`}
                       className={cn(
-                        "w-full h-full object-cover",
+                        "w-full h-full object-cover pointer-events-none",
                         hasError && "opacity-50"
                       )}
                     />
+                  )}
+                  
+                  {/* Drag handle indicator */}
+                  {!hasError && (
+                    <div className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                      <GripVertical className="w-4 h-4" />
+                    </div>
                   )}
                   
                   {/* Error overlay */}
@@ -425,24 +505,27 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
 
                   {/* Actions overlay */}
                   {!hasError && (
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                       {index !== 0 && (
                         <Button
                           type="button"
                           size="sm"
                           variant="secondary"
+                          className="text-xs h-7"
                           onClick={(e) => { e.stopPropagation(); moveImageToFirst(index); }}
                         >
-                          Make Cover
+                          <Star className="w-3 h-3 mr-1" />
+                          Cover
                         </Button>
                       )}
                       <Button
                         type="button"
                         size="icon"
                         variant="destructive"
+                        className="h-7 w-7"
                         onClick={(e) => { e.stopPropagation(); removeImage(index); }}
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-3 h-3" />
                       </Button>
                     </div>
                   )}
