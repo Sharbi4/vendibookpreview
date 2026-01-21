@@ -45,6 +45,8 @@ import { calculateDistance } from '@/lib/geolocation';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
+import SEO from '@/components/SEO';
+import JsonLd, { generateItemListSchema, generateSearchBreadcrumbSchema, ProductListItem } from '@/components/JsonLd';
 
 // Fetch all blocked dates and bookings for availability filtering
 interface UnavailableDates {
@@ -560,8 +562,70 @@ const Search = () => {
     instantBookOnly,
   ].filter(Boolean).length;
 
+  // Generate structured data for Google Shopping / Search indexing
+  const itemListSchema = useMemo(() => {
+    const productItems: ProductListItem[] = filteredListings.map(listing => ({
+      id: listing.id,
+      title: listing.title,
+      description: listing.description,
+      cover_image_url: listing.cover_image_url,
+      mode: listing.mode as 'rent' | 'sale',
+      category: listing.category,
+      price_daily: listing.price_daily,
+      price_weekly: listing.price_weekly,
+      price_sale: listing.price_sale,
+      status: listing.status,
+    }));
+
+    return generateItemListSchema(productItems, {
+      mode: mode as 'rent' | 'sale' | 'all',
+      category: category !== 'all' ? category : undefined,
+      query: searchQuery || undefined,
+      location: locationText || undefined,
+    });
+  }, [filteredListings, mode, category, searchQuery, locationText]);
+
+  const breadcrumbSchema = useMemo(() => generateSearchBreadcrumbSchema({
+    mode: mode as 'rent' | 'sale' | 'all',
+    category: category !== 'all' ? category : undefined,
+  }), [mode, category]);
+
+  // Build dynamic SEO title and description
+  const seoTitle = useMemo(() => {
+    const parts: string[] = [];
+    if (category !== 'all') {
+      parts.push(CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS] || 'Listings');
+    } else {
+      parts.push('Food Trucks, Trailers & Ghost Kitchens');
+    }
+    if (mode !== 'all') {
+      parts.push(mode === 'rent' ? 'for Rent' : 'for Sale');
+    }
+    if (locationText) {
+      parts.push(`in ${locationText}`);
+    }
+    return `${parts.join(' ')} | Vendibook`;
+  }, [category, mode, locationText]);
+
+  const seoDescription = useMemo(() => {
+    const categoryLabel = category !== 'all' 
+      ? CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS]?.toLowerCase() 
+      : 'food trucks, trailers, and ghost kitchens';
+    const modeLabel = mode !== 'all' 
+      ? (mode === 'rent' ? 'rent' : 'buy') 
+      : 'rent or buy';
+    const locationLabel = locationText ? ` in ${locationText}` : '';
+    return `Browse ${filteredListings.length}+ ${categoryLabel} available to ${modeLabel}${locationLabel}. Verified listings with secure payments on Vendibook.`;
+  }, [category, mode, locationText, filteredListings.length]);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        canonical="/search"
+      />
+      <JsonLd schema={[itemListSchema, breadcrumbSchema]} />
       <Header />
       
       <main className="flex-1">
