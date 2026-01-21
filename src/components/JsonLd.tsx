@@ -4,10 +4,19 @@ interface JsonLdProps {
   schema: object | object[];
 }
 
-/**
- * Component to inject JSON-LD structured data into the page head.
- * Automatically handles cleanup on unmount.
- */
+// Product listing item for ItemList schema
+export interface ProductListItem {
+  id: string;
+  title: string;
+  description?: string;
+  cover_image_url?: string | null;
+  mode: 'rent' | 'sale';
+  category: string;
+  price_daily?: number | null;
+  price_weekly?: number | null;
+  price_sale?: number | null;
+  status: string;
+}
 const JsonLd = ({ schema }: JsonLdProps) => {
   useEffect(() => {
     const scriptId = `json-ld-${Math.random().toString(36).substring(7)}`;
@@ -359,5 +368,122 @@ export const generateListingBreadcrumbSchema = (listing: {
         item: `https://vendibook.com/listing/${listing.id}`,
       },
     ],
+  };
+};
+
+// ItemList schema for search results - helps Google index multiple products
+export const generateItemListSchema = (
+  listings: ProductListItem[],
+  searchParams?: {
+    mode?: 'rent' | 'sale' | 'all';
+    category?: string;
+    query?: string;
+    location?: string;
+  }
+) => {
+  const categoryLabels: Record<string, string> = {
+    food_truck: 'Food Trucks',
+    food_trailer: 'Food Trailers',
+    ghost_kitchen: 'Ghost Kitchens',
+    vendor_lot: 'Vendor Lots',
+  };
+
+  // Build list name based on filters
+  let listName = 'Mobile Food Assets';
+  if (searchParams?.category && searchParams.category !== 'all') {
+    listName = categoryLabels[searchParams.category] || listName;
+  }
+  if (searchParams?.mode && searchParams.mode !== 'all') {
+    listName += searchParams.mode === 'rent' ? ' for Rent' : ' for Sale';
+  }
+  if (searchParams?.location) {
+    listName += ` in ${searchParams.location}`;
+  }
+
+  // Build URL for the list
+  const urlParams = new URLSearchParams();
+  if (searchParams?.mode && searchParams.mode !== 'all') urlParams.set('mode', searchParams.mode);
+  if (searchParams?.category && searchParams.category !== 'all') urlParams.set('category', searchParams.category);
+  if (searchParams?.query) urlParams.set('q', searchParams.query);
+  const listUrl = `https://vendibook.com/search${urlParams.toString() ? '?' + urlParams.toString() : ''}`;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: listName,
+    url: listUrl,
+    numberOfItems: listings.length,
+    itemListElement: listings.slice(0, 50).map((listing, index) => {
+      const price = listing.mode === 'rent'
+        ? (listing.price_daily || listing.price_weekly || 0)
+        : (listing.price_sale || 0);
+
+      return {
+        '@type': 'ListItem',
+        position: index + 1,
+        item: {
+          '@type': 'Product',
+          name: listing.title,
+          url: `https://vendibook.com/listing/${listing.id}`,
+          image: listing.cover_image_url || 'https://vendibook.com/placeholder.svg',
+          description: listing.description?.slice(0, 200) || `${categoryLabels[listing.category] || 'Asset'} ${listing.mode === 'rent' ? 'for rent' : 'for sale'}`,
+          offers: {
+            '@type': 'Offer',
+            url: `https://vendibook.com/listing/${listing.id}`,
+            priceCurrency: 'USD',
+            price: price.toString(),
+            availability: listing.status === 'published'
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock',
+          },
+        },
+      };
+    }),
+  };
+};
+
+// Search results breadcrumb schema
+export const generateSearchBreadcrumbSchema = (searchParams?: {
+  mode?: 'rent' | 'sale' | 'all';
+  category?: string;
+}) => {
+  const categoryLabels: Record<string, string> = {
+    food_truck: 'Food Trucks',
+    food_trailer: 'Food Trailers',
+    ghost_kitchen: 'Ghost Kitchens',
+    vendor_lot: 'Vendor Lots',
+  };
+
+  const items = [
+    { name: 'Home', url: '/' },
+    { name: 'Search', url: '/search' },
+  ];
+
+  if (searchParams?.mode && searchParams.mode !== 'all') {
+    const modeLabel = searchParams.mode === 'rent' ? 'For Rent' : 'For Sale';
+    items.push({ 
+      name: modeLabel, 
+      url: `/search?mode=${searchParams.mode}` 
+    });
+  }
+
+  if (searchParams?.category && searchParams.category !== 'all') {
+    const categoryLabel = categoryLabels[searchParams.category] || searchParams.category;
+    const modeParam = searchParams.mode && searchParams.mode !== 'all' ? `mode=${searchParams.mode}&` : '';
+    items.push({ 
+      name: categoryLabel, 
+      url: `/search?${modeParam}category=${searchParams.category}` 
+    });
+  }
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      item: `https://vendibook.com${item.url}`,
+    })),
   };
 };
