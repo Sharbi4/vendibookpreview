@@ -38,6 +38,7 @@ const footerSections: FooterSection[] = [
     links: [
       { label: 'List Your Asset', href: '/host' },
       { label: 'Sell My Food Truck', href: '/sell-my-food-truck' },
+      { label: 'Payment Options', href: '/payments' },
       { label: 'Host FAQ', href: '/faq' },
       { label: 'Insurance Info', href: '/insurance' },
     ],
