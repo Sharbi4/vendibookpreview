@@ -46,7 +46,7 @@ import { cn } from '@/lib/utils';
 import { FreightSettingsCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { ProofNotaryCard } from './ProofNotaryCard';
-import stripeWordmark from '@/assets/stripe-wordmark-blurple.png';
+import stripeIcon from '@/assets/stripe-icon.png';
 import {
   calculateRentalFees,
   calculateSaleFees,
@@ -3020,7 +3020,7 @@ export const PublishWizard: React.FC = () => {
                             <Check className="w-5 h-5 text-white" />
                           </div>
                           <div className="flex items-center gap-2">
-                            <img src={stripeWordmark} alt="Stripe" className="h-5 w-auto" />
+                            <img src={stripeIcon} alt="Stripe" className="h-5 w-5 object-contain" />
                             <span className="font-semibold text-foreground">connected</span>
                           </div>
                           <p className="text-sm text-muted-foreground ml-auto">You're ready to receive payments</p>
@@ -3030,7 +3030,7 @@ export const PublishWizard: React.FC = () => {
                       <div className="relative overflow-hidden rounded-xl p-6 border-2 border-[#635bff]/30 bg-[#635bff]/5 text-center">
                         <div className="relative">
                           <div className="w-14 h-14 mx-auto mb-4 bg-[#635bff] rounded-xl shadow-md flex items-center justify-center">
-                            <img src={stripeWordmark} alt="Stripe" className="h-6 w-auto brightness-0 invert" />
+                            <img src={stripeIcon} alt="Stripe" className="h-6 w-6 object-contain" />
                           </div>
                           <h3 className="font-semibold text-foreground mb-2">Set up payouts</h3>
                           <p className="text-sm text-muted-foreground mb-4">
@@ -3042,7 +3042,7 @@ export const PublishWizard: React.FC = () => {
                             className="bg-[#635bff] hover:bg-[#5147e6] text-white border-0 shadow-md"
                           >
                             {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                            <img src={stripeWordmark} alt="" className="h-4 w-auto brightness-0 invert mr-2" />
+                            <img src={stripeIcon} alt="" className="h-4 w-4 object-contain mr-2" />
                             Connect Stripe
                             <ExternalLink className="w-4 h-4 ml-2" />
                           </Button>
@@ -3186,7 +3186,7 @@ export const PublishWizard: React.FC = () => {
                   {requiresStripe && !isOnboardingComplete && (
                     <div className="p-5 rounded-xl border-2 border-[#635bff]/30 bg-[#635bff]/5">
                       <div className="flex items-start gap-3">
-                        <img src={stripeWordmark} alt="Stripe" className="w-12 h-auto mt-0.5" />
+                        <img src={stripeIcon} alt="Stripe" className="w-10 h-10 object-contain mt-0.5" />
                         <div className="flex-1">
                           <h3 className="font-semibold text-foreground mb-1">
                             Connect to get paid from your listings
