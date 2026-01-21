@@ -7,11 +7,11 @@ import JsonLd, { generateBlogListSchema } from '@/components/JsonLd';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BLOG_POSTS, BLOG_CATEGORIES, getFeaturedPosts } from '@/data/blogPosts';
+import { BLOG_CATEGORIES, getFeaturedPosts, getRecentPosts } from '@/data/blogPosts';
 
 const Blog = () => {
   const featuredPosts = getFeaturedPosts();
-  const recentPosts = BLOG_POSTS.slice(0, 6);
+  const recentPosts = getRecentPosts(6);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
