@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Tag, Check, X, Clock, Loader2, MessageSquare, User, DollarSign } from 'lucide-react';
+import { Tag, Check, X, Clock, Loader2, MessageSquare, DollarSign, ArrowRightLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -17,21 +19,23 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useHostOffers, HostOffer } from '@/hooks/useHostOffers';
 
-const OfferCard = ({ 
-  offer, 
-  onAccept, 
-  onDecline,
-  isResponding 
-}: { 
-  offer: HostOffer; 
+interface OfferCardProps {
+  offer: HostOffer;
   onAccept: (offerId: string) => void;
   onDecline: (offerId: string, response?: string) => void;
+  onCounter: (offerId: string, amount: number, message?: string) => void;
   isResponding: boolean;
-}) => {
+}
+
+const OfferCard = ({ offer, onAccept, onDecline, onCounter, isResponding }: OfferCardProps) => {
   const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [showCounterModal, setShowCounterModal] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
+  const [counterAmount, setCounterAmount] = useState('');
+  const [counterMessage, setCounterMessage] = useState('');
   
   const isPending = offer.status === 'pending';
+  const isCountered = offer.status === 'countered';
   const isExpired = offer.expires_at && new Date(offer.expires_at) < new Date() && isPending;
   const percentOfAsking = offer.listing.price_sale 
     ? Math.round((offer.offer_amount / offer.listing.price_sale) * 100)
@@ -41,6 +45,50 @@ const OfferCard = ({
     onDecline(offer.id, declineReason);
     setShowDeclineModal(false);
     setDeclineReason('');
+  };
+
+  const handleCounter = () => {
+    const amount = parseFloat(counterAmount);
+    if (isNaN(amount) || amount <= 0) return;
+    onCounter(offer.id, amount, counterMessage);
+    setShowCounterModal(false);
+    setCounterAmount('');
+    setCounterMessage('');
+  };
+
+  const openCounterModal = () => {
+    // Pre-fill with a suggested counter (midpoint between offer and asking)
+    if (offer.listing.price_sale) {
+      const suggested = Math.round((offer.offer_amount + offer.listing.price_sale) / 2);
+      setCounterAmount(suggested.toString());
+    }
+    setShowCounterModal(true);
+  };
+
+  const getStatusBadge = () => {
+    if (isExpired) {
+      return <Badge variant="outline" className="text-muted-foreground">Expired</Badge>;
+    }
+    switch (offer.status) {
+      case 'accepted':
+        return <Badge className="bg-emerald-500 text-white">Accepted</Badge>;
+      case 'declined':
+        return <Badge variant="outline" className="text-destructive border-destructive">Declined</Badge>;
+      case 'countered':
+        return (
+          <Badge variant="outline" className="text-blue-600 border-blue-500">
+            <ArrowRightLeft className="h-3 w-3 mr-1" />
+            Countered
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="outline" className="text-amber-600 border-amber-500">
+            <Clock className="h-3 w-3 mr-1" />
+            Pending
+          </Badge>
+        );
+    }
   };
 
   return (
@@ -82,24 +130,7 @@ const OfferCard = ({
                     </span>
                   </div>
                 </div>
-                
-                {/* Status Badge */}
-                {isExpired ? (
-                  <Badge variant="outline" className="text-muted-foreground">
-                    Expired
-                  </Badge>
-                ) : offer.status === 'accepted' ? (
-                  <Badge className="bg-emerald-500 text-white">Accepted</Badge>
-                ) : offer.status === 'declined' ? (
-                  <Badge variant="outline" className="text-destructive border-destructive">
-                    Declined
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-amber-600 border-amber-500">
-                    <Clock className="h-3 w-3 mr-1" />
-                    Pending
-                  </Badge>
-                )}
+                {getStatusBadge()}
               </div>
 
               {/* Price Info */}
@@ -122,15 +153,35 @@ const OfferCard = ({
                 )}
               </div>
 
+              {/* Counter Offer Display */}
+              {isCountered && offer.counter_amount && (
+                <div className="p-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg mb-2">
+                  <div className="flex items-center gap-2">
+                    <ArrowRightLeft className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-semibold text-blue-700 dark:text-blue-400">
+                      Your counter: ${offer.counter_amount.toLocaleString()}
+                    </span>
+                  </div>
+                  {offer.counter_message && (
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 italic">
+                      "{offer.counter_message}"
+                    </p>
+                  )}
+                  <p className="text-[11px] text-blue-500 mt-1">
+                    Waiting for buyer response
+                  </p>
+                </div>
+              )}
+
               {/* Message */}
-              {offer.message && (
+              {offer.message && !isCountered && (
                 <div className="flex items-start gap-2 p-2 bg-muted/50 rounded-lg mb-2">
                   <MessageSquare className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-muted-foreground line-clamp-2">{offer.message}</p>
                 </div>
               )}
 
-              {/* Actions or Response */}
+              {/* Actions */}
               {isPending && !isExpired ? (
                 <div className="flex items-center gap-2 mt-3">
                   <Button
@@ -150,16 +201,25 @@ const OfferCard = ({
                   </Button>
                   <Button
                     size="sm"
-                    variant="outline"
-                    onClick={() => setShowDeclineModal(true)}
+                    variant="secondary"
+                    onClick={openCounterModal}
                     disabled={isResponding}
                     className="flex-1"
                   >
-                    <X className="h-4 w-4 mr-1" />
-                    Decline
+                    <ArrowRightLeft className="h-4 w-4 mr-1" />
+                    Counter
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowDeclineModal(true)}
+                    disabled={isResponding}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
-              ) : offer.seller_response ? (
+              ) : offer.seller_response && !isCountered ? (
                 <p className="text-xs text-muted-foreground italic mt-2">
                   Your response: "{offer.seller_response}"
                 </p>
@@ -199,12 +259,86 @@ const OfferCard = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Counter Offer Modal */}
+      <Dialog open={showCounterModal} onOpenChange={setShowCounterModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowRightLeft className="h-5 w-5 text-primary" />
+              Make a Counter-Offer
+            </DialogTitle>
+            <DialogDescription>
+              Propose a different price. The buyer will have 48 hours to respond.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="p-3 bg-muted/50 rounded-lg">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Their offer:</span>
+                <span className="font-semibold">${offer.offer_amount.toLocaleString()}</span>
+              </div>
+              {offer.listing.price_sale && (
+                <div className="flex justify-between text-sm mt-1">
+                  <span className="text-muted-foreground">Your asking price:</span>
+                  <span className="font-semibold">${offer.listing.price_sale.toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="counterAmount">Your Counter-Offer</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="counterAmount"
+                  type="number"
+                  placeholder="Enter amount"
+                  value={counterAmount}
+                  onChange={(e) => setCounterAmount(e.target.value)}
+                  className="pl-9"
+                  min="1"
+                  step="1"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="counterMessage">Message (optional)</Label>
+              <Textarea
+                id="counterMessage"
+                placeholder="E.g., 'I can meet you halfway at this price...'"
+                value={counterMessage}
+                onChange={(e) => setCounterMessage(e.target.value)}
+                rows={2}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCounterModal(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCounter} 
+              disabled={isResponding || !counterAmount || parseFloat(counterAmount) <= 0}
+            >
+              {isResponding ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                'Send Counter-Offer'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
 
 export const HostOffersSection = () => {
-  const { pendingOffers, respondedOffers, isLoading, respondToOffer, isResponding } = useHostOffers();
+  const { pendingOffers, counteredOffers, respondedOffers, isLoading, respondToOffer, isResponding } = useHostOffers();
 
   const handleAccept = (offerId: string) => {
     respondToOffer({ offerId, status: 'accepted' });
@@ -212,6 +346,10 @@ export const HostOffersSection = () => {
 
   const handleDecline = (offerId: string, response?: string) => {
     respondToOffer({ offerId, status: 'declined', response });
+  };
+
+  const handleCounter = (offerId: string, amount: number, message?: string) => {
+    respondToOffer({ offerId, status: 'countered', counterAmount: amount, counterMessage: message });
   };
 
   if (isLoading) {
@@ -222,7 +360,9 @@ export const HostOffersSection = () => {
     );
   }
 
-  if (pendingOffers.length === 0 && respondedOffers.length === 0) {
+  const allEmpty = pendingOffers.length === 0 && counteredOffers.length === 0 && respondedOffers.length === 0;
+
+  if (allEmpty) {
     return (
       <div className="py-8 text-center">
         <div className="w-12 h-12 rounded-xl bg-muted mx-auto mb-3 flex items-center justify-center">
@@ -236,39 +376,42 @@ export const HostOffersSection = () => {
     );
   }
 
+  const activeOffers = [...pendingOffers, ...counteredOffers];
+
   return (
-    <Tabs defaultValue="pending" className="w-full">
+    <Tabs defaultValue="active" className="w-full">
       <TabsList className="grid w-full grid-cols-2 mb-4">
-        <TabsTrigger value="pending" className="relative">
-          Pending
-          {pendingOffers.length > 0 && (
+        <TabsTrigger value="active" className="relative">
+          Active
+          {activeOffers.length > 0 && (
             <span className="ml-1.5 px-1.5 py-0.5 text-[10px] bg-amber-500 text-white rounded-full">
-              {pendingOffers.length}
+              {activeOffers.length}
             </span>
           )}
         </TabsTrigger>
-        <TabsTrigger value="responded">History</TabsTrigger>
+        <TabsTrigger value="history">History</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="pending" className="space-y-3">
-        {pendingOffers.length === 0 ? (
+      <TabsContent value="active" className="space-y-3">
+        {activeOffers.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">
-            No pending offers
+            No active offers
           </p>
         ) : (
-          pendingOffers.map((offer) => (
+          activeOffers.map((offer) => (
             <OfferCard
               key={offer.id}
               offer={offer}
               onAccept={handleAccept}
               onDecline={handleDecline}
+              onCounter={handleCounter}
               isResponding={isResponding}
             />
           ))
         )}
       </TabsContent>
 
-      <TabsContent value="responded" className="space-y-3">
+      <TabsContent value="history" className="space-y-3">
         {respondedOffers.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">
             No offer history
@@ -280,6 +423,7 @@ export const HostOffersSection = () => {
               offer={offer}
               onAccept={handleAccept}
               onDecline={handleDecline}
+              onCounter={handleCounter}
               isResponding={isResponding}
             />
           ))
