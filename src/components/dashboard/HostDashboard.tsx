@@ -22,7 +22,7 @@ import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectMod
 import { useMemo, useState } from 'react';
 
 const HostDashboard = () => {
-  const { listings, isLoading, stats, pauseListing, publishListing, deleteListing } = useHostListings();
+  const { listings, isLoading, stats, pauseListing, publishListing, deleteListing, updateListingPrice } = useHostListings();
   const { stats: bookingStats } = useHostBookings();
   const { isConnected, hasAccountStarted, isLoading: stripeLoading, connectStripe, isConnecting, openStripeDashboard, isOpeningDashboard } = useStripeConnect();
   const { analytics, isLoading: analyticsLoading } = useListingAnalytics();
@@ -165,6 +165,7 @@ const HostDashboard = () => {
                       onPause={pauseListing}
                       onPublish={handlePublish}
                       onDelete={deleteListing}
+                      onPriceUpdate={updateListingPrice}
                     />
                   ))}
                 </div>

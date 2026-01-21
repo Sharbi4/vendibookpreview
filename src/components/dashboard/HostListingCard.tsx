@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Edit2, Eye, Pause, Play, Trash2, Calendar, Heart } from 'lucide-react';
+import { Edit2, Eye, Pause, Play, Trash2, Calendar, Heart, Check, X, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { CATEGORY_LABELS } from '@/types/listing';
 import AvailabilityCalendar from './AvailabilityCalendar';
 import { useListingFavoriteCount } from '@/hooks/useFavorites';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Listing = Tables<'listings'>;
@@ -14,6 +17,7 @@ interface HostListingCardProps {
   onPause?: (id: string) => void;
   onPublish?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onPriceUpdate?: (id: string, newPrice: number) => void;
 }
 
 const StatusPill = ({ status }: { status: Listing['status'] }) => {
@@ -36,9 +40,13 @@ const StatusPill = ({ status }: { status: Listing['status'] }) => {
   );
 };
 
-const HostListingCard = ({ listing, onPause, onPublish, onDelete }: HostListingCardProps) => {
+const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate }: HostListingCardProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
+  const [isEditingPrice, setIsEditingPrice] = useState(false);
+  const [editedPrice, setEditedPrice] = useState(listing.price_sale?.toString() || '');
+  const [isSaving, setIsSaving] = useState(false);
   const { data: favoriteCount = 0 } = useListingFavoriteCount(listing.id);
+  const { toast } = useToast();
   
   const displayPrice = listing.mode === 'rent' 
     ? `$${listing.price_daily}/day` 
@@ -46,6 +54,51 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete }: HostListingC
 
   const location = listing.address || listing.pickup_location_text || 'No location set';
   const isRental = listing.mode === 'rent';
+  const isSale = listing.mode === 'sale';
+
+  const handleSavePrice = async () => {
+    const newPrice = parseFloat(editedPrice);
+    if (isNaN(newPrice) || newPrice <= 0) {
+      toast({
+        title: 'Invalid price',
+        description: 'Please enter a valid price greater than 0',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('listings')
+        .update({ price_sale: newPrice, updated_at: new Date().toISOString() })
+        .eq('id', listing.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Price updated',
+        description: `Sale price updated to $${newPrice.toLocaleString()}`,
+      });
+      
+      setIsEditingPrice(false);
+      onPriceUpdate?.(listing.id, newPrice);
+    } catch (error) {
+      console.error('Error updating price:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update price',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditedPrice(listing.price_sale?.toString() || '');
+    setIsEditingPrice(false);
+  };
 
   return (
     <>
@@ -72,7 +125,47 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete }: HostListingC
               </div>
 
               <div className="flex items-center gap-3 text-sm flex-wrap">
-                <span className="text-primary font-semibold">{displayPrice}</span>
+                {isSale && isEditingPrice ? (
+                  <div className="flex items-center gap-1">
+                    <div className="relative">
+                      <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                      <Input
+                        type="number"
+                        value={editedPrice}
+                        onChange={(e) => setEditedPrice(e.target.value)}
+                        className="w-28 h-7 pl-6 text-sm"
+                        autoFocus
+                        disabled={isSaving}
+                      />
+                    </div>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                      onClick={handleSavePrice}
+                      disabled={isSaving}
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={handleCancelEdit}
+                      disabled={isSaving}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <span 
+                    className={`text-primary font-semibold ${isSale ? 'cursor-pointer hover:underline' : ''}`}
+                    onClick={() => isSale && setIsEditingPrice(true)}
+                    title={isSale ? 'Click to edit price' : undefined}
+                  >
+                    {displayPrice}
+                  </span>
+                )}
                 <span className="text-muted-foreground">•</span>
                 <span className="text-muted-foreground capitalize">
                   {CATEGORY_LABELS[listing.category]}
