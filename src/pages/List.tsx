@@ -3,13 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Loader2, 
-  Upload, 
   PenLine, 
-  Sparkles, 
   Shield, 
   DollarSign, 
   Clock, 
-  CheckCircle2,
   TrendingUp,
   Star,
   ChevronRight,
@@ -19,10 +16,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { QuickStartWizard } from '@/components/listing-wizard/QuickStartWizard';
-import { ImportListingWizard } from '@/components/listing-wizard/ImportListingWizard';
 import { trackEvent } from '@/lib/analytics';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import vendibookIcon from '@/assets/vendibook-icon.png';
@@ -39,7 +34,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-type ListingMode = 'choose' | 'import' | 'scratch';
+type ListingMode = 'choose' | 'scratch';
 
 const benefits = [
   { icon: DollarSign, text: 'Earn $500-2,000/week', subtext: 'Average host earnings' },
@@ -89,10 +84,6 @@ const ListPage: React.FC = () => {
   };
 
   const renderContent = () => {
-    if (mode === 'import') {
-      return <ImportListingWizard />;
-    }
-
     if (mode === 'scratch') {
       return <QuickStartWizard />;
     }
@@ -124,50 +115,9 @@ const ListPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          {/* Import option - primary */}
+          {/* Create a Free Listing option */}
           <div
             className="overflow-hidden rounded-2xl border-0 shadow-xl bg-card cursor-pointer transition-all hover:shadow-2xl group"
-            onClick={() => {
-              trackEvent({
-                category: 'Supply',
-                action: 'listing_mode_selected',
-                label: 'import',
-              });
-              setMode('import');
-            }}
-          >
-            {/* Header */}
-            <div className="bg-muted/30 border-b border-border px-6 py-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-lg">
-                  <Upload className="w-6 h-6 text-primary-foreground" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <p className="font-bold text-lg">Import a listing</p>
-                    <Badge className="text-xs bg-primary text-primary-foreground border-0">
-                      <Sparkles className="w-3 h-3 mr-1" />
-                      AI-powered
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Paste your Facebook post, Craigslist ad, or URL
-                  </p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
-              </div>
-            </div>
-            {/* Content */}
-            <div className="px-6 py-4">
-              <p className="text-sm text-muted-foreground">
-                We'll create your draft in seconds with AI-powered extraction
-              </p>
-            </div>
-          </div>
-
-          {/* Start from scratch option */}
-          <div
-            className="overflow-hidden rounded-2xl border-0 shadow-lg bg-card cursor-pointer transition-all hover:shadow-xl group"
             onClick={() => {
               trackEvent({
                 category: 'Supply',
@@ -180,16 +130,16 @@ const ListPage: React.FC = () => {
             {/* Header */}
             <div className="bg-muted/30 border-b border-border px-6 py-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center shrink-0 shadow-md">
-                  <PenLine className="w-6 h-6 text-muted-foreground" />
+                <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-lg">
+                  <PenLine className="w-6 h-6 text-primary-foreground" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-lg">Start from scratch</p>
+                  <p className="font-bold text-lg">Create a Free Listing</p>
                   <p className="text-sm text-muted-foreground">
-                    Build your listing step by step
+                    1 step closer to publishing your first live listing
                   </p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
               </div>
             </div>
             {/* Content */}
