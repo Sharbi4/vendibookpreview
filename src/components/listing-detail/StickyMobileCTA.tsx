@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, ShoppingCart, Zap } from 'lucide-react';
+import { Calendar, ShoppingCart, Zap, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { useAuth } from '@/contexts/AuthContext';
 import BookingWizard from './BookingWizard';
 import { BookingOnboardingModal, useBookingOnboarding } from '@/components/booking/BookingOnboardingModal';
+import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
+import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 
 interface StickyMobileCTAProps {
@@ -54,6 +56,11 @@ export const StickyMobileCTA = ({
   const [showBookingDrawer, setShowBookingDrawer] = useState(false);
   const { shouldShow: showOnboarding, setShouldShow: setShowOnboarding } = useBookingOnboarding();
   const [pendingBooking, setPendingBooking] = useState(false);
+  
+  // Sale listing states
+  const [showOfferModal, setShowOfferModal] = useState(false);
+  const [showAuthGate, setShowAuthGate] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'buy' | 'offer' | null>(null);
 
   // Show sticky CTA after scrolling past a certain point
   useEffect(() => {
@@ -76,6 +83,34 @@ export const StickyMobileCTA = ({
   const isAvailable = status === 'published';
   const price = isRental ? priceDaily : priceSale;
 
+  const handleBuyNow = () => {
+    if (!user) {
+      setPendingAction('buy');
+      setShowAuthGate(true);
+      return;
+    }
+    navigate(`/checkout/${listingId}`);
+  };
+
+  const handleMakeOffer = () => {
+    if (!user) {
+      setPendingAction('offer');
+      setShowAuthGate(true);
+      return;
+    }
+    setShowOfferModal(true);
+  };
+
+  const handleAuthSuccess = () => {
+    setShowAuthGate(false);
+    if (pendingAction === 'buy') {
+      navigate(`/checkout/${listingId}`);
+    } else if (pendingAction === 'offer') {
+      setShowOfferModal(true);
+    }
+    setPendingAction(null);
+  };
+
   const handlePrimaryCTA = () => {
     if (!user) {
       navigate('/auth');
@@ -89,12 +124,6 @@ export const StickyMobileCTA = ({
         setPendingBooking(true);
       } else {
         setShowBookingDrawer(true);
-      }
-    } else {
-      // Scroll to inquiry form for sales
-      const formElement = document.querySelector('[data-booking-form]');
-      if (formElement) {
-        formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
   };
@@ -124,26 +153,44 @@ export const StickyMobileCTA = ({
             </div>
           </div>
 
-          {/* Primary CTA */}
-          <Button
-            variant="gradient"
-            size="sm"
-            onClick={handlePrimaryCTA}
-            disabled={!isAvailable}
-            className="gap-1.5 min-w-[120px]"
-          >
-            {isRental ? (
-              <>
-                {instantBook ? <Zap className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
-                {instantBook ? 'Book Now' : 'Request to Book'}
-              </>
-            ) : (
-              <>
+          {/* Rental CTA */}
+          {isRental ? (
+            <Button
+              variant="gradient"
+              size="sm"
+              onClick={handlePrimaryCTA}
+              disabled={!isAvailable}
+              className="gap-1.5 min-w-[120px]"
+            >
+              {instantBook ? <Zap className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
+              {instantBook ? 'Book Now' : 'Request to Book'}
+            </Button>
+          ) : (
+            /* Sale CTAs - Buy Now & Make Offer */
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleMakeOffer}
+                disabled={!isAvailable}
+                className="gap-1.5"
+              >
+                <Tag className="h-4 w-4" />
+                <span className="hidden xs:inline">Make Offer</span>
+                <span className="xs:hidden">Offer</span>
+              </Button>
+              <Button
+                variant="gradient"
+                size="sm"
+                onClick={handleBuyNow}
+                disabled={!isAvailable}
+                className="gap-1.5"
+              >
                 <ShoppingCart className="h-4 w-4" />
-                Contact Seller
-              </>
-            )}
-          </Button>
+                Buy Now
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -183,6 +230,25 @@ export const StickyMobileCTA = ({
           </div>
         </DrawerContent>
       </Drawer>
+
+      {/* Auth Gate for Sale Actions */}
+      <AuthGateOfferModal
+        open={showAuthGate}
+        onOpenChange={setShowAuthGate}
+        onAuthSuccess={handleAuthSuccess}
+      />
+
+      {/* Make Offer Modal */}
+      {priceSale && (
+        <MakeOfferModal
+          open={showOfferModal}
+          onOpenChange={setShowOfferModal}
+          listingId={listingId}
+          sellerId={hostId}
+          listingTitle={listingTitle}
+          askingPrice={priceSale}
+        />
+      )}
     </>
   );
 };
