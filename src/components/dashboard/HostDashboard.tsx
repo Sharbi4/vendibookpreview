@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Plus, Truck, Eye, Loader2, Calendar, BarChart3, DollarSign, Wrench } from 'lucide-react';
+import { Plus, Truck, Eye, Loader2, Calendar, BarChart3, DollarSign, Wrench, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NextStepCard } from './NextStepCard';
@@ -13,11 +13,13 @@ import DraftsSection from './DraftsSection';
 import { EnhancedAnalytics } from './EnhancedAnalytics';
 import { RevenueAnalyticsCard } from './RevenueAnalyticsCard';
 import { GetBookedFasterCard } from './GetBookedFasterCard';
+import { HostOffersSection } from './HostOffersSection';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { useListingAnalytics } from '@/hooks/useListingAnalytics';
 import { useRevenueAnalytics } from '@/hooks/useRevenueAnalytics';
+import { useHostOffers } from '@/hooks/useHostOffers';
 import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectModal';
 import { useMemo, useState } from 'react';
 
@@ -27,6 +29,7 @@ const HostDashboard = () => {
   const { isConnected, hasAccountStarted, isLoading: stripeLoading, connectStripe, isConnecting, openStripeDashboard, isOpeningDashboard } = useStripeConnect();
   const { analytics, isLoading: analyticsLoading } = useListingAnalytics();
   const { analytics: revenueAnalytics, isLoading: revenueLoading } = useRevenueAnalytics();
+  const { pendingOffers } = useHostOffers();
   const [showStripeModal, setShowStripeModal] = useState(false);
 
   // Filter drafts for the DraftsSection
@@ -103,9 +106,17 @@ const HostDashboard = () => {
 
       {/* C) Listings Module - Primary work area */}
       <Tabs defaultValue="listings" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-4 bg-muted/50 p-1 rounded-lg h-10">
+        <TabsList className="grid w-full grid-cols-5 mb-4 bg-muted/50 p-1 rounded-lg h-10">
           <TabsTrigger value="listings" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
             Listings
+          </TabsTrigger>
+          <TabsTrigger value="offers" className="relative rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            Offers
+            {pendingOffers.length > 0 && (
+              <span className="ml-1.5 px-1.5 py-0.5 text-[10px] bg-primary text-primary-foreground rounded-full">
+                {pendingOffers.length}
+              </span>
+            )}
           </TabsTrigger>
           <TabsTrigger value="bookings" className="relative rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
             Requests
@@ -171,6 +182,12 @@ const HostDashboard = () => {
                 </div>
               )}
             </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="offers" className="mt-0">
+          <div className="p-4 rounded-xl bg-card border border-border">
+            <HostOffersSection />
           </div>
         </TabsContent>
 

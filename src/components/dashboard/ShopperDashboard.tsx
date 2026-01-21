@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EnhancedStatCard from './EnhancedStatCard';
 import ShopperBookingCard from './ShopperBookingCard';
 import BuyerSalesSection from './BuyerSalesSection';
+import { BuyerOffersSection } from './BuyerOffersSection';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 
 const ShopperDashboard = () => {
@@ -218,6 +219,9 @@ const ShopperDashboard = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* My Offers Section */}
+      <BuyerOffersSection />
 
       {/* Purchases/Sales Section */}
       <BuyerSalesSection />
