@@ -67,15 +67,11 @@ export const MakeOfferModal = ({
 
       if (offerError) throw offerError;
 
-      // Send notification to seller
-      await supabase.functions.invoke('create-notification', {
+      // Send email notification to seller
+      await supabase.functions.invoke('send-offer-notification', {
         body: {
-          user_id: sellerId,
-          type: 'offer_received',
-          title: 'New Offer Received',
-          message: `You received a $${amount.toLocaleString()} offer on "${listingTitle}"`,
-          link: '/dashboard',
-          send_email: true,
+          offer_id: offer.id,
+          event_type: 'new_offer',
         },
       });
 
