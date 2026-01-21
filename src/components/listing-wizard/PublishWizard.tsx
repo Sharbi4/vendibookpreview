@@ -136,6 +136,8 @@ export const PublishWizard: React.FC = () => {
   // Form fields
   const [images, setImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [videos, setVideos] = useState<File[]>([]);
+  const [existingVideos, setExistingVideos] = useState<string[]>([]);
   const [photoDraggedIndex, setPhotoDraggedIndex] = useState<number | null>(null);
   const [photoDragOverIndex, setPhotoDragOverIndex] = useState<number | null>(null);
   const [title, setTitle] = useState('');
@@ -335,6 +337,7 @@ export const PublishWizard: React.FC = () => {
       setInstantBook(data.instant_book || false);
       setDepositAmount(data.deposit_amount?.toString() || '');
       setExistingImages(data.image_urls || []);
+      setExistingVideos(((data as any).video_urls as string[] | null) || []);
       setVendibookFreightEnabled(data.vendibook_freight_enabled || false);
       setFreightPayer((data.freight_payer as FreightPayer) || 'buyer');
       setAcceptCardPayment(data.accept_card_payment ?? true);
@@ -774,12 +777,26 @@ export const PublishWizard: React.FC = () => {
     }
   };
 
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setVideos(prev => [...prev, ...Array.from(e.target.files!)]);
+    }
+  };
+
   const removeImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const removeExistingImage = (index: number) => {
     setExistingImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeVideo = (index: number) => {
+    setVideos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingVideo = (index: number) => {
+    setExistingVideos(prev => prev.filter((_, i) => i !== index));
   };
 
   // Photo drag-and-drop reordering
@@ -912,6 +929,43 @@ export const PublishWizard: React.FC = () => {
     return urls;
   };
 
+  const uploadVideos = async (): Promise<string[]> => {
+    if (!user) {
+      throw new Error('Please sign in to upload videos.');
+    }
+    if (!listingId) {
+      throw new Error('Missing listing id.');
+    }
+
+    const urls: string[] = [...existingVideos];
+
+    for (let i = 0; i < videos.length; i++) {
+      const file = videos[i];
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'mp4';
+      const fileName = `${user.id}/${listingId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('listing-videos')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type || 'video/mp4',
+        });
+
+      if (uploadError) {
+        throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`);
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('listing-videos')
+        .getPublicUrl(fileName);
+
+      urls.push(publicUrl);
+    }
+
+    return urls;
+  };
+
   const saveStep = async () => {
     if (!listing) return;
     setIsSaving(true);
@@ -920,28 +974,44 @@ export const PublishWizard: React.FC = () => {
       let updateData: any = {};
 
       if (step === 'photos') {
-        if (images.length > 0) {
+        const hasNewImages = images.length > 0;
+        const hasNewVideos = videos.length > 0;
+
+        if (hasNewImages || hasNewVideos) {
           // Guest drafts can access the wizard without auth, but uploads require auth.
           if (!user) {
             if (isGuestDraft) {
               setShowAuthModal(true);
             }
             toast({
-              title: 'Sign in to upload photos',
-              description: 'Please sign in to add photos to this listing.',
+              title: 'Sign in to upload media',
+              description: 'Please sign in to add photos or videos to this listing.',
               variant: 'destructive',
             });
             setIsSaving(false);
             return;
           }
 
-          const imageUrls = await uploadImages();
+          let imageUrls = existingImages;
+          let videoUrls = existingVideos;
+
+          if (hasNewImages) {
+            imageUrls = await uploadImages();
+            setExistingImages(imageUrls);
+            setImages([]);
+          }
+
+          if (hasNewVideos) {
+            videoUrls = await uploadVideos();
+            setExistingVideos(videoUrls);
+            setVideos([]);
+          }
+
           updateData = {
             image_urls: imageUrls,
             cover_image_url: imageUrls[0] || null,
+            video_urls: videoUrls,
           };
-          setExistingImages(imageUrls);
-          setImages([]);
         }
         // Allow proceeding without photos (guests can add later after auth)
       } else if (step === 'pricing') {
@@ -1109,13 +1179,14 @@ export const PublishWizard: React.FC = () => {
       // Persist ALL current in-memory fields before publishing.
       // Users can jump directly to Review; without this, the DB may still contain placeholders.
       let imageUrlsToSave = existingImages;
+      let videoUrlsToSave = existingVideos;
       if (images.length > 0) {
         // Uploading requires auth.
         if (!user) {
           if (isGuestDraft) setShowAuthModal(true);
           toast({
-            title: 'Sign in to upload photos',
-            description: 'Please sign in to add photos to this listing.',
+            title: 'Sign in to upload media',
+            description: 'Please sign in to add photos or videos to this listing.',
             variant: 'destructive',
           });
           return;
@@ -1124,6 +1195,23 @@ export const PublishWizard: React.FC = () => {
         imageUrlsToSave = await uploadImages();
         setExistingImages(imageUrlsToSave);
         setImages([]);
+      }
+
+      if (videos.length > 0) {
+        // Uploading requires auth.
+        if (!user) {
+          if (isGuestDraft) setShowAuthModal(true);
+          toast({
+            title: 'Sign in to upload media',
+            description: 'Please sign in to add photos or videos to this listing.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        videoUrlsToSave = await uploadVideos();
+        setExistingVideos(videoUrlsToSave);
+        setVideos([]);
       }
 
       // Determine if category-based static or manually toggled
@@ -1136,6 +1224,7 @@ export const PublishWizard: React.FC = () => {
         // Media
         image_urls: imageUrlsToSave,
         cover_image_url: imageUrlsToSave?.[0] || null,
+        video_urls: videoUrlsToSave,
 
         // Details
         title,
@@ -1399,13 +1488,13 @@ export const PublishWizard: React.FC = () => {
             </div>
 
             <div className="bg-card rounded-2xl shadow-sm border p-6 md:p-8">
-              {/* Step: Photos */}
+              {/* Step: Media */}
               {step === 'photos' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Add photos</h2>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Add media</h2>
                     <p className="text-muted-foreground">
-                      Upload at least 3 photos. 5+ recommended. <span className="font-medium text-foreground">Drag to reorder</span> — first image is your cover.
+                      Upload at least 3 photos. Videos are optional. <span className="font-medium text-foreground">Drag to reorder</span> — first image is your cover.
                     </p>
                   </div>
 
@@ -1476,7 +1565,7 @@ export const PublishWizard: React.FC = () => {
                     })}
                     <label className="aspect-[4/3] rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
                       <Camera className="w-8 h-8 text-muted-foreground mb-2" />
-                      <span className="text-sm text-muted-foreground">Add photo</span>
+                      <span className="text-sm text-muted-foreground">Add photos</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -1485,6 +1574,60 @@ export const PublishWizard: React.FC = () => {
                         className="hidden"
                       />
                     </label>
+                  </div>
+
+                  {/* Videos (optional) */}
+                  <div className="border-t pt-6 space-y-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <h3 className="text-base font-semibold text-foreground">Videos (optional)</h3>
+                        <p className="text-sm text-muted-foreground">Add short walkthroughs to increase trust.</p>
+                      </div>
+                      <label className="shrink-0 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:opacity-90 h-10 px-4">
+                        Add videos
+                        <input
+                          type="file"
+                          accept="video/mp4,video/webm,video/quicktime"
+                          multiple
+                          onChange={handleVideoUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {(existingVideos.length > 0 || videos.length > 0) ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {existingVideos.map((url, index) => (
+                          <div key={url} className="relative aspect-video rounded-xl overflow-hidden group bg-muted">
+                            <video src={url} className="w-full h-full object-cover" muted playsInline />
+                            <button
+                              type="button"
+                              onClick={() => removeExistingVideo(index)}
+                              className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                        {videos.map((file, index) => {
+                          const preview = URL.createObjectURL(file);
+                          return (
+                            <div key={`${file.name}-${index}`} className="relative aspect-video rounded-xl overflow-hidden group bg-muted">
+                              <video src={preview} className="w-full h-full object-cover" muted playsInline />
+                              <button
+                                type="button"
+                                onClick={() => removeVideo(index)}
+                                className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground">No videos added yet</div>
+                    )}
                   </div>
 
                   <Button onClick={saveStep} disabled={isSaving || allPhotos.length < 3}>
