@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Link2, 
@@ -10,7 +10,9 @@ import {
   X, 
   Check,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  Video,
+  Play
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +43,7 @@ interface ImportFormData {
   url: string;
   text: string;
   photos: File[];
+  videos: File[];
   // Prefilled/editable fields
   title: string;
   category: ListingCategory | null;
@@ -57,6 +60,7 @@ const initialFormData: ImportFormData = {
   url: '',
   text: '',
   photos: [],
+  videos: [],
   title: '',
   category: null,
   mode: null,
@@ -65,6 +69,12 @@ const initialFormData: ImportFormData = {
   highlights: [],
   autoFilledFields: new Set(),
 };
+
+// File validation constants
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
 
 const IMPORT_METHODS = [
   { 
@@ -81,8 +91,8 @@ const IMPORT_METHODS = [
   },
   { 
     id: 'photos' as ImportMethod, 
-    label: 'Upload photos only', 
-    description: 'Start with photos, add details later.',
+    label: 'Upload photos & videos', 
+    description: 'Start with media, add details later.',
     icon: ImagePlus 
   },
 ];
@@ -108,7 +118,20 @@ export const ImportListingWizard: React.FC = () => {
   const [formData, setFormData] = useState<ImportFormData>(initialFormData);
   const [isProcessing, setIsProcessing] = useState(false);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
   const [createdListingId, setCreatedListingId] = useState<string | null>(null);
+  
+  // Refs for URL cleanup
+  const photoUrlsRef = useRef<string[]>([]);
+  const videoUrlsRef = useRef<string[]>([]);
+  
+  // Cleanup URLs on unmount
+  useEffect(() => {
+    return () => {
+      photoUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
+      videoUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, []);
 
   // Track flow started on mount
   React.useEffect(() => {
@@ -131,24 +154,100 @@ export const ImportListingWizard: React.FC = () => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    const newPhotos = [...formData.photos, ...files];
+    // Validate files
+    const validFiles: File[] = [];
+    const errors: string[] = [];
+    
+    files.forEach(file => {
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        errors.push(`${file.name}: Invalid format. Use JPG, PNG, or WebP.`);
+      } else if (file.size > MAX_IMAGE_SIZE) {
+        errors.push(`${file.name}: Too large. Max 10MB allowed.`);
+      } else {
+        validFiles.push(file);
+      }
+    });
+    
+    if (errors.length > 0) {
+      toast({
+        title: `${errors.length} file(s) couldn't be added`,
+        description: errors.slice(0, 2).join('\n'),
+        variant: 'destructive',
+      });
+    }
+    
+    if (validFiles.length === 0) return;
+
+    const newPhotos = [...formData.photos, ...validFiles];
     updateField('photos', newPhotos);
 
-    // Create previews
+    // Create previews using object URLs for better memory management
+    validFiles.forEach(file => {
+      const url = URL.createObjectURL(file);
+      photoUrlsRef.current.push(url);
+      setPhotoPreviews(prev => [...prev, url]);
+    });
+  };
+
+  const handleVideosSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    // Validate files
+    const validFiles: File[] = [];
+    const errors: string[] = [];
+    
     files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPhotoPreviews(prev => [...prev, e.target?.result as string]);
-      };
-      reader.readAsDataURL(file);
+      if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
+        errors.push(`${file.name}: Invalid format. Use MP4, WebM, or MOV.`);
+      } else if (file.size > MAX_VIDEO_SIZE) {
+        errors.push(`${file.name}: Too large. Max 100MB allowed.`);
+      } else {
+        validFiles.push(file);
+      }
+    });
+    
+    if (errors.length > 0) {
+      toast({
+        title: `${errors.length} video(s) couldn't be added`,
+        description: errors.slice(0, 2).join('\n'),
+        variant: 'destructive',
+      });
+    }
+    
+    if (validFiles.length === 0) return;
+
+    const newVideos = [...formData.videos, ...validFiles];
+    updateField('videos', newVideos);
+
+    // Create previews using object URLs
+    validFiles.forEach(file => {
+      const url = URL.createObjectURL(file);
+      videoUrlsRef.current.push(url);
+      setVideoPreviews(prev => [...prev, url]);
     });
   };
 
   const removePhoto = (index: number) => {
     const newPhotos = formData.photos.filter((_, i) => i !== index);
     const newPreviews = photoPreviews.filter((_, i) => i !== index);
+    // Clean up the URL
+    if (photoPreviews[index]) {
+      URL.revokeObjectURL(photoPreviews[index]);
+    }
     updateField('photos', newPhotos);
     setPhotoPreviews(newPreviews);
+  };
+
+  const removeVideo = (index: number) => {
+    const newVideos = formData.videos.filter((_, i) => i !== index);
+    const newPreviews = videoPreviews.filter((_, i) => i !== index);
+    // Clean up the URL
+    if (videoPreviews[index]) {
+      URL.revokeObjectURL(videoPreviews[index]);
+    }
+    updateField('videos', newVideos);
+    setVideoPreviews(newPreviews);
   };
 
   const handleContinueToContent = () => {
@@ -402,9 +501,8 @@ export const ImportListingWizard: React.FC = () => {
       }
 
       // Upload photos if any
+      const uploadedImageUrls: string[] = [];
       if (formData.photos && formData.photos.length > 0) {
-        const uploadedUrls: string[] = [];
-
         for (const photo of formData.photos) {
           try {
             const fileExt = photo.name.split('.').pop() || 'jpg';
@@ -419,7 +517,7 @@ export const ImportListingWizard: React.FC = () => {
                 .from('listings')
                 .getPublicUrl(fileName);
               if (publicUrl?.publicUrl) {
-                uploadedUrls.push(publicUrl.publicUrl);
+                uploadedImageUrls.push(publicUrl.publicUrl);
               }
             } else {
               console.warn('Photo upload error:', uploadError);
@@ -429,21 +527,58 @@ export const ImportListingWizard: React.FC = () => {
             // Continue with other photos
           }
         }
+      }
 
-        // Update listing with image URLs if any were uploaded
-        if (uploadedUrls.length > 0) {
-          const { error: updateError } = await supabase
-            .from('listings')
-            .update({
-              cover_image_url: uploadedUrls[0],
-              image_urls: uploadedUrls,
-            })
-            .eq('id', listing.id);
-          
-          if (updateError) {
-            console.warn('Error updating listing with images:', updateError);
-            // Don't throw - listing was created, images can be added later
+      // Upload videos if any
+      const uploadedVideoUrls: string[] = [];
+      if (formData.videos && formData.videos.length > 0) {
+        for (const video of formData.videos) {
+          try {
+            const fileExt = video.name.split('.').pop() || 'mp4';
+            const fileName = `${listing.id}/${crypto.randomUUID()}.${fileExt}`;
+            
+            const { error: uploadError } = await supabase.storage
+              .from('listings')
+              .upload(fileName, video);
+
+            if (!uploadError) {
+              const { data: publicUrl } = supabase.storage
+                .from('listings')
+                .getPublicUrl(fileName);
+              if (publicUrl?.publicUrl) {
+                uploadedVideoUrls.push(publicUrl.publicUrl);
+              }
+            } else {
+              console.warn('Video upload error:', uploadError);
+            }
+          } catch (videoError) {
+            console.warn('Error uploading video:', videoError);
+            // Continue with other videos
           }
+        }
+      }
+
+      // Update listing with image and video URLs if any were uploaded
+      if (uploadedImageUrls.length > 0 || uploadedVideoUrls.length > 0) {
+        const updateData: Record<string, any> = {};
+        
+        if (uploadedImageUrls.length > 0) {
+          updateData.cover_image_url = uploadedImageUrls[0];
+          updateData.image_urls = uploadedImageUrls;
+        }
+        
+        if (uploadedVideoUrls.length > 0) {
+          updateData.video_urls = uploadedVideoUrls;
+        }
+        
+        const { error: updateError } = await supabase
+          .from('listings')
+          .update(updateData)
+          .eq('id', listing.id);
+        
+        if (updateError) {
+          console.warn('Error updating listing with media:', updateError);
+          // Don't throw - listing was created, media can be added later
         }
       }
 
@@ -485,7 +620,7 @@ export const ImportListingWizard: React.FC = () => {
     if (!formData.method) return false;
     if (formData.method === 'url' && !formData.url.trim() && !formData.text.trim()) return false;
     if (formData.method === 'text' && !formData.text.trim()) return false;
-    if (formData.method === 'photos' && formData.photos.length === 0) return false;
+    if (formData.method === 'photos' && formData.photos.length === 0 && formData.videos.length === 0) return false;
     return true;
   };
 
@@ -721,6 +856,39 @@ export const ImportListingWizard: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* Videos preview */}
+          {videoPreviews.length > 0 && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Video className="w-4 h-4" />
+                Videos ({videoPreviews.length})
+              </Label>
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {videoPreviews.map((preview, index) => (
+                  <div key={index} className="relative flex-shrink-0">
+                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted relative">
+                      <video
+                        src={preview}
+                        className="w-full h-full object-cover"
+                        muted
+                        playsInline
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <Play className="w-6 h-6 text-white fill-white" />
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => removeVideo(index)}
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-3 pt-4">
@@ -758,12 +926,12 @@ export const ImportListingWizard: React.FC = () => {
           <h2 className="text-2xl font-bold mb-2">
             {formData.method === 'url' && 'Paste your listing link'}
             {formData.method === 'text' && 'Paste your listing text'}
-            {formData.method === 'photos' && 'Upload your photos'}
+            {formData.method === 'photos' && 'Upload your photos & videos'}
           </h2>
           <p className="text-muted-foreground">
             {formData.method === 'url' && "We'll use this to prefill a draft."}
             {formData.method === 'text' && 'Copy and paste your listing description.'}
-            {formData.method === 'photos' && 'Start with photos, add details in the next step.'}
+            {formData.method === 'photos' && 'Start with media, add details in the next step.'}
           </p>
         </div>
 
@@ -841,7 +1009,10 @@ export const ImportListingWizard: React.FC = () => {
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
                 <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
-                  Click to upload or drag and drop
+                  Click to upload photos
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  JPG, PNG, WebP up to 10MB
                 </p>
               </div>
               <input
@@ -849,6 +1020,62 @@ export const ImportListingWizard: React.FC = () => {
                 accept="image/*"
                 multiple
                 onChange={handlePhotosSelect}
+                className="hidden"
+              />
+            </label>
+          </div>
+
+          {/* Video upload - shown for all methods */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Video className="w-4 h-4" />
+              {formData.method === 'photos' ? 'Videos' : 'Add videos (optional)'}
+            </Label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Show off your listing in action
+            </p>
+            
+            {videoPreviews.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-2 mb-2">
+                {videoPreviews.map((preview, index) => (
+                  <div key={index} className="relative flex-shrink-0">
+                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted relative">
+                      <video
+                        src={preview}
+                        className="w-full h-full object-cover"
+                        muted
+                        playsInline
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <Play className="w-6 h-6 text-white fill-white" />
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => removeVideo(index)}
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+              <div className="flex flex-col items-center justify-center">
+                <Video className="w-6 h-6 mb-1 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Click to upload videos
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  MP4, WebM, MOV up to 100MB
+                </p>
+              </div>
+              <input
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime"
+                multiple
+                onChange={handleVideosSelect}
                 className="hidden"
               />
             </label>
