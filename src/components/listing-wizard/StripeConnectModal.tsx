@@ -102,6 +102,17 @@ export const StripeConnectModal: React.FC<StripeConnectModalProps> = ({
             )}
           </Button>
 
+          {/* New user explainer - important! */}
+          <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+            <p className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+              🆕 First time? No Stripe account needed!
+            </p>
+            <p className="text-xs text-blue-700 dark:text-blue-300">
+              You'll be redirected to Stripe's secure page. Just <strong>fill out the form</strong> with your info — 
+              Stripe will create your account automatically. No signup required.
+            </p>
+          </div>
+
           {/* What you'll need */}
           <div className="bg-muted/30 rounded-lg p-4 space-y-2">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">What you'll need:</p>
