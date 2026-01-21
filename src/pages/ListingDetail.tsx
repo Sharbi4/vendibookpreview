@@ -272,7 +272,7 @@ const ListingDetail = () => {
               <HostCard
                 hostId={listing.host_id}
                 listingId={listing.id}
-                hostName={host?.full_name || null}
+                hostName={host?.display_name || host?.full_name || null}
                 hostAvatar={host?.avatar_url}
                 isVerified={host?.identity_verified || false}
                 memberSince={host?.created_at}
