@@ -1,5 +1,15 @@
 // Analytics utility for tracking user interactions
-// Can be extended to integrate with Google Analytics, Mixpanel, Segment, etc.
+// Integrates with Google Analytics 4 and custom event tracking
+
+import { hasAnalyticsConsent } from '@/lib/cookieConsent';
+import { 
+  trackGA4ViewItem, 
+  trackGA4AddToWishlist, 
+  trackGA4SelectItem, 
+  trackGA4Search,
+  trackGA4BeginCheckout,
+  trackGA4GenerateLead
+} from '@/lib/ga4Conversions';
 
 type AnalyticsEvent = {
   category: string;
@@ -18,8 +28,6 @@ type TrustModalEvent = TrustTileEvent & {
   ctaType?: 'primary' | 'secondary';
   ctaLabel?: string;
 };
-
-import { hasAnalyticsConsent } from '@/lib/cookieConsent';
 
 // Generic event tracker - extend this to send to your analytics provider
 const trackEvent = (event: AnalyticsEvent): void => {
@@ -147,12 +155,20 @@ export const trackSearchStarted = (location?: string): void => {
   });
 };
 
-export const trackListingViewed = (listingId: string, category?: string): void => {
+export const trackListingViewed = (listingId: string, category?: string, title?: string, price?: number): void => {
   trackEvent({
     category: 'Conversion',
     action: 'listing_viewed',
     label: category,
     metadata: { listing_id: listingId },
+  });
+  
+  // Also fire GA4 view_item event
+  trackGA4ViewItem({
+    item_id: listingId,
+    item_name: title || 'Listing',
+    item_category: category,
+    price: price,
   });
 };
 

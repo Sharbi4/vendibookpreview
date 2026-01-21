@@ -12,6 +12,7 @@ import vendibookLogo from '@/assets/vendibook-logo.png';
 import Header from '@/components/layout/Header';
 import { trackSignupCompleted, trackLoginAttempt, trackLoginSuccess, trackLoginError, trackSignupAttempt, trackSignupError, trackPasswordResetRequest } from '@/lib/analytics';
 import { trackSignupConversion } from '@/lib/gtagConversions';
+import { trackGA4SignUp, trackGA4Login } from '@/lib/ga4Conversions';
 
 const authSchema = z.object({
   email: z.string().trim().email('Please enter a valid email').max(255, 'Email is too long'),
@@ -191,9 +192,14 @@ const Auth = () => {
           // Track signup completion
           trackSignupCompleted(selectedRole);
           
+          // Track GA4 signup conversion
+          trackGA4SignUp('email');
+          
           // Track Google Ads conversion for host signups
           if (selectedRole === 'host') {
-            trackSignupConversion({ role: 'host' });
+            trackSignupConversion({ method: 'email', user_type: 'host' });
+          } else {
+            trackSignupConversion({ method: 'email', user_type: 'shopper' });
           }
           
           toast({
@@ -227,6 +233,7 @@ const Auth = () => {
           });
         } else {
           trackLoginSuccess('email');
+          trackGA4Login('email');
           toast({
             title: 'Welcome back!',
             description: 'You have signed in successfully.',
