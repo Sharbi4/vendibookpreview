@@ -36,6 +36,8 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
+import affirmLogo from '@/assets/affirm-logo-new.png';
+import afterpayLogo from '@/assets/afterpay-logo-new.png';
 
 const SellMyFoodTruck = () => {
   // FAQ data for schema and accordion
@@ -571,22 +573,35 @@ const SellMyFoodTruck = () => {
                 
                 {/* Affirm & Afterpay Financing */}
                 <Card className="bg-background border-blue-500/20 mb-6">
-                  <CardContent className="p-4 flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-blue-500/10 shrink-0">
-                      <Sparkles className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-sm mb-1">Accept Affirm & Afterpay</h4>
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Let buyers pay over time with <strong className="text-foreground">Affirm</strong> (up to $30,000) or <strong className="text-foreground">Afterpay</strong> (up to $4,000). You get paid upfront — no extra fees for sellers.
-                      </p>
-                      <Link 
-                        to="/help/affirm-afterpay-payments" 
-                        className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-                      >
-                        Learn more
-                        <ChevronRight className="h-3 w-3" />
-                      </Link>
+                  <CardContent className="p-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <div className="flex items-center gap-4">
+                        <Link to="/payments" className="hover:opacity-80 transition-opacity">
+                          <img 
+                            src={affirmLogo} 
+                            alt="Affirm" 
+                            className="h-6 md:h-8 object-contain dark:invert" 
+                          />
+                        </Link>
+                        <Link to="/payments" className="hover:opacity-80 transition-opacity">
+                          <img 
+                            src={afterpayLogo} 
+                            alt="Afterpay" 
+                            className="h-5 md:h-6 object-contain dark:invert" 
+                          />
+                        </Link>
+                      </div>
+                      <div className="flex-1 text-center sm:text-left">
+                        <p className="text-xs text-muted-foreground">
+                          Let buyers pay over time — you get paid upfront, no extra fees.
+                        </p>
+                      </div>
+                      <Button variant="outline" size="sm" asChild className="gap-1 shrink-0">
+                        <Link to="/payments">
+                          Learn more
+                          <ChevronRight className="h-3 w-3" />
+                        </Link>
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
