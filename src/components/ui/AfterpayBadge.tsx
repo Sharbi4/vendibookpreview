@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import afterpayLogo from '@/assets/afterpay-logo.jpg';
+import afterpayLogo from '@/assets/afterpay-logo-new.png';
 
 interface AfterpayBadgeProps {
   price: number;
@@ -33,7 +33,7 @@ export const AfterpayBadge = ({ price, className, showTooltip = true }: Afterpay
       <img 
         src={afterpayLogo} 
         alt="Afterpay" 
-        className="h-4 w-auto rounded-sm"
+        className="h-4 w-auto dark:invert"
       />
       <span>4 × ${paymentAmount}</span>
     </div>
