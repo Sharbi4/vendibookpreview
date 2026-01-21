@@ -14,6 +14,9 @@ export interface HostOffer {
   expires_at: string | null;
   responded_at: string | null;
   seller_response: string | null;
+  counter_amount: number | null;
+  counter_message: string | null;
+  counter_expires_at: string | null;
   listing: {
     id: string;
     title: string;
@@ -84,39 +87,58 @@ export const useHostOffers = () => {
     mutationFn: async ({ 
       offerId, 
       status, 
-      response 
+      response,
+      counterAmount,
+      counterMessage,
     }: { 
       offerId: string; 
-      status: 'accepted' | 'declined'; 
+      status: 'accepted' | 'declined' | 'countered'; 
       response?: string;
+      counterAmount?: number;
+      counterMessage?: string;
     }) => {
+      const updateData: Record<string, unknown> = {
+        status,
+        seller_response: response || null,
+        responded_at: new Date().toISOString(),
+      };
+
+      // Add counter-offer fields if countering
+      if (status === 'countered' && counterAmount) {
+        updateData.counter_amount = counterAmount;
+        updateData.counter_message = counterMessage || null;
+        updateData.counter_expires_at = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+      }
+
       const { error } = await supabase
         .from('offers')
-        .update({
-          status,
-          seller_response: response || null,
-          responded_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', offerId)
         .eq('seller_id', user?.id);
 
       if (error) throw error;
 
       // Send email notification to buyer
+      const eventType = status === 'countered' ? 'counter_offer' : 
+                        status === 'accepted' ? 'offer_accepted' : 'offer_declined';
+      
       await supabase.functions.invoke('send-offer-notification', {
         body: {
           offer_id: offerId,
-          event_type: status === 'accepted' ? 'offer_accepted' : 'offer_declined',
+          event_type: eventType,
         },
       });
     },
     onSuccess: (_, { status }) => {
       queryClient.invalidateQueries({ queryKey: ['host-offers'] });
+      const messages = {
+        accepted: { title: 'Offer accepted!', desc: 'The buyer will be notified to complete the purchase.' },
+        declined: { title: 'Offer declined', desc: 'The buyer has been notified.' },
+        countered: { title: 'Counter-offer sent!', desc: 'The buyer has 48 hours to respond.' },
+      };
       toast({
-        title: status === 'accepted' ? 'Offer accepted!' : 'Offer declined',
-        description: status === 'accepted' 
-          ? 'The buyer will be notified to complete the purchase.'
-          : 'The buyer has been notified.',
+        title: messages[status].title,
+        description: messages[status].desc,
       });
     },
     onError: (error) => {
@@ -130,11 +152,13 @@ export const useHostOffers = () => {
   });
 
   const pendingOffers = offers.filter(o => o.status === 'pending');
-  const respondedOffers = offers.filter(o => o.status !== 'pending');
+  const counteredOffers = offers.filter(o => o.status === 'countered');
+  const respondedOffers = offers.filter(o => !['pending', 'countered'].includes(o.status));
 
   return {
     offers,
     pendingOffers,
+    counteredOffers,
     respondedOffers,
     isLoading,
     refetch,

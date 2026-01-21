@@ -11,7 +11,7 @@ const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 interface OfferNotificationRequest {
   offer_id: string;
-  event_type: 'new_offer' | 'offer_accepted' | 'offer_declined';
+  event_type: 'new_offer' | 'offer_accepted' | 'offer_declined' | 'counter_offer' | 'counter_accepted' | 'counter_declined';
 }
 
 const wrapEmailHtml = (content: string): string => `
@@ -101,11 +101,17 @@ serve(async (req: Request): Promise<Response> => {
       throw new Error("Could not find seller or buyer profile");
     }
 
+    // Determine recipient based on event type
+    const recipientIsSellerEvents = ['counter_accepted', 'counter_declined'];
+    const recipientIsBuyerEvents = ['offer_accepted', 'offer_declined', 'counter_offer'];
+    const recipientId = event_type === 'new_offer' ? seller.id : 
+                        recipientIsSellerEvents.includes(event_type) ? seller.id : buyer.id;
+
     // Check notification preferences
     const { data: prefs } = await supabase
       .from("notification_preferences")
       .select("sale_email")
-      .eq("user_id", event_type === 'new_offer' ? seller.id : buyer.id)
+      .eq("user_id", recipientId)
       .single();
 
     const shouldSendEmail = prefs?.sale_email !== false;
@@ -113,11 +119,9 @@ serve(async (req: Request): Promise<Response> => {
     let emailContent = "";
     let emailSubject = "";
     let recipientEmail = "";
-    let recipientName = "";
 
     if (event_type === "new_offer") {
       recipientEmail = seller.email!;
-      recipientName = seller.full_name || "Seller";
       emailSubject = `💰 New Offer Received: $${offer.offer_amount.toLocaleString()}`;
       
       emailContent = `
@@ -158,7 +162,7 @@ serve(async (req: Request): Promise<Response> => {
       `;
     } else if (event_type === "offer_accepted") {
       recipientEmail = buyer.email!;
-      recipientName = buyer.full_name || "Buyer";
+      const agreedPrice = offer.counter_amount || offer.offer_amount;
       emailSubject = `🎉 Great news! Your offer was accepted`;
       
       emailContent = `
@@ -170,7 +174,7 @@ serve(async (req: Request): Promise<Response> => {
         <div style="background-color: #ecfdf5; border-radius: 8px; padding: 20px; margin-bottom: 24px; border: 1px solid #10b981;">
           <h2 style="margin: 0 0 12px; color: #1a1a1a; font-size: 18px;">${offer.listing.title}</h2>
           <p style="margin: 0; color: #10b981; font-size: 20px; font-weight: bold;">
-            Agreed Price: $${offer.offer_amount.toLocaleString()}
+            Agreed Price: $${agreedPrice.toLocaleString()}
           </p>
         </div>
         
@@ -187,7 +191,6 @@ serve(async (req: Request): Promise<Response> => {
       `;
     } else if (event_type === "offer_declined") {
       recipientEmail = buyer.email!;
-      recipientName = buyer.full_name || "Buyer";
       emailSubject = `Update on your offer for ${offer.listing.title}`;
       
       emailContent = `
@@ -216,6 +219,102 @@ serve(async (req: Request): Promise<Response> => {
           <a href="https://vendibookpreview.lovable.app/listing/${offer.listing_id}" 
              style="display: inline-block; background-color: #1a1a1a; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">
             View Listing
+          </a>
+        </div>
+      `;
+    } else if (event_type === "counter_offer") {
+      recipientEmail = buyer.email!;
+      emailSubject = `↔️ Counter-Offer: $${offer.counter_amount?.toLocaleString()} for ${offer.listing.title}`;
+      
+      emailContent = `
+        <h1 style="margin: 0 0 16px; color: #1a1a1a; font-size: 24px;">You've received a counter-offer!</h1>
+        <p style="margin: 0 0 24px; color: #666; font-size: 16px; line-height: 1.5;">
+          ${seller.full_name || "The seller"} has responded with a counter-offer on your listing inquiry.
+        </p>
+        
+        <div style="background-color: #eff6ff; border-radius: 8px; padding: 20px; margin-bottom: 24px; border: 1px solid #3b82f6;">
+          <h2 style="margin: 0 0 12px; color: #1a1a1a; font-size: 18px;">${offer.listing.title}</h2>
+          <p style="margin: 0 0 8px; color: #666; font-size: 14px;">
+            <strong>Your Original Offer:</strong> <span style="text-decoration: line-through;">$${offer.offer_amount.toLocaleString()}</span>
+          </p>
+          <p style="margin: 0 0 8px; color: #666; font-size: 14px;">
+            <strong>Counter-Offer:</strong> 
+            <span style="color: #3b82f6; font-size: 20px; font-weight: bold;">$${offer.counter_amount?.toLocaleString()}</span>
+          </p>
+          ${offer.counter_message ? `
+            <p style="margin: 16px 0 0; color: #666; font-size: 14px;">
+              <strong>Seller's Message:</strong><br>
+              <em>"${offer.counter_message}"</em>
+            </p>
+          ` : ""}
+        </div>
+        
+        <p style="margin: 0 0 8px; color: #f59e0b; font-size: 14px;">
+          ⏰ This counter-offer expires in 48 hours
+        </p>
+        
+        <div style="text-align: center; margin-top: 24px;">
+          <a href="https://vendibookpreview.lovable.app/dashboard" 
+             style="display: inline-block; background-color: #3b82f6; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            Review Counter-Offer
+          </a>
+        </div>
+      `;
+    } else if (event_type === "counter_accepted") {
+      recipientEmail = seller.email!;
+      emailSubject = `🎉 Your counter-offer was accepted!`;
+      
+      emailContent = `
+        <h1 style="margin: 0 0 16px; color: #1a1a1a; font-size: 24px;">Counter-offer accepted! 🎉</h1>
+        <p style="margin: 0 0 24px; color: #666; font-size: 16px; line-height: 1.5;">
+          Great news! ${buyer.full_name || "The buyer"} has accepted your counter-offer.
+        </p>
+        
+        <div style="background-color: #ecfdf5; border-radius: 8px; padding: 20px; margin-bottom: 24px; border: 1px solid #10b981;">
+          <h2 style="margin: 0 0 12px; color: #1a1a1a; font-size: 18px;">${offer.listing.title}</h2>
+          <p style="margin: 0; color: #10b981; font-size: 20px; font-weight: bold;">
+            Agreed Price: $${offer.counter_amount?.toLocaleString()}
+          </p>
+        </div>
+        
+        <p style="margin: 0 0 24px; color: #666; font-size: 14px; line-height: 1.5;">
+          The buyer will now complete their purchase. You'll receive a notification once payment is received.
+        </p>
+        
+        <div style="text-align: center;">
+          <a href="https://vendibookpreview.lovable.app/dashboard" 
+             style="display: inline-block; background-color: #1a1a1a; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            View Dashboard
+          </a>
+        </div>
+      `;
+    } else if (event_type === "counter_declined") {
+      recipientEmail = seller.email!;
+      emailSubject = `Counter-offer declined for ${offer.listing.title}`;
+      
+      emailContent = `
+        <h1 style="margin: 0 0 16px; color: #1a1a1a; font-size: 24px;">Counter-offer declined</h1>
+        <p style="margin: 0 0 24px; color: #666; font-size: 16px; line-height: 1.5;">
+          ${buyer.full_name || "The buyer"} has declined your counter-offer on "${offer.listing.title}".
+        </p>
+        
+        <div style="background-color: #f9f9f9; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+          <p style="margin: 0 0 8px; color: #666; font-size: 14px;">
+            <strong>Their Original Offer:</strong> $${offer.offer_amount.toLocaleString()}
+          </p>
+          <p style="margin: 0 0 8px; color: #666; font-size: 14px;">
+            <strong>Your Counter:</strong> $${offer.counter_amount?.toLocaleString()}
+          </p>
+        </div>
+        
+        <p style="margin: 0 0 24px; color: #666; font-size: 14px; line-height: 1.5;">
+          Your listing is still active. Keep an eye out for new offers!
+        </p>
+        
+        <div style="text-align: center;">
+          <a href="https://vendibookpreview.lovable.app/dashboard" 
+             style="display: inline-block; background-color: #1a1a1a; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            View Dashboard
           </a>
         </div>
       `;

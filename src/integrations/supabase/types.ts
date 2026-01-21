@@ -939,6 +939,9 @@ export type Database = {
       offers: {
         Row: {
           buyer_id: string
+          counter_amount: number | null
+          counter_expires_at: string | null
+          counter_message: string | null
           created_at: string
           expires_at: string | null
           id: string
@@ -953,6 +956,9 @@ export type Database = {
         }
         Insert: {
           buyer_id: string
+          counter_amount?: number | null
+          counter_expires_at?: string | null
+          counter_message?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
@@ -967,6 +973,9 @@ export type Database = {
         }
         Update: {
           buyer_id?: string
+          counter_amount?: number | null
+          counter_expires_at?: string | null
+          counter_message?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string

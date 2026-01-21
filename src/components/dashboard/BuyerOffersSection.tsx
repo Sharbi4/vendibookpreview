@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
-import { Tag, Clock, CheckCircle2, XCircle, AlertCircle, Loader2, ExternalLink } from 'lucide-react';
+import { Tag, Clock, CheckCircle2, XCircle, AlertCircle, Loader2, ExternalLink, ArrowRightLeft, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +26,14 @@ const getStatusConfig = (status: string, expiresAt: string | null) => {
         label: 'Pending',
         color: 'text-amber-600',
         bgColor: 'bg-amber-50',
+        badgeVariant: 'outline' as const,
+      };
+    case 'countered':
+      return {
+        icon: ArrowRightLeft,
+        label: 'Counter-Offer',
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-50',
         badgeVariant: 'outline' as const,
       };
     case 'accepted':
@@ -63,19 +71,35 @@ const getStatusConfig = (status: string, expiresAt: string | null) => {
   }
 };
 
-const OfferCard = ({ 
-  offer, 
-  onCancel,
-  isCancelling 
-}: { 
+interface OfferCardProps {
   offer: BuyerOffer;
   onCancel: (id: string) => void;
   isCancelling: boolean;
-}) => {
+  onAcceptCounter: (id: string) => void;
+  onDeclineCounter: (id: string) => void;
+  isRespondingToCounter: boolean;
+}
+
+const OfferCard = ({ 
+  offer, 
+  onCancel,
+  isCancelling,
+  onAcceptCounter,
+  onDeclineCounter,
+  isRespondingToCounter,
+}: OfferCardProps) => {
   const statusConfig = getStatusConfig(offer.status, offer.expires_at);
   const StatusIcon = statusConfig.icon;
   const isPending = offer.status === 'pending';
+  const isCountered = offer.status === 'countered';
   const isExpired = offer.expires_at && new Date(offer.expires_at) < new Date() && isPending;
+
+  // For accepted offers with counter, the agreed price is the counter amount
+  const agreedPrice = offer.status === 'accepted' && offer.counter_amount 
+    ? offer.counter_amount 
+    : offer.status === 'accepted' 
+      ? offer.offer_amount 
+      : null;
 
   return (
     <Card className="border border-border shadow-sm">
@@ -119,18 +143,63 @@ const OfferCard = ({
 
             {/* Price Info */}
             <div className="flex items-center gap-3 mb-2">
-              <span className="font-bold text-foreground">
+              <span className={`font-bold ${isCountered ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
                 ${offer.offer_amount.toLocaleString()}
               </span>
-              {offer.listing.price_sale && (
+              {offer.listing.price_sale && !isCountered && (
                 <span className="text-xs text-muted-foreground">
                   of ${offer.listing.price_sale.toLocaleString()} asking
                 </span>
               )}
             </div>
 
-            {/* Seller Response */}
-            {offer.seller_response && (
+            {/* Counter Offer Section */}
+            {isCountered && offer.counter_amount && (
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg mb-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <ArrowRightLeft className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-semibold text-blue-700 dark:text-blue-400">
+                    Seller's counter: ${offer.counter_amount.toLocaleString()}
+                  </span>
+                </div>
+                {offer.counter_message && (
+                  <p className="text-xs text-blue-600 dark:text-blue-400 italic mb-2">
+                    "{offer.counter_message}"
+                  </p>
+                )}
+                
+                {/* Counter Response Actions */}
+                <div className="flex items-center gap-2 mt-3">
+                  <Button
+                    size="sm"
+                    onClick={() => onAcceptCounter(offer.id)}
+                    disabled={isRespondingToCounter}
+                    className="flex-1"
+                  >
+                    {isRespondingToCounter ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Check className="h-4 w-4 mr-1" />
+                        Accept ${offer.counter_amount.toLocaleString()}
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onDeclineCounter(offer.id)}
+                    disabled={isRespondingToCounter}
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Decline
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Seller Response (for declined) */}
+            {offer.seller_response && offer.status === 'declined' && (
               <p className="text-xs text-muted-foreground italic bg-muted/50 p-2 rounded mb-2">
                 Seller: "{offer.seller_response}"
               </p>
@@ -143,10 +212,10 @@ const OfferCard = ({
               </p>
               
               <div className="flex items-center gap-2">
-                {offer.status === 'accepted' && (
+                {offer.status === 'accepted' && agreedPrice && (
                   <Button size="sm" asChild>
                     <Link to={`/checkout/${offer.listing_id}`}>
-                      Complete Purchase
+                      Buy for ${agreedPrice.toLocaleString()}
                       <ExternalLink className="h-3 w-3 ml-1" />
                     </Link>
                   </Button>
@@ -176,7 +245,15 @@ const OfferCard = ({
 };
 
 export const BuyerOffersSection = () => {
-  const { offers, stats, isLoading, cancelOffer, isCancelling } = useBuyerOffers();
+  const { 
+    offers, 
+    stats, 
+    isLoading, 
+    cancelOffer, 
+    isCancelling,
+    respondToCounter,
+    isRespondingToCounter,
+  } = useBuyerOffers();
 
   if (isLoading) {
     return (
@@ -203,6 +280,11 @@ export const BuyerOffersSection = () => {
             My Offers
           </CardTitle>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {stats.countered > 0 && (
+              <Badge variant="outline" className="text-blue-600 border-blue-500">
+                {stats.countered} counter
+              </Badge>
+            )}
             {stats.pending > 0 && (
               <Badge variant="outline" className="text-amber-600 border-amber-500">
                 {stats.pending} pending
@@ -223,6 +305,9 @@ export const BuyerOffersSection = () => {
             offer={offer}
             onCancel={cancelOffer}
             isCancelling={isCancelling}
+            onAcceptCounter={(id) => respondToCounter({ offerId: id, action: 'accept' })}
+            onDeclineCounter={(id) => respondToCounter({ offerId: id, action: 'decline' })}
+            isRespondingToCounter={isRespondingToCounter}
           />
         ))}
       </CardContent>
