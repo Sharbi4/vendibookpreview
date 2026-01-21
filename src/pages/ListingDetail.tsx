@@ -40,6 +40,39 @@ const ListingDetail = () => {
   const { data: ratingData } = useListingAverageRating(id);
   const { trackView } = useTrackListingView();
 
+  // Generate structured data for Google Shopping / Search
+  // Must be called before any conditional returns to follow Rules of Hooks
+  const productSchema = useMemo(() => {
+    if (!listing || !host) return null;
+    return generateProductSchema({
+      id: listing.id,
+      title: listing.title,
+      description: listing.description,
+      category: listing.category,
+      mode: listing.mode as 'rent' | 'sale',
+      price_daily: listing.price_daily,
+      price_weekly: listing.price_weekly,
+      price_sale: listing.price_sale,
+      cover_image_url: listing.cover_image_url,
+      image_urls: listing.image_urls || [],
+      address: listing.address,
+      status: listing.status,
+      host_name: host?.full_name,
+      average_rating: ratingData?.average,
+      review_count: ratingData?.count,
+    });
+  }, [listing, host, ratingData]);
+
+  const breadcrumbSchema = useMemo(() => {
+    if (!listing) return null;
+    return generateListingBreadcrumbSchema({
+      id: listing.id,
+      title: listing.title,
+      category: listing.category,
+      mode: listing.mode as 'rent' | 'sale',
+    });
+  }, [listing]);
+
   // Track page view when listing loads
   useEffect(() => {
     if (id && listing && !isLoading) {
@@ -91,32 +124,6 @@ const ListingDetail = () => {
   // Extract city/state from address for compact display
   const locationShort = location?.split(',').slice(-2).join(',').trim() || location;
 
-  // Generate structured data for Google Shopping / Search
-  const productSchema = useMemo(() => generateProductSchema({
-    id: listing.id,
-    title: listing.title,
-    description: listing.description,
-    category: listing.category,
-    mode: listing.mode as 'rent' | 'sale',
-    price_daily: listing.price_daily,
-    price_weekly: listing.price_weekly,
-    price_sale: listing.price_sale,
-    cover_image_url: listing.cover_image_url,
-    image_urls: listing.image_urls || [],
-    address: listing.address,
-    status: listing.status,
-    host_name: host?.full_name,
-    average_rating: ratingData?.average,
-    review_count: ratingData?.count,
-  }), [listing, host, ratingData]);
-
-  const breadcrumbSchema = useMemo(() => generateListingBreadcrumbSchema({
-    id: listing.id,
-    title: listing.title,
-    category: listing.category,
-    mode: listing.mode as 'rent' | 'sale',
-  }), [listing]);
-
   // SEO meta description
   const metaDescription = `${listing.mode === 'rent' ? 'Rent' : 'Buy'} this ${CATEGORY_LABELS[listing.category as keyof typeof CATEGORY_LABELS] || 'listing'}${location ? ` in ${locationShort}` : ''}. ${listing.description?.slice(0, 120) || ''}`;
 
@@ -128,7 +135,9 @@ const ListingDetail = () => {
         canonical={`/listing/${listing.id}`}
         image={listing.cover_image_url || undefined}
       />
-      <JsonLd schema={[productSchema, breadcrumbSchema]} />
+      {productSchema && breadcrumbSchema && (
+        <JsonLd schema={[productSchema, breadcrumbSchema]} />
+      )}
       <Header />
 
       <main className="flex-1">
