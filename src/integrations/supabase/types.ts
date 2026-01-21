@@ -1009,10 +1009,12 @@ export type Database = {
           display_name: string | null
           draft_nudge_sent_at: string | null
           email: string | null
+          first_name: string | null
           full_name: string | null
           id: string
           identity_verified: boolean | null
           identity_verified_at: string | null
+          last_name: string | null
           phone_number: string | null
           public_city: string | null
           public_state: string | null
@@ -1036,10 +1038,12 @@ export type Database = {
           display_name?: string | null
           draft_nudge_sent_at?: string | null
           email?: string | null
+          first_name?: string | null
           full_name?: string | null
           id: string
           identity_verified?: boolean | null
           identity_verified_at?: string | null
+          last_name?: string | null
           phone_number?: string | null
           public_city?: string | null
           public_state?: string | null
@@ -1063,10 +1067,12 @@ export type Database = {
           display_name?: string | null
           draft_nudge_sent_at?: string | null
           email?: string | null
+          first_name?: string | null
           full_name?: string | null
           id?: string
           identity_verified?: boolean | null
           identity_verified_at?: string | null
+          last_name?: string | null
           phone_number?: string | null
           public_city?: string | null
           public_state?: string | null

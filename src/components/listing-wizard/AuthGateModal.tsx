@@ -12,6 +12,9 @@ import { z } from 'zod';
 const authSchema = z.object({
   email: z.string().trim().email('Please enter a valid email').max(255),
   password: z.string().min(8, 'Password must be at least 8 characters').max(72),
+  firstName: z.string().trim().min(1, 'First name is required').max(50).optional(),
+  lastName: z.string().trim().min(1, 'Last name is required').max(50).optional(),
+  phoneNumber: z.string().trim().min(10, 'Phone must be at least 10 digits').max(20).optional(),
 });
 
 interface AuthGateModalProps {
@@ -31,19 +34,26 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
   const [mode, setMode] = useState<'signin' | 'signup'>('signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = (): boolean => {
     try {
-      authSchema.parse({ email: email.trim(), password });
+      if (mode === 'signup') {
+        authSchema.parse({ email: email.trim(), password, firstName, lastName, phoneNumber });
+      } else {
+        authSchema.pick({ email: true, password: true }).parse({ email: email.trim(), password });
+      }
       setErrors({});
       return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const newErrors: { email?: string; password?: string } = {};
+        const newErrors: Record<string, string> = {};
         error.errors.forEach((err) => {
-          const field = err.path[0] as 'email' | 'password';
+          const field = err.path[0] as string;
           newErrors[field] = err.message;
         });
         setErrors(newErrors);
@@ -64,11 +74,18 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
 
     try {
       if (mode === 'signup') {
+        const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/create-listing/${draftId || ''}`,
+            data: {
+              full_name: fullName,
+              first_name: firstName.trim(),
+              last_name: lastName.trim(),
+              phone_number: phoneNumber.trim(),
+            },
           },
         });
 
@@ -97,10 +114,11 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
           }
 
           // Send welcome email to new user (don't block on failure)
+          const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
           supabase.functions.invoke('send-welcome-email', {
             body: {
               email: trimmedEmail,
-              fullName: null,
+              fullName,
               role: 'host',
             },
           }).catch(err => console.error('Failed to send welcome email:', err));
@@ -111,7 +129,10 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
               type: 'new_user',
               data: {
                 email: trimmedEmail,
-                full_name: null,
+                full_name: fullName,
+                first_name: firstName.trim(),
+                last_name: lastName.trim(),
+                phone_number: phoneNumber.trim(),
                 role: 'host',
                 user_id: data.user.id,
                 source: 'listing_wizard',
@@ -191,6 +212,68 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+          {mode === 'signup' && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    placeholder="John"
+                    value={firstName}
+                    onChange={(e) => {
+                      setFirstName(e.target.value);
+                      if (errors.firstName) setErrors(prev => ({ ...prev, firstName: undefined }));
+                    }}
+                    className={errors.firstName ? 'border-destructive' : ''}
+                    required
+                  />
+                  {errors.firstName && (
+                    <p className="text-sm text-destructive">{errors.firstName}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    placeholder="Doe"
+                    value={lastName}
+                    onChange={(e) => {
+                      setLastName(e.target.value);
+                      if (errors.lastName) setErrors(prev => ({ ...prev, lastName: undefined }));
+                    }}
+                    className={errors.lastName ? 'border-destructive' : ''}
+                    required
+                  />
+                  {errors.lastName && (
+                    <p className="text-sm text-destructive">{errors.lastName}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phoneNumber">Phone Number <span className="text-destructive">*</span></Label>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  placeholder="(555) 123-4567"
+                  value={phoneNumber}
+                  onChange={(e) => {
+                    setPhoneNumber(e.target.value);
+                    if (errors.phoneNumber) setErrors(prev => ({ ...prev, phoneNumber: undefined }));
+                  }}
+                  className={errors.phoneNumber ? 'border-destructive' : ''}
+                  required
+                />
+                {errors.phoneNumber && (
+                  <p className="text-sm text-destructive">{errors.phoneNumber}</p>
+                )}
+              </div>
+            </>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input

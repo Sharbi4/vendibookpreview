@@ -21,7 +21,7 @@ interface AuthContextType {
   roles: AppRole[];
   isLoading: boolean;
   isVerified: boolean;
-  signUp: (email: string, password: string, fullName: string, role: AppRole) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, role: AppRole, firstName?: string, lastName?: string, phoneNumber?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
@@ -135,7 +135,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, role: AppRole) => {
+  const signUp = async (email: string, password: string, fullName: string, role: AppRole, firstName?: string, lastName?: string, phoneNumber?: string) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
 
@@ -146,6 +146,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName,
+            first_name: firstName || '',
+            last_name: lastName || '',
+            phone_number: phoneNumber || '',
           },
         },
       });

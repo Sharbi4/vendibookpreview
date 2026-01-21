@@ -4,12 +4,11 @@ import { z } from 'zod';
 import { 
   ArrowLeft, Camera, Eye, EyeOff, Key, Loader2, Save, User, 
   ShieldCheck, CreditCard, Globe, Lock, ExternalLink, Bell,
-  Building2, MapPin, Phone, Mail, ChevronDown, Pencil, Check, X, AlertCircle
+  Building2, MapPin, ChevronDown, Pencil, Check, X, AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -43,6 +42,8 @@ const VisibilityBadge = ({ isPublic }: { isPublic: boolean }) => (
 
 interface ProfileData {
   full_name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   avatar_url: string;
   display_name: string;
@@ -109,6 +110,8 @@ const Account = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const [formData, setFormData] = useState<ProfileData>({
     full_name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     avatar_url: '',
     display_name: '',
@@ -149,7 +152,7 @@ const Account = () => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('full_name, email, avatar_url, display_name, username, business_name, public_city, public_state, phone_number, address1, address2, city, state, zip_code, identity_verified')
+          .select('full_name, first_name, last_name, email, avatar_url, display_name, username, business_name, public_city, public_state, phone_number, address1, address2, city, state, zip_code, identity_verified')
           .eq('id', user.id)
           .single();
 
@@ -157,6 +160,8 @@ const Account = () => {
 
         const profileData = {
           full_name: data.full_name || '',
+          first_name: data.first_name || '',
+          last_name: data.last_name || '',
           email: data.email || user.email || '',
           avatar_url: data.avatar_url || '',
           display_name: data.display_name || '',
@@ -580,23 +585,63 @@ const Account = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4 pt-6">
+              {/* Locked identity fields notice */}
+              <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <Lock className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  Your name and phone number are locked for security. They're used for identity verification and Stripe payouts. <Link to="/help/contact" className="underline">Contact support</Link> to make changes.
+                </p>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="full_name" className="text-sm">Legal Name</Label>
-                    <VisibilityBadge isPublic={false} />
+                    <Label htmlFor="first_name" className="text-sm">First Name</Label>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-amber-500/50 text-amber-600 bg-amber-50/50">
+                      <Lock className="h-2.5 w-2.5 mr-0.5" /> Locked
+                    </Badge>
                   </div>
                   <Input
-                    id="full_name"
-                    name="full_name"
-                    value={formData.full_name}
-                    onChange={handleInputChange}
-                    placeholder="Your full legal name"
-                    className={`h-9 ${errors.full_name ? 'border-destructive' : ''}`}
+                    id="first_name"
+                    name="first_name"
+                    value={formData.first_name}
+                    disabled
+                    className="h-9 bg-muted/50 cursor-not-allowed"
                   />
-                  {errors.full_name && (
-                    <p className="text-xs text-destructive">{errors.full_name}</p>
-                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="last_name" className="text-sm">Last Name</Label>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-amber-500/50 text-amber-600 bg-amber-50/50">
+                      <Lock className="h-2.5 w-2.5 mr-0.5" /> Locked
+                    </Badge>
+                  </div>
+                  <Input
+                    id="last_name"
+                    name="last_name"
+                    value={formData.last_name}
+                    disabled
+                    className="h-9 bg-muted/50 cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="phone_number" className="text-sm">Phone Number</Label>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-amber-500/50 text-amber-600 bg-amber-50/50">
+                      <Lock className="h-2.5 w-2.5 mr-0.5" /> Locked
+                    </Badge>
+                  </div>
+                  <Input
+                    id="phone_number"
+                    name="phone_number"
+                    type="tel"
+                    value={formData.phone_number}
+                    disabled
+                    className="h-9 bg-muted/50 cursor-not-allowed"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
@@ -616,22 +661,6 @@ const Account = () => {
                     <p className="text-xs text-destructive">{errors.email}</p>
                   )}
                 </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="phone_number" className="text-sm">Phone Number</Label>
-                  <VisibilityBadge isPublic={false} />
-                </div>
-                <Input
-                  id="phone_number"
-                  name="phone_number"
-                  type="tel"
-                  value={formData.phone_number}
-                  onChange={handleInputChange}
-                  placeholder="(555) 123-4567"
-                  className="h-9"
-                />
               </div>
 
               {/* Password Section */}
