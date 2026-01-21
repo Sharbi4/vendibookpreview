@@ -41,11 +41,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useConversations } from '@/hooks/useConversations';
 import { useState, useRef, useEffect } from 'react';
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
-
+import { getPublicDisplayName, getDisplayInitials } from '@/lib/displayName';
 // Type for public profile data
 interface PublicProfileData {
   id: string;
   full_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
   display_name: string | null;
   username: string | null;
   business_name: string | null;
@@ -152,14 +154,9 @@ const PublicProfile = () => {
   const isLoading = profileLoading || statsLoading;
   const isHost = (stats?.totalListings || 0) > 0;
 
-  // Display name logic
-  const displayName = profile?.display_name || profile?.full_name || 'User';
-  const initials = displayName
-    ?.split(' ')
-    .map((n: string) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) || '?';
+  // Display name logic - use public display name utility
+  const displayName = profile ? getPublicDisplayName(profile) : 'User';
+  const initials = profile ? getDisplayInitials(profile) : '?';
 
   // Derive service area from listings if not set in profile
   const serviceArea = (() => {

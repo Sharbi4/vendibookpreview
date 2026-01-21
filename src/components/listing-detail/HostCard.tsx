@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import MessageHostButton from '@/components/messaging/MessageHostButton';
 import { useHostResponseTime } from '@/hooks/useHostResponseTime';
 import { useListingAverageRating } from '@/hooks/useReviews';
+import { getDisplayInitials } from '@/lib/displayName';
 
 interface HostCardProps {
   hostId: string;
@@ -24,8 +25,9 @@ const HostCard = ({
   isVerified = false,
   memberSince,
 }: HostCardProps) => {
+  // Generate initials from the display name
   const initials = hostName 
-    ? hostName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    ? hostName.replace(/\.$/, '').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : 'H';
 
   // Include listing context in profile link for messaging

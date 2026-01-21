@@ -5,6 +5,10 @@ export interface UserProfile {
   id: string;
   email: string | null;
   full_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  display_name: string | null;
+  business_name: string | null;
   avatar_url: string | null;
   identity_verified: boolean | null;
   created_at: string;
@@ -31,7 +35,7 @@ export const useUserProfile = (userId: string | undefined) => {
         // For own profile, fetch all data directly (RLS allows this)
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, avatar_url, identity_verified, created_at, email')
+          .select('id, full_name, first_name, last_name, display_name, business_name, avatar_url, identity_verified, created_at, email')
           .eq('id', userId)
           .single();
 
@@ -40,6 +44,10 @@ export const useUserProfile = (userId: string | undefined) => {
         return {
           id: data.id,
           full_name: data.full_name,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          display_name: data.display_name,
+          business_name: data.business_name,
           avatar_url: data.avatar_url,
           identity_verified: data.identity_verified,
           created_at: data.created_at,
@@ -60,7 +68,7 @@ export const useUserProfile = (userId: string | undefined) => {
           // This covers cases where user might be a booking/conversation participant
           const { data: directData, error: directError } = await supabase
             .from('profiles')
-            .select('id, full_name, avatar_url, identity_verified, created_at')
+            .select('id, full_name, first_name, last_name, display_name, business_name, avatar_url, identity_verified, created_at')
             .eq('id', userId)
             .single();
           
@@ -69,6 +77,10 @@ export const useUserProfile = (userId: string | undefined) => {
           return {
             id: directData.id,
             full_name: directData.full_name,
+            first_name: directData.first_name,
+            last_name: directData.last_name,
+            display_name: directData.display_name,
+            business_name: directData.business_name,
             avatar_url: directData.avatar_url,
             identity_verified: directData.identity_verified,
             created_at: directData.created_at,
@@ -79,6 +91,10 @@ export const useUserProfile = (userId: string | undefined) => {
         return {
           id: profile.id,
           full_name: profile.full_name,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          display_name: profile.display_name,
+          business_name: profile.business_name,
           avatar_url: profile.avatar_url,
           identity_verified: profile.identity_verified,
           created_at: profile.created_at,

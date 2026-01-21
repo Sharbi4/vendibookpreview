@@ -33,6 +33,7 @@ import { trackListingViewed } from '@/lib/analytics';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 import SEO from '@/components/SEO';
 import JsonLd, { generateProductSchema, generateListingBreadcrumbSchema } from '@/components/JsonLd';
+import { getPublicDisplayName } from '@/lib/displayName';
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -272,7 +273,7 @@ const ListingDetail = () => {
               <HostCard
                 hostId={listing.host_id}
                 listingId={listing.id}
-                hostName={host?.display_name || host?.full_name || null}
+                hostName={host ? getPublicDisplayName(host) : null}
                 hostAvatar={host?.avatar_url}
                 isVerified={host?.identity_verified || false}
                 memberSince={host?.created_at}
