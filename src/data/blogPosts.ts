@@ -666,27 +666,38 @@ Vendibook listings include information about local permit requirements to help y
   },
 ];
 
+// Helper to sort posts by date (most recent first)
+function sortByDateDesc(posts: BlogPost[]): BlogPost[] {
+  return [...posts].sort((a, b) => 
+    new Date(b.datePublished).getTime() - new Date(a.datePublished).getTime()
+  );
+}
+
 export function getBlogPostBySlug(slug: string): BlogPost | undefined {
   return BLOG_POSTS.find(post => post.slug === slug);
 }
 
 export function getBlogPostsByCategory(category: string): BlogPost[] {
-  return BLOG_POSTS.filter(post => post.category === category);
+  return sortByDateDesc(BLOG_POSTS.filter(post => post.category === category));
 }
 
 export function getFeaturedPosts(): BlogPost[] {
-  return BLOG_POSTS.filter(post => post.featured);
+  return sortByDateDesc(BLOG_POSTS.filter(post => post.featured));
+}
+
+export function getRecentPosts(limit = 6): BlogPost[] {
+  return sortByDateDesc(BLOG_POSTS).slice(0, limit);
 }
 
 export function getRelatedPosts(currentSlug: string, limit = 3): BlogPost[] {
   const currentPost = getBlogPostBySlug(currentSlug);
-  if (!currentPost) return BLOG_POSTS.slice(0, limit);
+  if (!currentPost) return sortByDateDesc(BLOG_POSTS).slice(0, limit);
   
-  return BLOG_POSTS
+  return sortByDateDesc(BLOG_POSTS
     .filter(post => post.slug !== currentSlug)
     .filter(post => 
       post.category === currentPost.category ||
       post.tags.some(tag => currentPost.tags.includes(tag))
-    )
+    ))
     .slice(0, limit);
 }
