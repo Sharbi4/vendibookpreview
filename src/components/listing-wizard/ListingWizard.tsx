@@ -33,7 +33,7 @@ import { PublishSuccessModal } from './PublishSuccessModal';
 import { StripeConnectBanner } from './StripeConnectBanner';
 import { ListingPreviewModal } from './ListingPreviewModal';
 
-const STEPS = ['Type', 'Details', 'Location', 'Pricing', 'Documents', 'Photos', 'Review'];
+const STEPS = ['Type', 'Details', 'Location', 'Pricing', 'Documents', 'Media', 'Review'];
 
 interface PublishedListing {
   id: string;
