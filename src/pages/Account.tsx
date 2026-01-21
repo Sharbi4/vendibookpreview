@@ -93,7 +93,7 @@ const passwordSchema = z.object({
 
 const Account = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const publicSectionRef = useRef<HTMLDivElement>(null);
@@ -336,6 +336,9 @@ const Account = () => {
         setOriginalData({ ...originalData, avatar_url: avatarUrl });
       }
 
+      // Refresh AuthContext profile so Header/MobileMenu update immediately
+      await refreshProfile();
+
       toast({
         title: 'Avatar updated',
         description: 'Your profile picture has been updated',
@@ -406,6 +409,9 @@ const Account = () => {
 
       setOriginalData({ ...formData });
       setHasChanges(false);
+
+      // Refresh AuthContext profile so Header/MobileMenu update immediately
+      await refreshProfile();
 
       toast({
         title: 'Changes saved',
