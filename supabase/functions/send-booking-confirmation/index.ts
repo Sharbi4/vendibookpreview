@@ -54,7 +54,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const siteUrl = Deno.env.get("SITE_URL") || "https://vendibookpreview.lovable.app";
+    const siteUrl = Deno.env.get("SITE_URL") || "https://vendibook.com";
     const logoUrl = `${siteUrl}/images/vendibook-email-logo.png`;
 
     // Create short booking reference ID (first 8 chars uppercase)

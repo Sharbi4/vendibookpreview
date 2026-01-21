@@ -15,7 +15,7 @@ interface LaunchEmailRequest {
   sendToAll?: boolean;
 }
 
-const BASE_URL = "https://vendibookpreview.lovable.app";
+const BASE_URL = "https://vendibook.com";
 
 // Supabase Storage URL for email assets
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";

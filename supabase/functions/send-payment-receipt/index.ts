@@ -81,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const siteUrl = Deno.env.get("SITE_URL") || "https://vendibookpreview.lovable.app";
+    const siteUrl = Deno.env.get("SITE_URL") || "https://vendibook.com";
     const logoUrl = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-logo-official.png";
 
     const formatDate = (dateStr: string) => {

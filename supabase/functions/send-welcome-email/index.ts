@@ -40,7 +40,7 @@ const handler = async (req: Request): Promise<Response> => {
       : "As a Shopper, you can browse and book amazing food trucks, trailers, ghost kitchens, and vendor lots.";
 
     // Use the published app URL for the logo
-    const siteUrl = Deno.env.get("SITE_URL") || "https://vendibookpreview.lovable.app";
+    const siteUrl = Deno.env.get("SITE_URL") || "https://vendibook.com";
     const logoUrl = `${siteUrl}/images/vendibook-email-logo.png`;
 
     const html = `
@@ -102,7 +102,7 @@ const handler = async (req: Request): Promise<Response> => {
               
               <!-- CTA Button -->
               <div style="text-align: center; margin-top: 32px;">
-                <a href="${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '.lovable.app') || 'https://vendibookpreview.lovable.app'}/dashboard" 
+                <a href="${siteUrl}/dashboard" 
                    style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
                   Go to Dashboard
                 </a>

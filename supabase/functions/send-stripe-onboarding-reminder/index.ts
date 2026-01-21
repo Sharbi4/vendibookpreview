@@ -114,7 +114,7 @@ serve(async (req) => {
                 </ul>
                 
                 <div style="text-align: center; margin: 30px 0;">
-                  <a href="https://vendibookpreview.lovable.app/dashboard" 
+                  <a href="https://vendibook.com/dashboard" 
                      style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">
                     Complete Setup
                   </a>

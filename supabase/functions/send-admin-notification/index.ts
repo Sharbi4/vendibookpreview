@@ -26,7 +26,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { type, data }: NotificationRequest = await req.json();
     console.log(`Processing notification type: ${type}`, data);
 
-    const siteUrl = Deno.env.get("SITE_URL") || "https://vendibookpreview.lovable.app";
+    const siteUrl = Deno.env.get("SITE_URL") || "https://vendibook.com";
     const logoUrl = `${siteUrl}/images/vendibook-email-logo.png`;
 
     let subject = "";
