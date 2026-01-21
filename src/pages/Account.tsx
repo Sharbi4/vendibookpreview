@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
+import { useQueryClient } from '@tanstack/react-query';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 
@@ -95,6 +96,7 @@ const Account = () => {
   const navigate = useNavigate();
   const { user, refreshProfile } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const publicSectionRef = useRef<HTMLDivElement>(null);
   const { isConnected: stripeConnected, isLoading: stripeLoading, connectStripe, isConnecting } = useStripeConnect();
@@ -339,6 +341,11 @@ const Account = () => {
       // Refresh AuthContext profile so Header/MobileMenu update immediately
       await refreshProfile();
 
+      // Invalidate all profile-related queries so PublicProfile, listings, etc. update
+      queryClient.invalidateQueries({ queryKey: ['public-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['user-stats'] });
+
       toast({
         title: 'Avatar updated',
         description: 'Your profile picture has been updated',
@@ -412,6 +419,12 @@ const Account = () => {
 
       // Refresh AuthContext profile so Header/MobileMenu update immediately
       await refreshProfile();
+
+      // Invalidate all profile-related queries so PublicProfile, listings, etc. update
+      queryClient.invalidateQueries({ queryKey: ['public-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['user-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['host-profile'] });
 
       toast({
         title: 'Changes saved',
