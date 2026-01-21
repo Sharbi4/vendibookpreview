@@ -50,7 +50,7 @@ const Payments = () => {
                 Vendibook is built to keep transactions safe, trackable, and fair—with Stripe-powered payments, protected holds, and flexible checkout options for both rentals and purchases.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button size="lg" asChild>
+                <Button size="lg" asChild className="bg-foreground text-background hover:bg-foreground/90">
                   <Link to="/search">
                     <Search className="h-4 w-4 mr-2" />
                     Start Your Search
@@ -306,7 +306,7 @@ const Payments = () => {
 
               {/* CTA for Rentals */}
               <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
-                <Button asChild>
+                <Button asChild className="bg-foreground text-background hover:bg-foreground/90">
                   <Link to="/search?mode=rent">
                     <Search className="h-4 w-4 mr-2" />
                     Find a Rental
@@ -398,7 +398,7 @@ const Payments = () => {
                 Ready to buy, book, or list—confidently?
               </h2>
               <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
-                <Button size="lg" asChild>
+                <Button size="lg" asChild className="bg-foreground text-background hover:bg-foreground/90">
                   <Link to="/search">
                     <Search className="h-4 w-4 mr-2" />
                     Start Your Search
