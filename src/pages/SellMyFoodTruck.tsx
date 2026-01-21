@@ -568,6 +568,28 @@ const SellMyFoodTruck = () => {
                     </CardContent>
                   </Card>
                 </div>
+                
+                {/* Affirm & Afterpay Financing */}
+                <Card className="bg-background border-blue-500/20 mb-6">
+                  <CardContent className="p-4 flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-blue-500/10 shrink-0">
+                      <Sparkles className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-sm mb-1">Accept Affirm & Afterpay</h4>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Let buyers pay over time with <strong className="text-foreground">Affirm</strong> (up to $30,000) or <strong className="text-foreground">Afterpay</strong> (up to $4,000). You get paid upfront — no extra fees for sellers.
+                      </p>
+                      <Link 
+                        to="/help/affirm-afterpay-payments" 
+                        className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                      >
+                        Learn more
+                        <ChevronRight className="h-3 w-3" />
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
                 <Button variant="outline" size="sm" asChild>
                   <Link to="/pricing-calculator">
                     See fee breakdown
