@@ -6,6 +6,8 @@ type DbListing = Tables<'listings'>;
 
 interface HostProfile {
   full_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
   avatar_url: string | null;
   identity_verified: boolean | null;
   created_at: string;
@@ -51,6 +53,8 @@ export const useListing = (listingId: string | undefined) => {
               const profile = hostData[0];
               setHost({
                 full_name: profile.full_name,
+                first_name: profile.first_name,
+                last_name: profile.last_name,
                 avatar_url: profile.avatar_url,
                 identity_verified: profile.identity_verified,
                 created_at: profile.created_at,

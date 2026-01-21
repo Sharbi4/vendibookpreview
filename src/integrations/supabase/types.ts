@@ -1571,9 +1571,11 @@ export type Database = {
           business_name: string
           created_at: string
           display_name: string
+          first_name: string
           full_name: string
           id: string
           identity_verified: boolean
+          last_name: string
           public_city: string
           public_state: string
           username: string

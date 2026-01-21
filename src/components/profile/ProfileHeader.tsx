@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import VerificationBadge from '@/components/verification/VerificationBadge';
 import { cn } from '@/lib/utils';
+import { getPublicDisplayName, getDisplayInitials } from '@/lib/displayName';
 import type { UserProfile, UserStats } from '@/hooks/useUserProfile';
 
 interface ProfileHeaderProps {
@@ -28,12 +29,9 @@ const ProfileHeader = ({
   avgResponseTime,
   isHost,
 }: ProfileHeaderProps) => {
-  const initials = profile.full_name
-    ?.split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) || '?';
+  // Use public display name utility for consistent formatting
+  const displayName = getPublicDisplayName(profile);
+  const initials = getDisplayInitials(profile);
 
   const memberSince = format(new Date(profile.created_at), 'MMM yyyy');
 
@@ -54,7 +52,7 @@ const ProfileHeader = ({
             {/* Name Row */}
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <h1 className="text-xl md:text-2xl font-bold text-foreground truncate">
-                {profile.full_name || 'User'}
+                {displayName}
               </h1>
               {isOwnProfile && (
                 <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>
