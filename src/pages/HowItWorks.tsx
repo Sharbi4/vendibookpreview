@@ -49,6 +49,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
+import affirmLogo from '@/assets/affirm-logo-new.png';
+import afterpayLogo from '@/assets/afterpay-logo-new.png';
 
 const HowItWorks = () => {
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -413,6 +415,40 @@ const HowItWorks = () => {
                   />
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ==================== BNPL BANNER ==================== */}
+        <section className="py-8 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-y border-border">
+          <div className="container">
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
+              <div className="text-center md:text-left">
+                <p className="text-lg md:text-xl font-semibold text-foreground">
+                  Now accepting flexible payments
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Let buyers pay over time — you get paid upfront
+                </p>
+              </div>
+              <div className="flex items-center gap-6">
+                <img 
+                  src={affirmLogo} 
+                  alt="Affirm" 
+                  className="h-6 md:h-8 object-contain dark:invert" 
+                />
+                <img 
+                  src={afterpayLogo} 
+                  alt="Afterpay" 
+                  className="h-5 md:h-6 object-contain dark:invert" 
+                />
+              </div>
+              <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                <Link to="/payments">
+                  Learn more
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </Button>
             </div>
           </div>
         </section>
