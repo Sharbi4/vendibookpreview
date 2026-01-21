@@ -156,11 +156,69 @@ const faqSections: FAQSection[] = [
       },
       {
         question: 'What payment methods are accepted?',
-        answer: 'Most major payment methods supported by our payment processor, depending on your region and eligibility.',
+        answer: 'Vendibook accepts credit/debit cards, ACH bank transfers (for large sales $5K+), Affirm (monthly payments for $35–$30,000), Afterpay (Pay in 4 installments up to $4,000), and Klarna. Some sellers also offer Pay in Person (cash) for local transactions.',
+      },
+      {
+        question: 'What is Affirm and how does it work?',
+        answer: 'Affirm lets you split purchases between $35 and $30,000 into monthly payments. At checkout, select Affirm to see your personalized rates (0–36% APR based on credit). You\'ll know your exact payment before committing—no hidden fees. Affirm does not support recurring subscriptions.',
+      },
+      {
+        question: 'What is Afterpay and how does it work?',
+        answer: 'Afterpay lets you split purchases up to $4,000 into 4 interest-free payments, due every 2 weeks. Select Afterpay at checkout, pay the first installment, and receive your asset immediately. Late fees may apply if payments are missed.',
       },
       {
         question: 'Why might funds be delayed or held?',
         answer: 'Delays can occur when a payout account is newly connected, a transaction is high value, a booking requires confirmation milestones, or a dispute or review is opened. These steps exist to protect both sides and reduce fraud.',
+      },
+    ],
+  },
+  {
+    id: 'offers',
+    title: 'Offers & Negotiation',
+    icon: Wallet,
+    questions: [
+      {
+        question: 'Can I make an offer on a listing?',
+        answer: 'Yes! For sale listings, you can click "Make Offer" to submit a price below the asking price. Include a message explaining your offer—sellers are more likely to respond to reasonable, well-explained offers.',
+      },
+      {
+        question: 'What happens after I submit an offer?',
+        answer: 'The seller is notified immediately. They can accept, decline, or counter your offer. You\'ll receive a notification with their response. Offers expire after 48 hours if the seller doesn\'t respond.',
+      },
+      {
+        question: 'What is a counter-offer?',
+        answer: 'If the seller thinks your offer is too low, they can propose a different price. You\'ll have 48 hours to accept or decline their counter-offer. If accepted, you\'ll proceed to checkout at the counter-offer price.',
+      },
+      {
+        question: 'Can I negotiate on rentals?',
+        answer: 'Rental prices are typically fixed, but you can message the host to discuss longer-term discounts or special arrangements before booking.',
+      },
+    ],
+  },
+  {
+    id: 'pay-in-person',
+    title: 'Pay in Person (Cash Transactions)',
+    icon: Wallet,
+    questions: [
+      {
+        question: 'What is Pay in Person?',
+        answer: 'Pay in Person allows buyers and sellers to complete transactions with cash at pickup/delivery. The seller must enable this option on their listing. No Stripe account is required for cash-only listings.',
+      },
+      {
+        question: 'How do cash transactions work?',
+        answer: 'After submitting a purchase request, both parties confirm the transaction in-app: (1) Request Submitted → (2) Seller Confirms → (3) Buyer Confirms → (4) Completed. Payment happens in person at the agreed location.',
+      },
+      {
+        question: 'Is Pay in Person safe?',
+        answer: 'Cash transactions carry more risk than platform payments since Vendibook cannot hold funds in escrow. We recommend meeting in public places, bringing a witness, and documenting the exchange with photos. Platform protections are limited for off-platform payments.',
+      },
+      {
+        question: 'Do I still need to confirm the transaction?',
+        answer: 'Yes. Both the buyer and seller must confirm completion in the app to close the transaction. This creates a record and allows both parties to leave reviews.',
+      },
+      {
+        question: 'Are there fees for Pay in Person transactions?',
+        answer: 'Vendibook does not charge payment processing fees on cash transactions. However, the standard platform commission still applies to the seller.',
       },
     ],
   },

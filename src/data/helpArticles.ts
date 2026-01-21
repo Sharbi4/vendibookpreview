@@ -3510,6 +3510,422 @@ If the asset significantly differs from the listing or is unsafe:
       }
     ],
     relatedArticles: ['equipment-issues', 'deposits-protection', 'cancellations-refunds']
+  },
+
+  // PAYMENT OPTIONS
+  {
+    slug: 'affirm-financing',
+    title: 'Affirm: Monthly Payment Plans',
+    description: 'Learn how to use Affirm to split purchases into affordable monthly payments on Vendibook.',
+    category: 'Payments & Payouts',
+    categorySlug: 'payments-payouts',
+    featured: true,
+    sections: [
+      {
+        id: 'what-is-affirm',
+        title: 'What is Affirm?',
+        content: `Affirm is a buy-now-pay-later service that lets you split purchases into monthly payments. Unlike credit cards, Affirm shows you the exact amount you'll pay upfront—no hidden fees or compounding interest.
+
+**Key Benefits**
+- Split purchases from $35 to $30,000 into monthly payments
+- Know your total cost before you commit
+- No late fees or prepayment penalties
+- Quick approval with soft credit check (won't affect your score)
+
+**Available On**
+Affirm is available for sale listings priced between $35 and $30,000.`
+      },
+      {
+        id: 'how-it-works',
+        title: 'How Affirm Works',
+        content: `**At Checkout**
+1. Select "Affirm" as your payment method
+2. Enter basic information (name, email, phone, date of birth)
+3. Affirm performs a soft credit check (no impact on credit score)
+4. See your personalized payment options (3, 6, 12, or more months)
+5. Choose your plan and confirm
+
+**After Purchase**
+- First payment due at checkout or within 30 days (varies by plan)
+- Automatic monthly payments from your linked bank or card
+- Manage payments in the Affirm app or website
+- Pay off early anytime with no penalties`
+      },
+      {
+        id: 'rates-terms',
+        title: 'Rates and Terms',
+        content: `**APR Range**
+- 0% to 36% APR depending on creditworthiness
+- Rates shown before you commit
+- No hidden fees
+
+**Example Payment**
+For a $15,000 food truck:
+- 12 months at 15% APR: ~$1,357/month
+- 24 months at 15% APR: ~$726/month
+- 36 months at 15% APR: ~$520/month
+
+*Actual rates vary based on your credit profile.*
+
+**What Affirm Checks**
+- Credit history (soft pull)
+- Debt-to-income ratio
+- Payment history with Affirm`
+      },
+      {
+        id: 'eligibility',
+        title: 'Eligibility Requirements',
+        content: `**To Use Affirm You Must**
+- Be at least 18 years old
+- Be a US resident
+- Have a valid US phone number
+- Have a Social Security Number
+- Pass Affirm's credit check
+
+**What Affirm Does NOT Support**
+- Recurring subscriptions or rentals
+- Purchases under $35 or over $30,000
+- Non-US transactions
+
+**If You're Declined**
+- Try again in 30 days
+- Build credit history
+- Consider a smaller purchase first`
+      },
+      {
+        id: 'managing-payments',
+        title: 'Managing Your Affirm Loan',
+        content: `**Payment Methods**
+- Debit card
+- Bank transfer (ACH)
+- Check (mail-in)
+
+**Making Payments**
+- Log in at affirm.com or the Affirm app
+- Payments due on the same day each month
+- Set up autopay to avoid missing payments
+
+**Early Payoff**
+- Pay off your balance anytime
+- No prepayment penalties
+- Interest stops accruing when paid in full
+
+**Need Help?**
+Contact Affirm directly at affirm.com/help for payment issues.`
+      }
+    ],
+    relatedArticles: ['afterpay-guide', 'buying-end-to-end']
+  },
+  {
+    slug: 'afterpay-guide',
+    title: 'Afterpay: Pay in 4 Installments',
+    description: 'Split your purchase into 4 interest-free payments with Afterpay on Vendibook.',
+    category: 'Payments & Payouts',
+    categorySlug: 'payments-payouts',
+    featured: true,
+    sections: [
+      {
+        id: 'what-is-afterpay',
+        title: 'What is Afterpay?',
+        content: `Afterpay lets you split purchases into 4 equal payments, due every 2 weeks. It's interest-free when you pay on time.
+
+**Key Benefits**
+- 4 equal payments over 6 weeks
+- 0% interest (no APR)
+- No credit impact for approval
+- Get your purchase immediately
+
+**Available On**
+Afterpay is available for purchases up to $4,000. The first payment is due at checkout.`
+      },
+      {
+        id: 'how-it-works',
+        title: 'How Afterpay Works',
+        content: `**Payment Schedule Example**
+For a $2,000 purchase:
+- Today: $500 (25%)
+- 2 weeks: $500 (25%)
+- 4 weeks: $500 (25%)
+- 6 weeks: $500 (25%)
+
+**At Checkout**
+1. Select "Afterpay" as payment method
+2. Log in or create Afterpay account
+3. Confirm your payment schedule
+4. Complete purchase
+
+**Payments Are Automatic**
+Afterpay charges your linked card automatically every 2 weeks.`
+      },
+      {
+        id: 'fees-limits',
+        title: 'Fees and Spending Limits',
+        content: `**Interest**
+- 0% interest when payments are on time
+
+**Late Fees**
+- $10 fee if payment fails
+- Additional $7 fee if not paid within 7 days
+- Maximum late fee: 25% of purchase or $68 (whichever is less)
+
+**Spending Limits**
+- First-time users: typically $150-$500
+- Limits increase with on-time payments
+- Maximum: $4,000 per transaction
+
+**How to Increase Your Limit**
+- Pay on time consistently
+- Link a debit card (vs credit)
+- Use Afterpay regularly`
+      },
+      {
+        id: 'eligibility',
+        title: 'Eligibility',
+        content: `**Requirements**
+- 18+ years old
+- Valid debit or credit card
+- US phone number and address
+- Valid email address
+
+**Approval Factors**
+- Payment history with Afterpay
+- Amount of outstanding Afterpay orders
+- Order amount and type
+
+**No Credit Check**
+Afterpay does not perform a hard credit check. Your credit score is not affected.`
+      },
+      {
+        id: 'managing-payments',
+        title: 'Managing Afterpay Payments',
+        content: `**View Your Schedule**
+- Download the Afterpay app
+- Log in at afterpay.com
+- See all upcoming payments
+
+**Change Payment Method**
+- Update your card in the Afterpay app
+- Changes apply to future installments
+
+**Pay Early**
+- Make extra payments anytime in the app
+- Reduces future installment amounts
+- No benefit or penalty for early payment
+
+**Missed Payment?**
+- Your account may be paused
+- Late fees apply
+- Pay ASAP to restore your account`
+      }
+    ],
+    relatedArticles: ['affirm-financing', 'buying-end-to-end']
+  },
+  {
+    slug: 'making-offers',
+    title: 'Making Offers on Listings',
+    description: 'How to negotiate and make offers on sale listings on Vendibook.',
+    category: 'Buying & Selling',
+    categorySlug: 'buying-selling',
+    featured: true,
+    sections: [
+      {
+        id: 'offer-overview',
+        title: 'How Offers Work',
+        content: `Vendibook allows buyers to negotiate on sale listings through our offer system. Instead of paying the asking price, you can propose a lower price that works for your budget.
+
+**When to Make an Offer**
+- Listing has been available for a while
+- You're a serious, qualified buyer
+- You can articulate why your offer is fair
+- You're ready to purchase if accepted
+
+**Offer Limits**
+- You can have one active offer per listing
+- Offers expire after 48 hours if no response`
+      },
+      {
+        id: 'submitting-offer',
+        title: 'How to Submit an Offer',
+        content: `**Step 1: Find the Listing**
+Browse sale listings and find the asset you want.
+
+**Step 2: Click "Make Offer"**
+On the listing detail page, click the "Make Offer" button.
+
+**Step 3: Enter Your Offer**
+- Enter your proposed price
+- Add a message explaining your offer
+- Be professional and reasonable
+
+**Step 4: Submit**
+Your offer is sent to the seller immediately. You'll receive a notification when they respond.
+
+**Tips for Better Offers**
+- Research comparable listings
+- Explain your situation (e.g., "Ready to buy this week")
+- Be within 10-20% of asking price for best results
+- Include financing pre-approval if applicable`
+      },
+      {
+        id: 'seller-responses',
+        title: 'What Happens After You Offer',
+        content: `**Seller Can:**
+
+**Accept** - You proceed to checkout at your offer price. Payment is due immediately.
+
+**Decline** - Your offer is rejected. You can submit a new offer or purchase at asking price.
+
+**Counter** - The seller proposes a different price. You have 48 hours to accept or decline their counter-offer.
+
+**No Response** - If the seller doesn't respond within 48 hours, your offer expires automatically.
+
+**After Acceptance**
+When your offer is accepted, you'll receive a notification with a link to complete checkout at the agreed price.`
+      },
+      {
+        id: 'counter-offers',
+        title: 'Understanding Counter-Offers',
+        content: `**What is a Counter-Offer?**
+If the seller thinks your offer is too low, they may propose a middle-ground price.
+
+**Example**
+- Asking price: $25,000
+- Your offer: $20,000
+- Counter-offer: $23,000
+
+**Responding to a Counter**
+You can:
+- **Accept**: Proceed to checkout at the counter-offer price
+- **Decline**: Your negotiation ends; you can submit a new offer later
+
+**Counter-Offer Expiration**
+You have 48 hours to respond. After that, the counter-offer expires and you'll need to start over.`
+      },
+      {
+        id: 'offer-best-practices',
+        title: 'Best Practices',
+        content: `**Do:**
+- Be respectful and professional
+- Make reasonable offers (within 20% of asking)
+- Respond quickly to counters
+- Be ready to complete purchase if accepted
+- Ask questions before offering
+
+**Don't:**
+- Make lowball offers (likely to be ignored)
+- Submit multiple offers in quick succession
+- Try to negotiate outside the platform
+- Offer if you're not ready to buy
+- Get emotional if declined
+
+**Remember**
+The best negotiations are win-win. Sellers want to sell, and buyers want to buy. Finding middle ground helps everyone.`
+      }
+    ],
+    relatedArticles: ['buying-end-to-end', 'affirm-financing']
+  },
+  {
+    slug: 'pay-in-person-guide',
+    title: 'Pay in Person (Cash Transactions)',
+    description: 'How cash and in-person payment transactions work on Vendibook.',
+    category: 'Payments & Payouts',
+    categorySlug: 'payments-payouts',
+    sections: [
+      {
+        id: 'what-is-pay-in-person',
+        title: 'What is Pay in Person?',
+        content: `Pay in Person allows buyers and sellers to complete transactions with cash or other offline payment methods. The transaction is still tracked through Vendibook, but payment happens face-to-face.
+
+**When It's Available**
+- Seller must enable "Pay in Person" on their listing
+- Typically used for local pickups
+- Common for smaller transactions or when buyer/seller prefer cash
+
+**Key Difference from Online Payments**
+- Funds are NOT held in escrow
+- Vendibook cannot mediate payment disputes
+- Both parties must confirm completion in-app`
+      },
+      {
+        id: 'how-it-works',
+        title: 'How the Process Works',
+        content: `**Step 1: Submit Request**
+Buyer submits a purchase request selecting "Pay in Person" at checkout.
+
+**Step 2: Seller Confirms**
+Seller reviews the request and confirms they're ready to proceed. This notifies the buyer.
+
+**Step 3: Meet & Exchange**
+Buyer and seller meet at the agreed location. Buyer pays cash (or agreed method) and receives the asset.
+
+**Step 4: Buyer Confirms**
+Buyer confirms in the app that they've received the asset and completed payment.
+
+**Step 5: Transaction Complete**
+Both confirmations close the transaction. Both parties can leave reviews.`
+      },
+      {
+        id: 'safety-tips',
+        title: 'Safety Tips for Cash Transactions',
+        content: `**For Buyers**
+- Meet in a public, well-lit location
+- Bring someone with you
+- Inspect the asset thoroughly before paying
+- Get a receipt or bill of sale
+- Document the exchange with photos/video
+
+**For Sellers**
+- Verify the buyer's identity
+- Count cash carefully before handing over asset
+- Meet during daylight hours
+- Bring a witness
+- Don't accept personal checks
+
+**Warning Signs**
+- Buyer refuses to meet in public
+- Pressure to complete quickly
+- Requests to change payment method last minute
+- Unusually high-pressure tactics`
+      },
+      {
+        id: 'platform-protections',
+        title: 'What Vendibook Can and Cannot Do',
+        content: `**What Vendibook Provides**
+- Transaction record and timeline
+- Messaging history between parties
+- Confirmation tracking
+- Review system for accountability
+- Basic dispute documentation
+
+**What Vendibook Cannot Do**
+- Hold funds in escrow
+- Guarantee payment was made
+- Refund cash transactions
+- Mediate "he said/she said" disputes
+- Recover funds from bad actors
+
+**Our Recommendation**
+For high-value transactions ($5,000+), we strongly recommend using Vendibook's secure online payment system for maximum protection.`
+      },
+      {
+        id: 'fees-for-cash',
+        title: 'Fees for Pay in Person',
+        content: `**Buyer Fees**
+- No platform fee for buyers on cash transactions
+
+**Seller Fees**
+- Standard Vendibook commission still applies
+- No payment processing fee (since no card is processed)
+- Commission is invoiced to seller separately
+
+**Why Sellers Still Pay Commission**
+Vendibook provides the marketplace, listing exposure, messaging system, and transaction infrastructure. The commission covers these services regardless of payment method.
+
+**Payment of Commission**
+Sellers receive an invoice for their commission, payable via credit card or bank transfer.`
+      }
+    ],
+    relatedArticles: ['buying-end-to-end', 'deposits-protection']
   }
 ];
 
