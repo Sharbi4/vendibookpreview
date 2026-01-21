@@ -28,9 +28,11 @@ import { useListing } from '@/hooks/useListing';
 import { useListingAverageRating } from '@/hooks/useReviews';
 import { useTrackListingView } from '@/hooks/useListingAnalytics';
 import { CATEGORY_LABELS } from '@/types/listing';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { trackListingViewed } from '@/lib/analytics';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
+import SEO from '@/components/SEO';
+import JsonLd, { generateProductSchema, generateListingBreadcrumbSchema } from '@/components/JsonLd';
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -89,8 +91,44 @@ const ListingDetail = () => {
   // Extract city/state from address for compact display
   const locationShort = location?.split(',').slice(-2).join(',').trim() || location;
 
+  // Generate structured data for Google Shopping / Search
+  const productSchema = useMemo(() => generateProductSchema({
+    id: listing.id,
+    title: listing.title,
+    description: listing.description,
+    category: listing.category,
+    mode: listing.mode as 'rent' | 'sale',
+    price_daily: listing.price_daily,
+    price_weekly: listing.price_weekly,
+    price_sale: listing.price_sale,
+    cover_image_url: listing.cover_image_url,
+    image_urls: listing.image_urls || [],
+    address: listing.address,
+    status: listing.status,
+    host_name: host?.full_name,
+    average_rating: ratingData?.average,
+    review_count: ratingData?.count,
+  }), [listing, host, ratingData]);
+
+  const breadcrumbSchema = useMemo(() => generateListingBreadcrumbSchema({
+    id: listing.id,
+    title: listing.title,
+    category: listing.category,
+    mode: listing.mode as 'rent' | 'sale',
+  }), [listing]);
+
+  // SEO meta description
+  const metaDescription = `${listing.mode === 'rent' ? 'Rent' : 'Buy'} this ${CATEGORY_LABELS[listing.category as keyof typeof CATEGORY_LABELS] || 'listing'}${location ? ` in ${locationShort}` : ''}. ${listing.description?.slice(0, 120) || ''}`;
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO
+        title={`${listing.title} | ${listing.mode === 'rent' ? 'For Rent' : 'For Sale'} - Vendibook`}
+        description={metaDescription}
+        canonical={`/listing/${listing.id}`}
+        image={listing.cover_image_url || undefined}
+      />
+      <JsonLd schema={[productSchema, breadcrumbSchema]} />
       <Header />
 
       <main className="flex-1">
