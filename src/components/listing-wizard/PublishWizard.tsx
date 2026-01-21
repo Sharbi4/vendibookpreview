@@ -3014,24 +3014,22 @@ export const PublishWizard: React.FC = () => {
 
                   {acceptCardPayment && (
                     isOnboardingComplete ? (
-                      <div className="relative overflow-hidden rounded-xl p-4 border-2 border-[#635bff]/30 bg-[#635bff]/5">
+                      <div className="relative overflow-hidden rounded-xl p-4 border border-border bg-muted/30">
                         <div className="relative flex items-center gap-3">
-                          <div className="p-2.5 bg-[#635bff] rounded-xl shadow-md flex items-center justify-center">
-                            <Check className="w-5 h-5 text-white" />
+                          <div className="p-1 rounded-lg flex items-center justify-center">
+                            <Check className="w-5 h-5 text-emerald-600" />
                           </div>
                           <div className="flex items-center gap-2">
-                            <img src={stripeIcon} alt="Stripe" className="h-5 w-5 object-contain" />
+                            <img src={stripeIcon} alt="Stripe" className="h-6 w-6 object-cover rounded-md" />
                             <span className="font-semibold text-foreground">connected</span>
                           </div>
                           <p className="text-sm text-muted-foreground ml-auto">You're ready to receive payments</p>
                         </div>
                       </div>
                     ) : (
-                      <div className="relative overflow-hidden rounded-xl p-6 border-2 border-[#635bff]/30 bg-[#635bff]/5 text-center">
+                      <div className="relative overflow-hidden rounded-xl p-6 border border-border bg-muted/30 text-center">
                         <div className="relative">
-                          <div className="w-14 h-14 mx-auto mb-4 bg-[#635bff] rounded-xl shadow-md flex items-center justify-center">
-                            <img src={stripeIcon} alt="Stripe" className="h-6 w-6 object-contain" />
-                          </div>
+                          <img src={stripeIcon} alt="Stripe" className="w-14 h-14 mx-auto mb-4 rounded-xl object-cover" />
                           <h3 className="font-semibold text-foreground mb-2">Set up payouts</h3>
                           <p className="text-sm text-muted-foreground mb-4">
                             Connect to get paid from your listings when you receive bookings or sales.
@@ -3042,7 +3040,7 @@ export const PublishWizard: React.FC = () => {
                             className="bg-[#635bff] hover:bg-[#5147e6] text-white border-0 shadow-md"
                           >
                             {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                            <img src={stripeIcon} alt="" className="h-4 w-4 object-contain mr-2" />
+                            <img src={stripeIcon} alt="" className="h-5 w-5 object-cover rounded mr-2" />
                             Connect Stripe
                             <ExternalLink className="w-4 h-4 ml-2" />
                           </Button>
@@ -3184,9 +3182,9 @@ export const PublishWizard: React.FC = () => {
 
                   {/* Stripe Connect Panel - Only show if card payments are enabled */}
                   {requiresStripe && !isOnboardingComplete && (
-                    <div className="p-5 rounded-xl border-2 border-[#635bff]/30 bg-[#635bff]/5">
+                    <div className="p-5 rounded-xl border border-border bg-muted/30">
                       <div className="flex items-start gap-3">
-                        <img src={stripeIcon} alt="Stripe" className="w-10 h-10 object-contain mt-0.5" />
+                        <img src={stripeIcon} alt="Stripe" className="w-12 h-12 object-cover rounded-xl mt-0.5" />
                         <div className="flex-1">
                           <h3 className="font-semibold text-foreground mb-1">
                             Connect to get paid from your listings
