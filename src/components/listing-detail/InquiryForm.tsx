@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, MapPin, Truck, Package, ArrowRight, Calendar } from 'lucide-react';
+import { ShieldCheck, MapPin, Truck, Package, ArrowRight, Calendar, Tag } from 'lucide-react';
 import type { FulfillmentType } from '@/types/listing';
 import { StripeLogo } from '@/components/ui/StripeLogo';
 import { AffirmBadge, isAffirmEligible } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge, isAfterpayEligible } from '@/components/ui/AfterpayBadge';
 import { trackCTAClick } from '@/lib/analytics';
+import { useAuth } from '@/contexts/AuthContext';
+import { MakeOfferModal, AuthGateOfferModal } from '@/components/offers';
 
 interface InquiryFormProps {
   listingId: string;
@@ -30,6 +33,7 @@ interface InquiryFormProps {
 
 const InquiryForm = ({ 
   listingId,
+  hostId,
   listingTitle,
   priceSale,
   fulfillmentType = 'pickup',
@@ -39,6 +43,9 @@ const InquiryForm = ({
   freightPayer = 'buyer',
 }: InquiryFormProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [showOfferModal, setShowOfferModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const getAvailableFulfillmentOptions = () => {
     const options: string[] = [];
@@ -59,6 +66,20 @@ const InquiryForm = ({
   const handleStartPurchase = () => {
     trackCTAClick('start_purchase', 'inquiry_form');
     navigate(`/checkout/${listingId}`);
+  };
+
+  const handleMakeOffer = () => {
+    trackCTAClick('make_offer', 'inquiry_form');
+    if (!user) {
+      setShowAuthModal(true);
+    } else {
+      setShowOfferModal(true);
+    }
+  };
+
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    setShowOfferModal(true);
   };
 
   return (
@@ -127,14 +148,35 @@ const InquiryForm = ({
           )}
         </div>
 
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleStartPurchase}
+            className="flex-1 h-12 text-base bg-primary hover:bg-primary/90" 
+            size="lg"
+            disabled={!priceSale}
+          >
+            Buy Now
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+          <Button 
+            onClick={handleMakeOffer}
+            variant="outline"
+            className="h-12 px-4 border-primary text-primary hover:bg-primary/10" 
+            size="lg"
+            disabled={!priceSale}
+          >
+            <Tag className="w-4 h-4" />
+          </Button>
+        </div>
+
         <Button 
-          onClick={handleStartPurchase}
-          className="w-full h-12 text-base bg-primary hover:bg-primary/90" 
-          size="lg"
+          onClick={handleMakeOffer}
+          variant="ghost"
+          className="w-full text-sm text-muted-foreground hover:text-primary" 
           disabled={!priceSale}
         >
-          Start Purchase
-          <ArrowRight className="w-4 h-4 ml-2" />
+          <Tag className="w-4 h-4 mr-2" />
+          Make an Offer
         </Button>
 
         {priceSale && (isAffirmEligible(priceSale) || isAfterpayEligible(priceSale)) && (
@@ -160,6 +202,24 @@ const InquiryForm = ({
           </div>
         </div>
       </div>
+
+      {/* Offer Modals */}
+      <AuthGateOfferModal
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+        onAuthSuccess={handleAuthSuccess}
+      />
+
+      {priceSale && (
+        <MakeOfferModal
+          open={showOfferModal}
+          onOpenChange={setShowOfferModal}
+          listingId={listingId}
+          sellerId={hostId}
+          listingTitle={listingTitle}
+          askingPrice={priceSale}
+        />
+      )}
     </div>
   );
 };
