@@ -6,21 +6,76 @@ import {
   Send, 
   Loader2, 
   AlertTriangle,
-  ShieldAlert 
+  ShieldAlert,
+  Paperclip,
+  X,
+  FileText,
+  Image as ImageIcon,
+  Download
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { useConversationMessages, ConversationMessage } from '@/hooks/useConversationMessages';
 import { detectPII } from '@/lib/piiDetection';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface ConversationThreadProps {
   conversationId: string;
 }
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const AttachmentPreview = ({ message, isOwn }: { message: ConversationMessage; isOwn: boolean }) => {
+  if (!message.attachment_url) return null;
+  
+  const isImage = message.attachment_type?.startsWith('image/');
+  
+  return (
+    <div className={cn(
+      'mt-2 rounded-lg overflow-hidden border',
+      isOwn ? 'border-primary-foreground/20' : 'border-border'
+    )}>
+      {isImage ? (
+        <a href={message.attachment_url} target="_blank" rel="noopener noreferrer">
+          <img 
+            src={message.attachment_url} 
+            alt={message.attachment_name || 'Image'} 
+            className="max-w-[200px] max-h-[200px] object-cover"
+          />
+        </a>
+      ) : (
+        <a 
+          href={message.attachment_url} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className={cn(
+            'flex items-center gap-2 p-2',
+            isOwn ? 'bg-primary-foreground/10 hover:bg-primary-foreground/20' : 'bg-muted hover:bg-muted/80'
+          )}
+        >
+          <FileText className="h-5 w-5 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{message.attachment_name}</p>
+            {message.attachment_size && (
+              <p className={cn('text-xs', isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
+                {formatFileSize(message.attachment_size)}
+              </p>
+            )}
+          </div>
+          <Download className="h-4 w-4 flex-shrink-0" />
+        </a>
+      )}
+    </div>
+  );
+};
 
 const MessageBubble = ({ 
   message, 
@@ -33,6 +88,8 @@ const MessageBubble = ({
   senderName: string;
   senderAvatar?: string | null;
 }) => {
+  const hasTextContent = message.message && message.message !== 'Sent an attachment';
+  
   return (
     <div className={cn('flex gap-2 mb-4', isOwn ? 'flex-row-reverse' : 'flex-row')}>
       {!isOwn && (
@@ -53,7 +110,10 @@ const MessageBubble = ({
               : 'bg-muted text-foreground rounded-bl-sm'
           )}
         >
-          <p className="text-sm whitespace-pre-wrap break-words">{message.message}</p>
+          {hasTextContent && (
+            <p className="text-sm whitespace-pre-wrap break-words">{message.message}</p>
+          )}
+          <AttachmentPreview message={message} isOwn={isOwn} />
         </div>
         <p className="text-xs text-muted-foreground mt-1 px-1">
           {format(new Date(message.created_at), 'h:mm a')}
@@ -63,8 +123,20 @@ const MessageBubble = ({
   );
 };
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_TYPES = [
+  'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/plain',
+];
+
 const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const {
     messages,
     conversation,
@@ -78,8 +150,13 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
 
   const [inputValue, setInputValue] = useState('');
   const [piiError, setPiiError] = useState<string | null>(null);
+  const [attachment, setAttachment] = useState<{
+    file: File;
+    preview: string;
+  } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -109,13 +186,73 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
     }
   }, [inputValue]);
 
-  const handleSend = async () => {
-    if (!inputValue.trim() || piiError) return;
+  // Cleanup attachment preview URL
+  useEffect(() => {
+    return () => {
+      if (attachment?.preview) {
+        URL.revokeObjectURL(attachment.preview);
+      }
+    };
+  }, [attachment]);
 
-    const result = await sendMessage(inputValue.trim());
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        title: 'File too large',
+        description: 'Maximum file size is 10MB',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate file type
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast({
+        title: 'Unsupported file type',
+        description: 'Please upload an image, PDF, Word, Excel, or text file.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setAttachment({
+      file,
+      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : '',
+    });
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removeAttachment = () => {
+    if (attachment?.preview) {
+      URL.revokeObjectURL(attachment.preview);
+    }
+    setAttachment(null);
+  };
+
+  const handleSend = async () => {
+    if ((!inputValue.trim() && !attachment) || piiError) return;
+
+    const attachmentData = attachment ? {
+      file: attachment.file,
+      url: attachment.preview,
+      name: attachment.file.name,
+      type: attachment.file.type,
+      size: attachment.file.size,
+    } : undefined;
+
+    const result = await sendMessage(inputValue.trim(), attachmentData);
     if (result.success) {
       setInputValue('');
       setPiiError(null);
+      removeAttachment();
     } else if (result.error) {
       setPiiError(result.error);
     }
@@ -232,9 +369,62 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
         </Alert>
       )}
 
+      {/* Attachment Preview */}
+      {attachment && (
+        <div className="mx-4 mb-2 p-2 bg-muted rounded-lg border border-border">
+          <div className="flex items-center gap-2">
+            {attachment.preview ? (
+              <img 
+                src={attachment.preview} 
+                alt="Preview" 
+                className="h-12 w-12 object-cover rounded"
+              />
+            ) : (
+              <div className="h-12 w-12 bg-primary/10 rounded flex items-center justify-center">
+                <FileText className="h-6 w-6 text-primary" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{attachment.file.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {formatFileSize(attachment.file.size)}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 flex-shrink-0"
+              onClick={removeAttachment}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div className="p-4 border-t border-border bg-background">
         <div className="flex gap-2">
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ALLOWED_TYPES.join(',')}
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          
+          {/* Attachment button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="flex-shrink-0 h-11 w-11"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isSending}
+          >
+            <Paperclip className="h-5 w-5" />
+          </Button>
+          
           <Textarea
             ref={textareaRef}
             value={inputValue}
@@ -246,7 +436,7 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
           />
           <Button
             onClick={handleSend}
-            disabled={!inputValue.trim() || isSending || !!piiError}
+            disabled={(!inputValue.trim() && !attachment) || isSending || !!piiError}
             size="icon"
             className="flex-shrink-0 h-11 w-11"
           >

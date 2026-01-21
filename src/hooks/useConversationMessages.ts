@@ -12,6 +12,10 @@ export interface ConversationMessage {
   read_at: string | null;
   created_at: string;
   pii_blocked: boolean;
+  attachment_url: string | null;
+  attachment_name: string | null;
+  attachment_type: string | null;
+  attachment_size: number | null;
 }
 
 export interface ConversationDetails {
@@ -112,15 +116,26 @@ export const useConversationMessages = (conversationId: string | undefined) => {
     }
   }, [user, conversationId]);
 
-  const sendMessage = async (messageText: string): Promise<{ success: boolean; error?: string }> => {
-    if (!user || !conversationId || !messageText.trim()) {
+  const sendMessage = async (
+    messageText: string,
+    attachment?: {
+      file: File;
+      url: string;
+      name: string;
+      type: string;
+      size: number;
+    }
+  ): Promise<{ success: boolean; error?: string }> => {
+    if (!user || !conversationId || (!messageText.trim() && !attachment)) {
       return { success: false, error: 'Invalid message' };
     }
 
-    // Check for PII
-    const piiResult = detectPII(messageText);
-    if (piiResult.hasPII) {
-      return { success: false, error: PII_BLOCK_MESSAGE };
+    // Check for PII in text
+    if (messageText.trim()) {
+      const piiResult = detectPII(messageText);
+      if (piiResult.hasPII) {
+        return { success: false, error: PII_BLOCK_MESSAGE };
+      }
     }
 
     setIsSending(true);
@@ -134,18 +149,47 @@ export const useConversationMessages = (conversationId: string | undefined) => {
       read_at: null,
       created_at: new Date().toISOString(),
       pii_blocked: false,
+      attachment_url: attachment?.url || null,
+      attachment_name: attachment?.name || null,
+      attachment_type: attachment?.type || null,
+      attachment_size: attachment?.size || null,
     };
     
     // Optimistically add the message to the UI
     setMessages((prev) => [...prev, optimisticMessage]);
     
     try {
+      let finalAttachmentUrl = attachment?.url || null;
+      
+      // Upload file to storage if present
+      if (attachment) {
+        const fileExt = attachment.name.split('.').pop();
+        const filePath = `${conversationId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('message-attachments')
+          .upload(filePath, attachment.file);
+          
+        if (uploadError) throw uploadError;
+        
+        // Get signed URL for private bucket
+        const { data: urlData } = await supabase.storage
+          .from('message-attachments')
+          .createSignedUrl(filePath, 60 * 60 * 24 * 7); // 7 days
+          
+        finalAttachmentUrl = urlData?.signedUrl || null;
+      }
+
       const { data, error } = await supabase
         .from('conversation_messages')
         .insert({
           conversation_id: conversationId,
           sender_id: user.id,
-          message: messageText.trim(),
+          message: messageText.trim() || (attachment ? 'Sent an attachment' : ''),
+          attachment_url: finalAttachmentUrl,
+          attachment_name: attachment?.name || null,
+          attachment_type: attachment?.type || null,
+          attachment_size: attachment?.size || null,
         })
         .select()
         .single();
