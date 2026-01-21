@@ -138,7 +138,7 @@ const handler = async (req: Request): Promise<Response> => {
           try {
             const appUrl = Deno.env.get("SUPABASE_URL")?.includes("localhost") 
               ? "http://localhost:5173" 
-              : "https://vendibookpreview.lovable.app";
+              : "https://vendibook.com";
 
             const emailHtml = `
               <!DOCTYPE html>

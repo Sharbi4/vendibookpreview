@@ -62,7 +62,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Sending listing live email to:", hostEmail);
     console.log("Listing:", listingTitle, listingId);
 
-    const siteUrl = Deno.env.get("SITE_URL") || "https://vendibookpreview.lovable.app";
+    const siteUrl = Deno.env.get("SITE_URL") || "https://vendibook.com";
     const logoUrl = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-logo-official.png";
     const listingUrl = `${siteUrl}/listing/${listingId}`;
     const dashboardUrl = `${siteUrl}/dashboard`;

@@ -197,7 +197,7 @@ serve(async (req) => {
           .map(d => DOCUMENT_TYPE_LABELS[d.document_type] || d.document_type)
           .join(", ");
 
-        const appUrl = "https://vendibookpreview.lovable.app";
+        const appUrl = "https://vendibook.com";
 
         // Determine email content based on urgency level
         const emailSubject = isUrgent 

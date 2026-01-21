@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     }
 
     const resend = new Resend(resendApiKey);
-    const siteUrl = Deno.env.get("SITE_URL") || "https://vendibookpreview.lovable.app";
+    const siteUrl = Deno.env.get("SITE_URL") || "https://vendibook.com";
     const logoUrl = `${siteUrl}/images/vendibook-email-logo.png`;
 
     const emailResponse = await resend.emails.send({
