@@ -100,6 +100,12 @@ export const useHostListings = () => {
     }
   };
 
+  const updateListingPrice = (id: string, newPrice: number) => {
+    setListings(prev => 
+      prev.map(l => l.id === id ? { ...l, price_sale: newPrice } : l)
+    );
+  };
+
   const stats = {
     total: listings.length,
     published: listings.filter(l => l.status === 'published').length,
@@ -116,5 +122,6 @@ export const useHostListings = () => {
     pauseListing: (id: string) => updateListingStatus(id, 'paused'),
     publishListing: (id: string) => updateListingStatus(id, 'published'),
     deleteListing,
+    updateListingPrice,
   };
 };
