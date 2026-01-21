@@ -52,12 +52,19 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Check if user already has a Stripe account
+    // Check if user already has a Stripe account and get profile data
     const { data: profile } = await supabaseClient
       .from('profiles')
-      .select('stripe_account_id, stripe_onboarding_complete')
+      .select('stripe_account_id, stripe_onboarding_complete, first_name, last_name, phone_number')
       .eq('id', user.id)
       .single();
+
+    logStep("Profile fetched", { 
+      hasStripeAccount: !!profile?.stripe_account_id,
+      firstName: profile?.first_name,
+      lastName: profile?.last_name,
+      hasPhone: !!profile?.phone_number
+    });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const origin = req.headers.get("origin") || "http://localhost:5173";
@@ -65,8 +72,15 @@ serve(async (req) => {
     let accountId = profile?.stripe_account_id;
 
     if (!accountId) {
-      // Create new Stripe Connect account
+      // Create new Stripe Connect account with pre-filled data
       logStep("Creating new Stripe Connect account");
+      
+      // Build individual object if we have name data
+      const individual: Record<string, unknown> = {};
+      if (profile?.first_name) individual.first_name = profile.first_name;
+      if (profile?.last_name) individual.last_name = profile.last_name;
+      if (profile?.phone_number) individual.phone = profile.phone_number;
+
       const account = await stripe.accounts.create({
         type: "express",
         email: user.email,
@@ -75,6 +89,10 @@ serve(async (req) => {
           card_payments: { requested: true },
           transfers: { requested: true },
         },
+        ...(Object.keys(individual).length > 0 && { 
+          business_type: "individual",
+          individual 
+        }),
       });
       accountId = account.id;
 

@@ -17,7 +17,9 @@ import { trackGA4SignUp, trackGA4Login } from '@/lib/ga4Conversions';
 const authSchema = z.object({
   email: z.string().trim().email('Please enter a valid email').max(255, 'Email is too long'),
   password: z.string().min(8, 'Password must be at least 8 characters').max(72, 'Password is too long'),
-  fullName: z.string().trim().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long').optional(),
+  firstName: z.string().trim().min(1, 'First name is required').max(50, 'First name is too long').optional(),
+  lastName: z.string().trim().min(1, 'Last name is required').max(50, 'Last name is too long').optional(),
+  phoneNumber: z.string().trim().min(10, 'Phone number must be at least 10 digits').max(20, 'Phone number is too long').optional(),
 });
 
 // Password strength helper
@@ -42,7 +44,9 @@ const Auth = () => {
   const [mode, setMode] = useState<AuthMode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [selectedRole, setSelectedRole] = useState<RoleType>('shopper');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -62,11 +66,11 @@ const Auth = () => {
   const validateForm = () => {
     try {
       if (mode === 'signup') {
-        authSchema.parse({ email, password, fullName });
+        authSchema.parse({ email, password, firstName, lastName, phoneNumber });
       } else if (mode === 'forgot' || mode === 'verify') {
         authSchema.pick({ email: true }).parse({ email });
       } else {
-        authSchema.omit({ fullName: true }).parse({ email, password });
+        authSchema.omit({ firstName: true, lastName: true, phoneNumber: true }).parse({ email, password });
       }
       setErrors({});
       return true;
@@ -129,9 +133,13 @@ const Auth = () => {
     
     // Trim inputs before validation
     const trimmedEmail = email.trim().toLowerCase();
-    const trimmedFullName = fullName.trim();
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
+    const trimmedPhone = phoneNumber.trim();
     setEmail(trimmedEmail);
-    setFullName(trimmedFullName);
+    setFirstName(trimmedFirstName);
+    setLastName(trimmedLastName);
+    setPhoneNumber(trimmedPhone);
     
     if (!validateForm()) return;
 
@@ -160,7 +168,8 @@ const Auth = () => {
         }
       } else if (mode === 'signup') {
         trackSignupAttempt(selectedRole);
-        const { error } = await signUp(trimmedEmail, password, trimmedFullName, selectedRole);
+        const fullName = `${trimmedFirstName} ${trimmedLastName}`.trim();
+        const { error } = await signUp(trimmedEmail, password, fullName, selectedRole, trimmedFirstName, trimmedLastName, trimmedPhone);
         if (error) {
           // Determine error type for analytics
           let errorType = 'unknown';
@@ -329,20 +338,57 @@ const Auth = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === 'signup' && (
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    placeholder="John Doe"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className={errors.fullName ? 'border-destructive' : ''}
-                  />
-                  {errors.fullName && (
-                    <p className="text-sm text-destructive">{errors.fullName}</p>
-                  )}
-                </div>
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name <span className="text-destructive">*</span></Label>
+                      <Input
+                        id="firstName"
+                        type="text"
+                        placeholder="John"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        className={errors.firstName ? 'border-destructive' : ''}
+                        required
+                      />
+                      {errors.firstName && (
+                        <p className="text-sm text-destructive">{errors.firstName}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name <span className="text-destructive">*</span></Label>
+                      <Input
+                        id="lastName"
+                        type="text"
+                        placeholder="Doe"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        className={errors.lastName ? 'border-destructive' : ''}
+                        required
+                      />
+                      {errors.lastName && (
+                        <p className="text-sm text-destructive">{errors.lastName}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phoneNumber">Phone Number <span className="text-destructive">*</span></Label>
+                    <Input
+                      id="phoneNumber"
+                      type="tel"
+                      placeholder="(555) 123-4567"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      className={errors.phoneNumber ? 'border-destructive' : ''}
+                      required
+                    />
+                    {errors.phoneNumber && (
+                      <p className="text-sm text-destructive">{errors.phoneNumber}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">Required for account verification and Stripe payouts</p>
+                  </div>
+                </>
               )}
 
               <div className="space-y-2">
