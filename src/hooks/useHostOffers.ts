@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect } from 'react';
 
 export interface HostOffer {
   id: string;
@@ -154,6 +155,31 @@ export const useHostOffers = () => {
   const pendingOffers = offers.filter(o => o.status === 'pending');
   const counteredOffers = offers.filter(o => o.status === 'countered');
   const respondedOffers = offers.filter(o => !['pending', 'countered'].includes(o.status));
+
+  // Subscribe to realtime updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('host-offers-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'offers',
+          filter: `seller_id=eq.${user.id}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['host-offers', user.id] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient]);
 
   return {
     offers,

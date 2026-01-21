@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect } from 'react';
 
 export interface BuyerOffer {
   id: string;
@@ -141,6 +142,31 @@ export const useBuyerOffers = () => {
     accepted: acceptedOffers.length,
     declined: declinedOffers.length,
   };
+
+  // Subscribe to realtime updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('buyer-offers-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'offers',
+          filter: `buyer_id=eq.${user.id}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['buyer-offers', user.id] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient]);
 
   return {
     offers,
