@@ -2,7 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { playNotificationSound } from '@/lib/notificationSound';
 
 export interface HostOffer {
   id: string;
@@ -156,7 +157,10 @@ export const useHostOffers = () => {
   const counteredOffers = offers.filter(o => o.status === 'countered');
   const respondedOffers = offers.filter(o => !['pending', 'countered'].includes(o.status));
 
-  // Subscribe to realtime updates
+  // Track initial load to avoid sound on first render
+  const isInitialLoad = useRef(true);
+
+  // Subscribe to realtime updates with notification sound
   useEffect(() => {
     if (!user) return;
 
@@ -165,7 +169,27 @@ export const useHostOffers = () => {
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
+          schema: 'public',
+          table: 'offers',
+          filter: `seller_id=eq.${user.id}`,
+        },
+        (payload) => {
+          // Play sound for new offers (not on initial load)
+          if (!isInitialLoad.current) {
+            playNotificationSound();
+            toast({
+              title: 'New Offer Received! 💰',
+              description: `You received a $${(payload.new as { offer_amount: number }).offer_amount.toLocaleString()} offer`,
+            });
+          }
+          queryClient.invalidateQueries({ queryKey: ['host-offers', user.id] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
           schema: 'public',
           table: 'offers',
           filter: `seller_id=eq.${user.id}`,
@@ -176,10 +200,16 @@ export const useHostOffers = () => {
       )
       .subscribe();
 
+    // Mark initial load as complete after a short delay
+    const timer = setTimeout(() => {
+      isInitialLoad.current = false;
+    }, 1000);
+
     return () => {
+      clearTimeout(timer);
       supabase.removeChannel(channel);
     };
-  }, [user, queryClient]);
+  }, [user, queryClient, toast]);
 
   return {
     offers,
