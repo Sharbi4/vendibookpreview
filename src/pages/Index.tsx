@@ -44,7 +44,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Vendibook | Rent or Buy Food Trucks, Trailers & Ghost Kitchens"
+        title="Vendibook: The Food Truck Marketplace"
         description="The marketplace for mobile food entrepreneurs. Rent or buy food trucks, food trailers, ghost kitchens, and vendor lots across the United States."
         canonical="/"
       />
