@@ -360,12 +360,12 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
 
   return (
     <div className="space-y-8">
-      {/* Photos Section */}
+      {/* Media Section */}
       <div className="space-y-6">
         <div>
-          <h3 className="text-lg font-semibold mb-2">Add Photos</h3>
+          <h3 className="text-lg font-semibold mb-2">Add Media</h3>
           <p className="text-sm text-muted-foreground">
-            Upload high-quality photos. <span className="font-medium text-foreground">Drag to reorder</span> — first image is your cover.
+            Upload photos and videos. <span className="font-medium text-foreground">Drag to reorder</span> — first image is your cover.
             <span className="font-medium text-foreground"> Minimum {minPhotos} photos required.</span>
           </p>
         </div>
