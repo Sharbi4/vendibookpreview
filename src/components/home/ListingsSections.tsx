@@ -96,7 +96,7 @@ const ListingsSections = () => {
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-md">
                   <DollarSign className="h-5 w-5 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-foreground">For Sale</h2>
+                <h2 className="text-xl font-bold text-foreground">Featured For Sale</h2>
                 <span className="text-sm text-muted-foreground">
                   ({allListings.filter(l => l.mode === 'sale').length} listings)
                 </span>
@@ -132,7 +132,7 @@ const ListingsSections = () => {
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-md">
                   <Key className="h-5 w-5 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-foreground">For Rent</h2>
+                <h2 className="text-xl font-bold text-foreground">Featured For Rent</h2>
                 <span className="text-sm text-muted-foreground">
                   ({allListings.filter(l => l.mode === 'rent').length} listings)
                 </span>
