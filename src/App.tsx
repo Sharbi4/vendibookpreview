@@ -72,6 +72,7 @@ const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const BlogCategory = lazy(() => import("./pages/BlogCategory"));
 const DynamicCityPage = lazy(() => import("./pages/DynamicCityPage"));
+const Payments = lazy(() => import("./pages/Payments"));
 
 // City landing pages - direct imports since they're lightweight wrappers
 import {
@@ -192,6 +193,9 @@ const AnimatedRoutes = () => {
           
           {/* Pricing Calculator */}
           <Route path="/pricing-calculator" element={<PageTransition><PricingCalculator /></PageTransition>} />
+          
+          {/* Payments & Protection */}
+          <Route path="/payments" element={<PageTransition><Payments /></PageTransition>} />
           
           {/* Blog */}
           <Route path="/blog" element={<PageTransition><Blog /></PageTransition>} />

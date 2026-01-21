@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import affirmLogo from '@/assets/affirm-logo.png';
+import affirmLogo from '@/assets/affirm-logo-new.png';
 
 interface AffirmBadgeProps {
   price: number;
@@ -32,7 +32,7 @@ export const AffirmBadge = ({ price, className, showTooltip = true }: AffirmBadg
       <img 
         src={affirmLogo} 
         alt="Affirm" 
-        className="h-3.5 w-auto"
+        className="h-3.5 w-auto dark:invert"
       />
       <span>~${monthlyEstimate}/mo</span>
     </div>
