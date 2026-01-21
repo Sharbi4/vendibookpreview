@@ -2,7 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { playNotificationSound } from '@/lib/notificationSound';
 
 export interface BuyerOffer {
   id: string;
@@ -143,7 +144,10 @@ export const useBuyerOffers = () => {
     declined: declinedOffers.length,
   };
 
-  // Subscribe to realtime updates
+  // Track initial load to avoid sound on first render
+  const isInitialLoad = useRef(true);
+
+  // Subscribe to realtime updates with notification sound
   useEffect(() => {
     if (!user) return;
 
@@ -152,21 +156,54 @@ export const useBuyerOffers = () => {
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'UPDATE',
           schema: 'public',
           table: 'offers',
           filter: `buyer_id=eq.${user.id}`,
         },
-        () => {
+        (payload) => {
+          const newStatus = (payload.new as { status: string }).status;
+          const oldStatus = (payload.old as { status: string }).status;
+          
+          // Play sound when status changes (seller responded)
+          if (!isInitialLoad.current && newStatus !== oldStatus) {
+            if (newStatus === 'accepted') {
+              playNotificationSound();
+              toast({
+                title: 'Offer Accepted! 🎉',
+                description: 'Your offer has been accepted. Complete your purchase now!',
+              });
+            } else if (newStatus === 'countered') {
+              playNotificationSound();
+              const counterAmount = (payload.new as { counter_amount: number }).counter_amount;
+              toast({
+                title: 'Counter-Offer Received! 💬',
+                description: `The seller proposed $${counterAmount?.toLocaleString() || ''}`,
+              });
+            } else if (newStatus === 'declined') {
+              playNotificationSound();
+              toast({
+                title: 'Offer Declined',
+                description: 'The seller has declined your offer.',
+                variant: 'destructive',
+              });
+            }
+          }
           queryClient.invalidateQueries({ queryKey: ['buyer-offers', user.id] });
         }
       )
       .subscribe();
 
+    // Mark initial load as complete after a short delay
+    const timer = setTimeout(() => {
+      isInitialLoad.current = false;
+    }, 1000);
+
     return () => {
+      clearTimeout(timer);
       supabase.removeChannel(channel);
     };
-  }, [user, queryClient]);
+  }, [user, queryClient, toast]);
 
   return {
     offers,
