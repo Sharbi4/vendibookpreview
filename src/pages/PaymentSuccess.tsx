@@ -14,6 +14,8 @@ import { EmailReceiptPreview } from '@/components/checkout';
 import { useAuth } from '@/contexts/AuthContext';
 import { calculateRentalFees } from '@/lib/commissions';
 import { generateReceiptPdf } from '@/lib/generateReceiptPdf';
+import { trackGA4Purchase } from '@/lib/ga4Conversions';
+import { trackCheckoutConversion } from '@/lib/gtagConversions';
 
 interface BookingDetails {
   id: string;
@@ -141,6 +143,25 @@ const PaymentSuccess = () => {
 
             if (!txError && data) {
               setSaleTransaction(data as SaleTransactionDetails);
+              
+              // Track GA4 purchase conversion for escrow sale
+              trackGA4Purchase({
+                transaction_id: data.id,
+                value: data.amount,
+                currency: 'USD',
+                items: [{
+                  item_id: result.transaction_id,
+                  item_name: data.listing?.title || 'Purchase',
+                  item_category: 'sale',
+                  price: data.amount,
+                  quantity: 1,
+                }],
+              });
+              trackCheckoutConversion({
+                transaction_id: data.id,
+                value: data.amount,
+                currency: 'USD',
+              });
             }
           }
         } else {
@@ -161,6 +182,25 @@ const PaymentSuccess = () => {
 
           if (!bookingError && data) {
             setBooking(data as unknown as BookingDetails);
+            
+            // Track GA4 purchase conversion for rental booking
+            trackGA4Purchase({
+              transaction_id: data.id,
+              value: data.total_price,
+              currency: 'USD',
+              items: [{
+                item_id: data.id,
+                item_name: data.listing?.title || 'Booking',
+                item_category: 'rental',
+                price: data.total_price,
+                quantity: 1,
+              }],
+            });
+            trackCheckoutConversion({
+              transaction_id: data.id,
+              value: data.total_price,
+              currency: 'USD',
+            });
           }
         }
 
