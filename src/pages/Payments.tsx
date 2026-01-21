@@ -195,6 +195,46 @@ const Payments = () => {
                 </div>
               </div>
 
+              {/* VendiBook Freight + BNPL */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Truck className="h-5 w-5 text-primary" />
+                  VendiBook Freight — Financing Available
+                </h3>
+                <Card className="border-2 border-primary/20 bg-primary/5">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col md:flex-row items-center gap-6">
+                      <div className="flex-1">
+                        <p className="text-muted-foreground mb-3">
+                          Shipping a food truck across the country? VendiBook Freight coordinates nationwide delivery — and you can finance the total (including freight) with Affirm or Afterpay at checkout.
+                        </p>
+                        <ul className="space-y-2 text-sm">
+                          <li className="flex items-start gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                            <span>Freight costs included in your BNPL payment plan</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                            <span>Split the full purchase + shipping into manageable payments</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                            <span>Available on eligible checkouts across 48 contiguous states</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div className="flex flex-col items-center gap-3 p-4 bg-background rounded-xl border border-border">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Finance with</p>
+                        <div className="flex items-center gap-4">
+                          <img src={affirmLogo} alt="Affirm" className="h-6 md:h-7 object-contain dark:invert" />
+                          <img src={afterpayLogo} alt="Afterpay" className="h-5 md:h-6 object-contain dark:invert" />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
               {/* CTA for Sales */}
               <div className="flex flex-col sm:flex-row gap-3 items-center justify-center p-6 bg-muted/30 rounded-xl">
                 <p className="text-sm text-muted-foreground">Selling? Reach serious buyers nationwide.</p>
