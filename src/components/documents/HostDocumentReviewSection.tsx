@@ -8,8 +8,8 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
+  ShieldCheck,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
@@ -23,7 +23,6 @@ import {
   useBookingDocuments,
   useDocumentComplianceStatus,
 } from '@/hooks/useRequiredDocuments';
-import { useBatchApproveDocuments } from '@/hooks/useHostDocumentReview';
 import { cn } from '@/lib/utils';
 
 interface HostDocumentReviewSectionProps {
@@ -33,6 +32,11 @@ interface HostDocumentReviewSectionProps {
   isInstantBook?: boolean;
 }
 
+/**
+ * Host-facing document section - READ ONLY
+ * Documents are reviewed by admin only, not hosts
+ * Hosts see status but cannot view or approve/reject documents
+ */
 export const HostDocumentReviewSection = ({
   listingId,
   bookingId,
@@ -44,7 +48,6 @@ export const HostDocumentReviewSection = ({
   const { data: requiredDocs, isLoading: loadingRequired } = useListingRequiredDocuments(listingId);
   const { data: uploadedDocs, isLoading: loadingUploaded } = useBookingDocuments(bookingId);
   const compliance = useDocumentComplianceStatus(listingId, bookingId);
-  const batchApproveMutation = useBatchApproveDocuments();
 
   if (loadingRequired || loadingUploaded) {
     return (
@@ -61,13 +64,6 @@ export const HostDocumentReviewSection = ({
 
   const pendingDocs = uploadedDocs?.filter((d) => d.status === 'pending') || [];
   const hasPendingReviews = pendingDocs.length > 0;
-
-  const handleApproveAll = () => {
-    const pendingIds = pendingDocs.map((d) => d.id);
-    if (pendingIds.length > 0) {
-      batchApproveMutation.mutate({ bookingId, documentIds: pendingIds });
-    }
-  };
 
   // Status summary
   const getStatusSummary = () => {
@@ -124,7 +120,7 @@ export const HostDocumentReviewSection = ({
               <span className="font-medium text-sm">Required Documents</span>
               {hasPendingReviews && (
                 <Badge variant="secondary" className="bg-amber-100 text-amber-700 text-xs">
-                  {pendingDocs.length} to review
+                  {pendingDocs.length} pending
                 </Badge>
               )}
             </div>
@@ -142,28 +138,16 @@ export const HostDocumentReviewSection = ({
 
         <CollapsibleContent>
           <div className="p-3 pt-0 space-y-3">
-            {/* Batch actions */}
+            {/* Admin review notice */}
             {hasPendingReviews && (
-              <div className="flex items-center justify-between pt-3 border-t border-border">
-                <span className="text-xs text-muted-foreground">
-                  {pendingDocs.length} document{pendingDocs.length > 1 ? 's' : ''} awaiting review
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={handleApproveAll}
-                  disabled={batchApproveMutation.isPending}
-                >
-                  {batchApproveMutation.isPending ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <>
-                      <CheckCircle2 className="h-3 w-3 mr-1" />
-                      Approve All
-                    </>
-                  )}
-                </Button>
+              <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                <div className="text-xs text-blue-800 dark:text-blue-200">
+                  <p className="font-medium">Documents reviewed by Vendibook</p>
+                  <p className="mt-1 text-blue-700 dark:text-blue-300">
+                    Typically reviewed within 30 minutes. You'll be notified once all documents are approved.
+                  </p>
+                </div>
               </div>
             )}
 
@@ -195,10 +179,10 @@ export const HostDocumentReviewSection = ({
 
             {/* Compliance summary */}
             {compliance.allApproved && (
-              <Alert className="bg-emerald-50 dark:bg-emerald-950/30 border-foreground dark:border-foreground">
+              <Alert className="bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                 <AlertDescription className="text-emerald-800 dark:text-emerald-200 text-sm">
-                  All required documents have been verified. This booking is compliant.
+                  All required documents have been verified by Vendibook. This booking is compliant.
                 </AlertDescription>
               </Alert>
             )}
