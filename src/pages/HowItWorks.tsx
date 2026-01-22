@@ -105,16 +105,16 @@ const HowItWorks = () => {
 
               {/* Jump Buttons */}
               <div className="flex flex-wrap gap-3 justify-center mb-10">
-                <Button size="lg" className="bg-foreground hover:bg-foreground/90 text-background shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
+                <Button size="lg" variant="dark-shine" asChild>
                   <a href="#sell">Sell</a>
                 </Button>
-                <Button size="lg" className="bg-foreground hover:bg-foreground/90 text-background shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
+                <Button size="lg" variant="dark-shine" asChild>
                   <a href="#rent">Rent</a>
                 </Button>
-                <Button size="lg" className="bg-foreground hover:bg-foreground/90 text-background shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
+                <Button size="lg" variant="dark-shine" asChild>
                   <a href="#lots">Vendor Lots</a>
                 </Button>
-                <Button size="lg" variant="secondary" className="gap-2 hover:scale-105 transition-all" asChild>
+                <Button size="lg" variant="dark-shine" className="gap-2" asChild>
                   <a href="#tools">
                     <Sparkles className="h-4 w-4" />
                     Free Tools
@@ -382,7 +382,7 @@ const HowItWorks = () => {
                 <div className="bg-muted/50 border border-border rounded-xl p-6 lg:hidden">
                   <h4 className="font-bold text-foreground mb-2">Ready to sell?</h4>
                   <p className="text-sm text-muted-foreground mb-4">Create a for-sale listing and reach buyers locally or nationwide.</p>
-                  <Button className="w-full gap-2 shadow-md hover:shadow-lg transition-all" asChild>
+                  <Button variant="dark-shine" className="w-full gap-2" asChild>
                     <Link to="/list">
                       <ArrowRight className="h-4 w-4" />
                       Create For-Sale Listing
@@ -443,7 +443,7 @@ const HowItWorks = () => {
                   className="h-5 md:h-6 object-contain dark:invert" 
                 />
               </div>
-              <Button variant="outline" size="sm" className="gap-1.5" asChild>
+              <Button variant="dark-shine" size="sm" className="gap-1.5" asChild>
                 <Link to="/payments">
                   Learn more
                   <ArrowRight className="h-3.5 w-3.5" />
@@ -585,7 +585,7 @@ const HowItWorks = () => {
                 <div className="bg-muted/50 border border-border rounded-xl p-6 lg:hidden">
                   <h4 className="font-bold text-foreground mb-2">Ready to rent out your asset?</h4>
                   <p className="text-sm text-muted-foreground mb-4">Create a rental listing and start earning on your schedule.</p>
-                  <Button className="w-full gap-2 shadow-md hover:shadow-lg transition-all" asChild>
+                  <Button variant="dark-shine" className="w-full gap-2" asChild>
                     <Link to="/list">
                       <ArrowRight className="h-4 w-4" />
                       Create Rental Listing
@@ -719,7 +719,7 @@ const HowItWorks = () => {
                 <div className="bg-muted/50 border border-border rounded-xl p-6 lg:hidden">
                   <h4 className="font-bold text-foreground mb-2">Ready to list your space?</h4>
                   <p className="text-sm text-muted-foreground mb-4">Create a vendor lot listing and start earning from your property.</p>
-                  <Button className="w-full gap-2 shadow-md hover:shadow-lg transition-all" asChild>
+                  <Button variant="dark-shine" className="w-full gap-2" asChild>
                     <Link to="/list">
                       <ArrowRight className="h-4 w-4" />
                       Create Vendor Lot Listing
@@ -803,19 +803,19 @@ const HowItWorks = () => {
               </div>
 
               <div className="flex flex-wrap justify-center gap-3">
-                <Button size="lg" className="gap-2 shadow-md hover:shadow-lg transition-all hover:scale-105" asChild>
+                <Button size="lg" variant="dark-shine" className="gap-2" asChild>
                   <Link to="/tools">
                     <Sparkles className="h-4 w-4" />
                     Explore Free Tools
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" className="gap-2 border border-border hover:scale-105 transition-all" asChild>
+                <Button size="lg" variant="dark-shine" className="gap-2" asChild>
                   <Link to="/help">
                     <Headphones className="h-4 w-4" />
                     Visit Help Center
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" className="gap-2 border border-border hover:scale-105 transition-all" asChild>
+                <Button size="lg" variant="dark-shine" className="gap-2" asChild>
                   <Link to="/contact">
                     <ArrowRight className="h-4 w-4" />
                     Contact Support
@@ -884,29 +884,19 @@ const HowItWorks = () => {
               </h2>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-105" asChild>
+                <Button size="lg" variant="dark-shine" className="gap-2" asChild>
                   <Link to="/list">
                     <DollarSign className="h-4 w-4" />
                     Sell an Asset
                   </Link>
                 </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="gap-2 bg-transparent border-2 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:scale-105 transition-all"
-                  asChild
-                >
+                <Button size="lg" variant="dark-shine" className="gap-2" asChild>
                   <Link to="/list">
                     <CalendarDays className="h-4 w-4" />
                     Rent Out an Asset
                   </Link>
                 </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="gap-2 bg-transparent border-2 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:scale-105 transition-all"
-                  asChild
-                >
+                <Button size="lg" variant="dark-shine" className="gap-2" asChild>
                   <Link to="/list">
                     <MapPin className="h-4 w-4" />
                     List a Vendor Lot
@@ -1017,7 +1007,7 @@ const StickyActionCard = ({
           </ol>
         </div>
 
-        <Button className="w-full mb-2 gap-2 shadow-md hover:shadow-lg transition-all" asChild>
+        <Button variant="dark-shine" className="w-full mb-2 gap-2" asChild>
           <Link to={ctaHref}>
             <ArrowRight className="h-4 w-4" />
             {ctaText}
