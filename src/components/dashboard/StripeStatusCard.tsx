@@ -45,7 +45,8 @@ const StripeStatusCard = ({
           <Button 
             onClick={onOpenDashboard}
             size="sm"
-            className="h-8 text-xs gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground border-0 shadow-lg rounded-xl"
+            variant="dark-shine"
+            className="h-8 text-xs gap-1.5 rounded-xl"
             disabled={isOpeningDashboard}
           >
             {isOpeningDashboard ? (

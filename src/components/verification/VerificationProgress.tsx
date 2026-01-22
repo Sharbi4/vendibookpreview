@@ -4,7 +4,6 @@ import { Check, Shield, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
 
 interface VerificationStep {
   id: string;
@@ -18,20 +17,12 @@ interface VerificationStep {
 const VerificationProgress = () => {
   const navigate = useNavigate();
   const { isVerified, hasRole } = useAuth();
-  const { isConnected, isOnboardingComplete, isLoading: stripeLoading, connectStripe, isConnecting } = useStripeConnect();
   const [isStartingVerification, setIsStartingVerification] = useState(false);
 
   const isHost = hasRole('host');
 
+  // Only show identity verification - Stripe is handled in NextStepCard
   const steps: VerificationStep[] = [
-    {
-      id: 'stripe',
-      title: 'Stripe connected',
-      isComplete: isConnected && isOnboardingComplete,
-      action: () => connectStripe(),
-      actionLabel: 'Connect Stripe',
-      isLoading: isConnecting,
-    },
     {
       id: 'identity',
       title: 'Identity verified',
@@ -48,15 +39,7 @@ const VerificationProgress = () => {
   const completedSteps = steps.filter(s => s.isComplete).length;
   const allComplete = completedSteps === steps.length;
 
-  // Don't show if loading or all complete
-  if (stripeLoading) {
-    return (
-      <div className="flex items-center justify-center py-4">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
+  // Don't show if all complete
   if (allComplete) {
     return null;
   }
@@ -115,9 +98,10 @@ const VerificationProgress = () => {
               {!step.isComplete && step.action && isNext && (
                 <Button
                   size="sm"
+                  variant="dark-shine"
                   onClick={step.action}
                   disabled={step.isLoading}
-                  className="h-8 text-xs gap-1.5"
+                  className="h-8 text-xs gap-1.5 rounded-xl"
                 >
                   {step.isLoading ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
