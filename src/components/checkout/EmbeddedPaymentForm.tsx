@@ -11,9 +11,9 @@ import { Loader2, Lock, CreditCard, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Initialize Stripe outside component to avoid recreating on each render
-const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined;
-// IMPORTANT: Never fall back to a hardcoded key (mismatched keys will cause Elements to never mount)
-const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : Promise.resolve(null);
+// Publishable key is safe to include in client-side code
+const STRIPE_PUBLISHABLE_KEY = 'pk_live_51R3fJaJXGJRCDwV4Y88svIxwFNjn4n6v54yQXX3M1HPg2bGcTNBZgPo0M7kJK1vvh1H0HHJePhWPZiD1Y2NqbfMI00rIVnNhAi';
+const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
 
 interface PaymentFormProps {
   clientSecret: string;
@@ -181,22 +181,6 @@ export const EmbeddedPaymentForm = ({
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!stripePublishableKey) {
-    return (
-      <div className="p-4 rounded-lg border border-border bg-card text-sm">
-        <div className="flex items-start gap-2 text-destructive">
-          <AlertCircle className="h-4 w-4 mt-0.5" />
-          <div>
-            <p className="font-medium">Payment configuration missing</p>
-            <p className="text-muted-foreground">
-              The Stripe publishable key is not available in the frontend environment.
-            </p>
-          </div>
-        </div>
       </div>
     );
   }
