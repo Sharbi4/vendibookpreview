@@ -132,19 +132,17 @@ const Search = () => {
     },
   });
 
-  // Fetch host verification status for all listings
-  const hostIds = useMemo(() => [...new Set(listings.map(l => l.host_id))], [listings]);
+  // Fetch host verification status for all listings using RPC (bypasses RLS)
+  const hostIds = useMemo(() => [...new Set(listings.map(l => l.host_id).filter(Boolean) as string[])], [listings]);
   
   const { data: hostProfiles = [] } = useQuery({
     queryKey: ['host-profiles', hostIds],
     queryFn: async () => {
       if (hostIds.length === 0) return [];
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, identity_verified')
-        .in('id', hostIds);
+        .rpc('get_host_verification_status', { host_ids: hostIds });
       if (error) throw error;
-      return data;
+      return data || [];
     },
     enabled: hostIds.length > 0,
   });

@@ -1572,6 +1572,13 @@ export type Database = {
         Args: { host_user_id: string }
         Returns: unknown
       }
+      get_host_verification_status: {
+        Args: { host_ids: string[] }
+        Returns: {
+          id: string
+          identity_verified: boolean
+        }[]
+      }
       get_listing_favorite_count: {
         Args: { listing_uuid: string }
         Returns: number
