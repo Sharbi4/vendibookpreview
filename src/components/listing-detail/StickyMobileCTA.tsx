@@ -2,10 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Calendar, ShoppingCart, Zap, Tag, Edit, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { useAuth } from '@/contexts/AuthContext';
-import BookingWizard from './BookingWizard';
-import { BookingOnboardingModal, useBookingOnboarding } from '@/components/booking/BookingOnboardingModal';
+import { DateSelectionModal } from './DateSelectionModal';
 import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
@@ -18,7 +16,7 @@ interface StickyMobileCTAProps {
   priceSale: number | null;
   status: 'draft' | 'published' | 'paused';
   instantBook?: boolean;
-  // Additional props for booking wizard
+  // Additional props for booking
   category?: ListingCategory;
   fulfillmentType?: FulfillmentType;
   priceWeekly?: number | null;
@@ -39,28 +37,20 @@ export const StickyMobileCTA = ({
   priceSale,
   status,
   instantBook = false,
-  category = 'food_truck',
-  fulfillmentType = 'pickup',
   priceWeekly,
   availableFrom,
   availableTo,
-  pickupLocation,
-  deliveryFee,
-  deliveryRadiusMiles,
   listingTitle = 'Listing',
-  depositAmount = null,
 }: StickyMobileCTAProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
-  const [showBookingDrawer, setShowBookingDrawer] = useState(false);
-  const { shouldShow: showOnboarding, setShouldShow: setShowOnboarding } = useBookingOnboarding();
-  const [pendingBooking, setPendingBooking] = useState(false);
+  const [showDateModal, setShowDateModal] = useState(false);
   
   // Sale listing states
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [showAuthGate, setShowAuthGate] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'buy' | 'offer' | null>(null);
+  const [pendingAction, setPendingAction] = useState<'buy' | 'offer' | 'book' | null>(null);
 
   // Check if user is the owner of this listing
   const isOwner = user?.id === hostId;
@@ -74,14 +64,6 @@ export const StickyMobileCTA = ({
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Open booking drawer after onboarding completes
-  useEffect(() => {
-    if (pendingBooking && !showOnboarding) {
-      setShowBookingDrawer(true);
-      setPendingBooking(false);
-    }
-  }, [pendingBooking, showOnboarding]);
 
   // Show owner banner instead of CTA buttons (always visible for owners after scroll)
   if (isOwner && isVisible) {
@@ -126,43 +108,26 @@ export const StickyMobileCTA = ({
     setShowOfferModal(true);
   };
 
+  const handleRentalCTA = () => {
+    if (!user) {
+      setPendingAction('book');
+      setShowAuthGate(true);
+      return;
+    }
+    setShowDateModal(true);
+  };
+
   const handleAuthSuccess = () => {
     setShowAuthGate(false);
     if (pendingAction === 'buy') {
       navigate(`/checkout/${listingId}`);
     } else if (pendingAction === 'offer') {
       setShowOfferModal(true);
+    } else if (pendingAction === 'book') {
+      setShowDateModal(true);
     }
     setPendingAction(null);
   };
-
-  const handlePrimaryCTA = () => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-
-    if (isRental) {
-      // Show onboarding first if not seen
-      if (showOnboarding) {
-        setShowOnboarding(true);
-        setPendingBooking(true);
-      } else {
-        setShowBookingDrawer(true);
-      }
-    }
-  };
-
-  const handleOnboardingClose = (open: boolean) => {
-    setShowOnboarding(open);
-    if (!open && pendingBooking) {
-      // Onboarding was closed, open the drawer
-      setShowBookingDrawer(true);
-      setPendingBooking(false);
-    }
-  };
-
-  if (!isVisible) return null;
 
   return (
     <>
@@ -183,7 +148,7 @@ export const StickyMobileCTA = ({
             <Button
               variant="gradient"
               size="sm"
-              onClick={handlePrimaryCTA}
+              onClick={handleRentalCTA}
               disabled={!isAvailable}
               className="gap-1.5 min-w-[120px]"
             >
@@ -219,44 +184,20 @@ export const StickyMobileCTA = ({
         </div>
       </div>
 
-      {/* Onboarding Modal */}
-      <BookingOnboardingModal
-        open={showOnboarding && pendingBooking}
-        onOpenChange={handleOnboardingClose}
+      {/* Date Selection Modal for Rentals */}
+      <DateSelectionModal
+        open={showDateModal}
+        onOpenChange={setShowDateModal}
+        listingId={listingId}
+        availableFrom={availableFrom}
+        availableTo={availableTo}
+        priceDaily={priceDaily}
+        priceWeekly={priceWeekly}
         instantBook={instantBook}
+        navigateToBooking={true}
       />
 
-      {/* Full-screen Mobile Booking Drawer */}
-      <Drawer open={showBookingDrawer} onOpenChange={setShowBookingDrawer}>
-        <DrawerContent className="h-[95vh] max-h-[95vh]">
-          <DrawerHeader className="sr-only">
-            <DrawerTitle>
-              {instantBook ? 'Book Now' : 'Request to Book'}
-            </DrawerTitle>
-          </DrawerHeader>
-          
-          <div className="overflow-y-auto flex-1 pb-safe">
-            <BookingWizard
-              listingId={listingId}
-              hostId={hostId}
-              category={category}
-              fulfillmentType={fulfillmentType}
-              priceDaily={priceDaily}
-              priceWeekly={priceWeekly || null}
-              availableFrom={availableFrom}
-              availableTo={availableTo}
-              pickupLocation={pickupLocation}
-              deliveryFee={deliveryFee}
-              deliveryRadiusMiles={deliveryRadiusMiles}
-              instantBook={instantBook}
-              listingTitle={listingTitle}
-              depositAmount={depositAmount}
-            />
-          </div>
-        </DrawerContent>
-      </Drawer>
-
-      {/* Auth Gate for Sale Actions */}
+      {/* Auth Gate for Actions */}
       <AuthGateOfferModal
         open={showAuthGate}
         onOpenChange={setShowAuthGate}
