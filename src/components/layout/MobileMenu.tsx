@@ -118,7 +118,7 @@ const MobileMenu = ({
             {/* Primary Actions */}
             <div className="px-5 pb-4 space-y-2">
               <Button
-                variant="default"
+                variant="dark-shine"
                 className="w-full justify-start gap-3 h-12 rounded-xl text-base font-medium"
                 onClick={() => handleNavigation('/search')}
               >
@@ -265,14 +265,14 @@ const MobileMenu = ({
             ) : (
               <div className="space-y-2">
                 <Button
-                  variant="outline"
+                  variant="dark-shine"
                   className="w-full h-11 rounded-xl"
                   onClick={() => handleNavigation('/auth')}
                 >
                   Sign In
                 </Button>
                 <Button
-                  variant="gradient"
+                  variant="dark-shine"
                   className="w-full h-11 rounded-xl"
                   onClick={() => handleNavigation('/list')}
                 >
