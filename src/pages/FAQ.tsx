@@ -807,13 +807,13 @@ const FAQ = () => {
                   Our support team is available 24/7 to help you with any questions or concerns.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button asChild size="lg" className="bg-vendibook-orange hover:bg-vendibook-orange/90">
+                  <Button asChild variant="dark-shine" size="lg">
                     <Link to="/contact">
                       Contact Support
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" size="lg">
+                  <Button asChild variant="dark-shine" size="lg">
                     <Link to="/help">
                       Visit Help Center
                       <ArrowRight className="h-4 w-4 ml-2" />
