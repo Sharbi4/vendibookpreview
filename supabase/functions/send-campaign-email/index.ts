@@ -112,6 +112,111 @@ const campaigns: Record<string, { subject: string; html: string }> = {
 </html>
     `,
   },
+  "houston-restaurants-kitchen": {
+    subject: "Your kitchen is already paid for—want it to earn on off-hours?",
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.7; color: #1a1a1a; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
+  
+  <div style="text-align: center; margin-bottom: 32px;">
+    <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png" alt="VendiBook" style="height: 56px;" />
+  </div>
+
+  <p style="font-size: 16px; margin-bottom: 20px;">Hi there,</p>
+
+  <p style="font-size: 16px; margin-bottom: 20px;">I'm reaching out to Houston restaurant owners who have kitchen time that's underused—slow weekdays, late nights, or off-days.</p>
+
+  <p style="font-size: 16px; margin-bottom: 20px;">Vendibook helps restaurants rent out approved kitchen time to vetted food entrepreneurs for prep, catering, meal prep, and delivery-first concepts. It's a simple way to turn downtime into reliable revenue without adding a long-term tenant.</p>
+
+  <div style="text-align: center; margin: 32px 0;">
+    <a href="https://vendibook.com/host/kitchens" style="display: inline-block; background: #1a1a1a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; margin-right: 12px;">Create Your Free Kitchen Listing</a>
+    <a href="https://calendar.app.google/FCKSyrLoXUXYHvBGA" style="display: inline-block; background: #ffffff; color: #1a1a1a; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; border: 2px solid #1a1a1a;">Set Up a Meeting</a>
+  </div>
+
+  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
+
+  <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">What you could earn (quick example)</h2>
+
+  <p style="font-size: 16px; margin-bottom: 20px;">Many hosts earn around <strong>$500/week</strong> renting their kitchen about 3 days/week — roughly <strong>$2,000/month</strong> (500 × 4).<br><em style="color: #666;">(Results vary by location, kitchen setup, and availability.)</em></p>
+
+  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
+
+  <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Why Houston restaurants use Vendibook</h2>
+
+  <p style="font-size: 15px; color: #666; margin-bottom: 20px;">You stay in control. We handle the hard parts.</p>
+
+  <div style="margin-bottom: 16px;">
+    <p style="margin: 0 0 8px 0;"><strong>✅ Done-for-you document reviews</strong></p>
+    <p style="margin: 0; font-size: 15px; color: #444;">You choose requirements (insurance, business license, ServSafe/food handler, work history, etc.). Renters submit documents, and Vendibook reviews them so you don't have to.</p>
+  </div>
+
+  <div style="margin-bottom: 16px;">
+    <p style="margin: 0 0 8px 0;"><strong>✅ Verified renters (optional)</strong></p>
+    <p style="margin: 0; font-size: 15px; color: #444;">Require Stripe Identity verification to ensure you're working with verified profiles.</p>
+  </div>
+
+  <div style="margin-bottom: 16px;">
+    <p style="margin: 0 0 8px 0;"><strong>✅ Hourly + daily rentals</strong></p>
+    <p style="margin: 0; font-size: 15px; color: #444;">Offer prep blocks by the hour or full-day access—whatever works for your operation.</p>
+  </div>
+
+  <div style="margin-bottom: 16px;">
+    <p style="margin: 0 0 8px 0;"><strong>✅ Secure payments + predictable payouts</strong></p>
+    <p style="margin: 0; font-size: 15px; color: #444;">Renters pay when they submit a booking request. You review the renter profile + approved docs, accept the booking, and payouts are initiated at the end of the booking.</p>
+  </div>
+
+  <div style="margin-bottom: 16px;">
+    <p style="margin: 0 0 8px 0;"><strong>✅ Optional deposits for protection</strong></p>
+    <p style="margin: 0; font-size: 15px; color: #444;">Set a deposit amount to help protect equipment and your space. If something goes wrong, we can hold the deposit during review.</p>
+  </div>
+
+  <div style="margin-bottom: 16px;">
+    <p style="margin: 0 0 8px 0;"><strong>✅ We help market your kitchen</strong></p>
+    <p style="margin: 0; font-size: 15px; color: #444;">Your listing is built to perform in search and in the marketplace so the right renters can find you.</p>
+  </div>
+
+  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
+
+  <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Common use cases we see in Houston</h2>
+
+  <ul style="font-size: 15px; color: #444; padding-left: 20px; margin-bottom: 24px;">
+    <li style="margin-bottom: 8px;">Prep-only shifts for caterers and meal prep brands</li>
+    <li style="margin-bottom: 8px;">Off-day production runs (wholesale, events, seasonal menus)</li>
+    <li style="margin-bottom: 8px;">Shared kitchen shifts (multiple approved renters during different blocks)</li>
+    <li style="margin-bottom: 8px;">Delivery-first concepts needing a compliant kitchen</li>
+  </ul>
+
+  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
+
+  <p style="font-size: 16px; margin-bottom: 20px;">If you'd like, I can help you get your listing live quickly—pricing, hours, and the exact documents to require for your kitchen.</p>
+
+  <div style="text-align: center; margin: 32px 0;">
+    <a href="https://calendar.app.google/FCKSyrLoXUXYHvBGA" style="display: inline-block; background: #1a1a1a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; margin-bottom: 12px;">Book a Quick Call</a>
+    <br>
+    <a href="https://vendibook.com/host/kitchens" style="display: inline-block; background: #ffffff; color: #1a1a1a; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; border: 2px solid #1a1a1a; margin-top: 12px;">Start Here</a>
+  </div>
+
+  <p style="font-size: 16px; margin-bottom: 8px;">Best,</p>
+  <p style="font-size: 16px; margin-bottom: 4px;"><strong>Alison M</strong></p>
+  <p style="font-size: 14px; color: #666; margin: 0;">Vendibook Customer Success</p>
+
+  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
+
+  <p style="font-size: 12px; color: #999; text-align: center;">
+    © ${new Date().getFullYear()} VendiBook. All rights reserved.<br>
+    <a href="https://vendibook.com/unsubscribe" style="color: #999;">Unsubscribe</a>
+  </p>
+
+</body>
+</html>
+    `,
+  },
 };
 
 serve(async (req) => {
