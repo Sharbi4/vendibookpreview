@@ -13,8 +13,12 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
 interface CallbackRequest {
   name: string;
   phone: string;
-  scheduledDate: string;
-  scheduledTime: string;
+  scheduledDate?: string;
+  scheduledTime?: string;
+  // White Glove popup fields
+  restaurantName?: string;
+  source?: string;
+  preferredTime?: string;
 }
 
 const sendEmail = async (apiKey: string, emailData: { from: string; to: string[]; subject: string; html: string }) => {
@@ -55,14 +59,31 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const data: CallbackRequest = await req.json();
-    const { name, phone, scheduledDate, scheduledTime } = data;
+    const { name, phone, scheduledDate, scheduledTime, restaurantName, source, preferredTime } = data;
 
-    logStep("Callback request received", { name: name?.substring(0, 20), scheduledDate, scheduledTime });
+    // Determine if this is a White Glove request (no scheduled date/time, has source)
+    const isWhiteGlove = source === 'white-glove-kitchen-popup' || (!scheduledDate && !scheduledTime);
 
-    // Validate required fields
-    if (!name || !phone || !scheduledDate || !scheduledTime) {
+    logStep("Callback request received", { 
+      name: name?.substring(0, 20), 
+      scheduledDate, 
+      scheduledTime,
+      source,
+      isWhiteGlove
+    });
+
+    // Validate required fields - White Glove only needs name and phone
+    if (!name || !phone) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: name, phone, scheduledDate, scheduledTime" }),
+        JSON.stringify({ error: "Missing required fields: name, phone" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // For non-White Glove, also require scheduledDate and scheduledTime
+    if (!isWhiteGlove && (!scheduledDate || !scheduledTime)) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields: scheduledDate, scheduledTime" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -86,23 +107,6 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    
-    // Validate date format
-    const dateRegex = /^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]+)?$/;
-    if (!dateRegex.test(scheduledDate)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid date format" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const scheduledDateObj = new Date(scheduledDate);
-    const formattedDate = scheduledDateObj.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
 
     // Escape HTML in name and phone to prevent XSS in email
     const escapedName = trimmedName.replace(/[<>&"']/g, (c) => {
@@ -113,12 +117,65 @@ const handler = async (req: Request): Promise<Response> => {
       const entities: Record<string, string> = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' };
       return entities[c] || c;
     });
+    const escapedRestaurantName = restaurantName ? String(restaurantName).trim().replace(/[<>&"']/g, (c) => {
+      const entities: Record<string, string> = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' };
+      return entities[c] || c;
+    }) : null;
 
-    // Create Zendesk ticket first (primary tracking method)
+    // Prepare formatted date/time for scheduled callbacks
+    let formattedDate = '';
+    let formattedTime = scheduledTime || '';
+    
+    if (!isWhiteGlove && scheduledDate) {
+      // Validate date format
+      const dateRegex = /^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]+)?$/;
+      if (!dateRegex.test(scheduledDate)) {
+        return new Response(
+          JSON.stringify({ error: "Invalid date format" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      const scheduledDateObj = new Date(scheduledDate);
+      formattedDate = scheduledDateObj.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+
+    // Create Zendesk ticket (primary tracking method)
     let zendeskTicketId: number | null = null;
     if (ZENDESK_API_KEY) {
       try {
         const auth = btoa(`${ZENDESK_EMAIL}/token:${ZENDESK_API_KEY}`);
+        
+        // Different ticket content based on request type
+        let ticketSubject: string;
+        let ticketBody: string;
+        let ticketTags: string[];
+        
+        if (isWhiteGlove) {
+          ticketSubject = `🤝 [White Glove] Kitchen Listing Request - ${trimmedName}${escapedRestaurantName ? ` (${escapedRestaurantName})` : ''}`;
+          ticketBody = `White Glove Service Request\n\n` +
+            `Name: ${trimmedName}\n` +
+            `Restaurant: ${escapedRestaurantName || 'Not provided'}\n` +
+            `Phone: ${trimmedPhone}\n` +
+            `Source: ${source || 'white-glove-kitchen-popup'}\n` +
+            `Preferred Contact Time: ${preferredTime || 'ASAP'}\n\n` +
+            `Action Required: Call this kitchen owner to help them create their listing.`;
+          ticketTags = ['vendibook', 'white-glove', 'kitchen-listing', 'callback-request'];
+        } else {
+          ticketSubject = `📞 [Scheduled Callback] ${trimmedName} - ${formattedDate} at ${formattedTime} EST`;
+          ticketBody = `Callback request from ${trimmedName}\n\n` +
+            `Phone: ${trimmedPhone}\n` +
+            `Scheduled Date: ${formattedDate}\n` +
+            `Scheduled Time: ${formattedTime} EST\n\n` +
+            `Please call this customer at the scheduled time.`;
+          ticketTags = ['vendibook', 'scheduled-callback', 'callback-request'];
+        }
+        
         const ticketResponse = await fetch(
           `https://${ZENDESK_SUBDOMAIN}.zendesk.com/api/v2/tickets.json`,
           {
@@ -129,16 +186,12 @@ const handler = async (req: Request): Promise<Response> => {
             },
             body: JSON.stringify({
               ticket: {
-                subject: `📞 [Scheduled Callback] ${trimmedName} - ${formattedDate} at ${scheduledTime} EST`,
-                comment: {
-                  body: `Callback request from ${trimmedName}\n\nPhone: ${trimmedPhone}\nScheduled Date: ${formattedDate}\nScheduled Time: ${scheduledTime} EST\n\nPlease call this customer at the scheduled time.`,
-                },
-                priority: 'high',
+                subject: ticketSubject,
+                comment: { body: ticketBody },
+                priority: isWhiteGlove ? 'urgent' : 'high',
                 type: 'task',
-                requester: {
-                  name: trimmedName,
-                },
-                tags: ['vendibook', 'scheduled-callback', 'callback-request'],
+                requester: { name: trimmedName },
+                tags: ticketTags,
                 custom_fields: [
                   { id: 'phone', value: trimmedPhone }
                 ],
@@ -150,7 +203,7 @@ const handler = async (req: Request): Promise<Response> => {
         if (ticketResponse.ok) {
           const ticketData = await ticketResponse.json();
           zendeskTicketId = ticketData.ticket?.id;
-          logStep("Zendesk ticket created", { ticketId: zendeskTicketId });
+          logStep("Zendesk ticket created", { ticketId: zendeskTicketId, isWhiteGlove });
         } else {
           const errorText = await ticketResponse.text();
           logStep("Zendesk ticket creation failed", { status: ticketResponse.status, error: errorText });
@@ -164,26 +217,62 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send notification email to support team (non-blocking)
     try {
-      await sendEmail(RESEND_API_KEY, {
-        from: "Vendibook <noreply@vendibook.com>",
-        to: ["support@vendibook.com"],
-        subject: `📞 Scheduled Callback: ${escapedName} - ${formattedDate} at ${scheduledTime} EST`,
-        html: `
+      const emailSubject = isWhiteGlove 
+        ? `🤝 White Glove Request: ${escapedName}${escapedRestaurantName ? ` - ${escapedRestaurantName}` : ''}`
+        : `📞 Scheduled Callback: ${escapedName} - ${formattedDate} at ${formattedTime} EST`;
+      
+      const emailHtml = isWhiteGlove
+        ? `
           <!DOCTYPE html>
           <html>
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>
-              @font-face {
-                font-family: 'Sofia Pro Soft';
-                src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-                font-weight: 300;
-                font-style: normal;
-              }
-            </style>
           </head>
-          <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #1a1a1a 0%, #333 100%); padding: 20px; border-radius: 12px 12px 0 0;">
+                <h1 style="color: white; margin: 0; font-size: 24px;">🤝 White Glove Service Request</h1>
+              </div>
+              <div style="background: #f9f9f9; padding: 20px; border-radius: 0 0 12px 12px;">
+                <p style="margin-bottom: 15px; color: #333;">A busy kitchen owner needs help creating their listing:</p>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 10px 0; border-bottom: 1px solid #eee; font-weight: bold; width: 140px;">Name:</td>
+                    <td style="padding: 10px 0; border-bottom: 1px solid #eee;">${escapedName}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px 0; border-bottom: 1px solid #eee; font-weight: bold;">Restaurant:</td>
+                    <td style="padding: 10px 0; border-bottom: 1px solid #eee;">${escapedRestaurantName || 'Not provided'}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px 0; border-bottom: 1px solid #eee; font-weight: bold;">Phone:</td>
+                    <td style="padding: 10px 0; border-bottom: 1px solid #eee;">
+                      <a href="tel:${encodeURIComponent(trimmedPhone)}" style="color: #FF5124;">${escapedPhone}</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px 0; font-weight: bold;">Contact Time:</td>
+                    <td style="padding: 10px 0;">${preferredTime === 'asap' ? 'ASAP' : preferredTime || 'ASAP'}</td>
+                  </tr>
+                </table>
+                ${zendeskTicketId ? `<p style="margin-top: 15px; font-size: 12px; color: #666;">Zendesk Ticket #${zendeskTicketId}</p>` : ''}
+                <div style="margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 8px; border-left: 4px solid #4caf50;">
+                  <strong>🎯 Action:</strong> Call ${escapedName} at <a href="tel:${encodeURIComponent(trimmedPhone)}" style="color: #FF5124; font-weight: bold;">${escapedPhone}</a> to build their kitchen listing.
+                </div>
+              </div>
+            </div>
+          </body>
+          </html>
+        `
+        : `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
             <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); padding: 20px; border-radius: 12px 12px 0 0;">
                 <h1 style="color: white; margin: 0; font-size: 24px;">📞 Callback Scheduled</h1>
@@ -206,18 +295,24 @@ const handler = async (req: Request): Promise<Response> => {
                 </tr>
                 <tr>
                   <td style="padding: 10px 0; font-weight: bold;">Time:</td>
-                  <td style="padding: 10px 0;">${scheduledTime} EST</td>
+                  <td style="padding: 10px 0;">${formattedTime} EST</td>
                 </tr>
               </table>
               ${zendeskTicketId ? `<p style="margin-top: 15px; font-size: 12px; color: #666;">Zendesk Ticket #${zendeskTicketId}</p>` : ''}
               <div style="margin-top: 20px; padding: 15px; background: #fff3e0; border-radius: 8px; border-left: 4px solid #FF5124;">
-                <strong>⏰ Reminder:</strong> Call ${escapedName} at <a href="tel:${encodeURIComponent(trimmedPhone)}" style="color: #FF5124; font-weight: bold;">${escapedPhone}</a> on ${formattedDate} at ${scheduledTime} EST.
+                <strong>⏰ Reminder:</strong> Call ${escapedName} at <a href="tel:${encodeURIComponent(trimmedPhone)}" style="color: #FF5124; font-weight: bold;">${escapedPhone}</a> on ${formattedDate} at ${formattedTime} EST.
               </div>
             </div>
           </div>
           </body>
           </html>
-        `,
+        `;
+
+      await sendEmail(RESEND_API_KEY, {
+        from: "Vendibook <noreply@vendibook.com>",
+        to: ["support@vendibook.com"],
+        subject: emailSubject,
+        html: emailHtml,
       });
       logStep("Support notification email sent");
     } catch (emailError) {
@@ -225,11 +320,16 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
 
+    const responseMessage = isWhiteGlove
+      ? "Request submitted successfully. Our team will call you soon!"
+      : `Callback scheduled for ${formattedDate} at ${formattedTime} EST`;
+
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: "Callback scheduled successfully",
-        scheduledFor: `${formattedDate} at ${scheduledTime} EST`
+        message: responseMessage,
+        ticketId: zendeskTicketId,
+        ...(isWhiteGlove ? {} : { scheduledFor: `${formattedDate} at ${formattedTime} EST` })
       }),
       { 
         status: 200, 
