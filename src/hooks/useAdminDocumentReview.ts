@@ -167,7 +167,7 @@ export function useAdminReviewDocument() {
       const { data, error } = await supabase
         .from('booking_documents')
         .update({
-          status: status as DocumentStatus,
+          status: status,
           rejection_reason: status === 'rejected' ? rejectionReason || null : null,
           reviewed_at: new Date().toISOString(),
         })
@@ -220,7 +220,7 @@ export function useAdminBulkApproveDocuments() {
           const { data, error } = await supabase
             .from('booking_documents')
             .update({
-              status: 'approved' as DocumentStatus,
+              status: 'approved',
               rejection_reason: null,
               reviewed_at: new Date().toISOString(),
             })
