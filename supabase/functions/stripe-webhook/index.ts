@@ -360,12 +360,16 @@ serve(async (req) => {
                       fullName: shopperProfile.full_name || "Valued Customer",
                       transactionId: paymentIntentId || bookingId,
                       itemName: listingTitle,
-                      amount: bookingData.total_price,
+                      amount: bookingData.total_price + depositAmount,
                       paymentMethod: "Card",
                       transactionType: "rental",
                       startDate: bookingData.start_date,
                       endDate: bookingData.end_date,
                       address: bookingData.listings?.address || bookingData.address_snapshot,
+                      depositAmount: depositAmount,
+                      basePrice: bookingData.total_price,
+                      isRental: true,
+                      bookingId: bookingId,
                     }),
                   }
                 );
