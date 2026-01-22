@@ -28,6 +28,9 @@ export interface TrackingTransaction {
   // Cash transaction confirmation fields
   buyer_confirmed_at: string | null;
   seller_confirmed_at: string | null;
+  // Freight payment fields
+  freight_payment_status: string | null;
+  freight_paid_at: string | null;
   // Joined fields
   listing?: {
     id: string;
@@ -71,6 +74,8 @@ export const useOrderTracking = (transactionId: string | undefined) => {
           shipping_notes,
           buyer_confirmed_at,
           seller_confirmed_at,
+          freight_payment_status,
+          freight_paid_at,
           listing:listings(id, title, cover_image_url, pickup_location_text)
         `)
         .eq('id', transactionId)

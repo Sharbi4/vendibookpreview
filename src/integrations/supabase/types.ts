@@ -1253,7 +1253,11 @@ export type Database = {
           delivery_fee: number | null
           delivery_instructions: string | null
           estimated_delivery_date: string | null
+          freight_checkout_session_id: string | null
           freight_cost: number | null
+          freight_paid_at: string | null
+          freight_payment_intent_id: string | null
+          freight_payment_status: string | null
           fulfillment_type: string | null
           id: string
           listing_id: string
@@ -1288,7 +1292,11 @@ export type Database = {
           delivery_fee?: number | null
           delivery_instructions?: string | null
           estimated_delivery_date?: string | null
+          freight_checkout_session_id?: string | null
           freight_cost?: number | null
+          freight_paid_at?: string | null
+          freight_payment_intent_id?: string | null
+          freight_payment_status?: string | null
           fulfillment_type?: string | null
           id?: string
           listing_id: string
@@ -1323,7 +1331,11 @@ export type Database = {
           delivery_fee?: number | null
           delivery_instructions?: string | null
           estimated_delivery_date?: string | null
+          freight_checkout_session_id?: string | null
           freight_cost?: number | null
+          freight_paid_at?: string | null
+          freight_payment_intent_id?: string | null
+          freight_payment_status?: string | null
           fulfillment_type?: string | null
           id?: string
           listing_id?: string
