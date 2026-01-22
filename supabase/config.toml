@@ -152,3 +152,6 @@ verify_jwt = false
 
 [functions.create-notary-checkout]
 verify_jwt = false
+
+[functions.expire-booking-holds]
+verify_jwt = false
