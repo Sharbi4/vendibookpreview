@@ -69,11 +69,11 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   // Get location from pickup_location_text or address
   const location = listing.pickup_location_text || listing.address?.split(',').slice(-2).join(',').trim() || 'Location TBD';
 
-  // Get displayable amenities (max 4 for compact view, max 3 for compact cards)
-  const maxAmenities = compact ? 3 : 4;
-  const displayAmenities = (listing.amenities || [])
-    .filter(a => popularAmenityIcons[a])
-    .slice(0, maxAmenities);
+  // Get displayable amenities (max 3 to leave room for Quick Book button)
+  const maxAmenities = compact ? 2 : 3;
+  const popularAmenities = (listing.amenities || []).filter(a => popularAmenityIcons[a]);
+  const displayAmenities = popularAmenities.slice(0, maxAmenities);
+  const remainingAmenitiesCount = (listing.amenities?.length || 0) - displayAmenities.length;
 
   return (
     <Link 
@@ -180,9 +180,9 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
                       </Tooltip>
                     );
                   })}
-                  {(listing.amenities?.length || 0) > 4 && (
+                  {remainingAmenitiesCount > 0 && (
                     <div className="w-7 h-7 bg-background/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm text-xs font-medium text-muted-foreground">
-                      +{(listing.amenities?.length || 0) - 4}
+                      +{remainingAmenitiesCount}
                     </div>
                   )}
                 </TooltipProvider>
