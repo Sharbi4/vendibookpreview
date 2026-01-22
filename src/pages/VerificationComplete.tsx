@@ -7,10 +7,13 @@ import { Button } from '@/components/ui/button';
 
 const VerificationComplete = () => {
   const [status, setStatus] = useState<'checking' | 'verified' | 'failed'>('checking');
-  const { refreshProfile, user } = useAuth();
+  const { refreshProfile, user, isLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Wait for auth state to be determined before checking
+    if (isLoading) return;
+
     const checkStatus = async () => {
       if (!user) {
         navigate('/auth');
@@ -46,7 +49,7 @@ const VerificationComplete = () => {
     };
 
     checkStatus();
-  }, [user, navigate, refreshProfile]);
+  }, [user, isLoading, navigate, refreshProfile]);
 
   if (status === 'checking') {
     return (
