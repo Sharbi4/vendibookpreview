@@ -11,8 +11,9 @@ import { Loader2, Lock, CreditCard, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Initialize Stripe outside component to avoid recreating on each render
-const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined;
-const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null;
+// Publishable key is safe to include in client-side code
+const STRIPE_PUBLISHABLE_KEY = 'pk_live_Y2xlcmsudmVuZGlib29rLmNvbSQ';
+const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
 
 interface PaymentFormProps {
   clientSecret: string;
@@ -176,22 +177,7 @@ export const EmbeddedPaymentForm = ({
     }
   }, [clientSecret]);
 
-  if (!isReady || !stripePromise) {
-    if (!STRIPE_PUBLISHABLE_KEY) {
-      return (
-        <div className="p-4 rounded-lg border border-border bg-card text-sm">
-          <div className="flex items-start gap-2 text-destructive">
-            <AlertCircle className="h-4 w-4 mt-0.5" />
-            <div>
-              <p className="font-medium">Payment configuration missing</p>
-              <p className="text-muted-foreground">
-                Stripe publishable key is not configured.
-              </p>
-            </div>
-          </div>
-        </div>
-      );
-    }
+  if (!isReady) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
