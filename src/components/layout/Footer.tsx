@@ -36,7 +36,7 @@ const footerSections: FooterSection[] = [
   {
     title: 'List & Earn',
     links: [
-      { label: 'List Your Asset', href: '/host' },
+      { label: 'Rent My Kitchen', href: '/rent-my-commercial-kitchen' },
       { label: 'Sell My Food Truck', href: '/sell-my-food-truck' },
       { label: 'Payment Options', href: '/payments' },
       { label: 'Host FAQ', href: '/faq' },
