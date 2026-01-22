@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,13 +57,17 @@ const Auth = () => {
 
   const { signIn, signUp, resetPassword, user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
+
+  // Get redirect URL from query params (for booking flow, etc.)
+  const redirectUrl = searchParams.get('redirect') || '/';
 
   useEffect(() => {
     if (user && !isLoading) {
-      navigate('/');
+      navigate(redirectUrl);
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, navigate, redirectUrl]);
 
   const validateForm = () => {
     try {
@@ -133,10 +137,13 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
+      // Build the redirect URL to preserve booking flow
+      const postAuthRedirect = redirectUrl !== '/' ? `${window.location.origin}${redirectUrl}` : window.location.origin;
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: postAuthRedirect,
           // We manually redirect so we can reliably escape iframes in preview.
           skipBrowserRedirect: true,
         },
@@ -298,8 +305,8 @@ const Auth = () => {
             title: 'Welcome back!',
             description: 'You have signed in successfully.',
           });
-          // Route to activation to choose path if needed
-          navigate('/activation');
+          // Use redirect URL if provided, otherwise go to activation
+          navigate(redirectUrl !== '/' ? redirectUrl : '/activation');
         }
       }
     } finally {
