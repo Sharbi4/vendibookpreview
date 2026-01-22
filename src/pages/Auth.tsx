@@ -133,10 +133,12 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: window.location.origin,
+          // We manually redirect so we can reliably escape iframes in preview.
+          skipBrowserRedirect: true,
         },
       });
       
@@ -147,8 +149,26 @@ const Auth = () => {
           description: error.message,
           variant: 'destructive',
         });
+        return;
       }
-      // Don't reset loading state on success - user will be redirected
+
+      const url = data?.url;
+      if (!url) {
+        setIsGoogleLoading(false);
+        toast({
+          title: 'Google sign-in failed',
+          description: 'Missing redirect URL. Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Prefer top-level navigation (preview often runs in an iframe)
+      try {
+        (window.top ?? window).location.assign(url);
+      } catch {
+        window.location.assign(url);
+      }
     } catch (error: any) {
       setIsGoogleLoading(false);
       toast({
