@@ -581,21 +581,23 @@ const HowItWorks = () => {
                   </ul>
                 </div>
 
-                {/* Inline CTA for mobile and desktop */}
-                <div className="bg-muted/50 border border-border rounded-xl p-6 lg:hidden">
+                {/* Inline CTA for all screen sizes */}
+                <div className="bg-muted/50 border border-border rounded-xl p-6">
                   <h4 className="font-bold text-foreground mb-2">Ready to rent out your asset?</h4>
                   <p className="text-sm text-muted-foreground mb-4">Create a rental listing and start earning on your schedule.</p>
-                  <Button variant="dark-shine" className="w-full gap-2" asChild>
-                    <Link to="/list">
-                      <ArrowRight className="h-4 w-4" />
-                      Create Rental Listing
-                    </Link>
-                  </Button>
-                  <Button variant="outline" className="w-full gap-2 mt-2" asChild>
-                    <Link to="/rent-my-commercial-kitchen">
-                      Learn More
-                    </Link>
-                  </Button>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button variant="dark-shine" className="gap-2" asChild>
+                      <Link to="/list">
+                        <ArrowRight className="h-4 w-4" />
+                        Create Rental Listing
+                      </Link>
+                    </Button>
+                    <Button variant="outline" className="gap-2" asChild>
+                      <Link to="/rent-my-commercial-kitchen">
+                        Learn More
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               </div>
 
