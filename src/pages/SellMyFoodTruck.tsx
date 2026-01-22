@@ -36,8 +36,8 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
-import affirmLogo from '@/assets/affirm-logo-new.png';
-import afterpayLogo from '@/assets/afterpay-logo-new.png';
+import affirmLogo from '@/assets/affirm-logo.png';
+import afterpayLogo from '@/assets/afterpay-logo.jpg';
 
 const SellMyFoodTruck = () => {
   // FAQ data for schema and accordion

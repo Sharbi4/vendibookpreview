@@ -49,8 +49,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
-import affirmLogo from '@/assets/affirm-logo-new.png';
-import afterpayLogo from '@/assets/afterpay-logo-new.png';
+import affirmLogo from '@/assets/affirm-logo.png';
+import afterpayLogo from '@/assets/afterpay-logo.jpg';
 
 const HowItWorks = () => {
   const [activeSection, setActiveSection] = useState<string | null>(null);
