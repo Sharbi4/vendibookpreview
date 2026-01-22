@@ -11,15 +11,15 @@ const FinalCTA = () => {
         </p>
         
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Button variant="gradient-premium" size="lg" onClick={() => navigate('/search')} className="px-8 gap-2">
+          <Button variant="dark-shine" size="lg" onClick={() => navigate('/search')} className="px-8 gap-2">
             <Search className="h-5 w-5" />
             Search Listings
           </Button>
-          <Button variant="outline" size="lg" onClick={() => navigate('/list')} className="px-8 gap-2">
+          <Button variant="dark-shine" size="lg" onClick={() => navigate('/list')} className="px-8 gap-2">
             List an Asset
             <ArrowRight className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="lg" onClick={() => navigate('/how-it-works')} className="px-8 gap-2">
+          <Button variant="dark-shine" size="lg" onClick={() => navigate('/how-it-works')} className="px-8 gap-2">
             <BookOpen className="h-5 w-5" />
             Learn More
           </Button>

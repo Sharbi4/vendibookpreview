@@ -88,7 +88,7 @@ const Index = () => {
                     className="h-5 md:h-6 object-contain dark:invert" 
                   />
                 </div>
-                <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                <Button variant="dark-shine" size="sm" className="gap-1.5" asChild>
                   <Link to="/payments">
                     Learn more
                     <ArrowRight className="h-3.5 w-3.5" />
