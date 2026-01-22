@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Calendar, ArrowRight, CalendarCheck, Lock, Clock, ChevronLeft, ChevronRight, Info } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, ArrowRight, CalendarCheck, Lock, Clock, ChevronLeft, ChevronRight, Info, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +22,9 @@ interface DateSelectionModalProps {
   availableTo?: string | null;
   priceDaily: number | null;
   priceWeekly?: number | null;
-  onDatesSelected: (startDate: Date, endDate: Date) => void;
+  instantBook?: boolean;
+  onDatesSelected?: (startDate: Date, endDate: Date) => void;
+  navigateToBooking?: boolean;
 }
 
 export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
@@ -32,8 +35,11 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
   availableTo,
   priceDaily,
   priceWeekly,
+  instantBook = false,
   onDatesSelected,
+  navigateToBooking = true,
 }) => {
+  const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
@@ -137,7 +143,14 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
 
   const handleContinue = () => {
     if (startDate && endDate) {
-      onDatesSelected(startDate, endDate);
+      if (onDatesSelected) {
+        onDatesSelected(startDate, endDate);
+      }
+      if (navigateToBooking) {
+        const startStr = format(startDate, 'yyyy-MM-dd');
+        const endStr = format(endDate, 'yyyy-MM-dd');
+        navigate(`/book/${listingId}?start=${startStr}&end=${endStr}`);
+      }
       onOpenChange(false);
     }
   };
@@ -312,7 +325,14 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
             onClick={handleContinue}
             disabled={!canContinue}
           >
-            Continue to Booking
+            {instantBook ? (
+              <>
+                <Zap className="h-4 w-4 mr-2" />
+                Book Now
+              </>
+            ) : (
+              'Request to Book'
+            )}
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </div>

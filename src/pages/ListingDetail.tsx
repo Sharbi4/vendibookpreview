@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import PhotoGallery from '@/components/listing-detail/PhotoGallery';
-import BookingWizard from '@/components/listing-detail/BookingWizard';
+import BookingSummaryCard from '@/components/listing-detail/BookingSummaryCard';
 import InquiryForm from '@/components/listing-detail/InquiryForm';
 import HostCard from '@/components/listing-detail/HostCard';
 import ReviewsSection from '@/components/reviews/ReviewsSection';
@@ -31,7 +31,7 @@ import { useListingAverageRating } from '@/hooks/useReviews';
 import { useTrackListingView } from '@/hooks/useListingAnalytics';
 import { useAuth } from '@/contexts/AuthContext';
 import { CATEGORY_LABELS } from '@/types/listing';
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo } from 'react';
 import { trackListingViewed } from '@/lib/analytics';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 import SEO from '@/components/SEO';
@@ -45,23 +45,8 @@ const ListingDetail = () => {
   const { data: ratingData } = useListingAverageRating(id);
   const { trackView } = useTrackListingView();
 
-  // State for pre-selected dates from modal
-  const [selectedStartDate, setSelectedStartDate] = useState<Date | undefined>();
-  const [selectedEndDate, setSelectedEndDate] = useState<Date | undefined>();
-
   // Check if user is the owner of this listing
   const isOwner = user?.id && listing?.host_id && user.id === listing.host_id;
-
-  // Handle dates selected from modal
-  const handleDatesSelected = useCallback((startDate: Date, endDate: Date) => {
-    setSelectedStartDate(startDate);
-    setSelectedEndDate(endDate);
-    // Scroll to booking widget on desktop
-    const bookingWidget = document.getElementById('booking-widget');
-    if (bookingWidget) {
-      bookingWidget.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, []);
 
   // Generate structured data for Google Shopping / Search
   // Must be called before any conditional returns to follow Rules of Hooks
@@ -305,7 +290,6 @@ const ListingDetail = () => {
                   priceDaily={listing.price_daily}
                   priceWeekly={listing.price_weekly}
                   instantBook={listing.instant_book || false}
-                  onDatesSelected={handleDatesSelected}
                 />
               )}
 
@@ -340,23 +324,15 @@ const ListingDetail = () => {
               {isOwner ? (
                 <OwnerBanner listingId={listing.id} variant="card" />
               ) : isRental ? (
-                <BookingWizard
+                <BookingSummaryCard
                   listingId={listing.id}
-                  hostId={listing.host_id}
-                  category={listing.category}
-                  fulfillmentType={listing.fulfillment_type}
+                  listingTitle={listing.title}
                   priceDaily={listing.price_daily}
                   priceWeekly={listing.price_weekly}
                   availableFrom={listing.available_from}
                   availableTo={listing.available_to}
-                  pickupLocation={listing.pickup_location_text}
-                  deliveryFee={listing.delivery_fee}
-                  deliveryRadiusMiles={listing.delivery_radius_miles}
                   instantBook={listing.instant_book || false}
-                  listingTitle={listing.title}
-                  depositAmount={(listing as any).deposit_amount || null}
-                  initialStartDate={selectedStartDate}
-                  initialEndDate={selectedEndDate}
+                  coverImage={listing.cover_image_url}
                 />
               ) : (
                 <InquiryForm
@@ -403,8 +379,6 @@ const ListingDetail = () => {
         deliveryFee={listing.delivery_fee}
         deliveryRadiusMiles={listing.delivery_radius_miles}
         listingTitle={listing.title}
-        initialStartDate={selectedStartDate}
-        initialEndDate={selectedEndDate}
       />
 
       <Footer />

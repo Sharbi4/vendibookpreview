@@ -68,6 +68,7 @@ const PricingCalculator = lazy(() => import("./pages/PricingCalculator"));
 const ListingPublished = lazy(() => import("./pages/ListingPublished"));
 const Cities = lazy(() => import("./pages/Cities"));
 const SaleCheckout = lazy(() => import("./pages/SaleCheckout"));
+const BookingCheckout = lazy(() => import("./pages/BookingCheckout"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
@@ -177,6 +178,7 @@ const AnimatedRoutes = () => {
           <Route path="/listing-published" element={<PageTransition><ListingPublished /></PageTransition>} />
           <Route path="/listing-published/:listingId" element={<PageTransition><ListingPublished /></PageTransition>} />
           <Route path="/checkout/:listingId" element={<PageTransition><SaleCheckout /></PageTransition>} />
+          <Route path="/book/:listingId" element={<PageTransition><BookingCheckout /></PageTransition>} />
           
           <Route path="/order-tracking/:transactionId" element={<PageTransition><OrderTracking /></PageTransition>} />
           <Route path="/transactions" element={<PageTransition><Transactions /></PageTransition>} />
