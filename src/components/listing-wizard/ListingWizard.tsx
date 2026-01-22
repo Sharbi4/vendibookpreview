@@ -130,6 +130,11 @@ export const ListingWizard: React.FC = () => {
     };
   }, []);
 
+  // Scroll to top when step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentStep]);
+
   // Check if user has made progress
   const hasProgress = formData.mode || formData.category || formData.title || 
     formData.description || formData.images.length > 0;
