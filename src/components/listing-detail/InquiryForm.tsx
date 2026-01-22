@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, MapPin, Truck, Package, ArrowRight, Calendar, Tag } from 'lucide-react';
+import { ShieldCheck, MapPin, Truck, Package, ArrowRight, Calendar, Tag, Mail } from 'lucide-react';
 import type { FulfillmentType } from '@/types/listing';
 import { StripeLogo } from '@/components/ui/StripeLogo';
 import { AffirmBadge, isAffirmEligible } from '@/components/ui/AffirmBadge';
@@ -9,6 +9,7 @@ import { AfterpayBadge, isAfterpayEligible } from '@/components/ui/AfterpayBadge
 import { trackCTAClick } from '@/lib/analytics';
 import { useAuth } from '@/contexts/AuthContext';
 import { MakeOfferModal, AuthGateOfferModal } from '@/components/offers';
+import { LeadCaptureModal } from './LeadCaptureModal';
 
 interface InquiryFormProps {
   listingId: string;
@@ -46,6 +47,7 @@ const InquiryForm = ({
   const { user } = useAuth();
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showLeadModal, setShowLeadModal] = useState(false);
 
   const getAvailableFulfillmentOptions = () => {
     const options: string[] = [];
@@ -180,6 +182,21 @@ const InquiryForm = ({
           Make an Offer
         </Button>
 
+        {/* Request Info for anonymous visitors */}
+        {!user && (
+          <Button 
+            onClick={() => {
+              trackCTAClick('request_info', 'inquiry_form');
+              setShowLeadModal(true);
+            }}
+            variant="outline"
+            className="w-full text-sm border-dashed" 
+          >
+            <Mail className="w-4 h-4 mr-2" />
+            Request Info
+          </Button>
+        )}
+
         {priceSale && (isAffirmEligible(priceSale) || isAfterpayEligible(priceSale)) && (
           <div className="mt-3 flex flex-col gap-2">
             {isAffirmEligible(priceSale) && (
@@ -221,6 +238,14 @@ const InquiryForm = ({
           askingPrice={priceSale}
         />
       )}
+
+      <LeadCaptureModal
+        open={showLeadModal}
+        onOpenChange={setShowLeadModal}
+        listingId={listingId}
+        hostId={hostId}
+        listingTitle={listingTitle}
+      />
     </div>
   );
 };
