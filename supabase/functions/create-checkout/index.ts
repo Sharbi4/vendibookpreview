@@ -227,17 +227,32 @@ serve(async (req) => {
     
     if (mode === 'rent') {
       // Rentals: Direct transfer to host
-      // Build line items - rental + optional deposit
+      // Calculate rental subtotal (for display purposes)
+      const rentalSubtotal = amount + delivery_fee;
+      const renterFee = rentalSubtotal * (RENTAL_RENTER_FEE_PERCENT / 100);
+      
+      // Build line items - separate base rental and platform fee
       const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
         {
           price_data: {
             currency: 'usd',
             product_data: {
               name: listing.title,
-              description: `Rental booking${delivery_fee > 0 ? ' (includes delivery)' : ''}`,
+              description: `Rental booking${delivery_fee > 0 ? ` (includes $${delivery_fee.toFixed(2)} delivery)` : ''}`,
             },
-            // Rental amount without deposit
-            unit_amount: Math.round((amount + delivery_fee + (amount + delivery_fee) * (RENTAL_RENTER_FEE_PERCENT / 100)) * 100),
+            unit_amount: Math.round(rentalSubtotal * 100),
+            tax_behavior: 'exclusive',
+          },
+          quantity: 1,
+        },
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Platform Service Fee',
+              description: 'Vendibook marketplace fee (12.9%)',
+            },
+            unit_amount: Math.round(renterFee * 100),
             tax_behavior: 'exclusive',
           },
           quantity: 1,
