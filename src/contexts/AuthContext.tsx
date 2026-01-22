@@ -40,6 +40,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  // Sync Google profile data (name & avatar) if user signed in via Google
+  const syncGoogleProfile = async (userId: string, userMetadata: Record<string, any>) => {
+    if (!userMetadata) return;
+
+    const googleName = userMetadata.full_name || userMetadata.name;
+    const googleAvatar = userMetadata.avatar_url || userMetadata.picture;
+
+    if (!googleName && !googleAvatar) return;
+
+    try {
+      // Fetch current profile
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url')
+        .eq('id', userId)
+        .single();
+
+      const updates: Record<string, string> = {};
+
+      // Sync name if profile is empty
+      if (googleName && !currentProfile?.full_name) {
+        updates.full_name = googleName;
+      }
+
+      // Sync avatar if profile has none (smart avatar)
+      if (googleAvatar && !currentProfile?.avatar_url) {
+        updates.avatar_url = googleAvatar;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        const { error } = await supabase
+          .from('profiles')
+          .update(updates)
+          .eq('id', userId);
+
+        if (error) {
+          console.error('Error syncing Google profile:', error);
+        } else {
+          console.log('Google profile synced:', updates);
+        }
+      }
+    } catch (error) {
+      console.error('Error syncing Google profile:', error);
+    }
+  };
+
   const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -97,6 +143,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Defer profile/roles fetch to avoid deadlock
         if (session?.user) {
           setTimeout(async () => {
+            // Sync Google profile data on sign-in
+            if (event === 'SIGNED_IN' && session.user.app_metadata?.provider === 'google') {
+              await syncGoogleProfile(session.user.id, session.user.user_metadata);
+            }
+
             const [profileData, rolesData] = await Promise.all([
               fetchProfile(session.user.id),
               fetchRoles(session.user.id),
@@ -114,19 +165,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        Promise.all([
+        // Sync Google profile for existing sessions (e.g., after OAuth redirect)
+        if (session.user.app_metadata?.provider === 'google') {
+          await syncGoogleProfile(session.user.id, session.user.user_metadata);
+        }
+
+        const [profileData, rolesData] = await Promise.all([
           fetchProfile(session.user.id),
           fetchRoles(session.user.id),
-        ]).then(([profileData, rolesData]) => {
-          if (profileData) setProfile(profileData);
-          setRoles(rolesData);
-          setIsLoading(false);
-        });
+        ]);
+        if (profileData) setProfile(profileData);
+        setRoles(rolesData);
+        setIsLoading(false);
       } else {
         setIsLoading(false);
       }
