@@ -362,8 +362,8 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
             </div>
           )}
 
-          {/* Security Deposit Status */}
-          {hasDeposit && (
+          {/* Security Deposit Status - Only show when deposit is actually collected (paid) */}
+          {hasDeposit && isPaid && (
             <div className={`rounded-lg p-3 mb-3 border ${
               depositStatus === 'refunded' ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800' :
               depositStatus === 'forfeited' ? 'bg-destructive/5 border-destructive/20' :
@@ -383,12 +383,6 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
                     <span className="text-sm font-semibold">${depositAmount?.toFixed(2)}</span>
                   </div>
                   <div className="flex items-center gap-1.5 mt-1">
-                    {depositStatus === 'pending' && (
-                      <>
-                        <Clock className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Collected at checkout</span>
-                      </>
-                    )}
                     {depositStatus === 'charged' && !rentalEnded && (
                       <>
                         <Shield className="h-3 w-3 text-blue-600" />
