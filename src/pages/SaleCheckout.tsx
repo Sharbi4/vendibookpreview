@@ -571,6 +571,7 @@ const SaleCheckout = () => {
                   deliveryAddress={deliveryAddress}
                   mode="checkout"
                   showWhatsIncluded={currentStep !== 'review'}
+                  financingEligiblePrice={totalPrice}
                 />
               </div>
             </div>

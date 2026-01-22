@@ -6,6 +6,7 @@ interface AfterpayBadgeProps {
   price: number;
   className?: string;
   showTooltip?: boolean;
+  showEstimate?: boolean;
 }
 
 // Afterpay eligibility range: $35 - $4,000 (US limits)
@@ -16,7 +17,7 @@ export const isAfterpayEligible = (price: number): boolean => {
   return price >= AFTERPAY_MIN && price <= AFTERPAY_MAX;
 };
 
-export const AfterpayBadge = ({ price, className, showTooltip = true }: AfterpayBadgeProps) => {
+export const AfterpayBadge = ({ price, className, showTooltip = true, showEstimate = true }: AfterpayBadgeProps) => {
   if (!isAfterpayEligible(price)) return null;
 
   // Afterpay splits into 4 payments
@@ -35,7 +36,7 @@ export const AfterpayBadge = ({ price, className, showTooltip = true }: Afterpay
         alt="Afterpay" 
         className="h-4 w-auto dark:invert"
       />
-      <span>4 × ${paymentAmount}</span>
+      {showEstimate && <span>4 × ${paymentAmount}</span>}
     </div>
   );
 
