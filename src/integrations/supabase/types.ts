@@ -297,7 +297,9 @@ export type Database = {
           document_review_status: string | null
           documents_approved_at: string | null
           documents_approved_by: string | null
+          duration_hours: number | null
           end_date: string
+          end_time: string | null
           first_response_at: string | null
           fulfillment_selected: string | null
           hold_expires_at: string | null
@@ -307,6 +309,7 @@ export type Database = {
           host_nudge_sent_at: string | null
           host_response: string | null
           id: string
+          is_hourly_booking: boolean | null
           is_instant_book: boolean | null
           listing_id: string
           message: string | null
@@ -320,6 +323,7 @@ export type Database = {
           shopper_confirmed_at: string | null
           shopper_id: string
           start_date: string
+          start_time: string | null
           status: Database["public"]["Enums"]["booking_status"]
           total_price: number
           updated_at: string
@@ -345,7 +349,9 @@ export type Database = {
           document_review_status?: string | null
           documents_approved_at?: string | null
           documents_approved_by?: string | null
+          duration_hours?: number | null
           end_date: string
+          end_time?: string | null
           first_response_at?: string | null
           fulfillment_selected?: string | null
           hold_expires_at?: string | null
@@ -355,6 +361,7 @@ export type Database = {
           host_nudge_sent_at?: string | null
           host_response?: string | null
           id?: string
+          is_hourly_booking?: boolean | null
           is_instant_book?: boolean | null
           listing_id: string
           message?: string | null
@@ -368,6 +375,7 @@ export type Database = {
           shopper_confirmed_at?: string | null
           shopper_id: string
           start_date: string
+          start_time?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           total_price: number
           updated_at?: string
@@ -393,7 +401,9 @@ export type Database = {
           document_review_status?: string | null
           documents_approved_at?: string | null
           documents_approved_by?: string | null
+          duration_hours?: number | null
           end_date?: string
+          end_time?: string | null
           first_response_at?: string | null
           fulfillment_selected?: string | null
           hold_expires_at?: string | null
@@ -403,6 +413,7 @@ export type Database = {
           host_nudge_sent_at?: string | null
           host_response?: string | null
           id?: string
+          is_hourly_booking?: boolean | null
           is_instant_book?: boolean | null
           listing_id?: string
           message?: string | null
@@ -416,6 +427,7 @@ export type Database = {
           shopper_confirmed_at?: string | null
           shopper_id?: string
           start_date?: string
+          start_time?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           total_price?: number
           updated_at?: string
@@ -596,6 +608,47 @@ export type Database = {
           },
         ]
       }
+      listing_blocked_times: {
+        Row: {
+          blocked_date: string
+          created_at: string
+          end_time: string
+          host_id: string
+          id: string
+          listing_id: string
+          reason: string | null
+          start_time: string
+        }
+        Insert: {
+          blocked_date: string
+          created_at?: string
+          end_time: string
+          host_id: string
+          id?: string
+          listing_id: string
+          reason?: string | null
+          start_time: string
+        }
+        Update: {
+          blocked_date?: string
+          created_at?: string
+          end_time?: string
+          host_id?: string
+          id?: string
+          listing_id?: string
+          reason?: string | null
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_blocked_times_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_required_documents: {
         Row: {
           created_at: string
@@ -687,9 +740,11 @@ export type Database = {
           amenities: string[] | null
           available_from: string | null
           available_to: string | null
+          buffer_time_mins: number | null
           category: Database["public"]["Enums"]["listing_category"]
           cover_image_url: string | null
           created_at: string
+          daily_enabled: boolean | null
           delivery_fee: number | null
           delivery_instructions: string | null
           delivery_radius_miles: number | null
@@ -702,6 +757,7 @@ export type Database = {
           height_inches: number | null
           highlights: string[] | null
           host_id: string | null
+          hourly_enabled: boolean | null
           hours_of_access: string | null
           id: string
           image_urls: string[] | null
@@ -710,10 +766,16 @@ export type Database = {
           length_inches: number | null
           location_notes: string | null
           longitude: number | null
+          max_hours: number | null
+          min_hours: number | null
+          min_notice_hours: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
+          operating_hours_end: string | null
+          operating_hours_start: string | null
           pickup_instructions: string | null
           pickup_location_text: string | null
           price_daily: number | null
+          price_hourly: number | null
           price_sale: number | null
           price_weekly: number | null
           proof_notary_enabled: boolean | null
@@ -736,9 +798,11 @@ export type Database = {
           amenities?: string[] | null
           available_from?: string | null
           available_to?: string | null
+          buffer_time_mins?: number | null
           category: Database["public"]["Enums"]["listing_category"]
           cover_image_url?: string | null
           created_at?: string
+          daily_enabled?: boolean | null
           delivery_fee?: number | null
           delivery_instructions?: string | null
           delivery_radius_miles?: number | null
@@ -751,6 +815,7 @@ export type Database = {
           height_inches?: number | null
           highlights?: string[] | null
           host_id?: string | null
+          hourly_enabled?: boolean | null
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
@@ -759,10 +824,16 @@ export type Database = {
           length_inches?: number | null
           location_notes?: string | null
           longitude?: number | null
+          max_hours?: number | null
+          min_hours?: number | null
+          min_notice_hours?: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
+          operating_hours_end?: string | null
+          operating_hours_start?: string | null
           pickup_instructions?: string | null
           pickup_location_text?: string | null
           price_daily?: number | null
+          price_hourly?: number | null
           price_sale?: number | null
           price_weekly?: number | null
           proof_notary_enabled?: boolean | null
@@ -785,9 +856,11 @@ export type Database = {
           amenities?: string[] | null
           available_from?: string | null
           available_to?: string | null
+          buffer_time_mins?: number | null
           category?: Database["public"]["Enums"]["listing_category"]
           cover_image_url?: string | null
           created_at?: string
+          daily_enabled?: boolean | null
           delivery_fee?: number | null
           delivery_instructions?: string | null
           delivery_radius_miles?: number | null
@@ -800,6 +873,7 @@ export type Database = {
           height_inches?: number | null
           highlights?: string[] | null
           host_id?: string | null
+          hourly_enabled?: boolean | null
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
@@ -808,10 +882,16 @@ export type Database = {
           length_inches?: number | null
           location_notes?: string | null
           longitude?: number | null
+          max_hours?: number | null
+          min_hours?: number | null
+          min_notice_hours?: number | null
           mode?: Database["public"]["Enums"]["listing_mode"]
+          operating_hours_end?: string | null
+          operating_hours_start?: string | null
           pickup_instructions?: string | null
           pickup_location_text?: string | null
           price_daily?: number | null
+          price_hourly?: number | null
           price_sale?: number | null
           price_weekly?: number | null
           proof_notary_enabled?: boolean | null

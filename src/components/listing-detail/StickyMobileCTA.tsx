@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Calendar, ShoppingCart, Zap, Tag, Edit, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { DateSelectionModal } from './DateSelectionModal';
+import { RequestDatesModal } from './RequestDatesModal';
 import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
@@ -181,14 +181,12 @@ export const StickyMobileCTA = ({
       </div>
 
       {/* Date Selection Modal for Rentals */}
-      <DateSelectionModal
+      <RequestDatesModal
         open={showDateModal}
         onOpenChange={setShowDateModal}
         listingId={listingId}
         availableFrom={availableFrom}
         availableTo={availableTo}
-        priceDaily={priceDaily}
-        priceWeekly={priceWeekly}
         instantBook={instantBook}
         navigateToBooking={true}
       />

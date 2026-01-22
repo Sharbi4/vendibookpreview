@@ -4,9 +4,10 @@ import { format, differenceInDays } from 'date-fns';
 import { Calendar, Zap, Shield, ArrowRight, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import DateSelectionModal from './DateSelectionModal';
+import RequestDatesModal, { BookingSelection } from './RequestDatesModal';
 import { cn } from '@/lib/utils';
 import { calculateRentalFees } from '@/lib/commissions';
+
 interface BookingSummaryCardProps {
   listingId: string;
   listingTitle: string;
@@ -49,9 +50,9 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
   const fees = calculateRentalFees(basePrice);
   const totalWithFees = fees.customerTotal;
 
-  const handleDatesSelected = (start: Date, end: Date) => {
-    setStartDate(start);
-    setEndDate(end);
+  const handleDatesSelected = (selection: BookingSelection) => {
+    setStartDate(selection.startDate);
+    setEndDate(selection.endDate);
   };
 
   const handleContinue = () => {
@@ -181,14 +182,12 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
         </div>
       </div>
 
-      <DateSelectionModal
+      <RequestDatesModal
         open={showDateModal}
         onOpenChange={setShowDateModal}
         listingId={listingId}
         availableFrom={availableFrom}
         availableTo={availableTo}
-        priceDaily={priceDaily}
-        priceWeekly={priceWeekly}
         instantBook={instantBook}
         onDatesSelected={handleDatesSelected}
         navigateToBooking={false}
