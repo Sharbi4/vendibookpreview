@@ -467,112 +467,167 @@ const HowItWorks = () => {
                     For Hosts
                   </div>
                   <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                    Turn idle time into income — and help vendors get started
+                    Rent Out Your Asset
                   </h2>
                   <p className="text-muted-foreground max-w-2xl">
-                    Renting lets you earn from days your asset isn't in use, while supporting new and growing food businesses. The modern food world is flexible: pop-ups, rotating markets, seasonal runs, and mobile-first concepts. Vendibook helps you participate safely and professionally.
+                    Turn idle time into income — safely and professionally. Renting lets you earn revenue from the days your truck, trailer, or kitchen isn't in use, all while supporting the next generation of food entrepreneurs. Whether it's for pop-ups, seasonal runs, or ghost kitchen prep, Vendibook connects you with vetted professionals, not just random leads.
                   </p>
                 </div>
 
-                {/* Set Terms */}
+                {/* Step 1: Document Workflow */}
                 <div className="mb-12">
-                  <h3 className="text-xl font-bold text-foreground mb-4">Set terms that protect your asset</h3>
-                  <p className="text-muted-foreground mb-4">You're in control:</p>
-                  <ul className="grid sm:grid-cols-2 gap-2 text-sm text-muted-foreground mb-4">
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      Availability calendar
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      Daily/weekly rates
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      Minimum rental periods
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      Pickup/delivery instructions
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      Optional recurring rentals for steady income
-                    </li>
-                  </ul>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-md">
+                      1
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">The Vendibook Advantage: We Handle the Paperwork</h3>
+                  </div>
 
-                  <InfoPopup
-                    trigger="Recurring rentals"
-                    content="Offer a repeat schedule (like weekends or weekly). It's a simple way to create predictable income and long-term relationships."
-                  />
+                  <p className="text-muted-foreground mb-4">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium mr-2">New!</span>
+                    Stop chasing PDF attachments. We have streamlined the compliance process so you can focus on your business, not administrative work.
+                  </p>
+
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <Card className="border border-border bg-muted/30">
+                      <CardContent className="p-5">
+                        <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-primary" />
+                          You Set the Rules
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          Choose exactly what you require from a renter (e.g., $1M General Liability Insurance, ServSafe Certification, Driver's License).
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border border-border bg-muted/30">
+                      <CardContent className="p-5">
+                        <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                          <FileCheck className="h-5 w-5 text-primary" />
+                          We Do the Review
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          When a renter uploads their documents, Vendibook's team reviews and verifies them for you. We check expiration dates, coverage amounts, and validity.
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border border-border bg-muted/30">
+                      <CardContent className="p-5">
+                        <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                          <CheckCircle2 className="h-5 w-5 text-primary" />
+                          You Just Approve
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          You only receive booking requests from renters who have already passed your specific compliance checks.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
 
-                {/* Document Requirements */}
+                {/* Step 2: Verified Renters & Trust */}
                 <div className="mb-12">
-                  <h3 className="text-xl font-bold text-foreground mb-4">
-                    Require documents before approval
-                    <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full ml-2">
-                      Optional, recommended
-                    </span>
-                  </h3>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-md">
+                      2
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">Verified Renters & Trust</h3>
+                  </div>
+
                   <p className="text-muted-foreground mb-4">
-                    You can request documents and review them before confirming a rental.
+                    Safety is our top priority. We use robust identity verification to ensure you know exactly who is using your asset.
+                  </p>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Card className="border border-border bg-muted/30">
+                      <CardContent className="p-5">
+                        <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                          <ShieldCheck className="h-5 w-5 text-primary" />
+                          Stripe Identity Verification
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          Renters are screened using bank-level identity checks.
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border border-border bg-muted/30">
+                      <CardContent className="p-5">
+                        <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                          <Users className="h-5 w-5 text-primary" />
+                          Profile History
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          See past reviews and verified status before you accept a booking.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+
+                {/* Step 3: Total Control */}
+                <div className="mb-12">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-md">
+                      3
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">Total Control Over Your Asset</h3>
+                  </div>
+
+                  <p className="text-muted-foreground mb-4">
+                    You stay in the driver's seat with tools designed for commercial operators:
                   </p>
 
                   <Card className="border border-border bg-muted/30 mb-4">
                     <CardContent className="p-5">
-                      <h4 className="font-semibold text-foreground mb-3">Common examples</h4>
-                      <ul className="grid sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
-                        <li className="flex items-start gap-2">
-                          <FileText className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                          Government ID
+                      <ul className="space-y-3 text-sm">
+                        <li className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                            <CalendarDays className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <span className="font-semibold text-foreground">Availability Calendar</span>
+                            <p className="text-muted-foreground">Block off your own operating hours; rent only the downtime.</p>
+                          </div>
                         </li>
-                        <li className="flex items-start gap-2">
-                          <FileText className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                          Proof of insurance (general liability / auto)
+                        <li className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                            <DollarSign className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <span className="font-semibold text-foreground">Flexible Terms</span>
+                            <p className="text-muted-foreground">Set daily or weekly rates, minimum rental periods, and specific pickup/delivery instructions.</p>
+                          </div>
                         </li>
-                        <li className="flex items-start gap-2">
-                          <FileText className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                          Business registration (optional)
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <FileText className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                          Event permit (if applicable)
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <FileText className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                          Food handler certification (if relevant)
+                        <li className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                            <Clock className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <span className="font-semibold text-foreground">Recurring Revenue</span>
+                            <p className="text-muted-foreground">Easily set up recurring rentals (e.g., "Every Monday/Tuesday") for steady, predictable income.</p>
+                          </div>
                         </li>
                       </ul>
                     </CardContent>
                   </Card>
-
-                  <div className="flex flex-wrap gap-2">
-                    <InfoPopup
-                      trigger="Insurance: What counts?"
-                      content="A policy that covers the rental dates and operational use. Many hosts request general liability for events."
-                    />
-                    <InfoPopup
-                      trigger="Event permit: When to require it"
-                      content="If the renter is operating at a permitted event or public site, requesting the permit helps reduce risk."
-                    />
-                    <InfoPopup
-                      trigger="Sample renter checklist"
-                      content="ID + insurance + pickup plan + return condition expectations."
-                    />
-                  </div>
                 </div>
 
                 {/* Fees */}
                 <div className="bg-muted/30 border border-border rounded-xl p-6 mb-8">
-                  <h4 className="font-semibold text-foreground mb-4">Clear fees at checkout</h4>
+                  <h4 className="font-semibold text-foreground mb-4">Clear & Transparent Fees</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    We only make money when you do. Our dual-sided commission covers the marketing, payment processing, and document verification services.
+                  </p>
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Host commission (rentals)</span>
-                      <span className="font-medium text-foreground">12.9%</span>
+                      <span className="text-muted-foreground">Host Commission</span>
+                      <span className="font-medium text-foreground">12.9% (deducted from payout)</span>
                     </li>
                     <li className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Renter service fee</span>
+                      <span className="text-muted-foreground">Renter Service Fee</span>
                       <span className="font-medium text-foreground">12.9%</span>
                     </li>
                     <li className="flex items-center justify-between text-muted-foreground text-xs pt-2 border-t border-border">
@@ -583,13 +638,13 @@ const HowItWorks = () => {
 
                 {/* Inline CTA for all screen sizes */}
                 <div className="bg-muted/50 border border-border rounded-xl p-6">
-                  <h4 className="font-bold text-foreground mb-2">Ready to rent out your asset?</h4>
+                  <h4 className="font-bold text-foreground mb-2">Ready to monetize your downtime?</h4>
                   <p className="text-sm text-muted-foreground mb-4">Create a rental listing and start earning on your schedule.</p>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <Button variant="dark-shine" className="gap-2" asChild>
                       <Link to="/list">
                         <ArrowRight className="h-4 w-4" />
-                        Create Rental Listing
+                        Create a Rental Listing
                       </Link>
                     </Button>
                     <Button variant="outline" className="gap-2" asChild>
@@ -609,14 +664,14 @@ const HowItWorks = () => {
                 )}>
                   <StickyActionCard
                     title="Create a Rental Listing"
-                    subtitle="Earn on your schedule with clear requirements."
+                    subtitle="Earn on your schedule with verified renters and clear requirements."
                     steps={[
-                      'Photos + listing details',
-                      'Availability + rates',
-                      'Pickup/delivery',
-                      'Document requirements (optional)',
+                      'Add photos + listing details',
+                      'Set availability + rates',
+                      'Define document requirements',
+                      'Publish & receive compliant requests',
                     ]}
-                    ctaText="Create Rental Listing"
+                    ctaText="Create a Rental Listing"
                     ctaHref="/list"
                     secondaryText="View example rental listing"
                     secondaryHref="/search?mode=rent"
