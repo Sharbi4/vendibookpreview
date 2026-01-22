@@ -319,7 +319,7 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
 
           {/* CTA */}
           <Button
-            variant="gradient"
+            variant="dark-shine"
             className="w-full h-12 text-base"
             size="lg"
             onClick={handleContinue}
