@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { WhiteGlovePopup } from '@/components/kitchen/WhiteGlovePopup';
 import {
   ChefHat,
   DollarSign,
@@ -655,6 +656,9 @@ const RentMyCommercialKitchen = () => {
           </Button>
         </div>
       </div>
+
+      {/* White Glove Service Popup - appears after 15 seconds */}
+      <WhiteGlovePopup delayMs={15000} />
     </>
   );
 };
