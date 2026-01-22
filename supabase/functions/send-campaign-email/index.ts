@@ -135,7 +135,7 @@ const campaigns: Record<string, { subject: string; html: string }> = {
   <p style="font-size: 16px; margin-bottom: 20px;">Vendibook helps restaurants rent out approved kitchen time to vetted food entrepreneurs for prep, catering, meal prep, and delivery-first concepts. It's a simple way to turn downtime into reliable revenue without adding a long-term tenant.</p>
 
   <div style="text-align: center; margin: 32px 0;">
-    <a href="https://vendibook.com/host/kitchens" style="display: inline-block; background: #1a1a1a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; margin-right: 12px;">Create Your Free Kitchen Listing</a>
+    <a href="https://vendibook.com/rent-my-commercial-kitchen" style="display: inline-block; background: #1a1a1a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; margin-right: 12px;">Create Your Free Kitchen Listing</a>
     <a href="https://calendar.app.google/FCKSyrLoXUXYHvBGA" style="display: inline-block; background: #ffffff; color: #1a1a1a; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; border: 2px solid #1a1a1a;">Set Up a Meeting</a>
   </div>
 
@@ -199,7 +199,7 @@ const campaigns: Record<string, { subject: string; html: string }> = {
   <div style="text-align: center; margin: 32px 0;">
     <a href="https://calendar.app.google/FCKSyrLoXUXYHvBGA" style="display: inline-block; background: #1a1a1a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; margin-bottom: 12px;">Book a Quick Call</a>
     <br>
-    <a href="https://vendibook.com/host/kitchens" style="display: inline-block; background: #ffffff; color: #1a1a1a; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; border: 2px solid #1a1a1a; margin-top: 12px;">Start Here</a>
+    <a href="https://vendibook.com/list" style="display: inline-block; background: #ffffff; color: #1a1a1a; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; border: 2px solid #1a1a1a; margin-top: 12px;">Start Here</a>
   </div>
 
   <p style="font-size: 16px; margin-bottom: 8px;">Best,</p>
