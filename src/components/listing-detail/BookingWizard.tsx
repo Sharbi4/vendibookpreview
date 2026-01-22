@@ -50,6 +50,9 @@ export interface BookingWizardProps {
   instantBook?: boolean;
   listingTitle: string;
   depositAmount?: number | null;
+  // Pre-selected dates from modal
+  initialStartDate?: Date;
+  initialEndDate?: Date;
 }
 
 export type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
@@ -69,6 +72,8 @@ const BookingWizard = ({
   instantBook = false,
   listingTitle,
   depositAmount = null,
+  initialStartDate,
+  initialEndDate,
 }: BookingWizardProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -84,7 +89,9 @@ const BookingWizard = ({
   const hasRequiredDocs = requiredDocs && requiredDocs.length > 0;
 
   // Wizard state - add extra step for document upload if documents are required
-  const [currentStep, setCurrentStep] = useState(1);
+  // Start at step 2 (Requirements) if dates are pre-selected
+  const hasPreselectedDates = initialStartDate && initialEndDate;
+  const [currentStep, setCurrentStep] = useState(hasPreselectedDates ? 2 : 1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
@@ -92,12 +99,12 @@ const BookingWizard = ({
   // Document upload state
   const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([]);
 
-  // Form state - initialize from draft if available
+  // Form state - initialize from initial dates or draft if available
   const [startDate, setStartDate] = useState<Date | undefined>(
-    draft?.startDate ? new Date(draft.startDate) : undefined
+    initialStartDate || (draft?.startDate ? new Date(draft.startDate) : undefined)
   );
   const [endDate, setEndDate] = useState<Date | undefined>(
-    draft?.endDate ? new Date(draft.endDate) : undefined
+    initialEndDate || (draft?.endDate ? new Date(draft.endDate) : undefined)
   );
   const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>(
     draft?.fulfillmentSelected || (category === 'ghost_kitchen' || category === 'vendor_lot' ? 'on_site' : 

@@ -24,14 +24,14 @@ import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
 import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
 import CompactTrustSection from '@/components/trust/CompactTrustSection';
 import CancellationPolicyCard from '@/components/trust/CancellationPolicyCard';
-import AvailabilityCalendarDisplay from '@/components/listing-detail/AvailabilityCalendarDisplay';
+import AvailabilitySection from '@/components/listing-detail/AvailabilitySection';
 import OwnerBanner from '@/components/listing-detail/OwnerBanner';
 import { useListing } from '@/hooks/useListing';
 import { useListingAverageRating } from '@/hooks/useReviews';
 import { useTrackListingView } from '@/hooks/useListingAnalytics';
 import { useAuth } from '@/contexts/AuthContext';
 import { CATEGORY_LABELS } from '@/types/listing';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { trackListingViewed } from '@/lib/analytics';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 import SEO from '@/components/SEO';
@@ -45,8 +45,23 @@ const ListingDetail = () => {
   const { data: ratingData } = useListingAverageRating(id);
   const { trackView } = useTrackListingView();
 
+  // State for pre-selected dates from modal
+  const [selectedStartDate, setSelectedStartDate] = useState<Date | undefined>();
+  const [selectedEndDate, setSelectedEndDate] = useState<Date | undefined>();
+
   // Check if user is the owner of this listing
   const isOwner = user?.id && listing?.host_id && user.id === listing.host_id;
+
+  // Handle dates selected from modal
+  const handleDatesSelected = useCallback((startDate: Date, endDate: Date) => {
+    setSelectedStartDate(startDate);
+    setSelectedEndDate(endDate);
+    // Scroll to booking widget on desktop
+    const bookingWidget = document.getElementById('booking-widget');
+    if (bookingWidget) {
+      bookingWidget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
 
   // Generate structured data for Google Shopping / Search
   // Must be called before any conditional returns to follow Rules of Hooks
@@ -281,12 +296,16 @@ const ListingDetail = () => {
                 />
               </div>
 
-              {/* Section 4: Availability Calendar (Rentals only) */}
+              {/* Section 4: Availability (Rentals only) */}
               {isRental && (
-                <AvailabilityCalendarDisplay
+                <AvailabilitySection
                   listingId={listing.id}
                   availableFrom={listing.available_from}
                   availableTo={listing.available_to}
+                  priceDaily={listing.price_daily}
+                  priceWeekly={listing.price_weekly}
+                  instantBook={listing.instant_book || false}
+                  onDatesSelected={handleDatesSelected}
                 />
               )}
 
@@ -317,7 +336,7 @@ const ListingDetail = () => {
             </div>
 
             {/* Right Column - Booking/Inquiry Form (Desktop) */}
-            <div className="hidden lg:block space-y-6">
+            <div id="booking-widget" className="hidden lg:block space-y-6">
               {isOwner ? (
                 <OwnerBanner listingId={listing.id} variant="card" />
               ) : isRental ? (
@@ -336,6 +355,8 @@ const ListingDetail = () => {
                   instantBook={listing.instant_book || false}
                   listingTitle={listing.title}
                   depositAmount={(listing as any).deposit_amount || null}
+                  initialStartDate={selectedStartDate}
+                  initialEndDate={selectedEndDate}
                 />
               ) : (
                 <InquiryForm
@@ -382,6 +403,8 @@ const ListingDetail = () => {
         deliveryFee={listing.delivery_fee}
         deliveryRadiusMiles={listing.delivery_radius_miles}
         listingTitle={listing.title}
+        initialStartDate={selectedStartDate}
+        initialEndDate={selectedEndDate}
       />
 
       <Footer />
