@@ -17,7 +17,7 @@ export const isAffirmEligible = (price: number): boolean => {
   return price >= AFFIRM_MIN && price <= AFFIRM_MAX;
 };
 
-export const AffirmBadge = ({ price, className, showTooltip = true, showEstimate = true }: AffirmBadgeProps) => {
+export const AffirmBadge = ({ price, className, showTooltip = true, showEstimate = false }: AffirmBadgeProps) => {
   if (!isAffirmEligible(price)) return null;
 
   const monthlyEstimate = Math.round(price / 12);
