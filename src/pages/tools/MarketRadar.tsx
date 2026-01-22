@@ -136,7 +136,7 @@ const MarketRadar = () => {
                   Location intel + competitor snapshots for smarter decisions. AI-powered research on any food truck topic.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Button size="lg" className="bg-gradient-to-r from-amber-500 to-yellow-500" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
+                  <Button size="lg" variant="dark-shine" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
                     Start Research<ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </div>
@@ -431,10 +431,10 @@ const MarketRadar = () => {
               <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to research your market?</h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">Get comprehensive insights on any food truck topic in seconds.</p>
               <div className="flex flex-wrap gap-4 justify-center">
-                <Button size="lg" className="bg-gradient-to-r from-amber-500 to-yellow-500" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
+                <Button size="lg" variant="dark-shine" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
                   Start Research
                 </Button>
-                <Button size="lg" variant="outline" asChild><Link to="/host">List Your Asset</Link></Button>
+                <Button size="lg" variant="dark-shine" asChild><Link to="/host">List Your Asset</Link></Button>
               </div>
             </div>
           </section>

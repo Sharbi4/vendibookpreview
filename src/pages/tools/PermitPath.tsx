@@ -168,7 +168,7 @@ const PermitPath = () => {
                   Permits, licenses, and compliance—mapped to your city and setup. Know exactly what you need before you start.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Button size="lg" className="bg-gradient-to-r from-amber-500 to-orange-500" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
+                  <Button size="lg" variant="dark-shine" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
                     Find My Permits<ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </div>
@@ -426,10 +426,10 @@ const PermitPath = () => {
               <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to get compliant?</h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">Find your permit requirements now and start your business the right way.</p>
               <div className="flex flex-wrap gap-4 justify-center">
-                <Button size="lg" className="bg-gradient-to-r from-amber-500 to-orange-500" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
+                <Button size="lg" variant="dark-shine" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
                   Find My Permits
                 </Button>
-                <Button size="lg" variant="outline" asChild><Link to="/host">List Your Asset</Link></Button>
+                <Button size="lg" variant="dark-shine" asChild><Link to="/host">List Your Asset</Link></Button>
               </div>
             </div>
           </section>

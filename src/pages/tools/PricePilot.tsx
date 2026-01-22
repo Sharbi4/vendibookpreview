@@ -157,11 +157,11 @@ const PricePilot = () => {
                 </p>
                 
                 <div className="flex flex-wrap gap-4">
-                  <Button size="lg" className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
+                  <Button size="lg" variant="dark-shine" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
                     Start Pricing
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
-                  <Button size="lg" variant="outline" asChild>
+                  <Button size="lg" variant="dark-shine" asChild>
                     <Link to="/search">See Example Listings</Link>
                   </Button>
                 </div>
@@ -362,7 +362,7 @@ const PricePilot = () => {
                         </OutputSection>
                       )}
 
-                      <Button className="w-full" asChild>
+                      <Button variant="dark-shine" className="w-full" asChild>
                         <Link to="/host">
                           List Your Asset
                           <ArrowRight className="h-4 w-4 ml-2" />
@@ -421,10 +421,10 @@ const PricePilot = () => {
               <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to price your listing?</h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">Get started with PricePilot now, or create a listing and we'll help you price it right.</p>
               <div className="flex flex-wrap gap-4 justify-center">
-                <Button size="lg" className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
+                <Button size="lg" variant="dark-shine" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
                   Start Pricing Now
                 </Button>
-                <Button size="lg" variant="outline" asChild>
+                <Button size="lg" variant="dark-shine" asChild>
                   <Link to="/host">List Your Asset</Link>
                 </Button>
               </div>
