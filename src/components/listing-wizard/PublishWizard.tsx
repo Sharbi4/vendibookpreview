@@ -37,6 +37,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { LocationSearchInput } from '@/components/search/LocationSearchInput';
 import { AvailabilityStep } from './AvailabilityStep';
+import { RentalAvailabilityStep } from './RentalAvailabilityStep';
 import { PublishChecklist, createChecklistItems } from './PublishChecklist';
 import { PublishSuccessModal } from './PublishSuccessModal';
 import { ListingPreviewModal } from './ListingPreviewModal';
@@ -2153,12 +2154,21 @@ export const PublishWizard: React.FC = () => {
                     </p>
                   </div>
 
-                  <AvailabilityStep
+                  <RentalAvailabilityStep
                     listingId={listing.id}
+                    listingMode={listing.mode}
                     availableFrom={availableFrom}
                     availableTo={availableTo}
+                    priceDaily={listing.price_daily}
+                    priceHourly={(listing as any).price_hourly}
                     onAvailableFromChange={setAvailableFrom}
                     onAvailableToChange={setAvailableTo}
+                    onPriceHourlyChange={(price) => {
+                      // Will be saved in saveStep
+                    }}
+                    onSettingsChange={(settings) => {
+                      // Will be saved in saveStep
+                    }}
                   />
 
                   <div className="flex gap-3 pt-4">
