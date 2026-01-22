@@ -146,7 +146,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
             <VerificationBadge 
               isVerified={true} 
               variant="starburst" 
-              size={compact ? "xl" : "2xl"}
+              size={compact ? "lg" : "xl"}
               showLabel={false}
             />
           )}
