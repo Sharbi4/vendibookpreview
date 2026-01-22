@@ -95,7 +95,7 @@ const Hero = () => {
             <img 
               src={vendibookLogo} 
               alt="Vendibook" 
-              className="h-44 md:h-52 w-auto transition-transform duration-300 hover:scale-105 drop-shadow-lg brightness-0 invert"
+              className="h-[22rem] md:h-[26rem] w-auto transition-transform duration-300 hover:scale-105 drop-shadow-lg brightness-0 invert"
             />
           </div>
           
