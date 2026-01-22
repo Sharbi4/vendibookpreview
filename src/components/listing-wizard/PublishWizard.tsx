@@ -134,6 +134,11 @@ export const PublishWizard: React.FC = () => {
   const [isGuestDraft, setIsGuestDraft] = useState(false);
   const [isClaimingDraft, setIsClaimingDraft] = useState(false);
 
+  // Scroll to top when step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
+
   // Form fields
   const [images, setImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
