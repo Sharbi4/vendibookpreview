@@ -1,0 +1,809 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { format, parseISO, differenceInDays } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ArrowLeft, 
+  Calendar, 
+  MapPin, 
+  FileCheck, 
+  CreditCard, 
+  ChevronDown, 
+  CheckCircle2, 
+  Zap,
+  Shield,
+  Truck,
+  Clock,
+  Info,
+  Loader2,
+  Star,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
+import { useListing } from '@/hooks/useListing';
+import { useBlockedDates } from '@/hooks/useBlockedDates';
+import { useListingRequiredDocuments } from '@/hooks/useRequiredDocuments';
+import { useListingAverageRating } from '@/hooks/useReviews';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { calculateRentalFees } from '@/lib/commissions';
+import { trackFormSubmitConversion } from '@/lib/gtagConversions';
+import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
+import { cn } from '@/lib/utils';
+import { BookingInfoModal, type BookingUserInfo } from '@/components/booking';
+import DateSelectionModal from '@/components/listing-detail/DateSelectionModal';
+import type { ListingCategory, FulfillmentType } from '@/types/listing';
+
+type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
+
+const BookingCheckout = () => {
+  const { listingId } = useParams<{ listingId: string }>();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { listing, host, isLoading, error } = useListing(listingId);
+  const { data: ratingData } = useListingAverageRating(listingId);
+  const { data: requiredDocs } = useListingRequiredDocuments(listingId || '');
+  const hasRequiredDocs = requiredDocs && requiredDocs.length > 0;
+
+  // Parse dates from URL params
+  const startDateParam = searchParams.get('start');
+  const endDateParam = searchParams.get('end');
+
+  // State
+  const [startDate, setStartDate] = useState<Date | undefined>(
+    startDateParam ? parseISO(startDateParam) : undefined
+  );
+  const [endDate, setEndDate] = useState<Date | undefined>(
+    endDateParam ? parseISO(endDateParam) : undefined
+  );
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [activeStep, setActiveStep] = useState<number | null>(1);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>('pickup');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [message, setMessage] = useState('');
+  const [userInfo, setUserInfo] = useState<BookingUserInfo | null>(null);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isMobileAsset = listing?.category === 'food_truck' || listing?.category === 'food_trailer';
+  const isStaticLocation = listing?.category === 'ghost_kitchen' || listing?.category === 'vendor_lot';
+
+  // Set initial fulfillment based on listing
+  useEffect(() => {
+    if (listing) {
+      if (isStaticLocation) {
+        setFulfillmentSelected('on_site');
+      } else if (listing.fulfillment_type === 'delivery') {
+        setFulfillmentSelected('delivery');
+      } else {
+        setFulfillmentSelected('pickup');
+      }
+    }
+  }, [listing, isStaticLocation]);
+
+  // Calculate pricing
+  const rentalDays = startDate && endDate ? differenceInDays(endDate, startDate) : 0;
+  
+  const calculateBasePrice = () => {
+    if (!listing?.price_daily || rentalDays <= 0) return 0;
+    const weeks = Math.floor(rentalDays / 7);
+    const remainingDays = rentalDays % 7;
+    if (listing.price_weekly && weeks > 0) {
+      return (weeks * listing.price_weekly) + (remainingDays * listing.price_daily);
+    }
+    return rentalDays * listing.price_daily;
+  };
+
+  const basePrice = calculateBasePrice();
+  const currentDeliveryFee = fulfillmentSelected === 'delivery' && listing?.delivery_fee ? listing.delivery_fee : 0;
+  const fees = calculateRentalFees(basePrice, currentDeliveryFee);
+  const depositAmount = (listing as any)?.deposit_amount || null;
+
+  // Step definitions
+  const steps = [
+    { id: 1, label: 'Log in or sign up', icon: CreditCard },
+    ...(hasRequiredDocs ? [{ id: 2, label: 'Required documents', icon: FileCheck }] : []),
+    { id: hasRequiredDocs ? 3 : 2, label: 'Fulfillment & details', icon: Truck },
+    { id: hasRequiredDocs ? 4 : 3, label: 'Review your request', icon: CheckCircle2 },
+  ];
+
+  // Check step completion
+  const isStep1Complete = !!user;
+  const isStep2Complete = !hasRequiredDocs || completedSteps.includes(2); // Documents acknowledged
+  const isFulfillmentComplete = userInfo?.agreedToTerms && 
+    (fulfillmentSelected !== 'delivery' || deliveryAddress.trim());
+  const isStepFulfillmentComplete = isFulfillmentComplete;
+
+  // Mark step 1 as complete when user logs in
+  useEffect(() => {
+    if (user && !completedSteps.includes(1)) {
+      setCompletedSteps(prev => [...prev, 1]);
+      // Auto-advance to next step
+      setActiveStep(hasRequiredDocs ? 2 : 2);
+    }
+  }, [user, hasRequiredDocs, completedSteps]);
+
+  const handleDatesSelected = (start: Date, end: Date) => {
+    setStartDate(start);
+    setEndDate(end);
+    // Update URL
+    const params = new URLSearchParams(searchParams);
+    params.set('start', format(start, 'yyyy-MM-dd'));
+    params.set('end', format(end, 'yyyy-MM-dd'));
+    navigate(`/book/${listingId}?${params.toString()}`, { replace: true });
+  };
+
+  const handleCompleteStep = (stepId: number) => {
+    if (!completedSteps.includes(stepId)) {
+      setCompletedSteps(prev => [...prev, stepId]);
+    }
+    // Move to next step
+    const nextStep = steps.find(s => s.id > stepId);
+    if (nextStep) {
+      setActiveStep(nextStep.id);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    if (!startDate || !endDate || !userInfo || !listing) {
+      toast({
+        title: 'Missing information',
+        description: 'Please complete all required fields.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Prevent owners from booking their own listings
+    if (user.id === listing.host_id) {
+      toast({
+        title: 'Cannot book your own listing',
+        description: 'You cannot rent your own listing.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const bookingData = {
+        listing_id: listingId,
+        host_id: listing.host_id,
+        shopper_id: user.id,
+        start_date: format(startDate, 'yyyy-MM-dd'),
+        end_date: format(endDate, 'yyyy-MM-dd'),
+        message: message.trim() || null,
+        total_price: fees.customerTotal,
+        fulfillment_selected: fulfillmentSelected,
+        is_instant_book: listing.instant_book || false,
+        deposit_amount: depositAmount,
+        ...(fulfillmentSelected === 'delivery' && {
+          delivery_address: deliveryAddress.trim(),
+          delivery_fee_snapshot: listing.delivery_fee || null,
+        }),
+      };
+
+      const { data: bookingResult, error: bookingError } = await supabase
+        .from('booking_requests')
+        .insert(bookingData)
+        .select('id')
+        .single();
+
+      if (bookingError) throw bookingError;
+
+      // For Instant Book: redirect to payment
+      if (listing.instant_book) {
+        const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout', {
+          body: {
+            booking_id: bookingResult.id,
+            listing_id: listingId,
+            mode: 'rent',
+            amount: fees.subtotal,
+            delivery_fee: currentDeliveryFee,
+            deposit_amount: depositAmount,
+          },
+        });
+
+        if (checkoutError) throw checkoutError;
+        if (!checkoutData?.url) throw new Error('Failed to create checkout session');
+
+        trackFormSubmitConversion({ form_type: 'instant_book', listing_id: listingId });
+        window.location.href = checkoutData.url;
+        return;
+      }
+
+      // Request to Book: send notification
+      supabase.functions.invoke('send-booking-notification', {
+        body: { booking_id: bookingResult.id, event_type: 'submitted' },
+      }).catch(console.error);
+
+      trackFormSubmitConversion({ form_type: 'booking_request', listing_id: listingId });
+      trackRequestSubmitted(listingId || '', false);
+
+      // Navigate to confirmation
+      navigate(`/dashboard?booking_success=true`);
+    } catch (error) {
+      console.error('Error submitting booking:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to submit booking. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error || !listing) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <div className="flex-1 container py-16 text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-4">Listing not found</h1>
+          <Button asChild>
+            <Link to="/search">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Search
+            </Link>
+          </Button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!startDate || !endDate) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <div className="flex-1 container py-16 text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-4">Select your dates</h1>
+          <p className="text-muted-foreground mb-8">Please select your rental dates to continue</p>
+          <Button onClick={() => setShowDateModal(true)}>
+            <Calendar className="h-4 w-4 mr-2" />
+            Select Dates
+          </Button>
+          <DateSelectionModal
+            open={showDateModal}
+            onOpenChange={setShowDateModal}
+            listingId={listingId!}
+            availableFrom={listing.available_from}
+            availableTo={listing.available_to}
+            priceDaily={listing.price_daily}
+            priceWeekly={listing.price_weekly}
+            onDatesSelected={handleDatesSelected}
+          />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  const coverImage = listing.cover_image_url || listing.image_urls?.[0] || '/placeholder.svg';
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      <Header />
+      
+      <main className="flex-1 container py-6 lg:py-10">
+        {/* Back Button */}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          asChild 
+          className="mb-6 text-muted-foreground hover:text-foreground"
+        >
+          <Link to={`/listing/${listingId}`}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to listing
+          </Link>
+        </Button>
+
+        {/* Title */}
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-8">
+          {listing.instant_book ? 'Book instantly' : 'Request to book'}
+        </h1>
+
+        <div className="grid lg:grid-cols-5 gap-8 lg:gap-12">
+          {/* Left Column - Steps */}
+          <div className="lg:col-span-3 space-y-4">
+            {/* Step 1: Login */}
+            <div className="border border-border rounded-2xl overflow-hidden bg-card">
+              <button
+                onClick={() => setActiveStep(activeStep === 1 ? null : 1)}
+                className="w-full p-5 flex items-center justify-between text-left"
+              >
+                <div className="flex items-center gap-4">
+                  <span className="text-lg font-semibold">1. Log in or sign up</span>
+                  {isStep1Complete && (
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                  )}
+                </div>
+                {!isStep1Complete && (
+                  <Button variant="gradient" size="sm" asChild onClick={(e) => e.stopPropagation()}>
+                    <Link to={`/auth?redirect=/book/${listingId}?start=${format(startDate, 'yyyy-MM-dd')}&end=${format(endDate, 'yyyy-MM-dd')}`}>
+                      Continue
+                    </Link>
+                  </Button>
+                )}
+                {isStep1Complete && (
+                  <ChevronDown className={cn(
+                    "h-5 w-5 text-muted-foreground transition-transform",
+                    activeStep === 1 && "rotate-180"
+                  )} />
+                )}
+              </button>
+              <AnimatePresence>
+                {activeStep === 1 && isStep1Complete && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="border-t border-border"
+                  >
+                    <div className="p-5 bg-muted/30">
+                      <p className="text-sm text-muted-foreground">
+                        Logged in as <span className="font-medium text-foreground">{user?.email}</span>
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Step 2: Documents (if required) */}
+            {hasRequiredDocs && (
+              <div className="border border-border rounded-2xl overflow-hidden bg-card">
+                <button
+                  onClick={() => isStep1Complete && setActiveStep(activeStep === 2 ? null : 2)}
+                  disabled={!isStep1Complete}
+                  className={cn(
+                    "w-full p-5 flex items-center justify-between text-left",
+                    !isStep1Complete && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="text-lg font-semibold">2. Required documents</span>
+                    {isStep2Complete && (
+                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                    )}
+                  </div>
+                  <ChevronDown className={cn(
+                    "h-5 w-5 text-muted-foreground transition-transform",
+                    activeStep === 2 && "rotate-180"
+                  )} />
+                </button>
+                <AnimatePresence>
+                  {activeStep === 2 && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="border-t border-border"
+                    >
+                      <div className="p-5 space-y-4">
+                        <p className="text-sm text-muted-foreground">
+                          This host requires the following documents before confirming your booking:
+                        </p>
+                        <ul className="space-y-2">
+                          {requiredDocs?.map((doc) => (
+                            <li key={doc.id} className="flex items-center gap-2 text-sm">
+                              <FileCheck className="h-4 w-4 text-primary" />
+                              <span className="capitalize">{doc.document_type.replace(/_/g, ' ')}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800/50">
+                          <p className="text-xs text-amber-700 dark:text-amber-300">
+                            You'll be able to upload these documents after your booking is submitted.
+                          </p>
+                        </div>
+                        <Button 
+                          onClick={() => handleCompleteStep(2)}
+                          className="w-full"
+                        >
+                          I understand, continue
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+
+            {/* Step 3: Fulfillment & Details */}
+            <div className="border border-border rounded-2xl overflow-hidden bg-card">
+              <button
+                onClick={() => (hasRequiredDocs ? isStep2Complete : isStep1Complete) && setActiveStep(activeStep === (hasRequiredDocs ? 3 : 2) ? null : (hasRequiredDocs ? 3 : 2))}
+                disabled={hasRequiredDocs ? !isStep2Complete : !isStep1Complete}
+                className={cn(
+                  "w-full p-5 flex items-center justify-between text-left",
+                  (hasRequiredDocs ? !isStep2Complete : !isStep1Complete) && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                <div className="flex items-center gap-4">
+                  <span className="text-lg font-semibold">{hasRequiredDocs ? '3' : '2'}. Fulfillment & details</span>
+                  {isStepFulfillmentComplete && (
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                  )}
+                </div>
+                <ChevronDown className={cn(
+                  "h-5 w-5 text-muted-foreground transition-transform",
+                  activeStep === (hasRequiredDocs ? 3 : 2) && "rotate-180"
+                )} />
+              </button>
+              <AnimatePresence>
+                {activeStep === (hasRequiredDocs ? 3 : 2) && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="border-t border-border"
+                  >
+                    <div className="p-5 space-y-6">
+                      {/* Fulfillment Options - Mobile assets only */}
+                      {isMobileAsset && listing.fulfillment_type === 'both' && (
+                        <div>
+                          <Label className="text-sm font-medium mb-3 block">Fulfillment method</Label>
+                          <RadioGroup
+                            value={fulfillmentSelected}
+                            onValueChange={(val) => setFulfillmentSelected(val as FulfillmentSelection)}
+                            className="space-y-2"
+                          >
+                            <div className={cn(
+                              "flex items-center space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer",
+                              fulfillmentSelected === 'pickup' ? 'border-primary bg-primary/5' : 'border-border'
+                            )}>
+                              <RadioGroupItem value="pickup" id="checkout-pickup" />
+                              <Label htmlFor="checkout-pickup" className="flex-1 cursor-pointer">
+                                <span className="font-medium block">Pickup</span>
+                                <span className="text-xs text-muted-foreground">Collect from host location</span>
+                              </Label>
+                            </div>
+                            <div className={cn(
+                              "flex items-center space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer",
+                              fulfillmentSelected === 'delivery' ? 'border-primary bg-primary/5' : 'border-border'
+                            )}>
+                              <RadioGroupItem value="delivery" id="checkout-delivery" />
+                              <Label htmlFor="checkout-delivery" className="flex-1 cursor-pointer">
+                                <span className="font-medium block">Delivery</span>
+                                <span className="text-xs text-muted-foreground">Delivered to your location</span>
+                              </Label>
+                              {listing.delivery_fee && (
+                                <span className="text-sm font-medium text-primary">+${listing.delivery_fee}</span>
+                              )}
+                            </div>
+                          </RadioGroup>
+                        </div>
+                      )}
+
+                      {/* Pickup info */}
+                      {(fulfillmentSelected === 'pickup' || isStaticLocation) && (
+                        <div className="p-4 bg-muted/50 rounded-xl">
+                          <div className="flex items-start gap-3">
+                            <MapPin className="h-5 w-5 text-primary mt-0.5" />
+                            <div>
+                              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                {isStaticLocation ? 'Location' : 'Pickup Location'}
+                              </span>
+                              <p className="text-sm font-medium text-foreground mt-1">
+                                {isStaticLocation 
+                                  ? 'Exact address will be sent after confirmation'
+                                  : listing.pickup_location_text || 'Address will be provided after confirmation'
+                                }
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Delivery address */}
+                      {fulfillmentSelected === 'delivery' && (
+                        <div>
+                          <Label htmlFor="delivery-addr" className="text-sm font-medium mb-2 block">
+                            Delivery address
+                          </Label>
+                          <Input
+                            id="delivery-addr"
+                            placeholder="Enter your full address"
+                            value={deliveryAddress}
+                            onChange={(e) => setDeliveryAddress(e.target.value)}
+                            className="h-12"
+                          />
+                        </div>
+                      )}
+
+                      {/* Message */}
+                      <div>
+                        <Label htmlFor="msg" className="text-sm font-medium mb-2 block">
+                          Message to host (optional)
+                        </Label>
+                        <Textarea
+                          id="msg"
+                          placeholder="Tell them about your event or how you'll use this rental..."
+                          value={message}
+                          onChange={(e) => setMessage(e.target.value)}
+                          rows={3}
+                        />
+                      </div>
+
+                      {/* Your info */}
+                      <div>
+                        <Label className="text-sm font-medium mb-2 block">Your information</Label>
+                        {userInfo?.agreedToTerms ? (
+                          <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800/50">
+                            <div className="flex items-center gap-3">
+                              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                              <div>
+                                <span className="font-medium text-emerald-700 dark:text-emerald-300">
+                                  {userInfo.firstName} {userInfo.lastName}
+                                </span>
+                                <span className="text-xs text-emerald-600 dark:text-emerald-400 block">
+                                  Information complete
+                                </span>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => setShowInfoModal(true)}>
+                              Edit
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            className="w-full h-12 border-dashed"
+                            onClick={() => setShowInfoModal(true)}
+                          >
+                            Complete your information
+                          </Button>
+                        )}
+                      </div>
+
+                      <Button 
+                        onClick={() => handleCompleteStep(hasRequiredDocs ? 3 : 2)}
+                        disabled={!isStepFulfillmentComplete}
+                        className="w-full"
+                      >
+                        Continue to review
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Step 4: Review */}
+            <div className="border border-border rounded-2xl overflow-hidden bg-card">
+              <button
+                onClick={() => isStepFulfillmentComplete && setActiveStep(activeStep === (hasRequiredDocs ? 4 : 3) ? null : (hasRequiredDocs ? 4 : 3))}
+                disabled={!isStepFulfillmentComplete}
+                className={cn(
+                  "w-full p-5 flex items-center justify-between text-left",
+                  !isStepFulfillmentComplete && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                <span className="text-lg font-semibold">{hasRequiredDocs ? '4' : '3'}. Review your request</span>
+                <ChevronDown className={cn(
+                  "h-5 w-5 text-muted-foreground transition-transform",
+                  activeStep === (hasRequiredDocs ? 4 : 3) && "rotate-180"
+                )} />
+              </button>
+              <AnimatePresence>
+                {activeStep === (hasRequiredDocs ? 4 : 3) && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="border-t border-border"
+                  >
+                    <div className="p-5 space-y-4">
+                      {/* Summary */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Dates</span>
+                          <span className="font-medium">
+                            {format(startDate, 'MMM d')} – {format(endDate, 'MMM d, yyyy')}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Duration</span>
+                          <span className="font-medium">{rentalDays} day{rentalDays > 1 ? 's' : ''}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Fulfillment</span>
+                          <span className="font-medium capitalize">{fulfillmentSelected.replace('_', ' ')}</span>
+                        </div>
+                      </div>
+
+                      {/* Trust badges */}
+                      <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                        <Shield className="h-4 w-4 text-primary" />
+                        <span className="text-xs text-muted-foreground">
+                          Your payment is protected by Vendibook
+                        </span>
+                      </div>
+
+                      {/* Submit button */}
+                      <Button
+                        variant="gradient"
+                        className="w-full h-14 text-base"
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                            Processing...
+                          </>
+                        ) : listing.instant_book ? (
+                          <>
+                            <Zap className="h-5 w-5 mr-2" />
+                            Confirm and pay ${fees.customerTotal.toLocaleString()}
+                          </>
+                        ) : (
+                          <>
+                            Request to book · ${fees.customerTotal.toLocaleString()}
+                          </>
+                        )}
+                      </Button>
+
+                      {!listing.instant_book && (
+                        <p className="text-xs text-center text-muted-foreground">
+                          You won't be charged until your request is approved
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Right Column - Summary Card */}
+          <div className="lg:col-span-2">
+            <div className="sticky top-24 border border-border rounded-2xl p-5 bg-card space-y-4">
+              {/* Listing preview */}
+              <div className="flex gap-4">
+                <img
+                  src={coverImage}
+                  alt={listing.title}
+                  className="w-24 h-20 object-cover rounded-xl"
+                />
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-foreground line-clamp-2 text-sm">
+                    {listing.title}
+                  </h3>
+                  {ratingData && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                      <span className="text-xs font-medium">{ratingData.average}</span>
+                      <span className="text-xs text-muted-foreground">({ratingData.count})</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-4">
+                {/* Free cancellation */}
+                <div className="flex items-start gap-2 mb-4">
+                  <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
+                  <div>
+                    <span className="text-sm font-medium">Free cancellation</span>
+                    <p className="text-xs text-muted-foreground">
+                      Cancel within 24 hours for a full refund.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Dates */}
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <span className="text-sm font-medium">Dates</span>
+                    <p className="text-sm text-muted-foreground">
+                      {format(startDate, 'MMM d')} – {format(endDate, 'MMM d, yyyy')}
+                    </p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowDateModal(true)}
+                  >
+                    Change
+                  </Button>
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-4 space-y-3">
+                <h4 className="font-medium text-sm">Price details</h4>
+                
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {rentalDays} day{rentalDays > 1 ? 's' : ''} × ${listing.price_daily?.toLocaleString()}
+                  </span>
+                  <span>${basePrice.toLocaleString()}</span>
+                </div>
+
+                {currentDeliveryFee > 0 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Delivery fee</span>
+                    <span>${currentDeliveryFee.toLocaleString()}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Service fee</span>
+                  <span>${fees.platformFee.toLocaleString()}</span>
+                </div>
+
+                {depositAmount && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Security deposit</span>
+                    <span>${depositAmount.toLocaleString()}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-3 border-t border-border">
+                  <span className="font-semibold">Total</span>
+                  <span className="font-semibold">${fees.customerTotal.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+
+      {/* Modals */}
+      <DateSelectionModal
+        open={showDateModal}
+        onOpenChange={setShowDateModal}
+        listingId={listingId!}
+        availableFrom={listing.available_from}
+        availableTo={listing.available_to}
+        priceDaily={listing.price_daily}
+        priceWeekly={listing.price_weekly}
+        onDatesSelected={handleDatesSelected}
+      />
+
+      <BookingInfoModal
+        open={showInfoModal}
+        onOpenChange={setShowInfoModal}
+        onComplete={(info) => {
+          setUserInfo(info);
+          setShowInfoModal(false);
+        }}
+        initialData={userInfo || undefined}
+      />
+    </div>
+  );
+};
+
+export default BookingCheckout;

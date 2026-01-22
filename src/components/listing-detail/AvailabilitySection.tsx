@@ -12,7 +12,7 @@ interface AvailabilitySectionProps {
   priceDaily: number | null;
   priceWeekly?: number | null;
   instantBook?: boolean;
-  onDatesSelected: (startDate: Date, endDate: Date) => void;
+  onDatesSelected?: (startDate: Date, endDate: Date) => void;
   className?: string;
 }
 
@@ -80,7 +80,9 @@ export const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({
         availableTo={availableTo}
         priceDaily={priceDaily}
         priceWeekly={priceWeekly}
+        instantBook={instantBook}
         onDatesSelected={onDatesSelected}
+        navigateToBooking={true}
       />
     </>
   );
