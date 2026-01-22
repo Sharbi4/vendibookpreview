@@ -115,13 +115,12 @@ const Hero = () => {
             style={{ animationDelay: '0.4s', animationFillMode: 'backwards' }}
           >
             <Button
-              variant="gradient-premium"
               size="lg"
               onClick={() => {
                 trackHeroCTAClick('browse');
                 navigate('/search');
               }}
-              className="text-base px-8 py-6"
+              className="text-base px-8 py-6 bg-black hover:bg-black/90 text-white"
             >
               <Search className="mr-2 h-5 w-5" />
               Browse Listings
@@ -134,7 +133,7 @@ const Hero = () => {
                 trackHeroCTAClick('list');
                 navigate('/list');
               }}
-              className="text-base px-8 py-6 border-2 bg-white/10 border-white/30 text-white hover:bg-white/20"
+              className="text-base px-8 py-6 border-2 bg-black hover:bg-black/90 border-black text-white"
             >
               Create a Free Listing
             </Button>
