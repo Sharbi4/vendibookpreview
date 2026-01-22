@@ -39,21 +39,23 @@ export const InlineSubscribe = () => {
 
   if (isSubscribed) {
     return (
-      <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
-        <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+      <div className="bg-card border-0 shadow-lg rounded-2xl p-5 flex items-center gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg shrink-0">
+          <CheckCircle2 className="h-6 w-6 text-white" />
+        </div>
         <p className="text-sm text-muted-foreground">You're subscribed! We'll send you new listings.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4">
-      <div className="flex items-start gap-3">
-        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-          <Mail className="h-4 w-4 text-primary" />
+    <div className="bg-card border-0 shadow-lg rounded-2xl p-5">
+      <div className="flex items-start gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shrink-0">
+          <Mail className="h-5 w-5 text-primary-foreground" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-foreground">Get new listings in your inbox</h3>
+          <h3 className="text-sm font-bold text-foreground">Get new listings in your inbox</h3>
           <p className="text-xs text-muted-foreground mt-0.5">Monthly updates, no spam.</p>
           <form onSubmit={handleSubmit} className="flex gap-2 mt-3">
             <Input
@@ -61,13 +63,14 @@ export const InlineSubscribe = () => {
               placeholder="Email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-9 text-sm"
+              className="h-10 text-sm rounded-xl border-border/60 focus:border-primary"
               required
             />
             <Button 
               type="submit" 
+              variant="dark-shine"
               size="sm" 
-              className="h-9 shrink-0"
+              className="h-10 shrink-0 rounded-xl px-4"
               disabled={isSubmitting}
             >
               {isSubmitting ? 'Subscribing...' : 'Subscribe'}
