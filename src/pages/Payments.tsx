@@ -20,8 +20,8 @@ import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
-import affirmLogo from '@/assets/affirm-logo-new.png';
-import afterpayLogo from '@/assets/afterpay-logo-new.png';
+import affirmLogo from '@/assets/affirm-logo.png';
+import afterpayLogo from '@/assets/afterpay-logo.jpg';
 import stripeLogo from '@/assets/stripe-wordmark-blurple.png';
 
 const Payments = () => {

@@ -6,7 +6,11 @@ import {
   Star,
   Heart,
   Edit,
+  Share2,
 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from '@/hooks/use-toast';
+import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
@@ -47,6 +51,34 @@ const ListingDetail = () => {
 
   // Check if user is the owner of this listing
   const isOwner = user?.id && listing?.host_id && user.id === listing.host_id;
+
+  // Handle share listing
+  const handleShare = async () => {
+    const listingUrl = `https://vendibook.com/listing/${id}`;
+    
+    trackEventToDb('share_listing', 'listing_detail', { listing_id: id });
+    
+    // Try native share on mobile
+    if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
+      try {
+        await navigator.share({
+          title: listing?.title || 'Check out this listing on Vendibook',
+          url: listingUrl,
+        });
+        return;
+      } catch {
+        // User cancelled or share failed, fallback to copy
+      }
+    }
+    
+    // Fallback to clipboard copy
+    try {
+      await navigator.clipboard.writeText(listingUrl);
+      toast({ title: 'Link copied!' });
+    } catch {
+      toast({ title: 'Failed to copy link', variant: 'destructive' });
+    }
+  };
 
   // Generate structured data for Google Shopping / Search
   // Must be called before any conditional returns to follow Rules of Hooks
@@ -229,11 +261,22 @@ const ListingDetail = () => {
                     </div>
                   )}
 
-                  {/* Save button - Secondary CTA */}
-                  <Button variant="ghost" size="sm" className="ml-auto text-muted-foreground gap-1.5">
-                    <Heart className="h-4 w-4" />
-                    Save
-                  </Button>
+                  {/* Share & Save buttons - Secondary CTAs */}
+                  <div className="ml-auto flex items-center gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-muted-foreground gap-1.5"
+                      onClick={handleShare}
+                    >
+                      <Share2 className="h-4 w-4" />
+                      Share
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-muted-foreground gap-1.5">
+                      <Heart className="h-4 w-4" />
+                      Save
+                    </Button>
+                  </div>
                 </div>
               </div>
 

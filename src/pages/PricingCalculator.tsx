@@ -7,8 +7,8 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles, ShieldCheck, Eye, BadgeCheck, CreditCard, Percent, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import affirmLogo from '@/assets/affirm-logo-new.png';
-import afterpayLogo from '@/assets/afterpay-logo-new.png';
+import affirmLogo from '@/assets/affirm-logo.png';
+import afterpayLogo from '@/assets/afterpay-logo.jpg';
 
 const PricingCalculator = () => {
   // FAQ schema for transparent pricing
