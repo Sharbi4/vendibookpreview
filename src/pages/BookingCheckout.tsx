@@ -186,6 +186,18 @@ const BookingCheckout = () => {
       return;
     }
 
+    // Check if we're in an iframe
+    const isInIframe = (() => {
+      try {
+        return window.self !== window.top;
+      } catch {
+        return true;
+      }
+    })();
+
+    // Pre-open a blank window BEFORE async calls to avoid popup blockers
+    const checkoutWindow = isInIframe ? window.open('about:blank', '_blank') : null;
+
     setIsSubmitting(true);
 
     try {
@@ -296,17 +308,28 @@ const BookingCheckout = () => {
       
       trackRequestSubmitted(listingId || '', listing.instant_book || false);
       
-      // Redirect to Stripe checkout - open in new tab to bypass iframe restrictions
-      const stripeWindow = window.open(checkoutData.url, '_blank');
-      if (!stripeWindow) {
-        // Fallback: if popup blocked, try top-level navigation
-        if (window.top) {
-          window.top.location.href = checkoutData.url;
-        } else {
-          window.location.href = checkoutData.url;
-        }
+      // Redirect to Stripe checkout
+      if (checkoutWindow) {
+        // Use pre-opened window to bypass popup blockers in iframe
+        checkoutWindow.location.href = checkoutData.url;
+        return;
       }
+
+      if (isInIframe) {
+        // Fallback: try to escape the iframe
+        try {
+          window.top?.location.assign(checkoutData.url);
+        } catch {
+          window.location.assign(checkoutData.url);
+        }
+        return;
+      }
+
+      // Standard navigation for non-iframe contexts
+      window.location.href = checkoutData.url;
     } catch (error) {
+      // Close the pre-opened window if there was an error
+      if (checkoutWindow) checkoutWindow.close();
       console.error('Error submitting booking:', error);
       toast({
         title: 'Error',
