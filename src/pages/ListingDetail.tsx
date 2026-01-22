@@ -319,8 +319,9 @@ const ListingDetail = () => {
               <CompactTrustSection />
             </div>
 
-            {/* Right Column - Booking/Inquiry Form (Desktop) */}
-            <div id="booking-widget" className="hidden lg:block space-y-6">
+            {/* Right Column - Booking/Inquiry Form (Desktop) - Sticky */}
+            <div id="booking-widget" className="hidden lg:block">
+              <div className="sticky top-24 space-y-6">
               {isOwner ? (
                 <OwnerBanner listingId={listing.id} variant="card" />
               ) : isRental ? (
@@ -356,6 +357,7 @@ const ListingDetail = () => {
                   acceptCashPayment={listing.accept_cash_payment ?? false}
                 />
               )}
+              </div>
             </div>
           </div>
         </div>
