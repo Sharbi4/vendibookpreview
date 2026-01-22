@@ -173,7 +173,7 @@ const MarketingStudio = () => {
                   Create social posts, flyers, emails, menu copy, taglines, and even AI-generated images — all tailored for your food business.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Button size="lg" className="bg-gradient-to-r from-pink-500 to-purple-600" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
+                  <Button size="lg" variant="dark-shine" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
                     Start Creating<ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </div>

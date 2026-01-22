@@ -130,7 +130,7 @@ const ConceptLab = () => {
                   Generate sellable concepts designed for your market and margins. Get 10 unique business ideas tailored to your preferences.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Button size="lg" className="bg-gradient-to-r from-orange-500 to-amber-500" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
+                  <Button size="lg" variant="dark-shine" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
                     Generate Ideas<ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </div>
@@ -370,10 +370,10 @@ const ConceptLab = () => {
               <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to find your concept?</h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">Generate 10 unique business ideas matched to your preferences and budget.</p>
               <div className="flex flex-wrap gap-4 justify-center">
-                <Button size="lg" className="bg-gradient-to-r from-orange-500 to-amber-500" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
+                <Button size="lg" variant="dark-shine" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
                   Generate Ideas
                 </Button>
-                <Button size="lg" variant="outline" asChild><Link to="/host">List Your Asset</Link></Button>
+                <Button size="lg" variant="dark-shine" asChild><Link to="/host">List Your Asset</Link></Button>
               </div>
             </div>
           </section>

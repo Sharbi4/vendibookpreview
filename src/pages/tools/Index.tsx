@@ -114,7 +114,7 @@ const ToolsIndex = () => {
               </p>
               
               {/* Primary CTA */}
-              <Button size="lg" asChild className="shadow-lg">
+              <Button size="lg" variant="dark-shine" asChild>
                 <Link to="/tools/pricepilot">
                   <DollarSign className="h-5 w-5 mr-2" />
                   Start with PricePilot
@@ -145,7 +145,7 @@ const ToolsIndex = () => {
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0">
-                        <Button asChild variant="ghost" className="w-full justify-between group-hover:bg-primary/5">
+                        <Button asChild variant="dark-shine" className="w-full justify-between">
                           <Link to={tool.href}>
                             Try {tool.name}
                             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -187,13 +187,13 @@ const ToolsIndex = () => {
                 Create your listing in minutes and start earning from your food truck, trailer, or equipment.
               </p>
               <div className="flex flex-wrap gap-3 justify-center">
-                <Button size="lg" asChild>
+                <Button size="lg" variant="dark-shine" asChild>
                   <Link to="/host">
                     List Your Asset
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" asChild>
+                <Button size="lg" variant="dark-shine" asChild>
                   <Link to="/search">Browse Listings</Link>
                 </Button>
               </div>
