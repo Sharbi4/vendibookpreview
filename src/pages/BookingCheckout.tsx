@@ -714,14 +714,14 @@ const BookingCheckout = () => {
                           </>
                         ) : (
                           <>
-                            Request to book · ${fees.customerTotal.toLocaleString()}
+                            Authorize payment · ${fees.customerTotal.toLocaleString()}
                           </>
                         )}
                       </Button>
 
                       {!listing.instant_book && (
                         <p className="text-xs text-center text-muted-foreground">
-                          You won't be charged until your request is approved
+                          Your card will be authorized but not charged until the host approves. If declined, the hold is released automatically.
                         </p>
                       )}
                     </div>
