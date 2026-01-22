@@ -10,8 +10,9 @@ const corsHeaders = {
 
 interface NotificationRequest {
   booking_id: string;
-  event_type: "submitted" | "approved" | "declined";
+  event_type: "submitted" | "approved" | "declined" | "hold_released" | "hold_expired";
   host_response?: string;
+  reason?: string;
 }
 
 const logStep = (step: string, details?: any) => {
@@ -72,8 +73,8 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const { booking_id, event_type, host_response }: NotificationRequest = await req.json();
-    logStep("Request received", { booking_id, event_type });
+    const { booking_id, event_type, host_response, reason }: NotificationRequest = await req.json();
+    logStep("Request received", { booking_id, event_type, reason });
 
     if (!booking_id || !event_type) {
       throw new Error("Missing required fields: booking_id and event_type");
@@ -395,6 +396,137 @@ serve(async (req) => {
         type: "booking_declined",
         title: `Booking #${bookingRef} Declined`,
         message: `Your booking request for ${listingTitle} was not approved${host_response ? `: "${host_response}"` : ""}`,
+        link: "/dashboard",
+      });
+    } else if (event_type === "hold_released") {
+      // Payment hold was released (host declined or other reason)
+      const releaseReason = reason || host_response || "The host was unable to approve your booking";
+      
+      if (shopper?.email) {
+        emails.push({
+          to: shopper.email,
+          subject: `Booking #${bookingRef} - Payment Released`,
+          html: wrapEmailHtml(`
+            <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">Payment Hold Released 💳</h1>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
+              Hi ${shopper.full_name || "there"},
+            </p>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+              The payment hold for your booking request for <strong>${listingTitle}</strong> has been released. 
+              Your card will <strong>not be charged</strong>.
+            </p>
+            <div style="background: #DCFCE7; border-left: 4px solid #22C55E; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 20px 0;">
+              <p style="color: #166534; font-size: 14px; line-height: 1.6; margin: 0;">
+                <strong>✓ No Charge:</strong> The authorization hold has been released. You will see the pending charge disappear from your statement within 3-5 business days.
+              </p>
+            </div>
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
+              <p style="margin: 0 0 10px 0;"><strong>Reason:</strong> ${releaseReason}</p>
+            </div>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
+              Don't worry! There are plenty of other great options available. Browse our marketplace to find your perfect match.
+            </p>
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="${SITE_URL}/search" 
+                 style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                Browse Listings
+              </a>
+            </div>
+          `),
+        });
+      }
+      
+      // In-app notification to shopper
+      inAppNotifications.push({
+        user_id: booking.shopper_id,
+        type: "payment_released",
+        title: `Payment Hold Released - Booking #${bookingRef}`,
+        message: `Your payment hold for ${listingTitle} has been released. Your card will not be charged.`,
+        link: "/dashboard",
+      });
+    } else if (event_type === "hold_expired") {
+      // Payment hold expired without host response
+      // Notify shopper
+      if (shopper?.email) {
+        emails.push({
+          to: shopper.email,
+          subject: `Booking #${bookingRef} Expired - Payment Released`,
+          html: wrapEmailHtml(`
+            <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">Booking Request Expired ⏰</h1>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
+              Hi ${shopper.full_name || "there"},
+            </p>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+              Your booking request for <strong>${listingTitle}</strong> has expired because the host did not respond in time.
+              <strong>Your card will not be charged.</strong>
+            </p>
+            <div style="background: #DCFCE7; border-left: 4px solid #22C55E; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 20px 0;">
+              <p style="color: #166534; font-size: 14px; line-height: 1.6; margin: 0;">
+                <strong>✓ No Charge:</strong> The authorization hold has been released. Any pending charge will disappear from your statement within 3-5 business days.
+              </p>
+            </div>
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
+              <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
+            </div>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
+              We apologize for the inconvenience. Please try booking another listing or reach out to our support team.
+            </p>
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="${SITE_URL}/search" 
+                 style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                Browse Listings
+              </a>
+            </div>
+          `),
+        });
+      }
+      
+      // Notify host about expired booking
+      if (host?.email) {
+        emails.push({
+          to: host.email,
+          subject: `Booking Request #${bookingRef} Expired`,
+          html: wrapEmailHtml(`
+            <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">Booking Request Expired ⏰</h1>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+              A booking request for <strong>${listingTitle}</strong> has expired because it wasn't responded to in time.
+            </p>
+            <div style="background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 20px 0;">
+              <p style="color: #92400E; font-size: 14px; line-height: 1.6; margin: 0;">
+                <strong>💡 Tip:</strong> Responding to booking requests quickly helps you secure more bookings and improves your host rating!
+              </p>
+            </div>
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
+              <p style="margin: 0 0 10px 0;"><strong>Guest:</strong> ${shopper?.full_name || "A shopper"}</p>
+              <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
+            </div>
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="${SITE_URL}/dashboard" 
+                 style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                View Dashboard
+              </a>
+            </div>
+          `),
+        });
+      }
+      
+      // In-app notifications
+      inAppNotifications.push({
+        user_id: booking.shopper_id,
+        type: "booking_expired",
+        title: `Booking #${bookingRef} Expired`,
+        message: `Your booking request for ${listingTitle} expired. Your payment hold has been released.`,
+        link: "/dashboard",
+      });
+      
+      inAppNotifications.push({
+        user_id: booking.host_id,
+        type: "booking_expired",
+        title: `Booking Request #${bookingRef} Expired`,
+        message: `A booking request for ${listingTitle} expired without a response.`,
         link: "/dashboard",
       });
     }

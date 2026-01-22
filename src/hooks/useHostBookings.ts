@@ -136,6 +136,34 @@ export const useHostBookings = () => {
     response?: string
   ) => {
     try {
+      // First, check if booking has an authorization hold that needs to be captured/released
+      const booking = bookings.find(b => b.id === bookingId);
+      const hasAuthHold = booking?.hold_status === 'held' && booking?.payment_intent_id;
+      
+      if (hasAuthHold) {
+        if (status === 'approved') {
+          // Capture the held payment
+          const { error: captureError, data: captureData } = await supabase.functions.invoke('capture-booking-payment', {
+            body: { booking_id: bookingId },
+          });
+          
+          if (captureError || captureData?.error) {
+            throw new Error(captureData?.error || captureError?.message || 'Failed to capture payment');
+          }
+          console.log('[HostBookings] Payment captured successfully');
+        } else {
+          // Release the held payment
+          const { error: releaseError, data: releaseData } = await supabase.functions.invoke('release-booking-hold', {
+            body: { booking_id: bookingId, reason: response || 'Host declined the booking request' },
+          });
+          
+          if (releaseError || releaseData?.error) {
+            console.error('[HostBookings] Failed to release hold:', releaseData?.error || releaseError);
+            // Continue anyway - the hold will expire naturally
+          }
+        }
+      }
+      
       const { error } = await supabase
         .from('booking_requests')
         .update({
