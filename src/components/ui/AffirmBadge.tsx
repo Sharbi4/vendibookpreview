@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import affirmLogo from '@/assets/affirm-logo-new.png';
+import affirmLogo from '@/assets/affirm-logo.png';
 
 interface AffirmBadgeProps {
   price: number;
