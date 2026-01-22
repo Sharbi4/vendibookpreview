@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Calendar, ShoppingCart, Zap, Tag } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Calendar, ShoppingCart, Zap, Tag, Edit, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { useAuth } from '@/contexts/AuthContext';
@@ -83,8 +83,27 @@ export const StickyMobileCTA = ({
     }
   }, [pendingBooking, showOnboarding]);
 
-  // Don't show the CTA if user is the owner
-  if (isOwner) return null;
+  // Show owner banner instead of CTA buttons (always visible for owners after scroll)
+  if (isOwner && isVisible) {
+    return (
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-amber-50 border-t border-amber-200 shadow-lg safe-area-pb">
+        <div className="container py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm text-foreground">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <span>This is your listing</span>
+          </div>
+          <Button asChild size="sm" variant="outline" className="h-8">
+            <Link to={`/edit-listing/${listingId}`}>
+              <Edit className="h-4 w-4 mr-1.5" />
+              Edit
+            </Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isVisible) return null;
 
   const isAvailable = status === 'published';
   const price = isRental ? priceDaily : priceSale;

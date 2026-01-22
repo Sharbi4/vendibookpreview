@@ -24,9 +24,11 @@ import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
 import CompactTrustSection from '@/components/trust/CompactTrustSection';
 import CancellationPolicyCard from '@/components/trust/CancellationPolicyCard';
 import AvailabilityCalendarDisplay from '@/components/listing-detail/AvailabilityCalendarDisplay';
+import OwnerBanner from '@/components/listing-detail/OwnerBanner';
 import { useListing } from '@/hooks/useListing';
 import { useListingAverageRating } from '@/hooks/useReviews';
 import { useTrackListingView } from '@/hooks/useListingAnalytics';
+import { useAuth } from '@/contexts/AuthContext';
 import { CATEGORY_LABELS } from '@/types/listing';
 import { useEffect, useMemo } from 'react';
 import { trackListingViewed } from '@/lib/analytics';
@@ -37,9 +39,13 @@ import { getPublicDisplayName } from '@/lib/displayName';
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const { listing, host, isLoading, error } = useListing(id);
   const { data: ratingData } = useListingAverageRating(id);
   const { trackView } = useTrackListingView();
+
+  // Check if user is the owner of this listing
+  const isOwner = user?.id && listing?.host_id && user.id === listing.host_id;
 
   // Generate structured data for Google Shopping / Search
   // Must be called before any conditional returns to follow Rules of Hooks
@@ -159,6 +165,13 @@ const ListingDetail = () => {
 
         {/* Main Content */}
         <div className="container pb-24 lg:pb-16">
+          {/* Owner Banner - Show prominently if owner is viewing */}
+          {isOwner && (
+            <div className="mb-6">
+              <OwnerBanner listingId={listing.id} variant="inline" />
+            </div>
+          )}
+
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Left Column - Details */}
             <div className="lg:col-span-2 space-y-6">
@@ -294,7 +307,9 @@ const ListingDetail = () => {
 
             {/* Right Column - Booking/Inquiry Form (Desktop) */}
             <div className="hidden lg:block space-y-6">
-              {isRental ? (
+              {isOwner ? (
+                <OwnerBanner listingId={listing.id} variant="card" />
+              ) : isRental ? (
                 <BookingWizard
                   listingId={listing.id}
                   hostId={listing.host_id}
