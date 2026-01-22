@@ -41,11 +41,13 @@ const PaymentFormInner = forwardRef<HTMLFormElement, PaymentFormInnerProps>(({
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isElementReady, setIsElementReady] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!stripe || !elements) {
+    if (!stripe || !elements || !isElementReady) {
+      setErrorMessage('Payment form is still loading. Please wait...');
       return;
     }
 
@@ -90,12 +92,22 @@ const PaymentFormInner = forwardRef<HTMLFormElement, PaymentFormInnerProps>(({
           <h3 className="font-semibold text-foreground">Payment Details</h3>
         </div>
         
-        <PaymentElement 
-          options={{
-            layout: 'tabs',
-            business: { name: 'VendiBook' },
-          }}
-        />
+        {!isElementReady && (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+            <span className="text-muted-foreground">Loading payment form...</span>
+          </div>
+        )}
+        
+        <div className={cn(!isElementReady && "opacity-0 h-0 overflow-hidden")}>
+          <PaymentElement 
+            onReady={() => setIsElementReady(true)}
+            options={{
+              layout: 'tabs',
+              business: { name: 'VendiBook' },
+            }}
+          />
+        </div>
       </div>
 
       {errorMessage && (
@@ -108,7 +120,7 @@ const PaymentFormInner = forwardRef<HTMLFormElement, PaymentFormInnerProps>(({
       <div className="space-y-3">
         <Button
           type="submit"
-          disabled={!stripe || !elements || isProcessing}
+          disabled={!stripe || !elements || !isElementReady || isProcessing}
           className={cn(
             "w-full h-14 text-base font-semibold",
             "bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80"
