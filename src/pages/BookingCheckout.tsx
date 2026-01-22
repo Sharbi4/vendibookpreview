@@ -18,6 +18,7 @@ import {
   Loader2,
   Star,
 } from 'lucide-react';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -841,7 +842,13 @@ const BookingCheckout = () => {
 
                 {depositAmount && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Security deposit</span>
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      Security deposit
+                      <InfoTooltip 
+                        content="Your security deposit will be returned within 24 hours after your booking ends, minus any charges for damages or late returns."
+                        side="top"
+                      />
+                    </span>
                     <span>${depositAmount.toLocaleString()}</span>
                   </div>
                 )}
