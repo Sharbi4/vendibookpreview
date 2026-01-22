@@ -6,19 +6,20 @@ import verifiedBadgeImg from '@/assets/verified-badge.png';
 
 interface VerificationBadgeProps {
   isVerified: boolean;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   showLabel?: boolean;
   variant?: 'badge' | 'inline' | 'card' | 'starburst' | 'image';
   className?: string;
 }
 
 // Image-based verification badge
-const VerifiedBadgeImage = ({ size = 'md', className }: { size?: 'sm' | 'md' | 'lg' | 'xl'; className?: string }) => {
+const VerifiedBadgeImage = ({ size = 'md', className }: { size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'; className?: string }) => {
   const sizes = {
     sm: 'h-4 w-4',
     md: 'h-6 w-6',
     lg: 'h-8 w-8',
     xl: 'h-10 w-10',
+    '2xl': 'h-20 w-20',
   };
 
   return (
