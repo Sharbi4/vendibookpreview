@@ -92,7 +92,7 @@ const InquiryForm = ({
             ${priceSale?.toLocaleString()}
           </span>
           {priceSale && isAfterpayEligible(priceSale) && (
-            <AfterpayBadge price={priceSale} className="text-xs" />
+            <AfterpayBadge price={priceSale} className="text-xs" showEstimate={false} />
           )}
         </div>
         {vendibookFreightEnabled && (
@@ -183,10 +183,10 @@ const InquiryForm = ({
         {priceSale && (isAffirmEligible(priceSale) || isAfterpayEligible(priceSale)) && (
           <div className="mt-3 flex flex-col gap-2">
             {isAffirmEligible(priceSale) && (
-              <AffirmBadge price={priceSale} className="w-full justify-center py-2" />
+              <AffirmBadge price={priceSale} className="w-full justify-center py-2" showEstimate={false} />
             )}
             {isAfterpayEligible(priceSale) && (
-              <AfterpayBadge price={priceSale} className="w-full justify-center py-2" />
+              <AfterpayBadge price={priceSale} className="w-full justify-center py-2" showEstimate={false} />
             )}
           </div>
         )}

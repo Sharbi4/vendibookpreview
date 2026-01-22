@@ -6,6 +6,7 @@ interface AffirmBadgeProps {
   price: number;
   className?: string;
   showTooltip?: boolean;
+  showEstimate?: boolean;
 }
 
 // Affirm eligibility range: $35 - $30,000
@@ -16,7 +17,7 @@ export const isAffirmEligible = (price: number): boolean => {
   return price >= AFFIRM_MIN && price <= AFFIRM_MAX;
 };
 
-export const AffirmBadge = ({ price, className, showTooltip = true }: AffirmBadgeProps) => {
+export const AffirmBadge = ({ price, className, showTooltip = true, showEstimate = true }: AffirmBadgeProps) => {
   if (!isAffirmEligible(price)) return null;
 
   const monthlyEstimate = Math.round(price / 12);
@@ -34,7 +35,7 @@ export const AffirmBadge = ({ price, className, showTooltip = true }: AffirmBadg
         alt="Affirm" 
         className="h-3.5 w-auto dark:invert"
       />
-      <span>~${monthlyEstimate}/mo</span>
+      {showEstimate && <span>~${monthlyEstimate}/mo</span>}
     </div>
   );
 

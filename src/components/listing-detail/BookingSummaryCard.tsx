@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import RequestDatesModal, { BookingSelection } from './RequestDatesModal';
 import { cn } from '@/lib/utils';
 import { calculateRentalFees } from '@/lib/commissions';
+import { AffirmBadge, isAffirmEligible } from '@/components/ui/AffirmBadge';
+import { AfterpayBadge, isAfterpayEligible } from '@/components/ui/AfterpayBadge';
 
 interface BookingSummaryCardProps {
   listingId: string;
@@ -78,6 +80,13 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
             <p className="text-sm text-muted-foreground mt-1">
               ${priceWeekly.toLocaleString()}/week for 7+ days
             </p>
+          )}
+          {/* Financing badges for rentals */}
+          {priceDaily && (isAfterpayEligible(priceDaily * 7) || isAffirmEligible(priceDaily * 30)) && (
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <AfterpayBadge price={priceDaily * 7} showEstimate={false} />
+              <AffirmBadge price={priceDaily * 30} showEstimate={false} />
+            </div>
           )}
         </div>
 

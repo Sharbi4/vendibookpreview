@@ -4,6 +4,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import WhatsIncluded from './WhatsIncluded';
+import { AffirmBadge, isAffirmEligible } from '@/components/ui/AffirmBadge';
+import { AfterpayBadge, isAfterpayEligible } from '@/components/ui/AfterpayBadge';
 
 interface PriceLine {
   label: string;
@@ -36,6 +38,9 @@ interface StickySummaryProps {
   mode: 'checkout' | 'booking';
   showWhatsIncluded?: boolean;
   className?: string;
+  
+  // Financing eligibility price (totalToday or base price)
+  financingEligiblePrice?: number;
 }
 
 const StickySummary = ({
@@ -53,6 +58,7 @@ const StickySummary = ({
   mode,
   showWhatsIncluded = true,
   className,
+  financingEligiblePrice,
 }: StickySummaryProps) => {
   const [showBreakdown, setShowBreakdown] = useState(true);
   const isRequestMode = totalLater !== undefined && totalToday === 0;
@@ -184,6 +190,14 @@ const StickySummary = ({
                 <span className="text-sm font-semibold text-foreground">
                   ${totalLater.toLocaleString()}
                 </span>
+              </div>
+            )}
+            
+            {/* Financing badges */}
+            {financingEligiblePrice && (isAfterpayEligible(financingEligiblePrice) || isAffirmEligible(financingEligiblePrice)) && (
+              <div className="flex items-center gap-2 pt-2 flex-wrap">
+                <AfterpayBadge price={financingEligiblePrice} showEstimate={false} />
+                <AffirmBadge price={financingEligiblePrice} showEstimate={false} />
               </div>
             )}
           </div>

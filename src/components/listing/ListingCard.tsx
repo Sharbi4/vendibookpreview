@@ -256,14 +256,14 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
             <>
               {listing.mode === 'sale' && listing.price_sale && (
                 <>
-                  <AfterpayBadge price={listing.price_sale} />
-                  <AffirmBadge price={listing.price_sale} />
+                  <AfterpayBadge price={listing.price_sale} showEstimate={false} />
+                  <AffirmBadge price={listing.price_sale} showEstimate={false} />
                 </>
               )}
               {listing.mode === 'rent' && listing.price_daily && (
                 <>
-                  <AfterpayBadge price={listing.price_daily * 7} />
-                  <AffirmBadge price={listing.price_daily * 30} />
+                  <AfterpayBadge price={listing.price_daily * 7} showEstimate={false} />
+                  <AffirmBadge price={listing.price_daily * 30} showEstimate={false} />
                 </>
               )}
             </>
