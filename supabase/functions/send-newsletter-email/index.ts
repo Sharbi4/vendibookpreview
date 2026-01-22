@@ -33,8 +33,16 @@ interface NewsletterRequest {
 // Latest blog post (update as needed)
 const LATEST_BLOG = {
   title: "How to Sell Your Food Truck in 2026: The Ultimate Valuation Guide",
+  excerpt: "The demand for compliant, turnkey used trucks has never been higher. Learn how to price your rig and position it to sell for top dollar.",
   url: "https://vendibook.com/blog/sell-my-food-truck-valuation-guide-2026",
 };
+
+// Host tools
+const HOST_TOOLS = [
+  { name: "PricePilot", description: "Get a data-backed valuation", url: "https://vendibook.com/tools/pricepilot" },
+  { name: "ListingStudio", description: "AI-powered listing photos & descriptions", url: "https://vendibook.com/tools/listingstudio" },
+  { name: "MarketRadar", description: "See what's selling in your area", url: "https://vendibook.com/tools/marketradar" },
+];
 
 const generateHtmlEmail = (unsubscribeUrl: string): string => {
   return `
@@ -150,7 +158,7 @@ const generateHtmlEmail = (unsubscribeUrl: string): string => {
           
           <!-- CTA Buttons -->
           <tr>
-            <td style="padding: 8px 40px 32px;">
+            <td style="padding: 8px 40px 24px;">
               <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
                 <tr>
                   <td align="center" style="padding-bottom: 12px;">
@@ -161,11 +169,68 @@ const generateHtmlEmail = (unsubscribeUrl: string): string => {
                 </tr>
                 <tr>
                   <td align="center">
-                    <a href="${LATEST_BLOG.url}" style="display: inline-block; background-color: ${COLORS.lightGray}; color: ${COLORS.charcoal}; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 14px; border: 1px solid ${COLORS.border};">
-                      Read the Latest Blog Post →
+                    <a href="https://vendibook.com/search" style="display: inline-block; background-color: ${COLORS.lightGray}; color: ${COLORS.charcoal}; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 14px; border: 1px solid ${COLORS.border};">
+                      Browse New Listings →
                     </a>
                   </td>
                 </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <div style="border-top: 1px solid ${COLORS.border};"></div>
+            </td>
+          </tr>
+          
+          <!-- Latest Blog Post Section -->
+          <tr>
+            <td style="padding: 24px 40px;">
+              <p style="margin: 0 0 8px; font-size: 12px; font-weight: 600; color: ${COLORS.primary}; text-transform: uppercase; letter-spacing: 0.5px;">FROM THE BLOG</p>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: ${COLORS.lightGray}; border-radius: 12px; overflow: hidden;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h3 style="margin: 0 0 8px; font-size: 17px; font-weight: 700; color: ${COLORS.charcoal}; line-height: 1.3;">
+                      <a href="${LATEST_BLOG.url}" style="color: ${COLORS.charcoal}; text-decoration: none;">${LATEST_BLOG.title}</a>
+                    </h3>
+                    <p style="margin: 0 0 12px; font-size: 14px; color: ${COLORS.gray}; line-height: 1.5;">
+                      ${LATEST_BLOG.excerpt}
+                    </p>
+                    <a href="${LATEST_BLOG.url}" style="font-size: 14px; font-weight: 600; color: ${COLORS.primary}; text-decoration: none;">
+                      Read the full guide →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <div style="border-top: 1px solid ${COLORS.border};"></div>
+            </td>
+          </tr>
+          
+          <!-- Host Tools Section -->
+          <tr>
+            <td style="padding: 24px 40px;">
+              <h3 style="margin: 0 0 16px; font-size: 16px; font-weight: 700; color: ${COLORS.charcoal};">
+                🛠️ Free Tools for Hosts
+              </h3>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                ${HOST_TOOLS.map(tool => `
+                <tr>
+                  <td style="padding-bottom: 12px;">
+                    <a href="${tool.url}" style="text-decoration: none; display: block; padding: 12px 16px; background-color: ${COLORS.lightGray}; border-radius: 8px; border-left: 3px solid ${COLORS.primary};">
+                      <strong style="color: ${COLORS.charcoal}; font-size: 14px;">${tool.name}</strong>
+                      <span style="color: ${COLORS.gray}; font-size: 13px;"> – ${tool.description}</span>
+                    </a>
+                  </td>
+                </tr>
+                `).join('')}
               </table>
             </td>
           </tr>
@@ -186,7 +251,7 @@ const generateHtmlEmail = (unsubscribeUrl: string): string => {
               <ul style="margin: 0; padding: 0 0 0 20px; font-size: 14px; color: ${COLORS.gray}; line-height: 1.7;">
                 <li style="margin-bottom: 6px;"><strong>Gather your paperwork</strong> – Buyers expect: title, health permits, fire suppression tags, equipment receipts.</li>
                 <li style="margin-bottom: 6px;"><strong>Deep clean everything</strong> – First impressions matter. A spotless truck commands higher offers.</li>
-                <li><strong>Use our PricePilot tool</strong> – Get a data-backed valuation to price competitively. <a href="https://vendibook.com/tools/pricepilot" style="color: ${COLORS.primary}; text-decoration: underline;">Try it free →</a></li>
+                <li><strong>Price it right</strong> – Use <a href="https://vendibook.com/tools/pricepilot" style="color: ${COLORS.primary}; text-decoration: underline;">PricePilot</a> to get a data-backed valuation.</li>
               </ul>
             </td>
           </tr>
@@ -244,8 +309,21 @@ Financing is now available at checkout for eligible transactions:
 ---
 
 → Create a Free Listing: https://vendibook.com/list
+→ Browse New Listings: https://vendibook.com/search
 
-→ Read the Latest Blog Post: ${LATEST_BLOG.url}
+---
+
+📖 FROM THE BLOG
+
+${LATEST_BLOG.title}
+${LATEST_BLOG.excerpt}
+Read the full guide: ${LATEST_BLOG.url}
+
+---
+
+🛠️ FREE TOOLS FOR HOSTS
+
+${HOST_TOOLS.map(tool => `• ${tool.name} – ${tool.description}: ${tool.url}`).join('\n')}
 
 ---
 
@@ -253,7 +331,7 @@ Financing is now available at checkout for eligible transactions:
 
 • Gather your paperwork – Buyers expect: title, health permits, fire suppression tags, equipment receipts.
 • Deep clean everything – First impressions matter. A spotless truck commands higher offers.
-• Use our PricePilot tool – Get a data-backed valuation to price competitively: https://vendibook.com/tools/pricepilot
+• Price it right – Use PricePilot to get a data-backed valuation: https://vendibook.com/tools/pricepilot
 
 ---
 
