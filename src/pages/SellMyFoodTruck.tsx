@@ -269,13 +269,13 @@ const SellMyFoodTruck = () => {
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
-                  <Button size="lg" asChild className="text-base bg-foreground text-background hover:bg-foreground/90">
+                  <Button size="lg" variant="dark-shine" asChild className="text-base">
                     <Link to="/list?mode=sale">
                       List for Sale
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button size="lg" variant="outline" asChild className="text-base">
+                  <Button size="lg" variant="dark-shine" asChild className="text-base">
                     <Link to="/tools/pricepilot">
                       Get a Price Estimate
                     </Link>
@@ -353,7 +353,7 @@ const SellMyFoodTruck = () => {
                       <p className="text-muted-foreground text-sm mb-4">
                         Comparable listings + a recommended price range with confidence cues.
                       </p>
-                      <Button asChild className="w-full">
+                      <Button variant="dark-shine" asChild className="w-full">
                         <Link to="/tools/pricepilot">
                           Get AI Suggestions
                           <ChevronRight className="ml-1 h-4 w-4" />
@@ -596,7 +596,7 @@ const SellMyFoodTruck = () => {
                           Let buyers pay over time — you get paid upfront, no extra fees.
                         </p>
                       </div>
-                      <Button variant="outline" size="sm" asChild className="gap-1 shrink-0">
+                      <Button variant="dark-shine" size="sm" asChild className="gap-1 shrink-0">
                         <Link to="/payments">
                           Learn more
                           <ChevronRight className="h-3 w-3" />
@@ -605,7 +605,7 @@ const SellMyFoodTruck = () => {
                     </div>
                   </CardContent>
                 </Card>
-                <Button variant="outline" size="sm" asChild>
+                <Button variant="dark-shine" size="sm" asChild>
                   <Link to="/pricing-calculator">
                     See fee breakdown
                     <ChevronRight className="ml-1 h-4 w-4" />
@@ -671,13 +671,13 @@ const SellMyFoodTruck = () => {
                   List your truck today — or get a price estimate first.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
-                  <Button size="lg" asChild>
+                  <Button size="lg" variant="dark-shine" asChild>
                     <Link to="/list?mode=sale">
                       List for Sale
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button size="lg" variant="outline" asChild>
+                  <Button size="lg" variant="dark-shine" asChild>
                     <Link to="/tools/pricepilot">
                       Get a Price Estimate
                     </Link>
@@ -700,10 +700,10 @@ const SellMyFoodTruck = () => {
         {/* Sticky Mobile CTA */}
         <div className="fixed bottom-0 left-0 right-0 p-3 bg-background/95 backdrop-blur-sm border-t md:hidden z-40">
           <div className="flex gap-2">
-            <Button asChild className="flex-1">
+            <Button variant="dark-shine" asChild className="flex-1">
               <Link to="/list?mode=sale">List for Sale</Link>
             </Button>
-            <Button variant="outline" asChild className="flex-1">
+            <Button variant="dark-shine" asChild className="flex-1">
               <Link to="/tools/pricepilot">Price Estimate</Link>
             </Button>
           </div>
