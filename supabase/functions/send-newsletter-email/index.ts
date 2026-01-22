@@ -67,7 +67,7 @@ const generateHtmlEmail = (unsubscribeUrl: string): string => {
   </style>
   <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: ${COLORS.lightGray}; color: ${COLORS.charcoal};">
+<body style="margin: 0; padding: 0; font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: ${COLORS.white}; color: ${COLORS.charcoal};">
   
   <!-- Preview text (preheader) -->
   <div style="display: none; max-height: 0px; overflow: hidden;">
@@ -75,7 +75,7 @@ const generateHtmlEmail = (unsubscribeUrl: string): string => {
     &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
   </div>
   
-  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: ${COLORS.lightGray};">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: ${COLORS.white};">
     <tr>
       <td align="center" style="padding: 40px 20px;">
         
