@@ -115,7 +115,7 @@ const Hero = () => {
             style={{ animationDelay: '0.4s', animationFillMode: 'backwards' }}
           >
             <Button
-              variant="gradient-premium"
+              variant="dark-shine"
               size="lg"
               onClick={() => {
                 trackHeroCTAClick('browse');
@@ -128,13 +128,13 @@ const Hero = () => {
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <Button
-              variant="outline"
+              variant="dark-shine"
               size="lg"
               onClick={() => {
                 trackHeroCTAClick('list');
                 navigate('/list');
               }}
-              className="text-base px-8 py-6 border-2 bg-white/10 border-white/30 text-white hover:bg-white/20"
+              className="text-base px-8 py-6"
             >
               Create a Free Listing
             </Button>
