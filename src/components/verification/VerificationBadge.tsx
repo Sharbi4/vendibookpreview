@@ -13,18 +13,19 @@ interface VerificationBadgeProps {
 }
 
 // Image-based verification badge
-const VerifiedBadgeImage = ({ size = 'md', className }: { size?: 'sm' | 'md' | 'lg'; className?: string }) => {
+const VerifiedBadgeImage = ({ size = 'md', className }: { size?: 'sm' | 'md' | 'lg' | 'xl'; className?: string }) => {
   const sizes = {
-    sm: 'h-5 w-5',
-    md: 'h-7 w-7',
-    lg: 'h-10 w-10',
+    sm: 'h-4 w-4',
+    md: 'h-6 w-6',
+    lg: 'h-8 w-8',
+    xl: 'h-10 w-10',
   };
 
   return (
     <img 
       src={verifiedBadgeImg} 
       alt="Verified" 
-      className={cn(sizes[size], "object-contain drop-shadow-sm", className)}
+      className={cn(sizes[size], "object-contain", className)}
     />
   );
 };
