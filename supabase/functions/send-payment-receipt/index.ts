@@ -31,6 +31,8 @@ interface PaymentReceiptRequest {
   deliveryFee?: number;
   freightCost?: number;
   basePrice?: number;
+  // Security deposit
+  depositAmount?: number;
   // Additional info
   paymentDate?: string;
   isRental?: boolean;
@@ -63,13 +65,15 @@ const handler = async (req: Request): Promise<Response> => {
     const deliveryFee = data.deliveryFee || 0;
     const freightCost = data.freightCost || 0;
     const platformFee = data.platformFee || 0;
+    const depositAmount = data.depositAmount || 0;
+    const hasDeposit = depositAmount > 0;
     const paymentDate = data.paymentDate || new Date().toISOString();
     const listingCategory = data.listingCategory || '';
     const listingImageUrl = data.listingImageUrl;
     const hostName = data.hostName || 'Host';
     const numberOfDays = data.numberOfDays;
     const bookingId = data.bookingId || transactionId;
-    const basePrice = data.basePrice || (amount - platformFee - deliveryFee - freightCost);
+    const basePrice = data.basePrice || (amount - platformFee - deliveryFee - freightCost - depositAmount);
 
     console.log(`Sending payment receipt to: ${email}, transaction: ${transactionId}`);
 
@@ -260,6 +264,15 @@ const handler = async (req: Request): Promise<Response> => {
                       <td style="color: #FFFFFF; font-size: 14px; padding: 8px 0; text-align: right;">$${platformFee.toFixed(2)}</td>
                     </tr>
                     ` : ''}
+                    ${hasDeposit ? `
+                    <tr>
+                      <td style="color: rgba(255,255,255,0.8); font-size: 14px; padding: 8px 0;">
+                        Security Deposit
+                        <span style="display: block; font-size: 11px; color: rgba(255,255,255,0.5);">Refundable</span>
+                      </td>
+                      <td style="color: #FFFFFF; font-size: 14px; padding: 8px 0; text-align: right;">$${depositAmount.toFixed(2)}</td>
+                    </tr>
+                    ` : ''}
                     <tr>
                       <td colspan="2" style="padding: 12px 0 0 0;">
                         <div style="border-top: 1px solid rgba(255,255,255,0.2); margin-bottom: 12px;"></div>
@@ -279,6 +292,17 @@ const handler = async (req: Request): Promise<Response> => {
                   <div>
                     <p style="color: #92400E; font-size: 14px; font-weight: 600; margin: 0 0 4px 0;">Escrow Protected Payment</p>
                     <p style="color: #A16207; font-size: 13px; margin: 0; line-height: 1.5;">Your funds are held securely and will be released to the seller after you confirm receipt of the item.</p>
+                  </div>
+                </div>
+                ` : ''}
+                
+                ${hasDeposit && isRental ? `
+                <!-- Deposit Notice -->
+                <div style="background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%); border-radius: 12px; padding: 16px 20px; margin-top: 20px; display: flex; align-items: flex-start; gap: 12px;">
+                  <span style="font-size: 20px;">🛡️</span>
+                  <div>
+                    <p style="color: #1E40AF; font-size: 14px; font-weight: 600; margin: 0 0 4px 0;">Security Deposit: $${depositAmount.toFixed(2)}</p>
+                    <p style="color: #1E3A8A; font-size: 13px; margin: 0; line-height: 1.5;">Your deposit will be automatically refunded after the rental ends, provided there are no issues or damages reported by the host.</p>
                   </div>
                 </div>
                 ` : ''}
