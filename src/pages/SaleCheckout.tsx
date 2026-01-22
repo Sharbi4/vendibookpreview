@@ -50,6 +50,9 @@ const SaleCheckout = () => {
   const { listing, isLoading: isListingLoading, error: listingError } = useListing(listingId || '');
   const { estimate, isLoading: isEstimating, error: estimateError, getEstimate, clearEstimate } = useFreightEstimate();
 
+  // Check if user is the owner of this listing
+  const isOwner = user?.id && listing?.host_id && user.id === listing.host_id;
+
   // Multi-step state
   const [currentStep, setCurrentStep] = useState<CheckoutStep>('delivery');
   
@@ -253,6 +256,16 @@ const SaleCheckout = () => {
       return;
     }
 
+    // Prevent owners from purchasing their own listings
+    if (isOwner) {
+      toast({
+        title: 'Cannot purchase your own listing',
+        description: 'You cannot buy your own listing.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!priceSale || !listingId || !listing?.host_id) return;
 
     if (!agreedToTerms) {
@@ -379,6 +392,27 @@ const SaleCheckout = () => {
           <button onClick={() => navigate('/browse')} className="text-primary hover:underline">
             Browse Listings
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Block owners from purchasing their own listings
+  if (isOwner) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="text-center max-w-md">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <ArrowLeft className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">You own this listing</h2>
+            <p className="text-muted-foreground mb-4">You cannot purchase your own listing.</p>
+            <button onClick={() => navigate(`/listing/${listingId}`)} className="text-primary hover:underline">
+              Back to listing
+            </button>
+          </div>
         </div>
       </div>
     );

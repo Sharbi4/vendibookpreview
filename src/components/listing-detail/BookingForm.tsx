@@ -77,6 +77,9 @@ const BookingForm = ({
   const { toast } = useToast();
   const { isDateUnavailable } = useBlockedDates({ listingId });
   
+  // Check if user is the owner of this listing
+  const isOwner = user?.id === hostId;
+  
   // Determine if this is a mobile asset or static location
   const isMobileAsset = category === 'food_truck' || category === 'food_trailer';
   const isStaticLocation = category === 'ghost_kitchen' || category === 'vendor_lot';
@@ -234,6 +237,16 @@ const BookingForm = ({
   const handleSubmit = async () => {
     if (!user) {
       navigate('/auth');
+      return;
+    }
+
+    // Prevent owners from booking their own listings
+    if (isOwner) {
+      toast({
+        title: 'Cannot book your own listing',
+        description: 'You cannot rent your own listing.',
+        variant: 'destructive',
+      });
       return;
     }
 

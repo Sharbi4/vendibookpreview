@@ -34,10 +34,23 @@ export const MakeOfferModal = ({
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Check if user is the owner of this listing
+  const isOwner = user?.id === sellerId;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!user) return;
+    
+    // Prevent owners from making offers on their own listings
+    if (isOwner) {
+      toast({
+        title: 'Cannot make offer',
+        description: 'You cannot make an offer on your own listing.',
+        variant: 'destructive',
+      });
+      return;
+    }
     
     const amount = parseFloat(offerAmount);
     if (isNaN(amount) || amount <= 0) {

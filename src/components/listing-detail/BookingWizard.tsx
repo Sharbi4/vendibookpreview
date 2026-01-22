@@ -76,6 +76,9 @@ const BookingWizard = ({
   const { isDateUnavailable } = useBlockedDates({ listingId });
   const { draft, saveDraft, clearDraft, isLoaded: draftLoaded } = useBookingDraft({ listingId });
   
+  // Check if user is the owner of this listing
+  const isOwner = user?.id === hostId;
+  
   // Check if listing has required documents
   const { data: requiredDocs } = useListingRequiredDocuments(listingId);
   const hasRequiredDocs = requiredDocs && requiredDocs.length > 0;
@@ -197,6 +200,16 @@ const BookingWizard = ({
   const handleSubmit = async () => {
     if (!user) {
       navigate('/auth');
+      return;
+    }
+
+    // Prevent owners from booking their own listings
+    if (isOwner) {
+      toast({
+        title: 'Cannot book your own listing',
+        description: 'You cannot rent your own listing.',
+        variant: 'destructive',
+      });
       return;
     }
 
