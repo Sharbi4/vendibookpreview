@@ -296,7 +296,7 @@ const Insurance = () => {
                   food vendors, event professionals, and mobile business operators. Coverage can be purchased 
                   for single events or ongoing operations.
                 </p>
-                <Button asChild>
+                <Button variant="dark-shine" asChild>
                   <a 
                     href="https://www.fliprogram.com" 
                     target="_blank" 
@@ -517,7 +517,7 @@ const Insurance = () => {
             <p className="text-muted-foreground mb-6">
               Contact us if you need clarification on insurance requirements or have concerns about coverage.
             </p>
-            <Button asChild>
+            <Button variant="dark-shine" asChild>
               <Link to="/contact">Contact Support</Link>
             </Button>
           </section>

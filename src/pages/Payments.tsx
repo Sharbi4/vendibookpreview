@@ -50,13 +50,13 @@ const Payments = () => {
                 Vendibook is built to keep transactions safe, trackable, and fair—with Stripe-powered payments, protected holds, and flexible checkout options for both rentals and purchases.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button size="lg" asChild className="bg-foreground text-background hover:bg-foreground/90">
+                <Button size="lg" variant="dark-shine" asChild>
                   <Link to="/search">
                     <Search className="h-4 w-4 mr-2" />
                     Start Your Search
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" asChild>
+                <Button size="lg" variant="dark-shine" asChild>
                   <Link to="/list">
                     <PlusCircle className="h-4 w-4 mr-2" />
                     Create a Free Listing
@@ -238,13 +238,13 @@ const Payments = () => {
               {/* CTA for Sales */}
               <div className="flex flex-col sm:flex-row gap-3 items-center justify-center p-6 bg-muted/30 rounded-xl">
                 <p className="text-sm text-muted-foreground">Selling? Reach serious buyers nationwide.</p>
-                <Button variant="outline" asChild>
+                <Button variant="dark-shine" asChild>
                   <Link to="/sell-my-food-truck">
                     Create a For-Sale Listing
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Link>
                 </Button>
-                <Button variant="ghost" asChild>
+                <Button variant="dark-shine" asChild>
                   <Link to="/search?mode=sale">
                     Browse Assets For Sale
                   </Link>
@@ -346,13 +346,13 @@ const Payments = () => {
 
               {/* CTA for Rentals */}
               <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
-                <Button asChild className="bg-foreground text-background hover:bg-foreground/90">
+                <Button variant="dark-shine" asChild>
                   <Link to="/search?mode=rent">
                     <Search className="h-4 w-4 mr-2" />
                     Find a Rental
                   </Link>
                 </Button>
-                <Button variant="outline" asChild>
+                <Button variant="dark-shine" asChild>
                   <Link to="/list">
                     Create a Rental Listing
                     <ArrowRight className="h-4 w-4 ml-2" />
@@ -419,7 +419,7 @@ const Payments = () => {
               </div>
 
               <div className="text-center">
-                <Button variant="ghost" asChild>
+                <Button variant="dark-shine" asChild>
                   <Link to="/help/buyer-protection">
                     <HandshakeIcon className="h-4 w-4 mr-2" />
                     Learn How Protection Works
@@ -438,13 +438,13 @@ const Payments = () => {
                 Ready to buy, book, or list—confidently?
               </h2>
               <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
-                <Button size="lg" asChild className="bg-foreground text-background hover:bg-foreground/90">
+                <Button size="lg" variant="dark-shine" asChild>
                   <Link to="/search">
                     <Search className="h-4 w-4 mr-2" />
                     Start Your Search
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" asChild>
+                <Button size="lg" variant="dark-shine" asChild>
                   <Link to="/list">
                     <PlusCircle className="h-4 w-4 mr-2" />
                     Create a Free Listing
