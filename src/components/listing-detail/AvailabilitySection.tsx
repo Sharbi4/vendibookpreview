@@ -47,7 +47,7 @@ export const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({
         </p>
 
         <Button
-          variant="gradient"
+          variant="dark-shine"
           className="w-full gap-2"
           size="lg"
           onClick={() => setShowDateModal(true)}

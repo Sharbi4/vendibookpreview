@@ -151,7 +151,8 @@ const InquiryForm = ({
         <div className="flex gap-2">
           <Button 
             onClick={handleStartPurchase}
-            className="flex-1 h-12 text-base bg-primary hover:bg-primary/90" 
+            variant="dark-shine"
+            className="flex-1 h-12 text-base" 
             size="lg"
             disabled={!priceSale}
           >
