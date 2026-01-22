@@ -150,7 +150,7 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
 
           <div className="flex-shrink-0">
             {nextStep.action.to ? (
-              <Button size="sm" asChild className="gap-1.5">
+              <Button size="sm" variant="dark-shine" asChild className="gap-1.5">
                 <Link to={nextStep.action.to}>
                   {nextStep.action.label}
                   <ArrowRight className="h-3.5 w-3.5" />
@@ -159,6 +159,7 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
             ) : (
               <Button 
                 size="sm" 
+                variant="dark-shine"
                 onClick={nextStep.action.onClick}
                 disabled={isConnectingStripe}
                 className="gap-1.5"

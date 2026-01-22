@@ -194,7 +194,7 @@ export const BookingOnboardingModal = ({
             Skip intro
           </Button>
           
-          <Button variant="gradient" onClick={handleNext} className="gap-1.5">
+          <Button variant="dark-shine" onClick={handleNext} className="gap-1.5">
             {currentStep < steps.length - 1 ? (
               <>
                 Next

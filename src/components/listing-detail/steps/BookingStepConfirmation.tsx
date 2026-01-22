@@ -199,7 +199,7 @@ const BookingStepConfirmation = ({
         </div>
 
         {/* Primary CTA */}
-        <Button variant="gradient" asChild className="w-full h-12 text-base mb-3">
+        <Button variant="dark-shine" asChild className="w-full h-12 text-base mb-3">
           <Link to="/dashboard">
             <Calendar className="h-4 w-4 mr-2" />
             View My Booking

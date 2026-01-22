@@ -235,7 +235,7 @@ const BookingStepDetails = ({
           Back
         </Button>
         <Button 
-          variant="gradient" 
+          variant="dark-shine"
           onClick={onContinue} 
           className="flex-1 h-12"
           disabled={!canContinue}

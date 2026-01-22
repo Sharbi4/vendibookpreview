@@ -517,14 +517,10 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
             {/* Pay Now / Retry Payment Button for approved unpaid or failed bookings */}
             {needsPayment && (
               <Button
-                variant="default"
+                variant="dark-shine"
                 size="sm"
                 onClick={() => setShowPriceBreakdown(true)}
                 disabled={isProcessingPayment}
-                className={paymentStatus === 'failed' 
-                  ? "bg-destructive hover:bg-destructive/90" 
-                  : "bg-primary hover:bg-primary/90"
-                }
               >
                 {isProcessingPayment ? (
                   <Loader2 className="h-4 w-4 mr-1 animate-spin" />
@@ -553,10 +549,9 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
 
             {canReview && (
               <Button
-                variant="default"
+                variant="dark-shine"
                 size="sm"
                 onClick={() => setShowReviewForm(true)}
-                className="ml-auto"
               >
                 <Star className="h-4 w-4 mr-1" />
                 Leave Review

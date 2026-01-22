@@ -156,7 +156,7 @@ export const GetBookedFasterCard = () => {
                   <p className="text-xs text-muted-foreground mt-0.5">{tip.description}</p>
                 </div>
                 {tip.actionTo && (
-                  <Button size="sm" asChild className="flex-shrink-0 h-8 text-xs gap-1">
+                  <Button size="sm" variant="dark-shine" asChild className="flex-shrink-0 h-8 text-xs gap-1">
                     <Link to={tip.actionTo}>
                       {tip.actionLabel}
                       <ArrowRight className="h-3 w-3" />

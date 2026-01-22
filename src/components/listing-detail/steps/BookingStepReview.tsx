@@ -178,7 +178,7 @@ const BookingStepReview = ({
           Back
         </Button>
         <Button 
-          variant="gradient" 
+          variant="dark-shine"
           onClick={onSubmit} 
           className="flex-1 h-12 text-base"
           disabled={isSubmitting}
