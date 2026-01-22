@@ -7,8 +7,7 @@ const corsHeaders = {
 };
 
 interface CampaignEmailRequest {
-  to: string;
-  subject: string;
+  to: string | string[];
   campaignId: string;
 }
 
@@ -142,25 +141,49 @@ serve(async (req) => {
       );
     }
 
-    const { error: emailError, data } = await resend.emails.send({
-      from: "Alison from VendiBook <hello@updates.vendibook.com>",
-      to: [to],
-      subject: campaign.subject,
-      html: campaign.html,
-    });
+    // Normalize to array
+    const recipients = Array.isArray(to) ? to : [to];
+    const results: { email: string; success: boolean; messageId?: string; error?: string }[] = [];
 
-    if (emailError) {
-      console.error("Email send error:", emailError);
-      return new Response(
-        JSON.stringify({ error: emailError.message }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // Helper to delay between sends (Resend rate limit: 2/sec)
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+    // Send to each recipient individually with rate limiting
+    for (const email of recipients) {
+      try {
+        const { error: emailError, data } = await resend.emails.send({
+          from: "Alison from VendiBook <hello@updates.vendibook.com>",
+          to: [email],
+          subject: campaign.subject,
+          html: campaign.html,
+        });
+
+        if (emailError) {
+          console.error(`Email send error for ${email}:`, emailError);
+          results.push({ email, success: false, error: emailError.message });
+        } else {
+          console.log(`Campaign email sent to ${email}:`, data?.id);
+          results.push({ email, success: true, messageId: data?.id });
+        }
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        results.push({ email, success: false, error: errMsg });
+      }
+      
+      // Wait 600ms between sends to stay under rate limit
+      await delay(600);
     }
 
-    console.log("Campaign email sent successfully:", data);
+    const successCount = results.filter(r => r.success).length;
+    const failCount = results.filter(r => !r.success).length;
 
     return new Response(
-      JSON.stringify({ success: true, messageId: data?.id }),
+      JSON.stringify({ 
+        success: true, 
+        sent: successCount, 
+        failed: failCount,
+        results 
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
