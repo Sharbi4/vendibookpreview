@@ -296,8 +296,16 @@ const BookingCheckout = () => {
       
       trackRequestSubmitted(listingId || '', listing.instant_book || false);
       
-      // Redirect to Stripe checkout
-      window.location.href = checkoutData.url;
+      // Redirect to Stripe checkout - open in new tab to bypass iframe restrictions
+      const stripeWindow = window.open(checkoutData.url, '_blank');
+      if (!stripeWindow) {
+        // Fallback: if popup blocked, try top-level navigation
+        if (window.top) {
+          window.top.location.href = checkoutData.url;
+        } else {
+          window.location.href = checkoutData.url;
+        }
+      }
     } catch (error) {
       console.error('Error submitting booking:', error);
       toast({
