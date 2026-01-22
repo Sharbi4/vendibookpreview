@@ -262,6 +262,54 @@ export function useAdminBulkApproveDocuments() {
   });
 }
 
+// Approve all pending documents for a specific booking and send single summary email
+export function useAdminApproveAllBookingDocs() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ bookingId, documents }: { bookingId: string; documents: AdminBookingDocument[] }) => {
+      const documentIds = documents.map(d => d.id);
+      const documentTypes = documents.map(d => d.document_type);
+
+      // Batch update all documents
+      const { data, error } = await supabase
+        .from('booking_documents')
+        .update({
+          status: 'approved',
+          rejection_reason: null,
+          reviewed_at: new Date().toISOString(),
+        })
+        .in('id', documentIds)
+        .select();
+
+      if (error) throw error;
+
+      // Send single summary notification for all approved docs
+      await sendBulkApprovalNotification(bookingId, documentTypes);
+
+      return { count: data?.length || 0 };
+    },
+    onSuccess: (result, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-documents'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-documents'] });
+      queryClient.invalidateQueries({ queryKey: ['booking-documents', variables.bookingId] });
+
+      toast({
+        title: 'All documents approved',
+        description: `Successfully approved ${result.count} document(s). Host and renter have been notified.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Approval failed',
+        description: error instanceof Error ? error.message : 'Failed to approve documents',
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
 // Helper to send document notification emails (with check_all_approved for approvals)
 async function sendDocumentNotification(
   bookingId: string,
@@ -285,6 +333,28 @@ async function sendDocumentNotification(
     }
   } catch (err) {
     console.error('Error sending document notification:', err);
+  }
+}
+
+// Helper for bulk approval - sends single summary email to both host and renter
+async function sendBulkApprovalNotification(
+  bookingId: string,
+  documentTypes: string[]
+) {
+  try {
+    const { error } = await supabase.functions.invoke('send-document-notification', {
+      body: {
+        booking_id: bookingId,
+        document_types: documentTypes, // Array of all approved doc types
+        event_type: 'all_approved',
+        is_bulk_approval: true,
+      },
+    });
+    if (error) {
+      console.error('Failed to send bulk approval notification:', error);
+    }
+  } catch (err) {
+    console.error('Error sending bulk approval notification:', err);
   }
 }
 

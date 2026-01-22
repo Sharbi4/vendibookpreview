@@ -11,10 +11,12 @@ const corsHeaders = {
 
 interface DocumentNotificationRequest {
   booking_id: string;
-  document_type: string;
+  document_type?: string;
+  document_types?: string[]; // For bulk approval
   event_type: "uploaded" | "approved" | "rejected" | "all_approved";
   rejection_reason?: string;
   check_all_approved?: boolean;
+  is_bulk_approval?: boolean; // When true, sends single summary email
 }
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
@@ -124,8 +126,8 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const { booking_id, document_type, event_type, rejection_reason, check_all_approved }: DocumentNotificationRequest = await req.json();
-    logStep("Request received", { booking_id, document_type, event_type, check_all_approved });
+    const { booking_id, document_type, document_types, event_type, rejection_reason, check_all_approved, is_bulk_approval }: DocumentNotificationRequest = await req.json();
+    logStep("Request received", { booking_id, document_type, document_types, event_type, check_all_approved, is_bulk_approval });
 
     if (!booking_id || !event_type) {
       throw new Error("Missing required fields: booking_id and event_type");
@@ -178,7 +180,17 @@ serve(async (req) => {
 
     const listingTitle = listing?.title || "your listing";
     const isInstantBook = booking.is_instant_book === true;
-    const documentLabel = DOCUMENT_TYPE_LABELS[document_type] || document_type?.replace(/_/g, ' ') || 'Document';
+    
+    // Handle document labels for single or bulk
+    let documentLabel = '';
+    let documentLabels: string[] = [];
+    if (is_bulk_approval && document_types && document_types.length > 0) {
+      documentLabels = document_types.map(dt => DOCUMENT_TYPE_LABELS[dt] || dt?.replace(/_/g, ' ') || 'Document');
+      documentLabel = documentLabels.join(', ');
+    } else {
+      documentLabel = DOCUMENT_TYPE_LABELS[document_type || ''] || document_type?.replace(/_/g, ' ') || 'Document';
+    }
+    
     const startDate = new Date(booking.start_date).toLocaleDateString("en-US", {
       weekday: "short",
       year: "numeric",
@@ -295,7 +307,79 @@ serve(async (req) => {
         });
       }
     } else if (event_type === "all_approved") {
-      // Notify host that all required documents have been approved
+      // This is a bulk approval - send summary email to BOTH host and renter
+      const docListHtml = is_bulk_approval && documentLabels.length > 0 
+        ? documentLabels.map(label => `<li style="color: #166534;">${label}</li>`).join('')
+        : `<li style="color: #166534;">${documentLabel}</li>`;
+
+      // Email to RENTER
+      if (renter?.email) {
+        emails.push({
+          to: renter.email,
+          subject: `✅ Your Documents Have Been Approved - ${listingTitle}`,
+          html: `
+            <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 22px;">Documents Approved! 🎉</h1>
+              </div>
+              
+              <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
+                  Hi ${renter.full_name || 'there'},
+                </p>
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                  Great news! All your documents for <strong>${listingTitle}</strong> have been reviewed and approved by our team.
+                </p>
+                
+                ${isInstantBook ? `
+                <div style="background: #dbeafe; border-radius: 8px; padding: 12px; border: 1px solid #93c5fd; margin: 0 0 16px 0;">
+                  <p style="margin: 0; color: #1e40af; font-size: 14px;">
+                    ⚡ <strong>Instant Book:</strong> Your booking has been automatically confirmed!
+                  </p>
+                </div>
+                ` : ''}
+                
+                <div style="background: #dcfce7; border-radius: 8px; padding: 16px; border: 1px solid #bbf7d0; margin: 0 0 20px 0;">
+                  <p style="margin: 0 0 8px 0; font-weight: 600; color: #166534; font-size: 16px;">✓ Approved Documents:</p>
+                  <ul style="margin: 0; padding-left: 20px;">
+                    ${docListHtml}
+                  </ul>
+                </div>
+                
+                <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e5e7eb; margin: 0 0 20px 0;">
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                      <td style="padding: 8px 0; color: #6b7280;">Listing:</td>
+                      <td style="padding: 8px 0; font-weight: 600; color: #1f2937;">${listingTitle}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px 0; color: #6b7280;">Booking Dates:</td>
+                      <td style="padding: 8px 0; color: #1f2937;">${startDate} - ${endDate}</td>
+                    </tr>
+                  </table>
+                </div>
+                
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                  ${isInstantBook 
+                    ? 'Your booking is now confirmed and you\'re all set!' 
+                    : 'The host will now review your booking request and respond soon.'}
+                </p>
+                
+                <div style="text-align: center;">
+                  <a href="https://vendibookpreview.lovable.app/dashboard" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Your Booking</a>
+                </div>
+              </div>
+              
+              <div style="padding: 16px; text-align: center; color: #9ca3af; font-size: 12px;">
+                <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a></p>
+                <p style="margin: 0;">© ${new Date().getFullYear()} Vendibook. All rights reserved.</p>
+              </div>
+            </div>
+          `,
+        });
+      }
+
+      // Email to HOST
       if (host?.email) {
         emails.push({
           to: host.email,
@@ -323,15 +407,10 @@ serve(async (req) => {
                 ` : ''}
                 
                 <div style="background: #dcfce7; border-radius: 8px; padding: 16px; border: 1px solid #bbf7d0; margin: 0 0 20px 0;">
-                  <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="background: #22c55e; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                      <span style="color: white; font-size: 24px;">✓</span>
-                    </div>
-                    <div>
-                      <p style="margin: 0 0 4px 0; font-weight: 600; color: #166534; font-size: 16px;">Documents Complete</p>
-                      <p style="margin: 0; color: #15803d; font-size: 14px;">All required documents have been submitted and approved</p>
-                    </div>
-                  </div>
+                  <p style="margin: 0 0 8px 0; font-weight: 600; color: #166534; font-size: 16px;">✓ Approved Documents:</p>
+                  <ul style="margin: 0; padding-left: 20px;">
+                    ${docListHtml}
+                  </ul>
                 </div>
                 
                 <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e5e7eb; margin: 0 0 20px 0;">
@@ -356,7 +435,7 @@ serve(async (req) => {
                 </p>
                 
                 <div style="text-align: center;">
-                  <a href="${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '.lovable.app')}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Dashboard</a>
+                  <a href="https://vendibookpreview.lovable.app/dashboard" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Dashboard</a>
                 </div>
               </div>
               
@@ -369,8 +448,19 @@ serve(async (req) => {
         });
       }
 
-      // Also create an in-app notification for the host
+      // Create in-app notifications for BOTH
       try {
+        // Notification for renter
+        await supabaseClient.from("notifications").insert({
+          user_id: booking.shopper_id,
+          type: "document",
+          title: "Documents Approved ✅",
+          message: `All your documents for "${listingTitle}" have been verified and approved!`,
+          link: "/dashboard",
+        });
+        logStep("In-app notification created for renter", { shopper_id: booking.shopper_id });
+
+        // Notification for host
         await supabaseClient.from("notifications").insert({
           user_id: booking.host_id,
           type: "document",
@@ -380,7 +470,13 @@ serve(async (req) => {
         });
         logStep("In-app notification created for host", { host_id: booking.host_id });
       } catch (notifError: any) {
-        logStep("Failed to create in-app notification", { error: notifError.message });
+        logStep("Failed to create in-app notifications", { error: notifError.message });
+      }
+
+      // For Instant Book with bulk approval: auto-confirm the booking
+      if (isInstantBook && booking.status === 'pending' && is_bulk_approval) {
+        logStep("Bulk approval for Instant Book - auto-confirming booking");
+        await confirmInstantBookBooking(supabaseClient, booking);
       }
     }
 

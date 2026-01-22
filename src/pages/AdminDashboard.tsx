@@ -19,6 +19,7 @@ import TrackingManagementCard from '@/components/admin/TrackingManagementCard';
 import AdminDocumentReviewCard from '@/components/admin/AdminDocumentReviewCard';
 import AdminDocumentHistorySection from '@/components/admin/AdminDocumentHistorySection';
 import AdminBulkDocumentActions from '@/components/admin/AdminBulkDocumentActions';
+import AdminBookingDocumentGroup from '@/components/admin/AdminBookingDocumentGroup';
 import InstantBookMonitorCard from '@/components/admin/InstantBookMonitorCard';
 import ConciergeQueueCard from '@/components/admin/ConciergeQueueCard';
 import EmailPreviewCard from '@/components/admin/EmailPreviewCard';
@@ -366,7 +367,7 @@ const AdminDashboard = () => {
             )}
           </TabsContent>
 
-          {/* Documents Tab */}
+          {/* Documents Tab - Grouped by Booking */}
           <TabsContent value="documents" className="space-y-4">
             {docsLoading ? (
               <div className="space-y-4">
@@ -384,33 +385,45 @@ const AdminDashboard = () => {
               </Card>
             ) : (
               <div className="space-y-4">
-                {/* Bulk Actions */}
+                {/* Global Bulk Actions */}
                 <AdminBulkDocumentActions
                   documents={pendingDocuments}
                   selectedIds={selectedDocIds}
                   onSelectionChange={setSelectedDocIds}
                 />
                 
-                {/* Document Cards */}
-                {pendingDocuments.map((doc) => (
-                  <AdminDocumentReviewCard 
-                    key={doc.id} 
-                    document={doc}
-                    showCheckbox
-                    isSelected={selectedDocIds.has(doc.id)}
-                    onSelectionChange={(selected) => {
-                      setSelectedDocIds(prev => {
-                        const newSet = new Set(prev);
-                        if (selected) {
-                          newSet.add(doc.id);
-                        } else {
-                          newSet.delete(doc.id);
-                        }
-                        return newSet;
-                      });
-                    }}
-                  />
-                ))}
+                {/* Group documents by booking */}
+                {(() => {
+                  // Group documents by booking_id
+                  const groupedByBooking = pendingDocuments.reduce((acc, doc) => {
+                    const bookingId = doc.booking_id;
+                    if (!acc[bookingId]) {
+                      acc[bookingId] = [];
+                    }
+                    acc[bookingId].push(doc);
+                    return acc;
+                  }, {} as Record<string, typeof pendingDocuments>);
+
+                  return Object.entries(groupedByBooking).map(([bookingId, docs]) => (
+                    <AdminBookingDocumentGroup
+                      key={bookingId}
+                      bookingId={bookingId}
+                      documents={docs}
+                      selectedIds={selectedDocIds}
+                      onSelectionChange={(docId, selected) => {
+                        setSelectedDocIds(prev => {
+                          const newSet = new Set(prev);
+                          if (selected) {
+                            newSet.add(docId);
+                          } else {
+                            newSet.delete(docId);
+                          }
+                          return newSet;
+                        });
+                      }}
+                    />
+                  ));
+                })()}
               </div>
             )}
           </TabsContent>
