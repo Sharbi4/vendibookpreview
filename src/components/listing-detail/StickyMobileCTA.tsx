@@ -146,7 +146,7 @@ export const StickyMobileCTA = ({
           {/* Rental CTA */}
           {isRental ? (
             <Button
-              variant="gradient"
+              variant="dark-shine"
               size="sm"
               onClick={handleRentalCTA}
               disabled={!isAvailable}
@@ -170,7 +170,7 @@ export const StickyMobileCTA = ({
                 <span className="xs:hidden">Offer</span>
               </Button>
               <Button
-                variant="gradient"
+                variant="dark-shine"
                 size="sm"
                 onClick={handleBuyNow}
                 disabled={!isAvailable}

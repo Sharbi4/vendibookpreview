@@ -117,7 +117,7 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
 
               {/* Continue button */}
               <Button
-                variant="gradient"
+                variant="dark-shine"
                 className="w-full h-12 text-base"
                 size="lg"
                 onClick={handleContinue}
@@ -143,7 +143,7 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
             <>
               {/* Select dates button */}
               <Button
-                variant="gradient"
+                variant="dark-shine"
                 className="w-full h-12 text-base"
                 size="lg"
                 onClick={() => setShowDateModal(true)}

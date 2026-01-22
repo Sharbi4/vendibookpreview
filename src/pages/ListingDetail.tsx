@@ -112,7 +112,7 @@ const ListingDetail = () => {
           <p className="text-muted-foreground mb-8">
             This listing may have been removed or is no longer available.
           </p>
-          <Button asChild>
+          <Button variant="dark-shine" asChild>
             <Link to="/search">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Search
@@ -281,17 +281,7 @@ const ListingDetail = () => {
                 />
               </div>
 
-              {/* Section 4: Availability (Rentals only) */}
-              {isRental && (
-                <AvailabilitySection
-                  listingId={listing.id}
-                  availableFrom={listing.available_from}
-                  availableTo={listing.available_to}
-                  priceDaily={listing.price_daily}
-                  priceWeekly={listing.price_weekly}
-                  instantBook={listing.instant_book || false}
-                />
-              )}
+              {/* Section 4: Availability is handled by BookingSummaryCard on desktop and StickyMobileCTA on mobile */}
 
               {/* Section 5: Requirements - Modal Entry Point (Rentals only) */}
               {isRental && <RequirementsModal listingId={listing.id} />}
