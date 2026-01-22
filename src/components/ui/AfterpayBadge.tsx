@@ -24,19 +24,13 @@ export const AfterpayBadge = ({ price, className, showTooltip = true, showEstima
   const paymentAmount = Math.round(price / 4);
 
   const badge = (
-    <div 
-      className={cn(
-        "inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[11px] font-medium",
-        "bg-black text-[#b2fce4]",
-        className
-      )}
-    >
+    <div className={cn("inline-flex items-center", className)}>
       <img 
         src={afterpayLogo} 
         alt="Afterpay" 
         className="h-4 w-auto dark:invert"
       />
-      {showEstimate && <span>4 × ${paymentAmount}</span>}
+      {showEstimate && <span className="ml-1 text-[11px] font-medium">4 × ${paymentAmount}</span>}
     </div>
   );
 
