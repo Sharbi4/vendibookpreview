@@ -251,11 +251,21 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
               </span>
             )}
           </p>
-          {/* BNPL badges for eligible sale listings */}
-          {!compact && listing.mode === 'sale' && listing.price_sale && (
+          {/* BNPL badges for eligible listings */}
+          {!compact && (
             <>
-              <AfterpayBadge price={listing.price_sale} />
-              <AffirmBadge price={listing.price_sale} />
+              {listing.mode === 'sale' && listing.price_sale && (
+                <>
+                  <AfterpayBadge price={listing.price_sale} />
+                  <AffirmBadge price={listing.price_sale} />
+                </>
+              )}
+              {listing.mode === 'rent' && listing.price_daily && (
+                <>
+                  <AfterpayBadge price={listing.price_daily * 7} />
+                  <AffirmBadge price={listing.price_daily * 30} />
+                </>
+              )}
             </>
           )}
         </div>
