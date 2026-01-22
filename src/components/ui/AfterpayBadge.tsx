@@ -17,7 +17,7 @@ export const isAfterpayEligible = (price: number): boolean => {
   return price >= AFTERPAY_MIN && price <= AFTERPAY_MAX;
 };
 
-export const AfterpayBadge = ({ price, className, showTooltip = true, showEstimate = true }: AfterpayBadgeProps) => {
+export const AfterpayBadge = ({ price, className, showTooltip = true, showEstimate = false }: AfterpayBadgeProps) => {
   if (!isAfterpayEligible(price)) return null;
 
   // Afterpay splits into 4 payments
