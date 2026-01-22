@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ShieldCheck, ExternalLink, Clock, Star, User } from 'lucide-react';
+import { ShieldCheck, Clock, Star, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import MessageHostButton from '@/components/messaging/MessageHostButton';
 import { useHostResponseTime } from '@/hooks/useHostResponseTime';
 import { useListingAverageRating } from '@/hooks/useReviews';
 import { getDisplayInitials } from '@/lib/displayName';
+import { VerifiedBadgeImage } from '@/components/verification/VerificationBadge';
 
 interface HostCardProps {
   hostId: string;
@@ -48,8 +49,8 @@ const HostCard = ({
             </AvatarFallback>
           </Avatar>
           {isVerified && (
-            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-background rounded-full p-0.5">
-              <ShieldCheck className="h-5 w-5 text-emerald-600" />
+            <div className="absolute -bottom-1 -right-1">
+              <VerifiedBadgeImage size="sm" />
             </div>
           )}
         </div>
@@ -71,8 +72,8 @@ const HostCard = ({
       {/* Trust Badges Row */}
       <div className="flex flex-wrap gap-1.5 mb-4">
         {isVerified && (
-          <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-emerald-500/50 text-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/20">
-            <ShieldCheck className="h-3 w-3 mr-0.5" />
+          <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-amber-500/50 text-amber-600 bg-amber-50/50 dark:bg-amber-950/20 gap-1">
+            <VerifiedBadgeImage size="sm" className="h-3 w-3" />
             Verified ID
           </Badge>
         )}
