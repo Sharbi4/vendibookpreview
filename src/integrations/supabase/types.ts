@@ -300,6 +300,8 @@ export type Database = {
           end_date: string
           first_response_at: string | null
           fulfillment_selected: string | null
+          hold_expires_at: string | null
+          hold_status: string | null
           host_confirmed_at: string | null
           host_id: string
           host_nudge_sent_at: string | null
@@ -346,6 +348,8 @@ export type Database = {
           end_date: string
           first_response_at?: string | null
           fulfillment_selected?: string | null
+          hold_expires_at?: string | null
+          hold_status?: string | null
           host_confirmed_at?: string | null
           host_id: string
           host_nudge_sent_at?: string | null
@@ -392,6 +396,8 @@ export type Database = {
           end_date?: string
           first_response_at?: string | null
           fulfillment_selected?: string | null
+          hold_expires_at?: string | null
+          hold_status?: string | null
           host_confirmed_at?: string | null
           host_id?: string
           host_nudge_sent_at?: string | null

@@ -265,37 +265,39 @@ const BookingCheckout = () => {
         }
       }
 
-      // For Instant Book: redirect to payment
-      if (listing.instant_book) {
-        const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout', {
-          body: {
-            booking_id: bookingResult.id,
-            listing_id: listingId,
-            mode: 'rent',
-            amount: fees.subtotal,
-            delivery_fee: currentDeliveryFee,
-            deposit_amount: depositAmount,
-          },
-        });
+      // Create authorization hold checkout - payment is held until host approves
+      // For Instant Book: use regular checkout (immediate capture)
+      // For Request to Book: use authorization hold (capture on approval)
+      const checkoutFunction = listing.instant_book ? 'create-checkout' : 'create-booking-hold';
+      
+      const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke(checkoutFunction, {
+        body: {
+          booking_id: bookingResult.id,
+          listing_id: listingId,
+          mode: 'rent',
+          amount: fees.subtotal,
+          delivery_fee: currentDeliveryFee,
+          deposit_amount: depositAmount,
+        },
+      });
 
-        if (checkoutError) throw checkoutError;
-        if (!checkoutData?.url) throw new Error('Failed to create checkout session');
+      if (checkoutError) throw checkoutError;
+      if (!checkoutData?.url) throw new Error('Failed to create checkout session');
 
-        trackFormSubmitConversion({ form_type: 'instant_book', listing_id: listingId });
-        window.location.href = checkoutData.url;
-        return;
+      const formType = listing.instant_book ? 'instant_book' : 'booking_request_hold';
+      trackFormSubmitConversion({ form_type: formType, listing_id: listingId });
+      
+      // Notify host about new request (for non-instant book)
+      if (!listing.instant_book) {
+        supabase.functions.invoke('send-booking-notification', {
+          body: { booking_id: bookingResult.id, event_type: 'submitted' },
+        }).catch(console.error);
       }
-
-      // Request to Book: send notification
-      supabase.functions.invoke('send-booking-notification', {
-        body: { booking_id: bookingResult.id, event_type: 'submitted' },
-      }).catch(console.error);
-
-      trackFormSubmitConversion({ form_type: 'booking_request', listing_id: listingId });
-      trackRequestSubmitted(listingId || '', false);
-
-      // Navigate to confirmation
-      navigate(`/dashboard?booking_success=true`);
+      
+      trackRequestSubmitted(listingId || '', listing.instant_book || false);
+      
+      // Redirect to Stripe checkout
+      window.location.href = checkoutData.url;
     } catch (error) {
       console.error('Error submitting booking:', error);
       toast({

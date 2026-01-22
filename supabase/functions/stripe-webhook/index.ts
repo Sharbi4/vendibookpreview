@@ -237,13 +237,38 @@ serve(async (req) => {
 
           // Get deposit amount from metadata
           const depositAmount = session.metadata?.deposit_amount ? parseFloat(session.metadata.deposit_amount) : 0;
+          const isAuthorizationHold = session.metadata?.authorization_hold === 'true';
           const paymentIntentId = typeof session.payment_intent === 'string' 
             ? session.payment_intent 
             : session.payment_intent?.id;
           
+          // Check if this is an authorization hold (manual capture) vs immediate capture
+          let holdStatus = 'none';
+          let paymentStatus = 'paid';
+          let paidAt: string | null = new Date().toISOString();
+          
+          if (isAuthorizationHold && paymentIntentId) {
+            try {
+              const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+              if (paymentIntent.status === 'requires_capture') {
+                // Authorization hold - not yet captured
+                holdStatus = 'held';
+                paymentStatus = 'authorized';
+                paidAt = null; // Not paid yet, just authorized
+                logStep("Authorization hold detected", { paymentIntentId, status: paymentIntent.status });
+              } else if (paymentIntent.status === 'succeeded') {
+                // Already captured
+                holdStatus = 'captured';
+                paymentStatus = 'paid';
+              }
+            } catch (piError) {
+              logStep("WARNING: Could not check payment intent status", { error: String(piError) });
+            }
+          }
+          
           // Get the charge ID from the payment intent for deposit tracking
           let depositChargeId: string | null = null;
-          if (depositAmount > 0 && paymentIntentId) {
+          if (depositAmount > 0 && paymentIntentId && paymentStatus === 'paid') {
             try {
               const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
               if (paymentIntent.latest_charge) {
@@ -261,15 +286,21 @@ serve(async (req) => {
           const { error: updateError } = await supabaseClient
             .from("booking_requests")
             .update({
-              payment_status: "paid",
+              payment_status: paymentStatus,
               checkout_session_id: session.id,
               payment_intent_id: paymentIntentId,
-              paid_at: new Date().toISOString(),
-              // Security deposit tracking - set to 'charged' when payment is made
-              ...(depositAmount > 0 && {
+              ...(paidAt && { paid_at: paidAt }),
+              hold_status: holdStatus,
+              // Security deposit tracking - set to 'charged' when payment is made (not authorized)
+              ...(depositAmount > 0 && paymentStatus === 'paid' && {
                 deposit_amount: depositAmount,
                 deposit_status: 'charged',
                 deposit_charge_id: depositChargeId,
+              }),
+              // For authorization holds, store deposit amount but don't mark as charged yet
+              ...(depositAmount > 0 && paymentStatus === 'authorized' && {
+                deposit_amount: depositAmount,
+                deposit_status: 'pending',
               }),
             })
             .eq("id", bookingId);
