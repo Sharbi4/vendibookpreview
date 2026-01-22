@@ -30,8 +30,11 @@ interface PurchaseStepDeliveryProps {
   fetchFreightEstimate: (address: string) => void;
   clearEstimate: () => void;
   // Navigation
+  onBack: () => void;
   onContinue: () => void;
 }
+
+export type { PurchaseStepDeliveryProps };
 
 const PurchaseStepDelivery = ({
   fulfillmentOptions,
@@ -53,6 +56,7 @@ const PurchaseStepDelivery = ({
   setIsAddressComplete,
   fetchFreightEstimate,
   clearEstimate,
+  onBack,
   onContinue,
 }: PurchaseStepDeliveryProps) => {
   const canContinue = fulfillmentSelected === 'pickup' || 
@@ -303,17 +307,27 @@ const PurchaseStepDelivery = ({
       </div>
 
       {/* Next Step Hint */}
-      <NextStepHint text="Add your contact details for scheduling and receipts." />
+      <NextStepHint text="Review your order and complete payment." />
 
-      {/* Continue Button */}
-      <Button
-        onClick={onContinue}
-        disabled={!canContinue}
-        className="w-full"
-        size="lg"
-      >
-        Continue
-      </Button>
+      {/* Navigation Buttons */}
+      <div className="flex gap-3">
+        <Button
+          variant="outline"
+          onClick={onBack}
+          className="flex-1"
+          size="lg"
+        >
+          Back
+        </Button>
+        <Button
+          onClick={onContinue}
+          disabled={!canContinue}
+          className="flex-1"
+          size="lg"
+        >
+          Continue to Review
+        </Button>
+      </div>
     </div>
   );
 };

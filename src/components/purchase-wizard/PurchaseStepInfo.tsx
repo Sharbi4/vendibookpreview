@@ -1,4 +1,3 @@
-import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -53,16 +52,6 @@ const PurchaseStepInfo = ({
 
   return (
     <div className="space-y-6">
-      {/* Back Button */}
-      <button
-        type="button"
-        onClick={onBack}
-        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to delivery
-      </button>
-
       {/* Step Header */}
       <div>
         <h2 className="text-xl font-bold text-foreground">Your information</h2>
@@ -156,12 +145,22 @@ const PurchaseStepInfo = ({
       </div>
 
       {/* Next Step Hint */}
-      <NextStepHint text="Review your order and agree to purchase terms." />
+      <NextStepHint text="Choose your delivery method next." />
 
-      {/* Continue Button */}
-      <Button onClick={onContinue} className="w-full" size="lg">
-        Continue to Review
-      </Button>
+      {/* Navigation Buttons */}
+      <div className="flex gap-3">
+        <Button
+          variant="outline"
+          onClick={onBack}
+          className="flex-1"
+          size="lg"
+        >
+          Back
+        </Button>
+        <Button onClick={onContinue} className="flex-1" size="lg">
+          Continue to Delivery
+        </Button>
+      </div>
     </div>
   );
 };

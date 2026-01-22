@@ -24,19 +24,18 @@ import StickySummary from '@/components/shared/StickySummary';
 import { PurchaseStepDelivery, PurchaseStepInfo, PurchaseStepReview } from '@/components/purchase-wizard';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
-type CheckoutStep = 'delivery' | 'information' | 'review';
+type CheckoutStep = 'information' | 'delivery' | 'review';
 
 const CHECKOUT_STEPS: WizardStep[] = [
-  { step: 1, label: 'Delivery', short: 'Delivery' },
-  { step: 2, label: 'Your Info', short: 'Info' },
-  { step: 3, label: 'Review', short: 'Review' },
-  { step: 4, label: 'Pay', short: 'Pay' },
+  { step: 1, label: 'Your Info', short: 'Info' },
+  { step: 2, label: 'Delivery', short: 'Delivery' },
+  { step: 3, label: 'Review & Pay', short: 'Pay' },
 ];
 
 const getStepNumber = (step: CheckoutStep): number => {
   switch (step) {
-    case 'delivery': return 1;
-    case 'information': return 2;
+    case 'information': return 1;
+    case 'delivery': return 2;
     case 'review': return 3;
     default: return 1;
   }
@@ -54,7 +53,7 @@ const SaleCheckout = () => {
   const isOwner = user?.id && listing?.host_id && user.id === listing.host_id;
 
   // Multi-step state
-  const [currentStep, setCurrentStep] = useState<CheckoutStep>('delivery');
+  const [currentStep, setCurrentStep] = useState<CheckoutStep>('information');
   
   // Customer info
   const [name, setName] = useState('');
@@ -455,7 +454,7 @@ const SaleCheckout = () => {
                 <WizardHeader
                   mode="checkout"
                   currentStep={currentStepNumber}
-                  totalSteps={4}
+                  totalSteps={3}
                   steps={CHECKOUT_STEPS}
                 />
 
@@ -469,6 +468,31 @@ const SaleCheckout = () => {
                       exit={{ opacity: 0, x: -20 }}
                       transition={{ duration: 0.2 }}
                     >
+                      {currentStep === 'information' && (
+                        <PurchaseStepInfo
+                          name={name}
+                          setName={setName}
+                          email={email}
+                          setEmail={setEmail}
+                          phone={phone}
+                          setPhone={setPhone}
+                          address={address}
+                          setAddress={setAddress}
+                          deliveryInstructions={deliveryInstructions}
+                          setDeliveryInstructions={setDeliveryInstructions}
+                          fulfillmentSelected={fulfillmentSelected}
+                          fieldErrors={fieldErrors}
+                          touchedFields={touchedFields}
+                          setTouchedFields={setTouchedFields}
+                          onBack={() => navigate(`/listing/${listingId}`)}
+                          onContinue={() => {
+                            if (validateStep('information')) {
+                              setCurrentStep('delivery');
+                            }
+                          }}
+                        />
+                      )}
+
                       {currentStep === 'delivery' && (
                         <PurchaseStepDelivery
                           fulfillmentOptions={fulfillmentOptions}
@@ -490,33 +514,9 @@ const SaleCheckout = () => {
                           setIsAddressComplete={setIsAddressComplete}
                           fetchFreightEstimate={fetchFreightEstimate}
                           clearEstimate={clearEstimate}
+                          onBack={() => setCurrentStep('information')}
                           onContinue={() => {
                             if (validateStep('delivery')) {
-                              setCurrentStep('information');
-                            }
-                          }}
-                        />
-                      )}
-
-                      {currentStep === 'information' && (
-                        <PurchaseStepInfo
-                          name={name}
-                          setName={setName}
-                          email={email}
-                          setEmail={setEmail}
-                          phone={phone}
-                          setPhone={setPhone}
-                          address={address}
-                          setAddress={setAddress}
-                          deliveryInstructions={deliveryInstructions}
-                          setDeliveryInstructions={setDeliveryInstructions}
-                          fulfillmentSelected={fulfillmentSelected}
-                          fieldErrors={fieldErrors}
-                          touchedFields={touchedFields}
-                          setTouchedFields={setTouchedFields}
-                          onBack={() => setCurrentStep('delivery')}
-                          onContinue={() => {
-                            if (validateStep('information')) {
                               setCurrentStep('review');
                             }
                           }}
@@ -545,7 +545,7 @@ const SaleCheckout = () => {
                           agreedToTerms={agreedToTerms}
                           setAgreedToTerms={setAgreedToTerms}
                           isPurchasing={isPurchasing}
-                          onBack={() => setCurrentStep('information')}
+                          onBack={() => setCurrentStep('delivery')}
                           onEditDelivery={() => setCurrentStep('delivery')}
                           onEditInfo={() => setCurrentStep('information')}
                           onSubmit={handlePurchase}
