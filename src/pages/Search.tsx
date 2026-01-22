@@ -105,6 +105,7 @@ const Search = () => {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [deliveryFilterEnabled, setDeliveryFilterEnabled] = useState(false);
   const [instantBookOnly, setInstantBookOnly] = useState(initialInstantBook);
+  const [verifiedHostsOnly, setVerifiedHostsOnly] = useState(searchParams.get('verified') === 'true');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
@@ -363,6 +364,11 @@ const Search = () => {
       results = results.filter(listing => listing.mode === 'rent' && listing.instant_book === true);
     }
 
+    // Filter by Verified Hosts
+    if (verifiedHostsOnly) {
+      results = results.filter(listing => hostVerificationMap[listing.host_id] === true);
+    }
+
     // Apply sorting
     if (sortBy === 'relevance' && searchQuery.trim()) {
       // Sort by Fuse.js score (lower = better match)
@@ -399,7 +405,7 @@ const Search = () => {
     }
 
     return results;
-  }, [listings, searchQuery, mode, category, locationCoords, searchRadius, priceRange, dateRange, selectedAmenities, deliveryFilterEnabled, fuse, unavailableDates, sortBy]);
+  }, [listings, searchQuery, mode, category, locationCoords, searchRadius, priceRange, dateRange, selectedAmenities, deliveryFilterEnabled, instantBookOnly, verifiedHostsOnly, hostVerificationMap, fuse, unavailableDates, sortBy]);
 
   // Update URL params
   const handleSearch = (value: string) => {
@@ -499,6 +505,7 @@ const Search = () => {
     setSelectedAmenities([]);
     setDeliveryFilterEnabled(false);
     setInstantBookOnly(false);
+    setVerifiedHostsOnly(false);
     setSortBy('newest');
     setSearchParams({});
   };
@@ -534,6 +541,17 @@ const Search = () => {
     setSearchParams(params);
   };
 
+  const handleVerifiedHostsChange = (enabled: boolean) => {
+    setVerifiedHostsOnly(enabled);
+    const params = new URLSearchParams(searchParams);
+    if (enabled) {
+      params.set('verified', 'true');
+    } else {
+      params.delete('verified');
+    }
+    setSearchParams(params);
+  };
+
   const getAmenityLabel = (amenityId: string): string => {
     for (const cat of Object.values(AMENITIES_BY_CATEGORY)) {
       for (const group of cat) {
@@ -558,6 +576,7 @@ const Search = () => {
     selectedAmenities.length > 0,
     deliveryFilterEnabled,
     instantBookOnly,
+    verifiedHostsOnly,
   ].filter(Boolean).length;
 
   // Generate structured data for Google Shopping / Search indexing
@@ -680,6 +699,7 @@ const Search = () => {
                       selectedAmenities={selectedAmenities}
                       deliveryFilterEnabled={deliveryFilterEnabled}
                       instantBookOnly={instantBookOnly}
+                      verifiedHostsOnly={verifiedHostsOnly}
                       onModeChange={handleModeChange}
                       onCategoryChange={handleCategoryChange}
                       onLocationTextChange={setLocationText}
@@ -690,6 +710,7 @@ const Search = () => {
                       onAmenityToggle={toggleAmenity}
                       onDeliveryFilterChange={setDeliveryFilterEnabled}
                       onInstantBookChange={handleInstantBookChange}
+                      onVerifiedHostsChange={handleVerifiedHostsChange}
                       onClear={clearFilters}
                     />
                   </div>
@@ -775,6 +796,7 @@ const Search = () => {
                   selectedAmenities={selectedAmenities}
                   deliveryFilterEnabled={deliveryFilterEnabled}
                   instantBookOnly={instantBookOnly}
+                  verifiedHostsOnly={verifiedHostsOnly}
                   onModeChange={handleModeChange}
                   onCategoryChange={handleCategoryChange}
                   onLocationTextChange={setLocationText}
@@ -785,6 +807,7 @@ const Search = () => {
                   onAmenityToggle={toggleAmenity}
                   onDeliveryFilterChange={setDeliveryFilterEnabled}
                   onInstantBookChange={handleInstantBookChange}
+                  onVerifiedHostsChange={handleVerifiedHostsChange}
                   onClear={clearFilters}
                 />
               </div>
@@ -794,7 +817,7 @@ const Search = () => {
             <div className="flex-1">
 
               {/* Active Filters Badges */}
-              {(mode !== 'all' || category !== 'all' || locationCoords || dateRange?.from || selectedAmenities.length > 0 || instantBookOnly) && (
+              {(mode !== 'all' || category !== 'all' || locationCoords || dateRange?.from || selectedAmenities.length > 0 || instantBookOnly || verifiedHostsOnly) && (
                 <div className="flex flex-wrap gap-2 mb-6">
                   {mode !== 'all' && (
                     <Badge variant="secondary" className="gap-1">
@@ -818,6 +841,15 @@ const Search = () => {
                       <Zap className="h-3 w-3" />
                       Instant Book
                       <button onClick={() => handleInstantBookChange(false)}>
+                        <X className="h-3 w-3 ml-1" />
+                      </button>
+                    </Badge>
+                  )}
+                  {verifiedHostsOnly && (
+                    <Badge variant="secondary" className="gap-1 bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                      <Shield className="h-3 w-3" />
+                      Verified Hosts
+                      <button onClick={() => handleVerifiedHostsChange(false)}>
                         <X className="h-3 w-3 ml-1" />
                       </button>
                     </Badge>
@@ -970,6 +1002,7 @@ interface FilterContentProps {
   selectedAmenities: string[];
   deliveryFilterEnabled: boolean;
   instantBookOnly: boolean;
+  verifiedHostsOnly: boolean;
   onModeChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onLocationTextChange: (value: string) => void;
@@ -980,6 +1013,7 @@ interface FilterContentProps {
   onAmenityToggle: (amenityId: string) => void;
   onDeliveryFilterChange: (enabled: boolean) => void;
   onInstantBookChange: (enabled: boolean) => void;
+  onVerifiedHostsChange: (enabled: boolean) => void;
   onClear: () => void;
 }
 
@@ -994,6 +1028,7 @@ const FilterContent = ({
   selectedAmenities,
   deliveryFilterEnabled,
   instantBookOnly,
+  verifiedHostsOnly,
   onModeChange,
   onCategoryChange,
   onLocationTextChange,
@@ -1004,6 +1039,7 @@ const FilterContent = ({
   onAmenityToggle,
   onDeliveryFilterChange,
   onInstantBookChange,
+  onVerifiedHostsChange,
 }: FilterContentProps) => {
   // Get amenities to show based on selected category
   const getAvailableAmenities = () => {
@@ -1167,21 +1203,38 @@ const FilterContent = ({
           <Zap className="h-4 w-4" />
           Booking Options
         </Label>
-        <label className="flex items-start gap-3 cursor-pointer p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors max-w-xs">
-          <Checkbox
-            checked={instantBookOnly}
-            onCheckedChange={(checked) => onInstantBookChange(checked === true)}
-          />
-          <div className="space-y-0.5">
-            <span className="text-sm font-medium flex items-center gap-1.5">
-              <Zap className="h-3.5 w-3.5 text-amber-500" />
-              Instant Book only
-            </span>
-            <p className="text-xs text-muted-foreground">
-              Book and pay immediately
-            </p>
-          </div>
-        </label>
+        <div className="space-y-2">
+          <label className="flex items-start gap-3 cursor-pointer p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors max-w-xs">
+            <Checkbox
+              checked={instantBookOnly}
+              onCheckedChange={(checked) => onInstantBookChange(checked === true)}
+            />
+            <div className="space-y-0.5">
+              <span className="text-sm font-medium flex items-center gap-1.5">
+                <Zap className="h-3.5 w-3.5 text-amber-500" />
+                Instant Book only
+              </span>
+              <p className="text-xs text-muted-foreground">
+                Book and pay immediately
+              </p>
+            </div>
+          </label>
+          <label className="flex items-start gap-3 cursor-pointer p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors max-w-xs">
+            <Checkbox
+              checked={verifiedHostsOnly}
+              onCheckedChange={(checked) => onVerifiedHostsChange(checked === true)}
+            />
+            <div className="space-y-0.5">
+              <span className="text-sm font-medium flex items-center gap-1.5">
+                <Shield className="h-3.5 w-3.5 text-amber-500" />
+                Verified Hosts only
+              </span>
+              <p className="text-xs text-muted-foreground">
+                ID verified via Stripe Identity
+              </p>
+            </div>
+          </label>
+        </div>
       </div>
 
       {/* Amenities Filter - Show when category is selected */}
