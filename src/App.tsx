@@ -12,6 +12,7 @@ import PageTransition from "@/components/PageTransition";
 import { usePageTracking } from "@/hooks/usePageTracking";
 import { AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
+import GoogleOneTap from "@/components/auth/GoogleOneTap";
 
 // Lazy load all pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -248,6 +249,7 @@ const App = () => (
           <Sonner />
           <CookieConsent />
           <ZendeskWidget />
+          <GoogleOneTap />
           <AnimatedRoutes />
         </AuthProvider>
       </TooltipProvider>
