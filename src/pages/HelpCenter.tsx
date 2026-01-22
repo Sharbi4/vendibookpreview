@@ -265,7 +265,7 @@ const HelpCenter = () => {
                     Chat with our team 24/7 via Zendesk. For account, payouts, bookings, documents, and disputes.
                   </p>
                   <div className="flex flex-col gap-2">
-                    <Button onClick={openZendeskChat} size="sm" className="w-full">
+                    <Button onClick={openZendeskChat} variant="dark-shine" size="sm" className="w-full">
                       <MessageCircle className="h-4 w-4 mr-2" />
                       Chat with Support
                     </Button>
@@ -332,7 +332,7 @@ const HelpCenter = () => {
                         </li>
                       ))}
                     </ul>
-                    <Button asChild variant="outline" size="sm" className="w-full h-8 text-xs">
+                    <Button asChild variant="dark-shine" size="sm" className="w-full h-8 text-xs">
                       <Link to={lane.cta.href}>
                         {lane.cta.label}
                         <ArrowRight className="h-3 w-3 ml-1" />
@@ -442,13 +442,13 @@ const HelpCenter = () => {
                   <CardTitle className="text-base">Turn your truck, trailer, kitchen, or lot into income.</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-wrap gap-2">
-                  <Button asChild size="sm">
+                  <Button asChild variant="dark-shine" size="sm">
                     <Link to="/list">
                       List your asset
                       <ArrowRight className="h-4 w-4 ml-1" />
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" size="sm">
+                  <Button asChild variant="dark-shine" size="sm">
                     <Link to="/host">
                       Host playbook
                     </Link>
@@ -466,13 +466,13 @@ const HelpCenter = () => {
                   <CardTitle className="text-base">Ready to book or buy?</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-wrap gap-2">
-                  <Button asChild size="sm">
+                  <Button asChild variant="dark-shine" size="sm">
                     <Link to="/search">
                       Browse listings
                       <ArrowRight className="h-4 w-4 ml-1" />
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" size="sm">
+                  <Button asChild variant="dark-shine" size="sm">
                     <Link to="/how-it-works">
                       How it works
                     </Link>
@@ -487,6 +487,7 @@ const HelpCenter = () => {
         <div className="md:hidden fixed bottom-4 right-4 z-40">
           <Button
             onClick={openZendeskChat}
+            variant="dark-shine"
             size="lg"
             className="rounded-full h-14 w-14 shadow-lg"
           >
