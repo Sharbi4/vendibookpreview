@@ -105,7 +105,7 @@ const Hero = () => {
             className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight animate-fade-in"
             style={{ animationDelay: '0.15s', animationFillMode: 'backwards' }}
           >
-            The trusted marketplace for mobile food businesses
+            The marketplace for food business
           </h1>
           
 
