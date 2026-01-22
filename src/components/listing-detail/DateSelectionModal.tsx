@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isBefore, startOfDay, parseISO, isSameDay, differenceInDays } from 'date-fns';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
+import { calculateRentalFees } from '@/lib/commissions';
 import {
   Tooltip,
   TooltipContent,
@@ -139,6 +140,8 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
   };
 
   const basePrice = calculateBasePrice();
+  const fees = calculateRentalFees(basePrice);
+  const totalWithFees = fees.customerTotal;
   const canContinue = startDate && endDate && rentalDays > 0;
 
   const handleContinue = () => {
@@ -291,9 +294,12 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
                   )}
                 </div>
                 {startDate && endDate && priceDaily && (
-                  <span className="text-lg font-bold text-primary">
-                    ${basePrice.toLocaleString()}
-                  </span>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-primary">
+                      ${totalWithFees.toLocaleString()}
+                    </span>
+                    <p className="text-[10px] text-muted-foreground">incl. fees</p>
+                  </div>
                 )}
               </div>
               {(startDate || endDate) && (
