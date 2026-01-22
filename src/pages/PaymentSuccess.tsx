@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { CheckCircle2, Calendar, ArrowRight, Loader2, Home, ShieldCheck, Clock, Sparkles, PartyPopper, Mail, ChevronDown, ChevronUp, Receipt, Download, FileText, Printer, Wallet, BanknoteIcon } from 'lucide-react';
+import { CheckCircle2, Calendar, ArrowRight, Loader2, Home, ShieldCheck, Clock, Sparkles, PartyPopper, Mail, ChevronDown, ChevronUp, Receipt, Download, FileText, Printer, Wallet, BanknoteIcon, MapPin, AlertCircle, RefreshCw } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -65,6 +65,7 @@ const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
   const isEscrow = searchParams.get('escrow') === 'true';
+  const isHold = searchParams.get('hold') === 'true';
   const { user } = useAuth();
   
   const [booking, setBooking] = useState<BookingDetails | null>(null);
@@ -518,26 +519,81 @@ const PaymentSuccess = () => {
                   </p>
                 </div>
               ) : (
-                // Regular Booking Success
+                // Regular Booking Success or Hold
                 <div className={`transition-all duration-700 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                   <div className="relative w-24 h-24 mx-auto mb-6">
-                    <div className="absolute inset-0 bg-emerald-200 rounded-full animate-pulse" />
-                    <div className="absolute inset-2 bg-emerald-100 rounded-full" />
+                    <div className={`absolute inset-0 ${isHold ? 'bg-amber-200' : 'bg-emerald-200'} rounded-full animate-pulse`} />
+                    <div className={`absolute inset-2 ${isHold ? 'bg-amber-100' : 'bg-emerald-100'} rounded-full`} />
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <CheckCircle2 className="h-12 w-12 text-emerald-600" />
+                      {isHold ? (
+                        <Clock className="h-12 w-12 text-amber-600" />
+                      ) : (
+                        <CheckCircle2 className="h-12 w-12 text-emerald-600" />
+                      )}
                     </div>
                     <Sparkles className="absolute -top-1 -right-1 h-6 w-6 text-amber-500 animate-bounce" />
                   </div>
                   
                   <h1 className="text-2xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
                     <PartyPopper className="h-6 w-6 text-primary" />
-                    Payment Successful!
+                    {isHold ? 'Request Submitted!' : 'Payment Successful!'}
                     <PartyPopper className="h-6 w-6 text-primary transform scale-x-[-1]" />
                   </h1>
                   
                   <p className="text-muted-foreground mb-6">
-                    Your booking has been confirmed and payment processed.
+                    {isHold 
+                      ? 'Your payment has been authorized. The host will review your request.'
+                      : 'Your booking has been confirmed and payment processed.'
+                    }
                   </p>
+
+                  {/* Host Review Notice for Holds */}
+                  {isHold && (
+                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 rounded-xl p-4 mb-6 text-left border border-amber-200 dark:border-amber-800">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
+                          <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-foreground text-sm">What happens next?</h4>
+                          <ul className="text-xs text-muted-foreground mt-2 space-y-2">
+                            <li className="flex items-start gap-2">
+                              <span className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0 text-xs font-bold text-amber-600">1</span>
+                              <span>The host will review your booking request</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0 text-xs font-bold text-amber-600">2</span>
+                              <span>If approved, your payment will be captured and booking confirmed</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0 text-xs font-bold text-amber-600">3</span>
+                              <span>You'll receive pickup/location details via email and messages</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Refund Policy Notice for Holds */}
+                  {isHold && (
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/20 rounded-xl p-4 mb-6 text-left border border-blue-200 dark:border-blue-800">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
+                          <RefreshCw className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-foreground text-sm flex items-center gap-2">
+                            Automatic Refund Protection
+                            <ShieldCheck className="h-4 w-4 text-blue-600" />
+                          </h4>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            If the host doesn't respond within <span className="font-medium text-blue-600 dark:text-blue-400">7 days</span>, your payment authorization will be automatically released and funds returned to your account within <span className="font-medium text-blue-600 dark:text-blue-400">7-10 business days</span>.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {booking && (
                     <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-4 mb-6 text-left border border-primary/20">
@@ -566,8 +622,15 @@ const PaymentSuccess = () => {
                               })}
                             </span>
                           </div>
+                          {/* Show address for non-hold bookings (pickup/static location) */}
+                          {!isHold && booking.address_snapshot && (booking.fulfillment_selected === 'pickup' || booking.fulfillment_selected === 'on_site') && (
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
+                              <MapPin className="h-4 w-4 text-primary" />
+                              <span className="line-clamp-1">{booking.address_snapshot}</span>
+                            </div>
+                          )}
                           <p className="font-bold text-lg text-primary mt-2">
-                            ${booking.total_price.toFixed(2)} paid
+                            ${booking.total_price.toFixed(2)} {isHold ? 'authorized' : 'paid'}
                           </p>
                         </div>
                       </div>
@@ -625,75 +688,79 @@ const PaymentSuccess = () => {
                     </Collapsible>
                   )}
 
-                  {/* Host Payout Timeline for Rentals */}
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/20 rounded-xl p-4 mb-6 text-left border border-blue-200 dark:border-blue-800">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
-                        <BanknoteIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-foreground text-sm flex items-center gap-2">
-                          Host Payout Timeline
-                        </h4>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Your host will receive their payout within <span className="font-medium text-blue-600 dark:text-blue-400">2-3 business days</span> after the booking begins. Payouts are processed automatically via Stripe.
-                        </p>
-                        <div className="mt-2 flex items-center gap-4 text-xs">
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                            <span className="text-muted-foreground">You paid: <span className="font-medium text-foreground">${booking?.total_price?.toFixed(2) || '—'}</span></span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                            <span className="text-muted-foreground">Platform fee: <span className="font-medium text-foreground">12.9%</span></span>
+                  {/* Host Payout Timeline for Confirmed Rentals (not holds) */}
+                  {!isHold && (
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/20 rounded-xl p-4 mb-6 text-left border border-blue-200 dark:border-blue-800">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
+                          <BanknoteIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-foreground text-sm flex items-center gap-2">
+                            Host Payout Timeline
+                          </h4>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Your host will receive their payout within <span className="font-medium text-blue-600 dark:text-blue-400">2-3 business days</span> after the booking begins. Payouts are processed automatically via Stripe.
+                          </p>
+                          <div className="mt-2 flex items-center gap-4 text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                              <span className="text-muted-foreground">You paid: <span className="font-medium text-foreground">${booking?.total_price?.toFixed(2) || '—'}</span></span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                              <span className="text-muted-foreground">Platform fee: <span className="font-medium text-foreground">12.9%</span></span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Quick Actions for Rentals */}
-                  <div className="flex items-center justify-center gap-3 mb-6">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
-                      onClick={() => {
-                        if (booking) {
-                          const fees = calculateRentalFees(
-                            booking.total_price - (booking.delivery_fee_snapshot || 0),
-                            booking.delivery_fee_snapshot || 0
-                          );
-                          generateReceiptPdf({
-                            transactionId: booking.id,
-                            itemName: booking.listing?.title || 'Your Booking',
-                            amount: booking.total_price,
-                            platformFee: fees.renterFee,
-                            deliveryFee: booking.delivery_fee_snapshot,
-                            isRental: true,
-                            startDate: booking.start_date,
-                            endDate: booking.end_date,
-                            address: booking.address_snapshot,
-                            fulfillmentType: booking.fulfillment_selected,
-                            paymentDate: new Date().toISOString(),
-                            recipientName: userProfile?.full_name || 'Valued Customer',
-                          });
-                        }
-                      }}
-                    >
-                      <Download className="h-4 w-4" />
-                      Download Receipt
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-2"
-                      onClick={() => window.print()}
-                    >
-                      <Printer className="h-4 w-4" />
-                      Print
-                    </Button>
-                  </div>
+                  {/* Quick Actions for Confirmed Rentals (not holds) */}
+                  {!isHold && (
+                    <div className="flex items-center justify-center gap-3 mb-6">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => {
+                          if (booking) {
+                            const fees = calculateRentalFees(
+                              booking.total_price - (booking.delivery_fee_snapshot || 0),
+                              booking.delivery_fee_snapshot || 0
+                            );
+                            generateReceiptPdf({
+                              transactionId: booking.id,
+                              itemName: booking.listing?.title || 'Your Booking',
+                              amount: booking.total_price,
+                              platformFee: fees.renterFee,
+                              deliveryFee: booking.delivery_fee_snapshot,
+                              isRental: true,
+                              startDate: booking.start_date,
+                              endDate: booking.end_date,
+                              address: booking.address_snapshot,
+                              fulfillmentType: booking.fulfillment_selected,
+                              paymentDate: new Date().toISOString(),
+                              recipientName: userProfile?.full_name || 'Valued Customer',
+                            });
+                          }
+                        }}
+                      >
+                        <Download className="h-4 w-4" />
+                        Download Receipt
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => window.print()}
+                      >
+                        <Printer className="h-4 w-4" />
+                        Print
+                      </Button>
+                    </div>
+                  )}
 
                   <div className="space-y-3">
                     <Button asChild className="w-full bg-primary hover:bg-primary/90" size="lg">
@@ -711,45 +778,51 @@ const PaymentSuccess = () => {
                     </Button>
                   </div>
 
-                  <Collapsible open={showEmailPreview} onOpenChange={setShowEmailPreview} className="mt-6">
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm" className="w-full gap-2 text-muted-foreground hover:text-foreground">
-                        <Mail className="h-4 w-4" />
-                        {showEmailPreview ? 'Hide' : 'Preview'} Receipt Email
-                        {showEmailPreview ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-4">
-                      {booking && (() => {
-                        const fees = calculateRentalFees(
-                          booking.total_price - (booking.delivery_fee_snapshot || 0),
-                          booking.delivery_fee_snapshot || 0
-                        );
-                        return (
-                          <EmailReceiptPreview
-                            transactionId={booking.id}
-                            itemName={booking.listing?.title || 'Your Booking'}
-                            amount={booking.total_price}
-                            platformFee={fees.renterFee}
-                            deliveryFee={booking.delivery_fee_snapshot}
-                            isRental={true}
-                            startDate={booking.start_date}
-                            endDate={booking.end_date}
-                            address={booking.address_snapshot}
-                            fulfillmentType={booking.fulfillment_selected}
-                            isEscrow={false}
-                            paymentMethod="Card ending in ****"
-                            paymentDate={new Date().toISOString()}
-                            recipientName={userProfile?.full_name || 'Valued Customer'}
-                            recipientEmail={userProfile?.email || user?.email}
-                          />
-                        );
-                      })()}
-                    </CollapsibleContent>
-                  </Collapsible>
+                  {/* Email Preview for Confirmed Rentals (not holds) */}
+                  {!isHold && (
+                    <Collapsible open={showEmailPreview} onOpenChange={setShowEmailPreview} className="mt-6">
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="sm" className="w-full gap-2 text-muted-foreground hover:text-foreground">
+                          <Mail className="h-4 w-4" />
+                          {showEmailPreview ? 'Hide' : 'Preview'} Receipt Email
+                          {showEmailPreview ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-4">
+                        {booking && (() => {
+                          const fees = calculateRentalFees(
+                            booking.total_price - (booking.delivery_fee_snapshot || 0),
+                            booking.delivery_fee_snapshot || 0
+                          );
+                          return (
+                            <EmailReceiptPreview
+                              transactionId={booking.id}
+                              itemName={booking.listing?.title || 'Your Booking'}
+                              amount={booking.total_price}
+                              platformFee={fees.renterFee}
+                              deliveryFee={booking.delivery_fee_snapshot}
+                              isRental={true}
+                              startDate={booking.start_date}
+                              endDate={booking.end_date}
+                              address={booking.address_snapshot}
+                              fulfillmentType={booking.fulfillment_selected}
+                              isEscrow={false}
+                              paymentMethod="Card ending in ****"
+                              paymentDate={new Date().toISOString()}
+                              recipientName={userProfile?.full_name || 'Valued Customer'}
+                              recipientEmail={userProfile?.email || user?.email}
+                            />
+                          );
+                        })()}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
 
                   <p className="text-xs text-muted-foreground mt-4">
-                    A confirmation email has been sent to your email address.
+                    {isHold 
+                      ? "A confirmation email has been sent to your email address. We'll notify you when the host responds."
+                      : 'A confirmation email has been sent to your email address.'
+                    }
                   </p>
                 </div>
               )}
