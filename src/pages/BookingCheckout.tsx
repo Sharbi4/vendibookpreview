@@ -38,8 +38,10 @@ import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 import { BookingInfoModal, type BookingUserInfo } from '@/components/booking';
+import { BookingDocumentUpload, type StagedDocument } from '@/components/booking/BookingDocumentUpload';
 import DateSelectionModal from '@/components/listing-detail/DateSelectionModal';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
+import type { DocumentType } from '@/types/documents';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
@@ -74,6 +76,7 @@ const BookingCheckout = () => {
   const [userInfo, setUserInfo] = useState<BookingUserInfo | null>(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [stagedDocuments, setStagedDocuments] = useState<StagedDocument[]>([]);
 
   const isMobileAsset = listing?.category === 'food_truck' || listing?.category === 'food_trailer';
   const isStaticLocation = listing?.category === 'ghost_kitchen' || listing?.category === 'vendor_lot';
@@ -119,7 +122,11 @@ const BookingCheckout = () => {
 
   // Check step completion
   const isStep1Complete = !!user;
-  const isStep2Complete = !hasRequiredDocs || completedSteps.includes(2); // Documents acknowledged
+  // Documents step is complete when all required docs are staged
+  const allDocsStaged = !hasRequiredDocs || (requiredDocs?.every(req =>
+    stagedDocuments.some(doc => doc.documentType === req.document_type)
+  ) ?? false);
+  const isStep2Complete = !hasRequiredDocs || (completedSteps.includes(2) && allDocsStaged);
   const isFulfillmentComplete = userInfo?.agreedToTerms && 
     (fulfillmentSelected !== 'delivery' || deliveryAddress.trim());
   const isStepFulfillmentComplete = isFulfillmentComplete;
@@ -206,6 +213,57 @@ const BookingCheckout = () => {
         .single();
 
       if (bookingError) throw bookingError;
+
+      // Upload staged documents if any
+      if (stagedDocuments.length > 0) {
+        for (const stagedDoc of stagedDocuments) {
+          try {
+            const fileExt = stagedDoc.file.name.split('.').pop();
+            const fileName = `${stagedDoc.documentType}_${Date.now()}.${fileExt}`;
+            const filePath = `${bookingResult.id}/${fileName}`;
+
+            // Upload file to storage
+            const { error: uploadError } = await supabase.storage
+              .from('booking-documents')
+              .upload(filePath, stagedDoc.file, {
+                cacheControl: '3600',
+                upsert: false,
+              });
+
+            if (uploadError) {
+              console.error('Error uploading document:', uploadError);
+              continue;
+            }
+
+            // Get public URL
+            const { data: urlData } = supabase.storage
+              .from('booking-documents')
+              .getPublicUrl(filePath);
+
+            // Create document record
+            await supabase
+              .from('booking_documents')
+              .insert({
+                booking_id: bookingResult.id,
+                document_type: stagedDoc.documentType,
+                file_url: urlData.publicUrl,
+                file_name: stagedDoc.file.name,
+                status: 'pending',
+              });
+
+            // Send notification for document uploaded
+            supabase.functions.invoke('send-document-notification', {
+              body: {
+                booking_id: bookingResult.id,
+                document_type: stagedDoc.documentType,
+                event_type: 'uploaded',
+              },
+            }).catch(console.error);
+          } catch (docError) {
+            console.error('Error processing document:', docError);
+          }
+        }
+      }
 
       // For Instant Book: redirect to payment
       if (listing.instant_book) {
@@ -409,29 +467,14 @@ const BookingCheckout = () => {
                       exit={{ height: 0, opacity: 0 }}
                       className="border-t border-border"
                     >
-                      <div className="p-5 space-y-4">
-                        <p className="text-sm text-muted-foreground">
-                          This host requires the following documents before confirming your booking:
-                        </p>
-                        <ul className="space-y-2">
-                          {requiredDocs?.map((doc) => (
-                            <li key={doc.id} className="flex items-center gap-2 text-sm">
-                              <FileCheck className="h-4 w-4 text-primary" />
-                              <span className="capitalize">{doc.document_type.replace(/_/g, ' ')}</span>
-                            </li>
-                          ))}
-                        </ul>
-                        <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800/50">
-                          <p className="text-xs text-amber-700 dark:text-amber-300">
-                            You'll be able to upload these documents after your booking is submitted.
-                          </p>
-                        </div>
-                        <Button 
-                          onClick={() => handleCompleteStep(2)}
-                          className="w-full"
-                        >
-                          I understand, continue
-                        </Button>
+                      <div className="p-5">
+                        <BookingDocumentUpload
+                          requiredDocs={requiredDocs || []}
+                          stagedDocuments={stagedDocuments}
+                          onDocumentsChange={setStagedDocuments}
+                          onComplete={() => handleCompleteStep(2)}
+                          disabled={isSubmitting}
+                        />
                       </div>
                     </motion.div>
                   )}
