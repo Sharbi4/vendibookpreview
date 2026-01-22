@@ -5,6 +5,7 @@ import {
   Loader2,
   Star,
   Heart,
+  Edit,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -195,9 +196,19 @@ const ListingDetail = () => {
                 </div>
                 
                 {/* Title */}
-                <h1 className="text-xl md:text-2xl font-bold text-foreground">
-                  {listing.title}
-                </h1>
+                <div className="flex items-start justify-between gap-3">
+                  <h1 className="text-xl md:text-2xl font-bold text-foreground">
+                    {listing.title}
+                  </h1>
+                  {isOwner && (
+                    <Button asChild size="sm" variant="outline" className="shrink-0">
+                      <Link to={`/edit-listing/${listing.id}`}>
+                        <Edit className="h-4 w-4 mr-1.5" />
+                        Edit
+                      </Link>
+                    </Button>
+                  )}
+                </div>
                 
                 {/* Location & Rating */}
                 <div className="flex flex-wrap items-center gap-3 text-sm">
