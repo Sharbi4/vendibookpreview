@@ -166,7 +166,7 @@ const ListingsSections = () => {
             <div className="text-4xl mb-4">🚚</div>
             <h3 className="text-lg font-semibold text-foreground mb-2">No listings yet</h3>
             <p className="text-muted-foreground mb-4">Be the first to list your food truck!</p>
-            <Button onClick={() => navigate('/host')}>
+            <Button variant="dark-shine" onClick={() => navigate('/host')}>
               List Your Asset
             </Button>
           </div>

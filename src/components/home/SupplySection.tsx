@@ -87,7 +87,7 @@ const SupplySection = () => {
             {/* Primary CTAs */}
             <div className="flex flex-wrap gap-3 mb-6">
               <Button
-                variant="gradient-premium"
+                variant="dark-shine"
                 size="lg"
                 onClick={() => navigate('/list')}
                 className="gap-2"
@@ -96,7 +96,7 @@ const SupplySection = () => {
                 <ArrowRight className="h-5 w-5" />
               </Button>
               <Button
-                variant="outline"
+                variant="dark-shine"
                 size="lg"
                 onClick={() => navigate('/how-it-works')}
                 className="gap-2"
@@ -153,9 +153,9 @@ const SupplySection = () => {
             </ul>
 
             <Button
-              variant="outline"
+              variant="dark-shine"
               onClick={() => navigate('/tools')}
-              className="gap-2 border-border hover:bg-muted/50"
+              className="gap-2"
             >
               Explore Host Tools
               <ArrowRight className="h-4 w-4" />
