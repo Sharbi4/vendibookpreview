@@ -683,37 +683,39 @@ const Search = () => {
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="h-[85vh] overflow-y-auto">
-                  <SheetHeader>
+                <SheetContent side="bottom" className="h-[85vh] flex flex-col">
+                  <SheetHeader className="shrink-0">
                     <SheetTitle>Filters</SheetTitle>
                   </SheetHeader>
-                  <div className="mt-6 space-y-6">
-                    <FilterContent
-                      mode={mode}
-                      category={category}
-                      locationText={locationText}
-                      locationCoords={locationCoords}
-                      searchRadius={searchRadius}
-                      priceRange={priceRange}
-                      dateRange={dateRange}
-                      selectedAmenities={selectedAmenities}
-                      deliveryFilterEnabled={deliveryFilterEnabled}
-                      instantBookOnly={instantBookOnly}
-                      verifiedHostsOnly={verifiedHostsOnly}
-                      onModeChange={handleModeChange}
-                      onCategoryChange={handleCategoryChange}
-                      onLocationTextChange={setLocationText}
-                      onLocationSelect={handleLocationSelect}
-                      onRadiusChange={handleRadiusChange}
-                      onPriceRangeChange={setPriceRange}
-                      onDateRangeChange={handleDateRangeChange}
-                      onAmenityToggle={toggleAmenity}
-                      onDeliveryFilterChange={setDeliveryFilterEnabled}
-                      onInstantBookChange={handleInstantBookChange}
-                      onVerifiedHostsChange={handleVerifiedHostsChange}
-                      onClear={clearFilters}
-                    />
-                  </div>
+                  <ScrollArea className="flex-1 mt-4 -mx-6 px-6">
+                    <div className="pb-6">
+                      <FilterContent
+                        mode={mode}
+                        category={category}
+                        locationText={locationText}
+                        locationCoords={locationCoords}
+                        searchRadius={searchRadius}
+                        priceRange={priceRange}
+                        dateRange={dateRange}
+                        selectedAmenities={selectedAmenities}
+                        deliveryFilterEnabled={deliveryFilterEnabled}
+                        instantBookOnly={instantBookOnly}
+                        verifiedHostsOnly={verifiedHostsOnly}
+                        onModeChange={handleModeChange}
+                        onCategoryChange={handleCategoryChange}
+                        onLocationTextChange={setLocationText}
+                        onLocationSelect={handleLocationSelect}
+                        onRadiusChange={handleRadiusChange}
+                        onPriceRangeChange={setPriceRange}
+                        onDateRangeChange={handleDateRangeChange}
+                        onAmenityToggle={toggleAmenity}
+                        onDeliveryFilterChange={setDeliveryFilterEnabled}
+                        onInstantBookChange={handleInstantBookChange}
+                        onVerifiedHostsChange={handleVerifiedHostsChange}
+                        onClear={clearFilters}
+                      />
+                    </div>
+                  </ScrollArea>
                 </SheetContent>
               </Sheet>
             </div>
