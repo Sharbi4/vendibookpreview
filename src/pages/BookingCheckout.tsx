@@ -14,12 +14,10 @@ import {
   Shield,
   Truck,
   Clock,
-  Info,
   Loader2,
   Star,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -27,7 +25,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useListing } from '@/hooks/useListing';
-import { useBlockedDates } from '@/hooks/useBlockedDates';
 import { useListingRequiredDocuments } from '@/hooks/useRequiredDocuments';
 import { useListingAverageRating } from '@/hooks/useReviews';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,13 +32,12 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateRentalFees } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
-import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
+import { trackRequestSubmitted } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 import { BookingInfoModal, type BookingUserInfo } from '@/components/booking';
 import { BookingDocumentUpload, type StagedDocument } from '@/components/booking/BookingDocumentUpload';
 import DateSelectionModal from '@/components/listing-detail/DateSelectionModal';
-import type { ListingCategory, FulfillmentType } from '@/types/listing';
-import type { DocumentType } from '@/types/documents';
+import { EmbeddedPaymentForm } from '@/components/checkout/EmbeddedPaymentForm';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
@@ -51,7 +47,7 @@ const BookingCheckout = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { listing, host, isLoading, error } = useListing(listingId);
+  const { listing, isLoading, error } = useListing(listingId);
   const { data: ratingData } = useListingAverageRating(listingId);
   const { data: requiredDocs } = useListingRequiredDocuments(listingId || '');
   const hasRequiredDocs = requiredDocs && requiredDocs.length > 0;
@@ -77,6 +73,12 @@ const BookingCheckout = () => {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [stagedDocuments, setStagedDocuments] = useState<StagedDocument[]>([]);
+  
+  // Embedded payment state
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
+  const [bookingId, setBookingId] = useState<string | null>(null);
+  const [isCreatingPaymentIntent, setIsCreatingPaymentIntent] = useState(false);
 
   const isMobileAsset = listing?.category === 'food_truck' || listing?.category === 'food_trailer';
   const isStaticLocation = listing?.category === 'ghost_kitchen' || listing?.category === 'vendor_lot';
@@ -161,7 +163,8 @@ const BookingCheckout = () => {
     }
   };
 
-  const handleSubmit = async () => {
+  // Function to prepare payment - creates booking and PaymentIntent
+  const handlePreparePayment = async () => {
     if (!user) {
       navigate('/auth');
       return;
@@ -186,19 +189,7 @@ const BookingCheckout = () => {
       return;
     }
 
-    // Check if we're in an iframe
-    const isInIframe = (() => {
-      try {
-        return window.self !== window.top;
-      } catch {
-        return true;
-      }
-    })();
-
-    // Pre-open a blank window BEFORE async calls to avoid popup blockers
-    const checkoutWindow = isInIframe ? window.open('about:blank', '_blank') : null;
-
-    setIsSubmitting(true);
+    setIsCreatingPaymentIntent(true);
 
     try {
       const bookingData = {
@@ -225,6 +216,7 @@ const BookingCheckout = () => {
         .single();
 
       if (bookingError) throw bookingError;
+      setBookingId(bookingResult.id);
 
       // Upload staged documents if any
       if (stagedDocuments.length > 0) {
@@ -277,68 +269,63 @@ const BookingCheckout = () => {
         }
       }
 
-      // Create authorization hold checkout - payment is held until host approves
-      // For Instant Book: use regular checkout (immediate capture)
-      // For Request to Book: use authorization hold (capture on approval)
-      const checkoutFunction = listing.instant_book ? 'create-checkout' : 'create-booking-hold';
-      
-      const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke(checkoutFunction, {
+      // Create PaymentIntent for embedded payment form
+      const { data: paymentData, error: paymentError } = await supabase.functions.invoke('create-payment-intent', {
         body: {
           booking_id: bookingResult.id,
           listing_id: listingId,
-          mode: 'rent',
           amount: fees.subtotal,
           delivery_fee: currentDeliveryFee,
           deposit_amount: depositAmount,
+          is_instant_book: listing.instant_book || false,
         },
       });
 
-      if (checkoutError) throw checkoutError;
-      if (!checkoutData?.url) throw new Error('Failed to create checkout session');
+      if (paymentError) throw paymentError;
+      if (!paymentData?.client_secret) throw new Error('Failed to create payment');
 
-      const formType = listing.instant_book ? 'instant_book' : 'booking_request_hold';
-      trackFormSubmitConversion({ form_type: formType, listing_id: listingId });
-      
-      // Notify host about new request (for non-instant book)
-      if (!listing.instant_book) {
-        supabase.functions.invoke('send-booking-notification', {
-          body: { booking_id: bookingResult.id, event_type: 'submitted' },
-        }).catch(console.error);
-      }
-      
-      trackRequestSubmitted(listingId || '', listing.instant_book || false);
-      
-      // Redirect to Stripe checkout
-      if (checkoutWindow) {
-        // Use pre-opened window to bypass popup blockers in iframe
-        checkoutWindow.location.href = checkoutData.url;
-        return;
-      }
-
-      if (isInIframe) {
-        // Fallback: try to escape the iframe
-        try {
-          window.top?.location.assign(checkoutData.url);
-        } catch {
-          window.location.assign(checkoutData.url);
-        }
-        return;
-      }
-
-      // Standard navigation for non-iframe contexts
-      window.location.href = checkoutData.url;
+      // Set payment client secret and show the embedded form
+      setPaymentClientSecret(paymentData.client_secret);
+      setShowPaymentForm(true);
     } catch (error) {
-      // Close the pre-opened window if there was an error
-      if (checkoutWindow) checkoutWindow.close();
-      console.error('Error submitting booking:', error);
+      console.error('Error preparing payment:', error);
       toast({
         title: 'Error',
-        description: 'Failed to submit booking. Please try again.',
+        description: 'Failed to prepare payment. Please try again.',
         variant: 'destructive',
       });
     } finally {
-      setIsSubmitting(false);
+      setIsCreatingPaymentIntent(false);
     }
+  };
+
+  // Handle successful payment
+  const handlePaymentSuccess = async (paymentIntentId: string) => {
+    if (!listing || !bookingId) return;
+
+    const formType = listing.instant_book ? 'instant_book' : 'booking_request_hold';
+    trackFormSubmitConversion({ form_type: formType, listing_id: listingId });
+    
+    // Notify host about new request (for non-instant book)
+    if (!listing.instant_book) {
+      supabase.functions.invoke('send-booking-notification', {
+        body: { booking_id: bookingId, event_type: 'submitted' },
+      }).catch(console.error);
+    }
+    
+    trackRequestSubmitted(listingId || '', listing.instant_book || false);
+    
+    // Navigate to success page
+    navigate(`/payment-success?booking_id=${bookingId}&hold=${!listing.instant_book}`);
+  };
+
+  // Handle payment error
+  const handlePaymentError = (error: string) => {
+    toast({
+      title: 'Payment failed',
+      description: error,
+      variant: 'destructive',
+    });
   };
 
   if (isLoading) {
@@ -726,35 +713,48 @@ const BookingCheckout = () => {
                         </span>
                       </div>
 
-                      {/* Submit button */}
-                      <Button
-                        variant="gradient"
-                        className="w-full h-14 text-base"
-                        onClick={handleSubmit}
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                            Processing...
-                          </>
-                        ) : listing.instant_book ? (
-                          <>
-                            <Zap className="h-5 w-5 mr-2" />
-                            Confirm and pay ${fees.customerTotal.toLocaleString()}
-                          </>
-                        ) : (
-                          <>
-                            <CreditCard className="h-5 w-5 mr-2" />
-                            Continue to payment · ${fees.customerTotal.toLocaleString()}
-                          </>
-                        )}
-                      </Button>
+                      {/* Embedded Payment Form or Prepare Button */}
+                      {showPaymentForm && paymentClientSecret && bookingId ? (
+                        <EmbeddedPaymentForm
+                          clientSecret={paymentClientSecret}
+                          amount={fees.customerTotal}
+                          onSuccess={handlePaymentSuccess}
+                          onError={handlePaymentError}
+                          isInstantBook={listing.instant_book || false}
+                          bookingId={bookingId}
+                        />
+                      ) : (
+                        <>
+                          <Button
+                            variant="gradient"
+                            className="w-full h-14 text-base"
+                            onClick={handlePreparePayment}
+                            disabled={isCreatingPaymentIntent}
+                          >
+                            {isCreatingPaymentIntent ? (
+                              <>
+                                <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                                Preparing payment...
+                              </>
+                            ) : listing.instant_book ? (
+                              <>
+                                <Zap className="h-5 w-5 mr-2" />
+                                Continue to pay ${fees.customerTotal.toLocaleString()}
+                              </>
+                            ) : (
+                              <>
+                                <CreditCard className="h-5 w-5 mr-2" />
+                                Continue to payment · ${fees.customerTotal.toLocaleString()}
+                              </>
+                            )}
+                          </Button>
 
-                      {!listing.instant_book && (
-                        <p className="text-xs text-center text-muted-foreground">
-                          You'll enter card details on the next page. Your card will be authorized but not charged until the host approves.
-                        </p>
+                          {!listing.instant_book && (
+                            <p className="text-xs text-center text-muted-foreground">
+                              Your card will be authorized but not charged until the host approves.
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
                   </motion.div>
