@@ -223,7 +223,7 @@ const RentMyCommercialKitchen = () => {
                 <Button
                   asChild
                   size="lg"
-                  className="bg-foreground hover:bg-foreground/90 text-background font-semibold shadow-lg hover:shadow-xl transition-all"
+                  variant="dark-shine"
                 >
                   <Link to="/list?category=ghost_kitchen">
                     Create a Free Kitchen Listing
@@ -346,7 +346,7 @@ const RentMyCommercialKitchen = () => {
               <Button
                 asChild
                 size="lg"
-                className="bg-foreground hover:bg-foreground/90 text-background font-semibold"
+                variant="dark-shine"
               >
                 <Link to="/list?category=ghost_kitchen">
                   List Your Kitchen for These Renters
@@ -446,7 +446,7 @@ const RentMyCommercialKitchen = () => {
               <Button
                 asChild
                 size="lg"
-                className="bg-foreground hover:bg-foreground/90 text-background font-semibold"
+                variant="dark-shine"
               >
                 <Link to="/list?category=ghost_kitchen">
                   Create a Kitchen Listing
@@ -498,7 +498,7 @@ const RentMyCommercialKitchen = () => {
               <Button
                 asChild
                 size="lg"
-                className="bg-foreground hover:bg-foreground/90 text-background font-semibold"
+                variant="dark-shine"
               >
                 <Link to="/list?category=ghost_kitchen">
                   Set Your Security Requirements
@@ -557,7 +557,7 @@ const RentMyCommercialKitchen = () => {
               <Button
                 asChild
                 size="lg"
-                className="bg-foreground hover:bg-foreground/90 text-background font-semibold"
+                variant="dark-shine"
               >
                 <Link to="/list?category=ghost_kitchen">
                   Start Earning Risk-Free
@@ -617,7 +617,7 @@ const RentMyCommercialKitchen = () => {
                 <Button
                   asChild
                   size="lg"
-                  className="bg-foreground hover:bg-foreground/90 text-background font-semibold shadow-lg hover:shadow-xl transition-all"
+                  variant="dark-shine"
                 >
                   <Link to="/list?category=ghost_kitchen">
                     Create a Kitchen Listing
@@ -647,7 +647,8 @@ const RentMyCommercialKitchen = () => {
         <div className="p-3 pb-safe">
           <Button
             asChild
-            className="w-full bg-foreground hover:bg-foreground/90 text-background font-semibold"
+            variant="dark-shine"
+            className="w-full"
           >
             <Link to="/list?category=ghost_kitchen">
               Create Listing
