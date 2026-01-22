@@ -19,6 +19,9 @@ interface BookingConfirmationRequest {
   address?: string;
   deliveryAddress?: string;
   bookingId: string;
+  depositAmount?: number;
+  platformFee?: number;
+  rentalSubtotal?: number;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -41,7 +44,10 @@ const handler = async (req: Request): Promise<Response> => {
       fulfillmentType,
       address,
       deliveryAddress,
-      bookingId
+      bookingId,
+      depositAmount = 0,
+      platformFee = 0,
+      rentalSubtotal = 0,
     }: BookingConfirmationRequest = await req.json();
 
     console.log(`Sending booking confirmation to: ${email}, booking: ${bookingId}`);
@@ -54,7 +60,8 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const siteUrl = Deno.env.get("SITE_URL") || "https://vendibook.com";
+    // Always use production domain
+    const siteUrl = "https://vendibook.com";
     const logoUrl = `${siteUrl}/images/vendibook-email-logo.png`;
 
     // Create short booking reference ID (first 8 chars uppercase)
@@ -78,6 +85,10 @@ const handler = async (req: Request): Promise<Response> => {
       : address 
         ? `<strong>Location:</strong> ${address}`
         : '';
+
+    // Calculate total due with deposit
+    const totalDue = totalPrice + depositAmount;
+    const hasDeposit = depositAmount > 0;
 
     const html = `
       <!DOCTYPE html>
@@ -106,19 +117,20 @@ const handler = async (req: Request): Promise<Response> => {
             
             <!-- Main Content Card -->
             <div style="background: #ffffff; border-radius: 16px; padding: 40px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-              <!-- Success Badge -->
+              <!-- Action Required Badge -->
               <div style="text-align: center; margin-bottom: 24px;">
-                <span style="display: inline-block; background: linear-gradient(135deg, #10B981 0%, #34D399 100%); color: #ffffff; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600;">
-                  ✓ Booking Confirmed
+                <span style="display: inline-block; background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%); color: #ffffff; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                  💳 Payment Required
                 </span>
               </div>
 
               <h2 style="color: #1f2937; font-size: 24px; margin: 0 0 16px 0; text-align: center;">
-                Your Booking is Confirmed! 🎉
+                Your Booking Has Been Approved! 🎉
               </h2>
               
               <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0; text-align: center;">
-                Hi ${fullName || 'there'}, great news! Your booking has been approved.
+                Hi ${fullName || 'there'}, great news! <strong>${hostName}</strong> approved your booking request. 
+                <strong>Complete your payment to confirm the booking.</strong>
               </p>
               
               <!-- Booking Details Card -->
@@ -164,33 +176,52 @@ const handler = async (req: Request): Promise<Response> => {
                 </div>
                 ` : ''}
                 
+                <!-- Payment Breakdown -->
                 <div style="border-top: 1px solid #FFD4C7; padding-top: 16px; margin-top: 16px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <p style="color: #6b7280; font-size: 14px; margin: 0;">Total Amount</p>
-                    <p style="color: #FF5124; font-size: 24px; font-weight: 700; margin: 0;">$${totalPrice.toFixed(2)}</p>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <p style="color: #6b7280; font-size: 14px; margin: 0;">Rental Total (incl. 12.9% fee)</p>
+                    <p style="color: #1f2937; font-size: 16px; font-weight: 500; margin: 0;">$${totalPrice.toFixed(2)}</p>
+                  </div>
+                  ${hasDeposit ? `
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <p style="color: #6b7280; font-size: 14px; margin: 0;">Security Deposit <span style="font-size: 12px;">(refundable)</span></p>
+                    <p style="color: #1f2937; font-size: 16px; font-weight: 500; margin: 0;">$${depositAmount.toFixed(2)}</p>
+                  </div>
+                  ` : ''}
+                  <div style="display: flex; justify-content: space-between; align-items: center; border-top: 2px solid #FF5124; padding-top: 12px; margin-top: 12px;">
+                    <p style="color: #1f2937; font-size: 16px; font-weight: 700; margin: 0;">Total Due Now</p>
+                    <p style="color: #FF5124; font-size: 24px; font-weight: 700; margin: 0;">$${totalDue.toFixed(2)}</p>
                   </div>
                 </div>
               </div>
               
               <div style="background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 24px 0;">
                 <p style="color: #92400E; font-size: 14px; line-height: 1.6; margin: 0;">
-                  <strong>What's Next?</strong> The host will reach out with any additional details. You can also message them directly through your dashboard.
+                  <strong>⏰ Action Required:</strong> Complete your payment to confirm this booking. 
+                  Your booking will not be guaranteed until payment is received.
                 </p>
               </div>
               
               <!-- CTA Button -->
               <div style="text-align: center; margin-top: 32px;">
                 <a href="${siteUrl}/dashboard" 
-                   style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                  View Booking Details
+                   style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 18px;">
+                  💳 Complete Payment - $${totalDue.toFixed(2)}
                 </a>
               </div>
+
+              <p style="color: #6b7280; font-size: 12px; text-align: center; margin-top: 16px;">
+                ${hasDeposit ? 'Your security deposit will be refunded after the rental ends if there are no issues.' : ''}
+              </p>
             </div>
             
             <!-- Footer -->
             <div style="text-align: center; margin-top: 40px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
               <p style="color: #9ca3af; font-size: 12px; margin: 0 0 8px 0;">
                 Need help? Call us at <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a> or email <a href="mailto:support@vendibook.com" style="color: #FF5124; text-decoration: none;">support@vendibook.com</a>
+              </p>
+              <p style="color: #9ca3af; font-size: 12px; margin: 0 0 8px 0;">
+                <a href="${siteUrl}/notification-preferences" style="color: #FF5124; text-decoration: none;">Manage notification preferences</a>
               </p>
               <p style="color: #9ca3af; font-size: 12px; margin: 0;">
                 © ${new Date().getFullYear()} VendiBook. All rights reserved.
@@ -210,7 +241,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "VendiBook <noreply@updates.vendibook.com>",
         to: [email],
-        subject: `Booking #${bookingRef} Confirmed: ${listingTitle} ✓`,
+        subject: `💳 Action Required: Complete Payment for Booking #${bookingRef}`,
         html,
       }),
     });

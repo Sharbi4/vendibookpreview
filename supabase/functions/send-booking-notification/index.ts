@@ -19,7 +19,9 @@ const logStep = (step: string, details?: any) => {
   console.log(`[BOOKING-NOTIFICATION] ${step}${detailsStr}`);
 };
 
-const LOGO_URL = 'https://vendibookpreview.lovable.app/images/vendibook-email-logo.png';
+// Production domain - always use vendibook.com
+const SITE_URL = 'https://vendibook.com';
+const LOGO_URL = `${SITE_URL}/images/vendibook-email-logo.png`;
 
 const wrapEmailHtml = (content: string) => `
   <!DOCTYPE html>
@@ -40,7 +42,7 @@ const wrapEmailHtml = (content: string) => `
     <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
       <!-- Logo Header -->
       <div style="text-align: center; margin-bottom: 24px;">
-        <a href="https://vendibookpreview.lovable.app" style="display: inline-block; background-color: #ffffff; padding: 16px 24px; border-radius: 12px;">
+        <a href="${SITE_URL}" style="display: inline-block; background-color: #ffffff; padding: 16px 24px; border-radius: 12px;">
           <img src="${LOGO_URL}" alt="VendiBook" style="max-width: 360px; height: auto;" />
         </a>
       </div>
@@ -194,13 +196,13 @@ serve(async (req) => {
               Please review and respond to this request as soon as possible.
             </p>
             <div style="text-align: center; margin: 24px 0;">
-              <a href="https://vendibookpreview.lovable.app/dashboard" 
+              <a href="${SITE_URL}/dashboard" 
                  style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
                 View Booking Request
               </a>
             </div>
             <p style="color: #888; font-size: 12px; margin-top: 20px;">
-              <a href="https://vendibookpreview.lovable.app/notification-preferences" style="color: #FF5124; text-decoration: none;">Manage notification preferences</a>
+              <a href="${SITE_URL}/notification-preferences" style="color: #FF5124; text-decoration: none;">Manage notification preferences</a>
             </p>
           `),
         });
@@ -241,13 +243,13 @@ serve(async (req) => {
               The host will review your request and respond soon. We'll notify you once they respond.
             </p>
             <div style="text-align: center; margin: 24px 0;">
-              <a href="https://vendibookpreview.lovable.app/dashboard" 
+              <a href="${SITE_URL}/dashboard" 
                  style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
                 View Booking Status
               </a>
             </div>
             <p style="color: #888; font-size: 12px; margin-top: 20px;">
-              <a href="https://vendibookpreview.lovable.app/notification-preferences" style="color: #FF5124; text-decoration: none;">Manage notification preferences</a>
+              <a href="${SITE_URL}/notification-preferences" style="color: #FF5124; text-decoration: none;">Manage notification preferences</a>
             </p>
           `),
         });
@@ -255,7 +257,11 @@ serve(async (req) => {
         logStep("Shopper email skipped due to preferences", { shopper_id: booking.shopper_id });
       }
     } else if (event_type === "approved") {
-      // Send branded booking confirmation email to shopper
+      // Get deposit amount if available
+      const depositAmount = booking.deposit_amount || 0;
+      const totalDue = booking.total_price + depositAmount;
+      
+      // Send branded booking confirmation email to shopper with payment required
       if (shopper?.email) {
         try {
           const confirmationResponse = await fetch(
@@ -278,31 +284,41 @@ serve(async (req) => {
                 address: listing?.address || booking.address_snapshot,
                 deliveryAddress: booking.delivery_address,
                 bookingId: booking.id,
+                depositAmount: depositAmount,
               }),
             }
           );
           
           if (confirmationResponse.ok) {
-            logStep("Branded booking confirmation email sent", { to: shopper.email });
+            logStep("Branded booking confirmation email sent with payment gate", { to: shopper.email });
           } else {
             const errorData = await confirmationResponse.json();
             logStep("Failed to send branded confirmation, falling back", { error: errorData });
-            // Fallback to basic email
+            // Fallback to basic email with payment required notice
             emails.push({
               to: shopper.email,
-              subject: `🎉 Booking #${bookingRef} Approved - ${listingTitle}`,
+              subject: `💳 Action Required: Complete Payment for Booking #${bookingRef}`,
               html: wrapEmailHtml(`
-                <h1 style="color: #16a34a; font-size: 24px; margin: 0 0 20px 0;">Booking Approved! 🎉</h1>
+                <div style="text-align: center; margin-bottom: 20px;">
+                  <span style="display: inline-block; background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%); color: #ffffff; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                    💳 Payment Required
+                  </span>
+                </div>
+                <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">Booking Approved! 🎉</h1>
                 <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
                   Great news, ${shopper.full_name || "there"}!
                 </p>
                 <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                  Your booking for <strong>${listingTitle}</strong> has been approved by the host.
+                  Your booking for <strong>${listingTitle}</strong> has been approved. <strong>Complete your payment to confirm the booking.</strong>
                 </p>
-                <div style="background: #dcfce7; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                <div style="background: #FFF5F2; border-radius: 12px; padding: 20px; margin: 20px 0;">
                   <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
-                  <p style="margin: 0 0 10px 0;"><strong>Confirmed Dates:</strong> ${startDate} - ${endDate}</p>
-                  <p style="margin: 0;"><strong>Total:</strong> $${booking.total_price}</p>
+                  <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
+                  <p style="margin: 0 0 10px 0;"><strong>Rental Total (incl. 12.9% fee):</strong> $${booking.total_price}</p>
+                  ${depositAmount > 0 ? `<p style="margin: 0 0 10px 0;"><strong>Security Deposit:</strong> $${depositAmount.toFixed(2)} <span style="color: #6b7280; font-size: 12px;">(refundable)</span></p>` : ""}
+                  <div style="border-top: 2px solid #FF5124; padding-top: 12px; margin-top: 12px;">
+                    <p style="margin: 0; font-size: 18px;"><strong>Total Due Now: $${totalDue.toFixed(2)}</strong></p>
+                  </div>
                 </div>
                 ${host_response ? `
                   <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
@@ -310,13 +326,15 @@ serve(async (req) => {
                     <p style="margin: 0; color: #4a4a4a;">${host_response}</p>
                   </div>
                 ` : ""}
-                <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
-                  You can message the host through your dashboard if you have any questions.
-                </p>
+                <div style="background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 20px 0;">
+                  <p style="color: #92400E; font-size: 14px; line-height: 1.6; margin: 0;">
+                    <strong>⏰ Action Required:</strong> Complete your payment to confirm this booking. Your booking will not be guaranteed until payment is received.
+                  </p>
+                </div>
                 <div style="text-align: center; margin: 24px 0;">
-                  <a href="https://vendibookpreview.lovable.app/dashboard" 
-                     style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                    View Booking Details
+                  <a href="${SITE_URL}/dashboard" 
+                     style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 18px;">
+                    💳 Complete Payment - $${totalDue.toFixed(2)}
                   </a>
                 </div>
               `),
@@ -327,12 +345,12 @@ serve(async (req) => {
         }
       }
       
-      // In-app notification to shopper
+      // In-app notification to shopper - indicate payment required
       inAppNotifications.push({
         user_id: booking.shopper_id,
         type: "booking_approved",
-        title: `Booking #${bookingRef} Approved!`,
-        message: `Your booking for ${listingTitle} from ${startDate} to ${endDate} has been approved`,
+        title: `💳 Booking #${bookingRef} Approved - Payment Required`,
+        message: `Your booking for ${listingTitle} has been approved! Complete your payment to confirm.`,
         link: "/dashboard",
       });
     } else if (event_type === "declined") {
@@ -362,7 +380,7 @@ serve(async (req) => {
               Don't worry! There are plenty of other great options available. Browse our marketplace to find your perfect match.
             </p>
             <div style="text-align: center; margin: 24px 0;">
-              <a href="https://vendibookpreview.lovable.app/search" 
+              <a href="${SITE_URL}/search" 
                  style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
                 Browse Listings
               </a>
