@@ -407,7 +407,7 @@ const Header = () => {
         <div className="hidden md:flex items-center gap-2 ml-4">
           {user && (
             <Button 
-              variant="gradient"
+              variant="dark-shine"
               className="rounded-full"
               onClick={() => navigate('/list')}
             >
@@ -492,14 +492,14 @@ const Header = () => {
           ) : (
             <>
               <Button 
-                variant="outline" 
+                variant="dark-shine" 
                 className="rounded-full"
                 onClick={() => navigate('/auth')}
               >
                 Sign In
               </Button>
               <Button 
-                variant="gradient"
+                variant="dark-shine"
                 className="rounded-full"
                 onClick={() => navigate('/list')}
               >
