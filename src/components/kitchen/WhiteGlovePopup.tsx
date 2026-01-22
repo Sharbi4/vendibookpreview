@@ -40,13 +40,23 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
   useEffect(() => {
     // Check if user has already dismissed or submitted
     const hasInteracted = sessionStorage.getItem('whiteGlovePopupInteracted');
-    if (hasInteracted) return;
+    console.log('[WhiteGlovePopup] Mount check - hasInteracted:', hasInteracted, 'delayMs:', delayMs);
+    
+    if (hasInteracted) {
+      console.log('[WhiteGlovePopup] Skipping - user already interacted');
+      return;
+    }
 
+    console.log('[WhiteGlovePopup] Setting timer for', delayMs, 'ms');
     const timer = setTimeout(() => {
+      console.log('[WhiteGlovePopup] Timer fired - opening popup');
       setIsOpen(true);
     }, delayMs);
 
-    return () => clearTimeout(timer);
+    return () => {
+      console.log('[WhiteGlovePopup] Cleanup - clearing timer');
+      clearTimeout(timer);
+    };
   }, [delayMs]);
 
   const handleClose = () => {
