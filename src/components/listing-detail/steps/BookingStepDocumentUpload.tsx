@@ -136,7 +136,7 @@ const BookingStepDocumentUpload = ({
           <Button variant="outline" onClick={onBack} className="flex-1 h-12">
             Back
           </Button>
-          <Button variant="gradient" onClick={onContinue} className="flex-1 h-12">
+          <Button variant="dark-shine" onClick={onContinue} className="flex-1 h-12">
             Continue to Review
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
@@ -319,7 +319,7 @@ const BookingStepDocumentUpload = ({
           Back
         </Button>
         <Button 
-          variant="gradient" 
+          variant="dark-shine"
           onClick={onContinue} 
           className="flex-1 h-12"
           disabled={!allUploaded}

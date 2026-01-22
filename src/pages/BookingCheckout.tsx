@@ -729,7 +729,7 @@ const BookingCheckout = () => {
 
                       {/* Submit button */}
                       <Button
-                        variant="gradient"
+                        variant="dark-shine"
                         className="w-full h-14 text-base"
                         onClick={handleSubmit}
                         disabled={isSubmitting}

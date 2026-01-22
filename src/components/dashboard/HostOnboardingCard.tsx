@@ -145,6 +145,7 @@ export const HostOnboardingCard = () => {
                   {step.action.to ? (
                     <Button 
                       size="sm" 
+                      variant="dark-shine"
                       asChild 
                       className="gap-1 rounded-xl shadow-lg"
                     >
@@ -156,6 +157,7 @@ export const HostOnboardingCard = () => {
                   ) : (
                     <Button 
                       size="sm" 
+                      variant="dark-shine"
                       onClick={step.action.onClick}
                       disabled={isConnecting}
                       className="gap-1 rounded-xl shadow-lg"

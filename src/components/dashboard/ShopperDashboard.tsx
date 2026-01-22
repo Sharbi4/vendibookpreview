@@ -33,7 +33,7 @@ const ShopperDashboard = () => {
                 </p>
               </div>
             </div>
-            <Button asChild size="lg">
+            <Button asChild size="lg" variant="dark-shine">
               <Link to="/search">
                 Browse Listings
               </Link>

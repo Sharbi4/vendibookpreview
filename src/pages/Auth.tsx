@@ -380,7 +380,7 @@ const Auth = () => {
               </div>
               <Button 
                 type="button"
-                variant="gradient"
+                variant="dark-shine"
                 className="w-full rounded-xl"
                 disabled={resendingEmail}
                 onClick={handleResendVerification}
