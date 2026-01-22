@@ -136,25 +136,26 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/activation`,
+          redirectTo: window.location.origin,
         },
       });
       
       if (error) {
+        setIsGoogleLoading(false);
         toast({
           title: 'Google sign-in failed',
           description: error.message,
           variant: 'destructive',
         });
       }
+      // Don't reset loading state on success - user will be redirected
     } catch (error: any) {
+      setIsGoogleLoading(false);
       toast({
         title: 'Google sign-in failed',
         description: error.message || 'An unexpected error occurred',
         variant: 'destructive',
       });
-    } finally {
-      setIsGoogleLoading(false);
     }
   };
 
