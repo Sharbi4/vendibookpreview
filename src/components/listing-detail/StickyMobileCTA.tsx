@@ -109,11 +109,7 @@ export const StickyMobileCTA = ({
   };
 
   const handleRentalCTA = () => {
-    if (!user) {
-      setPendingAction('book');
-      setShowAuthGate(true);
-      return;
-    }
+    // Show date selection first, auth happens when navigating to checkout
     setShowDateModal(true);
   };
 
