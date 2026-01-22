@@ -741,12 +741,12 @@ const BookingCheckout = () => {
                         ) : listing.instant_book ? (
                           <>
                             <Zap className="h-5 w-5 mr-2" />
-                            Confirm and pay ${fees.customerTotal.toLocaleString()}
+                            Confirm and pay ${(fees.customerTotal + (depositAmount || 0)).toLocaleString()}
                           </>
                         ) : (
                           <>
                             <CreditCard className="h-5 w-5 mr-2" />
-                            Continue to payment · ${fees.customerTotal.toLocaleString()}
+                            Continue to payment · ${(fees.customerTotal + (depositAmount || 0)).toLocaleString()}
                           </>
                         )}
                       </Button>
@@ -836,7 +836,7 @@ const BookingCheckout = () => {
 
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Service fee</span>
-                  <span>${fees.platformFee.toLocaleString()}</span>
+                  <span>${fees.renterFee.toLocaleString()}</span>
                 </div>
 
                 {depositAmount && (
@@ -848,7 +848,7 @@ const BookingCheckout = () => {
 
                 <div className="flex items-center justify-between pt-3 border-t border-border">
                   <span className="font-semibold">Total</span>
-                  <span className="font-semibold">${fees.customerTotal.toLocaleString()}</span>
+                  <span className="font-semibold">${(fees.customerTotal + (depositAmount || 0)).toLocaleString()}</span>
                 </div>
               </div>
             </div>
