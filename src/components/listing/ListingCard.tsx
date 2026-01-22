@@ -251,21 +251,17 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
               </span>
             )}
           </p>
-          {/* BNPL badges for eligible listings */}
-          {!compact && (
+          {/* BNPL badges for eligible listings - show on all cards including compact */}
+          {listing.mode === 'sale' && listing.price_sale && (
             <>
-              {listing.mode === 'sale' && listing.price_sale && (
-                <>
-                  <AfterpayBadge price={listing.price_sale} showEstimate={false} />
-                  <AffirmBadge price={listing.price_sale} showEstimate={false} />
-                </>
-              )}
-              {listing.mode === 'rent' && listing.price_daily && (
-                <>
-                  <AfterpayBadge price={listing.price_daily * 7} showEstimate={false} />
-                  <AffirmBadge price={listing.price_daily * 30} showEstimate={false} />
-                </>
-              )}
+              <AfterpayBadge price={listing.price_sale} showEstimate={false} showTooltip={!compact} />
+              <AffirmBadge price={listing.price_sale} showEstimate={false} showTooltip={!compact} />
+            </>
+          )}
+          {listing.mode === 'rent' && listing.price_daily && (
+            <>
+              <AfterpayBadge price={listing.price_daily * 7} showEstimate={false} showTooltip={!compact} />
+              <AffirmBadge price={listing.price_daily * 30} showEstimate={false} showTooltip={!compact} />
             </>
           )}
         </div>
