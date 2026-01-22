@@ -646,38 +646,38 @@ const Search = () => {
       <Header />
       
       <main className="flex-1">
-        {/* Simplified Search Header - Max 2 rows above fold */}
-        <div className="border-b border-border bg-background">
-          <div className="container py-3">
+        {/* Search Header - Enhanced styling matching Contact page */}
+        <div className="border-b border-border bg-card/50 backdrop-blur-sm">
+          <div className="container py-4">
             {/* Row 1: Search + Filters */}
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <div className="relative flex-1">
-                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
                   placeholder="Search trucks, trailers, kitchens..."
                   value={searchQuery}
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-10 h-10 text-sm rounded-lg border focus:border-primary"
+                  className="pl-10 h-11 text-sm rounded-xl border-border/60 focus:border-primary shadow-sm"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => handleSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <X className="h-4 w-4" />
                   </button>
                 )}
               </div>
               
-              {/* Filter Button */}
+              {/* Filter Button - Enhanced */}
               <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="default" className="rounded-lg relative shrink-0 h-10">
+                  <Button variant="dark-shine" size="default" className="rounded-xl relative shrink-0 h-11 px-5">
                     <SlidersHorizontal className="h-4 w-4 sm:mr-2" />
                     <span className="hidden sm:inline">Filters</span>
                     {activeFiltersCount > 0 && (
-                      <span className="absolute -top-1 -right-1 h-5 w-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
+                      <span className="absolute -top-1.5 -right-1.5 h-5 w-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center font-medium shadow-lg">
                         {activeFiltersCount}
                       </span>
                     )}
@@ -721,7 +721,7 @@ const Search = () => {
             </div>
 
             {/* Row 2: Results count + Sort + View toggle + Save Search */}
-            <div className="mt-2 flex items-center justify-between gap-3">
+            <div className="mt-3 flex items-center justify-between gap-3">
               <p className="text-sm text-muted-foreground truncate">
                 {isLoadingListings ? (
                   'Loading...'
@@ -748,12 +748,12 @@ const Search = () => {
                   amenities={selectedAmenities}
                 />
                 
-                {/* View Toggle */}
-                <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'map')}>
-                  <ToggleGroupItem value="grid" aria-label="Grid view" className="h-8 px-2">
+                {/* View Toggle - Enhanced */}
+                <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'map')} className="bg-card border border-border rounded-xl p-0.5 shadow-sm">
+                  <ToggleGroupItem value="grid" aria-label="Grid view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
                     <LayoutGrid className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="map" aria-label="Map view" className="h-8 px-2">
+                  <ToggleGroupItem value="map" aria-label="Map view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
                     <Map className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
                 </ToggleGroup>
@@ -761,7 +761,7 @@ const Search = () => {
                 <select
                   value={sortBy}
                   onChange={(e) => handleSortChange(e.target.value)}
-                  className="text-xs border border-border rounded-md px-2 py-1.5 bg-background"
+                  className="text-xs border border-border rounded-xl px-3 py-2 bg-card shadow-sm hover:bg-muted/50 transition-colors cursor-pointer"
                 >
                   <option value="newest">Newest</option>
                   {searchQuery.trim() && <option value="relevance">Relevance</option>}
@@ -776,13 +776,13 @@ const Search = () => {
         {/* Results */}
         <div className="container py-6">
           <div className="flex gap-8">
-            {/* Desktop Sidebar Filters */}
+            {/* Desktop Sidebar Filters - Enhanced card styling */}
             <aside className="hidden md:block w-64 shrink-0">
-              <div className="sticky top-24 space-y-6 p-4 bg-card rounded-xl border border-border">
+              <div className="sticky top-24 space-y-6 p-5 bg-card rounded-2xl border-0 shadow-xl">
                 <div className="flex items-center justify-between">
                   <h2 className="font-semibold text-foreground">Filters</h2>
                   {activeFiltersCount > 0 && (
-                    <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs">
+                    <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs text-primary hover:text-primary">
                       Clear all
                     </Button>
                   )}

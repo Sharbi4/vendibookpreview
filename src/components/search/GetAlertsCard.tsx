@@ -79,10 +79,12 @@ export const GetAlertsCard = ({ category, location, radius }: GetAlertsCardProps
 
   if (isEnabled) {
     return (
-      <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
-        <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+      <div className="bg-card border-0 shadow-lg rounded-2xl p-5 flex items-center gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg shrink-0">
+          <CheckCircle2 className="h-6 w-6 text-white" />
+        </div>
         <div>
-          <p className="text-sm font-medium text-foreground">Alerts enabled</p>
+          <p className="text-sm font-semibold text-foreground">Alerts enabled</p>
           <p className="text-xs text-muted-foreground">We'll email you when new listings match your search.</p>
         </div>
       </div>
@@ -90,18 +92,19 @@ export const GetAlertsCard = ({ category, location, radius }: GetAlertsCardProps
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4">
-      <div className="flex items-start gap-3">
-        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-          <Bell className="h-4 w-4 text-primary" />
+    <div className="bg-card border-0 shadow-lg rounded-2xl p-5">
+      <div className="flex items-start gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shrink-0">
+          <Bell className="h-5 w-5 text-primary-foreground" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-foreground">Get alerts for new listings</h3>
+          <h3 className="text-sm font-bold text-foreground">Get alerts for new listings</h3>
           <p className="text-xs text-muted-foreground mt-0.5">Weekly digest when new matches appear.</p>
           <Button 
             onClick={handleEnableAlerts}
+            variant="dark-shine"
             size="sm" 
-            className="h-8 mt-3"
+            className="h-9 mt-3 rounded-xl"
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Enabling...' : 'Enable alerts'}
