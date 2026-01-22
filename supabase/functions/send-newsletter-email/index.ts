@@ -302,7 +302,7 @@ const handler = async (req: Request): Promise<Response> => {
     const subjectLine = "New ways to buy & sell on Vendibook 🎉";
 
     const emailResponse = await resend.emails.send({
-      from: "Vendibook <onboarding@resend.dev>",
+      from: "Vendibook <hello@updates.vendibook.com>",
       to: [testEmail],
       subject: subjectLine,
       html: htmlContent,
