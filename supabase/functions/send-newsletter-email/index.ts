@@ -53,21 +53,15 @@ const generateHtmlEmail = (unsubscribeUrl: string): string => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Vendibook Newsletter</title>
-  <style>
-    @font-face {
-      font-family: 'Sofia Pro Soft';
-      src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-      font-weight: 300;
-      font-style: normal;
-    }
-  </style>
+  <!-- Google Fonts: Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <!--[if mso]>
   <style type="text/css">
     body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
   </style>
   <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: ${COLORS.white}; color: ${COLORS.charcoal};">
+<body style="margin: 0; padding: 0; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: ${COLORS.white}; color: ${COLORS.charcoal};">
   
   <!-- Preview text (preheader) -->
   <div style="display: none; max-height: 0px; overflow: hidden;">
