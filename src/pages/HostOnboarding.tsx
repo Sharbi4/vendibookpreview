@@ -180,13 +180,13 @@ const HostOnboarding = () => {
 
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-3 justify-center mb-3">
-                <Button asChild size="lg" className="text-base px-8 py-6 bg-primary hover:bg-primary/90">
+                <Button asChild size="lg" variant="dark-shine" className="text-base px-8 py-6">
                   <Link to="/list">
                     Start Listing
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="text-base px-8 py-6">
+                <Button asChild size="lg" variant="dark-shine" className="text-base px-8 py-6">
                   <a href="#how-it-works">See How It Works</a>
                 </Button>
               </div>
@@ -361,10 +361,10 @@ const HostOnboarding = () => {
                     <p className="text-sm text-muted-foreground">Chat with our team 24/7 or submit a support request.</p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                    <Button size="sm" onClick={openZendeskChat}>
+                    <Button size="sm" variant="dark-shine" onClick={openZendeskChat}>
                       Chat with Support
                     </Button>
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="dark-shine" size="sm" asChild>
                       <Link to="/contact">Submit Request</Link>
                     </Button>
                   </div>
@@ -406,7 +406,7 @@ const HostOnboarding = () => {
               </div>
 
               <div className="text-center">
-                <Button asChild variant="outline" size="lg">
+                <Button asChild variant="dark-shine" size="lg">
                   <Link to="/tools">
                     Explore Host Tools
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -458,13 +458,13 @@ const HostOnboarding = () => {
                 Join operators who trust Vendibook to connect with verified renters and serious buyers.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
-                <Button asChild size="lg" className="text-base px-8 py-6 bg-primary hover:bg-primary/90">
+                <Button asChild size="lg" variant="dark-shine" className="text-base px-8 py-6">
                   <Link to="/list">
                     Start Listing
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="text-base px-8 py-6">
+                <Button asChild variant="dark-shine" size="lg" className="text-base px-8 py-6">
                   <Link to="/tools">Explore Host Tools</Link>
                 </Button>
               </div>
@@ -480,6 +480,7 @@ const HostOnboarding = () => {
       <div className="fixed bottom-6 right-6 md:hidden z-50">
         <Button
           size="lg"
+          variant="dark-shine"
           className="rounded-full w-14 h-14 shadow-lg"
           onClick={openZendeskChat}
         >
