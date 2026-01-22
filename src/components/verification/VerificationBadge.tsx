@@ -1,84 +1,31 @@
-import { Shield, Check } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import verifiedBadgeImg from '@/assets/verified-badge.png';
 
 interface VerificationBadgeProps {
   isVerified: boolean;
   size?: 'sm' | 'md' | 'lg';
   showLabel?: boolean;
-  variant?: 'badge' | 'inline' | 'card' | 'starburst';
+  variant?: 'badge' | 'inline' | 'card' | 'starburst' | 'image';
   className?: string;
 }
 
-// Custom starburst SVG badge component
-const StarburstBadge = ({ size = 'md', className }: { size?: 'sm' | 'md' | 'lg'; className?: string }) => {
+// Image-based verification badge
+const VerifiedBadgeImage = ({ size = 'md', className }: { size?: 'sm' | 'md' | 'lg'; className?: string }) => {
   const sizes = {
-    sm: { outer: 24, inner: 10 },
-    md: { outer: 32, inner: 14 },
-    lg: { outer: 48, inner: 20 },
-  };
-
-  const { outer, inner } = sizes[size];
-  const center = outer / 2;
-  const points = 16;
-  const outerRadius = outer / 2 - 1;
-  const innerRadius = outerRadius * 0.78;
-
-  // Generate starburst path
-  const generateStarburstPath = () => {
-    const path: string[] = [];
-    for (let i = 0; i < points * 2; i++) {
-      const angle = (i * Math.PI) / points - Math.PI / 2;
-      const radius = i % 2 === 0 ? outerRadius : innerRadius;
-      const x = center + radius * Math.cos(angle);
-      const y = center + radius * Math.sin(angle);
-      path.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`);
-    }
-    path.push('Z');
-    return path.join(' ');
+    sm: 'h-5 w-5',
+    md: 'h-7 w-7',
+    lg: 'h-10 w-10',
   };
 
   return (
-    <svg 
-      width={outer} 
-      height={outer} 
-      viewBox={`0 0 ${outer} ${outer}`} 
-      className={cn("drop-shadow-md", className)}
-    >
-      <defs>
-        <linearGradient id={`starburstGradient-${size}`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#FBBF24" />
-          <stop offset="50%" stopColor="#F59E0B" />
-          <stop offset="100%" stopColor="#EA580C" />
-        </linearGradient>
-      </defs>
-      <path
-        d={generateStarburstPath()}
-        fill={`url(#starburstGradient-${size})`}
-      />
-      {/* White circle for checkmark background */}
-      <circle 
-        cx={center} 
-        cy={center} 
-        r={innerRadius * 0.65} 
-        fill="white" 
-        stroke="white" 
-        strokeWidth="1"
-      />
-      {/* Checkmark */}
-      <Check 
-        className="text-amber-500"
-        style={{
-          position: 'absolute',
-        }}
-        x={center - inner / 2}
-        y={center - inner / 2}
-        width={inner}
-        height={inner}
-        strokeWidth={3}
-      />
-    </svg>
+    <img 
+      src={verifiedBadgeImg} 
+      alt="Verified" 
+      className={cn(sizes[size], "object-contain drop-shadow-sm", className)}
+    />
   );
 };
 
@@ -101,7 +48,27 @@ const VerificationBadge = ({
     lg: 'text-base',
   };
 
-  // Starburst variant - just the badge icon
+  // Image variant - just the badge image
+  if (variant === 'image') {
+    if (!isVerified) return null;
+    
+    return (
+      <TooltipProvider>
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild>
+            <div className={cn("inline-flex", className)}>
+              <VerifiedBadgeImage size={size} />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Identity verified via Stripe Identity</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  // Starburst variant - now uses the image
   if (variant === 'starburst') {
     if (!isVerified) return null;
     
@@ -110,7 +77,7 @@ const VerificationBadge = ({
         <Tooltip delayDuration={300}>
           <TooltipTrigger asChild>
             <div className={cn("inline-flex", className)}>
-              <StarburstBadge size={size} />
+              <VerifiedBadgeImage size={size} />
             </div>
           </TooltipTrigger>
           <TooltipContent>
@@ -134,7 +101,7 @@ const VerificationBadge = ({
       >
         <div className="flex-shrink-0">
           {isVerified ? (
-            <StarburstBadge size="lg" />
+            <VerifiedBadgeImage size="lg" />
           ) : (
             <div className="p-2 rounded-full bg-muted">
               <Shield className={cn(iconSizes.lg, 'text-muted-foreground')} />
@@ -168,7 +135,7 @@ const VerificationBadge = ({
               )}
             >
               {isVerified ? (
-                <StarburstBadge size={size} />
+                <VerifiedBadgeImage size={size} />
               ) : (
                 <Shield className={iconSizes[size]} />
               )}
@@ -207,7 +174,7 @@ const VerificationBadge = ({
             )}
           >
             {isVerified ? (
-              <StarburstBadge size="sm" />
+              <VerifiedBadgeImage size="sm" />
             ) : (
               <Shield className={iconSizes[size]} />
             )}
@@ -227,3 +194,6 @@ const VerificationBadge = ({
 };
 
 export default VerificationBadge;
+
+// Export the image component for direct use
+export { VerifiedBadgeImage };

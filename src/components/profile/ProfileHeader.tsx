@@ -1,11 +1,11 @@
 import { format } from 'date-fns';
-import { Calendar, Clock, CreditCard, User, Zap, Star, Edit } from 'lucide-react';
+import { Calendar, Clock, CreditCard, Zap, Star, Edit, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import VerificationBadge from '@/components/verification/VerificationBadge';
+import { VerifiedBadgeImage } from '@/components/verification/VerificationBadge';
 import { cn } from '@/lib/utils';
 import { getPublicDisplayName, getDisplayInitials } from '@/lib/displayName';
 import type { UserProfile, UserStats } from '@/hooks/useUserProfile';
@@ -70,18 +70,19 @@ const ProfileHeader = ({
                 {/* Verified Badge */}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge
-                      variant={profile.identity_verified ? 'default' : 'secondary'}
-                      className={cn(
-                        'text-xs gap-1',
-                        profile.identity_verified
-                          ? 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/50 dark:text-amber-400'
-                          : 'bg-muted text-muted-foreground'
+                    <div className={cn(
+                      'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border',
+                      profile.identity_verified
+                        ? 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/50 dark:text-amber-400 dark:border-amber-700'
+                        : 'bg-muted text-muted-foreground border-border'
+                    )}>
+                      {profile.identity_verified ? (
+                        <VerifiedBadgeImage size="sm" />
+                      ) : (
+                        <Shield className="h-3 w-3" />
                       )}
-                    >
-                      <User className="h-3 w-3" />
                       {profile.identity_verified ? 'Verified' : 'Unverified'}
-                    </Badge>
+                    </div>
                   </TooltipTrigger>
                   <TooltipContent>
                     {profile.identity_verified 
