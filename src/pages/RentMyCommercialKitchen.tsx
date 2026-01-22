@@ -522,19 +522,12 @@ const RentMyCommercialKitchen = () => {
               <p className="text-muted-foreground">No monthly subscriptions. We only make money when you do.</p>
             </motion.div>
 
-            <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-10">
+            <div className="max-w-md mx-auto mb-10">
               <Card className="text-center">
                 <CardContent className="pt-6">
                   <p className="text-sm text-muted-foreground mb-2">Host Fee</p>
                   <p className="text-4xl font-bold">12.9%</p>
                   <p className="text-sm text-muted-foreground mt-2">Deducted from payout</p>
-                </CardContent>
-              </Card>
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground mb-2">Renter Fee</p>
-                  <p className="text-4xl font-bold">12.9%</p>
-                  <p className="text-sm text-muted-foreground mt-2">Added to booking total</p>
                 </CardContent>
               </Card>
             </div>
