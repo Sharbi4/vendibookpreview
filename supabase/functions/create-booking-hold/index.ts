@@ -124,16 +124,28 @@ serve(async (req) => {
       logStep("Existing Stripe customer found", { customerId });
     }
 
-    // Build line items
+    // Build line items - separate base rental and platform fee
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
       {
         price_data: {
           currency: 'usd',
           product_data: {
             name: listing.title,
-            description: `Rental booking${delivery_fee > 0 ? ' (includes delivery)' : ''} - Payment held until host approves`,
+            description: `Rental booking${delivery_fee > 0 ? ` (includes $${delivery_fee.toFixed(2)} delivery)` : ''} - Payment held until host approves`,
           },
-          unit_amount: Math.round((amount + delivery_fee + (amount + delivery_fee) * (RENTAL_RENTER_FEE_PERCENT / 100)) * 100),
+          unit_amount: Math.round(subtotal * 100),
+          tax_behavior: 'exclusive',
+        },
+        quantity: 1,
+      },
+      {
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: 'Platform Service Fee',
+            description: 'Vendibook marketplace fee (12.9%)',
+          },
+          unit_amount: Math.round(renterFee * 100),
           tax_behavior: 'exclusive',
         },
         quantity: 1,
