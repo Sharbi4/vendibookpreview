@@ -649,6 +649,50 @@ export type Database = {
           },
         ]
       }
+      listing_leads: {
+        Row: {
+          created_at: string
+          email: string
+          host_id: string
+          id: string
+          listing_id: string
+          message: string | null
+          name: string | null
+          phone: string | null
+          source: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          host_id: string
+          id?: string
+          listing_id: string
+          message?: string | null
+          name?: string | null
+          phone?: string | null
+          source?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          host_id?: string
+          id?: string
+          listing_id?: string
+          message?: string | null
+          name?: string | null
+          phone?: string | null
+          source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_leads_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_required_documents: {
         Row: {
           created_at: string

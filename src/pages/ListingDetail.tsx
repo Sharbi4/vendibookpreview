@@ -362,6 +362,7 @@ const ListingDetail = () => {
                 <BookingSummaryCard
                   listingId={listing.id}
                   listingTitle={listing.title}
+                  hostId={listing.host_id}
                   priceDaily={listing.price_daily}
                   priceWeekly={listing.price_weekly}
                   availableFrom={listing.available_from}

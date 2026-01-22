@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays } from 'date-fns';
-import { Calendar, Zap, Shield, ArrowRight, Star } from 'lucide-react';
+import { Calendar, Zap, Shield, ArrowRight, Star, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import RequestDatesModal, { BookingSelection } from './RequestDatesModal';
@@ -9,10 +9,14 @@ import { cn } from '@/lib/utils';
 import { calculateRentalFees } from '@/lib/commissions';
 import { AffirmBadge, isAffirmEligible } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge, isAfterpayEligible } from '@/components/ui/AfterpayBadge';
+import { useAuth } from '@/contexts/AuthContext';
+import { trackCTAClick } from '@/lib/analytics';
+import { LeadCaptureModal } from './LeadCaptureModal';
 
 interface BookingSummaryCardProps {
   listingId: string;
   listingTitle: string;
+  hostId: string;
   priceDaily: number | null;
   priceWeekly?: number | null;
   availableFrom?: string | null;
@@ -24,6 +28,7 @@ interface BookingSummaryCardProps {
 export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
   listingId,
   listingTitle,
+  hostId,
   priceDaily,
   priceWeekly,
   availableFrom,
@@ -32,7 +37,9 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
   coverImage,
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showDateModal, setShowDateModal] = useState(false);
+  const [showLeadModal, setShowLeadModal] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
 
@@ -178,6 +185,21 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
                   </Badge>
                 </div>
               )}
+
+              {/* Request Info for anonymous visitors */}
+              {!user && (
+                <Button 
+                  onClick={() => {
+                    trackCTAClick('request_info', 'booking_summary');
+                    setShowLeadModal(true);
+                  }}
+                  variant="outline"
+                  className="w-full text-sm border-dashed" 
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  Request Info
+                </Button>
+              )}
             </>
           )}
 
@@ -200,6 +222,14 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
         instantBook={instantBook}
         onDatesSelected={handleDatesSelected}
         navigateToBooking={false}
+      />
+
+      <LeadCaptureModal
+        open={showLeadModal}
+        onOpenChange={setShowLeadModal}
+        listingId={listingId}
+        hostId={hostId}
+        listingTitle={listingTitle}
       />
     </>
   );
