@@ -79,7 +79,7 @@ export const LeadCaptureModal = ({
       
       toast({
         title: 'Request sent!',
-        description: 'The seller will receive your info and reach out soon.',
+        description: "We'll be in touch with you shortly.",
       });
     } catch (error) {
       console.error('Error submitting lead:', error);
@@ -114,7 +114,7 @@ export const LeadCaptureModal = ({
             </div>
             <h3 className="text-xl font-semibold mb-2">Request Sent!</h3>
             <p className="text-muted-foreground mb-6 max-w-xs">
-              We've notified the seller about your interest. They'll reach out to you at <strong>{formData.email}</strong> soon.
+              Thanks for your interest! Our team will reach out to you at <strong>{formData.email}</strong> shortly.
             </p>
             <Button onClick={handleClose} variant="dark-shine">
               Got it
