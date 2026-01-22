@@ -10,8 +10,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
-import affirmLogo from '@/assets/affirm-logo-new.png';
-import afterpayLogo from '@/assets/afterpay-logo-new.png';
+import affirmLogo from '@/assets/affirm-logo.png';
+import afterpayLogo from '@/assets/afterpay-logo.jpg';
 // Lazy load below-the-fold components for faster initial load
 const ListingsSections = lazy(() => import('@/components/home/ListingsSections'));
 const SupplySection = lazy(() => import('@/components/home/SupplySection'));
