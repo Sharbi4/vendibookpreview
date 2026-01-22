@@ -440,7 +440,7 @@ const BookingCheckout = () => {
                   )}
                 </div>
                 {!isStep1Complete && (
-                  <Button variant="gradient" size="sm" asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="dark-shine" size="sm" asChild onClick={(e) => e.stopPropagation()}>
                     <Link to={`/auth?redirect=/book/${listingId}?start=${format(startDate, 'yyyy-MM-dd')}&end=${format(endDate, 'yyyy-MM-dd')}`}>
                       Continue
                     </Link>

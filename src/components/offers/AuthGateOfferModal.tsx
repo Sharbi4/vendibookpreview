@@ -161,7 +161,7 @@ export const AuthGateOfferModal = ({
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type="submit" variant="dark-shine" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             {mode === 'signin' ? 'Sign In' : 'Create Account'}
           </Button>

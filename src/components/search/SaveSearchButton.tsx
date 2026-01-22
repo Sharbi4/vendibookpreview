@@ -130,6 +130,7 @@ export const SaveSearchButton = ({
               Cancel
             </Button>
             <Button
+              variant="dark-shine"
               className="flex-1"
               onClick={() => {
                 setShowLoginPrompt(false);
