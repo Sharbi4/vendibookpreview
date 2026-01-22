@@ -23,19 +23,13 @@ export const AffirmBadge = ({ price, className, showTooltip = true, showEstimate
   const monthlyEstimate = Math.round(price / 12);
 
   const badge = (
-    <div 
-      className={cn(
-        "inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium",
-        "bg-[#0fa0ea]/10 text-foreground border border-[#0fa0ea]/20",
-        className
-      )}
-    >
+    <div className={cn("inline-flex items-center", className)}>
       <img 
         src={affirmLogo} 
         alt="Affirm" 
-        className="h-3.5 w-auto dark:invert"
+        className="h-4 w-auto dark:invert"
       />
-      {showEstimate && <span>~${monthlyEstimate}/mo</span>}
+      {showEstimate && <span className="ml-1 text-[11px] font-medium">~${monthlyEstimate}/mo</span>}
     </div>
   );
 
