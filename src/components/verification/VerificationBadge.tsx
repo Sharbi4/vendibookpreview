@@ -6,7 +6,7 @@ import verifiedBadgeImg from '@/assets/verified-badge.png';
 
 interface VerificationBadgeProps {
   isVerified: boolean;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   showLabel?: boolean;
   variant?: 'badge' | 'inline' | 'card' | 'starburst' | 'image';
   className?: string;
