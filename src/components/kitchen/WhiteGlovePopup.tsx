@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ValidatedInput, useFormValidation, validators } from '@/components/ui/validated-input';
-import { Phone, Sparkles, X } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Phone, Mail, Sparkles, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -14,12 +16,14 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [preferredContact, setPreferredContact] = useState<'phone' | 'email'>('phone');
 
   const form = useFormValidation({
     initialValues: {
       name: '',
       restaurantName: '',
       phone: '',
+      email: '',
     },
     validators: {
       name: validators.compose(
@@ -33,6 +37,10 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
       phone: validators.compose(
         validators.required('Please enter your phone number'),
         validators.phone('Please enter a valid phone number')
+      ),
+      email: validators.compose(
+        validators.required('Please enter your email'),
+        validators.email('Please enter a valid email address')
       ),
     },
   });
@@ -77,9 +85,11 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
         body: {
           name: form.values.name,
           phone: form.values.phone,
+          email: form.values.email,
           restaurantName: form.values.restaurantName,
           source: 'white-glove-kitchen-popup',
           preferredTime: 'asap',
+          preferredContact,
         },
       });
 
@@ -171,6 +181,17 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
               />
 
               <ValidatedInput
+                label="Email"
+                value={form.values.email}
+                onChange={(value) => form.setValue('email', value)}
+                onBlur={() => form.setTouched('email')}
+                error={form.errors.email}
+                touched={form.touched.has('email')}
+                placeholder="you@restaurant.com"
+                required
+              />
+
+              <ValidatedInput
                 label="Phone Number"
                 value={form.values.phone}
                 onChange={(value) => form.setValue('phone', value)}
@@ -181,6 +202,30 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
                 formatPhone
                 required
               />
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Preferred Contact Method</Label>
+                <RadioGroup
+                  value={preferredContact}
+                  onValueChange={(value) => setPreferredContact(value as 'phone' | 'email')}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="phone" id="contact-phone" />
+                    <Label htmlFor="contact-phone" className="flex items-center gap-1.5 cursor-pointer text-sm">
+                      <Phone className="h-4 w-4" />
+                      Phone
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="email" id="contact-email" />
+                    <Label htmlFor="contact-email" className="flex items-center gap-1.5 cursor-pointer text-sm">
+                      <Mail className="h-4 w-4" />
+                      Email
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
 
               <Button
                 type="submit"
