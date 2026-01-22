@@ -77,6 +77,67 @@ serve(async (req) => {
         const isEscrow = session.metadata?.escrow === 'true';
         const paymentType = session.metadata?.type;
 
+        // Handle freight payment for cash transactions
+        if (paymentType === 'freight_payment' && session.payment_status === "paid") {
+          const transactionId = session.metadata?.transaction_id;
+          logStep("Processing freight payment", { transactionId });
+
+          if (transactionId) {
+            const paymentIntentId = typeof session.payment_intent === 'string' 
+              ? session.payment_intent 
+              : session.payment_intent?.id;
+
+            const { error: updateError } = await supabaseClient
+              .from("sale_transactions")
+              .update({
+                freight_payment_status: "paid",
+                freight_payment_intent_id: paymentIntentId,
+                freight_paid_at: new Date().toISOString(),
+              })
+              .eq("id", transactionId);
+
+            if (updateError) {
+              logStep("ERROR: Failed to update freight payment status", { 
+                error: updateError.message, 
+                transactionId 
+              });
+            } else {
+              logStep("Freight payment marked as paid", { transactionId });
+
+              // Get transaction for notifications
+              const { data: txData } = await supabaseClient
+                .from("sale_transactions")
+                .select("buyer_id, seller_id, freight_cost, listing:listings(title)")
+                .eq("id", transactionId)
+                .single();
+
+              if (txData) {
+                const listing = Array.isArray(txData.listing) ? txData.listing[0] : txData.listing;
+                const listingTitle = listing?.title || "your order";
+
+                // Notify buyer
+                await supabaseClient.from("notifications").insert({
+                  user_id: txData.buyer_id,
+                  type: "payment",
+                  title: "Freight Payment Confirmed",
+                  message: `Your freight payment of $${txData.freight_cost} for "${listingTitle}" has been confirmed. Shipping will be arranged shortly.`,
+                  link: `/order-tracking/${transactionId}`,
+                });
+
+                // Notify seller
+                await supabaseClient.from("notifications").insert({
+                  user_id: txData.seller_id,
+                  type: "shipping",
+                  title: "Freight Payment Received",
+                  message: `The buyer has paid for freight on "${listingTitle}". VendiBook Freight will contact you to arrange pickup.`,
+                  link: `/order-tracking/${transactionId}`,
+                });
+              }
+            }
+          }
+          break;
+        }
+
         // Handle Proof Notary payment - publish listing after successful payment
         if (paymentType === 'proof_notary' && listingId && session.payment_status === "paid") {
           logStep("Processing Proof Notary payment", { listingId });

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import { 
   Package, Truck, CheckCircle2, Clock, MapPin, 
   ExternalLink, ArrowLeft, AlertCircle, PackageCheck,
-  Loader2, DollarSign, UserCheck, Users, Banknote
+  Loader2, DollarSign, UserCheck, Users, Banknote, CreditCard
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -127,7 +127,215 @@ const TrackingTimeline = ({ currentStatus }: { currentStatus: string }) => {
   );
 };
 
-// Cash Transaction Timeline Component
+// Cash + Freight Transaction Timeline Component
+interface CashFreightTimelineProps {
+  status: string;
+  sellerConfirmedAt: string | null;
+  freightPaymentStatus: string | null;
+  freightPaidAt: string | null;
+  buyerConfirmedAt: string | null;
+  createdAt: string;
+  freightCost: number;
+  isBuyer: boolean;
+  isSeller: boolean;
+  onSellerConfirm: () => void;
+  onPayFreight: () => void;
+  onBuyerConfirm: () => void;
+  isConfirming: boolean;
+  isPayingFreight: boolean;
+}
+
+const CashFreightTimeline = ({ 
+  status, 
+  sellerConfirmedAt, 
+  freightPaymentStatus,
+  freightPaidAt,
+  buyerConfirmedAt, 
+  createdAt,
+  freightCost,
+  isBuyer,
+  isSeller,
+  onSellerConfirm,
+  onPayFreight,
+  onBuyerConfirm,
+  isConfirming,
+  isPayingFreight
+}: CashFreightTimelineProps) => {
+  const steps = [
+    { 
+      key: 'requested', 
+      label: 'Request Submitted', 
+      icon: Banknote,
+      description: 'Cash purchase request sent',
+      completedAt: createdAt
+    },
+    { 
+      key: 'seller_confirmed', 
+      label: 'Seller Confirmed', 
+      icon: UserCheck,
+      description: 'Seller accepted the request',
+      completedAt: sellerConfirmedAt
+    },
+    { 
+      key: 'freight_paid', 
+      label: 'Freight Paid', 
+      icon: CreditCard,
+      description: 'Shipping cost paid',
+      completedAt: freightPaidAt
+    },
+    { 
+      key: 'buyer_confirmed', 
+      label: 'Buyer Confirmed', 
+      icon: Users,
+      description: 'Buyer confirmed receipt',
+      completedAt: buyerConfirmedAt
+    },
+    { 
+      key: 'completed', 
+      label: 'Completed', 
+      icon: CheckCircle2,
+      description: 'Transaction complete',
+      completedAt: status === 'completed' ? (buyerConfirmedAt || freightPaidAt) : null
+    },
+  ];
+
+  // Determine current step
+  let currentStep = 1;
+  if (sellerConfirmedAt) currentStep = 2;
+  if (freightPaymentStatus === 'paid') currentStep = 3;
+  if (buyerConfirmedAt) currentStep = 4;
+  if (status === 'completed') currentStep = 5;
+
+  // Determine available actions
+  const canSellerConfirm = isSeller && !sellerConfirmedAt && status === 'pending_cash';
+  const canPayFreight = isBuyer && sellerConfirmedAt && freightPaymentStatus !== 'paid';
+  const canBuyerConfirm = isBuyer && freightPaymentStatus === 'paid' && !buyerConfirmedAt;
+
+  return (
+    <div className="space-y-4">
+      {/* Visual Timeline */}
+      <div className="relative">
+        <div className="flex justify-between items-start">
+          {steps.map((step, index) => {
+            const StepIcon = step.icon;
+            const isCompleted = currentStep > (index + 1);
+            const isCurrent = currentStep === (index + 1);
+            
+            return (
+              <div key={step.key} className="flex flex-col items-center relative z-10 flex-1">
+                <div className={`
+                  w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all
+                  ${isCompleted ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 
+                    isCurrent ? 'bg-primary text-white shadow-lg shadow-primary/30 ring-4 ring-primary/20' : 
+                    'bg-muted text-muted-foreground'}
+                `}>
+                  <StepIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                </div>
+                <span className={`
+                  text-[10px] sm:text-xs mt-2 text-center font-medium max-w-[60px] sm:max-w-none
+                  ${isCompleted ? 'text-emerald-600' : isCurrent ? 'text-primary' : 'text-muted-foreground'}
+                `}>
+                  {step.label}
+                </span>
+                {step.completedAt && (
+                  <span className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 hidden sm:block">
+                    {format(new Date(step.completedAt), 'MMM d, h:mm a')}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {/* Progress line */}
+        <div className="absolute top-5 sm:top-6 left-[10%] right-[10%] h-0.5 bg-muted -z-0">
+          <div 
+            className="h-full bg-emerald-500 transition-all duration-500"
+            style={{ width: `${Math.min((currentStep - 1) / (steps.length - 1) * 100, 100)}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Status Message & Action */}
+      <div className="mt-6 p-4 rounded-xl bg-muted/50 border">
+        {status === 'pending_cash' && !sellerConfirmedAt && (
+          <div className="text-center">
+            <Clock className="h-8 w-8 text-amber-500 mx-auto mb-2" />
+            <p className="font-medium text-foreground">Awaiting Seller Confirmation</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              The seller will review your request and confirm to proceed with the sale.
+            </p>
+            {canSellerConfirm && (
+              <Button 
+                onClick={onSellerConfirm} 
+                disabled={isConfirming}
+                className="mt-4"
+              >
+                {isConfirming ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                Confirm Sale
+              </Button>
+            )}
+          </div>
+        )}
+
+        {sellerConfirmedAt && freightPaymentStatus !== 'paid' && (
+          <div className="text-center">
+            <CreditCard className="h-8 w-8 text-primary mx-auto mb-2" />
+            <p className="font-medium text-foreground">Freight Payment Required</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {isBuyer 
+                ? `Pay $${freightCost.toLocaleString()} for VendiBook Freight shipping to proceed.`
+                : 'Waiting for the buyer to pay for freight shipping.'}
+            </p>
+            {canPayFreight && (
+              <Button 
+                onClick={onPayFreight} 
+                disabled={isPayingFreight}
+                className="mt-4"
+              >
+                {isPayingFreight ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CreditCard className="h-4 w-4 mr-2" />}
+                Pay ${freightCost.toLocaleString()} for Freight
+              </Button>
+            )}
+          </div>
+        )}
+
+        {freightPaymentStatus === 'paid' && !buyerConfirmedAt && status !== 'completed' && (
+          <div className="text-center">
+            <Truck className="h-8 w-8 text-blue-500 mx-auto mb-2" />
+            <p className="font-medium text-foreground">Freight Paid — Awaiting Delivery</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {isBuyer 
+                ? 'Once you receive the item and have paid the seller, confirm receipt below.'
+                : 'Waiting for the buyer to confirm they received the item.'}
+            </p>
+            {canBuyerConfirm && (
+              <Button 
+                onClick={onBuyerConfirm} 
+                disabled={isConfirming}
+                className="mt-4"
+              >
+                {isConfirming ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                Confirm Receipt
+              </Button>
+            )}
+          </div>
+        )}
+
+        {status === 'completed' && (
+          <div className="text-center">
+            <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
+            <p className="font-medium text-emerald-600">Transaction Complete!</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Thank you for using VendiBook!
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Cash Transaction Timeline Component (no freight)
 interface CashTimelineProps {
   status: string;
   sellerConfirmedAt: string | null;
@@ -294,17 +502,59 @@ const CashTransactionTimeline = ({
 
 const OrderTracking = () => {
   const { transactionId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const { transaction, isLoading, error, refetch } = useOrderTracking(transactionId);
   const { toast } = useToast();
   const [isConfirming, setIsConfirming] = useState(false);
+  const [isPayingFreight, setIsPayingFreight] = useState(false);
+
+  // Handle freight payment success/cancel from URL params
+  useEffect(() => {
+    if (searchParams.get('freight_paid') === 'true') {
+      toast({ title: 'Freight payment successful!', description: 'Shipping will be arranged shortly.' });
+      refetch();
+    } else if (searchParams.get('freight_cancelled') === 'true') {
+      toast({ title: 'Freight payment cancelled', description: 'You can pay for freight when you\'re ready.', variant: 'destructive' });
+    }
+  }, [searchParams, toast, refetch]);
 
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth?redirect=/order-tracking/' + transactionId);
     }
   }, [user, authLoading, transactionId, navigate]);
+
+  // Handle freight payment for cash + freight transactions
+  const handlePayFreight = async () => {
+    if (!transaction || !user) return;
+    
+    setIsPayingFreight(true);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('create-freight-checkout', {
+        body: { transaction_id: transaction.id },
+      });
+
+      if (fnError) throw fnError;
+      if (data.error) throw new Error(data.error);
+
+      // Open Stripe checkout
+      const stripeWindow = window.open(data.url, '_blank');
+      if (!stripeWindow) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      console.error('Freight payment error:', err);
+      toast({ 
+        title: 'Error', 
+        description: err instanceof Error ? err.message : 'Failed to start freight payment.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsPayingFreight(false);
+    }
+  };
 
   // Handle confirmation for cash transactions
   const handleCashConfirm = async () => {
@@ -319,15 +569,23 @@ const OrderTracking = () => {
       
       if (isSeller && !transaction.seller_confirmed_at) {
         updateData.seller_confirmed_at = new Date().toISOString();
-        // If buyer already confirmed, complete the transaction
-        if (transaction.buyer_confirmed_at) {
+        // For cash+freight, don't complete until freight is paid and buyer confirms
+        // For regular cash, complete if buyer already confirmed
+        if (transaction.buyer_confirmed_at && transaction.fulfillment_type !== 'vendibook_freight') {
           updateData.status = 'completed';
         }
       } else if (isBuyer && !transaction.buyer_confirmed_at) {
         updateData.buyer_confirmed_at = new Date().toISOString();
-        // If seller already confirmed, complete the transaction
+        // For cash+freight, only complete if freight is paid
+        // For regular cash, complete if seller already confirmed
         if (transaction.seller_confirmed_at) {
-          updateData.status = 'completed';
+          if (transaction.fulfillment_type === 'vendibook_freight') {
+            if (transaction.freight_payment_status === 'paid') {
+              updateData.status = 'completed';
+            }
+          } else {
+            updateData.status = 'completed';
+          }
         }
       }
       
@@ -398,6 +656,7 @@ const OrderTracking = () => {
 
   const isCashTransaction = transaction.status === 'pending_cash' || 
     (transaction.status === 'completed' && !transaction.shipping_status && (transaction.seller_confirmed_at || transaction.buyer_confirmed_at));
+  const isCashFreightTransaction = isCashTransaction && transaction.fulfillment_type === 'vendibook_freight';
   const shippingStatus = transaction.shipping_status || 'pending';
   const statusConfig = SHIPPING_STATUS_CONFIG[shippingStatus as keyof typeof SHIPPING_STATUS_CONFIG] 
     || SHIPPING_STATUS_CONFIG.pending;
@@ -430,12 +689,18 @@ const OrderTracking = () => {
 
           {/* Order Header */}
           <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3 mb-2 flex-wrap">
               <h1 className="text-2xl font-bold text-foreground">Order Tracking</h1>
               {isCashTransaction && (
                 <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                   <Banknote className="h-3 w-3 mr-1" />
                   Pay in Person
+                </Badge>
+              )}
+              {isCashFreightTransaction && (
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                  <Truck className="h-3 w-3 mr-1" />
+                  VendiBook Freight
                 </Badge>
               )}
             </div>
@@ -447,8 +712,25 @@ const OrderTracking = () => {
           {/* Status Card */}
           <Card className="mb-6">
             <CardContent className="pt-6">
-              {/* Cash Transaction Timeline */}
-              {isCashTransaction ? (
+              {/* Cash + Freight Transaction Timeline */}
+              {isCashFreightTransaction ? (
+                <CashFreightTimeline
+                  status={transaction.status}
+                  sellerConfirmedAt={transaction.seller_confirmed_at}
+                  freightPaymentStatus={transaction.freight_payment_status}
+                  freightPaidAt={transaction.freight_paid_at}
+                  buyerConfirmedAt={transaction.buyer_confirmed_at}
+                  createdAt={transaction.created_at}
+                  freightCost={transaction.freight_cost || 0}
+                  isBuyer={isBuyer}
+                  isSeller={isSeller}
+                  onSellerConfirm={handleCashConfirm}
+                  onPayFreight={handlePayFreight}
+                  onBuyerConfirm={handleCashConfirm}
+                  isConfirming={isConfirming}
+                  isPayingFreight={isPayingFreight}
+                />
+              ) : isCashTransaction ? (
                 <CashTransactionTimeline
                   status={transaction.status}
                   sellerConfirmedAt={transaction.seller_confirmed_at}
