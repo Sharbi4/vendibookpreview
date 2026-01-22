@@ -361,8 +361,8 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
               </div>
             </div>
 
-            {/* Deposit Status Indicator */}
-            {hasDeposit && (
+            {/* Deposit Status Indicator - Only show when deposit is actually collected (paid) */}
+            {hasDeposit && isPaid && (
               <div className={`flex items-center justify-between p-3 mb-3 rounded-lg border ${
                 depositStatus === 'refunded' ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800' :
                 depositStatus === 'forfeited' ? 'bg-destructive/10 border-destructive/20' :
@@ -386,7 +386,6 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
                       depositStatus === 'charged' ? 'text-blue-600' :
                       'text-muted-foreground'
                     }`}>
-                      {depositStatus === 'pending' && 'Pending collection'}
                       {depositStatus === 'charged' && (rentalEnded ? 'Ready for release' : 'Held until rental ends')}
                       {depositStatus === 'refunded' && 'Refunded to renter'}
                       {depositStatus === 'forfeited' && (booking.deposit_refund_notes || 'Forfeited')}
