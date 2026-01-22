@@ -591,6 +591,11 @@ const HowItWorks = () => {
                       Create Rental Listing
                     </Link>
                   </Button>
+                  <Button variant="outline" className="w-full gap-2 mt-2" asChild>
+                    <Link to="/rent-my-commercial-kitchen">
+                      Learn More
+                    </Link>
+                  </Button>
                 </div>
               </div>
 
@@ -613,6 +618,8 @@ const HowItWorks = () => {
                     ctaHref="/list"
                     secondaryText="View example rental listing"
                     secondaryHref="/search?mode=rent"
+                    tertiaryText="Learn More About Kitchen Rentals"
+                    tertiaryHref="/rent-my-commercial-kitchen"
                     reassurance="Approve renters only when you're comfortable."
                     accent="emerald"
                   />
@@ -972,6 +979,8 @@ interface StickyActionCardProps {
   secondaryHref: string;
   reassurance: string;
   accent?: 'primary' | 'emerald' | 'amber';
+  tertiaryText?: string;
+  tertiaryHref?: string;
 }
 
 const StickyActionCard = ({
@@ -984,6 +993,8 @@ const StickyActionCard = ({
   secondaryHref,
   reassurance,
   accent = 'primary',
+  tertiaryText,
+  tertiaryHref,
 }: StickyActionCardProps) => {
   return (
     <Card className="border-0 shadow-xl bg-card rounded-2xl">
@@ -1016,10 +1027,19 @@ const StickyActionCard = ({
 
         <Link
           to={secondaryHref}
-          className="block text-center text-sm text-primary hover:underline mb-4"
+          className="block text-center text-sm text-primary hover:underline mb-2"
         >
           {secondaryText}
         </Link>
+
+        {tertiaryText && tertiaryHref && (
+          <Link
+            to={tertiaryHref}
+            className="block text-center text-sm text-muted-foreground hover:text-foreground hover:underline mb-2"
+          >
+            {tertiaryText}
+          </Link>
+        )}
 
         <p className="text-xs text-muted-foreground text-center">{reassurance}</p>
       </CardContent>
