@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import DateSelectionModal from './DateSelectionModal';
 import { cn } from '@/lib/utils';
-
+import { calculateRentalFees } from '@/lib/commissions';
 interface BookingSummaryCardProps {
   listingId: string;
   listingTitle: string;
@@ -46,6 +46,8 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
   };
 
   const basePrice = calculateBasePrice();
+  const fees = calculateRentalFees(basePrice);
+  const totalWithFees = fees.customerTotal;
 
   const handleDatesSelected = (start: Date, end: Date) => {
     setStartDate(start);
@@ -104,13 +106,19 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
               </div>
 
               {/* Price summary */}
-              <div className="p-3 bg-primary/5 rounded-xl border border-primary/20">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    {rentalDays} × ${priceDaily?.toLocaleString()}
-                  </span>
+              <div className="p-3 bg-primary/5 rounded-xl border border-primary/20 space-y-2">
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>{rentalDays} day{rentalDays > 1 ? 's' : ''} × ${priceDaily?.toLocaleString()}</span>
+                  <span>${basePrice.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>Platform fee</span>
+                  <span>${fees.renterFee.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-border">
+                  <span className="font-medium text-foreground">Est. total</span>
                   <span className="text-lg font-bold text-foreground">
-                    ${basePrice.toLocaleString()}
+                    ${totalWithFees.toLocaleString()}
                   </span>
                 </div>
               </div>
