@@ -139,18 +139,23 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           )}
         </div>
 
-        {/* Top Right Badges */}
-        <div className={cn("absolute flex items-center gap-1.5", compact ? "top-2 right-2" : "top-3 right-3 gap-2")}>
-          {/* Verified Badge */}
-          {hostVerified && (
+        {/* Verified Badge - Pinned to top-left corner, extending outside card */}
+        {hostVerified && (
+          <div className={cn(
+            "absolute z-20",
+            compact ? "-top-2 -left-2" : "-top-3 -left-3"
+          )}>
             <VerificationBadge 
               isVerified={true} 
               variant="starburst" 
               size={compact ? "lg" : "xl"}
               showLabel={false}
             />
-          )}
-          
+          </div>
+        )}
+
+        {/* Top Right Badges */}
+        <div className={cn("absolute flex items-center gap-1.5", compact ? "top-2 right-2" : "top-3 right-3 gap-2")}>
           {/* Favorite Button */}
           {!compact && (
             <FavoriteButton listingId={listing.id} category={listing.category} size="sm" />
