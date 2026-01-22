@@ -758,6 +758,7 @@ export type Database = {
           highlights: string[] | null
           host_id: string | null
           hourly_enabled: boolean | null
+          hourly_schedule: Json | null
           hours_of_access: string | null
           id: string
           image_urls: string[] | null
@@ -781,6 +782,7 @@ export type Database = {
           proof_notary_enabled: boolean | null
           published_at: string | null
           rental_buffer_days: number | null
+          rental_min_days: number | null
           status: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at: string
@@ -816,6 +818,7 @@ export type Database = {
           highlights?: string[] | null
           host_id?: string | null
           hourly_enabled?: boolean | null
+          hourly_schedule?: Json | null
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
@@ -839,6 +842,7 @@ export type Database = {
           proof_notary_enabled?: boolean | null
           published_at?: string | null
           rental_buffer_days?: number | null
+          rental_min_days?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at?: string
@@ -874,6 +878,7 @@ export type Database = {
           highlights?: string[] | null
           host_id?: string | null
           hourly_enabled?: boolean | null
+          hourly_schedule?: Json | null
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
@@ -897,6 +902,7 @@ export type Database = {
           proof_notary_enabled?: boolean | null
           published_at?: string | null
           rental_buffer_days?: number | null
+          rental_min_days?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
           title?: string
           updated_at?: string
