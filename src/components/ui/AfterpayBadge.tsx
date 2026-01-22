@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import afterpayLogo from '@/assets/afterpay-logo.jpg';
+import afterpayLogo from '@/assets/afterpay-logo.png';
 
 interface AfterpayBadgeProps {
   price: number;
