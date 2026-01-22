@@ -3197,7 +3197,7 @@ export const PublishWizard: React.FC = () => {
                               {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                               Connect Stripe (2 min)
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => navigate('/dashboard')}>
+                            <Button size="sm" variant="dark-shine" onClick={() => navigate('/dashboard')}>
                               <Save className="w-4 h-4 mr-1" />
                               Save Draft
                             </Button>
@@ -3226,16 +3226,16 @@ export const PublishWizard: React.FC = () => {
                   <div className="flex flex-wrap gap-3">
                     <Button variant="outline" onClick={() => setStep('stripe')}>Back</Button>
                     <Button
-                      variant="secondary"
+                      variant="dark-shine"
                       onClick={() => setShowPreviewModal(true)}
                     >
                       <Eye className="w-4 h-4 mr-2" />
                       Preview as Shopper
                     </Button>
                     <Button 
+                      variant="dark-shine"
                       onClick={() => setShowPublishDialog(true)} 
                       disabled={isSaving || !canPublish || (requiresStripe && !isOnboardingComplete)}
-                      className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
                     >
                       <Send className="w-4 h-4 mr-2" />
                       Publish Listing
@@ -3284,17 +3284,15 @@ export const PublishWizard: React.FC = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setTosAgreed(false)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
+            <Button
+              variant="dark-shine"
               onClick={handlePublish}
               disabled={!tosAgreed || isSaving}
-              className={cn(
-                "bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md",
-                !tosAgreed && "opacity-50 cursor-not-allowed"
-              )}
+              className={cn(!tosAgreed && "opacity-50 cursor-not-allowed")}
             >
               {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
               Yes, publish
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

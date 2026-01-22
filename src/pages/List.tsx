@@ -259,9 +259,9 @@ const ListPage: React.FC = () => {
           </div>
           {drafts.length > 5 && (
             <Button
-              variant="ghost"
+              variant="dark-shine"
               size="sm"
-              className="w-full text-[10px] text-muted-foreground h-7"
+              className="w-full h-7"
               onClick={() => navigate('/dashboard')}
             >
               View all {drafts.length} drafts

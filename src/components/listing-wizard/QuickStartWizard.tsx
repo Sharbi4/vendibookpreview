@@ -212,10 +212,10 @@ export const QuickStartWizard: React.FC = () => {
           Now add photos and pricing to publish your listing.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
-          <Button onClick={handleContinueSetup} className="flex-1" size="lg">
+          <Button onClick={handleContinueSetup} variant="dark-shine" className="flex-1" size="lg">
             Continue setup
           </Button>
-          <Button onClick={handleSaveForLater} variant="outline" className="flex-1" size="lg">
+          <Button onClick={handleSaveForLater} variant="dark-shine" className="flex-1" size="lg">
             Save for later
           </Button>
         </div>
@@ -394,7 +394,7 @@ export const QuickStartWizard: React.FC = () => {
                 ← Back
               </Button>
               <Button 
-                variant="gradient"
+                variant="dark-shine"
                 onClick={handleCreateDraft} 
                 disabled={isCreating}
                 className="flex-1"
