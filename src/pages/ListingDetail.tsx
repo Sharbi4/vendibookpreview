@@ -4,7 +4,6 @@ import {
   MapPin, 
   Loader2,
   Star,
-  Heart,
   Edit,
   Share2,
 } from 'lucide-react';
@@ -26,6 +25,7 @@ import QuickHighlights from '@/components/listing-detail/QuickHighlights';
 import PricingSection from '@/components/listing-detail/PricingSection';
 import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
 import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
+import { FavoriteButton } from '@/components/listing/FavoriteButton';
 import CompactTrustSection from '@/components/trust/CompactTrustSection';
 import CancellationPolicyCard from '@/components/trust/CancellationPolicyCard';
 import AvailabilitySection from '@/components/listing-detail/AvailabilitySection';
@@ -272,10 +272,11 @@ const ListingDetail = () => {
                       <Share2 className="h-4 w-4" />
                       Share
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-muted-foreground gap-1.5">
-                      <Heart className="h-4 w-4" />
-                      Save
-                    </Button>
+                    <FavoriteButton 
+                      listingId={id!} 
+                      category={listing.category}
+                      size="sm"
+                    />
                   </div>
                 </div>
               </div>
