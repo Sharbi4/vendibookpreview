@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
@@ -22,13 +22,21 @@ interface PaymentFormProps {
   bookingId: string;
 }
 
-const PaymentFormInner = ({ 
+interface PaymentFormInnerProps {
+  amount: number;
+  onSuccess: (paymentIntentId: string) => void;
+  onError: (error: string) => void;
+  isInstantBook?: boolean;
+  bookingId: string;
+}
+
+const PaymentFormInner = forwardRef<HTMLFormElement, PaymentFormInnerProps>(({ 
   amount, 
   onSuccess, 
   onError, 
   isInstantBook,
   bookingId,
-}: Omit<PaymentFormProps, 'clientSecret'>) => {
+}, ref) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -128,7 +136,9 @@ const PaymentFormInner = ({
       </div>
     </form>
   );
-};
+});
+
+PaymentFormInner.displayName = 'PaymentFormInner';
 
 export const EmbeddedPaymentForm = ({
   clientSecret,
