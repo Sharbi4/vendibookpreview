@@ -29,6 +29,9 @@ interface StickyMobileCTAProps {
   deliveryRadiusMiles?: number | null;
   listingTitle?: string;
   depositAmount?: number | null;
+  // Pre-selected dates from modal
+  initialStartDate?: Date;
+  initialEndDate?: Date;
 }
 
 export const StickyMobileCTA = ({
@@ -49,6 +52,8 @@ export const StickyMobileCTA = ({
   deliveryRadiusMiles,
   listingTitle = 'Listing',
   depositAmount = null,
+  initialStartDate,
+  initialEndDate,
 }: StickyMobileCTAProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -251,6 +256,8 @@ export const StickyMobileCTA = ({
               instantBook={instantBook}
               listingTitle={listingTitle}
               depositAmount={depositAmount}
+              initialStartDate={initialStartDate}
+              initialEndDate={initialEndDate}
             />
           </div>
         </DrawerContent>
