@@ -62,6 +62,9 @@ export const StickyMobileCTA = ({
   const [showAuthGate, setShowAuthGate] = useState(false);
   const [pendingAction, setPendingAction] = useState<'buy' | 'offer' | null>(null);
 
+  // Check if user is the owner of this listing
+  const isOwner = user?.id === hostId;
+
   // Show sticky CTA after scrolling past a certain point
   useEffect(() => {
     const handleScroll = () => {
@@ -79,6 +82,9 @@ export const StickyMobileCTA = ({
       setPendingBooking(false);
     }
   }, [pendingBooking, showOnboarding]);
+
+  // Don't show the CTA if user is the owner
+  if (isOwner) return null;
 
   const isAvailable = status === 'published';
   const price = isRental ? priceDaily : priceSale;
