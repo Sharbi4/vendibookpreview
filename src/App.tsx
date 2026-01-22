@@ -64,6 +64,7 @@ const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const VendiAISuite = lazy(() => import("./pages/VendiAISuite"));
 const Browse = lazy(() => import("./pages/Browse"));
 const SellMyFoodTruck = lazy(() => import("./pages/SellMyFoodTruck"));
+const RentMyCommercialKitchen = lazy(() => import("./pages/RentMyCommercialKitchen"));
 const PricingCalculator = lazy(() => import("./pages/PricingCalculator"));
 const ListingPublished = lazy(() => import("./pages/ListingPublished"));
 const Cities = lazy(() => import("./pages/Cities"));
@@ -193,6 +194,9 @@ const AnimatedRoutes = () => {
           
           {/* Seller landing page */}
           <Route path="/sell-my-food-truck" element={<PageTransition><SellMyFoodTruck /></PageTransition>} />
+          
+          {/* Commercial kitchen rental landing page */}
+          <Route path="/rent-my-commercial-kitchen" element={<PageTransition><RentMyCommercialKitchen /></PageTransition>} />
           
           {/* Pricing Calculator */}
           <Route path="/pricing-calculator" element={<PageTransition><PricingCalculator /></PageTransition>} />
