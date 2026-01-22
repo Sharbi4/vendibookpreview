@@ -50,7 +50,7 @@ const HostCard = ({
           </Avatar>
           {isVerified && (
             <div className="absolute -bottom-1 -right-1">
-              <VerifiedBadgeImage size="sm" />
+              <VerifiedBadgeImage size="lg" />
             </div>
           )}
         </div>
@@ -73,7 +73,7 @@ const HostCard = ({
       <div className="flex flex-wrap gap-1.5 mb-4">
         {isVerified && (
           <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-amber-500/50 text-amber-600 bg-amber-50/50 dark:bg-amber-950/20 gap-1">
-            <VerifiedBadgeImage size="sm" className="h-3 w-3" />
+            <VerifiedBadgeImage size="sm" />
             Verified ID
           </Badge>
         )}

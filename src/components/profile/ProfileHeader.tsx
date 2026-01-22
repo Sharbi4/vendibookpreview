@@ -77,7 +77,7 @@ const ProfileHeader = ({
                         : 'bg-muted text-muted-foreground border-border'
                     )}>
                       {profile.identity_verified ? (
-                        <VerifiedBadgeImage size="sm" />
+                        <VerifiedBadgeImage size="md" />
                       ) : (
                         <Shield className="h-3 w-3" />
                       )}
