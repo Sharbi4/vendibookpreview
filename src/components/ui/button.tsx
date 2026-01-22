@@ -17,6 +17,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         gradient: "relative overflow-hidden bg-gradient-to-r from-[#FF5124] via-[#FF6B3D] to-[#FF7D4D] hover:from-[#E5481F] hover:via-[#FF5124] hover:to-[#FF6B3D] text-white font-semibold shadow-lg hover:shadow-xl before:absolute before:inset-0 before:w-full before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent before:-left-full hover:before:animate-btn-shimmer",
         "gradient-premium": "relative overflow-hidden bg-gradient-to-r from-[#FF3D00] via-[#FF5124] to-[#FF8A50] text-white font-bold shadow-xl hover:shadow-2xl before:absolute before:inset-0 before:w-[200%] before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent before:-left-full hover:before:animate-premium-shimmer hover:scale-[1.02] transition-all duration-200",
+        "dark-shine": "relative overflow-hidden bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white font-semibold shadow-[0_4px_20px_rgba(0,0,0,0.5)] border border-white/20 hover:border-white/30 before:absolute before:inset-0 before:w-[200%] before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:-left-full hover:before:animate-premium-shimmer hover:shadow-[0_6px_25px_rgba(0,0,0,0.6)] transition-all duration-200",
       },
       size: {
         default: "h-10 px-4 py-2",
