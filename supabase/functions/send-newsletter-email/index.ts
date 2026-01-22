@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,6 +29,7 @@ const COLORS = {
 
 interface NewsletterRequest {
   testEmail?: string; // For sending a test to a specific email
+  sendToAll?: boolean; // Send to all subscribers and users
 }
 
 // Latest blog post (update as needed)
@@ -352,26 +354,97 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const resend = new Resend(resendApiKey);
-    const { testEmail } = await req.json() as NewsletterRequest;
+    const { testEmail, sendToAll } = await req.json() as NewsletterRequest;
 
+    const subjectLine = "New ways to buy & sell on Vendibook 🎉";
+
+    // If sendToAll is true, fetch all subscribers and users
+    if (sendToAll) {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+      // Fetch newsletter subscribers (not unsubscribed)
+      const { data: subscribers, error: subError } = await supabase
+        .from("newsletter_subscribers")
+        .select("email")
+        .is("unsubscribed_at", null);
+
+      if (subError) {
+        console.error("[NEWSLETTER] Error fetching subscribers:", subError);
+      }
+
+      // Fetch all users with emails from profiles
+      const { data: users, error: userError } = await supabase
+        .from("profiles")
+        .select("email")
+        .not("email", "is", null);
+
+      if (userError) {
+        console.error("[NEWSLETTER] Error fetching users:", userError);
+      }
+
+      // Combine and dedupe emails
+      const allEmails = new Set<string>();
+      subscribers?.forEach((s) => s.email && allEmails.add(s.email.toLowerCase()));
+      users?.forEach((u) => u.email && allEmails.add(u.email.toLowerCase()));
+
+      const emailList = Array.from(allEmails);
+      console.log(`[NEWSLETTER] Sending to ${emailList.length} recipients`);
+
+      const results: { email: string; success: boolean; error?: string }[] = [];
+
+      // Send to each recipient
+      for (const email of emailList) {
+        try {
+          const unsubscribeUrl = `https://vendibook.com/unsubscribe?email=${encodeURIComponent(email)}`;
+          const htmlContent = generateHtmlEmail(unsubscribeUrl);
+          const textContent = generatePlainTextEmail(unsubscribeUrl);
+
+          await resend.emails.send({
+            from: "Vendibook <hello@updates.vendibook.com>",
+            to: [email],
+            subject: subjectLine,
+            html: htmlContent,
+            text: textContent,
+          });
+
+          results.push({ email, success: true });
+          console.log(`[NEWSLETTER] Sent to ${email}`);
+        } catch (err) {
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          results.push({ email, success: false, error: errorMsg });
+          console.error(`[NEWSLETTER] Failed to send to ${email}:`, errorMsg);
+        }
+      }
+
+      const successCount = results.filter((r) => r.success).length;
+      const failCount = results.filter((r) => !r.success).length;
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Newsletter sent to ${successCount} recipients (${failCount} failed)`,
+          totalRecipients: emailList.length,
+          successCount,
+          failCount,
+          results,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
+    // Test mode - send to single email
     if (!testEmail) {
       return new Response(
-        JSON.stringify({ error: "testEmail is required for draft mode" }),
+        JSON.stringify({ error: "testEmail is required for draft mode, or set sendToAll: true" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }
 
-    // For testing, use a placeholder unsubscribe URL
-    // In production with Resend audiences, this would be {{unsubscribe_url}}
     const unsubscribeUrl = `https://vendibook.com/unsubscribe?email=${encodeURIComponent(testEmail)}`;
-
     const htmlContent = generateHtmlEmail(unsubscribeUrl);
     const textContent = generatePlainTextEmail(unsubscribeUrl);
-
-    // Subject line options:
-    // 1. "New ways to buy & sell on Vendibook 🎉"
-    // 2. "Pay in Person + Affirm/Afterpay now available"
-    const subjectLine = "New ways to buy & sell on Vendibook 🎉";
 
     const emailResponse = await resend.emails.send({
       from: "Vendibook <hello@updates.vendibook.com>",
