@@ -157,7 +157,8 @@ serve(async (req) => {
     }
 
     // Create Checkout Session with MANUAL capture
-    // This authorizes the card but doesn't charge until captured
+    // Funds are held on the PLATFORM (not transferred to host) until booking ends
+    // Host payout happens 24 hours after booking completion via complete-ended-bookings cron
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card', 'affirm', 'klarna', 'afterpay_clearpay'],
       mode: 'payment',
@@ -168,11 +169,9 @@ serve(async (req) => {
       billing_address_collection: 'required',
       line_items: lineItems,
       payment_intent_data: {
-        capture_method: 'manual', // ← KEY: Authorizes but doesn't capture
-        application_fee_amount: applicationFee,
-        transfer_data: {
-          destination: hostProfile.stripe_account_id,
-        },
+        capture_method: 'manual', // ← KEY: Authorizes but doesn't capture until host approves
+        // NO transfer_data - funds stay on platform until booking ends
+        // Host payout is handled by complete-ended-bookings cron 24h after end_date
         metadata: {
           booking_id,
           listing_id,
@@ -181,6 +180,8 @@ serve(async (req) => {
           host_id: listing.host_id,
           deposit_amount: deposit_amount.toString(),
           authorization_hold: 'true',
+          platform_fee_cents: applicationFee.toString(),
+          host_payout_cents: hostReceives.toString(),
         },
       },
       success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&hold=true`,

@@ -218,8 +218,10 @@ serve(async (req) => {
     }
 
     // Create the Checkout Session
-    // For sales: Use separate charges (escrow) - funds go to platform first
-    // For rentals: Use destination charges - funds go directly to host
+    // BOTH rentals and sales use PLATFORM HOLD model:
+    // - Funds are captured to platform account (no transfer_data)
+    // - Host payout happens 24 hours after booking ends (via complete-ended-bookings cron)
+    // - This protects renters and allows for dispute resolution
     
     let sessionParams: Stripe.Checkout.SessionCreateParams;
     
@@ -269,10 +271,8 @@ serve(async (req) => {
         billing_address_collection: 'required',
         line_items: lineItems,
         payment_intent_data: {
-          application_fee_amount: applicationFee,
-          transfer_data: {
-            destination: hostProfile.stripe_account_id,
-          },
+          // NO transfer_data - funds stay on platform until booking ends
+          // Host payout is handled by complete-ended-bookings cron 24h after end_date
           metadata: {
             booking_id: booking_id || '',
             listing_id,
@@ -280,6 +280,8 @@ serve(async (req) => {
             buyer_id: user.id,
             host_id: listing.host_id,
             deposit_amount: deposit_amount.toString(),
+            platform_fee_cents: applicationFee.toString(),
+            host_payout_cents: hostReceives.toString(),
           },
         },
         success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
