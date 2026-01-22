@@ -55,9 +55,10 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
         </div>
         <Button 
           size="sm" 
+          variant="dark-shine"
           onClick={() => connectStripe()}
           disabled={isConnecting}
-          className="h-7 text-xs gap-1 bg-[#635bff] hover:bg-[#5147e6] text-white border-0"
+          className="h-7 text-xs gap-1 rounded-xl"
         >
           {isConnecting ? (
             <Loader2 className="h-3 w-3 animate-spin" />
@@ -93,9 +94,10 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
           </p>
           <Button 
             size="sm" 
+            variant="dark-shine"
             onClick={() => connectStripe()}
             disabled={isConnecting}
-            className="mt-3 gap-1 bg-[#635bff] hover:bg-[#5147e6] text-white"
+            className="mt-3 gap-1 rounded-xl"
           >
             {isConnecting ? (
               <>
@@ -104,8 +106,7 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
               </>
             ) : (
               <>
-                <img src={stripeWordmark} alt="" className="h-4 w-auto brightness-0 invert" />
-                {hasAccountStarted ? 'Complete Setup' : 'Connect'}
+                {hasAccountStarted ? 'Complete Setup' : 'Connect Stripe'}
                 <ArrowRight className="h-4 w-4" />
               </>
             )}

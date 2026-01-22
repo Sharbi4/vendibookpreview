@@ -138,7 +138,7 @@ const HostDashboard = () => {
           <div className="rounded-2xl border-0 shadow-xl bg-card overflow-hidden">
             <div className="flex items-center justify-between p-4 bg-muted/30 border-b border-border">
               <h3 className="text-sm font-semibold text-foreground">My Listings</h3>
-              <Button variant="outline" size="sm" asChild className="h-8 text-xs">
+              <Button variant="dark-shine" size="sm" asChild className="h-8 text-xs rounded-xl">
                 <Link to="/list">
                   <Plus className="h-3.5 w-3.5 mr-1.5" />
                   New Listing
@@ -160,7 +160,7 @@ const HostDashboard = () => {
                   <p className="text-xs text-muted-foreground mb-4">
                     Create a listing to start earning.
                   </p>
-                  <Button asChild size="sm">
+                  <Button asChild size="sm" variant="dark-shine" className="rounded-xl">
                     <Link to="/list">
                       <Plus className="h-3.5 w-3.5 mr-1.5" />
                       New Listing
@@ -263,7 +263,9 @@ const HostDashboard = () => {
           </div>
           <Button 
             size="sm" 
+            variant="dark-shine"
             asChild
+            className="rounded-xl"
           >
             <Link to="/tools">Open Host Tools</Link>
           </Button>
