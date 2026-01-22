@@ -11,7 +11,9 @@ import { Loader2, Lock, CreditCard, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Initialize Stripe outside component to avoid recreating on each render
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_live_51R3fJaJXGJRCDwV4Y88svIxwFNjn4n6v54yQXX3M1HPg2bGcTNBZgPo0M7kJK1vvh1H0HHJePhWPZiD1Y2NqbfMI00rIVnNhAi');
+const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined;
+// IMPORTANT: Never fall back to a hardcoded key (mismatched keys will cause Elements to never mount)
+const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : Promise.resolve(null);
 
 interface PaymentFormProps {
   clientSecret: string;
@@ -85,28 +87,35 @@ const PaymentFormInner = forwardRef<HTMLFormElement, PaymentFormInnerProps>(({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form ref={ref} onSubmit={handleSubmit} className="space-y-6">
       <div className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <CreditCard className="h-5 w-5 text-primary" />
           <h3 className="font-semibold text-foreground">Payment Details</h3>
         </div>
-        
-        {!isElementReady && (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
-            <span className="text-muted-foreground">Loading payment form...</span>
+
+        <div className="relative min-h-[180px]">
+          {!isElementReady && (
+            <div className="absolute inset-0 flex items-center justify-center bg-card/60">
+              <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+              <span className="text-muted-foreground">Loading payment form...</span>
+            </div>
+          )}
+
+          <div className={cn(!isElementReady && 'opacity-0 pointer-events-none')}>
+            <PaymentElement
+              onReady={() => setIsElementReady(true)}
+              onLoadError={({ error }) => {
+                const message = error?.message || 'Failed to load payment form';
+                setErrorMessage(message);
+                onError(message);
+              }}
+              options={{
+                layout: 'tabs',
+                business: { name: 'VendiBook' },
+              }}
+            />
           </div>
-        )}
-        
-        <div className={cn(!isElementReady && "opacity-0 h-0 overflow-hidden")}>
-          <PaymentElement 
-            onReady={() => setIsElementReady(true)}
-            options={{
-              layout: 'tabs',
-              business: { name: 'VendiBook' },
-            }}
-          />
         </div>
       </div>
 
@@ -172,6 +181,22 @@ export const EmbeddedPaymentForm = ({
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!stripePublishableKey) {
+    return (
+      <div className="p-4 rounded-lg border border-border bg-card text-sm">
+        <div className="flex items-start gap-2 text-destructive">
+          <AlertCircle className="h-4 w-4 mt-0.5" />
+          <div>
+            <p className="font-medium">Payment configuration missing</p>
+            <p className="text-muted-foreground">
+              The Stripe publishable key is not available in the frontend environment.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
