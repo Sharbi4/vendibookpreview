@@ -559,6 +559,7 @@ const QuickBookingModal = ({
 
             {/* Submit Button */}
             <Button
+              variant="dark-shine"
               className="w-full"
               size="lg"
               onClick={handleSubmit}
