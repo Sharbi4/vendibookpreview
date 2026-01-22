@@ -361,6 +361,14 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
               </div>
             </div>
 
+            {/* Deposit Required Preview - Show when deposit configured but not yet paid */}
+            {hasDeposit && !isPaid && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+                <Shield className="h-3.5 w-3.5" />
+                <span>${depositAmount.toFixed(2)} deposit will be collected at checkout</span>
+              </div>
+            )}
+
             {/* Deposit Status Indicator - Only show when deposit is actually collected (paid) */}
             {hasDeposit && isPaid && (
               <div className={`flex items-center justify-between p-3 mb-3 rounded-lg border ${

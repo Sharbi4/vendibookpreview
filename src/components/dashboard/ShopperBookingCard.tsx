@@ -362,7 +362,13 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
             </div>
           )}
 
-          {/* Security Deposit Status - Only show when deposit is actually collected (paid) */}
+          {/* Deposit Required Preview - Show when deposit configured but not yet paid */}
+          {hasDeposit && !isPaid && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+              <Shield className="h-3.5 w-3.5" />
+              <span>${depositAmount?.toFixed(2)} security deposit required at checkout</span>
+            </div>
+          )}
           {hasDeposit && isPaid && (
             <div className={`rounded-lg p-3 mb-3 border ${
               depositStatus === 'refunded' ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800' :
