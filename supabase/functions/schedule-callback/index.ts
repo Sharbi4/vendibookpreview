@@ -12,13 +12,15 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
 
 interface CallbackRequest {
   name: string;
-  phone: string;
+  phone?: string;
+  email?: string;
   scheduledDate?: string;
   scheduledTime?: string;
   // White Glove popup fields
   restaurantName?: string;
   source?: string;
   preferredTime?: string;
+  preferredContact?: 'phone' | 'email';
 }
 
 const sendEmail = async (apiKey: string, emailData: { from: string; to: string[]; subject: string; html: string }) => {
@@ -59,7 +61,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const data: CallbackRequest = await req.json();
-    const { name, phone, scheduledDate, scheduledTime, restaurantName, source, preferredTime } = data;
+    const { name, phone, email, scheduledDate, scheduledTime, restaurantName, source, preferredTime, preferredContact } = data;
 
     // Determine if this is a White Glove request (no scheduled date/time, has source)
     const isWhiteGlove = source === 'white-glove-kitchen-popup' || (!scheduledDate && !scheduledTime);
@@ -69,15 +71,26 @@ const handler = async (req: Request): Promise<Response> => {
       scheduledDate, 
       scheduledTime,
       source,
-      isWhiteGlove
+      isWhiteGlove,
+      preferredContact
     });
 
-    // Validate required fields - White Glove only needs name and phone
-    if (!name || !phone) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields: name, phone" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // Validate required fields - White Glove needs name and email (phone is optional)
+    if (isWhiteGlove) {
+      if (!name || !email) {
+        return new Response(
+          JSON.stringify({ error: "Missing required fields: name, email" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } else {
+      // For scheduled callbacks, require name and phone
+      if (!name || !phone) {
+        return new Response(
+          JSON.stringify({ error: "Missing required fields: name, phone" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
     
     // For non-White Glove, also require scheduledDate and scheduledTime
@@ -90,7 +103,8 @@ const handler = async (req: Request): Promise<Response> => {
     
     // Validate and sanitize inputs
     const trimmedName = String(name).trim();
-    const trimmedPhone = String(phone).trim();
+    const trimmedPhone = phone ? String(phone).trim() : '';
+    const trimmedEmail = email ? String(email).trim() : '';
     
     if (trimmedName.length < 2 || trimmedName.length > 100) {
       return new Response(
@@ -99,13 +113,26 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
     
-    // Validate phone format (10-20 digits with optional formatting characters)
-    const phoneRegex = /^[\d\s\-\(\)\+]{10,20}$/;
-    if (!phoneRegex.test(trimmedPhone)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid phone number format" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // Validate phone format if provided (10-20 digits with optional formatting characters)
+    if (trimmedPhone) {
+      const phoneRegex = /^[\d\s\-\(\)\+]{10,20}$/;
+      if (!phoneRegex.test(trimmedPhone)) {
+        return new Response(
+          JSON.stringify({ error: "Invalid phone number format" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+    
+    // Validate email format if provided
+    if (trimmedEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(trimmedEmail)) {
+        return new Response(
+          JSON.stringify({ error: "Invalid email format" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // Escape HTML in name and phone to prevent XSS in email
@@ -161,10 +188,12 @@ const handler = async (req: Request): Promise<Response> => {
           ticketBody = `White Glove Service Request\n\n` +
             `Name: ${trimmedName}\n` +
             `Restaurant: ${escapedRestaurantName || 'Not provided'}\n` +
-            `Phone: ${trimmedPhone}\n` +
+            `Email: ${trimmedEmail}\n` +
+            `Phone: ${trimmedPhone || 'Not provided'}\n` +
+            `Preferred Contact Method: ${preferredContact || 'phone'}\n` +
             `Source: ${source || 'white-glove-kitchen-popup'}\n` +
             `Preferred Contact Time: ${preferredTime || 'ASAP'}\n\n` +
-            `Action Required: Call this kitchen owner to help them create their listing.`;
+            `Action Required: Contact this kitchen owner via their preferred method to help them create their listing.`;
           ticketTags = ['vendibook', 'white-glove', 'kitchen-listing', 'callback-request'];
         } else {
           ticketSubject = `📞 [Scheduled Callback] ${trimmedName} - ${formattedDate} at ${formattedTime} EST`;
