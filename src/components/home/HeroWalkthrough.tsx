@@ -247,9 +247,13 @@ const HeroWalkthrough = () => {
             {/* Logo */}
             <motion.div 
               className="flex justify-center lg:justify-start"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
+              initial={{ opacity: 0, scale: 0.8, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ 
+                duration: 0.7, 
+                ease: [0.16, 1, 0.3, 1],
+                scale: { duration: 0.8, ease: [0.34, 1.56, 0.64, 1] }
+              }}
             >
               <img 
                 src={vendibookLogo} 
