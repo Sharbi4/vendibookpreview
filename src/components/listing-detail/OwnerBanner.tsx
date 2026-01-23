@@ -24,7 +24,7 @@ export const OwnerBanner = ({ listingId, variant = 'inline', className = '' }: O
             </p>
             <div className="flex flex-wrap gap-2">
               <Button asChild size="sm" variant="outline">
-                <Link to={`/edit-listing/${listingId}`}>
+                <Link to={`/create-listing/${listingId}`}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Listing
                 </Link>
@@ -51,7 +51,7 @@ export const OwnerBanner = ({ listingId, variant = 'inline', className = '' }: O
         </span>
         <div className="flex gap-2">
           <Button asChild size="sm" variant="outline" className="h-7 text-xs">
-            <Link to={`/edit-listing/${listingId}`}>
+            <Link to={`/create-listing/${listingId}`}>
               <Edit className="h-3 w-3 mr-1" />
               Edit
             </Link>
