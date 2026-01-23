@@ -82,12 +82,12 @@ const HeroWalkthrough = () => {
       subtitle: 'Browse food trucks, trailers, kitchens & vendor lots',
       icon: <Search className="h-5 w-5" />,
       visual: (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {[
-            { name: 'Food Trucks', icon: <Truck className="h-6 w-6" /> },
-            { name: 'Food Trailers', icon: <Truck className="h-6 w-6" /> },
-            { name: 'Ghost Kitchens', icon: <Building2 className="h-6 w-6" /> },
-            { name: 'Vendor Lots', icon: <Building2 className="h-6 w-6" /> },
+            { name: 'Food Trucks', icon: <Truck className="h-5 w-5 sm:h-6 sm:w-6" /> },
+            { name: 'Food Trailers', icon: <Truck className="h-5 w-5 sm:h-6 sm:w-6" /> },
+            { name: 'Ghost Kitchens', icon: <Building2 className="h-5 w-5 sm:h-6 sm:w-6" /> },
+            { name: 'Vendor Lots', icon: <Building2 className="h-5 w-5 sm:h-6 sm:w-6" /> },
           ].map((item, i) => (
             <motion.div
               key={item.name}
@@ -95,12 +95,12 @@ const HeroWalkthrough = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.1 }}
               className={cn(
-                "p-4 rounded-xl border-2 text-center transition-all bg-background/80 backdrop-blur-sm",
+                "p-3 sm:p-4 rounded-xl border-2 text-center transition-all bg-background/80 backdrop-blur-sm",
                 i === 0 ? "border-primary bg-primary/10" : "border-border/50"
               )}
             >
-              <div className="mx-auto mb-2 text-primary">{item.icon}</div>
-              <span className="text-xs font-medium">{item.name}</span>
+              <div className="mx-auto mb-1.5 sm:mb-2 text-primary">{item.icon}</div>
+              <span className="text-[11px] sm:text-xs font-medium">{item.name}</span>
             </motion.div>
           ))}
         </div>
@@ -112,7 +112,7 @@ const HeroWalkthrough = () => {
       subtitle: 'Flexible options to fit your business needs',
       icon: <ShoppingCart className="h-5 w-5" />,
       visual: (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {[
             { mode: 'Buy', desc: 'Own your asset outright', price: 'From $15,000' },
             { mode: 'Rent', desc: 'Flexible daily or weekly rentals', price: 'From $150/day' },
@@ -123,16 +123,16 @@ const HeroWalkthrough = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.2 }}
               className={cn(
-                "p-4 rounded-xl border-2 transition-all bg-background/80 backdrop-blur-sm",
+                "p-3 sm:p-4 rounded-xl border-2 transition-all bg-background/80 backdrop-blur-sm",
                 i === 0 ? "border-primary" : "border-border/50"
               )}
             >
               <div className="flex justify-between items-center">
                 <div>
-                  <div className="font-semibold text-lg">{option.mode}</div>
-                  <div className="text-sm text-muted-foreground">{option.desc}</div>
+                  <div className="font-semibold text-base sm:text-lg">{option.mode}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">{option.desc}</div>
                 </div>
-                <div className="text-primary font-bold text-sm">{option.price}</div>
+                <div className="text-primary font-bold text-xs sm:text-sm">{option.price}</div>
               </div>
             </motion.div>
           ))}
@@ -145,7 +145,7 @@ const HeroWalkthrough = () => {
       subtitle: 'Create a free listing in minutes',
       icon: <Building2 className="h-5 w-5" />,
       visual: (
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {[
             { step: 1, text: 'Upload photos & details' },
             { step: 2, text: 'Set your price' },
@@ -156,12 +156,12 @@ const HeroWalkthrough = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.15 }}
-              className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-background/80 backdrop-blur-sm"
+              className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl border border-border/50 bg-background/80 backdrop-blur-sm"
             >
-              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs sm:text-sm font-bold shrink-0">
                 {item.step}
               </div>
-              <span className="font-medium">{item.text}</span>
+              <span className="font-medium text-sm sm:text-base">{item.text}</span>
             </motion.div>
           ))}
         </div>
@@ -196,12 +196,12 @@ const HeroWalkthrough = () => {
   };
 
   return (
-    <section className="relative overflow-hidden py-8 md:py-12 mx-4 mt-4 rounded-3xl bg-gradient-to-br from-background via-muted/30 to-background border-2 border-border">
+    <section className="relative overflow-hidden py-6 sm:py-8 md:py-12 mx-2 sm:mx-4 mt-2 sm:mt-4 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-background via-muted/30 to-background border-2 border-border">
 
-      <div className="container max-w-5xl mx-auto px-4 relative z-10">
-        <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+      <div className="container max-w-5xl mx-auto px-3 sm:px-4 relative z-10">
+        <div className="flex flex-col lg:flex-row items-center gap-6 sm:gap-8 lg:gap-12">
           {/* Left side - Logo & CTAs */}
-          <div className="flex-1 text-center lg:text-left">
+          <div className="flex-1 text-center lg:text-left w-full">
             {/* Logo */}
             <motion.div 
               className="flex justify-center lg:justify-start"
@@ -212,13 +212,13 @@ const HeroWalkthrough = () => {
               <img 
                 src={vendibookLogo} 
                 alt="Vendibook" 
-                className="h-32 md:h-40 lg:h-48 w-auto drop-shadow-lg"
+                className="h-24 sm:h-32 md:h-40 lg:h-48 w-auto drop-shadow-lg"
               />
             </motion.div>
 
             {/* Tagline */}
             <motion.h1 
-              className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight mt-4"
+              className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight mt-3 sm:mt-4"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.5 }}
@@ -228,7 +228,7 @@ const HeroWalkthrough = () => {
 
             {/* CTA Buttons */}
             <motion.div 
-              className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 mt-6"
+              className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2 sm:gap-3 mt-4 sm:mt-6"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.5 }}
@@ -240,11 +240,11 @@ const HeroWalkthrough = () => {
                   trackHeroCTAClick('browse');
                   navigate('/search');
                 }}
-                className="text-base px-8 py-6"
+                className="text-sm sm:text-base px-5 sm:px-8 py-5 sm:py-6 w-full sm:w-auto"
               >
-                <Search className="mr-2 h-5 w-5" />
+                <Search className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 Browse Listings
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
               <Button
                 variant="dark-shine"
@@ -253,7 +253,7 @@ const HeroWalkthrough = () => {
                   trackHeroCTAClick('list');
                   navigate('/list');
                 }}
-                className="text-base px-8 py-6"
+                className="text-sm sm:text-base px-5 sm:px-8 py-5 sm:py-6 w-full sm:w-auto"
               >
                 Create a Free Listing
               </Button>
@@ -300,32 +300,32 @@ const HeroWalkthrough = () => {
 
           {/* Right side - Animated Walkthrough */}
           <motion.div 
-            className="flex-1 w-full max-w-md"
+            className="flex-1 w-full max-w-sm sm:max-w-md"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
           >
-            <div className="relative bg-card border-2 border-border rounded-2xl overflow-hidden shadow-2xl">
+            <div className="relative bg-card border-2 border-border rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl">
                 {/* Header */}
-                <div className="bg-muted/50 border-b border-border px-4 py-3 flex items-center justify-between">
+                <div className="bg-muted/50 border-b border-border px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="flex gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-red-400" />
-                      <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                      <div className="w-3 h-3 rounded-full bg-green-400" />
+                    <div className="flex gap-1 sm:gap-1.5">
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-400" />
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-yellow-400" />
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-400" />
                     </div>
-                    <span className="text-xs text-muted-foreground ml-2">How it works</span>
+                    <span className="text-[10px] sm:text-xs text-muted-foreground ml-1.5 sm:ml-2">How it works</span>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 w-7 p-0"
+                    className="h-6 w-6 sm:h-7 sm:w-7 p-0"
                     onClick={() => setIsPlaying(!isPlaying)}
                   >
                     {isPlaying ? (
-                      <Pause className="h-3.5 w-3.5" />
+                      <Pause className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     ) : (
-                      <Play className="h-3.5 w-3.5" />
+                      <Play className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     )}
                   </Button>
                 </div>
@@ -341,22 +341,22 @@ const HeroWalkthrough = () => {
                 </div>
 
                 {/* Content */}
-                <div className="p-5">
+                <div className="p-3 sm:p-5">
                   {/* Step indicator */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary text-primary-foreground flex items-center justify-center shrink-0">
                       {steps[currentStep].icon}
                     </div>
-                    <div>
-                      <div className="text-xs text-muted-foreground">Step {currentStep + 1} of {steps.length}</div>
-                      <div className="font-semibold">{steps[currentStep].title}</div>
+                    <div className="min-w-0">
+                      <div className="text-[10px] sm:text-xs text-muted-foreground">Step {currentStep + 1} of {steps.length}</div>
+                      <div className="font-semibold text-sm sm:text-base truncate">{steps[currentStep].title}</div>
                     </div>
                   </div>
 
-                  <p className="text-sm text-muted-foreground mb-4">{steps[currentStep].subtitle}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">{steps[currentStep].subtitle}</p>
 
                   {/* Visual content */}
-                  <div className="min-h-[200px]">
+                  <div className="min-h-[180px] sm:min-h-[200px]">
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={currentStep}
@@ -371,25 +371,25 @@ const HeroWalkthrough = () => {
                   </div>
 
                   {/* Navigation */}
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                    <div className="flex gap-1.5">
+                  <div className="flex items-center justify-between mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border">
+                    <div className="flex gap-1 sm:gap-1.5">
                       {steps.map((_, index) => (
                         <button
                           key={index}
                           onClick={() => goToStep(index)}
                           className={cn(
-                            "w-2 h-2 rounded-full transition-all",
-                            index === currentStep ? "bg-primary w-6" : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                            "w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all",
+                            index === currentStep ? "bg-primary w-4 sm:w-6" : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
                           )}
                         />
                       ))}
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={goPrev} className="h-8 w-8 p-0">
-                        <ChevronLeft className="h-4 w-4" />
+                    <div className="flex gap-1.5 sm:gap-2">
+                      <Button variant="outline" size="sm" onClick={goPrev} className="h-7 w-7 sm:h-8 sm:w-8 p-0">
+                        <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </Button>
-                      <Button variant="outline" size="sm" onClick={goNext} className="h-8 w-8 p-0">
-                        <ChevronRight className="h-4 w-4" />
+                      <Button variant="outline" size="sm" onClick={goNext} className="h-7 w-7 sm:h-8 sm:w-8 p-0">
+                        <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </Button>
                     </div>
                   </div>
