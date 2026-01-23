@@ -11,12 +11,36 @@ import {
   CalendarDays,
   FileCheck,
   Package,
+  Star,
+  Quote,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
+const testimonials = [
+  {
+    name: "Marcus J.",
+    role: "Food Truck Owner",
+    location: "Atlanta, GA",
+    text: "Sold my trailer in 2 weeks. The buyer financing made it easy for them to pay.",
+  },
+  {
+    name: "Sarah C.",
+    role: "Kitchen Host",
+    location: "Houston, TX",
+    text: "Love that Vendibook verifies all my renters. No more chasing documents myself.",
+  },
+  {
+    name: "David W.",
+    role: "Lot Owner",
+    location: "Miami, FL",
+    text: "Passive income from my parking lot. Setup took 10 minutes.",
+  },
+];
 
 const HowItWorks = () => {
   return (
@@ -275,24 +299,73 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        {/* ==================== FREE TOOLS ==================== */}
+        {/* ==================== TESTIMONIALS ==================== */}
         <section className="py-16 md:py-20 bg-muted/30">
           <div className="container">
-            <div className="max-w-2xl mx-auto text-center">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-                <Sparkles className="h-4 w-4" />
-                Free Tools
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-10">
+                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium mb-4">
+                  <Star className="h-4 w-4 fill-primary" />
+                  Trusted by Entrepreneurs
+                </div>
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                  What Users Are Saying
+                </h2>
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-                Resources to Help You Succeed
+
+              <div className="grid md:grid-cols-3 gap-6">
+                {testimonials.map((testimonial, index) => (
+                  <Card key={index} className="border-border/50">
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Avatar className="h-9 w-9 border-2 border-primary/20">
+                          <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
+                            {testimonial.name.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-semibold text-foreground text-sm">{testimonial.name}</span>
+                            <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                          </div>
+                          <p className="text-xs text-muted-foreground">{testimonial.role} • {testimonial.location}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-0.5 mb-2">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="h-3 w-3 fill-primary text-primary" />
+                        ))}
+                      </div>
+                      
+                      <div className="relative">
+                        <Quote className="absolute -top-0.5 -left-0.5 h-5 w-5 text-primary/10" />
+                        <p className="text-muted-foreground text-sm leading-relaxed pl-2">
+                          {testimonial.text}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ==================== FINAL CTA ==================== */}
+        <section className="py-20 bg-foreground text-primary-foreground">
+          <div className="container">
+            <div className="max-w-2xl mx-auto text-center">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Ready to get started?
               </h2>
-              <p className="text-muted-foreground mb-8">
-                Pricing guidance, permit research, and listing tips — all free.
+              <p className="text-lg opacity-90 mb-8">
+                Create your first listing in minutes.
               </p>
               <Button size="lg" variant="dark-shine" className="gap-2" asChild>
-                <Link to="/tools">
-                  <Sparkles className="h-4 w-4" />
-                  Explore Free Tools
+                <Link to="/list">
+                  Create a Listing
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
             </div>
