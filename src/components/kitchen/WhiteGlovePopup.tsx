@@ -34,10 +34,16 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
         validators.required('Please enter your restaurant name'),
         validators.minLength(2, 'Restaurant name must be at least 2 characters')
       ),
-      phone: validators.compose(
-        validators.required('Please enter your phone number'),
-        validators.phone('Please enter a valid phone number')
-      ),
+      phone: (value) => {
+        // Phone is optional, but if provided, validate format
+        if (value && value.trim()) {
+          const phoneRegex = /^[\d\s\-\(\)\+]+$/;
+          if (!phoneRegex.test(value) || value.replace(/\D/g, '').length < 10) {
+            return 'Please enter a valid phone number';
+          }
+        }
+        return undefined;
+      },
       email: validators.compose(
         validators.required('Please enter your email'),
         validators.email('Please enter a valid email address')
@@ -200,8 +206,8 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
                 touched={form.touched.has('phone')}
                 placeholder="(555) 123-4567"
                 formatPhone
-                required
               />
+              <p className="text-xs text-muted-foreground -mt-2">Optional</p>
 
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Preferred Contact Method</Label>
