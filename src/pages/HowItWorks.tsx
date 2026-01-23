@@ -377,6 +377,133 @@ const HowItWorks = () => {
           </div>
         </section>
 
+        {/* ==================== RENT OUT YOUR ASSET - VENDIBOOK ADVANTAGE ==================== */}
+        <section className="py-16 md:py-20">
+          <div className="container">
+            <div className="max-w-5xl mx-auto">
+              <div className="text-center mb-12">
+                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium mb-4">
+                  <Sparkles className="h-4 w-4" />
+                  The Vendibook Advantage
+                </div>
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+                  Rent Out Your Asset with Confidence
+                </h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  We handle the hard work so you can focus on earning. From verified renters to automated compliance, Vendibook manages it all.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6 mb-10">
+                <AnimatedCard index={0}>
+                  <Card className="border-2 border-primary/10 h-full">
+                    <CardContent className="p-6">
+                      <motion.div 
+                        className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4"
+                        whileHover={{ scale: 1.1, rotate: -5 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                      >
+                        <ShieldCheck className="h-6 w-6 text-primary-foreground" />
+                      </motion.div>
+                      <h3 className="text-lg font-bold text-foreground mb-2">Identity-Verified Renters</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Every renter completes Stripe Identity verification before they can book. Know exactly who's using your asset.
+                      </p>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                          Government ID verification
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                          Selfie matching
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                          Fraud detection built-in
+                        </li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </AnimatedCard>
+
+                <AnimatedCard index={1}>
+                  <Card className="border-2 border-primary/10 h-full">
+                    <CardContent className="p-6">
+                      <motion.div 
+                        className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                      >
+                        <FileCheck className="h-6 w-6 text-primary-foreground" />
+                      </motion.div>
+                      <h3 className="text-lg font-bold text-foreground mb-2">Automated Document Review</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        No more chasing paperwork. Set your requirements and we'll collect and verify documents before approval.
+                      </p>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                          Business licenses
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                          Insurance certificates
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                          Health permits & more
+                        </li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </AnimatedCard>
+
+                <AnimatedCard index={2}>
+                  <Card className="border-2 border-primary/10 h-full">
+                    <CardContent className="p-6">
+                      <motion.div 
+                        className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4"
+                        whileHover={{ scale: 1.1, rotate: -5 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                      >
+                        <CreditCard className="h-6 w-6 text-primary-foreground" />
+                      </motion.div>
+                      <h3 className="text-lg font-bold text-foreground mb-2">Protected Payments</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Funds are held securely and released to you 24 hours after the booking ends. Full protection against disputes.
+                      </p>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                          Secure escrow payments
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                          24-hour safety window
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                          Optional security deposits
+                        </li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </AnimatedCard>
+              </div>
+
+              <div className="text-center">
+                <Button size="lg" variant="dark-shine" className="gap-2" asChild>
+                  <Link to="/rent-my-commercial-kitchen">
+                    Learn More About Renting
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ==================== FINAL CTA ==================== */}
         <section className="py-20 bg-foreground text-primary-foreground">
           <div className="container">
