@@ -119,9 +119,9 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+      <DialogContent className="max-w-[92vw] sm:max-w-md p-0 overflow-hidden">
         {/* Header with gradient */}
-        <div className="bg-gradient-to-r from-primary to-primary/80 p-6 text-primary-foreground">
+        <div className="bg-gradient-to-r from-primary to-primary/80 p-4 sm:p-6 text-primary-foreground">
           <button
             onClick={handleClose}
             className="absolute right-4 top-4 text-primary-foreground/80 hover:text-primary-foreground transition-colors"
@@ -138,18 +138,18 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
             </span>
           </div>
           
-          <DialogHeader className="text-left space-y-2">
-            <DialogTitle className="text-2xl font-bold text-primary-foreground">
+          <DialogHeader className="text-left space-y-1.5 sm:space-y-2">
+            <DialogTitle className="text-xl sm:text-2xl font-bold text-primary-foreground">
               Too Busy to Set Up a Listing?
             </DialogTitle>
-            <DialogDescription className="text-primary-foreground/90 text-base">
+            <DialogDescription className="text-primary-foreground/90 text-sm sm:text-base">
               Enter your details below and our Onboarding Team will call you to build your listing for you—free of charge.
             </DialogDescription>
           </DialogHeader>
         </div>
 
         {/* Form */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {isSuccess ? (
             <div className="text-center py-4">
               <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -163,7 +163,7 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
               </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               <ValidatedInput
                 label="Your Name"
                 value={form.values.name}
