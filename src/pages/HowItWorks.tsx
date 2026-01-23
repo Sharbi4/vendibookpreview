@@ -397,25 +397,6 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        {/* ==================== FINAL CTA ==================== */}
-        <section className="py-20 bg-foreground text-primary-foreground">
-          <div className="container">
-            <div className="max-w-2xl mx-auto text-center">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Ready to get started?
-              </h2>
-              <p className="text-lg opacity-90 mb-8">
-                Create your first listing in minutes.
-              </p>
-              <Button size="lg" variant="dark-shine" className="gap-2" asChild>
-                <Link to="/list">
-                  Create a Listing
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </section>
       </main>
 
       <Footer />
