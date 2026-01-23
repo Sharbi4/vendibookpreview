@@ -103,7 +103,7 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
 
       setIsSuccess(true);
       sessionStorage.setItem('whiteGlovePopupInteracted', 'true');
-      toast.success('Request submitted! Our team will call you soon.');
+      toast.success('Request submitted! We will be in touch soon.');
       
       // Close after showing success
       setTimeout(() => {
@@ -156,7 +156,7 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
                 <Phone className="h-8 w-8 text-emerald-600" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                We'll Call You Soon!
+                We'll Be in Touch Soon!
               </h3>
               <p className="text-muted-foreground text-sm">
                 Our onboarding team will reach out within 1 business day.
