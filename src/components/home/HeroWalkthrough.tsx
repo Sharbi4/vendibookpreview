@@ -254,7 +254,7 @@ const HeroWalkthrough = () => {
               <img 
                 src={vendibookLogo} 
                 alt="Vendibook" 
-                className="h-24 sm:h-32 md:h-40 lg:h-48 w-auto drop-shadow-lg"
+                className="h-48 sm:h-64 md:h-80 lg:h-96 w-auto drop-shadow-lg"
               />
             </motion.div>
 
