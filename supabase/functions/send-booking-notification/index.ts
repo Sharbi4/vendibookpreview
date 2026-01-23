@@ -531,11 +531,41 @@ serve(async (req) => {
       });
     }
     
-    // Create in-app notifications
+    // Create in-app notifications and send push notifications
     for (const notif of inAppNotifications) {
       try {
         await supabaseClient.from("notifications").insert(notif);
         logStep("In-app notification created", { user_id: notif.user_id, type: notif.type });
+        
+        // Send push notification for this in-app notification
+        try {
+          const pushResponse = await fetch(
+            `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-notification`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              },
+              body: JSON.stringify({
+                user_id: notif.user_id,
+                title: notif.title,
+                body: notif.message,
+                url: notif.link,
+                tag: `booking-${booking_id}`,
+              }),
+            }
+          );
+          
+          if (pushResponse.ok) {
+            const pushResult = await pushResponse.json();
+            logStep("Push notification sent", { user_id: notif.user_id, sent: pushResult.sent });
+          } else {
+            logStep("Push notification failed", { user_id: notif.user_id, status: pushResponse.status });
+          }
+        } catch (pushError: any) {
+          logStep("Error sending push notification", { error: pushError.message });
+        }
       } catch (notifError: any) {
         logStep("Failed to create in-app notification", { error: notifError.message });
       }
