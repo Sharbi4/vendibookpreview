@@ -351,8 +351,8 @@ const campaigns: Record<string, { subject: string; html: string }> = {
   <p style="font-size: 16px; margin-bottom: 20px;">Vendibook helps businesses list vendor lots and get booking requests from verified vendors—without you chasing people, collecting paperwork, or handling payments manually.</p>
 
   <div style="text-align: center; margin: 32px 0;">
-    <a href="https://vendibook.com/host/vendor-lots" style="display: inline-block; background: #1a1a1a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; margin-right: 12px;">Create Your Free Vendor Lot Listing</a>
-    <a href="https://calendar.app.google/FCKSyrLoXUXYHvBGA" style="display: inline-block; background: #ffffff; color: #1a1a1a; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; border: 2px solid #1a1a1a;">Set Up a Meeting</a>
+    <a href="https://vendibook.com/host/vendor-lots" style="display: inline-block; background: #F97316; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; margin-right: 12px;">Create Your Free Vendor Lot Listing</a>
+    <a href="https://calendar.app.google/FCKSyrLoXUXYHvBGA" style="display: inline-block; background: #ffffff; color: #F97316; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; border: 2px solid #F97316;">Set Up a Meeting</a>
   </div>
 
   <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
@@ -420,9 +420,9 @@ const campaigns: Record<string, { subject: string; html: string }> = {
   <p style="font-size: 16px; margin-bottom: 20px;">If you tell me what kind of space you have (address + how many spots), I can help you set pricing and the best schedule in under 10 minutes.</p>
 
   <div style="text-align: center; margin: 32px 0;">
-    <a href="https://vendibook.com/host/vendor-lots" style="display: inline-block; background: #1a1a1a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; margin-bottom: 12px;">Create Your Free Vendor Lot Listing</a>
+    <a href="https://vendibook.com/host/vendor-lots" style="display: inline-block; background: #F97316; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; margin-bottom: 12px;">Create Your Free Vendor Lot Listing</a>
     <br>
-    <a href="https://calendar.app.google/FCKSyrLoXUXYHvBGA" style="display: inline-block; background: #ffffff; color: #1a1a1a; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; border: 2px solid #1a1a1a; margin-top: 12px;">Set Up a Meeting</a>
+    <a href="https://calendar.app.google/FCKSyrLoXUXYHvBGA" style="display: inline-block; background: #ffffff; color: #F97316; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; border: 2px solid #F97316; margin-top: 12px;">Set Up a Meeting</a>
   </div>
 
   <p style="font-size: 16px; margin-bottom: 8px;">Best,</p>
