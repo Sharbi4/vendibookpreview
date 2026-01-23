@@ -13,6 +13,7 @@ import { usePageTracking } from "@/hooks/usePageTracking";
 import { AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import GoogleOneTap from "@/components/auth/GoogleOneTap";
+import InstallPromptBanner from "@/components/pwa/InstallPromptBanner";
 
 // Lazy load all pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -256,6 +257,7 @@ const App = () => (
           <CookieConsent />
           <ZendeskWidget />
           <GoogleOneTap />
+          <InstallPromptBanner />
           <AnimatedRoutes />
         </AuthProvider>
       </TooltipProvider>

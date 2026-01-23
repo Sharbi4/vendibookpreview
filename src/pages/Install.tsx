@@ -18,6 +18,7 @@ import {
   ArrowRight,
   Apple,
   Chrome,
+  Monitor,
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -299,18 +300,64 @@ const Install = () => {
                       </li>
                     </ol>
                   </CardContent>
+              </Card>
+
+                {/* Desktop Chrome Instructions */}
+                <Card className={!isMobile ? 'ring-2 ring-primary md:col-span-2' : 'md:col-span-2'}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white">
+                        <Monitor className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground">Desktop (Chrome/Edge)</h3>
+                        <p className="text-sm text-muted-foreground">Windows, Mac, Linux</p>
+                      </div>
+                      {!isMobile && (
+                        <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                          Your device
+                        </span>
+                      )}
+                    </div>
+
+                    <ol className="space-y-4">
+                      <li className="flex items-start gap-3">
+                        <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium shrink-0">
+                          1
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">Look for the install icon in the address bar</p>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Download className="h-4 w-4" /> Click the install icon on the right side
+                          </p>
+                        </div>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium shrink-0">
+                          2
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">Or use the browser menu</p>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <MoreVertical className="h-4 w-4" /> Menu → "Install Vendibook..." or "Create shortcut"
+                          </p>
+                        </div>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium shrink-0">
+                          3
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">Click "Install"</p>
+                          <p className="text-sm text-muted-foreground">
+                            Vendibook will open in its own window and appear in your apps
+                          </p>
+                        </div>
+                      </li>
+                    </ol>
+                  </CardContent>
                 </Card>
               </div>
-
-              {/* Desktop Note */}
-              {!isMobile && (
-                <div className="mt-8 text-center">
-                  <p className="text-muted-foreground">
-                    <Smartphone className="inline h-4 w-4 mr-1" />
-                    Visit this page on your phone for the best install experience
-                  </p>
-                </div>
-              )}
             </div>
           </section>
         )}
