@@ -609,23 +609,33 @@ export const ListingWizard: React.FC = () => {
       let imageUrls: string[] = [];
       let videoUrls: string[] = [];
 
+      // Upload new images if any
       if (formData.images.length > 0) {
         imageUrls = await uploadImages(listing.id);
-        coverImageUrl = imageUrls[0] || null;
       }
 
       if (formData.videos.length > 0) {
         videoUrls = await uploadVideos(listing.id);
       }
 
+      // Combine existing images with newly uploaded images
+      // Existing images come first (they maintain their order, with cover at index 0)
+      const allImageUrls = [...formData.existingImages, ...imageUrls];
+      
+      // Cover is the first existing image if available, otherwise first new upload
+      coverImageUrl = allImageUrls.length > 0 ? allImageUrls[0] : null;
+
+      // Combine existing videos with newly uploaded videos
+      const allVideoUrls = [...formData.existingVideos, ...videoUrls];
+
       // Update listing with media URLs
-      if (imageUrls.length > 0 || videoUrls.length > 0) {
+      if (allImageUrls.length > 0 || allVideoUrls.length > 0) {
         const { error: updateError } = await supabase
           .from('listings')
           .update({
             cover_image_url: coverImageUrl,
-            image_urls: imageUrls,
-            video_urls: videoUrls,
+            image_urls: allImageUrls,
+            video_urls: allVideoUrls,
           } as any)
           .eq('id', listing.id);
 

@@ -252,6 +252,21 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
     toast({ title: 'Cover photo updated' });
   }, [formData.images, toast, updateField]);
 
+  // Move an existing image to the cover position
+  const moveExistingImageToFirst = useCallback((index: number) => {
+    // Get the URL of the existing image to make cover
+    const coverUrl = formData.existingImages[index];
+    
+    // Remove it from existingImages
+    const newExistingImages = formData.existingImages.filter((_, i) => i !== index);
+    
+    // Put it at the front of existingImages and clear new images to front position
+    // The cover should be the first existing image, with new images coming after
+    updateField('existingImages', [coverUrl, ...newExistingImages]);
+    
+    toast({ title: 'Cover photo updated' });
+  }, [formData.existingImages, toast, updateField]);
+
   // Drag and drop reorder handlers
   const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
     e.stopPropagation();
@@ -351,7 +366,15 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
     }
   }, [handleImageSelect, handleVideoSelect]);
 
-  const allImages = [...imagePreviews, ...formData.existingImages];
+  // For display: existing images first, then new uploads
+  // This ensures the cover photo logic works correctly - first existing image is cover if no new images
+  const allImages = [...formData.existingImages, ...imagePreviews];
+  
+  // Determine which image is currently the cover
+  // Priority: first existing image if exists, otherwise first new image
+  const coverImageUrl = formData.existingImages.length > 0 
+    ? formData.existingImages[0] 
+    : (imagePreviews.length > 0 ? imagePreviews[0] : null);
   const allVideos = [...videoPreviews, ...formData.existingVideos];
   const totalPhotos = allImages.length;
   const totalVideos = allVideos.length;
@@ -495,8 +518,8 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
                     </div>
                   )}
                   
-                  {/* Cover badge */}
-                  {index === 0 && !hasError && (
+                  {/* Cover badge - only show if no existing images AND this is first new image */}
+                  {index === 0 && !hasError && formData.existingImages.length === 0 && (
                     <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
                       <Star className="w-3 h-3" />
                       Cover
@@ -537,19 +560,41 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
             {formData.existingImages.map((url, index) => (
               <div
                 key={url}
-                className="relative aspect-square rounded-xl overflow-hidden bg-muted"
+                className="relative aspect-square rounded-xl overflow-hidden bg-muted group"
               >
                 <img
                   src={url}
                   alt={`Existing ${index + 1}`}
                   className="w-full h-full object-cover"
                 />
+                {/* Cover badge for first existing image */}
+                {index === 0 && (
+                  <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                    <Star className="w-3 h-3" />
+                    Cover
+                  </div>
+                )}
                 {/* Saved indicator */}
                 <div className="absolute top-2 right-2">
                   <div className="bg-emerald-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
                     <CheckCircle className="w-3 h-3" />
                     Saved
                   </div>
+                </div>
+                {/* Actions overlay - Cover button for non-cover images */}
+                <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  {index !== 0 && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      className="text-xs h-7"
+                      onClick={(e) => { e.stopPropagation(); moveExistingImageToFirst(index); }}
+                    >
+                      <Star className="w-3 h-3 mr-1" />
+                      Cover
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
