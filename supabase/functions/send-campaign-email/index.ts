@@ -556,6 +556,113 @@ const campaigns: Record<string, { subject: string; html: string }> = {
 </html>
     `,
   },
+  "food-truck-manufacturers": {
+    subject: "Partner with VendiBook: Connect your buyers with rentable kitchens + lots",
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.7; color: #1a1a1a; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
+  
+  <div style="text-align: center; margin-bottom: 32px;">
+    <a href="https://vendibook.com" style="text-decoration: none;">
+      <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png" alt="VendiBook" style="height: 56px;" />
+    </a>
+  </div>
+
+  <p style="font-size: 16px; margin-bottom: 20px;">Hi there,</p>
+
+  <p style="font-size: 16px; margin-bottom: 20px;"><strong>You build food trucks. We help your buyers find places to operate them.</strong></p>
+
+  <p style="font-size: 16px; margin-bottom: 20px;">VendiBook is a marketplace that connects food truck operators with:</p>
+
+  <ul style="font-size: 16px; color: #1a1a1a; padding-left: 20px; margin-bottom: 20px;">
+    <li style="margin-bottom: 10px;"><strong>Vending lots</strong> — breweries, event venues, office parks, private lots</li>
+    <li style="margin-bottom: 10px;"><strong>Commercial kitchens</strong> — for commissary use, prep, and storage</li>
+  </ul>
+
+  <p style="font-size: 16px; margin-bottom: 20px;">When your customers buy a truck, their #1 question is: <em>"Where can I park this thing?"</em></p>
+
+  <p style="font-size: 16px; margin-bottom: 20px;">We want to make it easy for you to answer that — and give your buyers a head start on day one.</p>
+
+  <div style="text-align: center; margin: 32px 0;">
+    <a href="https://calendar.app.google/FCKSyrLoXUXYHvBGA" style="display: inline-block; background: #F97316; color: white; padding: 16px 32px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 16px;">Let's Talk Partnership</a>
+  </div>
+
+  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
+
+  <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Here's what we're thinking</h2>
+
+  <div style="background: #FFF7ED; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+    <div style="margin-bottom: 16px;">
+      <p style="margin: 0 0 8px 0;"><strong>🎁 Exclusive offer for your buyers</strong></p>
+      <p style="margin: 0; font-size: 15px; color: #444;">We can create a custom landing page or promo code for your customers — giving them priority access or special perks when they sign up.</p>
+    </div>
+
+    <div style="margin-bottom: 16px;">
+      <p style="margin: 0 0 8px 0;"><strong>📦 Include VendiBook in your delivery package</strong></p>
+      <p style="margin: 0; font-size: 15px; color: #444;">Add a one-pager or QR code to your truck handoff docs — so buyers know exactly where to find lots and kitchens from day one.</p>
+    </div>
+
+    <div style="margin-bottom: 0;">
+      <p style="margin: 0 0 8px 0;"><strong>🤝 Co-marketing opportunities</strong></p>
+      <p style="margin: 0; font-size: 15px; color: #444;">We'd love to feature your trucks on our blog, social, and newsletter — and drive traffic back to your business.</p>
+    </div>
+  </div>
+
+  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
+
+  <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Why this works for your customers</h2>
+
+  <div style="margin-bottom: 16px;">
+    <p style="margin: 0 0 8px 0;"><strong>✅ Instant access to vending locations</strong></p>
+    <p style="margin: 0; font-size: 15px; color: #444;">No cold-calling property owners. Browse available lots with clear pricing and availability.</p>
+  </div>
+
+  <div style="margin-bottom: 16px;">
+    <p style="margin: 0 0 8px 0;"><strong>✅ Commissary + prep kitchens on-demand</strong></p>
+    <p style="margin: 0; font-size: 15px; color: #444;">Find licensed commercial kitchens for prep, storage, and health department compliance.</p>
+  </div>
+
+  <div style="margin-bottom: 16px;">
+    <p style="margin: 0 0 8px 0;"><strong>✅ Secure bookings + verified hosts</strong></p>
+    <p style="margin: 0; font-size: 15px; color: #444;">Payments are protected. Hosts are vetted. Everything is tracked in one place.</p>
+  </div>
+
+  <div style="margin-bottom: 16px;">
+    <p style="margin: 0 0 8px 0;"><strong>✅ Flexible terms</strong></p>
+    <p style="margin: 0; font-size: 15px; color: #444;">Daily, weekly, or monthly bookings — no long-term commitments required.</p>
+  </div>
+
+  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
+
+  <p style="font-size: 16px; margin-bottom: 20px;">I'd love to set up a quick call to explore how we can work together — whether it's a co-branded landing page, a referral program, or just getting your buyers access to our marketplace.</p>
+
+  <div style="text-align: center; margin: 32px 0;">
+    <a href="https://calendar.app.google/FCKSyrLoXUXYHvBGA" style="display: inline-block; background: #F97316; color: white; padding: 16px 32px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 16px; margin-bottom: 12px;">Schedule a 15-Min Call</a>
+    <br>
+    <a href="https://vendibook.com" style="display: inline-block; background: #ffffff; color: #F97316; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; border: 2px solid #F97316; margin-top: 12px;">Explore VendiBook →</a>
+  </div>
+
+  <p style="font-size: 16px; margin-bottom: 8px;">Best,</p>
+  <p style="font-size: 16px; margin-bottom: 4px;"><strong>Alison M</strong></p>
+  <p style="font-size: 14px; color: #666; margin: 0;">VendiBook Partnerships</p>
+
+  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
+
+  <p style="font-size: 12px; color: #999; text-align: center;">
+    © ${new Date().getFullYear()} VendiBook. All rights reserved.<br>
+    <a href="https://vendibook.com/unsubscribe" style="color: #999;">Unsubscribe</a>
+  </p>
+
+</body>
+</html>
+    `,
+  },
 };
 
 serve(async (req) => {
