@@ -638,6 +638,11 @@ const campaigns: Record<string, { subject: string; html: string }> = {
     <p style="margin: 0; font-size: 15px; color: #444;">Daily, weekly, or monthly bookings — no long-term commitments required.</p>
   </div>
 
+  <div style="margin-bottom: 16px;">
+    <p style="margin: 0 0 8px 0;"><strong>✅ Affirm financing available</strong></p>
+    <p style="margin: 0; font-size: 15px; color: #444;">Your buyers can pay over time with Affirm — making it easier to book locations and kitchens without upfront strain on their budget.</p>
+  </div>
+
   <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
 
   <p style="font-size: 16px; margin-bottom: 20px;">I'd love to set up a quick call to explore how we can work together — whether it's a co-branded landing page, a referral program, or just getting your buyers access to our marketplace.</p>
