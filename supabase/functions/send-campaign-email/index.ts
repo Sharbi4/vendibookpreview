@@ -614,8 +614,8 @@ serve(async (req) => {
         results.push({ email, success: false, error: errMsg });
       }
       
-      // Wait 600ms between sends to stay under rate limit
-      await delay(600);
+      // Wait 1500ms between sends to stay under Resend rate limit (2 requests/sec)
+      await delay(1500);
     }
 
     const successCount = results.filter(r => r.success).length;
