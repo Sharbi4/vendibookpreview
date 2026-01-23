@@ -305,7 +305,12 @@ const HeroWalkthrough = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
           >
-            <div className="relative bg-card border-2 border-border rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl">
+            <div className="relative">
+              {/* Animated gradient border */}
+              <div className="absolute -inset-[2px] rounded-xl sm:rounded-2xl overflow-hidden">
+                <div className="walkthrough-shine-border" />
+              </div>
+              <div className="relative bg-card rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl">
                 {/* Header */}
                 <div className="bg-muted/50 border-b border-border px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -393,6 +398,7 @@ const HeroWalkthrough = () => {
                       </Button>
                     </div>
                   </div>
+              </div>
               </div>
             </div>
           </motion.div>
