@@ -441,7 +441,7 @@ const campaigns: Record<string, { subject: string; html: string }> = {
     `,
   },
   "commercial-realestate-kitchens": {
-    subject: "Turn unused commercial kitchens into recurring rental revenue",
+    subject: "Monetize vacant commercial kitchens across your portfolio (we handle screening + payments)",
     html: `
 <!DOCTYPE html>
 <html>
