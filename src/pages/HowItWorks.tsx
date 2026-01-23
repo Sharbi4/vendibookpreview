@@ -51,6 +51,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import affirmLogo from '@/assets/affirm-logo.png';
 import afterpayLogo from '@/assets/afterpay-logo.jpg';
+import ListingWalkthrough from '@/components/how-it-works/ListingWalkthrough';
 
 const HowItWorks = () => {
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -376,6 +377,17 @@ const HowItWorks = () => {
                       <span>Optional add-ons (Freight, Proof Notary) shown clearly before purchase</span>
                     </li>
                   </ul>
+                </div>
+
+                {/* Listing Creation Walkthrough */}
+                <div className="mb-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-md">
+                      <Sparkles className="h-5 w-5" />
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">See how easy it is to create a listing</h3>
+                  </div>
+                  <ListingWalkthrough />
                 </div>
 
                 {/* Inline CTA for mobile and desktop */}
