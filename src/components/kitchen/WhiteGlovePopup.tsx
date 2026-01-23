@@ -242,7 +242,7 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
               </Button>
 
               <p className="text-xs text-muted-foreground text-center">
-                100% free. No obligation. We just want to help you earn.
+                100% free. No obligation.
               </p>
             </form>
           )}
