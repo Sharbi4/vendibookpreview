@@ -10,7 +10,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Play,
-  Pause
+  Pause,
+  Hand
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -37,6 +38,7 @@ const HeroWalkthrough = () => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [showSwipeHint, setShowSwipeHint] = useState(true);
 
   // Minimum swipe distance to trigger navigation (in pixels)
   const minSwipeDistance = 50;
@@ -57,12 +59,24 @@ const HeroWalkthrough = () => {
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
     
+    if (isLeftSwipe || isRightSwipe) {
+      setShowSwipeHint(false); // Hide hint after first swipe
+    }
+    
     if (isLeftSwipe) {
       goNext();
     } else if (isRightSwipe) {
       goPrev();
     }
   };
+
+  // Hide swipe hint after 5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSwipeHint(false);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
@@ -389,7 +403,7 @@ const HeroWalkthrough = () => {
                   <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">{steps[currentStep].subtitle}</p>
 
                   {/* Visual content */}
-                  <div className="min-h-[180px] sm:min-h-[200px]">
+                  <div className="min-h-[180px] sm:min-h-[200px] relative">
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={currentStep}
@@ -400,6 +414,34 @@ const HeroWalkthrough = () => {
                       >
                         {steps[currentStep].visual}
                       </motion.div>
+                    </AnimatePresence>
+
+                    {/* Mobile swipe hint */}
+                    <AnimatePresence>
+                      {showSwipeHint && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-2 py-2 lg:hidden"
+                        >
+                          <motion.div
+                            animate={{ x: [0, -8, 8, 0] }}
+                            transition={{ 
+                              duration: 1.5, 
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }}
+                            className="flex items-center gap-1.5 text-muted-foreground/60 text-xs"
+                          >
+                            <ChevronLeft className="h-3 w-3" />
+                            <Hand className="h-4 w-4" />
+                            <ChevronRight className="h-3 w-3" />
+                            <span className="ml-1">Swipe</span>
+                          </motion.div>
+                        </motion.div>
+                      )}
                     </AnimatePresence>
                   </div>
 
