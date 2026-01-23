@@ -326,6 +326,120 @@ const campaigns: Record<string, { subject: string; html: string }> = {
 </html>
     `,
   },
+  "vendor-lots": {
+    subject: "Turn your parking lot into paid vendor space (we bring vetted vendors)",
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.7; color: #1a1a1a; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
+  
+  <div style="text-align: center; margin-bottom: 32px;">
+    <a href="https://vendibook.com" style="text-decoration: none;">
+      <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png" alt="VendiBook" style="height: 56px;" />
+    </a>
+  </div>
+
+  <p style="font-size: 16px; margin-bottom: 20px;">Hi there,</p>
+
+  <p style="font-size: 16px; margin-bottom: 20px;">If you have extra space—parking lots, open land, or a designated event area—you can turn it into a steady revenue stream by renting it to food trucks, trailers, and pop-up vendors.</p>
+
+  <p style="font-size: 16px; margin-bottom: 20px;">Vendibook helps businesses list vendor lots and get booking requests from verified vendors—without you chasing people, collecting paperwork, or handling payments manually.</p>
+
+  <div style="text-align: center; margin: 32px 0;">
+    <a href="https://vendibook.com/host/vendor-lots" style="display: inline-block; background: #1a1a1a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; margin-right: 12px;">Create Your Free Vendor Lot Listing</a>
+    <a href="https://calendar.app.google/FCKSyrLoXUXYHvBGA" style="display: inline-block; background: #ffffff; color: #1a1a1a; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; border: 2px solid #1a1a1a;">Set Up a Meeting</a>
+  </div>
+
+  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
+
+  <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">What you can do with a vendor lot</h2>
+
+  <ul style="font-size: 15px; color: #444; padding-left: 20px; margin-bottom: 24px;">
+    <li style="margin-bottom: 8px;">Host food trucks during peak hours (lunch/dinner)</li>
+    <li style="margin-bottom: 8px;">Rent spots for weekend pop-ups or recurring markets</li>
+    <li style="margin-bottom: 8px;">Offer space for seasonal events and community nights</li>
+    <li style="margin-bottom: 8px;">Create a rotating lineup that drives foot traffic to your business</li>
+  </ul>
+
+  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
+
+  <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Why businesses list vendor lots on Vendibook</h2>
+
+  <p style="font-size: 15px; color: #666; margin-bottom: 20px;">You stay in control. We handle the heavy lifting.</p>
+
+  <div style="margin-bottom: 16px;">
+    <p style="margin: 0 0 8px 0;"><strong>✅ Done-for-you document reviews</strong></p>
+    <p style="margin: 0; font-size: 15px; color: #444;">You choose what vendors must provide (business license, insurance, permits, food handler certs, etc.). Vendors submit documents and Vendibook reviews them so you don't have to.</p>
+  </div>
+
+  <div style="margin-bottom: 16px;">
+    <p style="margin: 0 0 8px 0;"><strong>✅ Verified vendors (optional)</strong></p>
+    <p style="margin: 0; font-size: 15px; color: #444;">Require Stripe Identity verification so you're only working with verified profiles.</p>
+  </div>
+
+  <div style="margin-bottom: 16px;">
+    <p style="margin: 0 0 8px 0;"><strong>✅ Set your rules + availability</strong></p>
+    <p style="margin: 0; font-size: 15px; color: #444;">Hourly, daily, weekly—set your time blocks, how many spots you have, vendor type limits, and onsite rules.</p>
+  </div>
+
+  <div style="margin-bottom: 16px;">
+    <p style="margin: 0 0 8px 0;"><strong>✅ Secure payments + predictable payouts</strong></p>
+    <p style="margin: 0; font-size: 15px; color: #444;">Vendors pay when they submit a booking request. You review the profile + approved docs, accept the booking, and payouts are initiated at the end of the booking.</p>
+  </div>
+
+  <div style="margin-bottom: 16px;">
+    <p style="margin: 0 0 8px 0;"><strong>✅ Optional deposits for extra protection</strong></p>
+    <p style="margin: 0; font-size: 15px; color: #444;">Add deposits to help protect your property and ensure vendors follow site rules.</p>
+  </div>
+
+  <div style="margin-bottom: 16px;">
+    <p style="margin: 0 0 8px 0;"><strong>✅ We help market your lot</strong></p>
+    <p style="margin: 0; font-size: 15px; color: #444;">Your listing is built to perform in search and in the marketplace—so vendors can find you quickly.</p>
+  </div>
+
+  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
+
+  <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">The best part: it can increase your core business, too</h2>
+
+  <p style="font-size: 16px; margin-bottom: 16px;">Vendor lots don't just generate rental income—they can:</p>
+
+  <ul style="font-size: 15px; color: #444; padding-left: 20px; margin-bottom: 24px;">
+    <li style="margin-bottom: 8px;">Bring in new foot traffic</li>
+    <li style="margin-bottom: 8px;">Increase repeat visits</li>
+    <li style="margin-bottom: 8px;">Create a "destination" feel on slow days</li>
+    <li style="margin-bottom: 8px;">Support local small businesses in your community</li>
+  </ul>
+
+  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
+
+  <p style="font-size: 16px; margin-bottom: 20px;">If you tell me what kind of space you have (address + how many spots), I can help you set pricing and the best schedule in under 10 minutes.</p>
+
+  <div style="text-align: center; margin: 32px 0;">
+    <a href="https://vendibook.com/host/vendor-lots" style="display: inline-block; background: #1a1a1a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; margin-bottom: 12px;">Create Your Free Vendor Lot Listing</a>
+    <br>
+    <a href="https://calendar.app.google/FCKSyrLoXUXYHvBGA" style="display: inline-block; background: #ffffff; color: #1a1a1a; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; border: 2px solid #1a1a1a; margin-top: 12px;">Set Up a Meeting</a>
+  </div>
+
+  <p style="font-size: 16px; margin-bottom: 8px;">Best,</p>
+  <p style="font-size: 16px; margin-bottom: 4px;"><strong>Alison M</strong></p>
+  <p style="font-size: 14px; color: #666; margin: 0;">Vendibook Customer Success</p>
+
+  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
+
+  <p style="font-size: 12px; color: #999; text-align: center;">
+    © ${new Date().getFullYear()} VendiBook. All rights reserved.<br>
+    <a href="https://vendibook.com/unsubscribe" style="color: #999;">Unsubscribe</a>
+  </p>
+
+</body>
+</html>
+    `,
+  },
 };
 
 serve(async (req) => {
