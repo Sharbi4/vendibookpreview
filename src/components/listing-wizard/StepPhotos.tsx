@@ -433,7 +433,11 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
-          onClick={() => imageInputRef.current?.click()}
+          onClick={(e) => { 
+            e.preventDefault();
+            e.stopPropagation();
+            imageInputRef.current?.click(); 
+          }}
           className={cn(
             "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all",
             dragOver
@@ -446,7 +450,11 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
             type="file"
             accept="image/*"
             multiple
-            onChange={(e) => handleImageSelect(e.target.files)}
+            onChange={(e) => {
+              handleImageSelect(e.target.files);
+              // Reset input value to allow selecting the same files again
+              e.target.value = '';
+            }}
             className="hidden"
           />
           <Upload className="w-10 h-10 mx-auto mb-4 text-muted-foreground" />
