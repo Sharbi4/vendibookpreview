@@ -2,7 +2,7 @@ import { useEffect, lazy, Suspense } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import Hero from '@/components/home/Hero';
+import HeroWalkthrough from '@/components/home/HeroWalkthrough';
 import AnnouncementBanner from '@/components/home/AnnouncementBanner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -58,8 +58,8 @@ const Index = () => {
       <AnnouncementBanner />
       
       <main className="flex-1">
-        {/* 1. Hero - above the fold */}
-        <Hero />
+        {/* 1. Hero with animated walkthrough - above the fold */}
+        <HeroWalkthrough />
         
         <Suspense fallback={<SectionSkeleton />}>
           {/* 2. For Sale & For Rent Sections */}
