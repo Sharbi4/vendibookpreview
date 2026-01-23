@@ -196,14 +196,7 @@ const HeroWalkthrough = () => {
   };
 
   return (
-    <section className="relative overflow-hidden py-8 md:py-12 mx-4 mt-4 rounded-3xl bg-gradient-to-br from-background via-muted/30 to-background">
-      {/* Animated dark-shine border */}
-      <div className="absolute inset-0 rounded-3xl">
-        <div className="absolute inset-0 rounded-3xl border-2 border-foreground/10" />
-        <div className="absolute inset-0 rounded-3xl overflow-hidden">
-          <div className="hero-shine-border" />
-        </div>
-      </div>
+    <section className="relative overflow-hidden py-8 md:py-12 mx-4 mt-4 rounded-3xl bg-gradient-to-br from-background via-muted/30 to-background border-2 border-border">
 
       <div className="container max-w-5xl mx-auto px-4 relative z-10">
         <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
@@ -312,13 +305,7 @@ const HeroWalkthrough = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
           >
-            <div className="relative">
-              {/* Dark shine surround animation on the card */}
-              <div className="absolute -inset-1 rounded-2xl overflow-hidden">
-                <div className="walkthrough-shine-border" />
-              </div>
-              
-              <div className="relative bg-card border border-border rounded-2xl overflow-hidden shadow-2xl">
+            <div className="relative bg-card border-2 border-border rounded-2xl overflow-hidden shadow-2xl">
                 {/* Header */}
                 <div className="bg-muted/50 border-b border-border px-4 py-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -406,7 +393,6 @@ const HeroWalkthrough = () => {
                       </Button>
                     </div>
                   </div>
-                </div>
               </div>
             </div>
           </motion.div>
