@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   ShieldCheck,
   CreditCard,
@@ -20,6 +21,7 @@ import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { AnimatedSection, AnimatedCard } from '@/components/ui/animated';
 
 const testimonials = [
   {
@@ -94,103 +96,121 @@ const HowItWorks = () => {
           <div className="container">
             <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {/* Sell Card */}
-              <Card className="border-2 border-primary/20 hover:border-primary/40 transition-colors">
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4">
-                    <DollarSign className="h-6 w-6 text-primary-foreground" />
-                  </div>
-                  <h2 className="text-xl font-bold text-foreground mb-2">Sell</h2>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    Sell food trucks, trailers, and equipment locally or nationwide.
-                  </p>
-                  <ul className="space-y-2 text-sm text-muted-foreground mb-6">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                      In-person or secure online payment
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                      Optional nationwide freight
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                      Buyer financing with Affirm/Afterpay
-                    </li>
-                  </ul>
-                  <Button variant="dark-shine" className="w-full gap-2" asChild>
-                    <Link to="/list?mode=sale">
-                      Sell an Asset
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+              <AnimatedCard index={0}>
+                <Card className="border-2 border-primary/20 hover:border-primary/40 transition-colors h-full">
+                  <CardContent className="p-6">
+                    <motion.div 
+                      className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4"
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                    >
+                      <DollarSign className="h-6 w-6 text-primary-foreground" />
+                    </motion.div>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Sell</h2>
+                    <p className="text-muted-foreground text-sm mb-4">
+                      Sell food trucks, trailers, and equipment locally or nationwide.
+                    </p>
+                    <ul className="space-y-2 text-sm text-muted-foreground mb-6">
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        In-person or secure online payment
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        Optional nationwide freight
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        Buyer financing with Affirm/Afterpay
+                      </li>
+                    </ul>
+                    <Button variant="dark-shine" className="w-full gap-2" asChild>
+                      <Link to="/list?mode=sale">
+                        Sell an Asset
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </AnimatedCard>
 
               {/* Rent Card */}
-              <Card className="border-2 border-primary/20 hover:border-primary/40 transition-colors">
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4">
-                    <CalendarDays className="h-6 w-6 text-primary-foreground" />
-                  </div>
-                  <h2 className="text-xl font-bold text-foreground mb-2">Rent</h2>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    Monetize downtime by renting your assets to verified operators.
-                  </p>
-                  <ul className="space-y-2 text-sm text-muted-foreground mb-6">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                      We verify renter documents
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                      Set your own availability
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                      Identity-verified renters only
-                    </li>
-                  </ul>
-                  <Button variant="dark-shine" className="w-full gap-2" asChild>
-                    <Link to="/list?mode=rent">
-                      Rent Out an Asset
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+              <AnimatedCard index={1}>
+                <Card className="border-2 border-primary/20 hover:border-primary/40 transition-colors h-full">
+                  <CardContent className="p-6">
+                    <motion.div 
+                      className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4"
+                      whileHover={{ scale: 1.1, rotate: -5 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                    >
+                      <CalendarDays className="h-6 w-6 text-primary-foreground" />
+                    </motion.div>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Rent</h2>
+                    <p className="text-muted-foreground text-sm mb-4">
+                      Monetize downtime by renting your assets to verified operators.
+                    </p>
+                    <ul className="space-y-2 text-sm text-muted-foreground mb-6">
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        We verify renter documents
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        Set your own availability
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        Identity-verified renters only
+                      </li>
+                    </ul>
+                    <Button variant="dark-shine" className="w-full gap-2" asChild>
+                      <Link to="/list?mode=rent">
+                        Rent Out an Asset
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </AnimatedCard>
 
               {/* Vendor Lots Card */}
-              <Card className="border-2 border-primary/20 hover:border-primary/40 transition-colors">
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4">
-                    <MapPin className="h-6 w-6 text-primary-foreground" />
-                  </div>
-                  <h2 className="text-xl font-bold text-foreground mb-2">Vendor Lots</h2>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    List your parking lot or space for food truck vendors.
-                  </p>
-                  <ul className="space-y-2 text-sm text-muted-foreground mb-6">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                      Hourly or daily booking
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                      Define amenities & rules
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                      Passive income from space
-                    </li>
-                  </ul>
-                  <Button variant="dark-shine" className="w-full gap-2" asChild>
-                    <Link to="/list">
-                      List a Vendor Lot
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+              <AnimatedCard index={2}>
+                <Card className="border-2 border-primary/20 hover:border-primary/40 transition-colors h-full">
+                  <CardContent className="p-6">
+                    <motion.div 
+                      className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4"
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                    >
+                      <MapPin className="h-6 w-6 text-primary-foreground" />
+                    </motion.div>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Vendor Lots</h2>
+                    <p className="text-muted-foreground text-sm mb-4">
+                      List your parking lot or space for food truck vendors.
+                    </p>
+                    <ul className="space-y-2 text-sm text-muted-foreground mb-6">
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        Hourly or daily booking
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        Define amenities & rules
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        Passive income from space
+                      </li>
+                    </ul>
+                    <Button variant="dark-shine" className="w-full gap-2" asChild>
+                      <Link to="/list">
+                        List a Vendor Lot
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </AnimatedCard>
             </div>
           </div>
         </section>
@@ -204,35 +224,30 @@ const HowItWorks = () => {
               </h2>
 
               <div className="grid md:grid-cols-3 gap-8">
-                <div className="text-center">
-                  <div className="w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xl mx-auto mb-4">
-                    1
-                  </div>
-                  <h3 className="font-semibold text-foreground mb-2">Create Listing</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Add photos, set your price, and describe your asset.
-                  </p>
-                </div>
-
-                <div className="text-center">
-                  <div className="w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xl mx-auto mb-4">
-                    2
-                  </div>
-                  <h3 className="font-semibold text-foreground mb-2">Connect with Buyers</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Verified users reach out. Review requests and approve.
-                  </p>
-                </div>
-
-                <div className="text-center">
-                  <div className="w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xl mx-auto mb-4">
-                    3
-                  </div>
-                  <h3 className="font-semibold text-foreground mb-2">Complete the Deal</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Get paid securely. We handle the details.
-                  </p>
-                </div>
+                {[
+                  { step: 1, title: 'Create Listing', desc: 'Add photos, set your price, and describe your asset.' },
+                  { step: 2, title: 'Connect with Buyers', desc: 'Verified users reach out. Review requests and approve.' },
+                  { step: 3, title: 'Complete the Deal', desc: 'Get paid securely. We handle the details.' },
+                ].map((item, index) => (
+                  <motion.div 
+                    key={item.step}
+                    className="text-center"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.15, type: 'spring', stiffness: 100 }}
+                  >
+                    <motion.div 
+                      className="w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xl mx-auto mb-4"
+                      whileHover={{ scale: 1.1 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                    >
+                      {item.step}
+                    </motion.div>
+                    <h3 className="font-semibold text-foreground mb-2">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground">{item.desc}</p>
+                  </motion.div>
+                ))}
               </div>
             </div>
           </div>
@@ -315,37 +330,47 @@ const HowItWorks = () => {
 
               <div className="grid md:grid-cols-3 gap-6">
                 {testimonials.map((testimonial, index) => (
-                  <Card key={index} className="border-border/50">
-                    <CardContent className="p-5">
-                      <div className="flex items-center gap-3 mb-3">
-                        <Avatar className="h-9 w-9 border-2 border-primary/20">
-                          <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
-                            {testimonial.name.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-semibold text-foreground text-sm">{testimonial.name}</span>
-                            <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                  <AnimatedCard key={index} index={index}>
+                    <Card className="border-border/50 h-full">
+                      <CardContent className="p-5">
+                        <div className="flex items-center gap-3 mb-3">
+                          <Avatar className="h-9 w-9 border-2 border-primary/20">
+                            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
+                              {testimonial.name.split(' ').map(n => n[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-semibold text-foreground text-sm">{testimonial.name}</span>
+                              <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                            </div>
+                            <p className="text-xs text-muted-foreground">{testimonial.role} • {testimonial.location}</p>
                           </div>
-                          <p className="text-xs text-muted-foreground">{testimonial.role} • {testimonial.location}</p>
                         </div>
-                      </div>
-                      
-                      <div className="flex gap-0.5 mb-2">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="h-3 w-3 fill-primary text-primary" />
-                        ))}
-                      </div>
-                      
-                      <div className="relative">
-                        <Quote className="absolute -top-0.5 -left-0.5 h-5 w-5 text-primary/10" />
-                        <p className="text-muted-foreground text-sm leading-relaxed pl-2">
-                          {testimonial.text}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                        
+                        <div className="flex gap-0.5 mb-2">
+                          {[...Array(5)].map((_, i) => (
+                            <motion.div
+                              key={i}
+                              initial={{ opacity: 0, scale: 0 }}
+                              whileInView={{ opacity: 1, scale: 1 }}
+                              viewport={{ once: true }}
+                              transition={{ delay: index * 0.1 + i * 0.05 }}
+                            >
+                              <Star className="h-3 w-3 fill-primary text-primary" />
+                            </motion.div>
+                          ))}
+                        </div>
+                        
+                        <div className="relative">
+                          <Quote className="absolute -top-0.5 -left-0.5 h-5 w-5 text-primary/10" />
+                          <p className="text-muted-foreground text-sm leading-relaxed pl-2">
+                            {testimonial.text}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </AnimatedCard>
                 ))}
               </div>
             </div>

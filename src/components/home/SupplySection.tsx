@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { ArrowRight, Shield, Sparkles, CheckCircle2, CreditCard, ShieldCheck, Users, Heart, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackCityListModuleViewed, trackCityListClicked } from '@/lib/analytics';
 import supplyFoodTruck from '@/assets/supply-food-truck.jpg';
+import { AnimatedSection, AnimatedCard, AnimatedListItem } from '@/components/ui/animated';
 
 const benefits = [
   { icon: ShieldCheck, text: 'Secure platform to sell or rent your assets' },
@@ -75,12 +77,16 @@ const SupplySection = () => {
             {/* Benefits list */}
             <ul className="space-y-4 mb-8">
               {benefits.map((benefit, index) => (
-                <li key={index} className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-md">
+                <AnimatedListItem key={index} index={index} className="flex items-center gap-3">
+                  <motion.div 
+                    className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-md"
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                  >
                     <benefit.icon className="h-5 w-5 text-primary-foreground" />
-                  </div>
+                  </motion.div>
                   <span className="text-foreground">{benefit.text}</span>
-                </li>
+                </AnimatedListItem>
               ))}
             </ul>
 
@@ -127,11 +133,15 @@ const SupplySection = () => {
           </div>
 
           {/* Right: AI Tools callout */}
-          <div className="rounded-2xl border-0 shadow-xl bg-card p-8 overflow-hidden">
+          <AnimatedCard className="rounded-2xl border-0 shadow-xl bg-card p-8 overflow-hidden relative group">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2.5 rounded-xl bg-primary shadow-md">
+              <motion.div 
+                className="p-2.5 rounded-xl bg-primary shadow-md"
+                whileHover={{ scale: 1.1, rotate: -5 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+              >
                 <Sparkles className="h-5 w-5 text-primary-foreground" />
-              </div>
+              </motion.div>
               <h3 className="text-xl font-semibold text-foreground">Free AI Tools for Hosts</h3>
             </div>
             
@@ -145,10 +155,22 @@ const SupplySection = () => {
                 'PermitPath — Find permits for any city',
                 'Listing Studio — Generate pro descriptions',
               ].map((tool, index) => (
-                <li key={index} className="flex items-start gap-2 text-sm text-foreground">
-                  <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <motion.li 
+                  key={index} 
+                  className="flex items-start gap-2 text-sm text-foreground"
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <motion.div
+                    whileHover={{ scale: 1.2 }}
+                    transition={{ type: 'spring', stiffness: 400 }}
+                  >
+                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                  </motion.div>
                   {tool}
-                </li>
+                </motion.li>
               ))}
             </ul>
 
@@ -160,7 +182,7 @@ const SupplySection = () => {
               Explore Host Tools
               <ArrowRight className="h-4 w-4" />
             </Button>
-          </div>
+          </AnimatedCard>
         </div>
       </div>
     </section>

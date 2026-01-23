@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck } from 'lucide-react';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
@@ -76,21 +77,25 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   const remainingAmenitiesCount = (listing.amenities?.length || 0) - displayAmenities.length;
 
   return (
-    <Link 
-      to={`/listing/${listing.id}`} 
-      className={cn("group cursor-pointer card-hover block", className)}
-      onClick={() => trackListingCardClick(listing.id, listing.category, 'listing_card')}
+    <motion.div
+      whileHover={{ y: -4 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
     >
-      {/* Image Container */}
-      <div className={cn(
-        "relative overflow-hidden rounded-xl bg-muted",
-        compact ? "aspect-[4/3]" : "aspect-[4/3]"
-      )}>
-        <img
-          src={listing.cover_image_url || listing.image_urls[0] || '/placeholder.svg'}
-          alt={listing.title}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
+      <Link 
+        to={`/listing/${listing.id}`} 
+        className={cn("group cursor-pointer block", className)}
+        onClick={() => trackListingCardClick(listing.id, listing.category, 'listing_card')}
+      >
+        {/* Image Container */}
+        <div className={cn(
+          "relative overflow-hidden rounded-xl bg-muted shadow-sm group-hover:shadow-lg transition-shadow duration-300",
+          compact ? "aspect-[4/3]" : "aspect-[4/3]"
+        )}>
+          <img
+            src={listing.cover_image_url || listing.image_urls[0] || '/placeholder.svg'}
+            alt={listing.title}
+            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+          />
         
         {/* Mode Badge */}
         <div className="absolute top-2 left-2 flex items-center gap-1.5">
@@ -266,7 +271,8 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           )}
         </div>
       </div>
-    </Link>
+      </Link>
+    </motion.div>
   );
 };
 
