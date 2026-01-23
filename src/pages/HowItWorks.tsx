@@ -86,11 +86,11 @@ const HowItWorks = () => {
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                      Optional freight coordination
+                      Optional nationwide freight
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                      Free to list, 12.9% on online sales
+                      Buyer financing with Affirm/Afterpay
                     </li>
                   </ul>
                   <Button variant="dark-shine" className="w-full gap-2" asChild>
@@ -123,7 +123,7 @@ const HowItWorks = () => {
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                      12.9% host commission
+                      Identity-verified renters only
                     </li>
                   </ul>
                   <Button variant="dark-shine" className="w-full gap-2" asChild>
