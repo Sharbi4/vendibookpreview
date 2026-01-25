@@ -19,8 +19,8 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
   const city = citySlug ? getCityFromSlug(citySlug) : null;
   
   if (!city) {
-    // Invalid city slug - show 404 page instead of redirecting
-    return <Navigate to="/404" replace />;
+    // Invalid city slug - redirect to homepage
+    return <Navigate to="/" replace />;
   }
 
   const categoryLabel = category 
