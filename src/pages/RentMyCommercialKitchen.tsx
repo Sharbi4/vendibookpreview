@@ -36,6 +36,7 @@ import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import { StripeLogo } from '@/components/ui/StripeLogo';
+import KitchenBenefitsAnimation from '@/components/kitchen/KitchenBenefitsAnimation';
 
 const RentMyCommercialKitchen = () => {
   const [showEarningsModal, setShowEarningsModal] = useState(false);
@@ -262,6 +263,9 @@ const RentMyCommercialKitchen = () => {
             </motion.div>
           </div>
         </section>
+
+        {/* Benefits Animation Section */}
+        <KitchenBenefitsAnimation />
 
         {/* Revenue Data Section */}
         <section className="py-16 md:py-20 bg-muted/30">
