@@ -236,7 +236,7 @@ const RentMyCommercialKitchen = () => {
                   variant="outline"
                   className="border-foreground text-foreground hover:bg-foreground hover:text-background"
                 >
-                  <Link to="/pricing-calculator">Estimate Your Earnings</Link>
+                  <Link to="/kitchen-earnings-calculator">Estimate Your Earnings</Link>
                 </Button>
               </div>
 
