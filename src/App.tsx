@@ -217,10 +217,7 @@ const AnimatedRoutes = () => {
           {/* Cities hub page */}
           <Route path="/cities" element={<PageTransition><Cities /></PageTransition>} />
           
-          {/* Dynamic city SEO pages */}
-          <Route path="/:citySlug" element={<PageTransition><DynamicCityPage /></PageTransition>} />
-          
-          {/* City landing pages */}
+          {/* City landing pages - must come BEFORE the dynamic :citySlug route */}
           <Route path="/houston/list" element={<PageTransition><HoustonList /></PageTransition>} />
           <Route path="/houston/browse" element={<PageTransition><HoustonBrowse /></PageTransition>} />
           <Route path="/houston/list-food-truck" element={<PageTransition><HoustonListFoodTruck /></PageTransition>} />
@@ -241,6 +238,12 @@ const AnimatedRoutes = () => {
           <Route path="/phoenix/list-food-truck" element={<PageTransition><PhoenixListFoodTruck /></PageTransition>} />
           <Route path="/phoenix/list-food-trailer" element={<PageTransition><PhoenixListFoodTrailer /></PageTransition>} />
           <Route path="/phoenix/list-vendor-lot" element={<PageTransition><PhoenixListVendorLot /></PageTransition>} />
+          
+          {/* Dynamic city SEO pages - catches valid city slugs like /houston, /dallas */}
+          <Route path="/:citySlug" element={<PageTransition><DynamicCityPage /></PageTransition>} />
+          
+          {/* Explicit 404 route for redirects */}
+          <Route path="/404" element={<PageTransition><NotFound /></PageTransition>} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
