@@ -67,6 +67,7 @@ const Browse = lazy(() => import("./pages/Browse"));
 const SellMyFoodTruck = lazy(() => import("./pages/SellMyFoodTruck"));
 const RentMyCommercialKitchen = lazy(() => import("./pages/RentMyCommercialKitchen"));
 const PricingCalculator = lazy(() => import("./pages/PricingCalculator"));
+const KitchenEarningsCalculator = lazy(() => import("./pages/KitchenEarningsCalculator"));
 const ListingPublished = lazy(() => import("./pages/ListingPublished"));
 const Cities = lazy(() => import("./pages/Cities"));
 const SaleCheckout = lazy(() => import("./pages/SaleCheckout"));
@@ -201,6 +202,9 @@ const AnimatedRoutes = () => {
           
           {/* Pricing Calculator */}
           <Route path="/pricing-calculator" element={<PageTransition><PricingCalculator /></PageTransition>} />
+          
+          {/* Kitchen Earnings Calculator - Google Ads Landing Page */}
+          <Route path="/kitchen-earnings-calculator" element={<PageTransition><KitchenEarningsCalculator /></PageTransition>} />
           
           {/* Payments & Protection */}
           <Route path="/payments" element={<PageTransition><Payments /></PageTransition>} />
