@@ -242,11 +242,11 @@ const AnimatedRoutes = () => {
           {/* Dynamic city SEO pages - catches valid city slugs like /houston, /dallas */}
           <Route path="/:citySlug" element={<PageTransition><DynamicCityPage /></PageTransition>} />
           
-          {/* Explicit 404 route for redirects */}
-          <Route path="/404" element={<PageTransition><NotFound /></PageTransition>} />
+          {/* Explicit 404 route - redirect to homepage */}
+          <Route path="/404" element={<Navigate to="/" replace />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
     </AnimatePresence>
