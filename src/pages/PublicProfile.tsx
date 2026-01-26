@@ -45,6 +45,7 @@ interface PublicProfileData {
   public_city: string | null;
   public_state: string | null;
   avatar_url: string | null;
+  header_image_url: string | null;
   identity_verified: boolean;
   created_at: string;
 }
@@ -60,7 +61,7 @@ const usePublicProfile = (identifier: string | undefined, isUsername: boolean = 
       if (isUsername) {
         const { data: profileByUsername, error } = await supabase
           .from('profiles')
-          .select('id, full_name, display_name, username, business_name, public_city, public_state, avatar_url, identity_verified, created_at')
+          .select('id, full_name, first_name, last_name, display_name, username, business_name, public_city, public_state, avatar_url, header_image_url, identity_verified, created_at')
           .eq('username', identifier)
           .single();
         
@@ -79,7 +80,7 @@ const usePublicProfile = (identifier: string | undefined, isUsername: boolean = 
       if (!profile) {
         const { data: directData, error: directError } = await supabase
           .from('profiles')
-          .select('id, full_name, display_name, username, business_name, public_city, public_state, avatar_url, identity_verified, created_at')
+          .select('id, full_name, first_name, last_name, display_name, username, business_name, public_city, public_state, avatar_url, header_image_url, identity_verified, created_at')
           .eq('id', identifier)
           .single();
         
@@ -350,7 +351,6 @@ const PublicProfile = () => {
           <EnhancedPublicProfileStats
             stats={stats}
             completedBookings={completedBookings || 0}
-            responseTime={responseTimeData?.avgResponseTime}
             isHost={isHost}
           />
         </motion.div>
