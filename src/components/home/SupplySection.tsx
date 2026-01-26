@@ -54,9 +54,11 @@ const SupplySection = () => {
   };
 
   return (
-    <section className="py-12 sm:py-16 md:py-20 bg-muted/30 relative overflow-hidden">
-      {/* Decorative elements */}
-      <div className="absolute top-10 right-10 w-64 h-64 bg-primary/5 rounded-full blur-3xl" aria-hidden="true" />
+    <section className="py-14 sm:py-18 md:py-24 bg-gradient-to-b from-background via-muted/20 to-background relative overflow-hidden">
+      {/* Premium decorative elements */}
+      <div className="absolute inset-0 bg-premium-radial pointer-events-none" aria-hidden="true" />
+      <div className="absolute top-10 right-10 w-64 h-64 bg-gradient-to-br from-primary/8 to-amber-500/8 rounded-full blur-3xl animate-float-slow" aria-hidden="true" />
+      <div className="absolute bottom-20 left-20 w-48 h-48 bg-gradient-to-br from-amber-500/5 to-primary/5 rounded-full blur-3xl animate-float-delayed" aria-hidden="true" />
       
       <div className="container max-w-6xl mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
@@ -71,8 +73,8 @@ const SupplySection = () => {
               <Heart className="h-4 w-4" />
               Built by a food truck owner & chef
             </motion.div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
-              A safe way to sell or rent your food truck.
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4 text-shadow-premium">
+              A safe way to <span className="gradient-text-warm">sell or rent</span> your food truck.
             </h2>
             <div className="flex flex-col sm:flex-row items-start gap-4 mb-6 sm:mb-8">
               <motion.img 
@@ -147,8 +149,8 @@ const SupplySection = () => {
             </div>
           </div>
 
-          {/* Right: AI Tools callout */}
-          <AnimatedCard className="rounded-2xl border-0 shadow-xl bg-card p-8 overflow-hidden relative group">
+          {/* Right: AI Tools callout - Premium card design */}
+          <AnimatedCard className="rounded-2xl border border-border/50 shadow-2xl glass-card p-8 overflow-hidden relative group hover-shine">
             <div className="flex items-center gap-3 mb-4">
               <motion.div 
                 className="p-2.5 rounded-xl bg-primary shadow-md"

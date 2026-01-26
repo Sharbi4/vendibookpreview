@@ -65,34 +65,37 @@ const Index = () => {
           {/* 2. For Sale & For Rent Sections */}
           <ListingsSections />
 
-          {/* BNPL Banner */}
-          <section className="py-8 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-y border-border">
-            <div className="container">
-              <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
+          {/* BNPL Banner - Premium design */}
+          <section className="py-10 bg-gradient-to-r from-muted/50 via-primary/5 to-muted/50 border-y border-border/50 relative overflow-hidden">
+            {/* Subtle decorative element */}
+            <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none" aria-hidden="true" />
+            
+            <div className="container relative z-10">
+              <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
                 <div className="text-center md:text-left">
-                  <p className="text-lg md:text-xl font-semibold text-foreground">
+                  <p className="text-lg md:text-xl font-bold text-foreground mb-1">
                     Now accepting flexible payments
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Let buyers pay over time — you get paid upfront
                   </p>
                 </div>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-8">
                   <img 
                     src={affirmLogo} 
                     alt="Affirm" 
-                    className="h-6 md:h-8 object-contain dark:invert" 
+                    className="h-7 md:h-9 object-contain dark:invert opacity-90 hover:opacity-100 transition-opacity" 
                   />
                   <img 
                     src={afterpayLogo} 
                     alt="Afterpay" 
-                    className="h-5 md:h-6 object-contain dark:invert" 
+                    className="h-6 md:h-7 object-contain dark:invert opacity-90 hover:opacity-100 transition-opacity" 
                   />
                 </div>
-                <Button variant="dark-shine" size="sm" className="gap-1.5" asChild>
+                <Button variant="dark-shine" size="sm" className="gap-2 px-6" asChild>
                   <Link to="/payments">
                     Learn more
-                    <ArrowRight className="h-3.5 w-3.5" />
+                    <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
               </div>
