@@ -21,9 +21,10 @@ import {
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
 
 // Food truck images
-import foodTruckPopcorn from '@/assets/food-truck-popcorn.jpg';
-import trailerCafecito from '@/assets/trailer-cafecito.jpg';
-import trailerPinkBlue from '@/assets/trailer-pink-blue.jpg';
+// Browse page uses commercial/professional trailers
+import trailerStealthSilver from '@/assets/trailer-stealth-silver.jpg';
+import trailerWhiteEvent from '@/assets/trailer-white-event.jpg';
+import trailerOrangeGrill from '@/assets/trailer-orange-grill.jpg';
 
 const Browse = () => {
   return (
@@ -46,9 +47,9 @@ const Browse = () => {
           {/* Background image collage */}
           <div className="absolute inset-0 opacity-5">
             <div className="grid grid-cols-3 h-full">
-              <img src={foodTruckPopcorn} alt="" className="w-full h-full object-cover" aria-hidden="true" />
-              <img src={trailerCafecito} alt="" className="w-full h-full object-cover" aria-hidden="true" />
-              <img src={trailerPinkBlue} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src={trailerStealthSilver} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src={trailerWhiteEvent} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src={trailerOrangeGrill} alt="" className="w-full h-full object-cover" aria-hidden="true" />
             </div>
           </div>
           <div className="container relative z-10">

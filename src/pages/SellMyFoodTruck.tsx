@@ -39,10 +39,10 @@ import JsonLd from '@/components/JsonLd';
 import affirmLogo from '@/assets/affirm-logo.png';
 import afterpayLogo from '@/assets/afterpay-logo.jpg';
 
-// Food truck photos
-import trailerCafecito from '@/assets/trailer-cafecito.jpg';
-import trailerRico from '@/assets/trailer-rico.jpg';
-import trailerPink from '@/assets/trailer-pink.jpg';
+// Food truck photos - Sell page uses wedding/event themed trailers
+import trailerWeddingFlowers from '@/assets/trailer-wedding-flowers.jpg';
+import trailerCreamParty from '@/assets/trailer-cream-party.jpg';
+import trailerPinkVintage from '@/assets/trailer-pink-vintage.jpg';
 
 const SellMyFoodTruck = () => {
   // FAQ data for schema and accordion
@@ -262,9 +262,9 @@ const SellMyFoodTruck = () => {
             {/* Background photo collage */}
             <div className="absolute inset-0 opacity-5">
               <div className="grid grid-cols-3 h-full">
-                <img src={trailerCafecito} alt="" className="w-full h-full object-cover" aria-hidden="true" />
-                <img src={trailerRico} alt="" className="w-full h-full object-cover" aria-hidden="true" />
-                <img src={trailerPink} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+                <img src={trailerWeddingFlowers} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+                <img src={trailerCreamParty} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+                <img src={trailerPinkVintage} alt="" className="w-full h-full object-cover" aria-hidden="true" />
               </div>
             </div>
             <div className="container relative z-10">
