@@ -125,10 +125,21 @@ const PaymentSuccess = () => {
 
       try {
         if (isEscrow) {
-          // Poll for transaction created by webhook (source of truth)
-          // The webhook creates the transaction on payment_intent.succeeded
+          // First, try to create the transaction via edge function
+          // This handles the case where webhook hasn't fired or user returns before it processes
+          // The edge function is idempotent - if transaction exists, it returns success
+          try {
+            await supabase.functions.invoke('create-sale-transaction', {
+              body: { session_id: sessionId },
+            });
+          } catch (createError) {
+            // Log but don't fail - transaction might already exist from webhook
+            console.log('Create transaction attempt:', createError);
+          }
+
+          // Now poll for the transaction (should exist after create call or from webhook)
           let attempts = 0;
-          const maxAttempts = 10;
+          const maxAttempts = 5;
           let transactionFound = false;
           
           while (attempts < maxAttempts && !transactionFound) {
@@ -169,7 +180,7 @@ const PaymentSuccess = () => {
                 currency: 'USD',
               });
             } else {
-              // Wait 1 second before retrying - webhook may not have processed yet
+              // Wait before retrying
               attempts++;
               if (attempts < maxAttempts) {
                 await new Promise(resolve => setTimeout(resolve, 1000));

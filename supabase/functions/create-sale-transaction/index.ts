@@ -35,16 +35,11 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    
-    const user = userData.user;
-    if (!user) throw new Error("User not authenticated");
-    logStep("User authenticated", { userId: user.id });
+    // Note: We don't require user authentication here because:
+    // 1. The user may have just returned from Stripe and their session might not be restored
+    // 2. The buyer_id comes from the Stripe session metadata which we created and trust
+    // 3. We validate the session_id against Stripe to ensure the payment is legitimate
+    logStep("Processing transaction creation (no auth required)");
 
     const body: CreateTransactionRequest = await req.json();
     const { session_id } = body;
@@ -153,7 +148,7 @@ serve(async (req) => {
       .from('sale_transactions')
       .insert({
         listing_id: session.metadata?.listing_id,
-        buyer_id: session.metadata?.buyer_id || user.id,
+        buyer_id: session.metadata?.buyer_id,
         seller_id: session.metadata?.seller_id,
         amount: amount,
         platform_fee: platformFee,
