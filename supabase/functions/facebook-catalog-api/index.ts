@@ -17,7 +17,7 @@ interface ProductData {
   description: string;
   availability: string;
   condition: string;
-  price: string;
+  price_cents: number;
   link: string;
   image_link: string;
   brand: string;
@@ -47,7 +47,8 @@ async function upsertProduct(catalogId: string, accessToken: string, product: Pr
       description: product.description,
       availability: product.availability,
       condition: product.condition,
-      price: product.price,
+      price: Math.round(product.price_cents),
+      currency: "USD",
       url: product.link,
       image_url: product.image_link,
       brand: product.brand,
@@ -100,7 +101,8 @@ async function batchUpdateProducts(catalogId: string, accessToken: string, produ
       description: product.description,
       availability: product.availability,
       condition: product.condition,
-      price: product.price,
+      price: Math.round(product.price_cents),
+      currency: "USD",
       url: product.link,
       image_url: product.image_link,
       brand: product.brand,
@@ -173,7 +175,7 @@ serve(async (req) => {
         description: (listing.description || '').replace(/<[^>]*>/g, '').substring(0, 5000),
         availability: 'in stock',
         condition: 'used',
-        price: `${listing.price_sale?.toFixed(2)} USD`,
+        price_cents: Math.round((listing.price_sale || 0) * 100),
         link: `${siteUrl}/listing/${listing.id}`,
         image_link: listing.cover_image_url || listing.image_urls?.[0] || '',
         brand: 'Vendibook',
@@ -237,7 +239,7 @@ serve(async (req) => {
         description: (listing.description || '').replace(/<[^>]*>/g, '').substring(0, 5000),
         availability: 'in stock',
         condition: 'used',
-        price: `${listing.price_sale.toFixed(2)} USD`,
+        price_cents: Math.round((listing.price_sale || 0) * 100),
         link: `${siteUrl}/listing/${listing.id}`,
         image_link: listing.cover_image_url || listing.image_urls?.[0] || '',
         brand: 'Vendibook',
