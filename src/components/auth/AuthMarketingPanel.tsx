@@ -17,11 +17,11 @@ export const AuthMarketingPanel = ({ mode }: AuthMarketingPanelProps) => {
   const isSignup = mode === 'signup';
 
   return (
-    <div className="relative hidden lg:flex flex-col justify-between h-full min-h-screen bg-gradient-to-br from-primary/10 via-background to-primary/5 p-8 lg:p-12 overflow-hidden">
+    <div className="relative hidden lg:flex flex-col justify-between h-full min-h-screen bg-gradient-to-br from-foreground/5 via-background to-foreground/10 p-8 lg:p-12 overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]" />
-      <div className="absolute top-20 -left-20 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-float" />
-      <div className="absolute bottom-20 -right-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+      <div className="absolute top-20 -left-20 w-72 h-72 bg-foreground/10 rounded-full blur-3xl animate-float" />
+      <div className="absolute bottom-20 -right-20 w-96 h-96 bg-foreground/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
       
       {/* Logo & Header */}
       <div className="relative z-10">
