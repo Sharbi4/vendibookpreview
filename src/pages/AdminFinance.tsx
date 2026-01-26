@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Shield, DollarSign, TrendingUp, Clock, CheckCircle2, 
-  ArrowRight, Wallet, PiggyBank, AlertCircle
+  ArrowRight, Wallet, PiggyBank, AlertCircle, RefreshCw, Loader2
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminFinance } from '@/hooks/useAdminFinance';
@@ -22,6 +22,8 @@ import {
 } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/commissions';
 import { format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const AdminFinance = () => {
   const navigate = useNavigate();
@@ -32,8 +34,38 @@ const AdminFinance = () => {
     stats, 
     recentTransactions,
     pendingPayouts,
-    isLoading 
+    isLoading,
+    refetch
   } = useAdminFinance(user?.id);
+  
+  const [isRetrying, setIsRetrying] = useState(false);
+
+  const handleRetryPayouts = async () => {
+    setIsRetrying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('retry-pending-payouts');
+      
+      if (error) throw error;
+      
+      if (data.processed > 0) {
+        toast.success(`Processed ${data.processed} payouts successfully`);
+        refetch();
+      } else if (data.failed > 0) {
+        toast.warning(`${data.failed} payouts failed. Check individual statuses.`);
+      } else if (data.skipped > 0) {
+        toast.info(`${data.skipped} payouts skipped due to insufficient balance`);
+      } else {
+        toast.info(data.message || 'No pending payouts to process');
+      }
+      
+      console.log('Retry payouts result:', data);
+    } catch (error) {
+      console.error('Failed to retry payouts:', error);
+      toast.error('Failed to retry payouts');
+    } finally {
+      setIsRetrying(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -168,13 +200,33 @@ const AdminFinance = () => {
           {/* Pending Payouts Section */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-amber-500" />
-                Pending Payouts
-              </CardTitle>
-              <CardDescription>
-                Transactions awaiting seller payout transfer
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5 text-amber-500" />
+                    Pending Payouts
+                  </CardTitle>
+                  <CardDescription>
+                    Transactions awaiting seller payout transfer
+                  </CardDescription>
+                </div>
+                {pendingPayouts.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRetryPayouts}
+                    disabled={isRetrying}
+                    className="shrink-0"
+                  >
+                    {isRetrying ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                    )}
+                    Retry Payouts
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (

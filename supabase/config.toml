@@ -164,3 +164,6 @@ verify_jwt = false
 
 [functions.facebook-conversions-api]
 verify_jwt = false
+
+[functions.retry-pending-payouts]
+verify_jwt = false
