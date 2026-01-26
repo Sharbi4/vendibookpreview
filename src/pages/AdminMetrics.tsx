@@ -292,7 +292,20 @@ const AdminMetrics = () => {
         </Card>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Button 
+            variant="outline" 
+            className="h-auto py-4 justify-start"
+            onClick={() => navigate('/admin/finance')}
+          >
+            <TrendingUp className="h-5 w-5 mr-3 text-emerald-500" />
+            <div className="text-left">
+              <div className="font-medium">Platform Finance</div>
+              <div className="text-xs text-muted-foreground">Commission & payouts</div>
+            </div>
+            <ArrowRight className="h-4 w-4 ml-auto" />
+          </Button>
+          
           <Button 
             variant="outline" 
             className="h-auto py-4 justify-start"
