@@ -95,12 +95,7 @@ const ListingsSections = () => {
         {saleListings.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-xl font-bold text-foreground">Featured For Sale</h2>
-                <span className="text-sm text-muted-foreground">
-                  {allListings.filter(l => l.mode === 'sale').length} listings available
-                </span>
-              </div>
+              <h2 className="text-xl font-bold text-foreground">Featured For Sale</h2>
               <Button 
                 variant="ghost" 
                 size="sm"
@@ -128,12 +123,7 @@ const ListingsSections = () => {
         {rentListings.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-xl font-bold text-foreground">Featured For Rent</h2>
-                <span className="text-sm text-muted-foreground">
-                  {allListings.filter(l => l.mode === 'rent').length} listings available
-                </span>
-              </div>
+              <h2 className="text-xl font-bold text-foreground">Featured For Rent</h2>
               <Button 
                 variant="ghost" 
                 size="sm"
