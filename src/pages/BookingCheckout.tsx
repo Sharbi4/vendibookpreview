@@ -62,6 +62,13 @@ const BookingCheckout = () => {
   // Parse dates from URL params
   const startDateParam = searchParams.get('start');
   const endDateParam = searchParams.get('end');
+  
+  // Parse hourly booking params
+  const startTimeParam = searchParams.get('startTime');
+  const endTimeParam = searchParams.get('endTime');
+  const hoursParam = searchParams.get('hours');
+  const isHourlyBooking = Boolean(startTimeParam && endTimeParam && hoursParam);
+  const durationHours = hoursParam ? parseInt(hoursParam) : 0;
 
   // State
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -70,6 +77,8 @@ const BookingCheckout = () => {
   const [endDate, setEndDate] = useState<Date | undefined>(
     endDateParam ? parseISO(endDateParam) : undefined
   );
+  const [startTime, setStartTime] = useState<string | undefined>(startTimeParam || undefined);
+  const [endTime, setEndTime] = useState<string | undefined>(endTimeParam || undefined);
   const [showDateModal, setShowDateModal] = useState(false);
   const [activeStep, setActiveStep] = useState<number | null>(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
@@ -97,10 +106,16 @@ const BookingCheckout = () => {
     }
   }, [listing, isStaticLocation]);
 
-  // Calculate pricing
+  // Calculate pricing - supports both hourly and daily
   const rentalDays = startDate && endDate ? differenceInDays(endDate, startDate) : 0;
   
   const calculateBasePrice = () => {
+    // For hourly bookings, use hourly rate
+    if (isHourlyBooking && (listing as any)?.price_hourly && durationHours > 0) {
+      return durationHours * (listing as any).price_hourly;
+    }
+    
+    // For daily bookings
     if (!listing?.price_daily || rentalDays <= 0) return 0;
     const weeks = Math.floor(rentalDays / 7);
     const remainingDays = rentalDays % 7;
@@ -215,6 +230,11 @@ const BookingCheckout = () => {
         fulfillment_selected: fulfillmentSelected,
         is_instant_book: listing.instant_book || false,
         deposit_amount: depositAmount,
+        // Hourly booking fields
+        is_hourly_booking: isHourlyBooking,
+        start_time: isHourlyBooking ? startTime : null,
+        end_time: isHourlyBooking ? endTime : null,
+        duration_hours: isHourlyBooking ? durationHours : null,
         ...(fulfillmentSelected === 'delivery' && {
           delivery_address: deliveryAddress.trim(),
           delivery_fee_snapshot: listing.delivery_fee || null,
