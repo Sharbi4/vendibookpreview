@@ -57,15 +57,15 @@ const SupplySection = () => {
     <section className="py-14 sm:py-18 md:py-24 bg-gradient-to-b from-background via-muted/20 to-background relative overflow-hidden">
       {/* Premium decorative elements */}
       <div className="absolute inset-0 bg-premium-radial pointer-events-none" aria-hidden="true" />
-      <div className="absolute top-10 right-10 w-64 h-64 bg-gradient-to-br from-primary/8 to-amber-500/8 rounded-full blur-3xl animate-float-slow" aria-hidden="true" />
-      <div className="absolute bottom-20 left-20 w-48 h-48 bg-gradient-to-br from-amber-500/5 to-primary/5 rounded-full blur-3xl animate-float-delayed" aria-hidden="true" />
+      <div className="absolute top-10 right-10 w-64 h-64 bg-gradient-to-br from-foreground/5 to-foreground/8 rounded-full blur-3xl animate-float-slow" aria-hidden="true" />
+      <div className="absolute bottom-20 left-20 w-48 h-48 bg-gradient-to-br from-foreground/5 to-foreground/3 rounded-full blur-3xl animate-float-delayed" aria-hidden="true" />
       
       <div className="container max-w-6xl mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left: Content */}
           <div>
             <motion.div 
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/10 to-amber-500/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium mb-4 border border-primary/20"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-foreground/10 to-foreground/5 text-foreground px-3 py-1.5 rounded-full text-sm font-medium mb-4 border border-foreground/20"
               initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -94,7 +94,7 @@ const SupplySection = () => {
               {benefits.map((benefit, index) => (
                 <AnimatedListItem key={index} index={index} className="flex items-center gap-3">
                   <motion.div 
-                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-md"
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-foreground flex items-center justify-center flex-shrink-0 shadow-md"
                     whileHover={shouldReduceMotion ? {} : { scale: 1.1, rotate: 5 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                   >

@@ -9,7 +9,7 @@ import trailerCreamParty from '@/assets/trailer-cream-party.jpg';
 const FinalCTA = () => {
   const navigate = useNavigate();
   return (
-    <section className="py-20 md:py-28 bg-gradient-to-br from-primary/5 via-muted/30 to-amber-500/5 relative overflow-hidden">
+    <section className="py-20 md:py-28 bg-gradient-to-br from-foreground/5 via-muted/30 to-foreground/5 relative overflow-hidden">
       {/* Background image gallery - decorative */}
       <div className="absolute inset-0 opacity-[0.07]">
         <div className="absolute top-0 left-0 w-1/3 h-full">
