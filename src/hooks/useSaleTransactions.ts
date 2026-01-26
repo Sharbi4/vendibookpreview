@@ -67,19 +67,37 @@ export const useBuyerSaleTransactions = (userId: string | undefined) => {
     queryFn: async () => {
       if (!userId) return [];
       
-      // Use type assertion to work around generated types not including this table yet
-      const { data, error } = await (supabase
+      // First get transactions with listing data
+      const { data: txData, error: txError } = await (supabase
         .from('sale_transactions' as any)
         .select(`
           *,
-          listing:listings(id, title, cover_image_url, category, pickup_location_text, pickup_instructions),
-          seller:profiles!sale_transactions_seller_id_fkey(id, full_name, avatar_url)
+          listing:listings(id, title, cover_image_url, category, pickup_location_text, pickup_instructions)
         `)
         .eq('buyer_id', userId)
         .order('created_at', { ascending: false })) as any;
 
-      if (error) throw error;
-      return data as SaleTransaction[];
+      if (txError) throw txError;
+      if (!txData || txData.length === 0) return [];
+
+      // Get seller profiles separately using RPC
+      const sellerIds = [...new Set(txData.map((t: any) => t.seller_id))] as string[];
+      const sellerProfiles: Record<string, any> = {};
+      
+      for (const sellerId of sellerIds) {
+        const { data: profile } = await supabase.rpc('get_safe_host_profile', { host_user_id: sellerId });
+        if (profile && profile.length > 0) {
+          sellerProfiles[sellerId as string] = profile[0];
+        }
+      }
+
+      // Merge seller data into transactions
+      const enrichedData = txData.map((tx: any) => ({
+        ...tx,
+        seller: sellerProfiles[tx.seller_id] || null
+      }));
+
+      return enrichedData as SaleTransaction[];
     },
     enabled: !!userId,
   });
@@ -165,18 +183,37 @@ export const useSellerSaleTransactions = (userId: string | undefined) => {
     queryFn: async () => {
       if (!userId) return [];
       
-      const { data, error } = await (supabase
+      // First get transactions with listing data
+      const { data: txData, error: txError } = await (supabase
         .from('sale_transactions' as any)
         .select(`
           *,
-          listing:listings(id, title, cover_image_url, category, pickup_location_text, pickup_instructions),
-          buyer:profiles!sale_transactions_buyer_id_fkey(id, full_name, avatar_url)
+          listing:listings(id, title, cover_image_url, category, pickup_location_text, pickup_instructions)
         `)
         .eq('seller_id', userId)
         .order('created_at', { ascending: false })) as any;
 
-      if (error) throw error;
-      return data as SaleTransaction[];
+      if (txError) throw txError;
+      if (!txData || txData.length === 0) return [];
+
+      // Get buyer profiles separately using RPC
+      const buyerIds = [...new Set(txData.map((t: any) => t.buyer_id))] as string[];
+      const buyerProfiles: Record<string, any> = {};
+      
+      for (const buyerId of buyerIds) {
+        const { data: profile } = await supabase.rpc('get_safe_host_profile', { host_user_id: buyerId });
+        if (profile && profile.length > 0) {
+          buyerProfiles[buyerId as string] = profile[0];
+        }
+      }
+
+      // Merge buyer data into transactions
+      const enrichedData = txData.map((tx: any) => ({
+        ...tx,
+        buyer: buyerProfiles[tx.buyer_id] || null
+      }));
+
+      return enrichedData as SaleTransaction[];
     },
     enabled: !!userId,
   });
