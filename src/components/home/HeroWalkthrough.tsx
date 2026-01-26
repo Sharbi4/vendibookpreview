@@ -249,10 +249,15 @@ const HeroWalkthrough = () => {
   };
 
   return (
-    <section className="relative overflow-hidden py-6 sm:py-8 md:py-12 mx-2 sm:mx-4 mt-2 sm:mt-4 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-background via-muted/30 to-background border-2 border-border">
-      {/* Decorative gradient orbs */}
-      <div className="absolute top-10 left-5 w-40 h-40 sm:w-72 sm:h-72 bg-primary/10 rounded-full blur-3xl" aria-hidden="true" />
-      <div className="absolute bottom-10 right-5 w-48 h-48 sm:w-80 sm:h-80 bg-amber-500/10 rounded-full blur-3xl" aria-hidden="true" />
+    <section className="relative overflow-hidden py-8 sm:py-10 md:py-14 mx-2 sm:mx-4 mt-2 sm:mt-4 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-background via-muted/20 to-background border border-border/50 shadow-2xl">
+      {/* Premium decorative elements */}
+      <div className="absolute inset-0 bg-premium-radial pointer-events-none" aria-hidden="true" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-primary/5 via-transparent to-transparent rounded-full blur-3xl" aria-hidden="true" />
+      
+      {/* Animated floating orbs */}
+      <div className="absolute top-10 left-5 w-40 h-40 sm:w-72 sm:h-72 bg-gradient-to-br from-primary/15 to-amber-500/10 rounded-full blur-3xl animate-float-slow" aria-hidden="true" />
+      <div className="absolute bottom-10 right-5 w-48 h-48 sm:w-80 sm:h-80 bg-gradient-to-br from-amber-500/10 to-primary/15 rounded-full blur-3xl animate-float-delayed" aria-hidden="true" />
+      <div className="absolute top-1/2 left-1/4 w-32 h-32 bg-primary/5 rounded-full blur-2xl animate-float" aria-hidden="true" />
 
       <div className="container max-w-5xl mx-auto px-3 sm:px-4 relative z-10">
         <div className="flex flex-col lg:flex-row items-center gap-6 sm:gap-8 lg:gap-12">
@@ -277,14 +282,15 @@ const HeroWalkthrough = () => {
               />
             </motion.div>
 
-            {/* Tagline */}
+            {/* Tagline with premium typography */}
             <motion.h1 
-              className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight mt-3 sm:mt-4"
+              className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight mt-3 sm:mt-4 text-shadow-premium"
               initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.5 }}
             >
-              The marketplace for food business
+              The marketplace for{' '}
+              <span className="gradient-text-warm">food business</span>
             </motion.h1>
 
             {/* CTA Buttons */}
@@ -320,21 +326,27 @@ const HeroWalkthrough = () => {
               </Button>
             </motion.div>
 
-            {/* Trust badges - Mobile optimized */}
+            {/* Trust badges - Premium design */}
             <motion.div 
-              className="flex flex-wrap items-center justify-center lg:justify-start gap-2 mt-4"
-              initial={shouldReduceMotion ? {} : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 mt-5"
+              initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
             >
               {trustBadges.map((badge, index) => (
-                <div
+                <motion.div
                   key={badge.label}
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2.5 py-1.5 rounded-full"
+                  className="flex items-center gap-2 text-xs sm:text-sm text-foreground/80 glass-premium px-3 py-2 rounded-full shadow-sm hover:shadow-md transition-shadow"
+                  initial={shouldReduceMotion ? {} : { opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 + index * 0.1, duration: 0.3 }}
+                  whileHover={shouldReduceMotion ? {} : { scale: 1.02 }}
                 >
-                  <badge.icon className="h-3 w-3 text-primary" />
-                  <span>{badge.label}</span>
-                </div>
+                  <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center">
+                    <badge.icon className="h-3 w-3 text-white" />
+                  </div>
+                  <span className="font-medium">{badge.label}</span>
+                </motion.div>
               ))}
             </motion.div>
 
@@ -384,16 +396,20 @@ const HeroWalkthrough = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
           >
-            <div className="relative bg-card border-2 border-border rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl">
+            <div className="relative glass-card border border-border/50 rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl">
+                {/* Premium glow effect */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-transparent to-amber-500/20 rounded-2xl blur-xl opacity-50" aria-hidden="true" />
+                
+                <div className="relative">
                 {/* Header */}
-                <div className="bg-muted/50 border-b border-border px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between">
+                <div className="bg-gradient-to-r from-muted/60 via-muted/40 to-muted/60 border-b border-border/50 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between backdrop-blur-sm">
                   <div className="flex items-center gap-2">
                     <div className="flex gap-1 sm:gap-1.5">
-                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-400" />
-                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-yellow-400" />
-                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-400" />
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gradient-to-br from-red-400 to-red-500 shadow-sm" />
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-500 shadow-sm" />
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gradient-to-br from-green-400 to-green-500 shadow-sm" />
                     </div>
-                    <span className="text-[10px] sm:text-xs text-muted-foreground ml-1.5 sm:ml-2">How it works</span>
+                    <span className="text-[10px] sm:text-xs text-muted-foreground ml-1.5 sm:ml-2 font-medium">How it works</span>
                   </div>
                   <Button
                     variant="ghost"
@@ -505,6 +521,7 @@ const HeroWalkthrough = () => {
                       </Button>
                     </div>
                   </div>
+                </div>
               </div>
             </div>
           </motion.div>

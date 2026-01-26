@@ -93,11 +93,11 @@ const CategoryCarousel = ({ config, listings, hostVerificationMap, isLoading }: 
   }
 
   return (
-    <div className="mb-10">
+    <div className="mb-12">
       {/* Category Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-md">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary via-primary to-amber-500 flex items-center justify-center shadow-lg shadow-primary/20">
             {config.icon}
           </div>
           <div>
@@ -212,12 +212,16 @@ const CategoryCarousels = () => {
   }
 
   return (
-    <section className="py-12 bg-background">
-      {/* NATURAL Section - Clean background */}
+    <section className="py-16 bg-gradient-to-b from-background via-muted/10 to-background relative overflow-hidden">
+      {/* Premium decorative elements */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-b from-primary/5 to-transparent rounded-full blur-3xl" aria-hidden="true" />
+      
       <div className="container relative z-10">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground mb-2">Browse by Category</h2>
-          <p className="text-muted-foreground">
+        <div className="mb-10 text-center sm:text-left">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3 text-shadow-premium">
+            Browse by <span className="gradient-text-warm">Category</span>
+          </h2>
+          <p className="text-muted-foreground text-lg">
             Explore listings across all categories
           </p>
         </div>

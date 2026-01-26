@@ -86,26 +86,31 @@ const ListingsSections = () => {
   }
 
   return (
-    <section className="py-8 bg-background">
-      <div className="container space-y-10">
+    <section className="py-12 bg-gradient-to-b from-background to-muted/10 relative overflow-hidden">
+      {/* Subtle decorative element */}
+      <div className="absolute top-0 right-0 w-[400px] h-[300px] bg-gradient-to-bl from-emerald-500/5 to-transparent rounded-full blur-3xl" aria-hidden="true" />
+      
+      <div className="container space-y-12 relative z-10">
         {/* For Sale Section */}
         {saleListings.length > 0 && (
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-md">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 via-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
                   <DollarSign className="h-5 w-5 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-foreground">Featured For Sale</h2>
-                <span className="text-sm text-muted-foreground">
-                  ({allListings.filter(l => l.mode === 'sale').length} listings)
-                </span>
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">Featured For Sale</h2>
+                  <span className="text-sm text-muted-foreground">
+                    {allListings.filter(l => l.mode === 'sale').length} listings available
+                  </span>
+                </div>
               </div>
               <Button 
                 variant="ghost" 
                 size="sm"
                 onClick={() => navigate('/search?mode=sale')}
-                className="text-primary"
+                className="text-primary font-medium hover:bg-primary/5"
               >
                 View all
                 <ArrowRight className="ml-1 h-4 w-4" />
@@ -127,21 +132,23 @@ const ListingsSections = () => {
         {/* For Rent Section */}
         {rentListings.length > 0 && (
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-md">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary via-primary to-amber-500 flex items-center justify-center shadow-lg shadow-primary/20">
                   <Key className="h-5 w-5 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-foreground">Featured For Rent</h2>
-                <span className="text-sm text-muted-foreground">
-                  ({allListings.filter(l => l.mode === 'rent').length} listings)
-                </span>
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">Featured For Rent</h2>
+                  <span className="text-sm text-muted-foreground">
+                    {allListings.filter(l => l.mode === 'rent').length} listings available
+                  </span>
+                </div>
               </div>
               <Button 
                 variant="ghost" 
                 size="sm"
                 onClick={() => navigate('/search?mode=rent')}
-                className="text-primary"
+                className="text-primary font-medium hover:bg-primary/5"
               >
                 View all
                 <ArrowRight className="ml-1 h-4 w-4" />
@@ -160,13 +167,13 @@ const ListingsSections = () => {
           </div>
         )}
 
-        {/* Empty State */}
+        {/* Empty State - Premium design */}
         {saleListings.length === 0 && rentListings.length === 0 && (
-          <div className="text-center py-12 bg-secondary/30 rounded-2xl">
-            <div className="text-4xl mb-4">🚚</div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">No listings yet</h3>
-            <p className="text-muted-foreground mb-4">Be the first to list your food truck!</p>
-            <Button variant="dark-shine" onClick={() => navigate('/host')}>
+          <div className="text-center py-16 glass-card rounded-2xl border border-border/50">
+            <div className="text-5xl mb-4">🚚</div>
+            <h3 className="text-xl font-semibold text-foreground mb-2">No listings yet</h3>
+            <p className="text-muted-foreground mb-6">Be the first to list your food truck!</p>
+            <Button variant="dark-shine" size="lg" onClick={() => navigate('/host')}>
               List Your Asset
             </Button>
           </div>
