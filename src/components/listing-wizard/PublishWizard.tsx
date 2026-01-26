@@ -984,14 +984,11 @@ export const PublishWizard: React.FC = () => {
         const hasNewVideos = videos.length > 0;
 
         if (hasNewImages || hasNewVideos) {
-          // Guest drafts can access the wizard without auth, but uploads require auth.
+          // User should already be authenticated since we require auth before listing creation
           if (!user) {
-            if (isGuestDraft) {
-              setShowAuthModal(true);
-            }
             toast({
-              title: 'Sign in to upload media',
-              description: 'Please sign in to add photos or videos to this listing.',
+              title: 'Sign in required',
+              description: 'Please sign in to continue.',
               variant: 'destructive',
             });
             setIsSaving(false);
