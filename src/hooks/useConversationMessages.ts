@@ -259,7 +259,23 @@ export const useConversationMessages = (conversationId: string | undefined) => {
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as ConversationMessage]);
+          const newMessage = payload.new as ConversationMessage;
+          setMessages((prev) => {
+            // Check if message already exists (from optimistic update or duplicate event)
+            const exists = prev.some(
+              (msg) => msg.id === newMessage.id || 
+              (msg.id.startsWith('temp-') && msg.sender_id === newMessage.sender_id && msg.message === newMessage.message)
+            );
+            if (exists) {
+              // Replace temp message with real one if it exists
+              return prev.map((msg) =>
+                msg.id.startsWith('temp-') && msg.sender_id === newMessage.sender_id && msg.message === newMessage.message
+                  ? newMessage
+                  : msg
+              );
+            }
+            return [...prev, newMessage];
+          });
         }
       )
       .subscribe();
