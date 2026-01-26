@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, MapPin, Truck, Package, ArrowRight, Calendar, Tag, Mail } from 'lucide-react';
+import { MapPin, Truck, Package, ArrowRight, Calendar, Tag, Mail } from 'lucide-react';
 import type { FulfillmentType } from '@/types/listing';
-import { StripeLogo } from '@/components/ui/StripeLogo';
 import { AffirmBadge, isAffirmEligible } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge, isAfterpayEligible } from '@/components/ui/AfterpayBadge';
 import { trackCTAClick } from '@/lib/analytics';
@@ -208,17 +207,6 @@ const InquiryForm = ({
           </div>
         )}
 
-        <div className="flex items-center gap-3 justify-center mt-4 text-xs text-muted-foreground p-3 bg-muted/30 rounded-xl border border-border">
-          <div className="flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4 text-primary" />
-            <span>Vendibook escrow</span>
-          </div>
-          <span className="text-border">•</span>
-          <div className="flex items-center gap-1.5">
-            <span>Powered by</span>
-            <StripeLogo size="xs" />
-          </div>
-        </div>
       </div>
 
       {/* Offer Modals */}
