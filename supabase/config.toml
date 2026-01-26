@@ -155,3 +155,6 @@ verify_jwt = false
 
 [functions.expire-booking-holds]
 verify_jwt = false
+
+[functions.facebook-catalog-feed]
+verify_jwt = false
