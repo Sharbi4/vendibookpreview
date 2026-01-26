@@ -158,3 +158,6 @@ verify_jwt = false
 
 [functions.facebook-catalog-feed]
 verify_jwt = false
+
+[functions.facebook-conversions-api]
+verify_jwt = false
