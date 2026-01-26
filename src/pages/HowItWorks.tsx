@@ -132,8 +132,8 @@ const HowItWorks = () => {
           </div>
           
           {/* Decorative gradient orbs */}
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" aria-hidden="true" />
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" aria-hidden="true" />
+          <div className="absolute top-20 left-10 w-72 h-72 bg-foreground/10 rounded-full blur-3xl" aria-hidden="true" />
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-foreground/10 rounded-full blur-3xl" aria-hidden="true" />
           
           <div className="container relative z-10">
             <motion.div 
@@ -147,7 +147,7 @@ const HowItWorks = () => {
                 initial={shouldReduceMotion ? {} : { opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 }}
-                className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-medium mb-6"
+                className="inline-flex items-center gap-2 bg-foreground/10 text-foreground px-4 py-1.5 rounded-full text-sm font-medium mb-6"
               >
                 <Zap className="h-4 w-4" />
                 The #1 Mobile Food Marketplace
@@ -174,13 +174,13 @@ const HowItWorks = () => {
                 ].map((badge, index) => (
                   <motion.div
                     key={badge.label}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border text-sm font-medium shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border text-sm font-medium shadow-sm hover:shadow-md hover:border-foreground/30 transition-all duration-200"
                     whileHover={shouldReduceMotion ? {} : { y: -2 }}
                     initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 + index * 0.1 }}
                   >
-                    <badge.icon className="h-4 w-4 text-primary" />
+                    <badge.icon className="h-4 w-4 text-foreground" />
                     {badge.label}
                   </motion.div>
                 ))}
@@ -238,7 +238,7 @@ const HowItWorks = () => {
                   transition={{ delay: index * 0.1 }}
                 >
                   <div className="flex items-center justify-center gap-2 mb-1">
-                    <stat.icon className="h-5 w-5 text-primary" />
+                    <stat.icon className="h-5 w-5 text-foreground" />
                     <span className="text-2xl md:text-3xl font-bold text-foreground">{stat.value}</span>
                   </div>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
@@ -283,14 +283,14 @@ const HowItWorks = () => {
             <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {/* Sell Card */}
               <AnimatedCard index={0}>
-                <Card className="border-2 border-primary/20 hover:border-primary/40 transition-colors h-full">
+                <Card className="border-2 border-foreground/20 hover:border-foreground/40 transition-colors h-full">
                   <CardContent className="p-6">
                     <motion.div 
-                      className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4"
+                      className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center mb-4"
                       whileHover={{ scale: 1.1, rotate: 5 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                     >
-                      <DollarSign className="h-6 w-6 text-primary-foreground" />
+                      <DollarSign className="h-6 w-6 text-background" />
                     </motion.div>
                     <h2 className="text-xl font-bold text-foreground mb-2">Sell</h2>
                     <p className="text-muted-foreground text-sm mb-4">
@@ -298,15 +298,15 @@ const HowItWorks = () => {
                     </p>
                     <ul className="space-y-2 text-sm text-muted-foreground mb-6">
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
                         In-person or secure online payment
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
                         Optional nationwide freight
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
                         Buyer financing with Affirm/Afterpay
                       </li>
                     </ul>
@@ -322,14 +322,14 @@ const HowItWorks = () => {
 
               {/* Rent Card */}
               <AnimatedCard index={1}>
-                <Card className="border-2 border-primary/20 hover:border-primary/40 transition-colors h-full">
+                <Card className="border-2 border-foreground/20 hover:border-foreground/40 transition-colors h-full">
                   <CardContent className="p-6">
                     <motion.div 
-                      className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4"
+                      className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center mb-4"
                       whileHover={{ scale: 1.1, rotate: -5 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                     >
-                      <CalendarDays className="h-6 w-6 text-primary-foreground" />
+                      <CalendarDays className="h-6 w-6 text-background" />
                     </motion.div>
                     <h2 className="text-xl font-bold text-foreground mb-2">Rent</h2>
                     <p className="text-muted-foreground text-sm mb-4">
@@ -337,15 +337,15 @@ const HowItWorks = () => {
                     </p>
                     <ul className="space-y-2 text-sm text-muted-foreground mb-6">
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
                         We verify renter documents
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
                         Set your own availability
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
                         Identity-verified renters only
                       </li>
                     </ul>
@@ -361,14 +361,14 @@ const HowItWorks = () => {
 
               {/* Vendor Lots Card */}
               <AnimatedCard index={2}>
-                <Card className="border-2 border-primary/20 hover:border-primary/40 transition-colors h-full">
+                <Card className="border-2 border-foreground/20 hover:border-foreground/40 transition-colors h-full">
                   <CardContent className="p-6">
                     <motion.div 
-                      className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4"
+                      className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center mb-4"
                       whileHover={{ scale: 1.1, rotate: 5 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                     >
-                      <MapPin className="h-6 w-6 text-primary-foreground" />
+                      <MapPin className="h-6 w-6 text-background" />
                     </motion.div>
                     <h2 className="text-xl font-bold text-foreground mb-2">Vendor Lots</h2>
                     <p className="text-muted-foreground text-sm mb-4">
@@ -376,15 +376,15 @@ const HowItWorks = () => {
                     </p>
                     <ul className="space-y-2 text-sm text-muted-foreground mb-6">
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
                         Hourly or daily booking
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
                         Define amenities & rules
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
                         Passive income from space
                       </li>
                     </ul>
@@ -424,7 +424,7 @@ const HowItWorks = () => {
                     transition={{ delay: index * 0.15, type: 'spring', stiffness: 100 }}
                   >
                     <motion.div 
-                      className="w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xl mx-auto mb-4"
+                      className="w-14 h-14 rounded-full bg-foreground text-background flex items-center justify-center font-bold text-xl mx-auto mb-4"
                       whileHover={{ scale: 1.1 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                     >
@@ -449,8 +449,8 @@ const HowItWorks = () => {
 
               <div className="grid sm:grid-cols-2 gap-6">
                 <div className="flex gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <ShieldCheck className="h-5 w-5 text-primary" />
+                  <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center shrink-0">
+                    <ShieldCheck className="h-5 w-5 text-foreground" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground mb-1">Verified Users</h3>
@@ -461,8 +461,8 @@ const HowItWorks = () => {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <FileCheck className="h-5 w-5 text-primary" />
+                  <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center shrink-0">
+                    <FileCheck className="h-5 w-5 text-foreground" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground mb-1">Document Review</h3>
@@ -473,8 +473,8 @@ const HowItWorks = () => {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <CreditCard className="h-5 w-5 text-primary" />
+                  <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center shrink-0">
+                    <CreditCard className="h-5 w-5 text-foreground" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground mb-1">Secure Payments</h3>
@@ -485,8 +485,8 @@ const HowItWorks = () => {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Package className="h-5 w-5 text-primary" />
+                  <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center shrink-0">
+                    <Package className="h-5 w-5 text-foreground" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground mb-1">Nationwide Freight</h3>
