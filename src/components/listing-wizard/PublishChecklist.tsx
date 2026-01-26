@@ -267,6 +267,18 @@ export const createChecklistItems = (
       benefit: 'More photos = more booking requests',
     },
     {
+      id: 'details',
+      label: 'Listing Details',
+      icon: <FileText className="w-4 h-4" />,
+      completed: formState.hasDescription,
+      required: true,
+      current: currentStep === 'details',
+      statusHint: getDetailsStatusHint(),
+      valueTag: 'Fewer questions',
+      timeEstimate: '~3 min',
+      benefit: 'Great descriptions reduce back-and-forth',
+    },
+    {
       id: 'pricing',
       label: 'Pricing & Rates',
       icon: <DollarSign className="w-4 h-4" />,
@@ -294,31 +306,17 @@ export const createChecklistItems = (
     });
   }
 
-  items.push(
-    {
-      id: 'details',
-      label: 'Listing Details',
-      icon: <FileText className="w-4 h-4" />,
-      completed: formState.hasDescription,
-      required: true,
-      current: currentStep === 'details',
-      statusHint: getDetailsStatusHint(),
-      valueTag: 'Fewer questions',
-      timeEstimate: '~3 min',
-      benefit: 'Great descriptions reduce back-and-forth',
-    },
-    {
-      id: 'location',
-      label: 'Location & Logistics',
-      icon: <MapPin className="w-4 h-4" />,
-      completed: formState.hasLocation,
-      required: true,
-      current: currentStep === 'location',
-      statusHint: getLocationStatusHint(),
-      timeEstimate: '~2 min',
-      benefit: 'Clear logistics build renter confidence',
-    },
-  );
+  items.push({
+    id: 'location',
+    label: 'Location & Logistics',
+    icon: <MapPin className="w-4 h-4" />,
+    completed: formState.hasLocation,
+    required: true,
+    current: currentStep === 'location',
+    statusHint: getLocationStatusHint(),
+    timeEstimate: '~2 min',
+    benefit: 'Clear logistics build renter confidence',
+  });
 
   // Add documents step for rental listings
   if (formState.isRental) {
