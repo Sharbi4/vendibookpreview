@@ -52,7 +52,7 @@ export const useAdminFinance = (userId: string | undefined) => {
   });
 
   // Fetch commission stats
-  const { data: stats, isLoading: isLoadingStats } = useQuery({
+  const { data: stats, isLoading: isLoadingStats, refetch: refetchStats } = useQuery({
     queryKey: ['admin-finance-stats', userId],
     queryFn: async (): Promise<CommissionStats> => {
       if (!userId || !isAdmin) {
@@ -170,7 +170,7 @@ export const useAdminFinance = (userId: string | undefined) => {
   });
 
   // Fetch pending payouts
-  const { data: pendingPayouts = [], isLoading: isLoadingPending } = useQuery({
+  const { data: pendingPayouts = [], isLoading: isLoadingPending, refetch: refetchPending } = useQuery({
     queryKey: ['admin-finance-pending', userId],
     queryFn: async (): Promise<PendingPayout[]> => {
       if (!userId || !isAdmin) return [];
@@ -224,6 +224,10 @@ export const useAdminFinance = (userId: string | undefined) => {
     enabled: !!userId && isAdmin,
   });
 
+  const refetch = async () => {
+    await Promise.all([refetchStats(), refetchPending()]);
+  };
+
   return {
     isAdmin,
     isCheckingAdmin,
@@ -238,5 +242,6 @@ export const useAdminFinance = (userId: string | undefined) => {
     recentTransactions,
     pendingPayouts,
     isLoading: isLoadingStats || isLoadingRecent || isLoadingPending,
+    refetch,
   };
 };
