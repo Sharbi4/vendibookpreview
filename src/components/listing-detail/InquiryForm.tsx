@@ -66,6 +66,10 @@ const InquiryForm = ({
 
   const handleStartPurchase = () => {
     trackCTAClick('start_purchase', 'inquiry_form');
+    if (!user) {
+      navigate(`/auth?redirect=/checkout/${listingId}`);
+      return;
+    }
     navigate(`/checkout/${listingId}`);
   };
 

@@ -252,7 +252,7 @@ const SaleCheckout = () => {
 
   const handlePurchase = async () => {
     if (!user) {
-      navigate('/auth');
+      navigate(`/auth?redirect=/checkout/${listingId}`);
       return;
     }
 
