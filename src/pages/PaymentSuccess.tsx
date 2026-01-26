@@ -139,7 +139,7 @@ const PaymentSuccess = () => {
 
           // Now poll for the transaction (should exist after create call or from webhook)
           let attempts = 0;
-          const maxAttempts = 5;
+          const maxAttempts = 10;
           let transactionFound = false;
           
           while (attempts < maxAttempts && !transactionFound) {
@@ -155,6 +155,8 @@ const PaymentSuccess = () => {
                 listing:listings(title, cover_image_url)
               `)
               .eq('checkout_session_id', sessionId)
+              .order('created_at', { ascending: false })
+              .limit(1)
               .maybeSingle()) as any;
 
             if (!txError && data) {
@@ -180,6 +182,9 @@ const PaymentSuccess = () => {
                 currency: 'USD',
               });
             } else {
+              if (txError) {
+                console.warn('PaymentSuccess: sale transaction lookup error', txError);
+              }
               // Wait before retrying
               attempts++;
               if (attempts < maxAttempts) {

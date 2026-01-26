@@ -72,12 +72,18 @@ serve(async (req) => {
       throw new Error("This is not an escrow sale transaction");
     }
 
-    // Check if transaction already exists
-    const { data: existingTx } = await supabaseClient
+    // Check if transaction already exists (avoid .single() so "0 rows" doesn't throw)
+    const { data: existingTx, error: existingTxError } = await supabaseClient
       .from('sale_transactions')
       .select('id')
       .eq('checkout_session_id', session_id)
-      .single();
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existingTxError) {
+      throw new Error(`Failed to check existing transaction: ${existingTxError.message}`);
+    }
 
     if (existingTx) {
       logStep("Transaction already exists", { id: existingTx.id });
@@ -144,36 +150,63 @@ serve(async (req) => {
     });
 
     // Create the sale transaction record
-    const { data: transaction, error: txError } = await supabaseClient
+    // NOTE: checkout_session_id is unique (DB index) so concurrent calls can't create duplicates.
+    // If we race and hit a unique violation, we just fetch the existing transaction.
+    const insertPayload = {
+      listing_id: session.metadata?.listing_id,
+      buyer_id: session.metadata?.buyer_id,
+      seller_id: session.metadata?.seller_id,
+      amount: amount,
+      platform_fee: platformFee,
+      seller_payout: sellerPayout,
+      payment_intent_id: paymentIntent.id,
+      checkout_session_id: session_id,
+      status: 'paid',
+      fulfillment_type: fulfillmentType,
+      delivery_address: deliveryAddress,
+      delivery_instructions: deliveryInstructions,
+      delivery_fee: deliveryFee,
+      buyer_name: buyerName,
+      buyer_email: buyerEmail,
+      buyer_phone: buyerPhone,
+      // Vendibook freight fields
+      freight_cost: vendibookFreightEnabled ? freightCost : 0,
+    };
+
+    let transaction: any = null;
+
+    const { data: insertedTx, error: insertErr } = await supabaseClient
       .from('sale_transactions')
-      .insert({
-        listing_id: session.metadata?.listing_id,
-        buyer_id: session.metadata?.buyer_id,
-        seller_id: session.metadata?.seller_id,
-        amount: amount,
-        platform_fee: platformFee,
-        seller_payout: sellerPayout,
-        payment_intent_id: paymentIntent.id,
-        checkout_session_id: session_id,
-        status: 'paid',
-        fulfillment_type: fulfillmentType,
-        delivery_address: deliveryAddress,
-        delivery_instructions: deliveryInstructions,
-        delivery_fee: deliveryFee,
-        buyer_name: buyerName,
-        buyer_email: buyerEmail,
-        buyer_phone: buyerPhone,
-        // Vendibook freight fields
-        freight_cost: vendibookFreightEnabled ? freightCost : 0,
-      })
+      .insert(insertPayload)
       .select()
       .single();
 
-    if (txError) {
-      throw new Error(`Failed to create transaction: ${txError.message}`);
+    if (insertErr) {
+      // 23505 = unique_violation
+      const isUniqueViolation = (insertErr as any)?.code === '23505' || insertErr.message.toLowerCase().includes('duplicate');
+      if (!isUniqueViolation) {
+        throw new Error(`Failed to create transaction: ${insertErr.message}`);
+      }
+
+      logStep('Insert raced with existing transaction; fetching existing record', { code: (insertErr as any)?.code });
+      const { data: existingAfter, error: existingAfterError } = await supabaseClient
+        .from('sale_transactions')
+        .select('*')
+        .eq('checkout_session_id', session_id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingAfterError || !existingAfter) {
+        throw new Error(`Transaction already exists but could not be fetched: ${existingAfterError?.message ?? 'not found'}`);
+      }
+
+      transaction = existingAfter;
+    } else {
+      transaction = insertedTx;
     }
 
-    logStep("Transaction created", { id: transaction.id, status: transaction.status });
+    logStep("Transaction ready", { id: transaction.id, status: transaction.status });
 
     // Send payment received notification (background task)
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
