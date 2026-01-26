@@ -26,6 +26,11 @@ import { ASSET_TYPES } from '@/data/cityData';
 import { trackEvent } from '@/lib/analytics';
 import { CategoryGuide } from '@/components/categories/CategoryGuide';
 
+// Food truck images for background
+import trailerBlack from '@/assets/trailer-black.jpg';
+import trailerWhite from '@/assets/trailer-white.jpg';
+import foodTruckGrilledCheese from '@/assets/food-truck-grilled-cheese.jpg';
+
 interface CitySupplyPageProps {
   city: CityData;
   assetType?: keyof typeof ASSET_TYPES;
@@ -82,7 +87,15 @@ export function CitySupplyPage({ city, assetType }: CitySupplyPageProps) {
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-primary/10 via-background to-emerald-500/5 py-20 lg:py-28">
           <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-          <div className="container mx-auto px-4 relative">
+          {/* Background image collage */}
+          <div className="absolute inset-0 opacity-5">
+            <div className="grid grid-cols-3 h-full">
+              <img src={trailerBlack} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src={foodTruckGrilledCheese} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src={trailerWhite} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+            </div>
+          </div>
+          <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
                 <MapPin className="h-4 w-4" />

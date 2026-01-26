@@ -20,6 +20,11 @@ import {
 } from 'lucide-react';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
 
+// Food truck images
+import foodTruckPopcorn from '@/assets/food-truck-popcorn.jpg';
+import trailerCafecito from '@/assets/trailer-cafecito.jpg';
+import trailerPinkBlue from '@/assets/trailer-pink-blue.jpg';
+
 const Browse = () => {
   return (
     <div className="min-h-screen flex flex-col">
@@ -38,7 +43,15 @@ const Browse = () => {
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-vendibook-cream via-white to-primary/5 py-20 md:py-28 overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,hsl(var(--primary)/0.08),transparent_50%)]" />
-          <div className="container relative">
+          {/* Background image collage */}
+          <div className="absolute inset-0 opacity-5">
+            <div className="grid grid-cols-3 h-full">
+              <img src={foodTruckPopcorn} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src={trailerCafecito} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src={trailerPinkBlue} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+            </div>
+          </div>
+          <div className="container relative z-10">
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
                 Find verified trucks, trailers, kitchens, and vendor lots

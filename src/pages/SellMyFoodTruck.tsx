@@ -39,6 +39,11 @@ import JsonLd from '@/components/JsonLd';
 import affirmLogo from '@/assets/affirm-logo.png';
 import afterpayLogo from '@/assets/afterpay-logo.jpg';
 
+// Food truck photos
+import trailerCafecito from '@/assets/trailer-cafecito.jpg';
+import trailerRico from '@/assets/trailer-rico.jpg';
+import trailerPink from '@/assets/trailer-pink.jpg';
+
 const SellMyFoodTruck = () => {
   // FAQ data for schema and accordion
   const faqs = [
@@ -254,7 +259,15 @@ const SellMyFoodTruck = () => {
           {/* Hero Section */}
           <section className="relative py-16 md:py-24 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-amber-500/5" />
-            <div className="container relative">
+            {/* Background photo collage */}
+            <div className="absolute inset-0 opacity-5">
+              <div className="grid grid-cols-3 h-full">
+                <img src={trailerCafecito} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+                <img src={trailerRico} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+                <img src={trailerPink} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              </div>
+            </div>
+            <div className="container relative z-10">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

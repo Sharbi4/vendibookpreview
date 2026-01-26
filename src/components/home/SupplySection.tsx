@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Shield, Sparkles, CheckCircle2, CreditCard, ShieldCheck, Users, Heart, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackCityListModuleViewed, trackCityListClicked } from '@/lib/analytics';
-import supplyFoodTruck from '@/assets/supply-food-truck.jpg';
+import trailerCafecito from '@/assets/trailer-cafecito.jpg';
 import { AnimatedSection, AnimatedCard, AnimatedListItem } from '@/components/ui/animated';
 
 const benefits = [
@@ -65,8 +65,8 @@ const SupplySection = () => {
             </h2>
             <div className="flex items-start gap-4 mb-8">
               <img 
-                src={supplyFoodTruck} 
-                alt="Food truck owner" 
+                src={trailerCafecito} 
+                alt="Coffee food trailer" 
                 className="w-24 h-24 md:w-32 md:h-32 rounded-xl object-cover shadow-lg flex-shrink-0 border-2 border-border"
               />
               <p className="text-lg text-muted-foreground">
