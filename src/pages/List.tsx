@@ -85,6 +85,11 @@ const ListPage: React.FC = () => {
 
   const renderContent = () => {
     if (mode === 'scratch') {
+      // Double-check auth before rendering wizard
+      if (!user) {
+        navigate('/auth?redirect=/list');
+        return null;
+      }
       return <QuickStartWizard />;
     }
 
