@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Loader2, ArrowLeft } from 'lucide-react';
@@ -45,10 +45,15 @@ const getStepNumber = (step: CheckoutStep): number => {
 const SaleCheckout = () => {
   const { listingId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const { listing, isLoading: isListingLoading, error: listingError } = useListing(listingId || '');
   const { estimate, isLoading: isEstimating, error: estimateError, getEstimate, clearEstimate } = useFreightEstimate();
+  
+  // Accepted offer state - price from negotiation
+  const [acceptedOfferPrice, setAcceptedOfferPrice] = useState<number | null>(null);
+  const [isLoadingOffer, setIsLoadingOffer] = useState(false);
 
   // Check if user is the owner of this listing
   const isOwner = user?.id && listing?.host_id && user.id === listing.host_id;
@@ -88,6 +93,51 @@ const SaleCheckout = () => {
     if (user?.email && !email) setEmail(user.email);
   }, [profile, user]);
 
+  // Check for accepted offer to get negotiated price
+  useEffect(() => {
+    const fetchAcceptedOffer = async () => {
+      if (!user || !listingId) return;
+      
+      // Check URL param first for offer price
+      const offerPriceParam = searchParams.get('offer_price');
+      if (offerPriceParam) {
+        const price = parseFloat(offerPriceParam);
+        if (!isNaN(price) && price > 0) {
+          setAcceptedOfferPrice(price);
+          return;
+        }
+      }
+      
+      // Otherwise fetch from database
+      setIsLoadingOffer(true);
+      try {
+        const { data: offer, error } = await supabase
+          .from('offers')
+          .select('offer_amount, counter_amount, status')
+          .eq('buyer_id', user.id)
+          .eq('listing_id', listingId)
+          .eq('status', 'accepted')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (error) {
+          console.error('Error fetching accepted offer:', error);
+        } else if (offer) {
+          // Use counter_amount if it exists (counter was accepted), otherwise use offer_amount
+          const agreedPrice = offer.counter_amount || offer.offer_amount;
+          setAcceptedOfferPrice(agreedPrice);
+        }
+      } catch (err) {
+        console.error('Error fetching offer:', err);
+      } finally {
+        setIsLoadingOffer(false);
+      }
+    };
+    
+    fetchAcceptedOffer();
+  }, [user, listingId, searchParams]);
+
   // Initialize fulfillment from listing data
   useEffect(() => {
     if (listing) {
@@ -124,8 +174,8 @@ const SaleCheckout = () => {
     address: validators.required('Address is required'),
   };
 
-  // Derived values
-  const priceSale = listing?.price_sale || 0;
+  // Derived values - Use accepted offer price if available, otherwise listing price
+  const priceSale = acceptedOfferPrice || listing?.price_sale || 0;
   const deliveryFee = listing?.delivery_fee || 0;
   const fulfillmentType = listing?.fulfillment_type || 'pickup';
   const vendibookFreightEnabled = listing?.vendibook_freight_enabled || false;
@@ -405,7 +455,7 @@ const SaleCheckout = () => {
   };
 
   // Loading state
-  if (isListingLoading) {
+  if (isListingLoading || isLoadingOffer) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

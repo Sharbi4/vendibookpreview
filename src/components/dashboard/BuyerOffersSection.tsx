@@ -44,6 +44,14 @@ const getStatusConfig = (status: string, expiresAt: string | null) => {
         bgColor: 'bg-emerald-50',
         badgeVariant: 'default' as const,
       };
+    case 'purchased':
+      return {
+        icon: CheckCircle2,
+        label: 'Purchased',
+        color: 'text-primary',
+        bgColor: 'bg-primary/10',
+        badgeVariant: 'default' as const,
+      };
     case 'declined':
       return {
         icon: XCircle,
@@ -214,7 +222,7 @@ const OfferCard = ({
               <div className="flex items-center gap-2">
                 {offer.status === 'accepted' && agreedPrice && (
                   <Button size="sm" asChild>
-                    <Link to={`/checkout/${offer.listing_id}`}>
+                    <Link to={`/checkout/${offer.listing_id}?offer_price=${agreedPrice}`}>
                       Buy for ${agreedPrice.toLocaleString()}
                       <ExternalLink className="h-3 w-3 ml-1" />
                     </Link>

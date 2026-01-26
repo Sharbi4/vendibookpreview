@@ -208,6 +208,20 @@ serve(async (req) => {
 
     logStep("Transaction ready", { id: transaction.id, status: transaction.status });
 
+    // Mark any accepted offers for this buyer/listing as purchased
+    const { error: offerUpdateError } = await supabaseClient
+      .from('offers')
+      .update({ status: 'purchased' })
+      .eq('buyer_id', session.metadata?.buyer_id)
+      .eq('listing_id', session.metadata?.listing_id)
+      .eq('status', 'accepted');
+    
+    if (offerUpdateError) {
+      logStep("Warning: Failed to update offer status", { error: offerUpdateError.message });
+    } else {
+      logStep("Offer status updated to purchased");
+    }
+
     // Send payment received notification (background task)
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";

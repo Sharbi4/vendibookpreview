@@ -133,6 +133,7 @@ export const useBuyerOffers = () => {
   const pendingOffers = offers.filter(o => o.status === 'pending');
   const counteredOffers = offers.filter(o => o.status === 'countered');
   const acceptedOffers = offers.filter(o => o.status === 'accepted');
+  const purchasedOffers = offers.filter(o => o.status === 'purchased');
   const declinedOffers = offers.filter(o => o.status === 'declined');
   const expiredOffers = offers.filter(o => o.status === 'expired');
 
@@ -141,6 +142,7 @@ export const useBuyerOffers = () => {
     pending: pendingOffers.length,
     countered: counteredOffers.length,
     accepted: acceptedOffers.length,
+    purchased: purchasedOffers.length,
     declined: declinedOffers.length,
   };
 
@@ -210,6 +212,7 @@ export const useBuyerOffers = () => {
     pendingOffers,
     counteredOffers,
     acceptedOffers,
+    purchasedOffers,
     declinedOffers,
     expiredOffers,
     stats,
