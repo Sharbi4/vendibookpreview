@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
-import { useCreateSaleTransaction } from '@/hooks/useSaleTransactions';
+
 import { EmailReceiptPreview } from '@/components/checkout';
 import { useAuth } from '@/contexts/AuthContext';
 import { calculateRentalFees } from '@/lib/commissions';
@@ -79,7 +79,7 @@ const PaymentSuccess = () => {
   const [userProfile, setUserProfile] = useState<{ full_name: string | null; email: string | null } | null>(null);
   const confettiFired = useRef(false);
   
-  const createSaleTransaction = useCreateSaleTransaction();
+  
 
   // Fire confetti on success
   const fireConfetti = () => {
@@ -125,9 +125,13 @@ const PaymentSuccess = () => {
 
       try {
         if (isEscrow) {
-          const result = await createSaleTransaction.mutateAsync(sessionId);
+          // Poll for transaction created by webhook (source of truth)
+          // The webhook creates the transaction on payment_intent.succeeded
+          let attempts = 0;
+          const maxAttempts = 10;
+          let transactionFound = false;
           
-          if (result.transaction_id) {
+          while (attempts < maxAttempts && !transactionFound) {
             const { data, error: txError } = await (supabase
               .from('sale_transactions' as any)
               .select(`
@@ -139,10 +143,11 @@ const PaymentSuccess = () => {
                 fulfillment_type,
                 listing:listings(title, cover_image_url)
               `)
-              .eq('id', result.transaction_id)
+              .eq('checkout_session_id', sessionId)
               .maybeSingle()) as any;
 
             if (!txError && data) {
+              transactionFound = true;
               setSaleTransaction(data as SaleTransactionDetails);
               
               // Track GA4 purchase conversion for escrow sale
@@ -151,7 +156,7 @@ const PaymentSuccess = () => {
                 value: data.amount,
                 currency: 'USD',
                 items: [{
-                  item_id: result.transaction_id,
+                  item_id: data.id,
                   item_name: data.listing?.title || 'Purchase',
                   item_category: 'sale',
                   price: data.amount,
@@ -163,7 +168,17 @@ const PaymentSuccess = () => {
                 value: data.amount,
                 currency: 'USD',
               });
+            } else {
+              // Wait 1 second before retrying - webhook may not have processed yet
+              attempts++;
+              if (attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+              }
             }
+          }
+          
+          if (!transactionFound) {
+            throw new Error('Transaction not found. Please check your purchases in the dashboard.');
           }
         } else {
           const { data, error: bookingError } = await supabase
