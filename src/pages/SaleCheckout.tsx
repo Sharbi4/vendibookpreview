@@ -13,6 +13,7 @@ import Footer from '@/components/layout/Footer';
 import { CheckoutOverlay } from '@/components/checkout';
 import { ValidatedInput, validators } from '@/components/ui/validated-input';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
+import { trackPurchase, trackInitiateCheckout } from '@/lib/facebookCAPI';
 import { calculateDistance } from '@/lib/geolocation';
 import SEO from '@/components/SEO';
 
@@ -311,6 +312,21 @@ const SaleCheckout = () => {
         }
 
         trackFormSubmitConversion({ form_type: 'purchase_cash', listing_id: listingId });
+        
+        // Track Facebook CAPI Purchase event for cash
+        trackPurchase({
+          value: priceSale,
+          contentIds: [listingId],
+          contentName: listing.title,
+          contentType: 'product',
+          userData: {
+            email: email.trim(),
+            phone: phone.trim() || undefined,
+            firstName: name.split(' ')[0],
+            lastName: name.split(' ').slice(1).join(' ') || undefined,
+          },
+        });
+        
         toast({ title: 'Purchase request submitted!', description: 'The seller will contact you.' });
         navigate(`/order-tracking/${txData.id}`);
       } catch (error) {
@@ -355,6 +371,21 @@ const SaleCheckout = () => {
       if (data.error) throw new Error(data.error);
 
       trackFormSubmitConversion({ form_type: 'purchase', listing_id: listingId });
+      
+      // Track Facebook CAPI InitiateCheckout event for card payment
+      trackInitiateCheckout({
+        value: totalPrice,
+        contentIds: [listingId],
+        contentName: listing.title,
+        numItems: 1,
+        userData: {
+          email: email.trim(),
+          phone: phone.trim() || undefined,
+          firstName: name.split(' ')[0],
+          lastName: name.split(' ').slice(1).join(' ') || undefined,
+        },
+      });
+      
       // Open Stripe checkout in new tab (works better in iframe environments)
       const stripeWindow = window.open(data.url, '_blank');
       if (!stripeWindow) {
