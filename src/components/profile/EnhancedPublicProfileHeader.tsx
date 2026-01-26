@@ -32,6 +32,7 @@ interface PublicProfileData {
   public_city: string | null;
   public_state: string | null;
   avatar_url: string | null;
+  header_image_url?: string | null;
   identity_verified: boolean;
   created_at: string;
 }
@@ -109,30 +110,41 @@ const EnhancedPublicProfileHeader = ({
 
   return (
     <motion.div 
-      className="relative overflow-hidden bg-gradient-to-br from-card via-card to-muted/30 border-b"
+      className="relative overflow-hidden border-b"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
     >
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div 
-          className="absolute -top-20 -right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl"
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div 
-          className="absolute -bottom-10 -left-10 w-48 h-48 bg-primary/5 rounded-full blur-2xl"
-          animate={{ 
-            scale: [1.2, 1, 1.2],
-            opacity: [0.2, 0.4, 0.2],
-          }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </div>
+      {/* Header image or decorative background */}
+      {profile.header_image_url ? (
+        <div className="absolute inset-0 h-32 md:h-40">
+          <img 
+            src={profile.header_image_url} 
+            alt="" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card" />
+        </div>
+      ) : (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none bg-gradient-to-br from-card via-card to-muted/30">
+          <motion.div 
+            className="absolute -top-20 -right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl"
+            animate={{ 
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.5, 0.3],
+            }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div 
+            className="absolute -bottom-10 -left-10 w-48 h-48 bg-primary/5 rounded-full blur-2xl"
+            animate={{ 
+              scale: [1.2, 1, 1.2],
+              opacity: [0.2, 0.4, 0.2],
+            }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
+      )}
 
       <div className="container py-6 md:py-8 relative">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-5">
@@ -151,15 +163,15 @@ const EnhancedPublicProfileHeader = ({
                 </AvatarFallback>
               </Avatar>
               
-              {/* Verified badge overlay */}
+              {/* Verified badge overlay - positioned at bottom-right with proper offset */}
               {profile.identity_verified && (
                 <motion.div 
-                  className="absolute -bottom-1 -right-1 bg-background rounded-full p-1 shadow-lg"
+                  className="absolute bottom-0 right-0 translate-x-1 translate-y-1 bg-background rounded-full p-0.5 shadow-lg border-2 border-background"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.5, type: 'spring', stiffness: 500 }}
                 >
-                  <VerifiedBadgeImage size="lg" />
+                  <VerifiedBadgeImage size="md" />
                 </motion.div>
               )}
             </div>

@@ -1159,6 +1159,7 @@ export type Database = {
           email: string | null
           first_name: string | null
           full_name: string | null
+          header_image_url: string | null
           id: string
           identity_verified: boolean | null
           identity_verified_at: string | null
@@ -1188,6 +1189,7 @@ export type Database = {
           email?: string | null
           first_name?: string | null
           full_name?: string | null
+          header_image_url?: string | null
           id: string
           identity_verified?: boolean | null
           identity_verified_at?: string | null
@@ -1217,6 +1219,7 @@ export type Database = {
           email?: string | null
           first_name?: string | null
           full_name?: string | null
+          header_image_url?: string | null
           id?: string
           identity_verified?: boolean | null
           identity_verified_at?: string | null
@@ -1755,6 +1758,7 @@ export type Database = {
           display_name: string
           first_name: string
           full_name: string
+          header_image_url: string
           id: string
           identity_verified: boolean
           last_name: string

@@ -46,6 +46,7 @@ interface ProfileData {
   last_name: string;
   email: string;
   avatar_url: string;
+  header_image_url: string;
   display_name: string;
   username: string;
   business_name: string;
@@ -99,6 +100,7 @@ const Account = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const headerInputRef = useRef<HTMLInputElement>(null);
   const publicSectionRef = useRef<HTMLDivElement>(null);
   const { isConnected: stripeConnected, isLoading: stripeLoading, connectStripe, isConnecting } = useStripeConnect();
 
@@ -106,6 +108,7 @@ const Account = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isUploadingHeader, setIsUploadingHeader] = useState(false);
   const [isPasswordSectionOpen, setIsPasswordSectionOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [formData, setFormData] = useState<ProfileData>({
@@ -114,6 +117,7 @@ const Account = () => {
     last_name: '',
     email: '',
     avatar_url: '',
+    header_image_url: '',
     display_name: '',
     username: '',
     business_name: '',
@@ -152,7 +156,7 @@ const Account = () => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('full_name, first_name, last_name, email, avatar_url, display_name, username, business_name, public_city, public_state, phone_number, address1, address2, city, state, zip_code, identity_verified')
+          .select('full_name, first_name, last_name, email, avatar_url, header_image_url, display_name, username, business_name, public_city, public_state, phone_number, address1, address2, city, state, zip_code, identity_verified')
           .eq('id', user.id)
           .single();
 
@@ -164,6 +168,7 @@ const Account = () => {
           last_name: data.last_name || '',
           email: data.email || user.email || '',
           avatar_url: data.avatar_url || '',
+          header_image_url: (data as { header_image_url?: string }).header_image_url || '',
           display_name: data.display_name || '',
           username: data.username || '',
           business_name: data.business_name || '',
@@ -364,6 +369,88 @@ const Account = () => {
       });
     } finally {
       setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleHeaderClick = () => {
+    headerInputRef.current?.click();
+  };
+
+  const handleHeaderChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: 'Invalid file type',
+        description: 'Please upload a JPEG, PNG, GIF, or WebP image',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: 'File too large',
+        description: 'Please upload an image smaller than 10MB',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsUploadingHeader(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-header-${Date.now()}.${fileExt}`;
+      const filePath = `headers/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('listing-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('listing-images')
+        .getPublicUrl(filePath);
+
+      const headerUrl = urlData.publicUrl;
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ header_image_url: headerUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      setFormData(prev => ({ ...prev, header_image_url: headerUrl }));
+      if (originalData) {
+        setOriginalData({ ...originalData, header_image_url: headerUrl });
+      }
+
+      // Refresh AuthContext profile so Header/MobileMenu update immediately
+      await refreshProfile();
+
+      // Invalidate all profile-related queries so PublicProfile, listings, etc. update
+      queryClient.invalidateQueries({ queryKey: ['public-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['user-stats'] });
+
+      toast({
+        title: 'Header updated',
+        description: 'Your profile header image has been updated',
+      });
+    } catch (error) {
+      console.error('Error uploading header:', error);
+      toast({
+        title: 'Upload failed',
+        description: 'Failed to upload header image',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploadingHeader(false);
     }
   };
 
@@ -914,6 +1001,57 @@ const Account = () => {
                     <p className="text-sm font-medium">Profile Photo</p>
                     <p className="text-xs text-muted-foreground">Visible on your public profile and listings</p>
                   </div>
+                </div>
+
+                {/* Header Image */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Profile Header Image</p>
+                      <p className="text-xs text-muted-foreground">Custom banner for your public profile (recommended: 1200x400px)</p>
+                    </div>
+                    <VisibilityBadge isPublic={true} />
+                  </div>
+                  <div 
+                    className="relative w-full h-32 rounded-xl overflow-hidden border-2 border-dashed border-border bg-muted/30 cursor-pointer hover:border-primary/50 transition-colors group"
+                    onClick={handleHeaderClick}
+                  >
+                    {formData.header_image_url ? (
+                      <>
+                        <img 
+                          src={formData.header_image_url} 
+                          alt="Profile header" 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <div className="text-white text-sm font-medium flex items-center gap-2">
+                            {isUploadingHeader ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Camera className="h-4 w-4" />
+                            )}
+                            Change Header
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
+                        {isUploadingHeader ? (
+                          <Loader2 className="h-6 w-6 animate-spin mb-2" />
+                        ) : (
+                          <Camera className="h-6 w-6 mb-2" />
+                        )}
+                        <span className="text-sm">Click to upload header image</span>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    ref={headerInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    className="hidden"
+                    onChange={handleHeaderChange}
+                  />
                 </div>
 
                 <Separator />

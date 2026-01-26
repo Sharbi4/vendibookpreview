@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { MapPin, Star, Calendar, Clock, MessageCircle } from 'lucide-react';
+import { MapPin, Star, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface EnhancedPublicProfileStatsProps {
@@ -9,14 +9,12 @@ interface EnhancedPublicProfileStatsProps {
     totalReviewsReceived?: number;
   } | null;
   completedBookings?: number;
-  responseTime?: string;
   isHost: boolean;
 }
 
 const EnhancedPublicProfileStats = ({ 
   stats, 
   completedBookings,
-  responseTime,
   isHost 
 }: EnhancedPublicProfileStatsProps) => {
   const statItems = [
@@ -51,17 +49,6 @@ const EnhancedPublicProfileStats = ({
       iconBg: 'bg-emerald-100 dark:bg-emerald-900/50',
       textColor: 'text-emerald-700 dark:text-emerald-300',
       show: (completedBookings || 0) > 0,
-    },
-    {
-      label: 'Response',
-      value: responseTime || '—',
-      subValue: 'avg time',
-      icon: Clock,
-      color: 'from-blue-500 to-indigo-500',
-      bgColor: 'bg-blue-50 dark:bg-blue-950/30',
-      iconBg: 'bg-blue-100 dark:bg-blue-900/50',
-      textColor: 'text-blue-700 dark:text-blue-300',
-      show: !!responseTime,
     },
   ];
 
