@@ -1,5 +1,5 @@
 // Analytics utility for tracking user interactions
-// Integrates with Google Analytics 4 and custom event tracking
+// Integrates with Google Analytics 4, Facebook CAPI, and custom event tracking
 
 import { hasAnalyticsConsent } from '@/lib/cookieConsent';
 import { 
@@ -10,6 +10,16 @@ import {
   trackGA4BeginCheckout,
   trackGA4GenerateLead
 } from '@/lib/ga4Conversions';
+import {
+  trackViewContent,
+  trackAddToWishlist,
+  trackSearch as trackFBSearch,
+  trackLead,
+  trackInitiateCheckout,
+  trackCompleteRegistration,
+  trackPurchase,
+  trackContact,
+} from '@/lib/facebookCAPI';
 
 type AnalyticsEvent = {
   category: string;
@@ -122,6 +132,12 @@ export const trackSignupCompleted = (role?: string): void => {
     action: 'signup_completed',
     label: role || 'unknown',
   });
+
+  // Fire Facebook CAPI CompleteRegistration event
+  trackCompleteRegistration({
+    contentName: role || 'user',
+    status: 'registered',
+  });
 };
 
 export const trackChoosePathShown = (): void => {
@@ -169,6 +185,14 @@ export const trackListingViewed = (listingId: string, category?: string, title?:
     item_name: title || 'Listing',
     item_category: category,
     price: price,
+  });
+
+  // Also fire Facebook CAPI ViewContent event
+  trackViewContent({
+    contentIds: [listingId],
+    contentName: title || 'Listing',
+    contentCategory: category,
+    value: price,
   });
 };
 
@@ -589,12 +613,20 @@ export const trackListingCardClick = (listingId: string, category: string, sourc
   });
 };
 
-export const trackListingFavorited = (listingId: string, category: string): void => {
+export const trackListingFavorited = (listingId: string, category: string, title?: string, price?: number): void => {
   trackEvent({
     category: 'Engagement',
     action: 'listing_favorited',
     label: category,
     metadata: { listing_id: listingId },
+  });
+
+  // Fire Facebook CAPI AddToWishlist event
+  trackAddToWishlist({
+    contentIds: [listingId],
+    contentName: title || 'Listing',
+    contentCategory: category,
+    value: price,
   });
 };
 
@@ -650,12 +682,20 @@ export const trackBookingDateSelected = (listingId: string, dateType: 'start' | 
   });
 };
 
-export const trackBookingCheckoutStarted = (listingId: string, totalPrice: number): void => {
+export const trackBookingCheckoutStarted = (listingId: string, totalPrice: number, title?: string): void => {
   trackEvent({
     category: 'Conversion',
     action: 'booking_checkout_started',
     value: totalPrice,
     metadata: { listing_id: listingId },
+  });
+
+  // Fire Facebook CAPI InitiateCheckout event
+  trackInitiateCheckout({
+    value: totalPrice,
+    contentIds: [listingId],
+    contentName: title,
+    numItems: 1,
   });
 };
 
@@ -668,6 +708,14 @@ export const trackSearchPerformed = (query: string, filters: Record<string, unkn
     value: resultCount,
     metadata: filters,
   });
+
+  // Fire Facebook CAPI Search event
+  if (query) {
+    trackFBSearch({
+      searchString: query,
+      contentCategory: (filters?.category as string) || undefined,
+    });
+  }
 };
 
 export const trackSearchFilterApplied = (filterType: string, filterValue: string): void => {
@@ -697,11 +745,17 @@ export const trackMessageSent = (conversationType: 'booking' | 'inquiry'): void 
   });
 };
 
-export const trackHostContacted = (listingId: string): void => {
+export const trackHostContacted = (listingId: string, contentName?: string): void => {
   trackEvent({
     category: 'Conversion',
     action: 'host_contacted',
     metadata: { listing_id: listingId },
+  });
+
+  // Fire Facebook CAPI Lead event
+  trackLead({
+    contentName: contentName || 'Host Contact',
+    contentCategory: 'inquiry',
   });
 };
 
@@ -731,6 +785,14 @@ export const trackScrollDepth = (depth: 25 | 50 | 75 | 100): void => {
     value: depth,
   });
 };
+
+// ========== Facebook CAPI Helpers ==========
+// Re-export FB CAPI functions for direct use where needed
+export { 
+  trackPurchase as trackFBPurchase,
+  trackLead as trackFBLead,
+  trackContact as trackFBContact,
+} from '@/lib/facebookCAPI';
 
 // Generic analytics exports for other parts of the app
 export { trackEvent };

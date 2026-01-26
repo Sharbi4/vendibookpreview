@@ -9,11 +9,13 @@ import { trackListingFavorited, trackListingUnfavorited } from '@/lib/analytics'
 interface FavoriteButtonProps {
   listingId: string;
   category?: string;
+  title?: string;
+  price?: number;
   className?: string;
   size?: 'sm' | 'default';
 }
 
-export const FavoriteButton = ({ listingId, category, className, size = 'default' }: FavoriteButtonProps) => {
+export const FavoriteButton = ({ listingId, category, title, price, className, size = 'default' }: FavoriteButtonProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { isFavorite, toggleFavorite, isToggling } = useFavorites();
@@ -33,7 +35,7 @@ export const FavoriteButton = ({ listingId, category, className, size = 'default
     if (isFav) {
       trackListingUnfavorited(listingId);
     } else {
-      trackListingFavorited(listingId, category || 'unknown');
+      trackListingFavorited(listingId, category || 'unknown', title, price);
     }
     
     toggleFavorite(listingId);
