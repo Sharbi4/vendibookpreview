@@ -342,7 +342,7 @@ const HeroWalkthrough = () => {
                   transition={{ delay: 0.5 + index * 0.1, duration: 0.3 }}
                   whileHover={shouldReduceMotion ? {} : { scale: 1.02 }}
                 >
-                  <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center">
+                  <div className="w-5 h-5 rounded-full bg-gradient-to-br from-foreground to-foreground/70 flex items-center justify-center">
                     <badge.icon className="h-3 w-3 text-white" />
                   </div>
                   <span className="font-medium">{badge.label}</span>
@@ -398,7 +398,7 @@ const HeroWalkthrough = () => {
           >
             <div className="relative glass-card border border-border/50 rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl">
                 {/* Premium glow effect */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-transparent to-amber-500/20 rounded-2xl blur-xl opacity-50" aria-hidden="true" />
+                <div className="absolute -inset-1 bg-gradient-to-r from-foreground/15 via-transparent to-foreground/10 rounded-2xl blur-xl opacity-50" aria-hidden="true" />
                 
                 <div className="relative">
                 {/* Header */}
