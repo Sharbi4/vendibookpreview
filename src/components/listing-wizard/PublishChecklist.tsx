@@ -68,142 +68,95 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
   }, [allRequiredComplete]);
 
   return (
-    <div className={cn("relative overflow-hidden rounded-2xl border-0 shadow-xl bg-card", className)}>
+    <div className={cn("rounded-2xl border border-border bg-card shadow-lg", className)}>
       {/* Header */}
-      <div className="relative bg-muted/30 border-b border-border p-4 pb-3">
-        <div className="flex items-center justify-between mb-1">
-          <h3 className="font-semibold text-foreground">Launch Your Listing</h3>
-          <span className="text-xs text-primary font-semibold">
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-semibold text-foreground text-sm">Launch Checklist</h3>
+          <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
             {progressPercentage}%
           </span>
         </div>
-        <p className="text-xs text-muted-foreground mb-3">
-          You're close. Finish the essentials to go live.
-        </p>
         <Progress value={progressPercentage} className="h-1.5" />
       </div>
       
-      {/* Do This Next Spotlight */}
+      {/* Do This Next */}
       {nextStep && !allRequiredComplete && (
-        <div className="relative mx-4 mt-4 mb-3 p-3 bg-muted/30 border border-border rounded-xl">
-          <div className="flex items-center gap-1.5 mb-2">
-            <div className="p-1 bg-primary rounded-md">
-              <Sparkles className="w-3 h-3 text-primary-foreground" />
-            </div>
-            <span className="text-[10px] font-semibold text-primary uppercase tracking-wide">Do this next</span>
+        <div className="mx-3 mt-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <Sparkles className="w-3 h-3 text-primary" />
+            <span className="text-[10px] font-semibold text-primary uppercase tracking-wide">Next</span>
           </div>
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{nextStep.label}</p>
-              {nextStep.benefit && (
-                <p className="text-xs text-muted-foreground mt-0.5">{nextStep.benefit}</p>
-              )}
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {nextStep.timeEstimate && (
-                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {nextStep.timeEstimate}
-                </span>
-              )}
-              <Button 
-                size="sm" 
-                className="h-7 text-xs px-3"
-                onClick={() => onItemClick?.(nextStep.id)}
-              >
-                Start
-                <ChevronRight className="w-3.5 h-3.5 ml-1" />
-              </Button>
-            </div>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-medium text-foreground truncate">{nextStep.label}</p>
+            <Button 
+              size="sm" 
+              className="h-7 text-xs px-3 shrink-0"
+              onClick={() => onItemClick?.(nextStep.id)}
+            >
+              Start
+              <ChevronRight className="w-3 h-3 ml-1" />
+            </Button>
           </div>
         </div>
       )}
       
       {/* Checklist Items */}
-      <div className="relative px-4 pb-2">
-        <div className="space-y-1">
-          {items.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => onItemClick?.(item.id)}
+      <div className="p-3 space-y-1">
+        {items.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => onItemClick?.(item.id)}
+            className={cn(
+              "w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all",
+              item.current
+                ? "bg-muted border border-border"
+                : "hover:bg-muted/50"
+            )}
+          >
+            <div
               className={cn(
-                "w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all bg-muted/30",
-                item.current
-                  ? "bg-muted border border-border shadow-sm"
-                  : item.completed
-                  ? "hover:bg-muted/50"
-                  : "hover:bg-muted/50"
+                "w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors",
+                item.completed
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
               )}
             >
-              <div
-                className={cn(
-                  "w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors",
-                  item.completed
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted-foreground/20 text-muted-foreground"
-                )}
-              >
-                {item.completed ? (
-                  <Check className="w-3 h-3" />
-                ) : (
-                  <Circle className="w-3 h-3" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0 flex items-center gap-2">
-                <span
-                  className={cn(
-                    "text-sm font-medium truncate",
-                    item.completed ? "text-muted-foreground" : "text-foreground"
-                  )}
-                >
-                  {item.label}
-                </span>
-                {item.required && !item.completed && item.valueTag && (
-                  <span className="text-[9px] font-medium text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded-full shrink-0">
-                    {item.valueTag}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {item.statusHint && (
-                  <span className={cn(
-                    "text-[10px]",
-                    item.completed ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
-                  )}>
-                    {item.statusHint}
-                  </span>
-                )}
-                {!item.required && !item.completed && (
-                  <span className="text-[10px] text-muted-foreground">Optional</span>
-                )}
-              </div>
-            </button>
-          ))}
-        </div>
+              {item.completed ? (
+                <Check className="w-3 h-3" />
+              ) : (
+                <Circle className="w-3 h-3" />
+              )}
+            </div>
+            <span className={cn(
+              "flex-1 text-sm font-medium truncate",
+              item.completed ? "text-muted-foreground" : "text-foreground"
+            )}>
+              {item.label}
+            </span>
+            {!item.required && !item.completed && (
+              <span className="text-[10px] text-muted-foreground shrink-0">Optional</span>
+            )}
+          </button>
+        ))}
       </div>
       
-      {/* Footer with Publish Button - hidden when hidePublishButton is true */}
+      {/* Footer */}
       {!hidePublishButton && (
-        <div className="relative p-4 pt-2 border-t border-border">
+        <div className="p-3 pt-0">
           <Button 
             className="w-full"
             disabled={!allRequiredComplete}
             variant={allRequiredComplete ? "default" : "secondary"}
             onClick={onPublishClick}
           >
-            {allRequiredComplete ? (
-              <>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Publish Listing
-              </>
-            ) : (
-              "Publish Listing"
-            )}
+            {allRequiredComplete && <Sparkles className="w-4 h-4 mr-2" />}
+            Publish Listing
           </Button>
-          <p className="text-[11px] text-center text-muted-foreground mt-2">
+          <p className="text-[10px] text-center text-muted-foreground mt-2">
             {allRequiredComplete 
-              ? "You're ready to publish" 
-              : `Finish ${requiredItems.length - requiredCompleted} essential${requiredItems.length - requiredCompleted > 1 ? 's' : ''} to go live`
+              ? "Ready to publish!" 
+              : `${requiredItems.length - requiredCompleted} step${requiredItems.length - requiredCompleted > 1 ? 's' : ''} remaining`
             }
           </p>
         </div>

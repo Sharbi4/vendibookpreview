@@ -72,7 +72,6 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<RentalSuggestions | null>(null);
 
-  // Derive booking type from enabled flags
   const bookingType: BookingType = hourlyEnabled && dailyEnabled ? 'both' : hourlyEnabled ? 'hourly' : 'daily';
 
   const handleBookingTypeChange = (type: BookingType) => {
@@ -88,7 +87,6 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
     }
   };
 
-  // Calculate payout estimates
   const payoutEstimates = useMemo(() => {
     const dailyPrice = parseFloat(priceDaily) || 0;
     const weeklyPrice = parseFloat(priceWeekly) || 0;
@@ -105,7 +103,7 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
     if (!title || !category) {
       toast({
         title: 'Missing information',
-        description: 'Please add a title and category first to get pricing suggestions.',
+        description: 'Please add a title and category first.',
         variant: 'destructive',
       });
       return;
@@ -115,28 +113,18 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
 
     try {
       const { data, error } = await supabase.functions.invoke('suggest-pricing', {
-        body: {
-          title,
-          category,
-          location,
-          mode: 'rent',
-          description,
-        },
+        body: { title, category, location, mode: 'rent', description },
       });
 
       if (error) throw error;
       if (data.error) throw new Error(data.error);
 
       setSuggestions(data as RentalSuggestions);
-      toast({
-        title: 'Suggestions ready!',
-        description: 'AI pricing suggestions have been generated.',
-      });
+      toast({ title: 'Suggestions ready!' });
     } catch (error) {
-      console.error('Error getting suggestions:', error);
       toast({
         title: 'Could not get suggestions',
-        description: error instanceof Error ? error.message : 'Please try again later.',
+        description: error instanceof Error ? error.message : 'Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -151,347 +139,266 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Page Header */}
-      <div className="text-center space-y-2">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-2">
-          <DollarSign className="w-6 h-6 text-primary" />
+      <div className="text-center space-y-3 pb-2">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10">
+          <DollarSign className="w-7 h-7 text-primary" />
         </div>
-        <h2 className="text-2xl font-bold">Set your pricing</h2>
-        <p className="text-muted-foreground max-w-md mx-auto">
-          Set competitive rates to attract renters while maximizing your earnings.
+        <h2 className="text-2xl font-bold text-foreground">Set your pricing</h2>
+        <p className="text-muted-foreground text-sm max-w-sm mx-auto">
+          Set competitive rates to attract renters.
         </p>
       </div>
 
       {/* AI Pricing Assistant */}
-      <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse pointer-events-none" />
-        <div className="relative flex items-start gap-3">
-          <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md shrink-0">
-            <Sparkles className="w-5 h-5 text-white" />
+      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
+            <Sparkles className="w-5 h-5 text-primary-foreground" />
           </div>
-          <div className="flex-1">
-            <h4 className="font-semibold text-foreground mb-1">AI Pricing Assistant</h4>
-            <p className="text-sm text-muted-foreground mb-3">
-              Get smart pricing suggestions based on your listing details and market data.
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold text-sm text-foreground">AI Pricing Assistant</h4>
+            <p className="text-xs text-muted-foreground">
+              Get smart pricing suggestions based on market data.
             </p>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleGetSuggestions}
-              disabled={isLoadingSuggestions}
-              className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
-            >
-              {isLoadingSuggestions ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Analyzing market...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Get AI Suggestions
-                </>
-              )}
-            </Button>
           </div>
         </div>
+        <Button
+          type="button"
+          size="sm"
+          onClick={handleGetSuggestions}
+          disabled={isLoadingSuggestions}
+          className="w-full"
+        >
+          {isLoadingSuggestions ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Analyzing...
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4 mr-2" />
+              Get AI Suggestions
+            </>
+          )}
+        </Button>
       </div>
 
-      {/* AI Suggestions Display */}
+      {/* AI Suggestions */}
       {suggestions && (
-        <div className="bg-card border border-border rounded-xl p-4 space-y-4">
-          <h4 className="font-medium text-foreground flex items-center gap-2">
+        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+          <h4 className="font-semibold text-sm text-foreground flex items-center gap-2">
             <Target className="w-4 h-4 text-primary" />
             Suggested Pricing
           </h4>
           
-          <div className="grid grid-cols-3 gap-3">
-            <button
-              type="button"
-              onClick={() => applySuggestion('low')}
-              className="p-3 rounded-xl border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-left"
-            >
-              <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
-                <TrendingDown className="w-3 h-3" />
-                Budget
-              </div>
-              <div className="font-bold text-foreground">${suggestions.daily_low}/day</div>
-              <div className="text-xs text-muted-foreground">${suggestions.weekly_low}/week</div>
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => applySuggestion('suggested')}
-              className="p-3 rounded-xl border-2 border-primary bg-primary/10 hover:bg-primary/15 transition-all text-left shadow-sm"
-            >
-              <div className="flex items-center gap-1 text-primary text-xs mb-1">
-                <Target className="w-3 h-3" />
-                Recommended
-              </div>
-              <div className="font-bold text-foreground">${suggestions.daily_suggested}/day</div>
-              <div className="text-xs text-muted-foreground">${suggestions.weekly_suggested}/week</div>
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => applySuggestion('high')}
-              className="p-3 rounded-xl border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-left"
-            >
-              <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
-                <TrendingUp className="w-3 h-3" />
-                Premium
-              </div>
-              <div className="font-bold text-foreground">${suggestions.daily_high}/day</div>
-              <div className="text-xs text-muted-foreground">${suggestions.weekly_high}/week</div>
-            </button>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { type: 'low' as const, label: 'Budget', icon: TrendingDown },
+              { type: 'suggested' as const, label: 'Recommended', icon: Target },
+              { type: 'high' as const, label: 'Premium', icon: TrendingUp },
+            ].map(({ type, label, icon: Icon }) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => applySuggestion(type)}
+                className={cn(
+                  "p-3 rounded-xl border text-left transition-all",
+                  type === 'suggested'
+                    ? "border-primary bg-primary/5"
+                    : "border-border bg-card hover:border-primary/40"
+                )}
+              >
+                <div className={cn(
+                  "flex items-center gap-1 text-xs mb-1",
+                  type === 'suggested' ? "text-primary" : "text-muted-foreground"
+                )}>
+                  <Icon className="w-3 h-3" />
+                  {label}
+                </div>
+                <div className="font-bold text-sm text-foreground">${suggestions[`daily_${type}`]}/day</div>
+                <div className="text-xs text-muted-foreground">${suggestions[`weekly_${type}`]}/wk</div>
+              </button>
+            ))}
           </div>
           
-          {suggestions.confidence && (
-            <div className="flex items-center gap-2 text-xs">
-              <span className={cn(
-                "px-2 py-0.5 rounded-full font-medium",
-                suggestions.confidence === 'high' 
-                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                  : suggestions.confidence === 'medium'
-                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                  : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-              )}>
-                {suggestions.confidence} confidence
-              </span>
-            </div>
-          )}
-          
-          <p className="text-sm text-muted-foreground italic">
-            {suggestions.reasoning}
-          </p>
+          <p className="text-xs text-muted-foreground italic">{suggestions.reasoning}</p>
         </div>
       )}
 
-      {/* Booking Type Selection */}
-      <div className="space-y-4">
+      {/* Booking Type */}
+      <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-primary" />
-          <Label className="text-base font-semibold">Booking Type</Label>
+          <Clock className="w-4 h-4 text-primary" />
+          <Label className="text-sm font-semibold text-foreground">Booking Type</Label>
         </div>
         <RadioGroup
           value={bookingType}
           onValueChange={(v) => handleBookingTypeChange(v as BookingType)}
-          className="grid grid-cols-3 gap-3"
+          className="grid grid-cols-3 gap-2"
         >
-          <Label
-            htmlFor="daily"
-            className={cn(
-              "flex flex-col items-center gap-1 p-4 rounded-xl border-2 cursor-pointer transition-all",
-              bookingType === 'daily' 
-                ? "border-primary bg-primary/10" 
-                : "border-border hover:border-primary/50"
-            )}
-          >
-            <RadioGroupItem value="daily" id="daily" className="sr-only" />
-            <span className="font-medium">Daily Only</span>
-            <span className="text-xs text-muted-foreground text-center">Full day rentals</span>
-          </Label>
-          <Label
-            htmlFor="hourly"
-            className={cn(
-              "flex flex-col items-center gap-1 p-4 rounded-xl border-2 cursor-pointer transition-all",
-              bookingType === 'hourly' 
-                ? "border-primary bg-primary/10" 
-                : "border-border hover:border-primary/50"
-            )}
-          >
-            <RadioGroupItem value="hourly" id="hourly" className="sr-only" />
-            <span className="font-medium">Hourly Only</span>
-            <span className="text-xs text-muted-foreground text-center">By the hour</span>
-          </Label>
-          <Label
-            htmlFor="both"
-            className={cn(
-              "flex flex-col items-center gap-1 p-4 rounded-xl border-2 cursor-pointer transition-all",
-              bookingType === 'both' 
-                ? "border-primary bg-primary/10" 
-                : "border-border hover:border-primary/50"
-            )}
-          >
-            <RadioGroupItem value="both" id="both" className="sr-only" />
-            <span className="font-medium">Both</span>
-            <span className="text-xs text-muted-foreground text-center">Hourly & Daily</span>
-          </Label>
+          {[
+            { value: 'daily', label: 'Daily', desc: 'Full day' },
+            { value: 'hourly', label: 'Hourly', desc: 'By the hour' },
+            { value: 'both', label: 'Both', desc: 'Both options' },
+          ].map((opt) => (
+            <Label
+              key={opt.value}
+              htmlFor={opt.value}
+              className={cn(
+                "flex flex-col items-center gap-1 p-3 rounded-xl border cursor-pointer transition-all text-center",
+                bookingType === opt.value 
+                  ? "border-primary bg-primary/5" 
+                  : "border-border hover:border-primary/40"
+              )}
+            >
+              <RadioGroupItem value={opt.value} id={opt.value} className="sr-only" />
+              <span className="font-medium text-sm text-foreground">{opt.label}</span>
+              <span className="text-xs text-muted-foreground">{opt.desc}</span>
+            </Label>
+          ))}
         </RadioGroup>
       </div>
 
       {/* Pricing Inputs */}
       <div className="space-y-4">
-        {/* Hourly Rate - shown when hourly or both */}
         {(bookingType === 'hourly' || bookingType === 'both') && (
           <div className="space-y-2">
-            <Label htmlFor="price_hourly" className="text-base font-semibold">Hourly Rate *</Label>
+            <Label className="text-sm font-semibold text-foreground">Hourly Rate *</Label>
             <div className="relative max-w-xs">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
               <Input
-                id="price_hourly"
                 type="number"
                 min="0"
                 step="1"
                 value={priceHourly}
                 onChange={(e) => onPriceHourlyChange(e.target.value)}
                 placeholder="0"
-                className="pl-8 text-xl h-14 font-semibold"
+                className="pl-7 pr-14 h-12 text-lg font-semibold bg-background"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">/hour</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/hour</span>
             </div>
-            <p className="text-xs text-muted-foreground">Set your rate for hourly bookings</p>
           </div>
         )}
 
-        {/* Daily & Weekly Rates - shown when daily or both */}
         {(bookingType === 'daily' || bookingType === 'both') && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="price_daily" className="text-base font-semibold">Daily Rate *</Label>
+              <Label className="text-sm font-semibold text-foreground">Daily Rate *</Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                 <Input
-                  id="price_daily"
                   type="number"
                   min="0"
                   step="1"
                   value={priceDaily}
                   onChange={(e) => onPriceDailyChange(e.target.value)}
                   placeholder="0"
-                  className="pl-8 text-xl h-14 font-semibold"
+                  className="pl-7 pr-12 h-12 text-lg font-semibold bg-background"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">/day</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/day</span>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="price_weekly" className="text-base font-semibold">Weekly Rate</Label>
+              <Label className="text-sm font-semibold text-foreground">Weekly Rate</Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                 <Input
-                  id="price_weekly"
                   type="number"
                   min="0"
                   step="1"
                   value={priceWeekly}
                   onChange={(e) => onPriceWeeklyChange(e.target.value)}
                   placeholder="0"
-                  className="pl-8 text-xl h-14 font-semibold"
+                  className="pl-7 pr-12 h-12 text-lg font-semibold bg-background"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">/week</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/wk</span>
               </div>
-              <p className="text-xs text-muted-foreground">Offer a discount for weekly rentals</p>
             </div>
           </div>
         )}
 
         {/* Payout Estimate */}
         {(payoutEstimates.daily || payoutEstimates.weekly || payoutEstimates.hourly) && (
-          <div className="bg-card rounded-xl p-4 border border-border">
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 bg-muted rounded-xl">
-                <Wallet className="w-5 h-5 text-foreground" />
+          <div className="rounded-xl border border-border bg-muted/30 p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                <Wallet className="w-4 h-4 text-foreground" />
               </div>
-              <div className="flex-1">
-                <h4 className="font-semibold text-foreground mb-2">Your Estimated Payout</h4>
-                <div className="space-y-2">
-                  {payoutEstimates.hourly && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Hourly rental:</span>
-                      <div className="text-right">
-                        <span className="font-bold text-lg text-primary">
-                          {formatCurrency(payoutEstimates.hourly.hostReceives)}
-                        </span>
-                        <span className="text-xs text-muted-foreground ml-2">
-                          ({formatCurrency(payoutEstimates.hourly.hostFee)} fee)
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                  {payoutEstimates.daily && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Daily rental:</span>
-                      <div className="text-right">
-                        <span className="font-bold text-lg text-primary">
-                          {formatCurrency(payoutEstimates.daily.hostReceives)}
-                        </span>
-                        <span className="text-xs text-muted-foreground ml-2">
-                          ({formatCurrency(payoutEstimates.daily.hostFee)} fee)
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                  {payoutEstimates.weekly && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Weekly rental:</span>
-                      <div className="text-right">
-                        <span className="font-bold text-lg text-primary">
-                          {formatCurrency(payoutEstimates.weekly.hostReceives)}
-                        </span>
-                        <span className="text-xs text-muted-foreground ml-2">
-                          ({formatCurrency(payoutEstimates.weekly.hostFee)} fee)
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-start gap-1.5 mt-3 text-xs text-muted-foreground">
-                  <Info className="w-3 h-3 mt-0.5 shrink-0" />
-                  <span>Platform fee is {RENTAL_HOST_FEE_PERCENT}% of the rental price</span>
-                </div>
-              </div>
+              <h4 className="font-semibold text-sm text-foreground">Your Payout</h4>
             </div>
+            <div className="space-y-2">
+              {payoutEstimates.hourly && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Hourly:</span>
+                  <span className="font-semibold text-primary">{formatCurrency(payoutEstimates.hourly.hostReceives)}</span>
+                </div>
+              )}
+              {payoutEstimates.daily && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Daily:</span>
+                  <span className="font-semibold text-primary">{formatCurrency(payoutEstimates.daily.hostReceives)}</span>
+                </div>
+              )}
+              {payoutEstimates.weekly && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Weekly:</span>
+                  <span className="font-semibold text-primary">{formatCurrency(payoutEstimates.weekly.hostReceives)}</span>
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+              <Info className="w-3 h-3" />
+              {RENTAL_HOST_FEE_PERCENT}% platform fee
+            </p>
           </div>
         )}
       </div>
 
       {/* Security Deposit */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 text-primary" />
-          <Label htmlFor="deposit" className="text-base font-semibold">Security Deposit</Label>
-          <span className="text-sm text-muted-foreground">(Optional)</span>
+          <Shield className="w-4 h-4 text-primary" />
+          <Label className="text-sm font-semibold text-foreground">Security Deposit</Label>
+          <span className="text-xs text-muted-foreground">(Optional)</span>
         </div>
         <div className="relative max-w-xs">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
           <Input
-            id="deposit"
             type="number"
             min="0"
             step="1"
             value={depositAmount}
             onChange={(e) => onDepositAmountChange(e.target.value)}
             placeholder="0"
-            className="pl-7"
+            className="pl-7 bg-background"
           />
         </div>
-        <p className="text-sm text-muted-foreground">
-          A refundable deposit held during the rental period for peace of mind.
+        <p className="text-xs text-muted-foreground">
+          Refundable deposit held during the rental period.
         </p>
       </div>
 
       {/* Instant Book */}
-      <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-        <div className="flex items-start gap-4">
-          <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md shrink-0">
-            <Zap className="w-5 h-5 text-white" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h4 className="font-semibold text-foreground">Instant Book</h4>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Allow renters to book immediately without waiting for your approval.
-                </p>
-              </div>
-              <Switch
-                checked={instantBook}
-                onCheckedChange={onInstantBookChange}
-              />
+      <div className="rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
+              <Zap className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-sm text-foreground">Instant Book</h4>
+              <p className="text-xs text-muted-foreground">
+                Allow immediate bookings without approval.
+              </p>
             </div>
           </div>
+          <Switch
+            checked={instantBook}
+            onCheckedChange={onInstantBookChange}
+          />
         </div>
       </div>
     </div>

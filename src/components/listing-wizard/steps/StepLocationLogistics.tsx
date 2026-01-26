@@ -36,9 +36,9 @@ interface StepLocationLogisticsProps {
 }
 
 const fulfillmentOptions: { value: FulfillmentType; label: string; icon: React.ReactNode; description: string }[] = [
-  { value: 'pickup', label: 'Pickup Only', icon: <MapPin className="w-5 h-5" />, description: 'Renter picks up from your location' },
-  { value: 'delivery', label: 'Delivery Only', icon: <Truck className="w-5 h-5" />, description: 'You deliver to their location' },
-  { value: 'both', label: 'Pickup + Delivery', icon: <Package className="w-5 h-5" />, description: 'Offer both options' },
+  { value: 'pickup', label: 'Pickup', icon: <MapPin className="w-4 h-4" />, description: 'Renter picks up' },
+  { value: 'delivery', label: 'Delivery', icon: <Truck className="w-4 h-4" />, description: 'You deliver' },
+  { value: 'both', label: 'Both', icon: <Package className="w-4 h-4" />, description: 'Offer both' },
 ];
 
 export const StepLocationLogistics: React.FC<StepLocationLogisticsProps> = ({
@@ -83,166 +83,145 @@ export const StepLocationLogistics: React.FC<StepLocationLogisticsProps> = ({
     }
   };
 
-  // Static Location UI (Ghost Kitchen, Vendor Lot, or toggled static)
+  // Static Location UI
   if (showStaticUI) {
     return (
-      <div className="space-y-8">
+      <div className="space-y-6">
         {/* Page Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-2">
-            <Building2 className="w-6 h-6 text-primary" />
+        <div className="text-center space-y-3 pb-2">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10">
+            <Building2 className="w-7 h-7 text-primary" />
           </div>
-          <h2 className="text-2xl font-bold">Location Details</h2>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            This is a fixed location. Customers will come to this address.
+          <h2 className="text-2xl font-bold text-foreground">Location Details</h2>
+          <p className="text-muted-foreground text-sm max-w-sm mx-auto">
+            Customers will come to this fixed location.
           </p>
         </div>
 
-        {/* Static Location Toggle (only for mobile assets) */}
+        {/* Static Location Toggle */}
         {categoryIsMobile && !categoryIsStatic && (
-          <div className="p-4 bg-card rounded-xl border border-border">
+          <div className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-start gap-3">
-                <Building2 className="w-5 h-5 text-muted-foreground mt-0.5" />
+              <div className="flex items-center gap-3">
+                <Building2 className="w-4 h-4 text-muted-foreground" />
                 <div>
-                  <Label htmlFor="static-toggle" className="text-base font-medium cursor-pointer">
-                    Static Location
-                  </Label>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    This asset is parked at a fixed location
-                  </p>
+                  <Label className="text-sm font-medium text-foreground cursor-pointer">Static Location</Label>
+                  <p className="text-xs text-muted-foreground">Asset is at a fixed location</p>
                 </div>
               </div>
-              <Switch
-                id="static-toggle"
-                checked={isStaticLocation}
-                onCheckedChange={onStaticLocationChange}
-              />
+              <Switch checked={isStaticLocation} onCheckedChange={onStaticLocationChange} />
             </div>
           </div>
         )}
 
         {/* Full Address */}
-        <div className="space-y-3">
-          <Label htmlFor="address" className="text-base font-semibold">Full Address *</Label>
+        <div className="space-y-2">
+          <Label className="text-sm font-semibold text-foreground">Full Address *</Label>
           <LocationSearchInput
             value={address}
             onChange={onAddressChange}
             onLocationSelect={handleLocationSelect}
             selectedCoordinates={pickupCoordinates}
-            placeholder="123 Main Street, Suite 100, City, State ZIP"
+            placeholder="123 Main Street, City, State ZIP"
           />
-          <p className="text-sm text-muted-foreground flex items-start gap-1.5">
-            <Info className="w-4 h-4 mt-0.5 shrink-0" />
-            <span>Address is kept private until booking is confirmed.</span>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Info className="w-3 h-3" />
+            Address is private until booking is confirmed.
           </p>
         </div>
 
         {/* Access Instructions */}
-        <div className="space-y-3">
-          <Label htmlFor="access_instructions" className="text-base font-semibold">Access Instructions *</Label>
+        <div className="space-y-2">
+          <Label className="text-sm font-semibold text-foreground">Access Instructions *</Label>
           <Textarea
-            id="access_instructions"
             value={accessInstructions}
             onChange={(e) => onAccessInstructionsChange(e.target.value)}
-            placeholder="How do guests access the space? Any gate codes, parking instructions, or check-in procedures?"
+            placeholder="Gate codes, parking instructions, check-in procedures..."
             rows={3}
+            className="resize-none bg-background"
           />
         </div>
 
         {/* Hours of Access */}
-        <div className="space-y-3">
-          <Label htmlFor="hours_of_access" className="text-base font-semibold">Hours of Access</Label>
+        <div className="space-y-2">
+          <Label className="text-sm font-semibold text-foreground">Hours of Access</Label>
           <Input
-            id="hours_of_access"
             value={hoursOfAccess}
             onChange={(e) => onHoursOfAccessChange(e.target.value)}
             placeholder="e.g., 6 AM - 10 PM daily"
+            className="bg-background"
           />
         </div>
 
         {/* Location Notes */}
-        <div className="space-y-3">
-          <Label htmlFor="location_notes" className="text-base font-semibold">Additional Notes</Label>
+        <div className="space-y-2">
+          <Label className="text-sm font-semibold text-foreground">Additional Notes</Label>
           <Textarea
-            id="location_notes"
             value={locationNotes}
             onChange={(e) => onLocationNotesChange(e.target.value)}
-            placeholder="Utilities included, parking availability, nearby amenities..."
-            rows={3}
+            placeholder="Utilities, parking, nearby amenities..."
+            rows={2}
+            className="resize-none bg-background"
           />
         </div>
       </div>
     );
   }
 
-  // Mobile Asset UI (Pickup/Delivery)
+  // Mobile Asset UI
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Page Header */}
-      <div className="text-center space-y-2">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-2">
-          <MapPin className="w-6 h-6 text-primary" />
+      <div className="text-center space-y-3 pb-2">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10">
+          <MapPin className="w-7 h-7 text-primary" />
         </div>
-        <h2 className="text-2xl font-bold">Location & Logistics</h2>
-        <p className="text-muted-foreground max-w-md mx-auto">
-          How will renters get your asset? Set up pickup and delivery options.
+        <h2 className="text-2xl font-bold text-foreground">Location & Logistics</h2>
+        <p className="text-muted-foreground text-sm max-w-sm mx-auto">
+          How will renters get your asset?
         </p>
       </div>
 
-      {/* Static Location Toggle for mobile assets */}
+      {/* Static Location Toggle */}
       {categoryIsMobile && (
-        <div className="p-4 bg-card rounded-xl border border-border">
+        <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-start gap-3">
-              <Building2 className="w-5 h-5 text-muted-foreground mt-0.5" />
+            <div className="flex items-center gap-3">
+              <Building2 className="w-4 h-4 text-muted-foreground" />
               <div>
-                <Label htmlFor="static-toggle" className="text-base font-medium cursor-pointer">
-                  Static Location
-                </Label>
-                <p className="text-sm text-muted-foreground mt-1">
-                  This asset is permanently stationed at a fixed location
-                </p>
+                <Label className="text-sm font-medium text-foreground cursor-pointer">Static Location</Label>
+                <p className="text-xs text-muted-foreground">Asset at a fixed location</p>
               </div>
             </div>
-            <Switch
-              id="static-toggle"
-              checked={isStaticLocation}
-              onCheckedChange={onStaticLocationChange}
-            />
+            <Switch checked={isStaticLocation} onCheckedChange={onStaticLocationChange} />
           </div>
         </div>
       )}
 
       {/* Fulfillment Type */}
       <div className="space-y-3">
-        <Label className="text-base font-semibold">Fulfillment Options *</Label>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Label className="text-sm font-semibold text-foreground">Fulfillment Options *</Label>
+        <div className="grid grid-cols-3 gap-2">
           {fulfillmentOptions.map((option) => (
             <button
               key={option.value}
               type="button"
               onClick={() => onFulfillmentTypeChange(option.value)}
               className={cn(
-                "p-4 rounded-xl border-2 text-left transition-all",
+                "p-3 rounded-xl border text-center transition-all",
                 fulfillmentType === option.value
-                  ? "border-primary bg-primary/5 shadow-sm"
-                  : "border-border hover:border-primary/50"
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/40"
               )}
             >
               <div className={cn(
-                "mb-2",
+                "mx-auto mb-1",
                 fulfillmentType === option.value ? "text-primary" : "text-muted-foreground"
               )}>
                 {option.icon}
               </div>
-              <h4 className={cn(
-                "font-semibold text-sm",
-                fulfillmentType === option.value ? "text-primary" : "text-foreground"
-              )}>
-                {option.label}
-              </h4>
-              <p className="text-xs text-muted-foreground mt-1">{option.description}</p>
+              <h4 className="font-semibold text-xs text-foreground">{option.label}</h4>
+              <p className="text-[10px] text-muted-foreground">{option.description}</p>
             </button>
           ))}
         </div>
@@ -250,33 +229,32 @@ export const StepLocationLogistics: React.FC<StepLocationLogisticsProps> = ({
 
       {/* Pickup Location */}
       {(fulfillmentType === 'pickup' || fulfillmentType === 'both') && (
-        <div className="space-y-4 p-4 bg-muted/30 rounded-xl border border-border">
+        <div className="space-y-3 p-4 rounded-xl bg-muted/30 border border-border">
           <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-primary" />
-            <Label className="text-base font-semibold">Pickup Location *</Label>
+            <MapPin className="w-4 h-4 text-primary" />
+            <Label className="text-sm font-semibold text-foreground">Pickup Location *</Label>
           </div>
           
-          <div className="space-y-3">
-            <LocationSearchInput
-              value={pickupLocationText}
-              onChange={onPickupLocationTextChange}
-              onLocationSelect={handleLocationSelect}
-              selectedCoordinates={pickupCoordinates}
-              placeholder="Enter full address for pickup"
-            />
-            <p className="text-sm text-muted-foreground flex items-start gap-1.5">
-              <Info className="w-4 h-4 mt-0.5 shrink-0" />
-              <span>Exact address is hidden until booking is confirmed.</span>
-            </p>
-          </div>
+          <LocationSearchInput
+            value={pickupLocationText}
+            onChange={onPickupLocationTextChange}
+            onLocationSelect={handleLocationSelect}
+            selectedCoordinates={pickupCoordinates}
+            placeholder="Enter full address"
+          />
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Info className="w-3 h-3" />
+            Hidden until booking confirmed.
+          </p>
 
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Pickup Instructions</Label>
+            <Label className="text-xs font-medium text-foreground">Pickup Instructions</Label>
             <Textarea
               value={pickupInstructions}
               onChange={(e) => onPickupInstructionsChange(e.target.value)}
-              placeholder="Any special instructions for pickup? Gate codes, parking, etc."
+              placeholder="Gate codes, parking, etc."
               rows={2}
+              className="resize-none bg-background"
             />
           </div>
         </div>
@@ -284,48 +262,47 @@ export const StepLocationLogistics: React.FC<StepLocationLogisticsProps> = ({
 
       {/* Delivery Options */}
       {(fulfillmentType === 'delivery' || fulfillmentType === 'both') && (
-        <div className="space-y-4 p-4 bg-muted/30 rounded-xl border border-border">
+        <div className="space-y-3 p-4 rounded-xl bg-muted/30 border border-border">
           <div className="flex items-center gap-2">
-            <Truck className="w-5 h-5 text-primary" />
-            <Label className="text-base font-semibold">Delivery Options</Label>
+            <Truck className="w-4 h-4 text-primary" />
+            <Label className="text-sm font-semibold text-foreground">Delivery Options</Label>
           </div>
 
           {fulfillmentType === 'delivery' && (
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">Your Base Location *</Label>
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-foreground">Your Base Location *</Label>
               <LocationSearchInput
                 value={pickupLocationText}
                 onChange={onPickupLocationTextChange}
                 onLocationSelect={handleLocationSelect}
                 selectedCoordinates={pickupCoordinates}
-                placeholder="City, State (e.g., Austin, TX)"
+                placeholder="City, State"
               />
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label className="text-sm font-medium flex items-center gap-1">
-                <DollarSign className="w-4 h-4" />
+              <Label className="text-xs font-medium text-foreground flex items-center gap-1">
+                <DollarSign className="w-3 h-3" />
                 Delivery Fee
               </Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
                 <Input
                   type="number"
                   min="0"
                   step="0.01"
                   value={deliveryFee}
                   onChange={(e) => onDeliveryFeeChange(e.target.value)}
-                  placeholder="0.00"
-                  className="pl-7"
+                  placeholder="0"
+                  className="pl-6 bg-background"
                 />
               </div>
-              <p className="text-xs text-muted-foreground">Per delivery (or per mile)</p>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Delivery Radius</Label>
+              <Label className="text-xs font-medium text-foreground">Radius</Label>
               <div className="relative">
                 <Input
                   type="number"
@@ -333,20 +310,21 @@ export const StepLocationLogistics: React.FC<StepLocationLogisticsProps> = ({
                   value={deliveryRadiusMiles}
                   onChange={(e) => onDeliveryRadiusMilesChange(e.target.value)}
                   placeholder="50"
-                  className="pr-14"
+                  className="pr-12 bg-background"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">miles</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">mi</span>
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Delivery Instructions</Label>
+            <Label className="text-xs font-medium text-foreground">Delivery Instructions</Label>
             <Textarea
               value={deliveryInstructions}
               onChange={(e) => onDeliveryInstructionsChange(e.target.value)}
-              placeholder="Any requirements for delivery location? Power hookup needed? Minimum space required?"
+              placeholder="Requirements, space needed, power hookup..."
               rows={2}
+              className="resize-none bg-background"
             />
           </div>
         </div>
