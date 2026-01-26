@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { DollarSign, Sparkles, Loader2, TrendingUp, TrendingDown, Target, Wallet, Info, Zap, Shield } from 'lucide-react';
+import { DollarSign, Sparkles, Loader2, TrendingUp, TrendingDown, Target, Wallet, Info, Zap, Shield, Clock } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,8 @@ interface RentalSuggestions {
   confidence?: 'low' | 'medium' | 'high';
 }
 
+type BookingType = 'daily' | 'hourly' | 'both';
+
 interface StepRentalPricingProps {
   title: string;
   category: string | null;
@@ -31,12 +34,18 @@ interface StepRentalPricingProps {
   location: string;
   priceDaily: string;
   priceWeekly: string;
+  priceHourly: string;
   depositAmount: string;
   instantBook: boolean;
+  hourlyEnabled: boolean;
+  dailyEnabled: boolean;
   onPriceDailyChange: (value: string) => void;
   onPriceWeeklyChange: (value: string) => void;
+  onPriceHourlyChange: (value: string) => void;
   onDepositAmountChange: (value: string) => void;
   onInstantBookChange: (value: boolean) => void;
+  onHourlyEnabledChange: (value: boolean) => void;
+  onDailyEnabledChange: (value: boolean) => void;
 }
 
 export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
@@ -46,27 +55,51 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
   location,
   priceDaily,
   priceWeekly,
+  priceHourly,
   depositAmount,
   instantBook,
+  hourlyEnabled,
+  dailyEnabled,
   onPriceDailyChange,
   onPriceWeeklyChange,
+  onPriceHourlyChange,
   onDepositAmountChange,
   onInstantBookChange,
+  onHourlyEnabledChange,
+  onDailyEnabledChange,
 }) => {
   const { toast } = useToast();
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<RentalSuggestions | null>(null);
 
+  // Derive booking type from enabled flags
+  const bookingType: BookingType = hourlyEnabled && dailyEnabled ? 'both' : hourlyEnabled ? 'hourly' : 'daily';
+
+  const handleBookingTypeChange = (type: BookingType) => {
+    if (type === 'daily') {
+      onDailyEnabledChange(true);
+      onHourlyEnabledChange(false);
+    } else if (type === 'hourly') {
+      onDailyEnabledChange(false);
+      onHourlyEnabledChange(true);
+    } else {
+      onDailyEnabledChange(true);
+      onHourlyEnabledChange(true);
+    }
+  };
+
   // Calculate payout estimates
   const payoutEstimates = useMemo(() => {
     const dailyPrice = parseFloat(priceDaily) || 0;
     const weeklyPrice = parseFloat(priceWeekly) || 0;
+    const hourlyPrice = parseFloat(priceHourly) || 0;
     
     return {
       daily: dailyPrice > 0 ? calculateRentalFees(dailyPrice) : null,
       weekly: weeklyPrice > 0 ? calculateRentalFees(weeklyPrice) : null,
+      hourly: hourlyPrice > 0 ? calculateRentalFees(hourlyPrice) : null,
     };
-  }, [priceDaily, priceWeekly]);
+  }, [priceDaily, priceWeekly, priceHourly]);
 
   const handleGetSuggestions = async () => {
     if (!title || !category) {
@@ -235,49 +268,127 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
         </div>
       )}
 
+      {/* Booking Type Selection */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Clock className="w-5 h-5 text-primary" />
+          <Label className="text-base font-semibold">Booking Type</Label>
+        </div>
+        <RadioGroup
+          value={bookingType}
+          onValueChange={(v) => handleBookingTypeChange(v as BookingType)}
+          className="grid grid-cols-3 gap-3"
+        >
+          <Label
+            htmlFor="daily"
+            className={cn(
+              "flex flex-col items-center gap-1 p-4 rounded-xl border-2 cursor-pointer transition-all",
+              bookingType === 'daily' 
+                ? "border-primary bg-primary/10" 
+                : "border-border hover:border-primary/50"
+            )}
+          >
+            <RadioGroupItem value="daily" id="daily" className="sr-only" />
+            <span className="font-medium">Daily Only</span>
+            <span className="text-xs text-muted-foreground text-center">Full day rentals</span>
+          </Label>
+          <Label
+            htmlFor="hourly"
+            className={cn(
+              "flex flex-col items-center gap-1 p-4 rounded-xl border-2 cursor-pointer transition-all",
+              bookingType === 'hourly' 
+                ? "border-primary bg-primary/10" 
+                : "border-border hover:border-primary/50"
+            )}
+          >
+            <RadioGroupItem value="hourly" id="hourly" className="sr-only" />
+            <span className="font-medium">Hourly Only</span>
+            <span className="text-xs text-muted-foreground text-center">By the hour</span>
+          </Label>
+          <Label
+            htmlFor="both"
+            className={cn(
+              "flex flex-col items-center gap-1 p-4 rounded-xl border-2 cursor-pointer transition-all",
+              bookingType === 'both' 
+                ? "border-primary bg-primary/10" 
+                : "border-border hover:border-primary/50"
+            )}
+          >
+            <RadioGroupItem value="both" id="both" className="sr-only" />
+            <span className="font-medium">Both</span>
+            <span className="text-xs text-muted-foreground text-center">Hourly & Daily</span>
+          </Label>
+        </RadioGroup>
+      </div>
+
       {/* Pricing Inputs */}
       <div className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Hourly Rate - shown when hourly or both */}
+        {(bookingType === 'hourly' || bookingType === 'both') && (
           <div className="space-y-2">
-            <Label htmlFor="price_daily" className="text-base font-semibold">Daily Rate *</Label>
-            <div className="relative">
+            <Label htmlFor="price_hourly" className="text-base font-semibold">Hourly Rate *</Label>
+            <div className="relative max-w-xs">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
               <Input
-                id="price_daily"
+                id="price_hourly"
                 type="number"
                 min="0"
                 step="1"
-                value={priceDaily}
-                onChange={(e) => onPriceDailyChange(e.target.value)}
+                value={priceHourly}
+                onChange={(e) => onPriceHourlyChange(e.target.value)}
                 placeholder="0"
                 className="pl-8 text-xl h-14 font-semibold"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">/day</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">/hour</span>
             </div>
+            <p className="text-xs text-muted-foreground">Set your rate for hourly bookings</p>
           </div>
+        )}
 
-          <div className="space-y-2">
-            <Label htmlFor="price_weekly" className="text-base font-semibold">Weekly Rate</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
-              <Input
-                id="price_weekly"
-                type="number"
-                min="0"
-                step="1"
-                value={priceWeekly}
-                onChange={(e) => onPriceWeeklyChange(e.target.value)}
-                placeholder="0"
-                className="pl-8 text-xl h-14 font-semibold"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">/week</span>
+        {/* Daily & Weekly Rates - shown when daily or both */}
+        {(bookingType === 'daily' || bookingType === 'both') && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="price_daily" className="text-base font-semibold">Daily Rate *</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
+                <Input
+                  id="price_daily"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={priceDaily}
+                  onChange={(e) => onPriceDailyChange(e.target.value)}
+                  placeholder="0"
+                  className="pl-8 text-xl h-14 font-semibold"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">/day</span>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">Offer a discount for weekly rentals</p>
+
+            <div className="space-y-2">
+              <Label htmlFor="price_weekly" className="text-base font-semibold">Weekly Rate</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
+                <Input
+                  id="price_weekly"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={priceWeekly}
+                  onChange={(e) => onPriceWeeklyChange(e.target.value)}
+                  placeholder="0"
+                  className="pl-8 text-xl h-14 font-semibold"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">/week</span>
+              </div>
+              <p className="text-xs text-muted-foreground">Offer a discount for weekly rentals</p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Payout Estimate */}
-        {(payoutEstimates.daily || payoutEstimates.weekly) && (
+        {(payoutEstimates.daily || payoutEstimates.weekly || payoutEstimates.hourly) && (
           <div className="bg-card rounded-xl p-4 border border-border">
             <div className="flex items-start gap-3">
               <div className="p-2.5 bg-muted rounded-xl">
@@ -286,6 +397,19 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
               <div className="flex-1">
                 <h4 className="font-semibold text-foreground mb-2">Your Estimated Payout</h4>
                 <div className="space-y-2">
+                  {payoutEstimates.hourly && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Hourly rental:</span>
+                      <div className="text-right">
+                        <span className="font-bold text-lg text-primary">
+                          {formatCurrency(payoutEstimates.hourly.hostReceives)}
+                        </span>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          ({formatCurrency(payoutEstimates.hourly.hostFee)} fee)
+                        </span>
+                      </div>
+                    </div>
+                  )}
                   {payoutEstimates.daily && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Daily rental:</span>
