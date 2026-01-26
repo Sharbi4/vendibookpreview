@@ -7,13 +7,27 @@ export interface Review {
   id: string;
   booking_id: string;
   listing_id: string;
-  reviewer_id: string;
   host_id: string;
   rating: number;
   review_text: string | null;
   created_at: string;
   updated_at: string;
   reviewer_name?: string;
+  reviewer_avatar_url?: string | null;
+}
+
+// Safe interface that doesn't expose reviewer_id
+interface SafeReviewRow {
+  id: string;
+  booking_id: string;
+  listing_id: string;
+  host_id: string;
+  rating: number;
+  review_text: string | null;
+  created_at: string;
+  updated_at: string;
+  reviewer_display_name: string;
+  reviewer_avatar_url: string | null;
 }
 
 export const useListingReviews = (listingId: string | undefined) => {
@@ -22,26 +36,23 @@ export const useListingReviews = (listingId: string | undefined) => {
     queryFn: async () => {
       if (!listingId) return [];
       
+      // Use the safe RPC function that doesn't expose reviewer_id
       const { data, error } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('listing_id', listingId)
-        .order('created_at', { ascending: false });
+        .rpc('get_listing_reviews_safe', { p_listing_id: listingId });
 
       if (error) throw error;
 
-      // Fetch reviewer names
-      const reviewerIds = [...new Set(data.map(r => r.reviewer_id))];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .in('id', reviewerIds);
-
-      const profileMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
-
-      return data.map(review => ({
-        ...review,
-        reviewer_name: profileMap.get(review.reviewer_id) || 'Anonymous'
+      return (data as SafeReviewRow[]).map(review => ({
+        id: review.id,
+        booking_id: review.booking_id,
+        listing_id: review.listing_id,
+        host_id: review.host_id,
+        rating: review.rating,
+        review_text: review.review_text,
+        created_at: review.created_at,
+        updated_at: review.updated_at,
+        reviewer_name: review.reviewer_display_name || 'Anonymous',
+        reviewer_avatar_url: review.reviewer_avatar_url,
       })) as Review[];
     },
     enabled: !!listingId,

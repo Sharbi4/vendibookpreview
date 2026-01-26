@@ -1731,6 +1731,21 @@ export type Database = {
         Args: { listing_uuid: string }
         Returns: number
       }
+      get_listing_reviews_safe: {
+        Args: { p_listing_id: string }
+        Returns: {
+          booking_id: string
+          created_at: string
+          host_id: string
+          id: string
+          listing_id: string
+          rating: number
+          review_text: string
+          reviewer_avatar_url: string
+          reviewer_display_name: string
+          updated_at: string
+        }[]
+      }
       get_safe_host_profile: {
         Args: { host_user_id: string }
         Returns: {
