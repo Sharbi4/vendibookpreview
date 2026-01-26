@@ -1,4 +1,4 @@
-import { Truck, Zap, FileCheck, Users, Clock, Package, Scale, Ruler } from 'lucide-react';
+import { Truck, Zap, FileCheck, Users, Clock, Package, Scale, Ruler, Check } from 'lucide-react';
 import type { FulfillmentType, ListingCategory } from '@/types/listing';
 
 interface QuickHighlightsProps {
@@ -29,43 +29,48 @@ const QuickHighlights = ({
   heightInches,
   isRental = true,
 }: QuickHighlightsProps) => {
-  const items: { icon: React.ReactNode; text: string }[] = [];
+  const items: { icon: React.ReactNode; title: string; description?: string }[] = [];
 
   // Add fulfillment type based on what's available
   if (fulfillmentType === 'on_site') {
     items.push({
-      icon: <Users className="h-4 w-4" />,
-      text: 'On-site access',
+      icon: <Users className="h-6 w-6" />,
+      title: 'On-site access',
+      description: 'Access the asset at its location',
     });
   }
 
   if (fulfillmentType === 'delivery' || fulfillmentType === 'both') {
     items.push({
-      icon: <Truck className="h-4 w-4" />,
-      text: deliveryFee ? `Delivery available ($${deliveryFee})` : 'Delivery available',
+      icon: <Truck className="h-6 w-6" />,
+      title: 'Delivery available',
+      description: deliveryFee ? `Starting at $${deliveryFee}` : 'We deliver to you',
     });
   }
 
   if (fulfillmentType === 'pickup' || fulfillmentType === 'both') {
     items.push({
-      icon: <Package className="h-4 w-4" />,
-      text: 'Pickup available',
+      icon: <Package className="h-6 w-6" />,
+      title: 'Pickup available',
+      description: 'Pick up at host location',
     });
   }
 
   // Instant book
   if (instantBook) {
     items.push({
-      icon: <Zap className="h-4 w-4" />,
-      text: 'Instant book enabled',
+      icon: <Zap className="h-6 w-6" />,
+      title: 'Instant Book',
+      description: 'Book without waiting for approval',
     });
   }
 
   // Hours of access for static locations
   if ((category === 'ghost_kitchen' || category === 'vendor_lot') && hoursOfAccess) {
     items.push({
-      icon: <Clock className="h-4 w-4" />,
-      text: hoursOfAccess,
+      icon: <Clock className="h-6 w-6" />,
+      title: hoursOfAccess,
+      description: 'Hours of access',
     });
   }
 
@@ -74,36 +79,38 @@ const QuickHighlights = ({
     // Weight
     if (weightLbs) {
       items.push({
-        icon: <Scale className="h-4 w-4" />,
-        text: `${weightLbs.toLocaleString()} lbs`,
+        icon: <Scale className="h-6 w-6" />,
+        title: `${weightLbs.toLocaleString()} lbs`,
+        description: 'Total weight',
       });
     }
 
     // Dimensions (L x W x H)
     if (lengthInches && widthInches && heightInches) {
-      // Convert to feet for readability
       const lengthFt = Math.round(lengthInches / 12);
       const widthFt = Math.round(widthInches / 12);
       const heightFt = Math.round(heightInches / 12);
       items.push({
-        icon: <Ruler className="h-4 w-4" />,
-        text: `${lengthFt}' × ${widthFt}' × ${heightFt}' (L×W×H)`,
+        icon: <Ruler className="h-6 w-6" />,
+        title: `${lengthFt}' × ${widthFt}' × ${heightFt}'`,
+        description: 'Length × Width × Height',
       });
     } else if (lengthInches) {
       const lengthFt = Math.round(lengthInches / 12);
       items.push({
-        icon: <Ruler className="h-4 w-4" />,
-        text: `${lengthFt}' long`,
+        icon: <Ruler className="h-6 w-6" />,
+        title: `${lengthFt}' long`,
+        description: 'Total length',
       });
     }
   }
 
-  // Add first 3 highlights from listing
+  // Add first highlights from listing
   if (highlights && highlights.length > 0) {
-    highlights.slice(0, 3).forEach((highlight) => {
+    highlights.slice(0, isRental ? 3 : 2).forEach((highlight) => {
       items.push({
-        icon: <FileCheck className="h-4 w-4" />,
-        text: highlight,
+        icon: <Check className="h-6 w-6" />,
+        title: highlight,
       });
     });
   }
@@ -114,14 +121,21 @@ const QuickHighlights = ({
   if (displayItems.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
       {displayItems.map((item, idx) => (
         <div
           key={idx}
-          className="flex items-center gap-2 text-sm text-muted-foreground"
+          className="flex items-start gap-4"
         >
-          <span className="text-primary flex-shrink-0">{item.icon}</span>
-          <span className="truncate">{item.text}</span>
+          <div className="flex-shrink-0 text-foreground">
+            {item.icon}
+          </div>
+          <div className="min-w-0">
+            <p className="font-medium text-foreground">{item.title}</p>
+            {item.description && (
+              <p className="text-sm text-muted-foreground">{item.description}</p>
+            )}
+          </div>
         </div>
       ))}
     </div>
