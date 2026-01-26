@@ -12,6 +12,7 @@ import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/compon
 import JsonLd from '@/components/JsonLd';
 import affirmLogo from '@/assets/affirm-logo.png';
 import afterpayLogo from '@/assets/afterpay-logo.jpg';
+import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
 
 // Lazy load below-the-fold components for faster initial load
 const ListingsSections = lazy(() => import('@/components/home/ListingsSections'));
@@ -115,6 +116,8 @@ const Index = () => {
       </main>
 
       <Footer />
+      
+      <NewsletterPopup />
     </div>
   );
 };
