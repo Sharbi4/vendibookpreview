@@ -12,7 +12,7 @@ import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/compon
 import JsonLd from '@/components/JsonLd';
 import affirmLogo from '@/assets/affirm-logo.png';
 import afterpayLogo from '@/assets/afterpay-logo.jpg';
-import { WhiteGlovePopup } from '@/components/kitchen/WhiteGlovePopup';
+
 // Lazy load below-the-fold components for faster initial load
 const ListingsSections = lazy(() => import('@/components/home/ListingsSections'));
 const SupplySection = lazy(() => import('@/components/home/SupplySection'));
@@ -115,9 +115,6 @@ const Index = () => {
       </main>
 
       <Footer />
-      
-      {/* White Glove Service Popup - appears after 15 seconds */}
-      <WhiteGlovePopup delayMs={15000} />
     </div>
   );
 };
