@@ -181,23 +181,15 @@ const ListingDetail = () => {
       <Header />
 
       <main className="flex-1">
-        {/* Back Button */}
-        <div className="container pt-4">
-          <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
-            <Link to="/search">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Link>
-          </Button>
-        </div>
-
-        {/* Photo Gallery - Full width on mobile */}
-        <div className="container py-4">
-          <PhotoGallery images={images} videos={videos} title={listing.title} />
+        {/* Photo Gallery - Full bleed on mobile, contained on desktop */}
+        <div className="md:container md:pt-6">
+          <div className="md:px-0">
+            <PhotoGallery images={images} videos={videos} title={listing.title} />
+          </div>
         </div>
 
         {/* Main Content */}
-        <div className="container pb-24 lg:pb-16">
+        <div className="container pt-6 pb-24 lg:pb-16">
           {/* Owner Banner - Show prominently if owner is viewing */}
           {isOwner && (
             <div className="mb-6">
@@ -205,31 +197,14 @@ const ListingDetail = () => {
             </div>
           )}
 
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
             {/* Left Column - Details */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Title & Key Info - Above the fold */}
-              <div className="space-y-3">
-                {/* Badges */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <CategoryTooltip category={listing.category} side="bottom">
-                    <Badge variant="secondary" className="text-xs cursor-help">
-                      {CATEGORY_LABELS[listing.category]}
-                    </Badge>
-                  </CategoryTooltip>
-                  <Badge variant={isRental ? 'default' : 'outline'} className="text-xs">
-                    For {isRental ? 'Rent' : 'Sale'}
-                  </Badge>
-                  {listing.instant_book && isRental && (
-                    <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
-                      Instant Book
-                    </Badge>
-                  )}
-                </div>
-                
+            <div className="lg:col-span-2 space-y-8">
+              {/* Title Section - Airbnb Style */}
+              <div className="space-y-4">
                 {/* Title */}
-                <div className="flex items-start justify-between gap-3">
-                  <h1 className="text-xl md:text-2xl font-bold text-foreground">
+                <div className="flex items-start justify-between gap-4">
+                  <h1 className="text-2xl md:text-3xl font-semibold text-foreground leading-tight">
                     {listing.title}
                   </h1>
                   {isOwner && (
@@ -241,96 +216,132 @@ const ListingDetail = () => {
                     </Button>
                   )}
                 </div>
-                
-                {/* Location & Rating */}
-                <div className="flex flex-wrap items-center gap-3 text-sm">
-                  {locationShort && (
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <MapPin className="h-4 w-4" />
-                      <span>{locationShort}</span>
-                    </div>
-                  )}
-                  
+
+                {/* Meta Info Row */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                   {ratingData && (
                     <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <Star className="h-4 w-4 fill-foreground text-foreground" />
                       <span className="font-medium">{ratingData.average}</span>
                       <span className="text-muted-foreground">
-                        ({ratingData.count})
+                        ({ratingData.count} review{ratingData.count !== 1 ? 's' : ''})
                       </span>
                     </div>
                   )}
+                  
+                  {ratingData && locationShort && (
+                    <span className="text-muted-foreground">·</span>
+                  )}
+                  
+                  {locationShort && (
+                    <button className="flex items-center gap-1 text-foreground underline underline-offset-2 hover:text-primary transition-colors">
+                      <MapPin className="h-4 w-4" />
+                      <span>{locationShort}</span>
+                    </button>
+                  )}
+                </div>
 
-                  {/* Share & Save buttons - Secondary CTAs */}
-                  <div className="ml-auto flex items-center gap-1">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-muted-foreground gap-1.5"
-                      onClick={handleShare}
-                    >
-                      <Share2 className="h-4 w-4" />
-                      Share
-                    </Button>
-                    <FavoriteButton 
-                      listingId={id!} 
-                      category={listing.category}
-                      size="sm"
-                    />
+                {/* Action Buttons Row */}
+                <div className="flex items-center gap-2 pt-1">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-foreground gap-2 underline underline-offset-2 hover:bg-muted/50 px-2"
+                    onClick={handleShare}
+                  >
+                    <Share2 className="h-4 w-4" />
+                    Share
+                  </Button>
+                  <FavoriteButton 
+                    listingId={id!} 
+                    category={listing.category}
+                    size="sm"
+                    variant="underline"
+                  />
+                  
+                  {/* Badges - More subtle placement */}
+                  <div className="ml-auto flex items-center gap-2">
+                    <CategoryTooltip category={listing.category} side="bottom">
+                      <Badge variant="secondary" className="text-xs cursor-help font-normal">
+                        {CATEGORY_LABELS[listing.category]}
+                      </Badge>
+                    </CategoryTooltip>
+                    <Badge variant={isRental ? 'default' : 'secondary'} className="text-xs font-normal">
+                      For {isRental ? 'Rent' : 'Sale'}
+                    </Badge>
+                    {listing.instant_book && isRental && (
+                      <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200 font-normal">
+                        ⚡ Instant Book
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Section 1: Overview - Quick Highlights */}
-              <div className="p-4 bg-muted/30 rounded-xl">
-                <QuickHighlights
-                  fulfillmentType={listing.fulfillment_type}
-                  category={listing.category}
-                  highlights={listing.highlights}
-                  instantBook={listing.instant_book || false}
-                  deliveryFee={listing.delivery_fee}
-                  hoursOfAccess={listing.hours_of_access}
-                  weightLbs={listing.weight_lbs}
-                  lengthInches={listing.length_inches}
-                  widthInches={listing.width_inches}
-                  heightInches={listing.height_inches}
-                  isRental={isRental}
-                />
-              </div>
+              {/* Divider */}
+              <div className="border-t border-border" />
 
-              {/* Section 2: Description - Collapsed by default */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-2">About</h3>
+              {/* Quick Highlights - Clean grid */}
+              <QuickHighlights
+                fulfillmentType={listing.fulfillment_type}
+                category={listing.category}
+                highlights={listing.highlights}
+                instantBook={listing.instant_book || false}
+                deliveryFee={listing.delivery_fee}
+                hoursOfAccess={listing.hours_of_access}
+                weightLbs={listing.weight_lbs}
+                lengthInches={listing.length_inches}
+                widthInches={listing.width_inches}
+                heightInches={listing.height_inches}
+                isRental={isRental}
+              />
+
+              {/* Divider */}
+              <div className="border-t border-border" />
+
+              {/* About Section */}
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-foreground">About this listing</h2>
                 <CollapsibleDescription description={listing.description} />
               </div>
 
-              {/* Section 2.5: Amenities */}
+              {/* Divider */}
+              <div className="border-t border-border" />
+
+              {/* Amenities / What's Included */}
               {listing.amenities && listing.amenities.length > 0 && (
-                <AmenitiesSection
-                  category={listing.category}
-                  amenities={listing.amenities}
-                />
+                <>
+                  <AmenitiesSection
+                    category={listing.category}
+                    amenities={listing.amenities}
+                  />
+                  <div className="border-t border-border" />
+                </>
               )}
 
-              {/* Section 3: Pricing & Fees */}
-              <div className="p-4 bg-muted/30 rounded-xl">
-                <PricingSection
-                  isRental={isRental}
-                  priceDaily={listing.price_daily}
-                  priceWeekly={listing.price_weekly}
-                  priceSale={listing.price_sale}
-                  deliveryFee={listing.delivery_fee}
-                  fulfillmentType={listing.fulfillment_type}
-                  vendibookFreightEnabled={(listing as any).vendibook_freight_enabled}
-                />
-              </div>
+              {/* Pricing Section */}
+              <PricingSection
+                isRental={isRental}
+                priceDaily={listing.price_daily}
+                priceWeekly={listing.price_weekly}
+                priceSale={listing.price_sale}
+                deliveryFee={listing.delivery_fee}
+                fulfillmentType={listing.fulfillment_type}
+                vendibookFreightEnabled={(listing as any).vendibook_freight_enabled}
+              />
 
-              {/* Section 4: Availability is handled by BookingSummaryCard on desktop and StickyMobileCTA on mobile */}
+              {/* Divider */}
+              <div className="border-t border-border" />
 
-              {/* Section 5: Requirements - Modal Entry Point (Rentals only) */}
-              {isRental && <RequirementsModal listingId={listing.id} />}
+              {/* Requirements - Rentals only */}
+              {isRental && (
+                <>
+                  <RequirementsModal listingId={listing.id} />
+                  <div className="border-t border-border" />
+                </>
+              )}
 
-              {/* Section 5: Host Card */}
+              {/* Host Section */}
               <HostCard
                 hostId={listing.host_id}
                 listingId={listing.id}
@@ -340,16 +351,22 @@ const ListingDetail = () => {
                 memberSince={host?.created_at}
               />
 
-              {/* Section 6: Reviews */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-3">Reviews</h3>
+              {/* Divider */}
+              <div className="border-t border-border" />
+
+              {/* Reviews Section */}
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-foreground">Reviews</h2>
                 <ReviewsSection listingId={listing.id} />
               </div>
 
-              {/* Section 7: Cancellation/Refund Policy (compact) */}
+              {/* Divider */}
+              <div className="border-t border-border" />
+
+              {/* Policies */}
               <CancellationPolicyCard isRental={isRental} />
 
-              {/* Section 8: Trust & Safety - Compact Grid with Modals */}
+              {/* Trust Section */}
               <CompactTrustSection />
             </div>
 

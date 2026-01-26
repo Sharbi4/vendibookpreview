@@ -13,9 +13,18 @@ interface FavoriteButtonProps {
   price?: number;
   className?: string;
   size?: 'sm' | 'default';
+  variant?: 'icon' | 'underline';
 }
 
-export const FavoriteButton = ({ listingId, category, title, price, className, size = 'default' }: FavoriteButtonProps) => {
+export const FavoriteButton = ({ 
+  listingId, 
+  category, 
+  title, 
+  price, 
+  className, 
+  size = 'default',
+  variant = 'icon'
+}: FavoriteButtonProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { isFavorite, toggleFavorite, isToggling } = useFavorites();
@@ -41,6 +50,33 @@ export const FavoriteButton = ({ listingId, category, title, price, className, s
     toggleFavorite(listingId);
   };
 
+  // Underline variant - text style like Airbnb
+  if (variant === 'underline') {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleClick}
+        disabled={isToggling}
+        className={cn(
+          "text-foreground gap-2 underline underline-offset-2 hover:bg-muted/50 px-2",
+          className
+        )}
+      >
+        <Heart 
+          className={cn(
+            "h-4 w-4 transition-all",
+            isFav 
+              ? 'fill-red-500 text-red-500' 
+              : 'text-current'
+          )} 
+        />
+        {isFav ? 'Saved' : 'Save'}
+      </Button>
+    );
+  }
+
+  // Default icon variant
   return (
     <Button
       variant="ghost"
