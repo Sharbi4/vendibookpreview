@@ -14,14 +14,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import PhotoGallery from '@/components/listing-detail/PhotoGallery';
-import BookingSummaryCard from '@/components/listing-detail/BookingSummaryCard';
-import InquiryForm from '@/components/listing-detail/InquiryForm';
-import HostCard from '@/components/listing-detail/HostCard';
+import EnhancedPhotoGallery from '@/components/listing-detail/EnhancedPhotoGallery';
+import EnhancedBookingSummaryCard from '@/components/listing-detail/EnhancedBookingSummaryCard';
+import EnhancedInquiryForm from '@/components/listing-detail/EnhancedInquiryForm';
+import EnhancedHostCard from '@/components/listing-detail/EnhancedHostCard';
 import ReviewsSection from '@/components/reviews/ReviewsSection';
 import RequirementsModal from '@/components/listing-detail/RequirementsModal';
 import CollapsibleDescription from '@/components/listing-detail/CollapsibleDescription';
-import QuickHighlights from '@/components/listing-detail/QuickHighlights';
+import EnhancedQuickHighlights from '@/components/listing-detail/EnhancedQuickHighlights';
 import PricingSection from '@/components/listing-detail/PricingSection';
 import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
 import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
@@ -184,7 +184,7 @@ const ListingDetail = () => {
         {/* Photo Gallery - Full bleed on mobile, contained on desktop */}
         <div className="md:container md:pt-6">
           <div className="md:px-0">
-            <PhotoGallery images={images} videos={videos} title={listing.title} />
+            <EnhancedPhotoGallery images={images} videos={videos} title={listing.title} />
           </div>
         </div>
 
@@ -282,7 +282,7 @@ const ListingDetail = () => {
               <div className="border-t border-border" />
 
               {/* Quick Highlights - Clean grid */}
-              <QuickHighlights
+              <EnhancedQuickHighlights
                 fulfillmentType={listing.fulfillment_type}
                 category={listing.category}
                 highlights={listing.highlights}
@@ -342,7 +342,7 @@ const ListingDetail = () => {
               )}
 
               {/* Host Section */}
-              <HostCard
+              <EnhancedHostCard
                 hostId={listing.host_id}
                 listingId={listing.id}
                 hostName={host ? getPublicDisplayName(host) : null}
@@ -376,7 +376,7 @@ const ListingDetail = () => {
               {isOwner ? (
                 <OwnerBanner listingId={listing.id} variant="card" />
               ) : isRental ? (
-                <BookingSummaryCard
+                <EnhancedBookingSummaryCard
                   listingId={listing.id}
                   listingTitle={listing.title}
                   hostId={listing.host_id}
@@ -388,7 +388,7 @@ const ListingDetail = () => {
                   coverImage={listing.cover_image_url}
                 />
               ) : (
-                <InquiryForm
+                <EnhancedInquiryForm
                   listingId={listing.id}
                   hostId={listing.host_id}
                   listingTitle={listing.title}
