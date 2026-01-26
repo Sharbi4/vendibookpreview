@@ -16,8 +16,8 @@ interface WizardProgressProps {
 const STEP_TIMES: Record<number, number> = {
   1: 1,  // Type
   2: 3,  // Details
-  3: 2,  // Location
-  4: 2,  // Pricing
+  3: 2,  // Pricing
+  4: 2,  // Location
   5: 1,  // Documents
   6: 3,  // Photos
   7: 1,  // Review

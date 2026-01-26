@@ -33,7 +33,7 @@ import { PublishSuccessModal } from './PublishSuccessModal';
 import { StripeConnectBanner } from './StripeConnectBanner';
 import { ListingPreviewModal } from './ListingPreviewModal';
 
-const STEPS = ['Type', 'Details', 'Location', 'Pricing', 'Documents', 'Media', 'Review'];
+const STEPS = ['Type', 'Details', 'Pricing', 'Location', 'Documents', 'Media', 'Review'];
 
 interface PublishedListing {
   id: string;
@@ -844,6 +844,13 @@ export const ListingWizard: React.FC = () => {
         );
       case 3:
         return (
+          <StepPricing
+            formData={formData}
+            updateField={updateField}
+          />
+        );
+      case 4:
+        return (
           <StepLocation
             formData={formData}
             updateField={updateField}
@@ -851,13 +858,6 @@ export const ListingWizard: React.FC = () => {
             isStaticLocation={isStaticLocation}
             isCategoryStaticLocation={isCategoryStaticLocation}
             onToggleStaticLocation={toggleStaticLocation}
-          />
-        );
-      case 4:
-        return (
-          <StepPricing
-            formData={formData}
-            updateField={updateField}
           />
         );
       case 5:

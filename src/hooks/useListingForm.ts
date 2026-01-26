@@ -137,19 +137,19 @@ export const useListingForm = () => {
         // Title required (minimum 5 chars)
         return formData.title.trim().length >= 5 && formData.description.trim().length > 0;
       case 3:
-        // Location required
-        const isStatic = isStaticLocation(formData.category) || formData.is_static_location;
-        if (isStatic) {
-          return formData.address.trim().length > 0 && formData.access_instructions.trim().length > 0;
-        }
-        return !!formData.fulfillment_type && formData.pickup_location_text.trim().length > 0;
-      case 4:
         // Price required, and for sales, at least one payment method
         if (formData.mode === 'sale') {
           const hasPaymentMethod = formData.accept_cash_payment || formData.accept_card_payment;
           return formData.price_sale.trim().length > 0 && parseFloat(formData.price_sale) > 0 && hasPaymentMethod;
         }
         return formData.price_daily.trim().length > 0 && parseFloat(formData.price_daily) > 0;
+      case 4:
+        // Location required
+        const isStatic = isStaticLocation(formData.category) || formData.is_static_location;
+        if (isStatic) {
+          return formData.address.trim().length > 0 && formData.access_instructions.trim().length > 0;
+        }
+        return !!formData.fulfillment_type && formData.pickup_location_text.trim().length > 0;
       case 5:
         // Documents step - always valid (documents are optional)
         return true;
