@@ -33,9 +33,6 @@ const FinalCTA = () => {
         <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
           Whether you're looking for equipment or have assets to list, Vendibook has you covered.
         </p>
-        <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-          Whether you're looking for equipment or have assets to list, Vendibook has you covered.
-        </p>
         
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button variant="dark-shine" size="lg" onClick={() => navigate('/search')} className="px-8 gap-2">
