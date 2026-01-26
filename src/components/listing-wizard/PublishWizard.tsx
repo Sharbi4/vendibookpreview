@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, Sparkles, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle, Shield, Clock, ChevronDown, ChevronUp, GripVertical, Star } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, Sparkles, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle, Shield, Clock, ChevronDown, ChevronUp, GripVertical, Star, Type, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -56,7 +56,7 @@ import {
   SALE_SELLER_FEE_PERCENT,
 } from '@/lib/commissions';
 
-type PublishStep = 'photos' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'stripe' | 'review';
+type PublishStep = 'photos' | 'headline' | 'includes' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'stripe' | 'review';
 
 interface ListingData {
   id: string;
@@ -576,8 +576,8 @@ export const PublishWizard: React.FC = () => {
       const isRentalListing = listing?.mode === 'rent';
       const skipStripeStep = listing?.mode === 'sale' && !acceptCardPayment;
       const baseSteps: PublishStep[] = isRentalListing
-        ? ['photos', 'details', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
-        : ['photos', 'details', 'pricing', 'location', 'stripe', 'review'];
+        ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
+        : ['photos', 'headline', 'includes', 'pricing', 'location', 'stripe', 'review'];
       const steps = skipStripeStep ? baseSteps.filter(s => s !== 'stripe') : baseSteps;
       const currentIndex = steps.indexOf(step);
       if (currentIndex < steps.length - 1) {
@@ -1017,6 +1017,18 @@ export const PublishWizard: React.FC = () => {
           };
         }
         // Allow proceeding without photos (guests can add later after auth)
+      } else if (step === 'headline') {
+        // Save title and description
+        updateData = {
+          title,
+          description,
+        };
+      } else if (step === 'includes') {
+        // Save amenities and highlights
+        updateData = {
+          amenities,
+          highlights,
+        };
       } else if (step === 'pricing') {
         // Helper function to safely parse price values
         const safeParsePrice = (value: string): number | null => {
@@ -1124,8 +1136,8 @@ export const PublishWizard: React.FC = () => {
       const isRentalListing = listing.mode === 'rent';
       const skipStripeStep = listing.mode === 'sale' && !acceptCardPayment;
       const baseSteps: PublishStep[] = isRentalListing
-        ? ['photos', 'details', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
-        : ['photos', 'details', 'pricing', 'location', 'stripe', 'review'];
+        ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
+        : ['photos', 'headline', 'includes', 'pricing', 'location', 'stripe', 'review'];
       const steps = skipStripeStep ? baseSteps.filter(s => s !== 'stripe') : baseSteps;
       const currentIndex = steps.indexOf(step);
       if (currentIndex < steps.length - 1) {
@@ -1641,6 +1653,278 @@ export const PublishWizard: React.FC = () => {
                 </div>
               )}
 
+              {/* Step: Headline & Description */}
+              {step === 'headline' && (
+                <div className="space-y-8">
+                  {/* Page Header */}
+                  <div className="text-center space-y-2">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-2">
+                      <Type className="w-6 h-6 text-primary" />
+                    </div>
+                    <h2 className="text-2xl font-bold">Let's create your listing</h2>
+                    <p className="text-muted-foreground max-w-md mx-auto">
+                      Start with a catchy headline and detailed description that will attract {listing.mode === 'rent' ? 'renters' : 'buyers'}.
+                    </p>
+                  </div>
+
+                  {/* Title Input */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="title" className="text-lg font-semibold">Listing Headline</Label>
+                      <span className={cn(
+                        "text-sm font-medium px-2 py-0.5 rounded-full",
+                        title.length >= MIN_TITLE_LENGTH ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-muted text-muted-foreground"
+                      )}>
+                        {title.length}/80
+                      </span>
+                    </div>
+                    <Input
+                      id="title"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value.slice(0, 80))}
+                      placeholder="e.g., 2022 Fully Equipped Taco Truck - Ready to Roll"
+                      className="text-lg h-14"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      💡 Include key details like year, type, specialty, or unique features.
+                    </p>
+                  </div>
+
+                  {/* Description with AI Builder */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="description" className="text-lg font-semibold">Description</Label>
+                      <div className="flex items-center gap-2">
+                        {showOptimized && originalDescription && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={revertDescription}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <RotateCcw className="w-3 h-3 mr-1" />
+                            Revert
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="relative">
+                      <Textarea
+                        id="description"
+                        value={description}
+                        onChange={(e) => {
+                          setDescription(e.target.value);
+                          if (showOptimized) setShowOptimized(false);
+                        }}
+                        placeholder="Describe your listing in detail. What makes it special? What equipment is included? What's the condition?"
+                        rows={8}
+                        className="resize-none text-base"
+                      />
+                    </div>
+                    
+                    <div className="flex items-start justify-between gap-4">
+                      <p className="text-sm text-muted-foreground">
+                        Be detailed! {listing.mode === 'rent' ? 'Renters' : 'Buyers'} want to know everything about your asset.
+                      </p>
+                      <span className={cn(
+                        "text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap",
+                        description.length >= MIN_DESCRIPTION_LENGTH ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                      )}>
+                        {description.length < MIN_DESCRIPTION_LENGTH ? `${MIN_DESCRIPTION_LENGTH - description.length} more chars needed` : '✓ Good length'}
+                      </span>
+                    </div>
+
+                    {/* AI Optimize Card */}
+                    <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse pointer-events-none" />
+                      <div className="relative flex items-start gap-3">
+                        <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md shrink-0">
+                          <Sparkles className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-foreground mb-1">AI Writing Assistant</h4>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            Let AI polish your description into professional, engaging copy.
+                          </p>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={optimizeDescription}
+                            disabled={isOptimizing || !description || description.length < 10}
+                            className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
+                          >
+                            {isOptimizing ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Optimizing...
+                              </>
+                            ) : showOptimized ? (
+                              <>
+                                <Check className="w-4 h-4 mr-2" />
+                                Optimized!
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="w-4 h-4 mr-2" />
+                                Optimize with AI
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => setStep('photos')}>Back</Button>
+                    <Button 
+                      onClick={saveStep} 
+                      disabled={isSaving || title.trim().length < MIN_TITLE_LENGTH || description.trim().length < MIN_DESCRIPTION_LENGTH}
+                    >
+                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      Continue
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step: What's Included & Key Highlights */}
+              {step === 'includes' && (
+                <div className="space-y-8">
+                  {/* Page Header */}
+                  <div className="text-center space-y-2">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-2">
+                      <ListChecks className="w-6 h-6 text-primary" />
+                    </div>
+                    <h2 className="text-2xl font-bold">What's Included?</h2>
+                    <p className="text-muted-foreground max-w-md mx-auto">
+                      Select features and add highlights to showcase what makes your listing special.
+                    </p>
+                  </div>
+
+                  {/* Amenities - Category specific */}
+                  {categoryAmenities.length > 0 && (
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-lg font-semibold">Features & Amenities</Label>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Select all that apply to your {CATEGORY_LABELS[listing.category].toLowerCase()}.
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-6">
+                        {categoryAmenities.map((group) => (
+                          <div key={group.label} className="space-y-3">
+                            <h4 className="text-sm font-medium text-muted-foreground">{group.label}</h4>
+                            <div className="grid grid-cols-2 gap-3">
+                              {group.items.map((item) => (
+                                <label
+                                  key={item.id}
+                                  className={cn(
+                                    "flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all",
+                                    amenities.includes(item.id)
+                                      ? "border-primary bg-primary/5"
+                                      : "border-border hover:border-primary/50 hover:bg-muted/50"
+                                  )}
+                                >
+                                  <Checkbox
+                                    checked={amenities.includes(item.id)}
+                                    onCheckedChange={() => toggleAmenity(item.id)}
+                                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                  />
+                                  <span className="text-sm font-medium">{item.label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {amenities.length > 0 && (
+                        <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-xl">
+                          <Check className="w-4 h-4 text-primary" />
+                          <span className="text-sm font-medium text-primary">
+                            {amenities.length} feature{amenities.length !== 1 ? 's' : ''} selected
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Key Highlights */}
+                  <div className="space-y-4 pt-6 border-t">
+                    <div>
+                      <Label className="text-lg font-semibold">Key Highlights</Label>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Add up to 6 bullet points to showcase the best features. These appear prominently on your listing.
+                      </p>
+                    </div>
+                    
+                    {highlights.length > 0 && (
+                      <ul className="space-y-2">
+                        {highlights.map((highlight, index) => (
+                          <li
+                            key={index}
+                            className="flex items-center gap-3 p-3 bg-muted rounded-xl"
+                          >
+                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                              <Check className="w-3.5 h-3.5 text-primary" />
+                            </div>
+                            <span className="flex-1 text-sm">{highlight}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeHighlight(index)}
+                              className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {highlights.length < 6 && (
+                      <div className="flex gap-2">
+                        <Input
+                          value={newHighlight}
+                          onChange={(e) => setNewHighlight(e.target.value)}
+                          onKeyDown={handleHighlightKeyDown}
+                          placeholder="e.g., Brand new refrigeration system"
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={addHighlight}
+                          disabled={!newHighlight.trim()}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {highlights.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        💡 Tip: Highlights like "Recently inspected" or "Low mileage" can increase interest.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => setStep('headline')}>Back</Button>
+                    <Button onClick={saveStep} disabled={isSaving}>
+                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      Continue
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Step: Pricing */}
               {step === 'pricing' && (
                 <div className="space-y-6">
@@ -2133,7 +2417,7 @@ export const PublishWizard: React.FC = () => {
                   )}
 
                   <div className="flex gap-3 pt-4">
-                    <Button variant="outline" onClick={() => setStep('details')}>Back</Button>
+                    <Button variant="outline" onClick={() => setStep('includes')}>Back</Button>
                     <Button 
                       onClick={saveStep} 
                       disabled={isSaving || (listing.mode === 'sale' ? (!isValidPrice(priceSale) || (!acceptCardPayment && !acceptCashPayment)) : !isValidPrice(priceDaily))}
