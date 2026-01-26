@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Search, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import trailerPink from '@/assets/trailer-pink.jpg';
-import trailerRico from '@/assets/trailer-rico.jpg';
-import foodTruckCoffee from '@/assets/food-truck-coffee.jpg';
+// Final CTA uses colorful exterior shots
+import trailerPinkVintage from '@/assets/trailer-pink-vintage.jpg';
+import trailerOrangeGrill from '@/assets/trailer-orange-grill.jpg';
+import trailerCreamParty from '@/assets/trailer-cream-party.jpg';
 
 const FinalCTA = () => {
   const navigate = useNavigate();
@@ -12,13 +13,13 @@ const FinalCTA = () => {
       {/* Background image gallery - decorative */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-0 left-0 w-1/3 h-full">
-          <img src={trailerPink} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+          <img src={trailerPinkVintage} alt="" className="w-full h-full object-cover" aria-hidden="true" />
         </div>
         <div className="absolute top-0 left-1/3 w-1/3 h-full">
-          <img src={foodTruckCoffee} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+          <img src={trailerOrangeGrill} alt="" className="w-full h-full object-cover" aria-hidden="true" />
         </div>
         <div className="absolute top-0 right-0 w-1/3 h-full">
-          <img src={trailerRico} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+          <img src={trailerCreamParty} alt="" className="w-full h-full object-cover" aria-hidden="true" />
         </div>
       </div>
       

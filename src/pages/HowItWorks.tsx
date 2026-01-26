@@ -23,13 +23,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { AnimatedSection, AnimatedCard } from '@/components/ui/animated';
 
-// Food truck gallery images
-import foodTruckPopcorn from '@/assets/food-truck-popcorn.jpg';
+// How It Works page uses interior/professional shots
+import trailerInteriorCeiling from '@/assets/trailer-interior-ceiling.jpg';
+import trailerInteriorFloor from '@/assets/trailer-interior-floor.jpg';
+import vendorRedStand from '@/assets/vendor-red-stand.jpg';
 import foodTruckGrilledCheese from '@/assets/food-truck-grilled-cheese.jpg';
-import foodTruckCoffee from '@/assets/food-truck-coffee.jpg';
 import trailerBlack from '@/assets/trailer-black.jpg';
 import trailerWhite from '@/assets/trailer-white.jpg';
-import trailerPinkBlue from '@/assets/trailer-pink-blue.jpg';
 
 const testimonials = [
   {
@@ -67,9 +67,9 @@ const HowItWorks = () => {
           {/* Background image collage */}
           <div className="absolute inset-0 opacity-5">
             <div className="grid grid-cols-3 h-full">
-              <img src={foodTruckPopcorn} alt="" className="w-full h-full object-cover" aria-hidden="true" />
-              <img src={trailerPinkBlue} alt="" className="w-full h-full object-cover" aria-hidden="true" />
-              <img src={foodTruckCoffee} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src={trailerInteriorCeiling} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src={trailerInteriorFloor} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src={vendorRedStand} alt="" className="w-full h-full object-cover" aria-hidden="true" />
             </div>
           </div>
           
@@ -116,12 +116,12 @@ const HowItWorks = () => {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               {[
-                { src: foodTruckPopcorn, alt: 'Popcorn food truck' },
+                { src: trailerInteriorCeiling, alt: 'Food trailer interior ceiling' },
                 { src: foodTruckGrilledCheese, alt: 'Grilled cheese food truck' },
-                { src: foodTruckCoffee, alt: 'Coffee food truck' },
+                { src: vendorRedStand, alt: 'Red vendor stand' },
                 { src: trailerBlack, alt: 'Black food trailer' },
                 { src: trailerWhite, alt: 'White food trailer' },
-                { src: trailerPinkBlue, alt: 'Pink and blue food trailer' },
+                { src: trailerInteriorFloor, alt: 'Food trailer interior floor' },
               ].map((img, index) => (
                 <motion.div
                   key={index}

@@ -26,10 +26,10 @@ import { ASSET_TYPES } from '@/data/cityData';
 import { trackEvent } from '@/lib/analytics';
 import { CategoryGuide } from '@/components/categories/CategoryGuide';
 
-// Food truck images for background
-import trailerBlack from '@/assets/trailer-black.jpg';
-import trailerWhite from '@/assets/trailer-white.jpg';
-import foodTruckGrilledCheese from '@/assets/food-truck-grilled-cheese.jpg';
+// City pages use diverse commercial trailers
+import trailerStealthSilver from '@/assets/trailer-stealth-silver.jpg';
+import trailerWeddingFlowers from '@/assets/trailer-wedding-flowers.jpg';
+import vendorRedStand from '@/assets/vendor-red-stand.jpg';
 
 interface CitySupplyPageProps {
   city: CityData;
@@ -90,9 +90,9 @@ export function CitySupplyPage({ city, assetType }: CitySupplyPageProps) {
           {/* Background image collage */}
           <div className="absolute inset-0 opacity-5">
             <div className="grid grid-cols-3 h-full">
-              <img src={trailerBlack} alt="" className="w-full h-full object-cover" aria-hidden="true" />
-              <img src={foodTruckGrilledCheese} alt="" className="w-full h-full object-cover" aria-hidden="true" />
-              <img src={trailerWhite} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src={trailerStealthSilver} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src={trailerWeddingFlowers} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src={vendorRedStand} alt="" className="w-full h-full object-cover" aria-hidden="true" />
             </div>
           </div>
           <div className="container mx-auto px-4 relative z-10">
