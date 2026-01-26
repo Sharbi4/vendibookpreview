@@ -1,19 +1,9 @@
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { 
-  ArrowLeft, MapPin, Star, Loader2, ShieldCheck, Building2, Clock, 
-  MessageCircle, MoreHorizontal, Share2, Flag, ShieldAlert, Calendar,
-  Eye
+  ArrowLeft, Loader2, ShieldCheck, MessageCircle, Flag, ShieldAlert, Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogContent,
@@ -23,8 +13,9 @@ import {
 } from '@/components/ui/dialog';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import ProfileListingsTab from '@/components/profile/ProfileListingsTab';
-import ProfileReviewsTab from '@/components/profile/ProfileReviewsTab';
+import EnhancedPublicProfileHeader from '@/components/profile/EnhancedPublicProfileHeader';
+import EnhancedPublicProfileStats from '@/components/profile/EnhancedPublicProfileStats';
+import EnhancedPublicProfileTabs from '@/components/profile/EnhancedPublicProfileTabs';
 import SEO from '@/components/SEO';
 import { 
   useUserStats, 
@@ -41,7 +32,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useConversations } from '@/hooks/useConversations';
 import { useState, useRef, useEffect } from 'react';
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
-import { getPublicDisplayName, getDisplayInitials } from '@/lib/displayName';
+import { getPublicDisplayName } from '@/lib/displayName';
 // Type for public profile data
 interface PublicProfileData {
   id: string;
@@ -156,7 +147,6 @@ const PublicProfile = () => {
 
   // Display name logic - use public display name utility
   const displayName = profile ? getPublicDisplayName(profile) : 'User';
-  const initials = profile ? getDisplayInitials(profile) : '?';
 
   // Derive service area from listings if not set in profile
   const serviceArea = (() => {
@@ -331,232 +321,65 @@ const PublicProfile = () => {
       <Header />
 
       <main className="flex-1 pb-20 md:pb-0">
-        {/* Section 1: Header with Desktop CTA */}
-        <div className="border-b border-border bg-card">
-          <div className="container py-4 md:py-5">
-            <div className="flex flex-col md:flex-row md:items-start gap-3 md:gap-5">
-              {/* Left: Profile Info */}
-              <div className="flex items-start gap-3 flex-1 min-w-0">
-                {/* Avatar */}
-                <div className="relative flex-shrink-0">
-                  <Avatar className="h-14 w-14 md:h-16 md:w-16 border-2 border-border rounded-xl">
-                    <AvatarImage src={profile.avatar_url || undefined} alt={displayName} className="rounded-xl" />
-                    <AvatarFallback className="text-lg font-semibold bg-primary text-primary-foreground rounded-xl">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  {profile.identity_verified && (
-                    <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-0.5 border border-border">
-                      <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                    </div>
-                  )}
-                </div>
+        {/* Enhanced Animated Header */}
+        <EnhancedPublicProfileHeader
+          profile={profile}
+          stats={stats}
+          isOwnProfile={isOwnProfile}
+          serviceArea={serviceArea}
+          responseTime={responseTimeData?.avgResponseTime}
+          completedBookings={completedBookings || 0}
+          isHost={isHost}
+          onMessageHost={handleMessageHost}
+          onShare={handleShare}
+          onReport={handleReport}
+          onShowSafety={() => setShowSafetyModal(true)}
+          onViewListings={handleViewListingsClick}
+          isMessaging={isMessaging}
+          listingContext={listingContext}
+        />
 
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <h1 className="text-base md:text-lg font-semibold text-foreground truncate leading-tight">
-                        {displayName}
-                      </h1>
-                      {profile.business_name && (
-                        <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                          <Building2 className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">{profile.business_name}</span>
-                        </p>
-                      )}
-                      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3 flex-shrink-0" />
-                        <span>{serviceArea || 'Service area not set'}</span>
-                      </p>
-                    </div>
+        {/* Content Section */}
+        <motion.div 
+          className="container py-6 space-y-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          {/* Stats Row */}
+          <EnhancedPublicProfileStats
+            stats={stats}
+            completedBookings={completedBookings || 0}
+            responseTime={responseTimeData?.avgResponseTime}
+            isHost={isHost}
+          />
+        </motion.div>
 
-                    {/* Overflow Menu - Mobile only */}
-                    <div className="md:hidden">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 -mr-1.5 -mt-0.5">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40 rounded-lg">
-                          <DropdownMenuItem onClick={handleShare} className="text-sm">
-                            <Share2 className="h-4 w-4 mr-2" />
-                            Share
-                          </DropdownMenuItem>
-                          {!isOwnProfile && (
-                            <DropdownMenuItem onClick={handleReport} className="text-sm">
-                              <Flag className="h-4 w-4 mr-2" />
-                              Report
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem onClick={() => setShowSafetyModal(true)} className="text-sm">
-                            <ShieldAlert className="h-4 w-4 mr-2" />
-                            Safety tips
-                          </DropdownMenuItem>
-                          {isOwnProfile && (
-                            <DropdownMenuItem onClick={() => navigate('/account')} className="text-sm">
-                              <Eye className="h-4 w-4 mr-2" />
-                              Edit profile
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-
-                  {/* Trust Pills - Unified styling */}
-                  <div className="flex flex-wrap gap-1 mt-1.5">
-                    {profile.identity_verified ? (
-                      <Badge variant="outline" className="text-[10px] h-[18px] px-1.5 rounded-md border-primary/30 text-primary bg-primary/5">
-                        <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />
-                        Verified
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-[10px] h-[18px] px-1.5 rounded-md border-border text-muted-foreground">
-                        Not verified
-                      </Badge>
-                    )}
-                    {responseTimeData?.avgResponseTime && (
-                      <Badge variant="outline" className="text-[10px] h-[18px] px-1.5 rounded-md border-border text-foreground">
-                        <Clock className="h-2.5 w-2.5 mr-0.5" />
-                        ~{responseTimeData.avgResponseTime}
-                      </Badge>
-                    )}
-                    {(completedBookings || 0) > 0 && (
-                      <Badge variant="outline" className="text-[10px] h-[18px] px-1.5 rounded-md border-border text-foreground">
-                        <Calendar className="h-2.5 w-2.5 mr-0.5" />
-                        {completedBookings} booked
-                      </Badge>
-                    )}
-                    {stats?.averageRating && (
-                      <Badge variant="outline" className="text-[10px] h-[18px] px-1.5 rounded-md border-border text-foreground">
-                        <Star className="h-2.5 w-2.5 mr-0.5 fill-primary text-primary" />
-                        {stats.averageRating.toFixed(1)} ({stats.totalReviewsReceived})
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Member since */}
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    Member since {memberSinceText}
-                  </p>
-                </div>
-              </div>
-
-              {/* Right: Desktop CTA Block */}
-              <div className="hidden md:flex flex-col items-end gap-2 flex-shrink-0">
-                {/* Overflow Menu */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40 rounded-lg">
-                    <DropdownMenuItem onClick={handleShare} className="text-sm">
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Share
-                    </DropdownMenuItem>
-                    {!isOwnProfile && (
-                      <DropdownMenuItem onClick={handleReport} className="text-sm">
-                        <Flag className="h-4 w-4 mr-2" />
-                        Report
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem onClick={() => setShowSafetyModal(true)} className="text-sm">
-                      <ShieldAlert className="h-4 w-4 mr-2" />
-                      Safety tips
-                    </DropdownMenuItem>
-                    {isOwnProfile && (
-                      <DropdownMenuItem onClick={() => navigate('/account')} className="text-sm">
-                        <Eye className="h-4 w-4 mr-2" />
-                        Edit profile
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                {/* CTA Buttons */}
-                {!isOwnProfile && isHost && (
-                  <div className="flex flex-col gap-1.5 w-44">
-                    <Button onClick={handleMessageHost} disabled={isMessaging} size="sm" className="w-full rounded-lg">
-                      {isMessaging ? (
-                        <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-                      ) : (
-                        <MessageCircle className="h-4 w-4 mr-1.5" />
-                      )}
-                      {listingContext ? 'Message about listing' : 'Message Host'}
-                    </Button>
-                    <Button variant="outline" onClick={handleViewListingsClick} size="sm" className="w-full rounded-lg">
-                      View Listings ({stats?.totalListings || 0})
-                    </Button>
-                  </div>
-                )}
-
-                {isOwnProfile && (
-                  <Button variant="outline" size="sm" asChild className="rounded-lg">
-                    <Link to="/account">Edit profile</Link>
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Section 3 & 4: Listings & Reviews Tabs */}
-        <div ref={listingsRef} className="container py-4">
-          <Tabs defaultValue="listings" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted p-0.5 rounded-lg h-9">
-              <TabsTrigger value="listings" className="gap-1 text-xs font-medium rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <MapPin className="h-3.5 w-3.5" />
-                Listings
-                {(stats?.totalListings || 0) > 0 && (
-                  <span className="text-[10px] text-muted-foreground ml-0.5">({stats?.totalListings})</span>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="reviews" className="gap-1 text-xs font-medium rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <Star className="h-3.5 w-3.5" />
-                Reviews
-                {(stats?.totalReviewsReceived || 0) > 0 && (
-                  <span className="text-[10px] text-muted-foreground ml-0.5">({stats?.totalReviewsReceived})</span>
-                )}
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="listings" className="mt-0">
-              <ProfileListingsTab
-                listings={listings as Listing[] | undefined}
-                isLoading={listingsLoading}
-                isOwnProfile={isOwnProfile}
-                hostVerified={profile.identity_verified || false}
-                hostId={actualUserId}
-                onListingClick={(listingId) => {
-                  trackEventToDb('listing_card_click', 'engagement', { 
-                    listing_id: listingId,
-                    host_id: actualUserId,
-                    source: 'profile' 
-                  });
-                }}
-              />
-            </TabsContent>
-
-            <TabsContent value="reviews" className="mt-0">
-              <ProfileReviewsTab
-                reviewsReceived={reviewsReceived}
-                reviewsGiven={reviewsGiven}
-                isLoadingReceived={reviewsReceivedLoading}
-                isLoadingGiven={reviewsGivenLoading}
-                isOwnProfile={isOwnProfile}
-                isHost={isHost}
-                responseTime={responseTimeData?.avgResponseTime}
-                listingsCount={stats?.totalListings || 0}
-                onMessageHost={handleMessageHost}
-                onViewListings={handleViewListingsClick}
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
+        {/* Enhanced Tabs */}
+        <EnhancedPublicProfileTabs
+          ref={listingsRef}
+          listings={listings as Listing[] | undefined}
+          listingsLoading={listingsLoading}
+          reviewsReceived={reviewsReceived}
+          reviewsGiven={reviewsGiven}
+          reviewsReceivedLoading={reviewsReceivedLoading}
+          reviewsGivenLoading={reviewsGivenLoading}
+          isOwnProfile={isOwnProfile}
+          hostVerified={profile.identity_verified || false}
+          isHost={isHost}
+          hostId={actualUserId}
+          stats={stats}
+          responseTime={responseTimeData?.avgResponseTime}
+          onListingClick={(listingId) => {
+            trackEventToDb('listing_card_click', 'engagement', { 
+              listing_id: listingId,
+              host_id: actualUserId,
+              source: 'profile' 
+            });
+          }}
+          onMessageHost={handleMessageHost}
+          onViewListings={handleViewListingsClick}
+        />
       </main>
 
       {/* Section 2: Mobile Sticky CTA */}
