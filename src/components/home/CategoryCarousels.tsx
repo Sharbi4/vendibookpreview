@@ -96,14 +96,9 @@ const CategoryCarousel = ({ config, listings, hostVerificationMap, isLoading }: 
     <div className="mb-12">
       {/* Category Header */}
       <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-foreground via-foreground to-foreground/80 flex items-center justify-center shadow-lg shadow-foreground/20">
-            {config.icon}
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold text-foreground">{config.title}</h3>
-            <p className="text-sm text-muted-foreground">{config.description}</p>
-          </div>
+        <div>
+          <h3 className="text-xl font-semibold text-foreground">{config.title}</h3>
+          <p className="text-sm text-muted-foreground">{config.description}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button

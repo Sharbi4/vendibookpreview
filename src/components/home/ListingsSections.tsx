@@ -95,16 +95,11 @@ const ListingsSections = () => {
         {saleListings.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 via-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                  <DollarSign className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-foreground">Featured For Sale</h2>
-                  <span className="text-sm text-muted-foreground">
-                    {allListings.filter(l => l.mode === 'sale').length} listings available
-                  </span>
-                </div>
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Featured For Sale</h2>
+                <span className="text-sm text-muted-foreground">
+                  {allListings.filter(l => l.mode === 'sale').length} listings available
+                </span>
               </div>
               <Button 
                 variant="ghost" 
@@ -133,16 +128,11 @@ const ListingsSections = () => {
         {rentListings.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-foreground via-foreground to-foreground/80 flex items-center justify-center shadow-lg shadow-foreground/20">
-                  <Key className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-foreground">Featured For Rent</h2>
-                  <span className="text-sm text-muted-foreground">
-                    {allListings.filter(l => l.mode === 'rent').length} listings available
-                  </span>
-                </div>
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Featured For Rent</h2>
+                <span className="text-sm text-muted-foreground">
+                  {allListings.filter(l => l.mode === 'rent').length} listings available
+                </span>
               </div>
               <Button 
                 variant="ghost" 
