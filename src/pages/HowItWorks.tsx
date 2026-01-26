@@ -26,7 +26,7 @@ import { AnimatedSection, AnimatedCard } from '@/components/ui/animated';
 // How It Works page uses interior/professional shots
 import trailerInteriorCeiling from '@/assets/trailer-interior-ceiling.jpg';
 import trailerInteriorFloor from '@/assets/trailer-interior-floor.jpg';
-import vendorRedStand from '@/assets/vendor-red-stand.jpg';
+import trailerCafecito from '@/assets/trailer-cafecito.jpg';
 import foodTruckGrilledCheese from '@/assets/food-truck-grilled-cheese.jpg';
 import trailerBlack from '@/assets/trailer-black.jpg';
 import trailerWhite from '@/assets/trailer-white.jpg';
@@ -69,7 +69,7 @@ const HowItWorks = () => {
             <div className="grid grid-cols-3 h-full">
               <img src={trailerInteriorCeiling} alt="" className="w-full h-full object-cover" aria-hidden="true" />
               <img src={trailerInteriorFloor} alt="" className="w-full h-full object-cover" aria-hidden="true" />
-              <img src={vendorRedStand} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src={trailerCafecito} alt="" className="w-full h-full object-cover" aria-hidden="true" />
             </div>
           </div>
           
@@ -118,7 +118,7 @@ const HowItWorks = () => {
               {[
                 { src: trailerInteriorCeiling, alt: 'Food trailer interior ceiling' },
                 { src: foodTruckGrilledCheese, alt: 'Grilled cheese food truck' },
-                { src: vendorRedStand, alt: 'Red vendor stand' },
+                { src: trailerCafecito, alt: 'Coffee trailer' },
                 { src: trailerBlack, alt: 'Black food trailer' },
                 { src: trailerWhite, alt: 'White food trailer' },
                 { src: trailerInteriorFloor, alt: 'Food trailer interior floor' },
