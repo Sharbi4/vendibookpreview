@@ -576,8 +576,8 @@ export const PublishWizard: React.FC = () => {
       const isRentalListing = listing?.mode === 'rent';
       const skipStripeStep = listing?.mode === 'sale' && !acceptCardPayment;
       const baseSteps: PublishStep[] = isRentalListing
-        ? ['photos', 'pricing', 'availability', 'details', 'location', 'documents', 'stripe', 'review']
-        : ['photos', 'pricing', 'details', 'location', 'stripe', 'review'];
+        ? ['photos', 'details', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
+        : ['photos', 'details', 'pricing', 'location', 'stripe', 'review'];
       const steps = skipStripeStep ? baseSteps.filter(s => s !== 'stripe') : baseSteps;
       const currentIndex = steps.indexOf(step);
       if (currentIndex < steps.length - 1) {
@@ -1124,8 +1124,8 @@ export const PublishWizard: React.FC = () => {
       const isRentalListing = listing.mode === 'rent';
       const skipStripeStep = listing.mode === 'sale' && !acceptCardPayment;
       const baseSteps: PublishStep[] = isRentalListing
-        ? ['photos', 'pricing', 'availability', 'details', 'location', 'documents', 'stripe', 'review']
-        : ['photos', 'pricing', 'details', 'location', 'stripe', 'review'];
+        ? ['photos', 'details', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
+        : ['photos', 'details', 'pricing', 'location', 'stripe', 'review'];
       const steps = skipStripeStep ? baseSteps.filter(s => s !== 'stripe') : baseSteps;
       const currentIndex = steps.indexOf(step);
       if (currentIndex < steps.length - 1) {
@@ -2133,7 +2133,7 @@ export const PublishWizard: React.FC = () => {
                   )}
 
                   <div className="flex gap-3 pt-4">
-                    <Button variant="outline" onClick={() => setStep('photos')}>Back</Button>
+                    <Button variant="outline" onClick={() => setStep('details')}>Back</Button>
                     <Button 
                       onClick={saveStep} 
                       disabled={isSaving || (listing.mode === 'sale' ? (!isValidPrice(priceSale) || (!acceptCardPayment && !acceptCashPayment)) : !isValidPrice(priceDaily))}
@@ -2524,7 +2524,7 @@ export const PublishWizard: React.FC = () => {
 
                   <div className="flex flex-col gap-3">
                     <div className="flex gap-3">
-                      <Button variant="outline" onClick={() => setStep(listing.mode === 'rent' ? 'availability' : 'pricing')}>Back</Button>
+                      <Button variant="outline" onClick={() => setStep('photos')}>Back</Button>
                       <Button onClick={handleDetailsSave} disabled={isSaving || !title || !description}>
                         {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                         {!user && isGuestDraft ? 'Save & Continue' : 'Continue'}
@@ -2794,7 +2794,7 @@ export const PublishWizard: React.FC = () => {
                   )}
 
                   <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setStep('details')}>Back</Button>
+                    <Button variant="outline" onClick={() => setStep(listing.mode === 'rent' ? 'availability' : 'pricing')}>Back</Button>
                     <Button 
                       onClick={saveStep} 
                       disabled={isSaving || (
