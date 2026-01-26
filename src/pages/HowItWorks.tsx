@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
+import { lazy, Suspense, useMemo } from 'react';
 import {
   ShieldCheck,
   CreditCard,
@@ -14,6 +15,11 @@ import {
   Package,
   Star,
   Quote,
+  Clock,
+  Users,
+  Zap,
+  HelpCircle,
+  ChevronDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/layout/Header';
@@ -22,8 +28,15 @@ import SEO from '@/components/SEO';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { AnimatedSection, AnimatedCard } from '@/components/ui/animated';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { Skeleton } from '@/components/ui/skeleton';
 
-// How It Works page uses interior/professional shots
+// How It Works page uses interior/professional shots - lazy load for performance
 import trailerInteriorCeiling from '@/assets/trailer-interior-ceiling.jpg';
 import trailerInteriorFloor from '@/assets/trailer-interior-floor.jpg';
 import trailerCafecito from '@/assets/trailer-cafecito.jpg';
@@ -37,22 +50,67 @@ const testimonials = [
     role: "Food Truck Owner",
     location: "Atlanta, GA",
     text: "Sold my trailer in 2 weeks. The buyer financing made it easy for them to pay.",
+    rating: 5,
   },
   {
     name: "Sarah C.",
     role: "Kitchen Host",
     location: "Houston, TX",
     text: "Love that Vendibook verifies all my renters. No more chasing documents myself.",
+    rating: 5,
   },
   {
     name: "David W.",
     role: "Lot Owner",
     location: "Miami, FL",
     text: "Passive income from my parking lot. Setup took 10 minutes.",
+    rating: 5,
   },
 ];
 
+const faqs = [
+  {
+    question: "How much does it cost to list?",
+    answer: "Creating a listing is completely free. We only charge a small platform fee when you make a sale or complete a rental booking.",
+  },
+  {
+    question: "How long does it take to get verified?",
+    answer: "Identity verification typically takes just 2-3 minutes using our Stripe-powered verification system. You'll need a valid government ID.",
+  },
+  {
+    question: "How do payments work?",
+    answer: "For sales, buyers can pay with card, Affirm, or Afterpay. For rentals, payments are held securely until 24 hours after booking ends, then released to you.",
+  },
+  {
+    question: "Can I offer delivery or shipping?",
+    answer: "Yes! You can offer local delivery, pickup only, or use VendiBook Freight for nationwide shipping to the 48 contiguous states.",
+  },
+  {
+    question: "What documents do renters need?",
+    answer: "You choose the requirements: business licenses, insurance certificates, health permits, and more. We collect and verify them before approval.",
+  },
+];
+
+const stats = [
+  { value: "500+", label: "Active Listings", icon: Truck },
+  { value: "48", label: "States Covered", icon: MapPin },
+  { value: "<24h", label: "Avg. Response Time", icon: Clock },
+  { value: "100%", label: "Verified Users", icon: ShieldCheck },
+];
+
 const HowItWorks = () => {
+  const shouldReduceMotion = useReducedMotion();
+  
+  // Memoize static content for performance
+  const galleryImages = useMemo(() => [
+    { src: trailerInteriorCeiling, alt: 'Food trailer interior ceiling' },
+    { src: foodTruckGrilledCheese, alt: 'Grilled cheese food truck' },
+    { src: trailerCafecito, alt: 'Coffee trailer' },
+    { src: trailerBlack, alt: 'Black food trailer' },
+    { src: trailerWhite, alt: 'White food trailer' },
+    { src: trailerInteriorFloor, alt: 'Food trailer interior floor' },
+  ], []);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
@@ -63,79 +121,156 @@ const HowItWorks = () => {
 
       <main className="flex-1">
         {/* ==================== HERO ==================== */}
-        <section className="py-16 md:py-20 bg-muted/30 relative overflow-hidden">
-          {/* Background image collage */}
-          <div className="absolute inset-0 opacity-5">
+        <section className="py-16 md:py-24 bg-gradient-to-b from-muted/50 to-background relative overflow-hidden">
+          {/* Animated background pattern */}
+          <div className="absolute inset-0 opacity-[0.03]">
             <div className="grid grid-cols-3 h-full">
-              <img src={trailerInteriorCeiling} alt="" className="w-full h-full object-cover" aria-hidden="true" />
-              <img src={trailerInteriorFloor} alt="" className="w-full h-full object-cover" aria-hidden="true" />
-              <img src={trailerCafecito} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src={trailerInteriorCeiling} alt="" className="w-full h-full object-cover" aria-hidden="true" loading="eager" />
+              <img src={trailerInteriorFloor} alt="" className="w-full h-full object-cover" aria-hidden="true" loading="eager" />
+              <img src={trailerCafecito} alt="" className="w-full h-full object-cover" aria-hidden="true" loading="eager" />
             </div>
           </div>
           
+          {/* Decorative gradient orbs */}
+          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" aria-hidden="true" />
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" aria-hidden="true" />
+          
           <div className="container relative z-10">
-            <div className="max-w-2xl mx-auto text-center">
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <motion.div 
+              className="max-w-3xl mx-auto text-center"
+              initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              {/* Eyebrow badge */}
+              <motion.div
+                initial={shouldReduceMotion ? {} : { opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+                className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-medium mb-6"
+              >
+                <Zap className="h-4 w-4" />
+                The #1 Mobile Food Marketplace
+              </motion.div>
+              
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-5 tracking-tight">
                 How Vendibook Works
               </h1>
-              <p className="text-lg text-muted-foreground mb-8">
+              <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
                 The secure marketplace for mobile food assets. Sell, rent, or list vendor lots with verified users and protected payments.
               </p>
 
-              {/* Trust Badges - Simplified */}
-              <div className="flex flex-wrap justify-center gap-3 mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-sm">
-                  <ShieldCheck className="h-4 w-4 text-primary" />
-                  Verified Users
-                </div>
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-sm">
-                  <CreditCard className="h-4 w-4 text-primary" />
-                  Secure Payments
-                </div>
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-sm">
-                  <Truck className="h-4 w-4 text-primary" />
-                  Nationwide Freight
-                </div>
-              </div>
+              {/* Trust Badges - Enhanced with animations */}
+              <motion.div 
+                className="flex flex-wrap justify-center gap-3 mb-10"
+                initial={shouldReduceMotion ? {} : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                {[
+                  { icon: ShieldCheck, label: "Verified Users" },
+                  { icon: CreditCard, label: "Secure Payments" },
+                  { icon: Truck, label: "Nationwide Freight" },
+                ].map((badge, index) => (
+                  <motion.div
+                    key={badge.label}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border text-sm font-medium shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200"
+                    whileHover={shouldReduceMotion ? {} : { y: -2 }}
+                    initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 + index * 0.1 }}
+                  >
+                    <badge.icon className="h-4 w-4 text-primary" />
+                    {badge.label}
+                  </motion.div>
+                ))}
+              </motion.div>
 
-              <Button size="lg" variant="dark-shine" className="gap-2" asChild>
-                <Link to="/list">
-                  Get Started
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
+              <motion.div
+                initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="flex flex-col sm:flex-row items-center justify-center gap-4"
+              >
+                <Button size="lg" variant="dark-shine" className="gap-2 px-8 h-12 text-base" asChild>
+                  <Link to="/list">
+                    Create Free Listing
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" className="gap-2 px-8 h-12 text-base" asChild>
+                  <Link to="/search">
+                    Browse Listings
+                  </Link>
+                </Button>
+              </motion.div>
+            </motion.div>
+          </div>
+          
+          {/* Scroll indicator */}
+          <motion.div 
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-muted-foreground"
+            initial={shouldReduceMotion ? {} : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+          >
+            <span className="text-xs font-medium">Learn more</span>
+            <motion.div
+              animate={shouldReduceMotion ? {} : { y: [0, 5, 0] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
+            >
+              <ChevronDown className="h-5 w-5" />
+            </motion.div>
+          </motion.div>
+        </section>
+        
+        {/* ==================== STATS BAR ==================== */}
+        <section className="py-8 bg-card border-y border-border">
+          <div className="container">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+              {stats.map((stat, index) => (
+                <motion.div
+                  key={stat.label}
+                  className="text-center"
+                  initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <stat.icon className="h-5 w-5 text-primary" />
+                    <span className="text-2xl md:text-3xl font-bold text-foreground">{stat.value}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                </motion.div>
+              ))}
             </div>
           </div>
         </section>
 
         {/* ==================== FEATURED ASSETS GALLERY ==================== */}
-        <section className="py-12 border-b border-border">
+        <section className="py-12 bg-muted/30">
           <div className="container">
             <div className="text-center mb-8">
               <p className="text-sm text-muted-foreground uppercase tracking-wider font-medium">Featured on Vendibook</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              {[
-                { src: trailerInteriorCeiling, alt: 'Food trailer interior ceiling' },
-                { src: foodTruckGrilledCheese, alt: 'Grilled cheese food truck' },
-                { src: trailerCafecito, alt: 'Coffee trailer' },
-                { src: trailerBlack, alt: 'Black food trailer' },
-                { src: trailerWhite, alt: 'White food trailer' },
-                { src: trailerInteriorFloor, alt: 'Food trailer interior floor' },
-              ].map((img, index) => (
+              {galleryImages.map((img, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={shouldReduceMotion ? {} : { opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  className="aspect-square rounded-xl overflow-hidden group"
+                  transition={{ delay: index * 0.08 }}
+                  className="aspect-square rounded-xl overflow-hidden group cursor-pointer relative"
                 >
                   <img 
                     src={img.src} 
                     alt={img.alt}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </motion.div>
               ))}
             </div>
@@ -555,23 +690,141 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        {/* ==================== FINAL CTA ==================== */}
-        <section className="py-20 bg-foreground text-primary-foreground">
+        {/* ==================== FAQ SECTION ==================== */}
+        <section className="py-16 md:py-20 bg-muted/30">
           <div className="container">
-            <div className="max-w-2xl mx-auto text-center">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <div className="max-w-3xl mx-auto">
+              <div className="text-center mb-10">
+                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium mb-4">
+                  <HelpCircle className="h-4 w-4" />
+                  Common Questions
+                </div>
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                  Frequently Asked Questions
+                </h2>
+              </div>
+
+              <Accordion type="single" collapsible className="w-full space-y-3">
+                {faqs.map((faq, index) => (
+                  <motion.div
+                    key={index}
+                    initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <AccordionItem 
+                      value={`item-${index}`} 
+                      className="bg-card border border-border rounded-xl px-5 data-[state=open]:border-primary/30 transition-colors"
+                    >
+                      <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-4">
+                        {faq.question}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground pb-4">
+                        {faq.answer}
+                      </AccordionContent>
+                    </AccordionItem>
+                  </motion.div>
+                ))}
+              </Accordion>
+
+              <motion.div 
+                className="text-center mt-8"
+                initial={shouldReduceMotion ? {} : { opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+              >
+                <p className="text-sm text-muted-foreground mb-3">
+                  Still have questions?
+                </p>
+                <Button variant="outline" className="gap-2" asChild>
+                  <Link to="/help">
+                    Visit Help Center
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* ==================== FINAL CTA ==================== */}
+        <section className="py-20 md:py-24 bg-gradient-to-br from-foreground via-foreground to-primary/90 text-primary-foreground relative overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-72 h-72 bg-primary rounded-full blur-3xl" />
+          </div>
+          
+          <div className="container relative z-10">
+            <motion.div 
+              className="max-w-2xl mx-auto text-center"
+              initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <motion.div
+                initial={shouldReduceMotion ? {} : { scale: 0.9 }}
+                whileInView={{ scale: 1 }}
+                viewport={{ once: true }}
+                className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium mb-6"
+              >
+                <Sparkles className="h-4 w-4" />
+                Free to list • No monthly fees
+              </motion.div>
+              
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
                 Ready to get started?
               </h2>
-              <p className="text-lg opacity-90 mb-8">
-                Create your first listing in minutes.
+              <p className="text-lg md:text-xl opacity-90 mb-10">
+                Create your first listing in under 5 minutes.
               </p>
-              <Button size="lg" variant="dark-shine" className="gap-2" asChild>
-                <Link to="/list">
-                  Create a Listing
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
+              
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Button 
+                  size="lg" 
+                  className="gap-2 px-8 h-12 text-base bg-white text-foreground hover:bg-white/90"
+                  asChild
+                >
+                  <Link to="/list">
+                    Create Free Listing
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="gap-2 px-8 h-12 text-base border-white/30 text-white hover:bg-white/10"
+                  asChild
+                >
+                  <Link to="/contact">
+                    Talk to Us
+                  </Link>
+                </Button>
+              </div>
+              
+              {/* Trust indicators */}
+              <motion.div 
+                className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm opacity-80"
+                initial={shouldReduceMotion ? {} : { opacity: 0 }}
+                whileInView={{ opacity: 0.8 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+              >
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  No credit card required
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Setup in minutes
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Cancel anytime
+                </div>
+              </motion.div>
+            </motion.div>
           </div>
         </section>
 
