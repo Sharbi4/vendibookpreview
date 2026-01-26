@@ -1,54 +1,16 @@
 import { motion } from 'framer-motion';
-import { BadgeCheck, Shield, Zap, TrendingUp, Star, Users } from 'lucide-react';
+import { BadgeCheck, Shield } from 'lucide-react';
 import vendibookLogo from '@/assets/vendibook-logo.png';
+import { AuthWalkthrough } from './AuthWalkthrough';
 
 interface AuthMarketingPanelProps {
   mode: 'signin' | 'signup' | 'forgot' | 'verify';
 }
 
-const testimonials = [
-  {
-    quote: "Listed my food truck and got my first booking within a week!",
-    author: "Maria S.",
-    role: "Food Truck Owner",
-    rating: 5,
-  },
-  {
-    quote: "The verified renter system gave me peace of mind.",
-    author: "James K.",
-    role: "Kitchen Host",
-    rating: 5,
-  },
-  {
-    quote: "Affirm financing made buying my trailer possible.",
-    author: "Lisa M.",
-    role: "Food Entrepreneur",
-    rating: 5,
-  },
-];
-
 const stats = [
   { value: '10K+', label: 'Active Users' },
   { value: '$2M+', label: 'Host Earnings' },
   { value: '98%', label: 'Satisfaction Rate' },
-];
-
-const features = [
-  {
-    icon: Shield,
-    title: 'Verified Users',
-    description: 'Every renter is identity-verified for your protection',
-  },
-  {
-    icon: Zap,
-    title: 'Instant Booking',
-    description: 'Get bookings instantly with our streamlined platform',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Maximize Earnings',
-    description: 'Turn idle assets into consistent income streams',
-  },
 ];
 
 export const AuthMarketingPanel = ({ mode }: AuthMarketingPanelProps) => {
@@ -96,63 +58,15 @@ export const AuthMarketingPanel = ({ mode }: AuthMarketingPanelProps) => {
         </motion.div>
       </div>
 
-      {/* Features - Show on signup */}
-      {isSignup && (
-        <motion.div
-          className="relative z-10 space-y-4 my-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          {features.map((feature, index) => (
-            <motion.div
-              key={feature.title}
-              className="flex items-start gap-4 p-4 rounded-xl bg-card/50 backdrop-blur-sm border border-border/50"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
-            >
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <feature.icon className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground">{feature.description}</p>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
-
-      {/* Testimonial Carousel - Show on signin */}
-      {!isSignup && (
-        <motion.div
-          className="relative z-10 my-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <div className="glass-card p-6 rounded-2xl">
-            <div className="flex gap-1 mb-3">
-              {[...Array(testimonials[0].rating)].map((_, i) => (
-                <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              ))}
-            </div>
-            <blockquote className="text-lg text-foreground italic mb-4">
-              "{testimonials[0].quote}"
-            </blockquote>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <Users className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium text-foreground">{testimonials[0].author}</p>
-                <p className="text-sm text-muted-foreground">{testimonials[0].role}</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      )}
+      {/* Animated Walkthrough */}
+      <motion.div
+        className="relative z-10 my-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <AuthWalkthrough />
+      </motion.div>
 
       {/* Stats */}
       <motion.div
