@@ -4,10 +4,6 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
 const PIXEL_ID = "1070006041675593";
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
