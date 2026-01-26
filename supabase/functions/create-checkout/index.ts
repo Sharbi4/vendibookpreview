@@ -183,11 +183,11 @@ serve(async (req) => {
       const totalSalePrice = salePrice + saleDeliveryFee + buyerFreightCost;
       customerTotal = Math.round(totalSalePrice * 100);
       
-      // Seller pays 15% fee on the sale price (not on delivery or freight)
+      // Seller pays 12.9% fee on the sale price (not on delivery or freight)
       const sellerFee = salePrice * (SALE_SELLER_FEE_PERCENT / 100);
       applicationFee = Math.round(sellerFee * 100);
       
-      // Seller receives: sale price - 15% fee + delivery fee - seller-paid freight
+      // Seller receives: sale price - 12.9% fee + delivery fee - seller-paid freight
       const sellerFreightDeduction = isSellerPaidFreight ? freightAmount : 0;
       hostReceives = Math.round((salePrice - sellerFee + saleDeliveryFee - sellerFreightDeduction) * 100);
       
