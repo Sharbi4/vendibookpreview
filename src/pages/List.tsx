@@ -124,6 +124,11 @@ const ListPage: React.FC = () => {
                 action: 'listing_mode_selected',
                 label: 'scratch',
               });
+              // Require auth before creating a listing
+              if (!user) {
+                navigate('/auth?redirect=/list');
+                return;
+              }
               setMode('scratch');
             }}
           >

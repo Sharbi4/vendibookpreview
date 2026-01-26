@@ -10,7 +10,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { ListingCategory, ListingMode, CATEGORY_LABELS } from '@/types/listing';
 import { cn } from '@/lib/utils';
 import { trackDraftCreated, trackEvent } from '@/lib/analytics';
-import { saveGuestDraft, generateDraftToken } from '@/lib/guestDraft';
 
 type QuickStartStep = 'category' | 'mode' | 'location' | 'created';
 
@@ -102,6 +101,17 @@ export const QuickStartWizard: React.FC = () => {
   const handleCreateDraft = async () => {
     if (!data.category || !data.mode) return;
 
+    // User must be authenticated to create a listing
+    if (!user) {
+      toast({
+        title: 'Sign in required',
+        description: 'Please sign in to create a listing.',
+        variant: 'destructive',
+      });
+      navigate('/auth?redirect=/list');
+      return;
+    }
+
     setIsCreating(true);
 
     try {
@@ -124,9 +134,6 @@ export const QuickStartWizard: React.FC = () => {
         }
       }
 
-      // Generate guest token for anonymous draft OR use user id
-      const guestToken = user ? null : generateDraftToken();
-
       // If authenticated user, ensure they have host role before creating listing
       if (user) {
         const { data: existingRole } = await supabase
@@ -143,12 +150,12 @@ export const QuickStartWizard: React.FC = () => {
         }
       }
 
-      // Create minimal draft listing (anonymous or authenticated)
+      // Create draft listing (user is authenticated at this point)
       const { data: listing, error } = await supabase
         .from('listings')
         .insert({
-          host_id: user?.id || null, // null for guest drafts
-          guest_draft_token: guestToken, // token for guest claiming
+          host_id: user.id,
+          guest_draft_token: null, // No longer supporting guest drafts
           mode: data.mode,
           category: data.category,
           status: 'draft',
@@ -164,11 +171,6 @@ export const QuickStartWizard: React.FC = () => {
         .single();
 
       if (error) throw error;
-
-      // Save guest draft token in localStorage for later claiming
-      if (guestToken && listing) {
-        saveGuestDraft(listing.id, guestToken);
-      }
 
       setCreatedListingId(listing.id);
       setStep('created');
@@ -409,12 +411,6 @@ export const QuickStartWizard: React.FC = () => {
                 )}
               </Button>
             </div>
-            {/* Guest note */}
-            {!user && (
-              <p className="text-xs text-muted-foreground text-center">
-                You can finish as a guest. Sign-in required to publish.
-              </p>
-            )}
           </div>
         </div>
       )}
