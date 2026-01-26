@@ -97,7 +97,7 @@ const CategoryCarousel = ({ config, listings, hostVerificationMap, isLoading }: 
       {/* Category Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary via-primary to-amber-500 flex items-center justify-center shadow-lg shadow-primary/20">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-foreground via-foreground to-foreground/80 flex items-center justify-center shadow-lg shadow-foreground/20">
             {config.icon}
           </div>
           <div>
