@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { BadgeCheck, Shield } from 'lucide-react';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 import { AuthWalkthrough } from './AuthWalkthrough';
+import { useTranslation } from 'react-i18next';
 
 interface AuthMarketingPanelProps {
   mode: 'signin' | 'signup' | 'forgot' | 'verify';
@@ -14,6 +15,7 @@ const stats = [
 ];
 
 export const AuthMarketingPanel = ({ mode }: AuthMarketingPanelProps) => {
+  const { t } = useTranslation();
   const isSignup = mode === 'signup';
 
   return (
@@ -42,18 +44,18 @@ export const AuthMarketingPanel = ({ mode }: AuthMarketingPanelProps) => {
           <h1 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
             {isSignup ? (
               <>
-                Join the <span className="gradient-text-warm">marketplace</span> for food business
+                {t('auth.joinMarketplace')} <span className="gradient-text-warm">{t('auth.marketplace')}</span> {t('auth.forFoodBusiness')}
               </>
             ) : (
               <>
-                Welcome back to <span className="gradient-text-warm">Vendibook</span>
+                {t('auth.welcomeBackTitle')} <span className="gradient-text-warm">Vendibook</span>
               </>
             )}
           </h1>
           <p className="text-lg text-muted-foreground max-w-md">
             {isSignup
-              ? 'Connect with verified renters, list your assets, and grow your food business today.'
-              : 'Pick up where you left off. Your listings and bookings are waiting for you.'}
+              ? t('auth.marketingSubtitle')
+              : t('auth.welcomeBackSubtitle')}
           </p>
         </motion.div>
       </div>
@@ -94,11 +96,11 @@ export const AuthMarketingPanel = ({ mode }: AuthMarketingPanelProps) => {
         <div className="flex items-center justify-center gap-6 mt-8 pt-6 border-t border-border/50">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <BadgeCheck className="h-4 w-4 text-primary" />
-            <span>Verified Users</span>
+            <span>{t('hero.trustBadges.verifiedUsers')}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Shield className="h-4 w-4 text-primary" />
-            <span>Secure Payments</span>
+            <span>{t('hero.trustBadges.securePayments')}</span>
           </div>
         </div>
       </motion.div>

@@ -18,6 +18,8 @@ import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import MobileMenu from './MobileMenu';
+import LanguageSwitcher from './LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 // Type declarations for Web Speech API
 interface SpeechRecognitionEvent extends Event {
@@ -81,6 +83,7 @@ const saveRecentSearch = (query: string) => {
 };
 
 const Header = () => {
+  const { t } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [mobileSearchQuery, setMobileSearchQuery] = useState('');
@@ -297,7 +300,7 @@ const Header = () => {
                     setShowSuggestions(true);
                   }}
                   onFocus={() => setShowSuggestions(true)}
-                  placeholder={isListening ? "Listening..." : "Search food trucks, trailers..."}
+                  placeholder={isListening ? t('header.listening') : t('header.mobileSearchPlaceholder')}
                   className={`pl-9 pr-4 py-2 w-full rounded-full border-border bg-muted/50 focus-visible:ring-primary ${isListening ? 'border-primary ring-2 ring-primary/20' : ''}`}
                   autoComplete="off"
                 />
@@ -335,7 +338,7 @@ const Header = () => {
                 >
                   {filteredRecent.length > 0 && (
                     <div className="py-2">
-                      <p className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">Recent</p>
+                      <p className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('header.recent')}</p>
                       {filteredRecent.map((search, index) => (
                         <button
                           key={`recent-${index}`}
@@ -352,7 +355,7 @@ const Header = () => {
                   
                   {filteredPopular.length > 0 && (
                     <div className="py-2 border-t border-border">
-                      <p className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">Popular</p>
+                      <p className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('header.popular')}</p>
                       {filteredPopular.slice(0, 4).map((search, index) => (
                         <button
                           key={`popular-${index}`}
@@ -377,7 +380,7 @@ const Header = () => {
               className="text-muted-foreground hover:text-foreground gap-1.5 px-3"
             >
               <Search className="h-4 w-4" />
-              <span className="text-sm font-medium">Search</span>
+              <span className="text-sm font-medium">{t('common.search')}</span>
             </Button>
           )}
         </div>
@@ -389,18 +392,19 @@ const Header = () => {
             className="w-full flex items-center gap-4 px-6 py-3.5 rounded-full border border-border bg-white hover:bg-muted/30 text-muted-foreground text-base font-medium shadow-sm transition-all duration-200 group"
           >
             <Search className="h-5 w-5 text-primary transition-transform duration-200 group-hover:scale-105" />
-            <span className="text-muted-foreground/80 group-hover:text-foreground transition-colors">Search food trucks, trailers, ghost kitchens, or equipment</span>
+            <span className="text-muted-foreground/80 group-hover:text-foreground transition-colors">{t('header.searchPlaceholder')}</span>
           </button>
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-5">
+        <nav className="hidden md:flex items-center gap-3">
           <Link 
             to="/how-it-works" 
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            Learn More
+            {t('common.learnMore')}
           </Link>
+          <LanguageSwitcher />
         </nav>
 
         {/* Desktop Actions */}
@@ -411,7 +415,7 @@ const Header = () => {
               className="rounded-full"
               onClick={() => navigate('/list')}
             >
-              Create a Listing
+              {t('common.createListing')}
             </Button>
           )}
           {user && <NotificationCenter />}
@@ -437,28 +441,28 @@ const Header = () => {
               <DropdownMenuContent align="end" className="w-48 bg-background">
                 <DropdownMenuItem onClick={() => navigate('/dashboard')}>
                   <LayoutDashboard className="h-4 w-4 mr-2" />
-                  Dashboard
+                  {t('common.dashboard')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/transactions?tab=bookings')}>
                   <Calendar className="h-4 w-4 mr-2" />
-                  Bookings
+                  {t('common.bookings')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/transactions?tab=purchases')}>
                   <ShoppingBag className="h-4 w-4 mr-2" />
-                  Purchases
+                  {t('common.purchases')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/favorites')}>
                   <Heart className="h-4 w-4 mr-2" />
-                  Favorites
+                  {t('common.favorites')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/messages')}>
                   <MessageCircle className="h-4 w-4 mr-2" />
-                  Messages
+                  {t('common.messages')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate('/account')}>
                   <User className="h-4 w-4 mr-2" />
-                  My Account
+                  {t('common.myAccount')}
                 </DropdownMenuItem>
                 {isVerified ? (
                   <div className="flex items-center gap-2 px-2 py-1.5 text-sm text-emerald-600">
@@ -475,17 +479,17 @@ const Header = () => {
                 {isAdmin && (
                   <DropdownMenuItem onClick={() => navigate('/admin')}>
                     <ShieldCheck className="h-4 w-4 mr-2 text-primary" />
-                    Admin Dashboard
+                    {t('common.admin')}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={() => navigate('/help')}>
                   <HelpCircle className="h-4 w-4 mr-2" />
-                  Help Center
+                  {t('common.support')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
+                  {t('common.signOut')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -496,14 +500,14 @@ const Header = () => {
                 className="rounded-full"
                 onClick={() => navigate('/auth')}
               >
-                Sign In
+                {t('common.signIn')}
               </Button>
               <Button 
                 variant="dark-shine"
                 className="rounded-full"
                 onClick={() => navigate('/list')}
               >
-                Create a Listing
+                {t('common.createListing')}
               </Button>
             </>
           )}
@@ -511,11 +515,12 @@ const Header = () => {
 
         {/* Mobile Actions - hide when search is open */}
         <div className={`flex md:hidden items-center gap-1 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          <LanguageSwitcher />
           <Link
             to="/how-it-works"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
           >
-            Learn More
+            {t('common.learnMore')}
           </Link>
           {user && <NotificationCenter />}
           <Button 

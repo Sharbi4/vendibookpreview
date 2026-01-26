@@ -23,6 +23,7 @@ import { trackHeroCTAClick } from '@/lib/analytics';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface WalkthroughStep {
   id: number;
@@ -33,6 +34,7 @@ interface WalkthroughStep {
 }
 
 const HeroWalkthrough = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -49,10 +51,10 @@ const HeroWalkthrough = () => {
   
   // Trust badges for social proof
   const trustBadges = useMemo(() => [
-    { icon: Shield, label: 'Verified Users' },
-    { icon: CreditCard, label: 'Secure Payments' },
+    { icon: Shield, label: t('hero.trustBadges.verifiedUsers') },
+    { icon: CreditCard, label: t('hero.trustBadges.securePayments') },
     { icon: Zap, label: 'Instant Booking' },
-  ], []);
+  ], [t]);
 
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);

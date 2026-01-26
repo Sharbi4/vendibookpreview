@@ -14,6 +14,7 @@ import { trackSignupConversion } from '@/lib/gtagConversions';
 import { trackGA4SignUp, trackGA4Login } from '@/lib/ga4Conversions';
 import { Separator } from '@/components/ui/separator';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const authSchema = z.object({
   email: z.string().trim().email('Please enter a valid email').max(255, 'Email is too long'),
@@ -46,6 +47,7 @@ interface AuthFormPanelProps {
 }
 
 export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -318,16 +320,16 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
           {/* Header */}
           <div className="text-center lg:text-left">
             <h2 className="text-2xl font-bold text-foreground">
-              {mode === 'signin' ? 'Sign in to your account' : 
-               mode === 'signup' ? 'Create your free account' : 
-               mode === 'verify' ? 'Verify your email' : 
-               'Reset your password'}
+              {mode === 'signin' ? t('auth.signInTitle') : 
+               mode === 'signup' ? t('auth.signUpTitle') : 
+               mode === 'verify' ? t('auth.verifyTitle') : 
+               t('auth.resetTitle')}
             </h2>
             <p className="text-muted-foreground mt-2">
-              {mode === 'signin' ? 'Enter your credentials to continue' :
-               mode === 'signup' ? 'Start listing or booking in minutes' :
-               mode === 'verify' ? 'Check your inbox for the verification link' :
-               'We\'ll send you a reset link'}
+              {mode === 'signin' ? t('auth.signInSubtitle') :
+               mode === 'signup' ? t('auth.signUpSubtitle') :
+               mode === 'verify' ? t('auth.verifySubtitle') :
+               t('auth.resetSubtitle')}
             </p>
           </div>
 
