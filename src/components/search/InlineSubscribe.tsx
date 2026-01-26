@@ -29,6 +29,11 @@ export const InlineSubscribe = () => {
       } else {
         setIsSubscribed(true);
         toast.success('Subscribed successfully!');
+        
+        // Send admin notification (fire and forget)
+        supabase.functions.invoke('send-admin-notification', {
+          body: { type: 'newsletter_signup', data: { email, source: 'search_inline' } }
+        }).catch(err => console.error('Admin notification error:', err));
       }
     } catch (err) {
       toast.error('Failed to subscribe. Please try again.');
