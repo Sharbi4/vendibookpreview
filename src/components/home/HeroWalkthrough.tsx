@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { 
   Search, 
   ShoppingCart, 
@@ -11,7 +11,10 @@ import {
   ChevronRight,
   Play,
   Pause,
-  Hand
+  Hand,
+  Shield,
+  CreditCard,
+  Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -33,6 +36,7 @@ const HeroWalkthrough = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const shouldReduceMotion = useReducedMotion();
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -42,6 +46,13 @@ const HeroWalkthrough = () => {
 
   // Minimum swipe distance to trigger navigation (in pixels)
   const minSwipeDistance = 50;
+  
+  // Trust badges for social proof
+  const trustBadges = useMemo(() => [
+    { icon: Shield, label: 'Verified Users' },
+    { icon: CreditCard, label: 'Secure Payments' },
+    { icon: Zap, label: 'Instant Booking' },
+  ], []);
 
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
@@ -239,6 +250,9 @@ const HeroWalkthrough = () => {
 
   return (
     <section className="relative overflow-hidden py-6 sm:py-8 md:py-12 mx-2 sm:mx-4 mt-2 sm:mt-4 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-background via-muted/30 to-background border-2 border-border">
+      {/* Decorative gradient orbs */}
+      <div className="absolute top-10 left-5 w-40 h-40 sm:w-72 sm:h-72 bg-primary/10 rounded-full blur-3xl" aria-hidden="true" />
+      <div className="absolute bottom-10 right-5 w-48 h-48 sm:w-80 sm:h-80 bg-amber-500/10 rounded-full blur-3xl" aria-hidden="true" />
 
       <div className="container max-w-5xl mx-auto px-3 sm:px-4 relative z-10">
         <div className="flex flex-col lg:flex-row items-center gap-6 sm:gap-8 lg:gap-12">
@@ -247,7 +261,7 @@ const HeroWalkthrough = () => {
             {/* Logo */}
             <motion.div 
               className="flex justify-center lg:justify-start"
-              initial={{ opacity: 0, scale: 0.8, y: -20 }}
+              initial={shouldReduceMotion ? {} : { opacity: 0, scale: 0.8, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ 
                 duration: 0.7, 
@@ -259,13 +273,14 @@ const HeroWalkthrough = () => {
                 src={vendibookLogo} 
                 alt="Vendibook" 
                 className="h-48 sm:h-64 md:h-80 lg:h-96 w-auto drop-shadow-lg"
+                loading="eager"
               />
             </motion.div>
 
             {/* Tagline */}
             <motion.h1 
               className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight mt-3 sm:mt-4"
-              initial={{ opacity: 0, y: 10 }}
+              initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.5 }}
             >
@@ -275,7 +290,7 @@ const HeroWalkthrough = () => {
             {/* CTA Buttons */}
             <motion.div 
               className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2 sm:gap-3 mt-4 sm:mt-6"
-              initial={{ opacity: 0, y: 10 }}
+              initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.5 }}
             >
@@ -286,7 +301,7 @@ const HeroWalkthrough = () => {
                   trackHeroCTAClick('browse');
                   navigate('/search');
                 }}
-                className="text-sm sm:text-base px-5 sm:px-8 py-5 sm:py-6 w-full sm:w-auto"
+                className="text-sm sm:text-base px-5 sm:px-8 h-12 sm:h-14 w-full sm:w-auto"
               >
                 <Search className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 Browse Listings
@@ -299,17 +314,35 @@ const HeroWalkthrough = () => {
                   trackHeroCTAClick('list');
                   navigate('/list');
                 }}
-                className="text-sm sm:text-base px-5 sm:px-8 py-5 sm:py-6 w-full sm:w-auto"
+                className="text-sm sm:text-base px-5 sm:px-8 h-12 sm:h-14 w-full sm:w-auto"
               >
-                Create a Free Listing
+                Create Free Listing
               </Button>
+            </motion.div>
+
+            {/* Trust badges - Mobile optimized */}
+            <motion.div 
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-2 mt-4"
+              initial={shouldReduceMotion ? {} : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              {trustBadges.map((badge, index) => (
+                <div
+                  key={badge.label}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2.5 py-1.5 rounded-full"
+                >
+                  <badge.icon className="h-3 w-3 text-primary" />
+                  <span>{badge.label}</span>
+                </div>
+              ))}
             </motion.div>
 
             {/* Google Sign-in for logged out users */}
             {!user && (
               <motion.div 
                 className="mt-4"
-                initial={{ opacity: 0 }}
+                initial={shouldReduceMotion ? {} : { opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6, duration: 0.5 }}
               >

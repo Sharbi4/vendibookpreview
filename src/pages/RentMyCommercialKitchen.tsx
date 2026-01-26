@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { WhiteGlovePopup } from '@/components/kitchen/WhiteGlovePopup';
 import {
   ChefHat,
@@ -22,6 +22,10 @@ import {
   Scale,
   Headphones,
   MessageCircle,
+  Zap,
+  Star,
+  Timer,
+  BadgeCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -37,6 +41,14 @@ import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import { StripeLogo } from '@/components/ui/StripeLogo';
 import KitchenBenefitsAnimation from '@/components/kitchen/KitchenBenefitsAnimation';
+
+// Social proof stats
+const socialProofStats = [
+  { value: '200+', label: 'Kitchens Listed', icon: Building2 },
+  { value: '$2M+', label: 'Host Earnings', icon: DollarSign },
+  { value: '100%', label: 'Verified Renters', icon: BadgeCheck },
+  { value: '<5min', label: 'Listing Setup', icon: Timer },
+];
 
 const RentMyCommercialKitchen = () => {
   const [showEarningsModal, setShowEarningsModal] = useState(false);
@@ -182,6 +194,8 @@ const RentMyCommercialKitchen = () => {
     serviceType: 'Kitchen Rental Marketplace',
   };
 
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <>
       <SEO
@@ -194,40 +208,54 @@ const RentMyCommercialKitchen = () => {
       <Header />
 
       <main className="min-h-screen">
-        {/* Hero Section */}
-        <section className="relative bg-gradient-to-b from-muted/50 to-background pt-20 pb-16 md:pt-28 md:pb-24 overflow-hidden">
+        {/* Hero Section - Enhanced */}
+        <section className="relative bg-gradient-to-b from-muted/50 via-background to-background pt-16 pb-12 md:pt-24 md:pb-20 overflow-hidden">
+          {/* Decorative gradient orbs */}
+          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" aria-hidden="true" />
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" aria-hidden="true" />
+          
           <div className="container relative z-10">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
               className="max-w-3xl mx-auto text-center"
             >
-              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
-                <ChefHat className="h-4 w-4" />
-                For Restaurant & Kitchen Owners
-              </div>
+              {/* Urgency badge */}
+              <motion.div
+                initial={shouldReduceMotion ? {} : { opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/20 to-amber-500/20 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6 border border-primary/20"
+              >
+                <Zap className="h-4 w-4" />
+                Join 200+ kitchen owners earning passive income
+              </motion.div>
 
-              <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">
-                Turn Your Empty Kitchen Stations Into a Second Revenue Stream
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+                Turn Your Empty Kitchen Into a{' '}
+                <span className="bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent">
+                  Second Revenue Stream
+                </span>
               </h1>
 
-              <p className="text-lg md:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto">
-                Don't let your overhead eat your profits. Vendibook connects restaurant owners with vetted food entrepreneurs looking for hourly prep space, ghost kitchen rentals, and commissary access.
+              <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto">
+                Stop letting overhead eat your profits. Connect with vetted food entrepreneurs looking for hourly prep space, ghost kitchen rentals, and commissary access.
               </p>
 
-              <p className="text-base text-foreground font-medium mb-8">
-                We handle the marketing, payments, and document verification so you just approve the booking.
+              <p className="text-sm sm:text-base text-foreground font-medium mb-8">
+                We handle marketing, payments, and document verification—you just approve bookings.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-4">
                 <Button
                   asChild
                   size="lg"
                   variant="dark-shine"
+                  className="h-12 sm:h-14 text-base sm:text-lg px-6 sm:px-8"
                 >
                   <Link to="/list?category=ghost_kitchen">
-                    Create a Free Kitchen Listing
+                    Create Free Listing
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -235,32 +263,76 @@ const RentMyCommercialKitchen = () => {
                   asChild
                   size="lg"
                   variant="outline"
-                  className="border-foreground text-foreground hover:bg-foreground hover:text-background"
+                  className="h-12 sm:h-14 text-base sm:text-lg px-6 sm:px-8 border-2"
                 >
-                  <Link to="/kitchen-earnings-calculator">Estimate Your Earnings</Link>
+                  <Link to="/kitchen-earnings-calculator">
+                    <TrendingUp className="mr-2 h-5 w-5" />
+                    Estimate Earnings
+                  </Link>
                 </Button>
               </div>
 
-              <p className="text-sm text-muted-foreground">
-                Free to list. You keep 100% control of your schedule.
-              </p>
+              <motion.p 
+                className="text-sm text-muted-foreground flex items-center justify-center gap-2"
+                initial={shouldReduceMotion ? {} : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                Free to list • No monthly fees • Cancel anytime
+              </motion.p>
 
-              {/* Trust Badges */}
-              <div className="flex flex-wrap items-center justify-center gap-4 mt-8 pt-8 border-t border-border">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <StripeLogo className="h-6" />
-                  <span>Secure Payments</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Shield className="h-5 w-5 text-green-600" />
-                  <span>Verified Renters</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <FileCheck className="h-5 w-5 text-blue-600" />
-                  <span>Document Review</span>
-                </div>
-              </div>
+              {/* Trust Badges - Enhanced with hover */}
+              <motion.div 
+                className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mt-8 pt-8 border-t border-border"
+                initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                {[
+                  { icon: StripeLogo, label: 'Secure Payments', isComponent: true },
+                  { icon: Shield, label: 'Verified Renters', color: 'text-green-600' },
+                  { icon: FileCheck, label: 'Document Review', color: 'text-blue-600' },
+                ].map((badge, index) => (
+                  <motion.div
+                    key={badge.label}
+                    className="flex items-center gap-2 text-sm text-muted-foreground px-3 py-2 rounded-full bg-card border border-border/50 hover:border-primary/30 transition-colors"
+                    whileHover={shouldReduceMotion ? {} : { y: -2 }}
+                  >
+                    {badge.isComponent ? (
+                      <StripeLogo className="h-5" />
+                    ) : (
+                      <badge.icon className={`h-4 w-4 ${badge.color}`} />
+                    )}
+                    <span className="text-xs sm:text-sm">{badge.label}</span>
+                  </motion.div>
+                ))}
+              </motion.div>
             </motion.div>
+          </div>
+        </section>
+        
+        {/* Social Proof Stats Bar */}
+        <section className="py-6 sm:py-8 bg-card border-y border-border">
+          <div className="container">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-4xl mx-auto">
+              {socialProofStats.map((stat, index) => (
+                <motion.div
+                  key={stat.label}
+                  className="text-center"
+                  initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                    <span className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">{stat.value}</span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{stat.label}</p>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -594,34 +666,55 @@ const RentMyCommercialKitchen = () => {
           </div>
         </section>
 
-        {/* Final CTA Section */}
-        <section className="py-16 md:py-20 bg-gradient-to-r from-primary/10 via-amber-500/10 to-orange-500/10">
-          <div className="container">
+        {/* Final CTA Section - Enhanced */}
+        <section className="py-16 md:py-24 bg-gradient-to-br from-foreground via-foreground to-primary/90 text-primary-foreground relative overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-72 h-72 bg-primary rounded-full blur-3xl" />
+          </div>
+          
+          <div className="container relative z-10">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               className="text-center max-w-2xl mx-auto"
             >
-              <h2 className="text-2xl md:text-3xl font-bold mb-4">
+              <motion.div
+                initial={shouldReduceMotion ? {} : { scale: 0.9 }}
+                whileInView={{ scale: 1 }}
+                viewport={{ once: true }}
+                className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium mb-6"
+              >
+                <Star className="h-4 w-4 fill-current" />
+                Free to list • No monthly fees
+              </motion.div>
+              
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
                 Ready to turn that dark kitchen into bright revenue?
               </h2>
-              <p className="text-muted-foreground mb-8">
+              <p className="text-base sm:text-lg opacity-90 mb-10">
                 Join hundreds of smart operators maximizing their real estate.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6">
                 <Button
                   asChild
                   size="lg"
-                  variant="dark-shine"
+                  className="h-12 sm:h-14 text-base sm:text-lg px-6 sm:px-8 bg-white text-foreground hover:bg-white/90"
                 >
                   <Link to="/list?category=ghost_kitchen">
-                    Create a Kitchen Listing
+                    Create Free Listing
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline">
+                <Button 
+                  asChild 
+                  size="lg" 
+                  variant="outline"
+                  className="h-12 sm:h-14 text-base sm:text-lg px-6 sm:px-8 border-white/30 text-white hover:bg-white/10"
+                >
                   <Link to="/contact">
                     <Headphones className="mr-2 h-5 w-5" />
                     Talk to Support
@@ -629,9 +722,27 @@ const RentMyCommercialKitchen = () => {
                 </Button>
               </div>
 
-              <p className="text-sm text-muted-foreground">
-                Free to list. You stay in control. We handle the process.
-              </p>
+              {/* Trust indicators */}
+              <motion.div 
+                className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm opacity-80"
+                initial={shouldReduceMotion ? {} : { opacity: 0 }}
+                whileInView={{ opacity: 0.8 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+              >
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  No credit card required
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Setup in 5 minutes
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Cancel anytime
+                </div>
+              </motion.div>
             </motion.div>
           </div>
         </section>
@@ -639,13 +750,17 @@ const RentMyCommercialKitchen = () => {
 
       <Footer />
 
-      {/* Sticky Mobile CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-background border-t border-border shadow-[0_-2px_10px_rgba(0,0,0,0.1)] safe-area-bottom">
-        <div className="p-3 pb-safe">
+      {/* Sticky Mobile CTA - Enhanced */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-background/95 backdrop-blur-sm border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.15)] safe-area-bottom">
+        <div className="p-3 pb-safe flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-foreground truncate">Start earning today</p>
+            <p className="text-[10px] text-muted-foreground">Free to list</p>
+          </div>
           <Button
             asChild
             variant="dark-shine"
-            className="w-full"
+            className="shrink-0"
           >
             <Link to="/list?category=ghost_kitchen">
               Create Listing
