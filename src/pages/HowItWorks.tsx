@@ -23,6 +23,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { AnimatedSection, AnimatedCard } from '@/components/ui/animated';
 
+// Food truck gallery images
+import foodTruckPopcorn from '@/assets/food-truck-popcorn.jpg';
+import foodTruckGrilledCheese from '@/assets/food-truck-grilled-cheese.jpg';
+import foodTruckCoffee from '@/assets/food-truck-coffee.jpg';
+import trailerBlack from '@/assets/trailer-black.jpg';
+import trailerWhite from '@/assets/trailer-white.jpg';
+import trailerPinkBlue from '@/assets/trailer-pink-blue.jpg';
+
 const testimonials = [
   {
     name: "Marcus J.",
@@ -55,8 +63,17 @@ const HowItWorks = () => {
 
       <main className="flex-1">
         {/* ==================== HERO ==================== */}
-        <section className="py-16 md:py-20 bg-muted/30">
-          <div className="container">
+        <section className="py-16 md:py-20 bg-muted/30 relative overflow-hidden">
+          {/* Background image collage */}
+          <div className="absolute inset-0 opacity-5">
+            <div className="grid grid-cols-3 h-full">
+              <img src={foodTruckPopcorn} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src={trailerPinkBlue} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src={foodTruckCoffee} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+            </div>
+          </div>
+          
+          <div className="container relative z-10">
             <div className="max-w-2xl mx-auto text-center">
               <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
                 How Vendibook Works
@@ -87,6 +104,40 @@ const HowItWorks = () => {
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* ==================== FEATURED ASSETS GALLERY ==================== */}
+        <section className="py-12 border-b border-border">
+          <div className="container">
+            <div className="text-center mb-8">
+              <p className="text-sm text-muted-foreground uppercase tracking-wider font-medium">Featured on Vendibook</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              {[
+                { src: foodTruckPopcorn, alt: 'Popcorn food truck' },
+                { src: foodTruckGrilledCheese, alt: 'Grilled cheese food truck' },
+                { src: foodTruckCoffee, alt: 'Coffee food truck' },
+                { src: trailerBlack, alt: 'Black food trailer' },
+                { src: trailerWhite, alt: 'White food trailer' },
+                { src: trailerPinkBlue, alt: 'Pink and blue food trailer' },
+              ].map((img, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  className="aspect-square rounded-xl overflow-hidden group"
+                >
+                  <img 
+                    src={img.src} 
+                    alt={img.alt}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                </motion.div>
+              ))}
             </div>
           </div>
         </section>
