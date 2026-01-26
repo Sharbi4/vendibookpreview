@@ -1,6 +1,5 @@
 import { ShieldCheck, HelpCircle, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { StripeLogo } from '@/components/ui/StripeLogo';
 import {
   Popover,
   PopoverContent,
@@ -68,17 +67,6 @@ const WizardHeader = ({
         )}
         
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Trust badge */}
-          <div className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800/50">
-            <ShieldCheck className="h-3 w-3 text-emerald-600" />
-            <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">Protected</span>
-          </div>
-          
-          {/* Stripe badge */}
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50 border border-border/50">
-            <StripeLogo className="h-3.5 w-auto" />
-            <span className="text-[10px] text-muted-foreground hidden sm:inline">Secure</span>
-          </div>
           
           {/* Help button */}
           <Popover>

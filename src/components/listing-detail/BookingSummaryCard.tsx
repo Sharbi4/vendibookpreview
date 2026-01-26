@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays } from 'date-fns';
-import { Calendar, Zap, Shield, ArrowRight, Star, Mail } from 'lucide-react';
+import { Calendar, Zap, ArrowRight, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import RequestDatesModal, { BookingSelection } from './RequestDatesModal';
@@ -202,14 +202,6 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
               )}
             </>
           )}
-
-          {/* Trust badges */}
-          <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg border border-border">
-            <Shield className="h-4 w-4 text-primary flex-shrink-0" />
-            <span className="text-xs text-muted-foreground">
-              Secure payments protected by Vendibook
-            </span>
-          </div>
         </div>
       </div>
 
