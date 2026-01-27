@@ -38,9 +38,9 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex bg-background">
-      {/* Left Panel - Marketing (hidden on mobile) */}
-      <div className="hidden lg:block lg:w-1/2 xl:w-[55%]">
+    <div className="min-h-screen flex flex-col lg:flex-row bg-background">
+      {/* Marketing Panel - Compact on mobile/tablet, full on desktop */}
+      <div className="lg:w-1/2 xl:w-[55%]">
         <AuthMarketingPanel mode={mode} />
       </div>
       
