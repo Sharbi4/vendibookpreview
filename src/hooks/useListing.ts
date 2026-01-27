@@ -13,6 +13,7 @@ interface HostProfile {
   created_at: string;
   display_name?: string | null;
   business_name?: string | null;
+  last_active_at?: string | null;
 }
 
 export const useListing = (listingId: string | undefined) => {
@@ -60,6 +61,7 @@ export const useListing = (listingId: string | undefined) => {
                 created_at: profile.created_at,
                 display_name: profile.display_name,
                 business_name: profile.business_name,
+                last_active_at: profile.last_active_at,
               });
             }
           }

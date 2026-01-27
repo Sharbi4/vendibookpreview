@@ -1163,6 +1163,7 @@ export type Database = {
           id: string
           identity_verified: boolean | null
           identity_verified_at: string | null
+          last_active_at: string | null
           last_name: string | null
           phone_number: string | null
           public_city: string | null
@@ -1193,6 +1194,7 @@ export type Database = {
           id: string
           identity_verified?: boolean | null
           identity_verified_at?: string | null
+          last_active_at?: string | null
           last_name?: string | null
           phone_number?: string | null
           public_city?: string | null
@@ -1223,6 +1225,7 @@ export type Database = {
           id?: string
           identity_verified?: boolean | null
           identity_verified_at?: string | null
+          last_active_at?: string | null
           last_name?: string | null
           phone_number?: string | null
           public_city?: string | null
@@ -1761,6 +1764,7 @@ export type Database = {
           header_image_url: string
           id: string
           identity_verified: boolean
+          last_active_at: string
           last_name: string
           public_city: string
           public_state: string
