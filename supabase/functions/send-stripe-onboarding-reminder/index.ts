@@ -36,16 +36,19 @@ serve(async (req) => {
     // 2. Have NOT completed onboarding
     // 3. Started onboarding more than 24 hours ago
     // 4. Started onboarding less than 7 days ago (don't spam forever)
+    // 5. Haven't received a reminder in the last 48 hours (every other day)
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
     const { data: incompleteUsers, error: queryError } = await supabaseClient
       .from('profiles')
-      .select('id, email, full_name, stripe_onboarding_started_at')
+      .select('id, email, full_name, stripe_onboarding_started_at, stripe_nudge_sent_at')
       .not('stripe_account_id', 'is', null)
       .or('stripe_onboarding_complete.is.null,stripe_onboarding_complete.eq.false')
       .lt('stripe_onboarding_started_at', twentyFourHoursAgo)
-      .gt('stripe_onboarding_started_at', sevenDaysAgo);
+      .gt('stripe_onboarding_started_at', sevenDaysAgo)
+      .or(`stripe_nudge_sent_at.is.null,stripe_nudge_sent_at.lt.${fortyEightHoursAgo}`);
 
     if (queryError) {
       throw new Error(`Database query error: ${queryError.message}`);
@@ -144,6 +147,12 @@ serve(async (req) => {
         } else {
           logStep("Email sent successfully", { userId: user.id, email: user.email });
           sentCount++;
+          
+          // Update stripe_nudge_sent_at to prevent duplicate emails
+          await supabaseClient
+            .from('profiles')
+            .update({ stripe_nudge_sent_at: new Date().toISOString() })
+            .eq('id', user.id);
         }
       } catch (sendError) {
         const errorMsg = sendError instanceof Error ? sendError.message : String(sendError);
