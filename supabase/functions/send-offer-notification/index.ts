@@ -29,8 +29,10 @@ const wrapEmailHtml = (content: string): string => `
         <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
           <!-- Header -->
           <tr>
-            <td style="background-color: #1a1a1a; padding: 24px; text-align: center;">
-              <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png" alt="Vendibook" height="32" style="height: 32px;">
+            <td style="padding: 24px; text-align: center;">
+              <a href="https://vendibook.com" style="display: inline-block; text-decoration: none;">
+                <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png" alt="Vendibook" style="height: 56px;">
+              </a>
             </td>
           </tr>
           <!-- Content -->

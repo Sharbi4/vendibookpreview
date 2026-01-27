@@ -22,7 +22,7 @@ const logStep = (step: string, details?: any) => {
 
 // Production domain - always use vendibook.com
 const SITE_URL = 'https://vendibook.com';
-const LOGO_URL = `${SITE_URL}/images/vendibook-email-logo.png`;
+const LOGO_URL = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png";
 
 const wrapEmailHtml = (content: string) => `
   <!DOCTYPE html>
@@ -43,8 +43,8 @@ const wrapEmailHtml = (content: string) => `
     <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
       <!-- Logo Header -->
       <div style="text-align: center; margin-bottom: 24px;">
-        <a href="${SITE_URL}" style="display: inline-block; background-color: #ffffff; padding: 16px 24px; border-radius: 12px;">
-          <img src="${LOGO_URL}" alt="VendiBook" style="max-width: 360px; height: auto;" />
+        <a href="${SITE_URL}" style="display: inline-block; text-decoration: none;">
+          <img src="${LOGO_URL}" alt="VendiBook" style="height: 56px;" />
         </a>
       </div>
       <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">

@@ -73,7 +73,9 @@ serve(async (req) => {
             <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
               
               <div style="text-align: center; margin-bottom: 24px;">
-                <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png" alt="VendiBook" style="height: 40px;" />
+                <a href="https://vendibook.com" style="display: inline-block; text-decoration: none;">
+                  <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png" alt="VendiBook" style="height: 56px;" />
+                </a>
               </div>
               
               <h2 style="color: #1a1a1a; font-size: 22px; margin-bottom: 16px;">Hey ${firstName}! 👋</h2>
