@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Clock, Star, ChevronRight, MessageCircle, Award } from 'lucide-react';
+import { ShieldCheck, Clock, Star, ChevronRight, MessageCircle, Award, Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import MessageHostButton from '@/components/messaging/MessageHostButton';
 import { useHostResponseTime } from '@/hooks/useHostResponseTime';
 import { useListingAverageRating } from '@/hooks/useReviews';
 import { VerifiedBadgeImage } from '@/components/verification/VerificationBadge';
+import { formatLastActive } from '@/hooks/useActivityTracker';
 
 interface EnhancedHostCardProps {
   hostId: string;
@@ -15,6 +16,7 @@ interface EnhancedHostCardProps {
   hostAvatar?: string | null;
   isVerified?: boolean;
   memberSince?: string;
+  lastActiveAt?: string | null;
 }
 
 const containerVariants = {
@@ -48,6 +50,7 @@ const EnhancedHostCard = ({
   hostAvatar, 
   isVerified = false,
   memberSince,
+  lastActiveAt,
 }: EnhancedHostCardProps) => {
   const initials = hostName 
     ? hostName.replace(/\.$/, '').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -58,6 +61,8 @@ const EnhancedHostCard = ({
   const { data: ratingData } = useListingAverageRating(listingId);
 
   const memberYear = memberSince ? new Date(memberSince).getFullYear() : null;
+  const lastActiveText = formatLastActive(lastActiveAt || null);
+  const isActiveNow = lastActiveText === 'Active now';
 
   return (
     <motion.div 
@@ -124,6 +129,12 @@ const EnhancedHostCard = ({
                 <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
                   <Award className="h-3.5 w-3.5" />
                   Hosting since {memberYear}
+                </p>
+              )}
+              {lastActiveText && (
+                <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+                  <Circle className={`h-2 w-2 ${isActiveNow ? 'fill-emerald-500 text-emerald-500' : 'fill-muted-foreground/50 text-muted-foreground/50'}`} />
+                  {lastActiveText}
                 </p>
               )}
             </div>

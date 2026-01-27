@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useActivityTracker } from '@/hooks/useActivityTracker';
 
 type AppRole = 'host' | 'shopper';
 
@@ -323,6 +324,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const hasRole = (role: AppRole) => roles.includes(role);
 
   const isVerified = profile?.identity_verified ?? false;
+
+  // Track user activity for "last active" feature
+  useActivityTracker();
 
   return (
     <AuthContext.Provider

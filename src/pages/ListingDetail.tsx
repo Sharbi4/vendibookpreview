@@ -349,6 +349,7 @@ const ListingDetail = () => {
                 hostAvatar={host?.avatar_url}
                 isVerified={host?.identity_verified || false}
                 memberSince={host?.created_at}
+                lastActiveAt={host?.last_active_at}
               />
 
               {/* Divider */}
