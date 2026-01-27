@@ -27,6 +27,424 @@ export const BLOG_CATEGORIES = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'sell-vs-rent-food-trailer-truck-ghost-kitchen',
+    title: 'Sell vs Rent Your Food Trailer, Truck, or Ghost Kitchen: Why the New Food Business Is Fluid',
+    description: 'The modern food entrepreneur doesn\'t just choose sell or rent—they stay flexible. Learn how to monetize your food trailer, truck, or ghost kitchen the smart way.',
+    excerpt: 'The food business used to be a single bet: sign a lease, build out, hope it works. Now it\'s fluid by design. Here\'s how to decide whether to sell, rent, or do both.',
+    content: `
+<p class="text-lg text-muted-foreground mb-6"><em>By The Vendibook Team | Estimated Read Time: 10 Minutes</em></p>
+
+<p class="text-lg mb-6">The food business used to be a single bet: sign a lease, build out a space, and hope your concept hits.</p>
+
+<p class="mb-6">Now it's <strong>flexible by design</strong>.</p>
+
+<p class="mb-6">Entrepreneurs are launching faster, moving smarter, and building income streams that adapt to seasons, events, trends, and real life. That's why the "sell vs rent" decision isn't just about equipment—it's about how you want to <strong>monetize your business right now</strong> while keeping options open.</p>
+
+<p class="mb-8">This guide covers the three biggest asset types in the modern mobile food economy: <strong>food trailers</strong>, <strong>food trucks</strong>, and <strong>ghost kitchens / commercial kitchen space</strong>—and how to decide whether to sell, rent, or do both.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Why Food Businesses Are More Fluid Than Ever</h2>
+
+<p class="mb-4"><strong>Demand moves fast:</strong></p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li>A festival weekend can outperform a slow month</li>
+<li>Catering can become your main revenue overnight</li>
+<li>A viral post can create a line around the block</li>
+<li>Costs and staffing can change instantly</li>
+</ul>
+
+<p class="mb-4"><strong>Owners are responding by choosing assets that can pivot:</strong></p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li>Rent for a short season</li>
+<li>Upgrade equipment without long-term leases</li>
+<li>Test a concept before committing</li>
+<li>Monetize downtime instead of paying to store unused assets</li>
+</ul>
+
+<p class="mb-8">That's the "fluid" food business: <strong>less static, more modular</strong>.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Option 1: Selling (Clean Exit, Immediate Capital)</h2>
+
+<p class="mb-4">Selling is the right move when you want:</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li>A lump sum to reinvest (bigger build, better location, different concept)</li>
+<li>To simplify your life (no bookings, maintenance coordination, scheduling)</li>
+<li>To exit the business entirely</li>
+</ul>
+
+<div class="bg-muted p-6 rounded-lg mb-6">
+<h3 class="font-bold mb-3">Sell your trailer/truck if:</h3>
+<ul class="list-disc pl-6 space-y-2">
+<li>You're upgrading or getting out</li>
+<li>The asset is sitting unused and you don't want to manage rentals</li>
+<li>You need capital now more than you need recurring income</li>
+<li>The market is hot and buyers are paying strong prices</li>
+</ul>
+</div>
+
+<p class="mb-8"><strong>Pro:</strong> Fast cash, fewer ongoing responsibilities<br/><strong>Con:</strong> You give up future earning power</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Option 2: Renting (Recurring Income + Flexibility)</h2>
+
+<p class="mb-4">Renting is the modern wealth play—turning your asset into a <strong>monthly earner</strong>.</p>
+
+<div class="bg-muted p-6 rounded-lg mb-6">
+<h3 class="font-bold mb-3">Rent your trailer/truck if:</h3>
+<ul class="list-disc pl-6 space-y-2">
+<li>It's sitting idle (even part-time)</li>
+<li>You like the idea of predictable income</li>
+<li>You want to keep the asset while it pays you back</li>
+<li>You're open to simple host responsibilities</li>
+</ul>
+</div>
+
+<p class="mb-8"><strong>Pro:</strong> Steady income + you can still sell later<br/><strong>Con:</strong> Requires basic vetting + wear-and-tear management</p>
+
+<h3 class="text-xl font-bold mt-8 mb-4">Pricing Tiers That Work</h3>
+
+<p class="mb-4">The best rental strategies are tiered:</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li><strong>Daily:</strong> Highest rate (short-term urgency)</li>
+<li><strong>Weekly:</strong> Discounted</li>
+<li><strong>Monthly:</strong> Best for stability (often the sweet spot)</li>
+</ul>
+
+<p class="mb-8">Monthly renters can be ideal if you want fewer turnovers and more consistency.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">The Smartest Move: Monetize First, Decide Later</h2>
+
+<p class="mb-4">Here's the modern play many owners use:</p>
+
+<ol class="list-decimal pl-6 mb-6 space-y-2">
+<li><strong>List it for rent</strong></li>
+<li>Earn income for 3–12 months</li>
+<li>Decide later whether to:
+  <ul class="list-disc pl-6 mt-2 space-y-1">
+    <li>Keep renting (cashflow asset)</li>
+    <li>Sell when the price is right</li>
+    <li>Offer a rent-to-own path when it makes sense</li>
+  </ul>
+</li>
+</ol>
+
+<p class="mb-8">This keeps the business flexible and reduces pressure to accept low offers.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Ghost Kitchens: Sell, Rent, or "Sell Access"</h2>
+
+<p class="mb-6">Ghost kitchens are the most underrated monetization opportunity—because kitchen space can generate income even without a full "business sale."</p>
+
+<div class="bg-muted p-6 rounded-lg mb-6">
+<h3 class="font-bold mb-3">Rent your ghost kitchen / commercial kitchen space if:</h3>
+<ul class="list-disc pl-6 space-y-2">
+<li>You have unused hours, days, or stations</li>
+<li>Your kitchen is idle during mornings/late nights</li>
+<li>You want a consistent, predictable revenue stream</li>
+</ul>
+</div>
+
+<h3 class="text-xl font-bold mt-8 mb-4">Common Ghost Kitchen Rental Models</h3>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li><strong>Hourly blocks:</strong> Great for prep-only businesses</li>
+<li><strong>Shift-based:</strong> Morning/afternoon/evening schedules</li>
+<li><strong>Monthly membership:</strong> Stable income, predictable access</li>
+</ul>
+
+<h3 class="text-xl font-bold mt-8 mb-4">How to Protect Your Kitchen (Without Being Complicated)</h3>
+
+<p class="mb-4">Require basic documentation:</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li>Business registration (or proof of business intent)</li>
+<li>Liability insurance (or temporary coverage, if available)</li>
+<li>Food handler/manager certs</li>
+<li>ID verification</li>
+<li>Kitchen rules + cleaning expectations</li>
+</ul>
+
+<p class="mb-8">Ghost kitchens win because they're flexible: you're not just "renting a building," you're <strong>selling access to production capacity</strong>.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Make Renting Safer (and Higher Quality) With a Simple "Trust Layer"</h2>
+
+<p class="mb-4">Whether it's a trailer, truck, or kitchen, great hosting comes down to three things:</p>
+
+<ol class="list-decimal pl-6 mb-8 space-y-2">
+<li><strong>Clear requirements</strong> (docs, expectations, rules)</li>
+<li><strong>Clear pricing and availability</strong></li>
+<li><strong>Clear next steps</strong> (how to book, what happens after)</li>
+</ol>
+
+<p class="mb-8">That's how you avoid bad renters and attract serious operators.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Quick Guide: What Should You Do This Month?</h2>
+
+<div class="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 p-6 rounded-lg mb-6">
+<h3 class="font-bold text-green-800 dark:text-green-200 mb-3">✅ Rent it if:</h3>
+<ul class="list-disc pl-6 space-y-2 text-green-700 dark:text-green-300">
+<li>You want recurring income</li>
+<li>You aren't ready to sell</li>
+<li>You can handle a simple approval flow</li>
+</ul>
+</div>
+
+<div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-6 rounded-lg mb-6">
+<h3 class="font-bold text-blue-800 dark:text-blue-200 mb-3">💰 Sell it if:</h3>
+<ul class="list-disc pl-6 space-y-2 text-blue-700 dark:text-blue-300">
+<li>You want cash now</li>
+<li>You're done with the asset</li>
+<li>You don't want ongoing management</li>
+</ul>
+</div>
+
+<div class="bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 p-6 rounded-lg mb-6">
+<h3 class="font-bold text-purple-800 dark:text-purple-200 mb-3">🔄 Do both if:</h3>
+<ul class="list-disc pl-6 space-y-2 text-purple-700 dark:text-purple-300">
+<li>You want income while you wait for the right buyer</li>
+<li>You want flexibility (rent now, sell later)</li>
+</ul>
+</div>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Ready to List Your Asset?</h2>
+
+<p class="mb-6">Whether you're renting, selling, or testing the waters, Vendibook makes it simple to list your food trailer, food truck, or ghost kitchen and connect with serious operators.</p>
+
+<p class="mb-6"><a href="/list" class="text-primary underline font-medium">List your asset today →</a></p>
+    `,
+    author: 'Vendibook Team',
+    authorRole: 'Editorial',
+    datePublished: '2026-01-27',
+    category: 'business-tips',
+    tags: ['sell vs rent', 'food trailer', 'food truck', 'ghost kitchen', 'monetization', 'passive income'],
+    image: '/images/taco-truck-hero.png',
+    readingTime: 10,
+    featured: true,
+  },
+  {
+    slug: 'rent-out-vendor-lot-commercial-property-host-guide',
+    title: 'How to Rent Out Your Vendor Lot or Commercial Property: The Complete Host Guide',
+    description: 'Turn your empty lot, parking space, or commercial property into a recurring income stream by hosting food vendors. Learn how to become the kind of host vendors love.',
+    excerpt: 'If you own land, a parking lot, or commercial space—even a small underused area—you might be sitting on one of the simplest income streams in the food world: vendor lots.',
+    content: `
+<p class="text-lg text-muted-foreground mb-6"><em>By The Vendibook Team | Estimated Read Time: 9 Minutes</em></p>
+
+<p class="text-lg mb-6">If you own land, a parking lot, or commercial space—even a small underused area—you might be sitting on one of the simplest income streams in the food world:</p>
+
+<p class="text-2xl font-bold mb-6">Vendor lots.</p>
+
+<p class="mb-6">The mobile food economy is booming, and operators are constantly hunting for:</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li>Reliable daily/weekly spots</li>
+<li>High-traffic parking lots</li>
+<li>Safe places to operate</li>
+<li>Event-friendly spaces with power and access</li>
+</ul>
+
+<p class="mb-8">If you can offer a clean, compliant, well-managed spot, you can monetize your property—<strong>without building a restaurant</strong>.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">What Counts as a "Vendor Lot"?</h2>
+
+<p class="mb-4">A vendor lot can be:</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li>Empty land or gravel lot</li>
+<li>A section of a commercial parking lot</li>
+<li>Unused space behind a building</li>
+<li>A corner of a retail plaza</li>
+<li>A seasonal pop-up location</li>
+<li>Church lots, VFW lots, bars, breweries, warehouses</li>
+<li>Industrial areas where workers need food nearby</li>
+</ul>
+
+<p class="mb-8"><strong>If vehicles can park safely and customers can access it, you can potentially monetize it.</strong></p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Why Vendors Pay for a Good Spot</h2>
+
+<p class="mb-4">A vendor doesn't just want "somewhere to park."</p>
+
+<p class="mb-4">They want:</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li><strong>Predictable traffic</strong></li>
+<li><strong>Low hassle</strong></li>
+<li><strong>Safety</strong></li>
+<li><strong>Fair rules</strong></li>
+<li><strong>Consistent access</strong></li>
+<li><strong>Zero drama</strong> with enforcement or neighbors</li>
+</ul>
+
+<p class="mb-8">When you provide a professional experience, you can charge professional rates—and attract better vendors.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Pricing Models That Work</h2>
+
+<p class="mb-4">Vendor lot pricing can be structured in a few ways:</p>
+
+<div class="grid md:grid-cols-2 gap-4 mb-8">
+<div class="bg-muted p-4 rounded-lg">
+<h3 class="font-bold mb-2">1) Daily</h3>
+<p class="text-sm text-muted-foreground">Perfect for rotating vendors, testing demand, weekends</p>
+</div>
+<div class="bg-muted p-4 rounded-lg">
+<h3 class="font-bold mb-2">2) Weekly</h3>
+<p class="text-sm text-muted-foreground">Perfect for repeat vendors, predictable schedules, building "regulars"</p>
+</div>
+<div class="bg-muted p-4 rounded-lg">
+<h3 class="font-bold mb-2">3) Monthly</h3>
+<p class="text-sm text-muted-foreground">Perfect for long-term stability, consistent income, vendor loyalty</p>
+</div>
+<div class="bg-muted p-4 rounded-lg">
+<h3 class="font-bold mb-2">4) Revenue Share (Advanced)</h3>
+<p class="text-sm text-muted-foreground">Harder to manage but can work for premium, high-traffic lots</p>
+</div>
+</div>
+
+<p class="mb-8">Most hosts start with <strong>daily/weekly/monthly</strong> because it's clean and simple.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">The "Good Host" Blueprint: How to Run a Vendor Lot Like a Pro</h2>
+
+<h3 class="text-xl font-bold mt-8 mb-4">1) Set Clear Requirements (And Enforce Them Kindly)</h3>
+
+<p class="mb-4">Good lots have standards. Not complicated—just clear.</p>
+
+<p class="mb-4"><strong>Common requirements:</strong></p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li>Proof of insurance (liability)</li>
+<li>Permits/licenses as required locally</li>
+<li>Business registration (optional but helpful)</li>
+<li>Health department compliance for food vendors</li>
+<li>Generator noise rules (if applicable)</li>
+</ul>
+
+<p class="mb-8">This protects you and builds trust with customers and neighbors.</p>
+
+<h3 class="text-xl font-bold mt-8 mb-4">2) Provide Basic Infrastructure (Or Be Transparent About What You Don't Provide)</h3>
+
+<p class="mb-4">Vendors want to know exactly what they're getting.</p>
+
+<p class="mb-4"><strong>At minimum, be clear about:</strong></p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li>Power access (yes/no + details)</li>
+<li>Water (yes/no)</li>
+<li>Restroom access (yes/no)</li>
+<li>Trash expectations</li>
+<li>Parking layout and customer flow</li>
+<li>Hours allowed</li>
+<li>Lighting and safety</li>
+</ul>
+
+<p class="mb-8"><strong>Even if you provide nothing, honesty wins.</strong> Ambiguity kills bookings.</p>
+
+<h3 class="text-xl font-bold mt-8 mb-4">3) Make Setup Easy</h3>
+
+<p class="mb-4">The best vendor lots are frictionless:</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li>Simple check-in instructions</li>
+<li>Arrival window</li>
+<li>Where to park</li>
+<li>Where customers should enter</li>
+<li>What to do if there's an issue</li>
+</ul>
+
+<p class="mb-8"><strong>When vendors feel supported, they come back.</strong></p>
+
+<h3 class="text-xl font-bold mt-8 mb-4">4) Protect the Customer Experience (This Is How You Scale)</h3>
+
+<p class="mb-4">If you want to monetize "to the masses," you need consistency.</p>
+
+<p class="mb-4">That means:</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li>Keep the lot clean</li>
+<li>Keep traffic flow safe</li>
+<li>Reduce confusion for customers</li>
+<li>Avoid vendor conflict with rules and spacing</li>
+<li>Communicate schedule clearly</li>
+</ul>
+
+<p class="mb-8">The vendor lot is a mini marketplace. <strong>Your job is to run it smoothly.</strong></p>
+
+<h3 class="text-xl font-bold mt-8 mb-4">5) Build a Rotation Strategy (How to Keep Customers Returning)</h3>
+
+<p class="mb-4">Customers return when there's variety but also consistency.</p>
+
+<p class="mb-4"><strong>A strong rotation strategy:</strong></p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li>1–2 anchor vendors (popular staples)</li>
+<li>Rotating vendors for variety</li>
+<li>Themed days (Taco Tuesday, Seafood Friday)</li>
+<li>Event tie-ins (game days, church events, community markets)</li>
+</ul>
+
+<p class="mb-8"><strong>Consistency builds habit. Habit builds sales. Sales attract better vendors.</strong></p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">How to Attract Vendors (Fast)</h2>
+
+<p class="mb-4">To fill your lot quickly:</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li>Post in local vendor Facebook groups</li>
+<li>Reach out directly to active food trucks/trailers in your city</li>
+<li>Partner with breweries/bars that want food but don't want a kitchen</li>
+<li>Offer a "trial day" for new vendors at a discounted rate</li>
+<li>Take great photos and show traffic potential</li>
+</ul>
+
+<p class="mb-8"><strong>The better your listing looks, the higher-quality vendors you attract.</strong></p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Vendor Lot Hosting = Recurring Revenue With Real Leverage</h2>
+
+<p class="mb-4">Here's the part that makes this powerful:</p>
+
+<p class="mb-4">A good vendor lot can become:</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li>A reliable side income stream</li>
+<li>A community hotspot</li>
+<li>A mini food truck park</li>
+<li>A launchpad for events and sponsorships</li>
+<li>A scalable marketplace model</li>
+</ul>
+
+<p class="mb-8">You're not just renting land—you're <strong>monetizing traffic + access + experience</strong>.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Final Checklist: A Great Vendor Lot Host Is…</h2>
+
+<div class="bg-muted p-6 rounded-lg mb-8">
+<ul class="space-y-3">
+<li class="flex items-center gap-2"><span class="text-green-600">✅</span> Clear about rules</li>
+<li class="flex items-center gap-2"><span class="text-green-600">✅</span> Consistent with scheduling</li>
+<li class="flex items-center gap-2"><span class="text-green-600">✅</span> Fair with pricing</li>
+<li class="flex items-center gap-2"><span class="text-green-600">✅</span> Focused on safety and cleanliness</li>
+<li class="flex items-center gap-2"><span class="text-green-600">✅</span> Easy to communicate with</li>
+<li class="flex items-center gap-2"><span class="text-green-600">✅</span> Supportive without micromanaging</li>
+</ul>
+</div>
+
+<p class="mb-8">If you can do that, vendors will stay, customers will return, and your property becomes a <strong>true earning asset</strong>.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Ready to List Your Vendor Lot?</h2>
+
+<p class="mb-6">Vendibook makes it simple to list your lot, set your availability, and connect with verified food vendors in your area.</p>
+
+<p class="mb-6"><a href="/list" class="text-primary underline font-medium">List your vendor lot today →</a></p>
+    `,
+    author: 'Vendibook Team',
+    authorRole: 'Editorial',
+    datePublished: '2026-01-27',
+    category: 'business-tips',
+    tags: ['vendor lot', 'commercial property', 'hosting', 'passive income', 'property management', 'food truck park'],
+    image: '/images/taco-truck-hero.png',
+    readingTime: 9,
+    featured: true,
+  },
+  {
     slug: 'how-to-start-food-truck-business-2025',
     title: 'How to Start a Food Truck Business in 2025: Complete Guide',
     description: 'Everything you need to know about starting a food truck business in 2025, from initial planning to your first day of sales.',
