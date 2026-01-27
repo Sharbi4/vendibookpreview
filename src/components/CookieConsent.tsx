@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Cookie, X, Settings } from 'lucide-react';
 import {
@@ -26,24 +26,41 @@ const defaultPreferences: CookiePreferences = {
   functional: false,
 };
 
+// Pages where cookie consent is required for tracking
+const CONSENT_REQUIRED_ROUTES = [
+  '/listing/',
+  '/checkout',
+  '/book/',
+  '/buy/',
+  '/search',
+  '/browse',
+];
+
 const CookieConsent = () => {
   const [showBanner, setShowBanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [preferences, setPreferences] = useState<CookiePreferences>(defaultPreferences);
+  const location = useLocation();
 
   useEffect(() => {
     const consent = localStorage.getItem('cookie-consent');
     if (!consent) {
-      // Show banner after a short delay
-      const timer = setTimeout(() => setShowBanner(true), 1000);
-      return () => clearTimeout(timer);
+      // Only show banner on pages where tracking matters
+      const shouldShowOnRoute = CONSENT_REQUIRED_ROUTES.some(route => 
+        location.pathname.startsWith(route)
+      );
+      
+      if (shouldShowOnRoute) {
+        const timer = setTimeout(() => setShowBanner(true), 1000);
+        return () => clearTimeout(timer);
+      }
     } else {
       const savedPrefs = JSON.parse(consent);
       setPreferences(savedPrefs);
       // Initialize tracking based on saved preferences
       initializeTrackingFromConsent();
     }
-  }, []);
+  }, [location.pathname]);
 
   const savePreferences = (prefs: CookiePreferences) => {
     localStorage.setItem('cookie-consent', JSON.stringify(prefs));
