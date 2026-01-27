@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 const ACTIVITY_UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
