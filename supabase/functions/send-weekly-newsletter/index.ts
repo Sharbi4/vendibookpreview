@@ -73,7 +73,9 @@ const generateHtmlEmail = (unsubscribeUrl: string, blogTitle: string, blogUrl: s
           <!-- Header with Logo -->
           <tr>
             <td align="center" style="padding: 32px 40px 24px; background-color: ${COLORS.white};">
-              <img src="https://vendibook.com/images/vendibook-email-logo.png" alt="Vendibook" style="max-width: 180px; height: auto;" />
+              <a href="https://vendibook.com" style="text-decoration: none;">
+                <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png" alt="VendiBook" style="height: 56px;" />
+              </a>
             </td>
           </tr>
           
