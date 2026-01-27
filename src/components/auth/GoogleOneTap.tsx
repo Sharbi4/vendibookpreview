@@ -1,6 +1,6 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import type { User } from '@supabase/supabase-js';
 import { useLocation } from 'react-router-dom';
 
 // Google Client ID - this is a publishable key, safe to include in client code
@@ -41,9 +41,42 @@ interface GoogleOneTapProps {
 }
 
 export const GoogleOneTap = ({ onSuccess, onError }: GoogleOneTapProps) => {
-  const { user, isLoading } = useAuth();
+  // NOTE: We intentionally do NOT use useAuth() here.
+  // In dev with HMR/Fast Refresh, a context module edit can temporarily
+  // create a new context instance, making consumers see `undefined`.
+  // Google One Tap is optional and should never blank-screen the app.
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
   const initialized = useRef(false);
+
+  // Keep local auth state in sync (no AuthContext dependency)
+  useEffect(() => {
+    let mounted = true;
+
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!mounted) return;
+        setUser(data.session?.user ?? null);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setIsLoading(false);
+      });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const handleCredentialResponse = useCallback(async (response: { credential: string }) => {
     try {
