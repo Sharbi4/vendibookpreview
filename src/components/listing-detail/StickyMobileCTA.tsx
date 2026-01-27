@@ -44,7 +44,7 @@ export const StickyMobileCTA = ({
 }: StickyMobileCTAProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true); // Always visible on mobile/tablet
   const [showDateModal, setShowDateModal] = useState(false);
   
   // Sale listing states
@@ -55,14 +55,10 @@ export const StickyMobileCTA = ({
   // Check if user is the owner of this listing
   const isOwner = user?.id === hostId;
 
-  // Show sticky CTA after scrolling past a certain point
+  // Always show sticky CTA on mobile/tablet (no scroll requirement)
   useEffect(() => {
-    const handleScroll = () => {
-      setIsVisible(window.scrollY > 400);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Keep visible always for better conversion on mobile
+    setIsVisible(true);
   }, []);
 
   // Show owner banner instead of CTA buttons (always visible for owners after scroll)
@@ -127,15 +123,16 @@ export const StickyMobileCTA = ({
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-background/95 backdrop-blur-md border-t border-border shadow-lg safe-area-pb">
-        <div className="container py-3 flex items-center justify-between gap-3">
-          {/* Price Display */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-background/98 backdrop-blur-lg border-t-2 border-primary/20 shadow-2xl safe-area-pb">
+        <div className="container py-4 flex items-center justify-between gap-4">
+          {/* Price Display - Enhanced */}
           <div className="flex-shrink-0">
-            <div className="flex items-baseline gap-1">
-              <span className="text-lg font-bold text-foreground">
+            <div className="flex flex-col">
+              <span className="text-xl sm:text-2xl font-bold text-foreground">
                 ${price?.toLocaleString() || '—'}
               </span>
-              {isRental && <span className="text-sm text-muted-foreground">/day</span>}
+              {isRental && <span className="text-xs text-muted-foreground">per day</span>}
+              {!isRental && <span className="text-xs text-green-600 font-medium">Ready to buy</span>}
             </div>
           </div>
 
@@ -143,23 +140,23 @@ export const StickyMobileCTA = ({
           {isRental ? (
             <Button
               variant="dark-shine"
-              size="sm"
+              size="lg"
               onClick={handleRentalCTA}
               disabled={!isAvailable}
-              className="gap-1.5 min-w-[120px]"
+              className="gap-2 min-w-[140px] h-12 text-base font-semibold shadow-lg"
             >
-              {instantBook ? <Zap className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
+              {instantBook ? <Zap className="h-5 w-5" /> : <Calendar className="h-5 w-5" />}
               {instantBook ? 'Book Now' : 'Request to Book'}
             </Button>
           ) : (
-            /* Sale CTAs - Buy Now & Make Offer */
-            <div className="flex items-center gap-2">
+            /* Sale CTAs - Buy Now (prominent) & Make Offer */
+            <div className="flex items-center gap-2 sm:gap-3">
               <Button
                 variant="outline"
-                size="sm"
+                size="default"
                 onClick={handleMakeOffer}
                 disabled={!isAvailable}
-                className="gap-1.5"
+                className="gap-1.5 h-10 sm:h-12 px-3 sm:px-4"
               >
                 <Tag className="h-4 w-4" />
                 <span className="hidden xs:inline">Make Offer</span>
@@ -167,12 +164,12 @@ export const StickyMobileCTA = ({
               </Button>
               <Button
                 variant="dark-shine"
-                size="sm"
+                size="lg"
                 onClick={handleBuyNow}
                 disabled={!isAvailable}
-                className="gap-1.5"
+                className="gap-2 h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg font-bold shadow-xl animate-pulse-subtle"
               >
-                <ShoppingCart className="h-4 w-4" />
+                <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6" />
                 Buy Now
               </Button>
             </div>
