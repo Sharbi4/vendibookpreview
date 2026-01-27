@@ -1242,6 +1242,89 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_code_uses: {
+        Row: {
+          discount_applied: number
+          id: string
+          promo_code_id: string
+          transaction_id: string | null
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          discount_applied: number
+          id?: string
+          promo_code_id: string
+          transaction_id?: string | null
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          discount_applied?: number
+          id?: string
+          promo_code_id?: string
+          transaction_id?: string | null
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_code_uses_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_codes: {
+        Row: {
+          applies_to: string
+          code: string
+          created_at: string
+          current_uses: number
+          description: string | null
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          min_purchase_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          applies_to?: string
+          code: string
+          created_at?: string
+          current_uses?: number
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_purchase_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          applies_to?: string
+          code?: string
+          created_at?: string
+          current_uses?: number
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_purchase_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           auth: string
@@ -1407,6 +1490,8 @@ export type Database = {
           payment_intent_id: string | null
           payout_completed_at: string | null
           platform_fee: number
+          promo_code_id: string | null
+          promo_discount: number | null
           seller_confirmed_at: string | null
           seller_id: string
           seller_payout: number
@@ -1446,6 +1531,8 @@ export type Database = {
           payment_intent_id?: string | null
           payout_completed_at?: string | null
           platform_fee: number
+          promo_code_id?: string | null
+          promo_discount?: number | null
           seller_confirmed_at?: string | null
           seller_id: string
           seller_payout: number
@@ -1485,6 +1572,8 @@ export type Database = {
           payment_intent_id?: string | null
           payout_completed_at?: string | null
           platform_fee?: number
+          promo_code_id?: string | null
+          promo_discount?: number | null
           seller_confirmed_at?: string | null
           seller_id?: string
           seller_payout?: number
@@ -1503,6 +1592,13 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_transactions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
             referencedColumns: ["id"]
           },
         ]

@@ -300,16 +300,8 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
   };
 
   return (
-    <div className="flex flex-col justify-center min-h-screen p-6 sm:p-8 lg:p-12 bg-background">
+    <div className="flex flex-col justify-center min-h-[50vh] lg:min-h-screen p-6 sm:p-8 lg:p-12 bg-background">
       <div className="w-full max-w-md mx-auto">
-        {/* Mobile logo - only show on mobile */}
-        <div className="lg:hidden text-center mb-8">
-          <img 
-            src={vendibookLogo} 
-            alt="Vendibook" 
-            className="h-16 w-auto mx-auto"
-          />
-        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
