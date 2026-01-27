@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,17 +20,12 @@ const COLORS = {
 
 interface WeeklyNewsletterRequest {
   testEmail?: string;
-  // Blog
+  sendToAll?: boolean;
   blog_1_title?: string;
   blog_1_url?: string;
 }
 
-const generateHtmlEmail = (data: WeeklyNewsletterRequest, unsubscribeUrl: string): string => {
-  const {
-    blog_1_title = "Sell vs Rent: Why the New Food Business Is Fluid",
-    blog_1_url = "https://vendibook.com/blog",
-  } = data;
-
+const generateHtmlEmail = (unsubscribeUrl: string, blogTitle: string, blogUrl: string): string => {
   // Top Picks - Real production listings
   const topPicks = [
     {
@@ -213,7 +209,7 @@ const generateHtmlEmail = (data: WeeklyNewsletterRequest, unsubscribeUrl: string
             <td style="padding: 24px 40px 16px;">
               <p style="margin: 0; font-size: 14px; color: ${COLORS.gray}; line-height: 1.6;">
                 📖 <strong style="color: ${COLORS.charcoal};">New this week on the blog:</strong> 
-                <a href="${blog_1_url}" style="color: ${COLORS.primary}; text-decoration: underline;">${blog_1_title}</a>
+                <a href="${blogUrl}" style="color: ${COLORS.primary}; text-decoration: underline;">${blogTitle}</a>
               </p>
             </td>
           </tr>
@@ -288,32 +284,139 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("RESEND_API_KEY is not configured");
     }
 
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
     const resend = new Resend(resendApiKey);
     const data = await req.json() as WeeklyNewsletterRequest;
-    const { testEmail } = data;
+    const { testEmail, sendToAll } = data;
 
-    if (!testEmail) {
-      throw new Error("testEmail is required for this function");
-    }
+    const blogTitle = data.blog_1_title || "Sell vs Rent: Why the New Food Business Is Fluid";
+    const blogUrl = data.blog_1_url || "https://vendibook.com/blog/sell-vs-rent-food-trailer-truck-ghost-kitchen";
 
     const subjectLine = "This Week on Vendibook: Fresh Listings, Tools & Insights 🚀";
-    const unsubscribeUrl = `https://vendibook.com/unsubscribe?email=${encodeURIComponent(testEmail)}`;
 
-    const emailHtml = generateHtmlEmail(data, unsubscribeUrl);
+    // If testEmail is provided, just send to that one address
+    if (testEmail && !sendToAll) {
+      const unsubscribeUrl = `https://vendibook.com/unsubscribe?email=${encodeURIComponent(testEmail)}`;
+      const emailHtml = generateHtmlEmail(unsubscribeUrl, blogTitle, blogUrl);
 
-    const emailResponse = await resend.emails.send({
-      from: "Vendibook <hello@updates.vendibook.com>",
-      to: [testEmail],
-      subject: subjectLine,
-      html: emailHtml,
-    });
+      const emailResponse = await resend.emails.send({
+        from: "Vendibook <hello@updates.vendibook.com>",
+        to: [testEmail],
+        subject: subjectLine,
+        html: emailHtml,
+      });
 
-    console.log("[WEEKLY NEWSLETTER] Test email sent:", emailResponse);
+      console.log("[WEEKLY NEWSLETTER] Test email sent:", emailResponse);
 
-    return new Response(
-      JSON.stringify({ success: true, data: emailResponse }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+      return new Response(
+        JSON.stringify({ success: true, data: emailResponse }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Send to all subscribers
+    if (sendToAll) {
+      console.log("[WEEKLY NEWSLETTER] Fetching all subscribers...");
+
+      // Get newsletter subscribers who haven't unsubscribed
+      const { data: newsletterSubs, error: subError } = await supabase
+        .from("newsletter_subscribers")
+        .select("email")
+        .is("unsubscribed_at", null);
+
+      if (subError) {
+        console.error("[WEEKLY NEWSLETTER] Error fetching newsletter subscribers:", subError);
+        throw new Error(`Failed to fetch newsletter subscribers: ${subError.message}`);
+      }
+
+      // Get all user emails from profiles
+      const { data: userProfiles, error: profileError } = await supabase
+        .from("profiles")
+        .select("email")
+        .not("email", "is", null);
+
+      if (profileError) {
+        console.error("[WEEKLY NEWSLETTER] Error fetching user profiles:", profileError);
+        throw new Error(`Failed to fetch user profiles: ${profileError.message}`);
+      }
+
+      // Combine and deduplicate emails
+      const allEmails = new Set<string>();
+      
+      newsletterSubs?.forEach((sub: { email: string }) => {
+        if (sub.email) allEmails.add(sub.email.toLowerCase().trim());
+      });
+      
+      userProfiles?.forEach((profile: { email: string }) => {
+        if (profile.email) allEmails.add(profile.email.toLowerCase().trim());
+      });
+
+      const emailList = Array.from(allEmails);
+      console.log(`[WEEKLY NEWSLETTER] Found ${emailList.length} unique emails to send to`);
+
+      if (emailList.length === 0) {
+        return new Response(
+          JSON.stringify({ success: true, message: "No subscribers found", sent: 0 }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      // Send in batches of 50 (Resend batch limit is 100)
+      const BATCH_SIZE = 50;
+      const results: any[] = [];
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (let i = 0; i < emailList.length; i += BATCH_SIZE) {
+        const batch = emailList.slice(i, i + BATCH_SIZE);
+        console.log(`[WEEKLY NEWSLETTER] Sending batch ${Math.floor(i / BATCH_SIZE) + 1} (${batch.length} emails)`);
+
+        // Create batch of emails
+        const batchEmails = batch.map(email => ({
+          from: "Vendibook <hello@updates.vendibook.com>",
+          to: [email],
+          subject: subjectLine,
+          html: generateHtmlEmail(
+            `https://vendibook.com/unsubscribe?email=${encodeURIComponent(email)}`,
+            blogTitle,
+            blogUrl
+          ),
+        }));
+
+        try {
+          const batchResponse = await resend.batch.send(batchEmails);
+          results.push(batchResponse);
+          successCount += batch.length;
+          console.log(`[WEEKLY NEWSLETTER] Batch sent successfully`);
+        } catch (batchError: any) {
+          console.error(`[WEEKLY NEWSLETTER] Batch error:`, batchError);
+          errorCount += batch.length;
+        }
+
+        // Small delay between batches to avoid rate limiting
+        if (i + BATCH_SIZE < emailList.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      console.log(`[WEEKLY NEWSLETTER] Complete. Success: ${successCount}, Errors: ${errorCount}`);
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: `Newsletter sent to ${successCount} recipients`,
+          sent: successCount,
+          errors: errorCount,
+          total: emailList.length
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    throw new Error("Either testEmail or sendToAll must be provided");
   } catch (error: any) {
     console.error("[WEEKLY NEWSLETTER] Error:", error);
     return new Response(
