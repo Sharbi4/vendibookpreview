@@ -326,7 +326,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isVerified = profile?.identity_verified ?? false;
 
   // Track user activity for "last active" feature
-  useActivityTracker();
+  useActivityTracker(user);
 
   return (
     <AuthContext.Provider

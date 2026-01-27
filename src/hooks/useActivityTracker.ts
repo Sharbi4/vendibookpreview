@@ -1,15 +1,16 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import type { User } from '@supabase/supabase-js';
 
 const ACTIVITY_UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 /**
  * Hook that tracks user activity and updates last_active_at in profiles table.
  * Updates on mount and every 5 minutes while active.
+ * 
+ * @param user - The authenticated user object (passed directly to avoid circular dependency with AuthContext)
  */
-export const useActivityTracker = () => {
-  const { user } = useAuth();
+export const useActivityTracker = (user: User | null) => {
   const lastUpdate = useRef<number>(0);
 
   useEffect(() => {
