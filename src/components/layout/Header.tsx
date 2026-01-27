@@ -404,7 +404,6 @@ const Header = () => {
           >
             {t('common.learnMore')}
           </Link>
-          <LanguageSwitcher />
         </nav>
 
         {/* Desktop Actions */}
@@ -511,11 +510,12 @@ const Header = () => {
               </Button>
             </>
           )}
+          {/* Language Switcher - Far Right */}
+          <LanguageSwitcher />
         </div>
 
         {/* Mobile Actions - hide when search is open */}
         <div className={`flex md:hidden items-center gap-1 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-          <LanguageSwitcher />
           <Link
             to="/how-it-works"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
@@ -530,6 +530,8 @@ const Header = () => {
           >
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
+          {/* Language Switcher - Far Right */}
+          <LanguageSwitcher />
         </div>
       </div>
 
