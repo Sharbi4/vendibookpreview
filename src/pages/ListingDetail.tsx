@@ -41,6 +41,7 @@ import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 import SEO from '@/components/SEO';
 import JsonLd, { generateProductSchema, generateListingBreadcrumbSchema } from '@/components/JsonLd';
 import { getPublicDisplayName } from '@/lib/displayName';
+import { formatLastActive } from '@/hooks/useActivityTracker';
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -238,6 +239,25 @@ const ListingDetail = () => {
                       <MapPin className="h-4 w-4" />
                       <span>{locationShort}</span>
                     </button>
+                  )}
+
+                  {/* Host Last Active */}
+                  {host?.last_active_at && (
+                    <>
+                      {(ratingData || locationShort) && (
+                        <span className="text-muted-foreground">·</span>
+                      )}
+                      <div className="flex items-center gap-1.5">
+                        <span className={`h-2 w-2 rounded-full ${
+                          formatLastActive(host.last_active_at) === 'Active now' 
+                            ? 'bg-green-500 animate-pulse' 
+                            : 'bg-muted-foreground/50'
+                        }`} />
+                        <span className="text-muted-foreground">
+                          {formatLastActive(host.last_active_at)}
+                        </span>
+                      </div>
+                    </>
                   )}
                 </div>
 
