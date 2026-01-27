@@ -31,6 +31,7 @@ export const BLOG_POSTS: BlogPost[] = [
     title: 'Sell vs Rent Your Food Trailer, Truck, or Ghost Kitchen: Why the New Food Business Is Fluid',
     description: 'The modern food entrepreneur doesn\'t just choose sell or rent—they stay flexible. Learn how to monetize your food trailer, truck, or ghost kitchen the smart way.',
     excerpt: 'The food business used to be a single bet: sign a lease, build out, hope it works. Now it\'s fluid by design. Here\'s how to decide whether to sell, rent, or do both.',
+    image: '/images/blog/sell-vs-rent-food-truck.jpg',
     content: `
 <p class="text-lg text-muted-foreground mb-6"><em>By The Vendibook Team | Estimated Read Time: 10 Minutes</em></p>
 
@@ -218,7 +219,6 @@ export const BLOG_POSTS: BlogPost[] = [
     datePublished: '2026-01-27',
     category: 'business-tips',
     tags: ['sell vs rent', 'food trailer', 'food truck', 'ghost kitchen', 'monetization', 'passive income'],
-    image: '/images/taco-truck-hero.png',
     readingTime: 10,
     featured: true,
   },
@@ -440,7 +440,7 @@ export const BLOG_POSTS: BlogPost[] = [
     datePublished: '2026-01-27',
     category: 'business-tips',
     tags: ['vendor lot', 'commercial property', 'hosting', 'passive income', 'property management', 'food truck park'],
-    image: '/images/taco-truck-hero.png',
+    image: '/images/blog/vendor-lot-hosting.webp',
     readingTime: 9,
     featured: true,
   },
