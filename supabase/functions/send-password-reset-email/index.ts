@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
 
     const resend = new Resend(resendApiKey);
     const siteUrl = Deno.env.get("SITE_URL") || "https://vendibook.com";
-    const logoUrl = `${siteUrl}/images/vendibook-email-logo.png`;
+    const logoUrl = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png";
 
     const emailResponse = await resend.emails.send({
       from: "VendiBook <noreply@updates.vendibook.com>",
@@ -65,9 +65,9 @@ Deno.serve(async (req) => {
           <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
             <!-- Header with Logo -->
             <div style="text-align: center; margin-bottom: 40px;">
-              <div style="display: inline-block; background-color: #ffffff; padding: 16px 24px; border-radius: 12px; margin-bottom: 16px;">
-                <img src="${logoUrl}" alt="VendiBook" style="max-width: 360px; height: auto;" />
-              </div>
+              <a href="https://vendibook.com" style="display: inline-block; text-decoration: none;">
+                <img src="${logoUrl}" alt="VendiBook" style="height: 56px;" />
+              </a>
               <p style="color: #6b7280; font-size: 14px; margin-top: 8px;">Your Mobile Food Business Marketplace</p>
             </div>
             

@@ -276,7 +276,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     const totalItems = enrichedBookings.length + enrichedDocs.length + enrichedDisputes.length;
-    const logoUrl = 'https://vendibookpreview.lovable.app/images/vendibook-email-logo.png';
+    const logoUrl = 'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png';
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -297,8 +297,8 @@ const handler = async (req: Request): Promise<Response> => {
         <div style="max-width: 700px; margin: 0 auto; padding: 40px 20px;">
           <!-- Logo Header -->
           <div style="text-align: center; margin-bottom: 24px;">
-            <a href="https://vendibookpreview.lovable.app" style="display: inline-block; background-color: #ffffff; padding: 16px 24px; border-radius: 12px;">
-              <img src="${logoUrl}" alt="VendiBook" style="max-width: 360px; height: auto;" />
+            <a href="https://vendibook.com" style="display: inline-block; text-decoration: none;">
+              <img src="${logoUrl}" alt="VendiBook" style="height: 56px;" />
             </a>
           </div>
           <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
