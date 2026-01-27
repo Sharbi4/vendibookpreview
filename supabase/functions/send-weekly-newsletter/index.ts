@@ -19,16 +19,6 @@ const COLORS = {
 
 interface WeeklyNewsletterRequest {
   testEmail?: string;
-  // Featured listings (Top Picks)
-  listing_1_title?: string;
-  listing_1_url?: string;
-  listing_2_title?: string;
-  listing_2_url?: string;
-  // New listings
-  new_1_title?: string;
-  new_1_url?: string;
-  new_2_title?: string;
-  new_2_url?: string;
   // Blog
   blog_1_title?: string;
   blog_1_url?: string;
@@ -36,17 +26,23 @@ interface WeeklyNewsletterRequest {
 
 const generateHtmlEmail = (data: WeeklyNewsletterRequest, unsubscribeUrl: string): string => {
   const {
-    listing_1_title = "Featured Mobile Kitchen – Ready to Roll",
-    listing_1_url = "https://vendibook.com/search",
-    listing_2_title = "Premium Food Trailer with Full Buildout",
-    listing_2_url = "https://vendibook.com/search",
-    new_1_title = "Newly Listed: Turnkey Food Truck",
-    new_1_url = "https://vendibook.com/search",
-    new_2_title = "Commercial Kitchen Space Available",
-    new_2_url = "https://vendibook.com/search",
     blog_1_title = "Sell vs Rent: Why the New Food Business Is Fluid",
     blog_1_url = "https://vendibook.com/blog",
   } = data;
+
+  // Top Picks - Real production listings
+  const topPicks = [
+    {
+      title: "TURNKEY Mobile Tap Trailer",
+      price: "$28,500",
+      url: "https://vendibook.com/listing/29db594a-1746-4d42-954a-16673d9ff875",
+    },
+    {
+      title: "🔥 TURNKEY SHIPPING CONTAINER KITCHEN🔥",
+      price: "$18,000 • Atlanta, Georgia",
+      url: "https://vendibook.com/listing/f4d5e5ae-31eb-4ba0-9d2b-13df7279d020",
+    },
+  ];
 
   return `
 <!DOCTYPE html>
@@ -111,47 +107,17 @@ const generateHtmlEmail = (data: WeeklyNewsletterRequest, unsubscribeUrl: string
                 🔥 Top Picks This Week
               </h2>
               <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                ${topPicks.map(pick => `
                 <tr>
                   <td style="padding-bottom: 10px;">
-                    <a href="${listing_1_url}" style="text-decoration: none; display: block; padding: 14px 16px; background-color: ${COLORS.lightGray}; border-radius: 8px; border-left: 4px solid ${COLORS.primary};">
-                      <strong style="color: ${COLORS.charcoal}; font-size: 14px;">${listing_1_title}</strong>
+                    <a href="${pick.url}" style="text-decoration: none; display: block; padding: 14px 16px; background-color: ${COLORS.lightGray}; border-radius: 8px; border-left: 4px solid ${COLORS.primary};">
+                      <strong style="color: ${COLORS.charcoal}; font-size: 14px;">${pick.title}</strong>
+                      <span style="color: ${COLORS.gray}; font-size: 13px; display: block; margin-top: 2px;">${pick.price}</span>
                       <span style="color: ${COLORS.primary}; font-size: 13px; display: block; margin-top: 4px;">View listing →</span>
                     </a>
                   </td>
                 </tr>
-                <tr>
-                  <td style="padding-bottom: 10px;">
-                    <a href="${listing_2_url}" style="text-decoration: none; display: block; padding: 14px 16px; background-color: ${COLORS.lightGray}; border-radius: 8px; border-left: 4px solid ${COLORS.primary};">
-                      <strong style="color: ${COLORS.charcoal}; font-size: 14px;">${listing_2_title}</strong>
-                      <span style="color: ${COLORS.primary}; font-size: 13px; display: block; margin-top: 4px;">View listing →</span>
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          
-          <!-- NEWLY ADDED -->
-          <tr>
-            <td style="padding: 8px 40px 16px;">
-              <h2 style="margin: 0 0 16px; font-size: 18px; font-weight: 700; color: ${COLORS.charcoal};">
-                🆕 Newly Added
-              </h2>
-              <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
-                <tr>
-                  <td style="padding-bottom: 8px;">
-                    <a href="${new_1_url}" style="color: ${COLORS.charcoal}; text-decoration: none; font-size: 14px;">
-                      • ${new_1_title} <span style="color: ${COLORS.primary};">→</span>
-                    </a>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding-bottom: 8px;">
-                    <a href="${new_2_url}" style="color: ${COLORS.charcoal}; text-decoration: none; font-size: 14px;">
-                      • ${new_2_title} <span style="color: ${COLORS.primary};">→</span>
-                    </a>
-                  </td>
-                </tr>
+                `).join('')}
               </table>
               <p style="margin: 12px 0 0; font-size: 13px; color: ${COLORS.gray};">
                 Our AI surfaces the newest listings and helpful resources each week—so you never miss an opportunity.
