@@ -1351,6 +1351,25 @@ export const PublishWizard: React.FC = () => {
       // Track analytics
       console.log('[ANALYTICS] Listing published', { listingId: listing.id });
 
+      // Send admin notification for new listing (fire and forget)
+      supabase.functions.invoke('send-admin-notification', {
+        body: {
+          type: 'new_listing',
+          data: {
+            listing_id: listing.id,
+            title: listing.title,
+            category: listing.category,
+            mode: listing.mode,
+            price_daily: priceDaily ? parseFloat(priceDaily.replace(/[^0-9.]/g, '')) : null,
+            price_sale: priceSale ? parseFloat(priceSale.replace(/[^0-9.]/g, '')) : null,
+            address: location,
+            host_id: user?.id,
+            host_name: user?.user_metadata?.full_name || user?.email?.split('@')[0],
+            host_email: user?.email,
+          },
+        },
+      }).catch(err => console.error('Admin notification error:', err));
+
       setShowSuccessModal(true);
     } catch (error) {
       console.error('Error publishing:', error);

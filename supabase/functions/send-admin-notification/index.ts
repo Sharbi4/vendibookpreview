@@ -10,7 +10,7 @@ const corsHeaders = {
 };
 
 interface NotificationRequest {
-  type: "new_user" | "new_booking" | "booking_paid" | "sale_payment" | "newsletter_signup";
+  type: "new_user" | "new_booking" | "booking_paid" | "sale_payment" | "newsletter_signup" | "new_listing";
   data: Record<string, any>;
 }
 
@@ -198,6 +198,70 @@ const handler = async (req: Request): Promise<Response> => {
             </table>
           </div>
           <p style="color: #6b7280; font-size: 14px; margin: 0;">A new user has subscribed to the VendiBook newsletter.</p>
+        `;
+        break;
+
+      case "new_listing":
+        const categoryLabels: Record<string, string> = {
+          food_truck: "Food Truck",
+          food_trailer: "Food Trailer", 
+          ghost_kitchen: "Ghost Kitchen",
+          vendor_lot: "Vendor Lot",
+        };
+        const categoryLabel = data.category ? (categoryLabels[data.category as string] || data.category) : "N/A";
+        const modeLabel = data.mode === "sale" ? "For Sale" : "For Rent";
+        const priceDisplay = data.mode === "sale" 
+          ? `$${Number(data.price_sale || 0).toLocaleString()}` 
+          : `$${Number(data.price_daily || 0).toLocaleString()}/day`;
+        const potentialCommission = data.mode === "sale"
+          ? `$${(Number(data.price_sale || 0) * 0.129).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          : `$${(Number(data.price_daily || 0) * 0.15).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/booking`;
+        
+        subject = "🚚 New Listing Published - VendiBook";
+        iconEmoji = "🚚";
+        iconBgColor = "linear-gradient(135deg, #10b981 0%, #059669 100%)";
+        contentHtml = `
+          <h2 style="color: #1f2937; font-size: 20px; margin: 0 0 20px 0;">New Listing Published!</h2>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 12px; margin: 20px 0;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Title:</td>
+                <td style="padding: 8px 0; font-weight: 600; color: #1f2937; font-size: 14px;">${data.title || "N/A"}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Category:</td>
+                <td style="padding: 8px 0; color: #1f2937; font-size: 14px;">${categoryLabel}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Type:</td>
+                <td style="padding: 8px 0; color: #1f2937; font-size: 14px;">${modeLabel}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Price:</td>
+                <td style="padding: 8px 0; font-weight: 600; color: #22c55e; font-size: 14px;">${priceDisplay}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Potential Commission:</td>
+                <td style="padding: 8px 0; font-weight: 600; color: #8b5cf6; font-size: 14px;">${potentialCommission}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Location:</td>
+                <td style="padding: 8px 0; color: #1f2937; font-size: 14px;">${data.address || "Not specified"}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Host:</td>
+                <td style="padding: 8px 0; color: #1f2937; font-size: 14px;">${data.host_name || "N/A"} (${data.host_email || "N/A"})</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Published at:</td>
+                <td style="padding: 8px 0; color: #1f2937; font-size: 14px;">${new Date().toLocaleString()}</td>
+              </tr>
+            </table>
+          </div>
+          <div style="text-align: center; margin-top: 24px;">
+            <a href="https://vendibook.com/listing/${data.listing_id}" style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600;">View Listing</a>
+          </div>
+          <p style="color: #6b7280; font-size: 14px; margin: 20px 0 0 0;">A new listing has been published on VendiBook!</p>
         `;
         break;
 
