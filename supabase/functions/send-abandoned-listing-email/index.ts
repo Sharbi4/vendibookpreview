@@ -9,7 +9,6 @@ const corsHeaders = {
 interface AbandonedListingEmailRequest {
   to: string;
   firstName?: string;
-  listingTitle?: string;
   category?: string;
   photoCount?: number;
   lastStep?: string;
@@ -29,7 +28,6 @@ serve(async (req) => {
     const { 
       to,
       firstName = "there",
-      listingTitle = "Your Listing",
       category = "Food Trailer",
       photoCount = 0,
       lastStep = "getting started"
@@ -77,8 +75,6 @@ serve(async (req) => {
               <p style="font-size: 16px; color: #374151;">We noticed you started listing your <strong>${category}</strong> but didn't finish. No worries – your progress is saved!</p>
               
               <div style="background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%); border-radius: 12px; padding: 20px; margin: 24px 0; border-left: 4px solid #FF5124;">
-                <p style="margin: 0 0 12px 0; font-weight: 600; color: #1a1a1a;">"${listingTitle}"</p>
-                
                 <!-- Progress Bar -->
                 <div style="background: #E5E7EB; border-radius: 8px; height: 8px; overflow: hidden; margin-bottom: 8px;">
                   <div style="background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); height: 100%; width: ${progressPercent}%; border-radius: 8px;"></div>
