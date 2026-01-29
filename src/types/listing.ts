@@ -458,6 +458,8 @@ export interface ListingFormData {
   accept_card_payment: boolean;
   // Proof Notary add-on (for sales)
   proof_notary_enabled: boolean;
+  // Featured Listing add-on (for both rentals and sales)
+  featured_enabled: boolean;
 }
 
 export const CATEGORY_LABELS: Record<ListingCategory, string> = {
