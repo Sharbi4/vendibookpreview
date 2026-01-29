@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
 import { Badge } from '@/components/ui/badge';
+import { FeaturedListingModal } from './FeaturedListingModal';
 
 type Listing = Tables<'listings'>;
 
@@ -43,10 +44,10 @@ const StatusPill = ({ status }: { status: Listing['status'] }) => {
 
 const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate }: HostListingCardProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showFeaturedModal, setShowFeaturedModal] = useState(false);
   const [isEditingPrice, setIsEditingPrice] = useState(false);
   const [editedPrice, setEditedPrice] = useState(listing.price_sale?.toString() || '');
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoadingFeatured, setIsLoadingFeatured] = useState(false);
   const [isLoadingNotary, setIsLoadingNotary] = useState(false);
   const { data: favoriteCount = 0 } = useListingFavoriteCount(listing.id);
   const { toast } = useToast();
@@ -56,7 +57,7 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
   const isFeatured = (listing as any).featured_enabled && (listing as any).featured_expires_at && new Date((listing as any).featured_expires_at) > new Date();
   const hasNotary = (listing as any).proof_notary_enabled;
 
-  const handleFeaturedCheckout = async () => {
+  const handleFeaturedClick = () => {
     if (!isPublished) {
       toast({
         title: 'Listing must be published',
@@ -65,27 +66,7 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
       });
       return;
     }
-
-    setIsLoadingFeatured(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-featured-checkout', {
-        body: { listingId: listing.id },
-      });
-
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
-    } catch (error) {
-      console.error('Featured checkout error:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to start checkout. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoadingFeatured(false);
-    }
+    setShowFeaturedModal(true);
   };
 
   const handleNotaryCheckout = async () => {
@@ -309,18 +290,11 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={handleFeaturedCheckout}
-                  disabled={isLoadingFeatured}
+                  onClick={handleFeaturedClick}
                   className="text-amber-600 border-amber-200 hover:bg-amber-50 hover:text-amber-700 dark:text-amber-400 dark:border-amber-800 dark:hover:bg-amber-900/20"
                 >
-                  {isLoadingFeatured ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Star className="h-4 w-4 mr-1" />
-                      Featured $25
-                    </>
-                  )}
+                  <Star className="h-4 w-4 mr-1" />
+                  Make Featured
                 </Button>
               )}
               {/* Notary Add-on Button (Sale listings only) */}
@@ -383,6 +357,14 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
           onClose={() => setShowCalendar(false)} 
         />
       )}
+
+      {/* Featured Listing Modal */}
+      <FeaturedListingModal
+        open={showFeaturedModal}
+        onOpenChange={setShowFeaturedModal}
+        listingId={listing.id}
+        listingTitle={listing.title}
+      />
     </>
   );
 };
