@@ -54,7 +54,7 @@ export const FeaturedListingModal = ({
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-featured-checkout', {
-        body: { listingId },
+        body: { listing_id: listingId },
       });
 
       if (error) throw error;
