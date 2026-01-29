@@ -136,8 +136,21 @@ serve(async (req) => {
       });
     }
 
-    // Get unique host IDs
-    const hostIds = [...new Set(draftListings.map(l => l.host_id))];
+    // Get unique host IDs, filtering out null values (guest drafts)
+    const hostIds = [...new Set(draftListings.map(l => l.host_id).filter((id): id is string => id !== null))];
+
+    if (hostIds.length === 0) {
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: "No drafts with registered hosts need reminders",
+        sent: 0 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    logStep("Unique hosts with drafts", { count: hostIds.length });
 
     // Fetch host profiles that haven't been nudged recently
     const { data: hosts, error: hostsError } = await supabaseClient
