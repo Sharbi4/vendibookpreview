@@ -62,6 +62,8 @@ interface ListingData {
   id: string;
   mode: 'rent' | 'sale';
   category: ListingCategory;
+  status: 'draft' | 'published' | 'paused';
+  published_at: string | null;
   title: string;
   description: string;
   address: string | null;
@@ -1336,39 +1338,45 @@ export const PublishWizard: React.FC = () => {
       }
 
       // Standard publish flow (no notary fee)
+      // Check if this is a first-time publish or an update to an existing published listing
+      const isFirstTimePublish = !listing.published_at;
+      
       const { error } = await supabase
         .from('listings')
         .update({
           ...baseUpdateData,
           ...pricingUpdateData,
           status: 'published',
-          published_at: new Date().toISOString(),
+          // Only set published_at if this is the first time publishing
+          ...(isFirstTimePublish ? { published_at: new Date().toISOString() } : {}),
         })
         .eq('id', listing.id);
 
       if (error) throw error;
 
-      // Track analytics
-      console.log('[ANALYTICS] Listing published', { listingId: listing.id });
+      // Track analytics - differentiate between new publish and update
+      console.log(`[ANALYTICS] Listing ${isFirstTimePublish ? 'published' : 'updated'}`, { listingId: listing.id });
 
-      // Send admin notification for new listing (fire and forget)
-      supabase.functions.invoke('send-admin-notification', {
-        body: {
-          type: 'new_listing',
-          data: {
-            listing_id: listing.id,
-            title: listing.title,
-            category: listing.category,
-            mode: listing.mode,
-            price_daily: priceDaily ? parseFloat(priceDaily.replace(/[^0-9.]/g, '')) : null,
-            price_sale: priceSale ? parseFloat(priceSale.replace(/[^0-9.]/g, '')) : null,
-            address: location,
-            host_id: user?.id,
-            host_name: user?.user_metadata?.full_name || user?.email?.split('@')[0],
-            host_email: user?.email,
+      // Only send admin notification for first-time publishes, not updates
+      if (isFirstTimePublish) {
+        supabase.functions.invoke('send-admin-notification', {
+          body: {
+            type: 'new_listing',
+            data: {
+              listing_id: listing.id,
+              title: listing.title,
+              category: listing.category,
+              mode: listing.mode,
+              price_daily: priceDaily ? parseFloat(priceDaily.replace(/[^0-9.]/g, '')) : null,
+              price_sale: priceSale ? parseFloat(priceSale.replace(/[^0-9.]/g, '')) : null,
+              address: location,
+              host_id: user?.id,
+              host_name: user?.user_metadata?.full_name || user?.email?.split('@')[0],
+              host_email: user?.email,
+            },
           },
-        },
-      }).catch(err => console.error('Admin notification error:', err));
+        }).catch(err => console.error('Admin notification error:', err));
+      }
 
       setShowSuccessModal(true);
     } catch (error) {
