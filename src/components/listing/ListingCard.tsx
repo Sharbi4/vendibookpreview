@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck } from 'lucide-react';
+import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Star } from 'lucide-react';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -47,6 +47,11 @@ const popularAmenityIcons: Record<string, { icon: React.ElementType; label: stri
 };
 
 const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook, canDeliverToUser, distanceMiles, compact = false }: ListingCardProps) => {
+  // Check if listing is featured (featured_enabled=true and featured_expires_at in the future)
+  const isFeatured = (listing as any).featured_enabled && 
+    (listing as any).featured_expires_at && 
+    new Date((listing as any).featured_expires_at) > new Date();
+
   // Safely format price with proper null handling
   const formatListingPrice = () => {
     if (listing.mode === 'rent') {
@@ -108,6 +113,26 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           >
             {modeLabel}
           </Badge>
+          
+          {/* Featured Badge */}
+          {isFeatured && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge className={cn(
+                    "font-medium bg-amber-500 text-white border-0 flex items-center gap-1",
+                    compact ? "text-[10px] px-1.5 py-0.5" : "text-xs"
+                  )}>
+                    <Star className={cn("fill-current", compact ? "h-2.5 w-2.5" : "h-3 w-3")} />
+                    {!compact && "Featured"}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  Premium listing with priority placement
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           
           {/* Instant Book Badge */}
           {!compact && listing.mode === 'rent' && listing.instant_book && (

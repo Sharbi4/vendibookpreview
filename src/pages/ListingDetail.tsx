@@ -161,6 +161,11 @@ const ListingDetail = () => {
   const videos = (listing as any).video_urls || [];
   const location = listing.address || listing.pickup_location_text;
   const isRental = listing.mode === 'rent';
+  
+  // Check if listing is featured (featured_enabled=true and featured_expires_at in the future)
+  const isFeatured = (listing as any).featured_enabled && 
+    (listing as any).featured_expires_at && 
+    new Date((listing as any).featured_expires_at) > new Date();
 
   // Extract city/state from address for compact display
   const locationShort = location?.split(',').slice(-2).join(',').trim() || location;
@@ -281,6 +286,12 @@ const ListingDetail = () => {
                   
                   {/* Badges - More subtle placement */}
                   <div className="ml-auto flex items-center gap-2">
+                    {isFeatured && (
+                      <Badge className="text-xs bg-amber-500 text-white border-0 flex items-center gap-1">
+                        <Star className="h-3 w-3 fill-current" />
+                        Featured
+                      </Badge>
+                    )}
                     <CategoryTooltip category={listing.category} side="bottom">
                       <Badge variant="secondary" className="text-xs cursor-help font-normal">
                         {CATEGORY_LABELS[listing.category]}

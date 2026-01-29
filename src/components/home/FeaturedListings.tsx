@@ -124,19 +124,46 @@ const FeaturedListings = () => {
   const sortedListings = useMemo(() => {
     let result = [...listings];
 
+    // Helper to check if a listing is featured (featured_enabled=true AND featured_expires_at in the future)
+    const isFeatured = (listing: any) => 
+      listing.featured_enabled && 
+      listing.featured_expires_at && 
+      new Date(listing.featured_expires_at) > new Date();
+
     if (sortBy === 'nearest' && userLocation) {
-      // Already sorted by distance from API
-      return result;
+      // Sort by distance but put featured listings first
+      result.sort((a, b) => {
+        const aFeatured = isFeatured(a);
+        const bFeatured = isFeatured(b);
+        if (aFeatured && !bFeatured) return -1;
+        if (!aFeatured && bFeatured) return 1;
+        // Both are featured or both are not - maintain distance order
+        return 0;
+      });
     } else if (sortBy === 'newest') {
-      result.sort((a, b) => new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime());
+      result.sort((a, b) => {
+        const aFeatured = isFeatured(a);
+        const bFeatured = isFeatured(b);
+        if (aFeatured && !bFeatured) return -1;
+        if (!aFeatured && bFeatured) return 1;
+        return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
+      });
     } else if (sortBy === 'price-low') {
       result.sort((a, b) => {
+        const aFeatured = isFeatured(a);
+        const bFeatured = isFeatured(b);
+        if (aFeatured && !bFeatured) return -1;
+        if (!aFeatured && bFeatured) return 1;
         const priceA = a.mode === 'rent' ? (a.price_daily || 0) : (a.price_sale || 0);
         const priceB = b.mode === 'rent' ? (b.price_daily || 0) : (b.price_sale || 0);
         return priceA - priceB;
       });
     } else if (sortBy === 'price-high') {
       result.sort((a, b) => {
+        const aFeatured = isFeatured(a);
+        const bFeatured = isFeatured(b);
+        if (aFeatured && !bFeatured) return -1;
+        if (!aFeatured && bFeatured) return 1;
         const priceA = a.mode === 'rent' ? (a.price_daily || 0) : (a.price_sale || 0);
         const priceB = b.mode === 'rent' ? (b.price_daily || 0) : (b.price_sale || 0);
         return priceB - priceA;
