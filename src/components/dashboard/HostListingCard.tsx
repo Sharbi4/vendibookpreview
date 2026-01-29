@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Edit2, Eye, Pause, Play, Trash2, Calendar, Heart, Check, X, DollarSign } from 'lucide-react';
+import { Edit2, Eye, Pause, Play, Trash2, Calendar, Heart, Check, X, DollarSign, Star, Shield, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CATEGORY_LABELS } from '@/types/listing';
@@ -9,6 +9,7 @@ import { useListingFavoriteCount } from '@/hooks/useFavorites';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
+import { Badge } from '@/components/ui/badge';
 
 type Listing = Tables<'listings'>;
 
@@ -45,8 +46,79 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
   const [isEditingPrice, setIsEditingPrice] = useState(false);
   const [editedPrice, setEditedPrice] = useState(listing.price_sale?.toString() || '');
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingFeatured, setIsLoadingFeatured] = useState(false);
+  const [isLoadingNotary, setIsLoadingNotary] = useState(false);
   const { data: favoriteCount = 0 } = useListingFavoriteCount(listing.id);
   const { toast } = useToast();
+  
+  const isSale = listing.mode === 'sale';
+  const isPublished = listing.status === 'published';
+  const isFeatured = (listing as any).featured_enabled && (listing as any).featured_expires_at && new Date((listing as any).featured_expires_at) > new Date();
+  const hasNotary = (listing as any).proof_notary_enabled;
+
+  const handleFeaturedCheckout = async () => {
+    if (!isPublished) {
+      toast({
+        title: 'Listing must be published',
+        description: 'Please publish your listing first before adding the Featured add-on.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLoadingFeatured(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-featured-checkout', {
+        body: { listingId: listing.id },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Featured checkout error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to start checkout. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingFeatured(false);
+    }
+  };
+
+  const handleNotaryCheckout = async () => {
+    if (!isPublished) {
+      toast({
+        title: 'Listing must be published',
+        description: 'Please publish your listing first before adding Proof Notary.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLoadingNotary(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-notary-checkout', {
+        body: { listingId: listing.id },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Notary checkout error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to start checkout. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingNotary(false);
+    }
+  };
   
   const displayPrice = listing.mode === 'rent' 
     ? `$${listing.price_daily}/day` 
@@ -54,7 +126,6 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
 
   const location = listing.address || listing.pickup_location_text || 'No location set';
   const isRental = listing.mode === 'rent';
-  const isSale = listing.mode === 'sale';
 
   const handleSavePrice = async () => {
     const newPrice = parseFloat(editedPrice);
@@ -118,7 +189,21 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
             <div>
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div>
-                  <h3 className="font-semibold text-foreground line-clamp-1">{listing.title}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-foreground line-clamp-1">{listing.title}</h3>
+                    {isFeatured && (
+                      <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-xs">
+                        <Star className="w-3 h-3 mr-1 fill-current" />
+                        Featured
+                      </Badge>
+                    )}
+                    {hasNotary && isSale && (
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
+                        <Shield className="w-3 h-3 mr-1" />
+                        Notary
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">{location}</p>
                 </div>
                 <StatusPill status={listing.status} />
@@ -217,6 +302,44 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
                 >
                   <Calendar className="h-4 w-4 mr-1" />
                   Availability
+                </Button>
+              )}
+              {/* Featured Add-on Button */}
+              {isPublished && !isFeatured && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleFeaturedCheckout}
+                  disabled={isLoadingFeatured}
+                  className="text-amber-600 border-amber-200 hover:bg-amber-50 hover:text-amber-700 dark:text-amber-400 dark:border-amber-800 dark:hover:bg-amber-900/20"
+                >
+                  {isLoadingFeatured ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Star className="h-4 w-4 mr-1" />
+                      Featured $25
+                    </>
+                  )}
+                </Button>
+              )}
+              {/* Notary Add-on Button (Sale listings only) */}
+              {isPublished && isSale && !hasNotary && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleNotaryCheckout}
+                  disabled={isLoadingNotary}
+                  className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/20"
+                >
+                  {isLoadingNotary ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Shield className="h-4 w-4 mr-1" />
+                      Notary $45
+                    </>
+                  )}
                 </Button>
               )}
               {listing.status === 'published' && onPause && (

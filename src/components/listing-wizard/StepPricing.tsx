@@ -18,8 +18,6 @@ import {
 import { FreightSettingsCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { StripeConnectBanner } from './StripeConnectBanner';
-import { ProofNotaryCard } from './ProofNotaryCard';
-import { FeaturedListingCard } from './FeaturedListingCard';
 
 interface StepPricingProps {
   formData: ListingFormData;
@@ -494,14 +492,6 @@ export const StepPricing: React.FC<StepPricingProps> = ({
               </div>
             </div>
           </div>
-
-          {/* Featured Listing Add-On for Rentals */}
-          <div className="pt-6 border-t">
-            <FeaturedListingCard
-              enabled={formData.featured_enabled}
-              onEnabledChange={(enabled) => updateField('featured_enabled', enabled)}
-            />
-          </div>
         </>
       ) : (
         <>
@@ -744,22 +734,6 @@ export const StepPricing: React.FC<StepPricingProps> = ({
               payer={formData.freight_payer}
               onEnabledChange={(enabled) => updateField('vendibook_freight_enabled', enabled)}
               onPayerChange={(payer) => updateField('freight_payer', payer)}
-            />
-          </div>
-
-          {/* Proof Notary Add-On */}
-          <div className="pt-6 border-t">
-            <ProofNotaryCard
-              enabled={formData.proof_notary_enabled}
-              onEnabledChange={(enabled) => updateField('proof_notary_enabled', enabled)}
-            />
-          </div>
-
-          {/* Featured Listing Add-On */}
-          <div className="pt-6 border-t">
-            <FeaturedListingCard
-              enabled={formData.featured_enabled}
-              onEnabledChange={(enabled) => updateField('featured_enabled', enabled)}
             />
           </div>
         </>
