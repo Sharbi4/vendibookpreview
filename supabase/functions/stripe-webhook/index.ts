@@ -146,13 +146,29 @@ serve(async (req) => {
             ? session.payment_intent 
             : session.payment_intent?.id;
 
-          // Update listing to published status
+          // First, fetch the listing to check if it was already published
+          const { data: existingListing, error: fetchError } = await supabaseClient
+            .from("listings")
+            .select("id, title, host_id, published_at, status")
+            .eq("id", listingId)
+            .single();
+
+          if (fetchError) {
+            logStep("ERROR: Failed to fetch listing", { error: fetchError.message, listingId });
+            break;
+          }
+
+          const isFirstTimePublish = !existingListing.published_at;
+
+          // Update listing to published status - only set published_at if first time
+          const updateData: Record<string, unknown> = { status: 'published' };
+          if (isFirstTimePublish) {
+            updateData.published_at = new Date().toISOString();
+          }
+
           const { error: updateError } = await supabaseClient
             .from("listings")
-            .update({
-              status: 'published',
-              published_at: new Date().toISOString(),
-            })
+            .update(updateData)
             .eq("id", listingId);
 
           if (updateError) {
@@ -161,57 +177,54 @@ serve(async (req) => {
               listingId 
             });
           } else {
-            logStep("Listing published after notary payment", { listingId });
+            logStep(`Listing ${isFirstTimePublish ? 'published' : 'updated'} after notary payment`, { listingId });
 
-            // Get listing details for notification
-            const { data: listingData } = await supabaseClient
-              .from("listings")
-              .select("title, host_id")
-              .eq("id", listingId)
-              .single();
-
-            if (listingData) {
+            if (existingListing) {
               // Create notification for host
               try {
                 await supabaseClient.from("notifications").insert({
-                  user_id: listingData.host_id,
+                  user_id: existingListing.host_id,
                   type: "listing",
-                  title: "Listing Published!",
-                  message: `Your listing "${listingData.title}" is now live with Proof Notary protection. The $45 notary fee has been charged.`,
+                  title: isFirstTimePublish ? "Listing Published!" : "Listing Updated!",
+                  message: isFirstTimePublish 
+                    ? `Your listing "${existingListing.title}" is now live with Proof Notary protection. The $45 notary fee has been charged.`
+                    : `Your listing "${existingListing.title}" has been updated with Proof Notary protection. The $45 notary fee has been charged.`,
                   link: `/listing/${listingId}`,
                 });
-                logStep("Notification created for host", { hostId: listingData.host_id });
+                logStep("Notification created for host", { hostId: existingListing.host_id });
               } catch (notifError) {
                 logStep("WARNING: Failed to create notification", { error: String(notifError) });
               }
 
-              // Trigger listing live email
-              try {
-                const emailResponse = await fetch(
-                  `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-listing-live-email`,
-                  {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
-                    },
-                    body: JSON.stringify({
-                      listing_id: listingId,
-                    }),
+              // Trigger listing live email only for first-time publishes
+              if (isFirstTimePublish) {
+                try {
+                  const emailResponse = await fetch(
+                    `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-listing-live-email`,
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+                      },
+                      body: JSON.stringify({
+                        listing_id: listingId,
+                      }),
+                    }
+                  );
+                  
+                  if (emailResponse.ok) {
+                    logStep("Listing live email triggered", { listingId });
+                  } else {
+                    logStep("WARNING: Failed to trigger listing live email", { 
+                      status: emailResponse.status 
+                    });
                   }
-                );
-                
-                if (emailResponse.ok) {
-                  logStep("Listing live email triggered", { listingId });
-                } else {
-                  logStep("WARNING: Failed to trigger listing live email", { 
-                    status: emailResponse.status 
+                } catch (emailError) {
+                  logStep("WARNING: Error triggering listing live email", { 
+                    error: String(emailError) 
                   });
                 }
-              } catch (emailError) {
-                logStep("WARNING: Error triggering listing live email", { 
-                  error: String(emailError) 
-                });
               }
             }
           }
