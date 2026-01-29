@@ -47,6 +47,7 @@ import { cn } from '@/lib/utils';
 import { FreightSettingsCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { ProofNotaryCard } from './ProofNotaryCard';
+import { FeaturedListingCard } from './FeaturedListingCard';
 import stripeIcon from '@/assets/stripe-icon.png';
 import {
   calculateRentalFees,
@@ -162,6 +163,7 @@ export const PublishWizard: React.FC = () => {
   const [acceptCardPayment, setAcceptCardPayment] = useState(true);
   const [acceptCashPayment, setAcceptCashPayment] = useState(false);
   const [proofNotaryEnabled, setProofNotaryEnabled] = useState(false);
+  const [featuredEnabled, setFeaturedEnabled] = useState(false);
   
   // AI suggestions state
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
@@ -244,11 +246,13 @@ export const PublishWizard: React.FC = () => {
         updateData.accept_card_payment = acceptCardPayment;
         updateData.accept_cash_payment = acceptCashPayment;
         updateData.proof_notary_enabled = proofNotaryEnabled;
+        updateData.featured_enabled = featuredEnabled;
       } else {
         updateData.price_daily = safeParsePrice(priceDaily);
         updateData.price_weekly = safeParsePrice(priceWeekly);
         updateData.instant_book = instantBook;
         updateData.deposit_amount = safeParsePrice(depositAmount);
+        updateData.featured_enabled = featuredEnabled;
       }
 
       // Add location fields
@@ -351,6 +355,7 @@ export const PublishWizard: React.FC = () => {
       setAcceptCardPayment(data.accept_card_payment ?? true);
       setAcceptCashPayment(data.accept_cash_payment ?? false);
       setProofNotaryEnabled(data.proof_notary_enabled ?? false);
+      setFeaturedEnabled((data as any).featured_enabled ?? false);
       // Set details step fields
       setHighlights(data.highlights || []);
       setAmenities(data.amenities || []);
@@ -520,11 +525,13 @@ export const PublishWizard: React.FC = () => {
         updateData.accept_card_payment = acceptCardPayment;
         updateData.accept_cash_payment = acceptCashPayment;
         updateData.proof_notary_enabled = proofNotaryEnabled;
+        updateData.featured_enabled = featuredEnabled;
       } else {
         updateData.price_daily = safeParsePrice(priceDaily) || listing.price_daily || null;
         updateData.price_weekly = safeParsePrice(priceWeekly) || listing.price_weekly || null;
         updateData.instant_book = instantBook;
         updateData.deposit_amount = safeParsePrice(depositAmount) || listing.deposit_amount || null;
+        updateData.featured_enabled = featuredEnabled;
       }
 
       // Claim the draft and persist all in-memory form data
@@ -1048,6 +1055,7 @@ export const PublishWizard: React.FC = () => {
             accept_card_payment: acceptCardPayment,
             accept_cash_payment: acceptCashPayment,
             proof_notary_enabled: proofNotaryEnabled,
+            featured_enabled: featuredEnabled,
           };
         } else {
           updateData = {
@@ -1055,6 +1063,7 @@ export const PublishWizard: React.FC = () => {
             price_weekly: safeParsePrice(priceWeekly),
             instant_book: instantBook,
             deposit_amount: safeParsePrice(depositAmount),
+            featured_enabled: featuredEnabled,
           };
         }
       } else if (step === 'details') {
@@ -1279,12 +1288,14 @@ export const PublishWizard: React.FC = () => {
             accept_card_payment: acceptCardPayment,
             accept_cash_payment: acceptCashPayment,
             proof_notary_enabled: proofNotaryEnabled,
+            featured_enabled: featuredEnabled,
           }
         : {
             price_daily: safeParsePrice(priceDaily),
             price_weekly: safeParsePrice(priceWeekly),
             instant_book: instantBook,
             deposit_amount: safeParsePrice(depositAmount),
+            featured_enabled: featuredEnabled,
           };
 
       // If Proof Notary is enabled for a sale listing, redirect to checkout for the $45 fee.
@@ -1337,7 +1348,56 @@ export const PublishWizard: React.FC = () => {
         return; // Exit early - webhook will handle publishing after payment
       }
 
-      // Standard publish flow (no notary fee)
+      // If Featured Listing is enabled and not already paid for, redirect to checkout for the $25 fee.
+      // This works for both rental and sale listings.
+      const listingAlreadyFeatured = !!(listing as any).featured_at;
+      if (featuredEnabled && !listingAlreadyFeatured) {
+        const { error: persistError } = await supabase
+          .from('listings')
+          .update({ ...baseUpdateData, ...pricingUpdateData })
+          .eq('id', listing.id);
+
+        if (persistError) throw persistError;
+
+        // Get session for auth
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData.session) {
+          toast({ title: 'Please sign in to continue', variant: 'destructive' });
+          return;
+        }
+
+        const { data, error } = await supabase.functions.invoke('create-featured-checkout', {
+          headers: {
+            Authorization: `Bearer ${sessionData.session.access_token}`,
+          },
+          body: { listing_id: listing.id },
+        });
+
+        if (error) throw error;
+        if (!data?.url) throw new Error('No checkout URL returned');
+
+        // Set up listener for cross-tab communication before opening checkout
+        const handleCheckoutComplete = (event: MessageEvent) => {
+          if (event.data?.type === 'featured-checkout-complete' && event.data?.listingId === listing.id) {
+            window.location.href = event.data.url || `/listing-published?listing_id=${listing.id}&featured_paid=true`;
+          }
+        };
+        
+        try {
+          const channel = new BroadcastChannel('featured-checkout');
+          channel.onmessage = handleCheckoutComplete;
+          (window as any).__featuredCheckoutChannel = channel;
+        } catch (e) {
+          console.log('BroadcastChannel not supported');
+        }
+        
+        const newWindow = window.open(data.url, '_blank');
+        if (!newWindow) window.location.href = data.url;
+
+        return; // Exit early - webhook will handle publishing after payment
+      }
+
+      // Standard publish flow (no add-on fees)
       // Check if this is a first-time publish or an update to an existing published listing
       const isFirstTimePublish = !listing.published_at;
       
@@ -2217,6 +2277,14 @@ export const PublishWizard: React.FC = () => {
                           onEnabledChange={(enabled) => setProofNotaryEnabled(enabled)}
                         />
                       </div>
+
+                      {/* Featured Listing Add-On */}
+                      <div className="pt-6 border-t">
+                        <FeaturedListingCard
+                          enabled={featuredEnabled}
+                          onEnabledChange={(enabled) => setFeaturedEnabled(enabled)}
+                        />
+                      </div>
                     </>
                   ) : (
                     <>
@@ -2439,6 +2507,14 @@ export const PublishWizard: React.FC = () => {
                             </div>
                           </div>
                         </div>
+                      </div>
+
+                      {/* Featured Listing Add-On for Rentals */}
+                      <div className="pt-6 border-t">
+                        <FeaturedListingCard
+                          enabled={featuredEnabled}
+                          onEnabledChange={(enabled) => setFeaturedEnabled(enabled)}
+                        />
                       </div>
                     </>
                   )}

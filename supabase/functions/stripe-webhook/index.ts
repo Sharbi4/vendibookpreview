@@ -138,6 +138,105 @@ serve(async (req) => {
           break;
         }
 
+        // Handle Featured Listing payment - enable featured status
+        if (paymentType === 'featured_listing' && listingId && session.payment_status === "paid") {
+          logStep("Processing Featured Listing payment", { listingId });
+          
+          const paymentIntentId = typeof session.payment_intent === 'string' 
+            ? session.payment_intent 
+            : session.payment_intent?.id;
+
+          // First, fetch the listing to check current status
+          const { data: existingListing, error: fetchError } = await supabaseClient
+            .from("listings")
+            .select("id, title, host_id, published_at, status")
+            .eq("id", listingId)
+            .single();
+
+          if (fetchError) {
+            logStep("ERROR: Failed to fetch listing for featured", { error: fetchError.message, listingId });
+            break;
+          }
+
+          const isFirstTimePublish = !existingListing.published_at;
+          const now = new Date();
+          const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+          // Update listing with featured status and publish if needed
+          const updateData: Record<string, unknown> = { 
+            status: 'published',
+            featured_enabled: true,
+            featured_at: now.toISOString(),
+            featured_expires_at: expiresAt.toISOString(),
+          };
+          if (isFirstTimePublish) {
+            updateData.published_at = now.toISOString();
+          }
+
+          const { error: updateError } = await supabaseClient
+            .from("listings")
+            .update(updateData)
+            .eq("id", listingId);
+
+          if (updateError) {
+            logStep("ERROR: Failed to update listing with featured status", { 
+              error: updateError.message, 
+              listingId 
+            });
+          } else {
+            logStep(`Listing ${isFirstTimePublish ? 'published and' : ''} marked as featured`, { listingId });
+
+            if (existingListing) {
+              // Create notification for host
+              try {
+                await supabaseClient.from("notifications").insert({
+                  user_id: existingListing.host_id,
+                  type: "listing",
+                  title: "Featured Listing Activated! ⭐",
+                  message: `Your listing "${existingListing.title}" is now featured and will appear at the top of search results for 30 days.`,
+                  link: `/listing/${listingId}`,
+                });
+                logStep("Featured notification created for host", { hostId: existingListing.host_id });
+              } catch (notifError) {
+                logStep("WARNING: Failed to create featured notification", { error: String(notifError) });
+              }
+
+              // Trigger listing live email only for first-time publishes
+              if (isFirstTimePublish) {
+                try {
+                  const emailResponse = await fetch(
+                    `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-listing-live-email`,
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+                      },
+                      body: JSON.stringify({
+                        listing_id: listingId,
+                      }),
+                    }
+                  );
+                  
+                  if (emailResponse.ok) {
+                    logStep("Listing live email triggered for featured listing", { listingId });
+                  } else {
+                    logStep("WARNING: Failed to trigger listing live email", { 
+                      status: emailResponse.status 
+                    });
+                  }
+                } catch (emailError) {
+                  logStep("WARNING: Error triggering listing live email", { 
+                    error: String(emailError) 
+                  });
+                }
+              }
+            }
+          }
+          
+          break;
+        }
+
         // Handle Proof Notary payment - publish listing after successful payment
         if (paymentType === 'proof_notary' && listingId && session.payment_status === "paid") {
           logStep("Processing Proof Notary payment", { listingId });

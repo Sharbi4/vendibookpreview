@@ -794,6 +794,9 @@ export type Database = {
           delivery_radius_miles: number | null
           deposit_amount: number | null
           description: string
+          featured_at: string | null
+          featured_enabled: boolean | null
+          featured_expires_at: string | null
           freight_category: string | null
           freight_payer: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
@@ -854,6 +857,9 @@ export type Database = {
           delivery_radius_miles?: number | null
           deposit_amount?: number | null
           description: string
+          featured_at?: string | null
+          featured_enabled?: boolean | null
+          featured_expires_at?: string | null
           freight_category?: string | null
           freight_payer?: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
@@ -914,6 +920,9 @@ export type Database = {
           delivery_radius_miles?: number | null
           deposit_amount?: number | null
           description?: string
+          featured_at?: string | null
+          featured_enabled?: boolean | null
+          featured_expires_at?: string | null
           freight_category?: string | null
           freight_payer?: string | null
           fulfillment_type?: Database["public"]["Enums"]["fulfillment_type"]

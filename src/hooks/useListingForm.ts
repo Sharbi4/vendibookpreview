@@ -44,6 +44,8 @@ const initialFormData: ListingFormData = {
   accept_card_payment: true,
   // Proof Notary add-on (for sales)
   proof_notary_enabled: false,
+  // Featured Listing add-on (for both rentals and sales)
+  featured_enabled: false,
 };
 
 const TOTAL_STEPS = 7;
