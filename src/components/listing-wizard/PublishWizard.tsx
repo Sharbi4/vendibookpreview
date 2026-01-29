@@ -46,8 +46,6 @@ import { getGuestDraft, clearGuestDraft } from '@/lib/guestDraft';
 import { cn } from '@/lib/utils';
 import { FreightSettingsCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
-import { ProofNotaryCard } from './ProofNotaryCard';
-import { FeaturedListingCard } from './FeaturedListingCard';
 import stripeIcon from '@/assets/stripe-icon.png';
 import {
   calculateRentalFees,
@@ -2269,22 +2267,6 @@ export const PublishWizard: React.FC = () => {
                           onPayerChange={(payer) => setFreightPayer(payer)}
                         />
                       </div>
-
-                      {/* Proof Notary Add-On */}
-                      <div className="pt-6 border-t">
-                        <ProofNotaryCard
-                          enabled={proofNotaryEnabled}
-                          onEnabledChange={(enabled) => setProofNotaryEnabled(enabled)}
-                        />
-                      </div>
-
-                      {/* Featured Listing Add-On */}
-                      <div className="pt-6 border-t">
-                        <FeaturedListingCard
-                          enabled={featuredEnabled}
-                          onEnabledChange={(enabled) => setFeaturedEnabled(enabled)}
-                        />
-                      </div>
                     </>
                   ) : (
                     <>
@@ -2507,14 +2489,6 @@ export const PublishWizard: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                      </div>
-
-                      {/* Featured Listing Add-On for Rentals */}
-                      <div className="pt-6 border-t">
-                        <FeaturedListingCard
-                          enabled={featuredEnabled}
-                          onEnabledChange={(enabled) => setFeaturedEnabled(enabled)}
-                        />
                       </div>
                     </>
                   )}
