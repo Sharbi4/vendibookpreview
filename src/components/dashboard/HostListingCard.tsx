@@ -49,6 +49,7 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
   const [editedPrice, setEditedPrice] = useState(listing.price_sale?.toString() || '');
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingNotary, setIsLoadingNotary] = useState(false);
+  const [isLoadingFeatured, setIsLoadingFeatured] = useState(false);
   const { data: favoriteCount = 0 } = useListingFavoriteCount(listing.id);
   const { toast } = useToast();
   
