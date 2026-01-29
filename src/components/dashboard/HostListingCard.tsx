@@ -289,10 +289,10 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
               {/* Featured Add-on Button */}
               {isPublished && !isFeatured && (
                 <Button 
-                  variant="outline" 
+                  variant="dark-shine" 
                   size="sm"
                   onClick={handleFeaturedClick}
-                  className="text-amber-600 border-amber-200 hover:bg-amber-50 hover:text-amber-700 dark:text-amber-400 dark:border-amber-800 dark:hover:bg-amber-900/20"
+                  className="rounded-xl"
                 >
                   <Star className="h-4 w-4 mr-1" />
                   Make Featured
