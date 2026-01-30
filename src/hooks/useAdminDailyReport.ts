@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format, eachDayOfInterval, parseISO, differenceInDays } from 'date-fns';
+import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
+
+const EASTERN_TZ = 'America/New_York';
 
 // Test/admin accounts to exclude
 const EXCLUDED_EMAILS = [
@@ -56,8 +59,14 @@ export const useAdminDailyReport = (startDate: Date = new Date('2025-01-15')) =>
   return useQuery({
     queryKey: ['admin-daily-report', startDate.toISOString()],
     queryFn: async (): Promise<DailyReportData> => {
-      const endDate = new Date();
+      const endDate = toZonedTime(new Date(), EASTERN_TZ);
       const days = eachDayOfInterval({ start: startDate, end: endDate });
+
+      // Helper to get Eastern date string from ISO timestamp
+      const getEasternDateStr = (isoTimestamp: string): string => {
+        const zonedDate = toZonedTime(parseISO(isoTimestamp), EASTERN_TZ);
+        return format(zonedDate, 'yyyy-MM-dd');
+      };
 
       // Get excluded user IDs
       const { data: excludedProfiles } = await supabase
@@ -130,15 +139,15 @@ export const useAdminDailyReport = (startDate: Date = new Date('2025-01-15')) =>
       const listingPublishDates: Date[] = [];
       const newsletterDates: Date[] = [];
 
-      // Process data by day
+      // Process data by day (in Eastern time)
       const rows: DailyReportRow[] = days.map((day, dayIndex) => {
         const dayStr = format(day, 'yyyy-MM-dd');
         const nextDay = new Date(day);
         nextDay.setDate(nextDay.getDate() + 1);
 
-        // Filter events for this day
+        // Filter events for this day (using Eastern timezone)
         const dayEvents = analyticsEvents.filter(e => {
-          const eventDate = format(parseISO(e.created_at), 'yyyy-MM-dd');
+          const eventDate = getEasternDateStr(e.created_at);
           return eventDate === dayStr;
         });
 
@@ -162,9 +171,9 @@ export const useAdminDailyReport = (startDate: Date = new Date('2025-01-15')) =>
         const bouncedSessions = Array.from(sessionEventCounts.values()).filter(count => count === 1).length;
         const bounceRate = totalSessions > 0 ? Math.round((bouncedSessions / totalSessions) * 100) : 0;
 
-        // New signups for this day
+        // New signups for this day (in Eastern time)
         const daySignups = profiles.filter(p => {
-          const signupDate = format(parseISO(p.created_at), 'yyyy-MM-dd');
+          const signupDate = getEasternDateStr(p.created_at);
           return signupDate === dayStr;
         });
         
@@ -176,28 +185,28 @@ export const useAdminDailyReport = (startDate: Date = new Date('2025-01-15')) =>
           return `${p.full_name || p.email || 'Unknown'} (${roles.join(', ')})`;
         }).join('; ');
 
-        // Newsletter signups for this day
+        // Newsletter signups for this day (in Eastern time)
         const dayNewsletters = newsletters.filter(n => {
-          const date = format(parseISO(n.created_at), 'yyyy-MM-dd');
+          const date = getEasternDateStr(n.created_at);
           return date === dayStr;
         });
         
         // Track newsletter dates for cadence
         dayNewsletters.forEach(() => newsletterDates.push(day));
 
-        // Drafts created this day
+        // Drafts created this day (in Eastern time)
         const dayDrafts = listings.filter(l => {
-          const date = format(parseISO(l.created_at), 'yyyy-MM-dd');
+          const date = getEasternDateStr(l.created_at);
           return date === dayStr && l.status === 'draft';
         });
         const draftDetails = dayDrafts.map(l => 
           `${l.title || 'Untitled'} (${l.category}, ${l.mode})`
         ).join('; ');
 
-        // Listings published this day
+        // Listings published this day (in Eastern time)
         const dayPublished = listings.filter(l => {
           if (!l.published_at) return false;
-          const date = format(parseISO(l.published_at), 'yyyy-MM-dd');
+          const date = getEasternDateStr(l.published_at);
           return date === dayStr;
         });
         
