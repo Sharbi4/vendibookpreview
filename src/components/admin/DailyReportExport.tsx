@@ -130,7 +130,7 @@ const DailyReportExport = () => {
             <div>
               <CardTitle className="text-lg">Daily Analytics Report</CardTitle>
               <CardDescription>
-                Data from Jan 15, 2025 to present (excluding test accounts)
+                Data from Jan 15, 2025 to present • Eastern Time (ET) • Excluding test accounts
               </CardDescription>
             </div>
           </div>
