@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History, Zap, Headphones, Mail, Users } from 'lucide-react';
+import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History, Zap, Headphones, Mail, Users, FileSpreadsheet } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminTransactions } from '@/hooks/useAdminTransactions';
 import { useAdminPendingDocuments, useAdminDocumentStats } from '@/hooks/useAdminDocumentReview';
@@ -24,6 +24,7 @@ import InstantBookMonitorCard from '@/components/admin/InstantBookMonitorCard';
 import ConciergeQueueCard from '@/components/admin/ConciergeQueueCard';
 import EmailPreviewCard from '@/components/admin/EmailPreviewCard';
 import AdminUsersListCard from '@/components/admin/AdminUsersListCard';
+import DailyReportExport from '@/components/admin/DailyReportExport';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -251,6 +252,10 @@ const AdminDashboard = () => {
               <Badge variant="secondary" className="ml-2 h-5 px-1.5">
                 {userStats.total}
               </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="relative">
+              <FileSpreadsheet className="h-4 w-4 mr-1" />
+              Reports
             </TabsTrigger>
           </TabsList>
 
@@ -661,6 +666,11 @@ const AdminDashboard = () => {
                   ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* Reports Tab */}
+          <TabsContent value="reports" className="space-y-4">
+            <DailyReportExport />
           </TabsContent>
         </Tabs>
       </main>
