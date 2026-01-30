@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { format, eachDayOfInterval, parseISO } from 'date-fns';
+import { format, eachDayOfInterval, parseISO, differenceInDays } from 'date-fns';
 
 // Test/admin accounts to exclude
 const EXCLUDED_EMAILS = [
@@ -23,6 +23,19 @@ interface DailyReportRow {
   draftDetails: string;
   listingsPublished: number;
   listingDetails: string;
+  daysSinceLastUser: number | null;
+  daysSinceLastListing: number | null;
+  daysSinceLastNewsletter: number | null;
+}
+
+export interface CadenceStats {
+  avgDaysBetweenUsers: number;
+  avgDaysBetweenListings: number;
+  avgDaysBetweenNewsletters: number;
+  usersPerWeek: number;
+  listingsPerWeek: number;
+  newslettersPerWeek: number;
+  totalDays: number;
 }
 
 export interface DailyReportData {
@@ -36,6 +49,7 @@ export interface DailyReportData {
     draftsCreated: number;
     listingsPublished: number;
   };
+  cadence: CadenceStats;
 }
 
 export const useAdminDailyReport = (startDate: Date = new Date('2025-01-15')) => {
@@ -111,8 +125,13 @@ export const useAdminDailyReport = (startDate: Date = new Date('2025-01-15')) =>
         userRoleMap.set(ur.user_id, roles);
       });
 
+      // Track dates of events for cadence calculation
+      const userSignupDates: Date[] = [];
+      const listingPublishDates: Date[] = [];
+      const newsletterDates: Date[] = [];
+
       // Process data by day
-      const rows: DailyReportRow[] = days.map(day => {
+      const rows: DailyReportRow[] = days.map((day, dayIndex) => {
         const dayStr = format(day, 'yyyy-MM-dd');
         const nextDay = new Date(day);
         nextDay.setDate(nextDay.getDate() + 1);
@@ -148,6 +167,10 @@ export const useAdminDailyReport = (startDate: Date = new Date('2025-01-15')) =>
           const signupDate = format(parseISO(p.created_at), 'yyyy-MM-dd');
           return signupDate === dayStr;
         });
+        
+        // Track signup dates for cadence
+        daySignups.forEach(() => userSignupDates.push(day));
+        
         const signupDetails = daySignups.map(p => {
           const roles = userRoleMap.get(p.id) || ['user'];
           return `${p.full_name || p.email || 'Unknown'} (${roles.join(', ')})`;
@@ -158,6 +181,9 @@ export const useAdminDailyReport = (startDate: Date = new Date('2025-01-15')) =>
           const date = format(parseISO(n.created_at), 'yyyy-MM-dd');
           return date === dayStr;
         });
+        
+        // Track newsletter dates for cadence
+        dayNewsletters.forEach(() => newsletterDates.push(day));
 
         // Drafts created this day
         const dayDrafts = listings.filter(l => {
@@ -174,9 +200,24 @@ export const useAdminDailyReport = (startDate: Date = new Date('2025-01-15')) =>
           const date = format(parseISO(l.published_at), 'yyyy-MM-dd');
           return date === dayStr;
         });
+        
+        // Track listing publish dates for cadence
+        dayPublished.forEach(() => listingPublishDates.push(day));
+        
         const listingDetails = dayPublished.map(l => 
           `${l.title || 'Untitled'} (${l.category}, ${l.mode})`
         ).join('; ');
+
+        // Calculate days since last events
+        const daysSinceLastUser = userSignupDates.length > 1 
+          ? differenceInDays(day, userSignupDates[userSignupDates.length - 2]) 
+          : null;
+        const daysSinceLastListing = listingPublishDates.length > 1 
+          ? differenceInDays(day, listingPublishDates[listingPublishDates.length - 2]) 
+          : null;
+        const daysSinceLastNewsletter = newsletterDates.length > 1 
+          ? differenceInDays(day, newsletterDates[newsletterDates.length - 2]) 
+          : null;
 
         return {
           date: format(day, 'MMM dd, yyyy'),
@@ -190,8 +231,34 @@ export const useAdminDailyReport = (startDate: Date = new Date('2025-01-15')) =>
           draftDetails: draftDetails || '-',
           listingsPublished: dayPublished.length,
           listingDetails: listingDetails || '-',
+          daysSinceLastUser: daySignups.length > 0 ? daysSinceLastUser : null,
+          daysSinceLastListing: dayPublished.length > 0 ? daysSinceLastListing : null,
+          daysSinceLastNewsletter: dayNewsletters.length > 0 ? daysSinceLastNewsletter : null,
         };
       });
+
+      // Calculate cadence stats
+      const totalDays = differenceInDays(endDate, startDate) + 1;
+      const totalWeeks = totalDays / 7;
+
+      const calculateAvgDaysBetween = (dates: Date[]): number => {
+        if (dates.length < 2) return 0;
+        let totalGap = 0;
+        for (let i = 1; i < dates.length; i++) {
+          totalGap += differenceInDays(dates[i], dates[i - 1]);
+        }
+        return Math.round((totalGap / (dates.length - 1)) * 10) / 10;
+      };
+
+      const cadence: CadenceStats = {
+        avgDaysBetweenUsers: calculateAvgDaysBetween(userSignupDates),
+        avgDaysBetweenListings: calculateAvgDaysBetween(listingPublishDates),
+        avgDaysBetweenNewsletters: calculateAvgDaysBetween(newsletterDates),
+        usersPerWeek: Math.round((userSignupDates.length / totalWeeks) * 10) / 10,
+        listingsPerWeek: Math.round((listingPublishDates.length / totalWeeks) * 10) / 10,
+        newslettersPerWeek: Math.round((newsletterDates.length / totalWeeks) * 10) / 10,
+        totalDays,
+      };
 
       // Calculate totals
       const totals = {
@@ -204,7 +271,7 @@ export const useAdminDailyReport = (startDate: Date = new Date('2025-01-15')) =>
         listingsPublished: rows.reduce((sum, r) => sum + r.listingsPublished, 0),
       };
 
-      return { rows: rows.reverse(), totals }; // Most recent first
+      return { rows: rows.reverse(), totals, cadence }; // Most recent first
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });

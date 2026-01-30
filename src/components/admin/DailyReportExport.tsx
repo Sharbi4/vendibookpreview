@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, FileSpreadsheet, Loader2, Calendar, TrendingUp, Users, Mail, FileText, Eye } from 'lucide-react';
+import { Download, FileSpreadsheet, Loader2, Calendar, TrendingUp, Users, Mail, FileText, Eye, Timer, Zap } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useAdminDailyReport, DailyReportData } from '@/hooks/useAdminDailyReport';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -27,11 +27,14 @@ const DailyReportExport = () => {
         'Unique Visitors': row.uniqueVisitors,
         'Bounce Rate (%)': row.bounceRate,
         'New Signups': row.newSignups,
+        'Days Since Last Signup': row.daysSinceLastUser ?? '-',
         'New User Details (Name & Role)': row.newSignupDetails,
         'Newsletter Signups': row.newsletterSignups,
+        'Days Since Last Newsletter': row.daysSinceLastNewsletter ?? '-',
         'Drafts Created': row.draftsCreated,
         'Draft Details (Title, Category, Mode)': row.draftDetails,
         'Listings Published': row.listingsPublished,
+        'Days Since Last Listing': row.daysSinceLastListing ?? '-',
         'Published Listing Details (Title, Category, Mode)': row.listingDetails,
       }));
 
@@ -42,11 +45,32 @@ const DailyReportExport = () => {
         'Unique Visitors': data.totals.uniqueVisitors,
         'Bounce Rate (%)': data.totals.avgBounceRate,
         'New Signups': data.totals.newSignups,
+        'Days Since Last Signup': '-',
         'New User Details (Name & Role)': '-',
         'Newsletter Signups': data.totals.newsletterSignups,
+        'Days Since Last Newsletter': '-',
         'Drafts Created': data.totals.draftsCreated,
         'Draft Details (Title, Category, Mode)': '-',
         'Listings Published': data.totals.listingsPublished,
+        'Days Since Last Listing': '-',
+        'Published Listing Details (Title, Category, Mode)': '-',
+      });
+
+      // Add cadence summary row (use 'as any' since this row has mixed types intentionally)
+      excelData.push({
+        'Date': 'CADENCE STATS',
+        'Page Views': 0,
+        'Unique Visitors': 0,
+        'Bounce Rate (%)': 0,
+        'New Signups': 0,
+        'Days Since Last Signup': `${data.cadence.usersPerWeek}/week, Avg ${data.cadence.avgDaysBetweenUsers} days between`,
+        'New User Details (Name & Role)': '-',
+        'Newsletter Signups': 0,
+        'Days Since Last Newsletter': `${data.cadence.newslettersPerWeek}/week, Avg ${data.cadence.avgDaysBetweenNewsletters} days between`,
+        'Drafts Created': 0,
+        'Draft Details (Title, Category, Mode)': '-',
+        'Listings Published': 0,
+        'Days Since Last Listing': `${data.cadence.listingsPerWeek}/week, Avg ${data.cadence.avgDaysBetweenListings} days between`,
         'Published Listing Details (Title, Category, Mode)': '-',
       });
 
@@ -61,11 +85,14 @@ const DailyReportExport = () => {
         { wch: 15 },  // Unique Visitors
         { wch: 15 },  // Bounce Rate
         { wch: 12 },  // New Signups
+        { wch: 20 },  // Days Since Last Signup
         { wch: 50 },  // New User Details
         { wch: 18 },  // Newsletter Signups
+        { wch: 22 },  // Days Since Last Newsletter
         { wch: 15 },  // Drafts Created
         { wch: 50 },  // Draft Details
         { wch: 18 },  // Listings Published
+        { wch: 20 },  // Days Since Last Listing
         { wch: 50 },  // Published Details
       ];
 
@@ -164,6 +191,50 @@ const DailyReportExport = () => {
                 <Calendar className="h-4 w-4 mx-auto mb-1 text-primary" />
                 <p className="text-xl font-bold">{data.totals.listingsPublished}</p>
                 <p className="text-xs text-muted-foreground">Published</p>
+              </div>
+            </div>
+
+            {/* Cadence Stats */}
+            <div className="bg-gradient-to-r from-primary/5 to-purple-500/5 rounded-xl p-4 border border-primary/10">
+              <div className="flex items-center gap-2 mb-3">
+                <Zap className="h-4 w-4 text-primary" />
+                <h3 className="font-semibold text-sm">Growth Cadence</h3>
+                <span className="text-xs text-muted-foreground">({data.cadence.totalDays} days tracked)</span>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <Users className="h-3 w-3 text-emerald-500" />
+                    <span className="text-xs font-medium">Users</span>
+                  </div>
+                  <p className="text-lg font-bold text-emerald-600">{data.cadence.usersPerWeek}/week</p>
+                  <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+                    <Timer className="h-3 w-3" />
+                    Avg {data.cadence.avgDaysBetweenUsers} days between
+                  </p>
+                </div>
+                <div className="text-center border-x border-border/50 px-4">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <Calendar className="h-3 w-3 text-primary" />
+                    <span className="text-xs font-medium">Listings</span>
+                  </div>
+                  <p className="text-lg font-bold text-primary">{data.cadence.listingsPerWeek}/week</p>
+                  <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+                    <Timer className="h-3 w-3" />
+                    Avg {data.cadence.avgDaysBetweenListings} days between
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <Mail className="h-3 w-3 text-pink-500" />
+                    <span className="text-xs font-medium">Newsletter</span>
+                  </div>
+                  <p className="text-lg font-bold text-pink-600">{data.cadence.newslettersPerWeek}/week</p>
+                  <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+                    <Timer className="h-3 w-3" />
+                    Avg {data.cadence.avgDaysBetweenNewsletters} days between
+                  </p>
+                </div>
               </div>
             </div>
 
