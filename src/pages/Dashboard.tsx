@@ -96,16 +96,14 @@ const Dashboard = () => {
                 </Card>
               </Link>
               <Link to="/rentals" className="min-w-0 relative">
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer overflow-hidden relative active:scale-95">
-                  {/* New Feature Star Badge */}
-                  <div className="absolute -top-1 -right-1 z-10">
-                    <div className="relative">
-                      <Sparkles className="h-5 w-5 text-amber-400 animate-pulse" />
-                      <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 text-[9px] font-bold text-amber-600 bg-amber-100 px-1.5 rounded whitespace-nowrap">
-                        NEW
-                      </span>
-                    </div>
-                  </div>
+                {/* New Feature Badge - positioned on Link to avoid overflow clip */}
+                <div className="absolute -top-2 -right-2 z-20 flex flex-col items-center">
+                  <Sparkles className="h-5 w-5 text-amber-400 animate-pulse" />
+                  <span className="text-[8px] font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-full mt-0.5">
+                    NEW
+                  </span>
+                </div>
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer relative active:scale-95">
                   <CardContent className="p-3 sm:p-4 text-center">
                     <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-500 text-white flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-105 transition-transform shadow-lg">
                       <CalendarRange className="h-5 w-5 sm:h-6 sm:w-6" />
