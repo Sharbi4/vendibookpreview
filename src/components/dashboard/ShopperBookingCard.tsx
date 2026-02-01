@@ -54,6 +54,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CATEGORY_LABELS } from '@/types/listing';
 import type { ShopperBooking } from '@/hooks/useShopperBookings';
+import { AddToCalendarButton } from '@/components/booking/AddToCalendarButton';
 
 interface ShopperBookingCardProps {
   booking: ShopperBooking;
@@ -464,6 +465,18 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
                 <MessageCircle className="h-4 w-4 mr-1" />
                 Message Host
               </Button>
+            )}
+            
+            {/* Add to Calendar - show for approved paid bookings */}
+            {isApproved && isPaid && listing && (
+              <AddToCalendarButton
+                title={`Rental: ${listing.title}`}
+                startDate={booking.start_date}
+                endDate={booking.end_date}
+                startTime={booking.start_time || undefined}
+                endTime={booking.end_time || undefined}
+                location={location}
+              />
             )}
             
             {/* Cancel button - show for pending OR approved with paid status */}
