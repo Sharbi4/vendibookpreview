@@ -1,8 +1,10 @@
 import { format } from 'date-fns';
-import { Shield, BadgeCheck, CreditCard, List, FileEdit } from 'lucide-react';
+import { Shield, BadgeCheck, CreditCard, List, FileEdit, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useSyncToZendesk } from '@/hooks/useSyncToZendesk';
 import type { AdminUser } from '@/hooks/useAdminUsers';
 
 interface AdminUsersListCardProps {
@@ -10,6 +12,8 @@ interface AdminUsersListCardProps {
 }
 
 const AdminUsersListCard = ({ user }: AdminUsersListCardProps) => {
+  const { syncCustomer, isSyncing } = useSyncToZendesk();
+
   const getInitials = (name: string | null) => {
     if (!name) return 'U';
     return name
@@ -18,6 +22,10 @@ const AdminUsersListCard = ({ user }: AdminUsersListCardProps) => {
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const handleSyncToZendesk = async () => {
+    await syncCustomer(user.id);
   };
 
   return (
@@ -88,6 +96,17 @@ const AdminUsersListCard = ({ user }: AdminUsersListCardProps) => {
                 {format(new Date(user.created_at), 'MMM d, yyyy')}
               </p>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSyncToZendesk}
+              disabled={isSyncing}
+              className="ml-2"
+              title="Sync to Zendesk"
+            >
+              <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span className="hidden lg:inline ml-1">Zendesk</span>
+            </Button>
           </div>
         </div>
       </CardContent>
