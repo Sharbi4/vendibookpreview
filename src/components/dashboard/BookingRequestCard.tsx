@@ -21,6 +21,7 @@ import { useDocumentComplianceStatus } from '@/hooks/useRequiredDocuments';
 import InstantBookTimeline from './InstantBookTimeline';
 import BookingPhaseIndicator, { getBookingPhase } from './BookingPhaseIndicator';
 import BookingConfirmationSection from './BookingConfirmationSection';
+import { AddToCalendarButton } from '@/components/booking/AddToCalendarButton';
 
 interface BookingRequestCardProps {
   booking: {
@@ -487,6 +488,16 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
                   <MessageCircle className="h-4 w-4 mr-1" />
                   Message
                 </Button>
+              )}
+              
+              {/* Add to Calendar - show for approved paid bookings */}
+              {isApproved && isPaid && booking.listing && (
+                <AddToCalendarButton
+                  title={`Rental: ${booking.listing.title}`}
+                  startDate={booking.start_date}
+                  endDate={booking.end_date}
+                  location={undefined}
+                />
               )}
             </div>
           </div>

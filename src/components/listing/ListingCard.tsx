@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Star } from 'lucide-react';
+import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Star, Calendar } from 'lucide-react';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import { FavoriteButton } from '@/components/listing/FavoriteButton';
 import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 import { trackListingCardClick } from '@/lib/analytics';
+import { AvailabilityCalendarModal } from '@/components/listing/AvailabilityCalendarModal';
 
 interface ListingCardProps {
   listing: Listing;
@@ -47,6 +49,8 @@ const popularAmenityIcons: Record<string, { icon: React.ElementType; label: stri
 };
 
 const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook, canDeliverToUser, distanceMiles, compact = false }: ListingCardProps) => {
+  const [showCalendar, setShowCalendar] = useState(false);
+  
   // Check if listing is featured (featured_enabled=true and featured_expires_at in the future)
   const isFeatured = (listing as any).featured_enabled && 
     (listing as any).featured_expires_at && 
@@ -209,20 +213,46 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
               )}
             </div>
             
-            {/* Quick Book Button */}
-            {showQuickBook && listing.mode === 'rent' && onQuickBook && (
-              <Button
-                size="sm"
-                className="shadow-lg text-xs px-3 py-1 h-auto"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onQuickBook(listing);
-                }}
-              >
-                Quick Book
-              </Button>
-            )}
+            {/* Calendar & Quick Book Buttons */}
+            <div className="flex items-center gap-1.5">
+              {/* View Availability Button for Rentals */}
+              {listing.mode === 'rent' && (
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        className="w-7 h-7 bg-background/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:bg-primary hover:text-primary-foreground transition-colors"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setShowCalendar(true);
+                        }}
+                      >
+                        <Calendar className="h-3.5 w-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      View Availability
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              
+              {/* Quick Book Button */}
+              {showQuickBook && listing.mode === 'rent' && onQuickBook && (
+                <Button
+                  size="sm"
+                  className="shadow-lg text-xs px-3 py-1 h-auto"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onQuickBook(listing);
+                  }}
+                >
+                  Quick Book
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -297,6 +327,18 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         </div>
       </div>
       </Link>
+      
+      {/* Availability Calendar Modal */}
+      {listing.mode === 'rent' && (
+        <AvailabilityCalendarModal
+          open={showCalendar}
+          onOpenChange={setShowCalendar}
+          listingId={listing.id}
+          listingTitle={listing.title}
+          availableFrom={(listing as any).available_from}
+          availableTo={(listing as any).available_to}
+        />
+      )}
     </motion.div>
   );
 };
