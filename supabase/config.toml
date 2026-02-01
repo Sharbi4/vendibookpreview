@@ -167,3 +167,6 @@ verify_jwt = false
 
 [functions.retry-pending-payouts]
 verify_jwt = false
+
+[functions.generate-service-token]
+verify_jwt = false
