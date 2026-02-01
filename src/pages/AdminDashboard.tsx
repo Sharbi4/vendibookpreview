@@ -25,6 +25,8 @@ import ConciergeQueueCard from '@/components/admin/ConciergeQueueCard';
 import EmailPreviewCard from '@/components/admin/EmailPreviewCard';
 import AdminUsersListCard from '@/components/admin/AdminUsersListCard';
 import DailyReportExport from '@/components/admin/DailyReportExport';
+import ZendeskBulkSync from '@/components/admin/ZendeskBulkSync';
+import ZendeskContactSync from '@/components/admin/ZendeskContactSync';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -304,6 +306,9 @@ const AdminDashboard = () => {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Zendesk Contact Sync */}
+                <ZendeskContactSync />
 
                 {/* Request Cards */}
                 {allRequests.map((request) => (
@@ -641,6 +646,9 @@ const AdminDashboard = () => {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Zendesk Bulk Sync */}
+                <ZendeskBulkSync />
 
                 {/* Search */}
                 <Input

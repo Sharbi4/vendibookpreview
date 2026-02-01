@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO, eachDayOfInterval, addDays, subDays } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 interface UseBlockedDatesOptions {
   listingId: string;
@@ -12,8 +13,26 @@ interface BookingInfo {
   status: string;
 }
 
-export const useBlockedDates = ({ listingId }: UseBlockedDatesOptions) => {
-  const [blockedDates, setBlockedDates] = useState<Date[]>([]);
+interface BlockedDateRecord {
+  id: string;
+  blocked_date: string;
+  note?: string;
+}
+
+// Overload for object parameter
+export function useBlockedDates(options: UseBlockedDatesOptions): ReturnType<typeof useBlockedDatesInternal>;
+// Overload for string parameter
+export function useBlockedDates(listingId: string): ReturnType<typeof useBlockedDatesInternal>;
+// Implementation
+export function useBlockedDates(arg: UseBlockedDatesOptions | string) {
+  const listingId = typeof arg === 'string' ? arg : arg.listingId;
+  return useBlockedDatesInternal(listingId);
+}
+
+const useBlockedDatesInternal = (listingId: string) => {
+  const { toast } = useToast();
+  const [blockedDates, setBlockedDates] = useState<BlockedDateRecord[]>([]);
+  const [blockedDateObjects, setBlockedDateObjects] = useState<Date[]>([]);
   const [bookedDates, setBookedDates] = useState<Date[]>([]);
   const [bufferDates, setBufferDates] = useState<Date[]>([]);
   const [upcomingBookings, setUpcomingBookings] = useState<BookingInfo[]>([]);
@@ -39,11 +58,12 @@ export const useBlockedDates = ({ listingId }: UseBlockedDatesOptions) => {
         // Fetch blocked dates
         const { data: blockedData } = await supabase
           .from('listing_blocked_dates')
-          .select('blocked_date')
+          .select('id, blocked_date, note')
           .eq('listing_id', listingId);
 
         if (blockedData) {
-          setBlockedDates(blockedData.map(d => parseISO(d.blocked_date)));
+          setBlockedDates(blockedData as BlockedDateRecord[]);
+          setBlockedDateObjects(blockedData.map(d => parseISO(d.blocked_date)));
         }
 
         // Fetch approved bookings that are paid (confirmed)
@@ -103,14 +123,88 @@ export const useBlockedDates = ({ listingId }: UseBlockedDatesOptions) => {
   const isDateUnavailable = (date: Date): boolean => {
     const dateStr = format(date, 'yyyy-MM-dd');
     
-    const isBlocked = blockedDates.some(d => format(d, 'yyyy-MM-dd') === dateStr);
+    const isBlocked = blockedDateObjects.some(d => format(d, 'yyyy-MM-dd') === dateStr);
     const isBooked = bookedDates.some(d => format(d, 'yyyy-MM-dd') === dateStr);
     const isBuffer = bufferDates.some(d => format(d, 'yyyy-MM-dd') === dateStr);
     
     return isBlocked || isBooked || isBuffer;
   };
 
-  const allUnavailableDates = [...blockedDates, ...bookedDates, ...bufferDates];
+  const addBlockedDates = useCallback(async (dates: Date[], note?: string) => {
+    if (!listingId || dates.length === 0) return;
+
+    try {
+      const records = dates.map(date => ({
+        listing_id: listingId,
+        blocked_date: format(date, 'yyyy-MM-dd'),
+        note: note || null,
+      }));
+
+      const { error } = await supabase
+        .from('listing_blocked_dates')
+        .upsert(records, { onConflict: 'listing_id,blocked_date' });
+
+      if (error) throw error;
+
+      // Refetch blocked dates
+      const { data: blockedData } = await supabase
+        .from('listing_blocked_dates')
+        .select('id, blocked_date, note')
+        .eq('listing_id', listingId);
+
+      if (blockedData) {
+        setBlockedDates(blockedData as BlockedDateRecord[]);
+        setBlockedDateObjects(blockedData.map(d => parseISO(d.blocked_date)));
+      }
+
+      toast({
+        title: 'Dates blocked',
+        description: `${dates.length} date${dates.length > 1 ? 's' : ''} marked as unavailable.`,
+      });
+    } catch (error) {
+      console.error('Error blocking dates:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to block dates. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  }, [listingId, toast]);
+
+  const removeBlockedDate = useCallback(async (dateId: string) => {
+    // Capture the record before any state updates to avoid stale closure
+    const recordToRemove = blockedDates.find(d => d.id === dateId);
+    
+    try {
+      const { error } = await supabase
+        .from('listing_blocked_dates')
+        .delete()
+        .eq('id', dateId);
+
+      if (error) throw error;
+
+      setBlockedDates(prev => prev.filter(d => d.id !== dateId));
+      if (recordToRemove) {
+        setBlockedDateObjects(prev => 
+          prev.filter(d => format(d, 'yyyy-MM-dd') !== recordToRemove.blocked_date)
+        );
+      }
+
+      toast({
+        title: 'Date unblocked',
+        description: 'The date is now available for bookings.',
+      });
+    } catch (error) {
+      console.error('Error removing blocked date:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to unblock date. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  }, [blockedDates, toast]);
+
+  const allUnavailableDates = [...blockedDateObjects, ...bookedDates, ...bufferDates];
 
   return {
     blockedDates,
@@ -121,5 +215,7 @@ export const useBlockedDates = ({ listingId }: UseBlockedDatesOptions) => {
     allUnavailableDates,
     isDateUnavailable,
     isLoading,
+    addBlockedDates,
+    removeBlockedDate,
   };
 };

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -25,7 +25,7 @@ import { useHostBookings } from '@/hooks/useHostBookings';
 import { useRevenueAnalytics } from '@/hooks/useRevenueAnalytics';
 import RentalCalendarView from '@/components/rentals/RentalCalendarView';
 import { ShareKit, ShareKitListing } from '@/components/listing-wizard/ShareKit';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const Rentals = () => {
   const { user, isLoading: authLoading } = useAuth();
@@ -97,8 +97,7 @@ const Rentals = () => {
   }
 
   if (!user) {
-    navigate('/auth');
-    return null;
+    return <Navigate to="/auth" replace />;
   }
 
   // If a listing is selected, show the calendar view
@@ -256,16 +255,16 @@ const Rentals = () => {
                   const bookingsThisMonth = getListingBookingsThisMonth(listing.id);
                   const earningsThisMonth = getListingEarningsThisMonth(listing.id);
                   const dailyRate = listing.price_daily || listing.price_hourly || 0;
-                  const pendingRequests = getListingPendingRequests(listing.id);
+                  const listingPendingCount = getListingPendingRequests(listing.id);
                   
                   return (
                     <Card 
                       key={listing.id} 
-                      className={`border-0 shadow-xl hover:shadow-2xl transition-all group ${pendingRequests > 0 ? 'ring-2 ring-amber-400' : ''}`}
+                      className={`border-0 shadow-xl hover:shadow-2xl transition-all group ${listingPendingCount > 0 ? 'ring-2 ring-amber-400' : ''}`}
                     >
                       <CardContent className="p-0">
                         {/* Pending Request Alert Banner */}
-                        {pendingRequests > 0 && (
+                        {listingPendingCount > 0 && (
                           <div 
                             className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
                             onClick={() => setSelectedListingId(listing.id)}
@@ -273,7 +272,7 @@ const Rentals = () => {
                             <div className="flex items-center gap-2">
                               <Clock className="h-4 w-4 text-amber-600" />
                               <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                                {pendingRequests} request{pendingRequests > 1 ? 's' : ''} pending review
+                                {listingPendingCount} request{listingPendingCount > 1 ? 's' : ''} pending review
                               </span>
                             </div>
                             <Button variant="ghost" size="sm" className="text-amber-700 hover:text-amber-900 hover:bg-amber-200 dark:text-amber-300 dark:hover:bg-amber-800">
@@ -299,9 +298,9 @@ const Rentals = () => {
                               </div>
                             )}
                             {/* Pending Badge on Image */}
-                            {pendingRequests > 0 && (
+                            {listingPendingCount > 0 && (
                               <div className="absolute top-2 right-2 bg-amber-500 text-white px-2 py-1 rounded-full text-xs font-bold animate-pulse">
-                                {pendingRequests}
+                                {listingPendingCount}
                               </div>
                             )}
                           </div>
@@ -493,6 +492,9 @@ const Rentals = () => {
       {/* ShareKit Modal */}
       <Dialog open={!!shareKitListing} onOpenChange={() => setShareKitListing(null)}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Share Listing</DialogTitle>
+          </DialogHeader>
           {shareKitListing && (
             <ShareKit 
               listing={shareKitListing} 

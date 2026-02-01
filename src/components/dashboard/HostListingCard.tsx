@@ -83,7 +83,7 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
     setIsLoadingNotary(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-notary-checkout', {
-        body: { listingId: listing.id },
+        body: { listing_id: listing.id },
       });
 
       if (error) throw error;
@@ -301,18 +301,18 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
               {/* Notary Add-on Button (Sale listings only) */}
               {isPublished && isSale && !hasNotary && (
                 <Button 
-                  variant="outline" 
+                  variant="dark-shine" 
                   size="sm"
                   onClick={handleNotaryCheckout}
                   disabled={isLoadingNotary}
-                  className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/20"
+                  className="rounded-xl"
                 >
                   {isLoadingNotary ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <>
                       <Shield className="h-4 w-4 mr-1" />
-                      Notary $45
+                      Notary
                     </>
                   )}
                 </Button>

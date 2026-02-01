@@ -27,6 +27,21 @@ const defaultCenter = { lat: 39.8283, lng: -98.5795 }; // Center of US
 
 const libraries: ("places" | "geometry" | "drawing" | "visualization")[] = ['places'];
 
+// Format price for display
+const formatPrice = (listing: ListingWithCoords) => {
+  if (listing.mode === 'rent') {
+    if (listing.price_hourly) {
+      return { amount: `$${listing.price_hourly}`, unit: '/hr' };
+    }
+    return { amount: `$${listing.price_daily}`, unit: '/day' };
+  }
+  const salePrice = listing.price_sale || 0;
+  return { 
+    amount: salePrice >= 1000 ? `$${Math.round(salePrice / 1000)}k` : `$${salePrice.toLocaleString()}`,
+    unit: '' 
+  };
+};
+
 // Custom price marker component
 const PriceMarker = ({ 
   listing, 
@@ -37,9 +52,7 @@ const PriceMarker = ({
   isSelected: boolean;
   onClick: () => void;
 }) => {
-  const price = listing.mode === 'rent'
-    ? `$${listing.price_daily}`
-    : `$${(listing.price_sale || 0) >= 1000 ? `${Math.round((listing.price_sale || 0) / 1000)}k` : listing.price_sale?.toLocaleString()}`;
+  const { amount, unit } = formatPrice(listing);
 
   return (
     <OverlayView
@@ -65,8 +78,8 @@ const PriceMarker = ({
           minWidth: '50px',
         }}
       >
-        {price}
-        {listing.mode === 'rent' && <span className="text-[10px] opacity-70">/day</span>}
+        {amount}
+        {unit && <span className="text-[10px] opacity-70">{unit}</span>}
       </button>
     </OverlayView>
   );
@@ -90,7 +103,6 @@ const SearchResultsMapLoaded = forwardRef<
   ) => {
     const [selectedListing, setSelectedListing] = useState<ListingWithCoords | null>(null);
     const [map, setMap] = useState<google.maps.Map | null>(null);
-    const [nearbyPlaces, setNearbyPlaces] = useState<google.maps.places.PlaceResult[]>([]);
 
     // Load Google Maps ONLY after we have a valid API key.
     // This component is mounted conditionally (see wrapper below), so the Loader is never
@@ -130,68 +142,6 @@ const SearchResultsMapLoaded = forwardRef<
       }
       return userLocation ? 10 : 4;
     }, [userLocation, searchRadius]);
-
-    // Fetch nearby high-value places when map loads
-    useEffect(() => {
-      if (!map || !isLoaded) return;
-
-      const service = new google.maps.places.PlacesService(map);
-      const center = getCenter();
-
-      // Search for high-value places (stadiums, convention centers, etc.)
-      service.nearbySearch(
-        {
-          location: center,
-          radius: 50000, // 50km radius
-          type: 'stadium',
-        },
-        (results, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-            setNearbyPlaces((prev) => [...prev, ...results.slice(0, 5)]);
-          }
-        }
-      );
-
-      // Also search for convention centers
-      service.nearbySearch(
-        {
-          location: center,
-          radius: 50000,
-          keyword: 'convention center',
-        },
-        (results, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-            setNearbyPlaces((prev) => {
-              const existing = new Set(prev.map((p) => p.place_id));
-              const newPlaces = results
-                .filter((r) => !existing.has(r.place_id))
-                .slice(0, 3);
-              return [...prev, ...newPlaces];
-            });
-          }
-        }
-      );
-
-      // Search for fairgrounds
-      service.nearbySearch(
-        {
-          location: center,
-          radius: 50000,
-          keyword: 'fairgrounds',
-        },
-        (results, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-            setNearbyPlaces((prev) => {
-              const existing = new Set(prev.map((p) => p.place_id));
-              const newPlaces = results
-                .filter((r) => !existing.has(r.place_id))
-                .slice(0, 3);
-              return [...prev, ...newPlaces];
-            });
-          }
-        }
-      );
-    }, [map, isLoaded, getCenter]);
 
     // Fit bounds to show all listings
     useEffect(() => {
@@ -300,26 +250,6 @@ const SearchResultsMapLoaded = forwardRef<
             </>
           )}
 
-          {/* High-value places markers */}
-          {nearbyPlaces.map((place) => {
-            if (!place.geometry?.location) return null;
-            return (
-              <Marker
-                key={place.place_id}
-                position={place.geometry.location}
-                icon={{
-                  path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-                  scale: 5,
-                  fillColor: '#f59e0b',
-                  fillOpacity: 0.9,
-                  strokeColor: '#ffffff',
-                  strokeWeight: 2,
-                }}
-                title={place.name}
-              />
-            );
-          })}
-
           {/* Custom price markers for listings */}
           {listings.map((listing) => {
             if (listing.latitude == null || listing.longitude == null) return null;
@@ -333,7 +263,7 @@ const SearchResultsMapLoaded = forwardRef<
             );
           })}
 
-          {/* Info window for selected listing */}
+          {/* Info window for selected listing - Preview card */}
           {selectedListing &&
             selectedListing.latitude &&
             selectedListing.longitude && (
@@ -345,35 +275,82 @@ const SearchResultsMapLoaded = forwardRef<
                 onCloseClick={() => setSelectedListing(null)}
                 options={{ pixelOffset: new google.maps.Size(0, -40) }}
               >
-                <div className="p-2 max-w-[220px]">
-                  <img
-                    src={
-                      selectedListing.cover_image_url ||
-                      selectedListing.image_urls?.[0] ||
-                      '/placeholder.svg'
-                    }
-                    alt={selectedListing.title}
-                    className="w-full h-28 object-cover rounded-lg mb-2"
-                  />
-                  <h3 className="font-bold text-sm line-clamp-1">
-                    {selectedListing.title}
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {selectedListing.address
-                      ?.split(',')
-                      .slice(-2)
-                      .join(',')
-                      .trim() || 'Location TBD'}
-                  </p>
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="font-bold text-base text-primary">
-                      {selectedListing.mode === 'rent'
-                        ? `$${selectedListing.price_daily}/day`
-                        : `$${selectedListing.price_sale?.toLocaleString()}`}
-                    </p>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium capitalize">
-                      {selectedListing.mode === 'rent' ? 'Rental' : 'For Sale'}
+                <div className="p-1 max-w-[260px]">
+                  {/* Preview Image */}
+                  <div className="relative">
+                    <img
+                      src={
+                        selectedListing.cover_image_url ||
+                        selectedListing.image_urls?.[0] ||
+                        '/placeholder.svg'
+                      }
+                      alt={selectedListing.title}
+                      className="w-full h-36 object-cover rounded-lg"
+                    />
+                    {/* Mode badge */}
+                    <span className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full font-medium text-white ${
+                      selectedListing.mode === 'rent' ? 'bg-blue-500' : 'bg-emerald-500'
+                    }`}>
+                      {selectedListing.mode === 'rent' ? 'For Rent' : 'For Sale'}
                     </span>
+                    {/* Instant book badge */}
+                    {selectedListing.mode === 'rent' && selectedListing.instant_book && (
+                      <span className="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full font-medium bg-amber-500 text-white">
+                        ⚡ Instant
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Preview Info */}
+                  <div className="mt-2">
+                    <h3 className="font-bold text-sm line-clamp-1 text-gray-900">
+                      {selectedListing.title}
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                      {selectedListing.address
+                        ?.split(',')
+                        .slice(-2)
+                        .join(',')
+                        .trim() || 'Location TBD'}
+                    </p>
+                    
+                    {/* Dynamic pricing */}
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      {selectedListing.mode === 'rent' ? (
+                        <>
+                          {selectedListing.price_hourly && (
+                            <span className="font-bold text-sm" style={{ color: '#FF5722' }}>
+                              ${selectedListing.price_hourly}<span className="text-xs font-normal text-gray-500">/hr</span>
+                            </span>
+                          )}
+                          {selectedListing.price_daily && (
+                            <span className="font-bold text-sm" style={{ color: '#FF5722' }}>
+                              ${selectedListing.price_daily}<span className="text-xs font-normal text-gray-500">/day</span>
+                            </span>
+                          )}
+                          {selectedListing.price_weekly && (
+                            <span className="text-xs text-gray-500">
+                              ${selectedListing.price_weekly}/wk
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="font-bold text-base" style={{ color: '#FF5722' }}>
+                          ${selectedListing.price_sale?.toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* View Details Button */}
+                    <button
+                      onClick={() => {
+                        window.location.href = `/listing/${selectedListing.id}`;
+                      }}
+                      className="mt-3 w-full py-2 px-4 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-95"
+                      style={{ backgroundColor: '#FF5722' }}
+                    >
+                      View Details
+                    </button>
                   </div>
                 </div>
               </InfoWindow>
@@ -385,12 +362,6 @@ const SearchResultsMapLoaded = forwardRef<
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded-full bg-primary border-2 border-white shadow" />
             <span className="text-muted-foreground">Listings</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 flex items-center justify-center">
-              <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[8px] border-b-amber-500" />
-            </div>
-            <span className="text-muted-foreground">High-Value Venues</span>
           </div>
           {userLocation && (
             <div className="flex items-center gap-2">

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Fuse from 'fuse.js';
-import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet, Truck, LayoutGrid, Map } from 'lucide-react';
+import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet, Truck, LayoutGrid, Map, Columns } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format, parseISO, eachDayOfInterval } from 'date-fns';
 import Header from '@/components/layout/Header';
@@ -108,7 +108,7 @@ const Search = () => {
   const [verifiedHostsOnly, setVerifiedHostsOnly] = useState(searchParams.get('verified') === 'true');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
-  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'map' | 'split'>('split');
 
   // Google Maps API key for map view
   const { apiKey: mapToken, isLoading: isMapTokenLoading, error: mapTokenError } = useGoogleMapsToken();
@@ -749,7 +749,10 @@ const Search = () => {
                 />
                 
                 {/* View Toggle - Enhanced */}
-                <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'map')} className="bg-card border border-border rounded-xl p-0.5 shadow-sm">
+                <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'map' | 'split')} className="bg-card border border-border rounded-xl p-0.5 shadow-sm">
+                  <ToggleGroupItem value="split" aria-label="Split view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                    <Columns className="h-3.5 w-3.5" />
+                  </ToggleGroupItem>
                   <ToggleGroupItem value="grid" aria-label="Grid view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
                     <LayoutGrid className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
@@ -886,6 +889,64 @@ const Search = () => {
                       </button>
                     </Badge>
                   ))}
+                </div>
+              )}
+
+              {/* Split View - Half Map, Half List */}
+              {viewMode === 'split' && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* List Side */}
+                  <div className="order-2 lg:order-1">
+                    <ScrollArea className="h-[600px] pr-4">
+                      {filteredListings.length > 0 ? (
+                        <div className="space-y-4">
+                          {filteredListings.map((listing) => {
+                            const distance = getListingDistance(listing);
+                            const isHostVerified = hostVerificationMap[listing.host_id] ?? false;
+                            const canDeliverToUser = checkListingDeliveryCapability(listing);
+                            return (
+                              <div key={listing.id} className="relative">
+                                <ListingCard 
+                                  listing={listing} 
+                                  hostVerified={isHostVerified}
+                                  showQuickBook
+                                  onQuickBook={handleQuickBook}
+                                  canDeliverToUser={canDeliverToUser}
+                                  compact
+                                />
+                                {distance !== null && (
+                                  <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 z-10">
+                                    <Navigation className="h-3 w-3" />
+                                    {distance < 1 ? '< 1' : Math.round(distance)} mi
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <NoResultsAlert 
+                          onClearFilters={clearFilters}
+                          category={category}
+                          mode={mode}
+                        />
+                      )}
+                    </ScrollArea>
+                  </div>
+                  {/* Map Side */}
+                  <div className="order-1 lg:order-2 h-[400px] lg:h-[600px] rounded-xl overflow-hidden border border-border sticky top-24">
+                    <SearchResultsMap
+                      listings={filteredListings}
+                      mapToken={mapToken}
+                      isLoading={isMapTokenLoading}
+                      error={mapTokenError}
+                      userLocation={locationCoords}
+                      searchRadius={searchRadius}
+                      onListingClick={() => {
+                        // Preview shows on click, button navigates to listing
+                      }}
+                    />
+                  </div>
                 </div>
               )}
 
