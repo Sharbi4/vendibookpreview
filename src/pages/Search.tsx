@@ -894,12 +894,28 @@ const Search = () => {
 
               {/* Split View - Half Map, Half List */}
               {viewMode === 'split' && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6">
+                  {/* Map Side - Sticky on desktop, fixed height on mobile */}
+                  <div className="lg:order-2 h-[300px] lg:h-auto lg:sticky lg:top-24 lg:self-start rounded-xl overflow-hidden border border-border shadow-lg z-10">
+                    <div className="h-full lg:h-[calc(100vh-140px)]">
+                    <SearchResultsMap
+                      listings={filteredListings}
+                      mapToken={mapToken}
+                      isLoading={isMapTokenLoading}
+                      error={mapTokenError}
+                      userLocation={locationCoords}
+                      searchRadius={searchRadius}
+                      onListingClick={() => {
+                        // Preview shows on click, button navigates to listing
+                      }}
+                    />
+                    </div>
+                  </div>
                   {/* List Side */}
-                  <div className="order-2 lg:order-1">
-                    <ScrollArea className="h-[600px] pr-4">
+                  <div className="lg:order-1">
+                    <div className="space-y-4">
                       {filteredListings.length > 0 ? (
-                        <div className="space-y-4">
+                        <>
                           {filteredListings.map((listing) => {
                             const distance = getListingDistance(listing);
                             const isHostVerified = hostVerificationMap[listing.host_id] ?? false;
@@ -923,7 +939,7 @@ const Search = () => {
                               </div>
                             );
                           })}
-                        </div>
+                        </>
                       ) : (
                         <NoResultsAlert 
                           onClearFilters={clearFilters}
@@ -931,21 +947,7 @@ const Search = () => {
                           mode={mode}
                         />
                       )}
-                    </ScrollArea>
-                  </div>
-                  {/* Map Side */}
-                  <div className="order-1 lg:order-2 h-[400px] lg:h-[600px] rounded-xl overflow-hidden border border-border sticky top-24">
-                    <SearchResultsMap
-                      listings={filteredListings}
-                      mapToken={mapToken}
-                      isLoading={isMapTokenLoading}
-                      error={mapTokenError}
-                      userLocation={locationCoords}
-                      searchRadius={searchRadius}
-                      onListingClick={() => {
-                        // Preview shows on click, button navigates to listing
-                      }}
-                    />
+                    </div>
                   </div>
                 </div>
               )}
