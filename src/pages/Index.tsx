@@ -5,6 +5,7 @@ import Footer from '@/components/layout/Footer';
 import HeroWalkthrough from '@/components/home/HeroWalkthrough';
 import AnnouncementBanner from '@/components/home/AnnouncementBanner';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTracking } from '@/hooks/usePageTracking';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
@@ -36,6 +37,9 @@ const SectionSkeleton = () => (
 const Index = () => {
   const { user, isVerified, isLoading } = useAuth();
   const navigate = useNavigate();
+  
+  // Track page views with Google Analytics
+  usePageTracking();
 
   useEffect(() => {
     if (!isLoading && user && !isVerified) {

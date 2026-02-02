@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
+import { usePageTracking } from '@/hooks/usePageTracking';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -155,6 +156,7 @@ const browseTopics = [
     { label: 'Reporting issues', slug: 'reporting-issues' },
   ]},
   { title: 'Compliance & Permits', icon: Scale, articles: [
+    { label: '📚 Regulations Hub (Full Guide)', slug: '../tools/regulations-hub' },
     { label: 'Mobile vending permits', slug: 'mobile-vending-permits' },
     { label: 'Health department inspections', slug: 'health-inspections' },
     { label: 'Commissary requirements', slug: 'commissary-requirements' },
@@ -170,6 +172,9 @@ const helpCenterFAQs = [
 
 const HelpCenter = () => {
   const [openTopics, setOpenTopics] = useState<string[]>([]);
+  
+  // Track page views with Google Analytics
+  usePageTracking();
 
   const toggleTopic = (title: string) => {
     setOpenTopics(prev => 
@@ -365,6 +370,75 @@ const HelpCenter = () => {
                   <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                 </Link>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Featured Resource: Regulations Hub */}
+        <section className="py-8 md:py-10">
+          <div className="container max-w-6xl">
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* Startup Guide Card */}
+              <Card className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border-2 border-emerald-200 dark:border-emerald-800 overflow-hidden">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
+                      <ClipboardCheck className="h-5 w-5 text-white" />
+                    </div>
+                    <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+                      Launch Checklist
+                    </Badge>
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground mb-2">
+                    Food Business Startup Guide
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Complete checklist to launch your food truck, trailer, or ghost kitchen. Covers setup, permits, equipment, costs, and hidden risks.
+                  </p>
+                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-4">
+                    <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-green-500" /> Step-by-step</span>
+                    <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-green-500" /> Cost breakdowns</span>
+                  </div>
+                  <Button asChild size="sm" className="w-full gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700">
+                    <Link to="/tools/startup-guide">
+                      <ClipboardCheck className="h-4 w-4" />
+                      Open Startup Guide
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Regulations Hub Card */}
+              <Card className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-indigo-500/10 border-2 border-blue-200 dark:border-blue-800 overflow-hidden">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
+                      <Scale className="h-5 w-5 text-white" />
+                    </div>
+                    <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                      Compliance Guide
+                    </Badge>
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground mb-2">
+                    Regulations Hub
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    State-by-state mobile food regulations, ANSI certifications, cottage food laws, commissary resources, and ghost kitchen compliance.
+                  </p>
+                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-4">
+                    <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-green-500" /> 50 States</span>
+                    <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-green-500" /> City-specific</span>
+                  </div>
+                  <Button asChild size="sm" className="w-full gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                    <Link to="/tools/regulations-hub">
+                      <Scale className="h-4 w-4" />
+                      Open Regulations Hub
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>

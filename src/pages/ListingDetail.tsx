@@ -10,6 +10,7 @@ import {
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
+import { usePageTracking } from '@/hooks/usePageTracking';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
@@ -47,6 +48,9 @@ const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { listing, host, isLoading, error } = useListing(id);
+  
+  // Track page views with Google Analytics
+  usePageTracking();
   const { data: ratingData } = useListingAverageRating(id);
   const { trackView } = useTrackListingView();
 

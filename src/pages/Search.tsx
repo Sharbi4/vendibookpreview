@@ -6,6 +6,7 @@ import { DateRange } from 'react-day-picker';
 import { format, parseISO, eachDayOfInterval } from 'date-fns';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { usePageTracking } from '@/hooks/usePageTracking';
 import ListingCard from '@/components/listing/ListingCard';
 import QuickBookingModal from '@/components/search/QuickBookingModal';
 import DateRangeFilter from '@/components/search/DateRangeFilter';
@@ -75,6 +76,9 @@ const POPULAR_FEATURES = [
 
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Track page views with Google Analytics
+  usePageTracking();
   
   // Get initial values from URL params
   const initialQuery = searchParams.get('q') || '';

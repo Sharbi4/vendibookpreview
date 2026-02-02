@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTracking } from '@/hooks/usePageTracking';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,6 +28,9 @@ import {
 const Dashboard = () => {
   const { user, profile, roles, isLoading, isVerified, hasRole } = useAuth();
   const navigate = useNavigate();
+
+  // Track page views with Google Analytics
+  usePageTracking();
 
   useEffect(() => {
     if (!isLoading && !user) {

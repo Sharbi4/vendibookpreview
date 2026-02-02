@@ -56,6 +56,8 @@ const ListingStudio = lazy(() => import("./pages/tools/ListingStudio"));
 const ConceptLab = lazy(() => import("./pages/tools/ConceptLab"));
 const MarketRadar = lazy(() => import("./pages/tools/MarketRadar"));
 const MarketingStudio = lazy(() => import("./pages/tools/MarketingStudio"));
+const StartupGuide = lazy(() => import("./pages/tools/StartupGuide"));
+const RegulationsHub = lazy(() => import("./pages/tools/RegulationsHub"));
 const OrderTracking = lazy(() => import("./pages/OrderTracking"));
 const Transactions = lazy(() => import("./pages/Transactions"));
 
@@ -174,6 +176,8 @@ const AnimatedRoutes = () => {
           <Route path="/tools/concept-lab" element={<PageTransition><ConceptLab /></PageTransition>} />
           <Route path="/tools/market-radar" element={<PageTransition><MarketRadar /></PageTransition>} />
           <Route path="/tools/marketing-studio" element={<PageTransition><MarketingStudio /></PageTransition>} />
+          <Route path="/tools/startup-guide" element={<PageTransition><StartupGuide /></PageTransition>} />
+          <Route path="/tools/regulations-hub" element={<PageTransition><RegulationsHub /></PageTransition>} />
           
           {/* Redirect old /ai-tools route to /tools */}
           <Route path="/ai-tools" element={<Navigate to="/tools" replace />} />

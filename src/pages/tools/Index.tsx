@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
+import { usePageTracking } from '@/hooks/usePageTracking';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,11 +15,19 @@ import {
   Search,
   ArrowRight,
   Megaphone,
-  CheckCircle2
+  CheckCircle2,
+  Rocket
 } from 'lucide-react';
 
 // Benefit-first descriptions: "Do X so you Y"
 const tools = [
+  {
+    name: 'Startup Guide',
+    description: 'Complete checklist to launch your food business.',
+    icon: Rocket,
+    gradient: 'from-emerald-400 to-teal-600',
+    href: '/tools/startup-guide',
+  },
   {
     name: 'PricePilot',
     description: 'Set competitive rates so you book faster.',
@@ -67,6 +76,13 @@ const tools = [
     icon: Megaphone,
     gradient: 'from-pink-500 to-purple-600',
     href: '/tools/marketing-studio',
+  },
+  {
+    name: 'Regulations Hub',
+    description: 'Navigate permits, certifications & compliance by state.',
+    icon: FileCheck,
+    gradient: 'from-blue-500 to-purple-600',
+    href: '/tools/regulations-hub',
   }
 ];
 
@@ -86,6 +102,9 @@ const pageJsonLd = {
 };
 
 const ToolsIndex = () => {
+  // Track page views with Google Analytics
+  usePageTracking();
+  
   return (
     <>
       <SEO

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTracking } from '@/hooks/usePageTracking';
 import { Loader2 } from 'lucide-react';
 import { AuthMarketingPanel } from '@/components/auth/AuthMarketingPanel';
 import { AuthFormPanel } from '@/components/auth/AuthFormPanel';
@@ -12,6 +13,9 @@ const Auth = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  
+  // Track page views with Google Analytics
+  usePageTracking();
   
   const redirectUrl = searchParams.get('redirect') || '/';
 
