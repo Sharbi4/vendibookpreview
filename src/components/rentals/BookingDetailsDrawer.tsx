@@ -82,7 +82,7 @@ const BookingDetailsDrawer = ({
   // Determine payout status
   const getPayoutStatus = () => {
     if (booking.status === 'completed') return 'sent';
-    if (booking.status === 'paid') return 'scheduled';
+    if (booking.payment_status === 'paid' && booking.status === 'approved') return 'scheduled';
     return 'pending';
   };
 
@@ -359,7 +359,7 @@ END:VCALENDAR`;
             )}
 
             {/* Mark completed (for paid bookings that have ended) */}
-            {booking.status === 'paid' && new Date(booking.end_date || booking.start_date) < new Date() && (
+            {booking.status === 'approved' && booking.payment_status === 'paid' && new Date(booking.end_date || booking.start_date) < new Date() && (
               <Button 
                 variant="outline" 
                 className="w-full"

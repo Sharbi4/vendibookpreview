@@ -28,6 +28,7 @@ export interface Listing {
   location_notes: string | null;
   price_daily: number | null;
   price_weekly: number | null;
+  price_hourly: number | null;
   price_sale: number | null;
   available_from: string | null;
   available_to: string | null;

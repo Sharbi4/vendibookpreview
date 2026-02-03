@@ -16,7 +16,7 @@ interface BookingInfo {
 interface BlockedDateRecord {
   id: string;
   blocked_date: string;
-  note?: string;
+  reason?: string | null;
 }
 
 // Overload for object parameter
@@ -58,11 +58,11 @@ const useBlockedDatesInternal = (listingId: string) => {
         // Fetch blocked dates
         const { data: blockedData } = await supabase
           .from('listing_blocked_dates')
-          .select('id, blocked_date, note')
+          .select('id, blocked_date, reason')
           .eq('listing_id', listingId);
 
         if (blockedData) {
-          setBlockedDates(blockedData as BlockedDateRecord[]);
+          setBlockedDates(blockedData as unknown as BlockedDateRecord[]);
           setBlockedDateObjects(blockedData.map(d => parseISO(d.blocked_date)));
         }
 
@@ -130,14 +130,19 @@ const useBlockedDatesInternal = (listingId: string) => {
     return isBlocked || isBooked || isBuffer;
   };
 
-  const addBlockedDates = useCallback(async (dates: Date[], note?: string) => {
+  const addBlockedDates = useCallback(async (dates: Date[], reason?: string) => {
     if (!listingId || dates.length === 0) return;
+
+    // Get current user for host_id
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
     try {
       const records = dates.map(date => ({
         listing_id: listingId,
+        host_id: user.id,
         blocked_date: format(date, 'yyyy-MM-dd'),
-        note: note || null,
+        reason: reason || null,
       }));
 
       const { error } = await supabase
@@ -149,12 +154,12 @@ const useBlockedDatesInternal = (listingId: string) => {
       // Refetch blocked dates
       const { data: blockedData } = await supabase
         .from('listing_blocked_dates')
-        .select('id, blocked_date, note')
+        .select('id, blocked_date, reason')
         .eq('listing_id', listingId);
 
       if (blockedData) {
-        setBlockedDates(blockedData as BlockedDateRecord[]);
-        setBlockedDateObjects(blockedData.map(d => parseISO(d.blocked_date)));
+        setBlockedDates(blockedData as unknown as BlockedDateRecord[]);
+        setBlockedDateObjects((blockedData as BlockedDateRecord[]).map(d => parseISO(d.blocked_date)));
       }
 
       toast({
