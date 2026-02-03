@@ -76,6 +76,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
+import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
 
 // Industry stats
 const INDUSTRY_STATS = {
@@ -1870,6 +1871,7 @@ const StartupGuide = () => {
         <ToolCrossLinks currentTool="startup-guide" />
       </main>
       
+      <NewsletterPopup />
       <Footer />
     </>
   );

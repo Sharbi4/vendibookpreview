@@ -16,6 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
+import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
 import { 
   Home,
   Shield,
@@ -1267,6 +1268,7 @@ const RegulationsHub = () => {
         <ToolCrossLinks currentTool="regulations-hub" />
       </main>
 
+      <NewsletterPopup />
       <Footer />
     </>
   );
