@@ -60,7 +60,7 @@ export const AvailabilityCalendarDisplay: React.FC<AvailabilityCalendarDisplayPr
     if (isBuffer) return 'buffer';
     
     // Check if manually blocked
-    const isBlocked = blockedDates.some(d => format(d, 'yyyy-MM-dd') === dateStr);
+    const isBlocked = blockedDates.some(d => format(typeof d === 'object' && 'blocked_date' in d ? parseISO((d as { blocked_date: string }).blocked_date) : d as Date, 'yyyy-MM-dd') === dateStr);
     if (isBlocked) return 'blocked';
     
     return 'available';

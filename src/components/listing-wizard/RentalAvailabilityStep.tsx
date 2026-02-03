@@ -17,6 +17,7 @@ import { useListingAvailability } from '@/hooks/useListingAvailability';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { HourlyScheduleGrid, WeeklySchedule, EMPTY_SCHEDULE } from './HourlyScheduleGrid';
+import { HourlySpecialPricing, HourlySpecialPricingData } from './HourlySpecialPricing';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -33,6 +34,7 @@ interface RentalAvailabilityStepProps {
   onAvailableToChange: (date: string | null) => void;
   onPriceHourlyChange: (price: number | null) => void;
   onSettingsChange: (settings: HourlySettings) => void;
+  onSpecialPricingChange?: (pricing: HourlySpecialPricingData | null) => void;
 }
 
 export interface HourlySettings {
@@ -44,6 +46,7 @@ export interface HourlySettings {
   minNoticeHours: number;
   hourlySchedule: WeeklySchedule;
   rentalMinDays: number;
+  specialPricing?: HourlySpecialPricingData | null;
 }
 
 export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
@@ -57,6 +60,7 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
   onAvailableToChange,
   onPriceHourlyChange,
   onSettingsChange,
+  onSpecialPricingChange,
 }) => {
   const { toast } = useToast();
   
@@ -71,6 +75,7 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
   const [hourlySchedule, setHourlySchedule] = useState<WeeklySchedule>(EMPTY_SCHEDULE);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [specialPricing, setSpecialPricing] = useState<HourlySpecialPricingData | null>(null);
 
   // Calendar state
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -109,7 +114,7 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
       try {
         const { data } = await supabase
           .from('listings')
-          .select('hourly_enabled, daily_enabled, min_hours, max_hours, buffer_time_mins, min_notice_hours, hourly_schedule, rental_min_days, price_hourly')
+          .select('hourly_enabled, daily_enabled, min_hours, max_hours, buffer_time_mins, min_notice_hours, hourly_schedule, rental_min_days, price_hourly, hourly_special_pricing')
           .eq('id', listingId)
           .single();
 
@@ -147,6 +152,12 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
           if ((data as any).price_hourly) {
             setHourlyRate((data as any).price_hourly.toString());
           }
+          
+          // Load special pricing
+          const savedSpecialPricing = (data as any).hourly_special_pricing;
+          if (savedSpecialPricing && typeof savedSpecialPricing === 'object') {
+            setSpecialPricing(savedSpecialPricing as HourlySpecialPricingData);
+          }
         }
       } catch (error) {
         console.error('Error loading settings:', error);
@@ -172,8 +183,14 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
       minNoticeHours: minNotice,
       hourlySchedule,
       rentalMinDays: minDays,
+      specialPricing,
     });
-  }, [bookingType, minHours, maxHours, bufferMins, minNotice, hourlySchedule, minDays, onSettingsChange]);
+  }, [bookingType, minHours, maxHours, bufferMins, minNotice, hourlySchedule, minDays, specialPricing, onSettingsChange]);
+  
+  // Propagate special pricing changes
+  useEffect(() => {
+    onSpecialPricingChange?.(specialPricing);
+  }, [specialPricing, onSpecialPricingChange]);
 
   useEffect(() => {
     const rate = parseFloat(hourlyRate);
@@ -503,6 +520,15 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
               )}
             </CardContent>
           </Card>
+        )}
+        
+        {/* Special Hourly Pricing */}
+        {showHourlySettings && (
+          <HourlySpecialPricing
+            baseHourlyRate={parseFloat(hourlyRate) || null}
+            specialPricing={specialPricing}
+            onChange={setSpecialPricing}
+          />
         )}
 
         {/* Availability Window Toggle */}

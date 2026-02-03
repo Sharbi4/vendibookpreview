@@ -806,6 +806,7 @@ export type Database = {
           host_id: string | null
           hourly_enabled: boolean | null
           hourly_schedule: Json | null
+          hourly_special_pricing: Json | null
           hours_of_access: string | null
           id: string
           image_urls: string[] | null
@@ -869,6 +870,7 @@ export type Database = {
           host_id?: string | null
           hourly_enabled?: boolean | null
           hourly_schedule?: Json | null
+          hourly_special_pricing?: Json | null
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
@@ -932,6 +934,7 @@ export type Database = {
           host_id?: string | null
           hourly_enabled?: boolean | null
           hourly_schedule?: Json | null
+          hourly_special_pricing?: Json | null
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
