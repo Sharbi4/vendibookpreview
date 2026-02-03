@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { lazy, Suspense, useMemo } from 'react';
 import {
   ShieldCheck,
   CreditCard,
@@ -8,18 +8,17 @@ import {
   ArrowRight,
   DollarSign,
   MapPin,
-  Sparkles,
   CheckCircle2,
   CalendarDays,
   FileCheck,
   Package,
   Star,
   Quote,
-  Clock,
-  Users,
-  Zap,
   HelpCircle,
-  ChevronDown,
+  Search,
+  PlusCircle,
+  MessageSquare,
+  Handshake,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/layout/Header';
@@ -27,22 +26,15 @@ import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { AnimatedSection, AnimatedCard } from '@/components/ui/animated';
+import { AnimatedCard } from '@/components/ui/animated';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Skeleton } from '@/components/ui/skeleton';
 
-// How It Works page uses interior/professional shots - lazy load for performance
-import trailerInteriorCeiling from '@/assets/trailer-interior-ceiling.jpg';
-import trailerInteriorFloor from '@/assets/trailer-interior-floor.jpg';
-import trailerCafecito from '@/assets/trailer-cafecito.jpg';
-import foodTruckGrilledCheese from '@/assets/food-truck-grilled-cheese.jpg';
-import trailerBlack from '@/assets/trailer-black.jpg';
-import trailerWhite from '@/assets/trailer-white.jpg';
+type UserRole = 'none' | 'buyer' | 'seller';
 
 const testimonials = [
   {
@@ -51,6 +43,7 @@ const testimonials = [
     location: "Atlanta, GA",
     text: "Sold my trailer in 2 weeks. The buyer financing made it easy for them to pay.",
     rating: 5,
+    forRole: 'seller' as const,
   },
   {
     name: "Sarah C.",
@@ -58,17 +51,38 @@ const testimonials = [
     location: "Houston, TX",
     text: "Love that Vendibook verifies all my renters. No more chasing documents myself.",
     rating: 5,
+    forRole: 'seller' as const,
   },
   {
-    name: "David W.",
-    role: "Lot Owner",
-    location: "Miami, FL",
-    text: "Passive income from my parking lot. Setup took 10 minutes.",
+    name: "Elena R.",
+    role: "Food Truck Buyer",
+    location: "Denver, CO",
+    text: "Found my dream truck and paid with Affirm. The escrow gave me peace of mind.",
     rating: 5,
+    forRole: 'buyer' as const,
   },
 ];
 
-const faqs = [
+const buyerFaqs = [
+  {
+    question: "How do I know the listing is legitimate?",
+    answer: "All sellers on Vendibook complete identity verification through Stripe. You'll see a verified badge on their profile.",
+  },
+  {
+    question: "How do payments work when I buy?",
+    answer: "You can pay with card, Affirm, or Afterpay. Funds are held in escrow and only released to the seller after you confirm receipt.",
+  },
+  {
+    question: "What if I'm not satisfied with my purchase?",
+    answer: "Contact us within 24 hours of receiving your asset. We'll help mediate and can hold funds until the issue is resolved.",
+  },
+  {
+    question: "Can I inspect before buying?",
+    answer: "Yes! You can message sellers directly to schedule an in-person inspection before committing to purchase.",
+  },
+];
+
+const sellerFaqs = [
   {
     question: "How much does it cost to list?",
     answer: "Creating a listing is completely free. We only charge a small platform fee when you make a sale or complete a rental booking.",
@@ -78,12 +92,8 @@ const faqs = [
     answer: "Identity verification typically takes just 2-3 minutes using our Stripe-powered verification system. You'll need a valid government ID.",
   },
   {
-    question: "How do payments work?",
-    answer: "For sales, buyers can pay with card, Affirm, or Afterpay. For rentals, payments are held securely until 24 hours after booking ends, then released to you.",
-  },
-  {
-    question: "Can I offer delivery or shipping?",
-    answer: "Yes! You can offer local delivery, pickup only, or use VendiBook Freight for nationwide shipping to the 48 contiguous states.",
+    question: "How do I get paid?",
+    answer: "Payments are deposited directly to your bank account. For sales, funds release after buyer confirmation. For rentals, 24 hours after the booking ends.",
   },
   {
     question: "What documents do renters need?",
@@ -91,743 +101,579 @@ const faqs = [
   },
 ];
 
-const stats = [
-  { value: "500+", label: "Active Listings", icon: Truck },
-  { value: "48", label: "States Covered", icon: MapPin },
-  { value: "<24h", label: "Avg. Response Time", icon: Clock },
-  { value: "100%", label: "Verified Users", icon: ShieldCheck },
+const buyerSteps = [
+  {
+    step: 1,
+    icon: Search,
+    title: "Find Your Asset",
+    description: "Browse verified food trucks, trailers, commercial kitchens, and vendor lots nationwide.",
+  },
+  {
+    step: 2,
+    icon: MessageSquare,
+    title: "Verify & Connect",
+    description: "All sellers are identity-verified. Message them to ask questions or schedule an inspection.",
+  },
+  {
+    step: 3,
+    icon: CreditCard,
+    title: "Secure Checkout",
+    description: "Pay safely with card, Affirm, or Afterpay. Funds are held in escrow until you confirm.",
+  },
+  {
+    step: 4,
+    icon: Handshake,
+    title: "Complete Transaction",
+    description: "Pickup, delivery, or nationwide freight. Confirm when satisfied to release payment.",
+  },
+];
+
+const sellerPathOptions = [
+  {
+    icon: DollarSign,
+    title: "Sell a Food Truck or Trailer",
+    description: "List your vehicle for sale with secure payments and optional buyer financing.",
+    link: "/sell-my-food-truck",
+    features: ["Buyer financing with Affirm/Afterpay", "Optional nationwide freight", "Secure escrow payments"],
+  },
+  {
+    icon: CalendarDays,
+    title: "Rent Out a Commercial Kitchen",
+    description: "Monetize your kitchen space with verified, document-compliant renters.",
+    link: "/rent-my-commercial-kitchen",
+    features: ["Identity-verified renters", "Automated document collection", "Flexible scheduling"],
+  },
+  {
+    icon: MapPin,
+    title: "List a Vendor Lot",
+    description: "Turn your parking lot or space into passive income for food vendors.",
+    link: "/vendor-lots",
+    features: ["Hourly or daily bookings", "Define amenities & rules", "Zero hassle setup"],
+  },
 ];
 
 const HowItWorks = () => {
   const shouldReduceMotion = useReducedMotion();
+  const [searchParams, setSearchParams] = useSearchParams();
   
-  // Memoize static content for performance
-  const galleryImages = useMemo(() => [
-    { src: trailerInteriorCeiling, alt: 'Food trailer interior ceiling' },
-    { src: foodTruckGrilledCheese, alt: 'Grilled cheese food truck' },
-    { src: trailerCafecito, alt: 'Coffee trailer' },
-    { src: trailerBlack, alt: 'Black food trailer' },
-    { src: trailerWhite, alt: 'White food trailer' },
-    { src: trailerInteriorFloor, alt: 'Food trailer interior floor' },
-  ], []);
+  const [selectedRole, setSelectedRole] = useState<UserRole>(() => {
+    const urlRole = searchParams.get('role');
+    return (urlRole === 'buyer' || urlRole === 'seller') ? urlRole : 'none';
+  });
+
+  // Sync URL with role selection
+  useEffect(() => {
+    if (selectedRole === 'none') {
+      searchParams.delete('role');
+    } else {
+      searchParams.set('role', selectedRole);
+    }
+    setSearchParams(searchParams, { replace: true });
+  }, [selectedRole, searchParams, setSearchParams]);
+
+  const handleRoleSelect = (role: UserRole) => {
+    setSelectedRole(role);
+    // Smooth scroll to content
+    setTimeout(() => {
+      document.getElementById('role-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
+
+  const handleBackToSelection = () => {
+    setSelectedRole('none');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const relevantTestimonials = testimonials.filter(t => 
+    selectedRole === 'none' || t.forRole === selectedRole
+  ).slice(0, 3);
+
+  const relevantFaqs = selectedRole === 'buyer' ? buyerFaqs : sellerFaqs;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Learn More | Vendibook - Sell, Rent & List Mobile Food Assets"
-        description="Learn how to sell, rent, or list vendor lots on Vendibook. Verified accounts, secure payments, and nationwide freight."
+        title="How It Works | Vendibook - Buy, Sell & Rent Mobile Food Assets"
+        description="Learn how to buy, sell, or rent food trucks, trailers, commercial kitchens, and vendor lots on Vendibook."
       />
       <Header />
 
       <main className="flex-1">
-        {/* ==================== HERO ==================== */}
-        <section className="py-16 md:py-24 bg-gradient-to-b from-muted/50 to-background relative overflow-hidden">
-          {/* Animated background pattern */}
-          <div className="absolute inset-0 opacity-[0.03]">
-            <div className="grid grid-cols-3 h-full">
-              <img src={trailerInteriorCeiling} alt="" className="w-full h-full object-cover" aria-hidden="true" loading="eager" />
-              <img src={trailerInteriorFloor} alt="" className="w-full h-full object-cover" aria-hidden="true" loading="eager" />
-              <img src={trailerCafecito} alt="" className="w-full h-full object-cover" aria-hidden="true" loading="eager" />
-            </div>
-          </div>
-          
-          {/* Decorative gradient orbs */}
-          <div className="absolute top-20 left-10 w-72 h-72 bg-foreground/10 rounded-full blur-3xl" aria-hidden="true" />
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-foreground/10 rounded-full blur-3xl" aria-hidden="true" />
-          
-          <div className="container relative z-10">
+        {/* ==================== ROLE SELECTION HERO ==================== */}
+        <section className="py-16 md:py-20 bg-gradient-to-b from-muted/50 to-background">
+          <div className="container">
             <motion.div 
               className="max-w-3xl mx-auto text-center"
               initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.4 }}
             >
-              {/* Eyebrow badge */}
-              <motion.div
-                initial={shouldReduceMotion ? {} : { opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 }}
-                className="inline-flex items-center gap-2 bg-foreground/10 text-foreground px-4 py-1.5 rounded-full text-sm font-medium mb-6"
-              >
-                <Zap className="h-4 w-4" />
-                The #1 Mobile Food Marketplace
-              </motion.div>
-              
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-5 tracking-tight">
-                How Vendibook Works
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 tracking-tight">
+                What would you like to do?
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                The secure marketplace for mobile food assets. Sell, rent, or list vendor lots with verified users and protected payments.
+              <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">
+                Choose your path and we'll show you exactly how it works.
               </p>
 
-              {/* Trust Badges - Enhanced with animations */}
+              {/* Role Selection Cards */}
+              <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                {/* Buyer/Renter Card */}
+                <motion.button
+                  onClick={() => handleRoleSelect('buyer')}
+                  className={`p-6 rounded-2xl border-2 text-left transition-all ${
+                    selectedRole === 'buyer'
+                      ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                      : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                  }`}
+                  whileHover={shouldReduceMotion ? {} : { y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
+                    selectedRole === 'buyer' ? 'bg-primary' : 'bg-muted'
+                  }`}>
+                    <Search className={`h-6 w-6 ${selectedRole === 'buyer' ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
+                  </div>
+                  <h2 className="text-xl font-bold text-foreground mb-2">Buy or Rent</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Find food trucks, trailers, kitchens, and vendor lots to purchase or rent.
+                  </p>
+                </motion.button>
+
+                {/* Seller/Host Card */}
+                <motion.button
+                  onClick={() => handleRoleSelect('seller')}
+                  className={`p-6 rounded-2xl border-2 text-left transition-all ${
+                    selectedRole === 'seller'
+                      ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                      : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                  }`}
+                  whileHover={shouldReduceMotion ? {} : { y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
+                    selectedRole === 'seller' ? 'bg-primary' : 'bg-muted'
+                  }`}>
+                    <PlusCircle className={`h-6 w-6 ${selectedRole === 'seller' ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
+                  </div>
+                  <h2 className="text-xl font-bold text-foreground mb-2">Sell or List</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Sell your assets, rent out equipment, or list your space for vendors.
+                  </p>
+                </motion.button>
+              </div>
+
+              {/* Trust Badges - Compact */}
               <motion.div 
-                className="flex flex-wrap justify-center gap-3 mb-10"
+                className="flex flex-wrap justify-center gap-4 mt-10 text-sm text-muted-foreground"
                 initial={shouldReduceMotion ? {} : { opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
               >
-                {[
-                  { icon: ShieldCheck, label: "Verified Users" },
-                  { icon: CreditCard, label: "Secure Payments" },
-                  { icon: Truck, label: "Nationwide Freight" },
-                ].map((badge, index) => (
-                  <motion.div
-                    key={badge.label}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border text-sm font-medium shadow-sm hover:shadow-md hover:border-foreground/30 transition-all duration-200"
-                    whileHover={shouldReduceMotion ? {} : { y: -2 }}
-                    initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 + index * 0.1 }}
-                  >
-                    <badge.icon className="h-4 w-4 text-foreground" />
-                    {badge.label}
-                  </motion.div>
-                ))}
-              </motion.div>
-
-              <motion.div
-                initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="flex flex-col sm:flex-row items-center justify-center gap-4"
-              >
-                <Button size="lg" variant="dark-shine" className="gap-2 px-8 h-12 text-base" asChild>
-                  <Link to="/list">
-                    Create Free Listing
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" className="gap-2 px-8 h-12 text-base" asChild>
-                  <Link to="/search">
-                    Browse Listings
-                  </Link>
-                </Button>
+                <div className="flex items-center gap-1.5">
+                  <ShieldCheck className="h-4 w-4" />
+                  <span>Verified Users</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CreditCard className="h-4 w-4" />
+                  <span>Secure Payments</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Truck className="h-4 w-4" />
+                  <span>Nationwide Shipping</span>
+                </div>
               </motion.div>
             </motion.div>
           </div>
-          
-          {/* Scroll indicator */}
-          <motion.div 
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-muted-foreground"
-            initial={shouldReduceMotion ? {} : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-          >
-            <span className="text-xs font-medium">Learn more</span>
-            <motion.div
-              animate={shouldReduceMotion ? {} : { y: [0, 5, 0] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-            >
-              <ChevronDown className="h-5 w-5" />
-            </motion.div>
-          </motion.div>
         </section>
-        
-        {/* ==================== STATS BAR ==================== */}
-        <section className="py-8 bg-card border-y border-border">
-          <div className="container">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-              {stats.map((stat, index) => (
-                <motion.div
-                  key={stat.label}
-                  className="text-center"
+
+        {/* ==================== CONDITIONAL CONTENT ==================== */}
+        {selectedRole !== 'none' && (
+          <div id="role-content">
+            {/* Back button */}
+            <div className="container pt-6">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleBackToSelection}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                ← Choose a different path
+              </Button>
+            </div>
+
+            {/* ==================== BUYER WALKTHROUGH ==================== */}
+            {selectedRole === 'buyer' && (
+              <section className="py-12 md:py-16">
+                <div className="container">
+                  <div className="max-w-4xl mx-auto">
+                    <div className="text-center mb-12">
+                      <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+                        How Buying & Renting Works
+                      </h2>
+                      <p className="text-muted-foreground max-w-xl mx-auto">
+                        Find verified listings, pay securely, and complete your transaction with confidence.
+                      </p>
+                    </div>
+
+                    {/* Steps Grid */}
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                      {buyerSteps.map((step, index) => {
+                        const Icon = step.icon;
+                        return (
+                          <motion.div
+                            key={step.step}
+                            className="relative"
+                            initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: index * 0.1 }}
+                          >
+                            <Card className="h-full border-2 border-border hover:border-primary/30 transition-colors">
+                              <CardContent className="p-5">
+                                <div className="flex items-center gap-3 mb-3">
+                                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
+                                    {step.step}
+                                  </div>
+                                  <Icon className="h-5 w-5 text-muted-foreground" />
+                                </div>
+                                <h3 className="font-semibold text-foreground mb-2">{step.title}</h3>
+                                <p className="text-sm text-muted-foreground">{step.description}</p>
+                              </CardContent>
+                            </Card>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+
+                    {/* CTA */}
+                    <div className="text-center">
+                      <Button size="lg" variant="dark-shine" className="gap-2" asChild>
+                        <Link to="/search">
+                          Start Browsing
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* ==================== SELLER PATH OPTIONS ==================== */}
+            {selectedRole === 'seller' && (
+              <section className="py-12 md:py-16">
+                <div className="container">
+                  <div className="max-w-5xl mx-auto">
+                    <div className="text-center mb-12">
+                      <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+                        Choose Your Listing Type
+                      </h2>
+                      <p className="text-muted-foreground max-w-xl mx-auto">
+                        Each path has a dedicated guide to help you get started quickly.
+                      </p>
+                    </div>
+
+                    {/* Seller Options Grid */}
+                    <div className="grid md:grid-cols-3 gap-6">
+                      {sellerPathOptions.map((option, index) => {
+                        const Icon = option.icon;
+                        return (
+                          <AnimatedCard key={option.title} index={index}>
+                            <Card className="border-2 border-border hover:border-primary/40 transition-colors h-full">
+                              <CardContent className="p-6">
+                                <motion.div 
+                                  className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center mb-4"
+                                  whileHover={{ scale: 1.1, rotate: 5 }}
+                                  transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                                >
+                                  <Icon className="h-6 w-6 text-background" />
+                                </motion.div>
+                                <h3 className="text-lg font-bold text-foreground mb-2">{option.title}</h3>
+                                <p className="text-sm text-muted-foreground mb-4">{option.description}</p>
+                                <ul className="space-y-2 text-sm text-muted-foreground mb-6">
+                                  {option.features.map((feature, i) => (
+                                    <li key={i} className="flex items-center gap-2">
+                                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                                      {feature}
+                                    </li>
+                                  ))}
+                                </ul>
+                                <Button variant="dark-shine" className="w-full gap-2" asChild>
+                                  <Link to={option.link}>
+                                    Learn More
+                                    <ArrowRight className="h-4 w-4" />
+                                  </Link>
+                                </Button>
+                              </CardContent>
+                            </Card>
+                          </AnimatedCard>
+                        );
+                      })}
+                    </div>
+
+                    {/* Quick Start CTA */}
+                    <div className="text-center mt-10">
+                      <p className="text-sm text-muted-foreground mb-3">Ready to jump in?</p>
+                      <Button size="lg" variant="outline" className="gap-2" asChild>
+                        <Link to="/list">
+                          Create Free Listing Now
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* ==================== WHY VENDIBOOK (Shared) ==================== */}
+            <section className="py-12 md:py-16 bg-muted/30">
+              <div className="container">
+                <div className="max-w-4xl mx-auto">
+                  <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-10">
+                    Why Choose Vendibook
+                  </h2>
+
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    <div className="flex gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center shrink-0">
+                        <ShieldCheck className="h-5 w-5 text-foreground" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground mb-1">Verified Users</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Identity verification reduces fraud and builds trust.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center shrink-0">
+                        <FileCheck className="h-5 w-5 text-foreground" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground mb-1">Document Review</h3>
+                        <p className="text-sm text-muted-foreground">
+                          We verify renter documents so you don't have to.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center shrink-0">
+                        <CreditCard className="h-5 w-5 text-foreground" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground mb-1">Secure Payments</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Funds held in escrow until transaction is complete.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center shrink-0">
+                        <Package className="h-5 w-5 text-foreground" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground mb-1">Nationwide Freight</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Buy or sell to anyone in the 48 contiguous states.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ==================== TESTIMONIALS (Filtered) ==================== */}
+            <section className="py-12 md:py-16">
+              <div className="container">
+                <div className="max-w-4xl mx-auto">
+                  <div className="text-center mb-10">
+                    <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium mb-4">
+                      <Star className="h-4 w-4 fill-primary" />
+                      Trusted by Entrepreneurs
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                      What Users Are Saying
+                    </h2>
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-6">
+                    {relevantTestimonials.map((testimonial, index) => (
+                      <AnimatedCard key={index} index={index}>
+                        <Card className="border-border/50 h-full">
+                          <CardContent className="p-5">
+                            <div className="flex items-center gap-3 mb-3">
+                              <Avatar className="h-9 w-9 border-2 border-primary/20">
+                                <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
+                                  {testimonial.name.split(' ').map(n => n[0]).join('')}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-semibold text-foreground text-sm">{testimonial.name}</span>
+                                  <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                                </div>
+                                <p className="text-xs text-muted-foreground">{testimonial.role} • {testimonial.location}</p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex gap-0.5 mb-2">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} className="h-3 w-3 fill-primary text-primary" />
+                              ))}
+                            </div>
+                            
+                            <div className="relative">
+                              <Quote className="absolute -top-0.5 -left-0.5 h-5 w-5 text-primary/10" />
+                              <p className="text-muted-foreground text-sm leading-relaxed pl-2">
+                                {testimonial.text}
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </AnimatedCard>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ==================== FAQ (Role-specific) ==================== */}
+            <section className="py-12 md:py-16 bg-muted/30">
+              <div className="container">
+                <div className="max-w-3xl mx-auto">
+                  <div className="text-center mb-10">
+                    <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium mb-4">
+                      <HelpCircle className="h-4 w-4" />
+                      {selectedRole === 'buyer' ? 'Buyer FAQs' : 'Seller FAQs'}
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                      Frequently Asked Questions
+                    </h2>
+                  </div>
+
+                  <Accordion type="single" collapsible className="w-full space-y-3">
+                    {relevantFaqs.map((faq, index) => (
+                      <motion.div
+                        key={index}
+                        initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <AccordionItem 
+                          value={`item-${index}`} 
+                          className="bg-card border border-border rounded-xl px-5 data-[state=open]:border-primary/30 transition-colors"
+                        >
+                          <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-4">
+                            {faq.question}
+                          </AccordionTrigger>
+                          <AccordionContent className="text-muted-foreground pb-4">
+                            {faq.answer}
+                          </AccordionContent>
+                        </AccordionItem>
+                      </motion.div>
+                    ))}
+                  </Accordion>
+
+                  <motion.div 
+                    className="text-center mt-8"
+                    initial={shouldReduceMotion ? {} : { opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                  >
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Still have questions?
+                    </p>
+                    <Button variant="outline" className="gap-2" asChild>
+                      <Link to="/help">
+                        Visit Help Center
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </motion.div>
+                </div>
+              </div>
+            </section>
+
+            {/* ==================== FINAL CTA ==================== */}
+            <section className="py-16 md:py-20 bg-gradient-to-br from-foreground via-foreground to-primary/90 text-primary-foreground">
+              <div className="container">
+                <motion.div 
+                  className="max-w-2xl mx-auto text-center"
                   initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
                 >
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    <stat.icon className="h-5 w-5 text-foreground" />
-                    <span className="text-2xl md:text-3xl font-bold text-foreground">{stat.value}</span>
+                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                    {selectedRole === 'buyer' ? 'Find Your Next Asset' : 'Start Earning Today'}
+                  </h2>
+                  <p className="text-lg opacity-90 mb-8">
+                    {selectedRole === 'buyer' 
+                      ? 'Browse verified listings from trusted sellers across the country.'
+                      : 'Create your first listing in under 5 minutes. No monthly fees.'}
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <Button 
+                      size="lg" 
+                      className="gap-2 px-8 h-12 text-base bg-white text-foreground hover:bg-white/90"
+                      asChild
+                    >
+                      <Link to={selectedRole === 'buyer' ? '/search' : '/list'}>
+                        {selectedRole === 'buyer' ? 'Browse Listings' : 'Create Free Listing'}
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <Button 
+                      size="lg" 
+                      variant="outline"
+                      className="gap-2 px-8 h-12 text-base border-white/30 text-white hover:bg-white/10"
+                      asChild
+                    >
+                      <Link to="/contact">
+                        Talk to Us
+                      </Link>
+                    </Button>
                   </div>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                  
+                  {/* Trust indicators */}
+                  <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm opacity-80">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4" />
+                      {selectedRole === 'buyer' ? 'All sellers verified' : 'No credit card required'}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Secure payments
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4" />
+                      {selectedRole === 'buyer' ? 'Escrow protection' : 'Setup in minutes'}
+                    </div>
+                  </div>
                 </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ==================== FEATURED ASSETS GALLERY ==================== */}
-        <section className="py-12 bg-muted/30">
-          <div className="container">
-            <div className="text-center mb-8">
-              <p className="text-sm text-muted-foreground uppercase tracking-wider font-medium">Featured on Vendibook</p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              {galleryImages.map((img, index) => (
-                <motion.div
-                  key={index}
-                  initial={shouldReduceMotion ? {} : { opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.08 }}
-                  className="aspect-square rounded-xl overflow-hidden group cursor-pointer relative"
-                >
-                  <img 
-                    src={img.src} 
-                    alt={img.alt}
-                    loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ==================== THREE OPTIONS ==================== */}
-        <section className="py-16 md:py-20">
-          <div className="container">
-            <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-              {/* Sell Card */}
-              <AnimatedCard index={0}>
-                <Card className="border-2 border-foreground/20 hover:border-foreground/40 transition-colors h-full">
-                  <CardContent className="p-6">
-                    <motion.div 
-                      className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center mb-4"
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                    >
-                      <DollarSign className="h-6 w-6 text-background" />
-                    </motion.div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Sell</h2>
-                    <p className="text-muted-foreground text-sm mb-4">
-                      Sell food trucks, trailers, and equipment locally or nationwide.
-                    </p>
-                    <ul className="space-y-2 text-sm text-muted-foreground mb-6">
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
-                        In-person or secure online payment
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
-                        Optional nationwide freight
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
-                        Buyer financing with Affirm/Afterpay
-                      </li>
-                    </ul>
-                    <Button variant="dark-shine" className="w-full gap-2" asChild>
-                      <Link to="/list?mode=sale">
-                        Sell an Asset
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              </AnimatedCard>
-
-              {/* Rent Card */}
-              <AnimatedCard index={1}>
-                <Card className="border-2 border-foreground/20 hover:border-foreground/40 transition-colors h-full">
-                  <CardContent className="p-6">
-                    <motion.div 
-                      className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center mb-4"
-                      whileHover={{ scale: 1.1, rotate: -5 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                    >
-                      <CalendarDays className="h-6 w-6 text-background" />
-                    </motion.div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Rent</h2>
-                    <p className="text-muted-foreground text-sm mb-4">
-                      Monetize downtime by renting your assets to verified operators.
-                    </p>
-                    <ul className="space-y-2 text-sm text-muted-foreground mb-6">
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
-                        We verify renter documents
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
-                        Set your own availability
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
-                        Identity-verified renters only
-                      </li>
-                    </ul>
-                    <Button variant="dark-shine" className="w-full gap-2" asChild>
-                      <Link to="/list?mode=rent">
-                        Rent Out an Asset
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              </AnimatedCard>
-
-              {/* Vendor Lots Card */}
-              <AnimatedCard index={2}>
-                <Card className="border-2 border-foreground/20 hover:border-foreground/40 transition-colors h-full">
-                  <CardContent className="p-6">
-                    <motion.div 
-                      className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center mb-4"
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                    >
-                      <MapPin className="h-6 w-6 text-background" />
-                    </motion.div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Vendor Lots</h2>
-                    <p className="text-muted-foreground text-sm mb-4">
-                      List your parking lot or space for food truck vendors.
-                    </p>
-                    <ul className="space-y-2 text-sm text-muted-foreground mb-6">
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
-                        Hourly or daily booking
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
-                        Define amenities & rules
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
-                        Passive income from space
-                      </li>
-                    </ul>
-                    <Button variant="dark-shine" className="w-full gap-2" asChild>
-                      <Link to="/list">
-                        List a Vendor Lot
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              </AnimatedCard>
-            </div>
-          </div>
-        </section>
-
-        {/* ==================== HOW IT WORKS - 3 STEPS ==================== */}
-        <section className="py-16 md:py-20 bg-muted/30">
-          <div className="container">
-            <div className="max-w-3xl mx-auto">
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-10">
-                Three Simple Steps
-              </h2>
-
-              <div className="grid md:grid-cols-3 gap-8">
-                {[
-                  { step: 1, title: 'Create Listing', desc: 'Add photos, set your price, and describe your asset.' },
-                  { step: 2, title: 'Connect with Buyers', desc: 'Verified users reach out. Review requests and approve.' },
-                  { step: 3, title: 'Complete the Deal', desc: 'Get paid securely. We handle the details.' },
-                ].map((item, index) => (
-                  <motion.div 
-                    key={item.step}
-                    className="text-center"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.15, type: 'spring', stiffness: 100 }}
-                  >
-                    <motion.div 
-                      className="w-14 h-14 rounded-full bg-foreground text-background flex items-center justify-center font-bold text-xl mx-auto mb-4"
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                    >
-                      {item.step}
-                    </motion.div>
-                    <h3 className="font-semibold text-foreground mb-2">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground">{item.desc}</p>
-                  </motion.div>
-                ))}
               </div>
-            </div>
+            </section>
           </div>
-        </section>
+        )}
 
-        {/* ==================== KEY FEATURES ==================== */}
-        <section className="py-16 md:py-20">
-          <div className="container">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-10">
-                Why Choose Vendibook
-              </h2>
-
-              <div className="grid sm:grid-cols-2 gap-6">
-                <div className="flex gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center shrink-0">
-                    <ShieldCheck className="h-5 w-5 text-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Verified Users</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Identity verification reduces fraud and builds trust.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center shrink-0">
-                    <FileCheck className="h-5 w-5 text-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Document Review</h3>
-                    <p className="text-sm text-muted-foreground">
-                      We verify renter documents so you don't have to.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center shrink-0">
-                    <CreditCard className="h-5 w-5 text-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Secure Payments</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Online checkout with clear records and protection.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center shrink-0">
-                    <Package className="h-5 w-5 text-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Nationwide Freight</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Sell to buyers across the 48 contiguous states.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ==================== TESTIMONIALS ==================== */}
-        <section className="py-16 md:py-20 bg-muted/30">
-          <div className="container">
-            <div className="max-w-4xl mx-auto">
-              <div className="text-center mb-10">
-                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium mb-4">
-                  <Star className="h-4 w-4 fill-primary" />
-                  Trusted by Entrepreneurs
-                </div>
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                  What Users Are Saying
-                </h2>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-6">
-                {testimonials.map((testimonial, index) => (
-                  <AnimatedCard key={index} index={index}>
-                    <Card className="border-border/50 h-full">
-                      <CardContent className="p-5">
-                        <div className="flex items-center gap-3 mb-3">
-                          <Avatar className="h-9 w-9 border-2 border-primary/20">
-                            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
-                              {testimonial.name.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-semibold text-foreground text-sm">{testimonial.name}</span>
-                              <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-                            </div>
-                            <p className="text-xs text-muted-foreground">{testimonial.role} • {testimonial.location}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-0.5 mb-2">
-                          {[...Array(5)].map((_, i) => (
-                            <motion.div
-                              key={i}
-                              initial={{ opacity: 0, scale: 0 }}
-                              whileInView={{ opacity: 1, scale: 1 }}
-                              viewport={{ once: true }}
-                              transition={{ delay: index * 0.1 + i * 0.05 }}
-                            >
-                              <Star className="h-3 w-3 fill-primary text-primary" />
-                            </motion.div>
-                          ))}
-                        </div>
-                        
-                        <div className="relative">
-                          <Quote className="absolute -top-0.5 -left-0.5 h-5 w-5 text-primary/10" />
-                          <p className="text-muted-foreground text-sm leading-relaxed pl-2">
-                            {testimonial.text}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </AnimatedCard>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ==================== RENT OUT YOUR ASSET - VENDIBOOK ADVANTAGE ==================== */}
-        <section className="py-16 md:py-20">
-          <div className="container">
-            <div className="max-w-5xl mx-auto">
-              <div className="text-center mb-12">
-                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium mb-4">
-                  <Sparkles className="h-4 w-4" />
-                  The Vendibook Advantage
-                </div>
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-                  Rent Out Your Asset with Confidence
-                </h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  We handle the hard work so you can focus on earning. From verified renters to automated compliance, Vendibook manages it all.
+        {/* ==================== PLACEHOLDER WHEN NO ROLE SELECTED ==================== */}
+        {selectedRole === 'none' && (
+          <section className="py-12 md:py-16 bg-muted/30">
+            <div className="container">
+              <div className="max-w-2xl mx-auto text-center">
+                <p className="text-muted-foreground">
+                  Select an option above to see how Vendibook works for you.
                 </p>
               </div>
-
-              <div className="grid md:grid-cols-3 gap-6 mb-10">
-                <AnimatedCard index={0}>
-                  <Card className="border-2 border-primary/10 h-full">
-                    <CardContent className="p-6">
-                      <motion.div 
-                        className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4"
-                        whileHover={{ scale: 1.1, rotate: -5 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                      >
-                        <ShieldCheck className="h-6 w-6 text-primary-foreground" />
-                      </motion.div>
-                      <h3 className="text-lg font-bold text-foreground mb-2">Identity-Verified Renters</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Every renter completes Stripe Identity verification before they can book. Know exactly who's using your asset.
-                      </p>
-                      <ul className="space-y-2 text-sm text-muted-foreground">
-                        <li className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                          Government ID verification
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                          Selfie matching
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                          Fraud detection built-in
-                        </li>
-                      </ul>
-                    </CardContent>
-                  </Card>
-                </AnimatedCard>
-
-                <AnimatedCard index={1}>
-                  <Card className="border-2 border-primary/10 h-full">
-                    <CardContent className="p-6">
-                      <motion.div 
-                        className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4"
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                      >
-                        <FileCheck className="h-6 w-6 text-primary-foreground" />
-                      </motion.div>
-                      <h3 className="text-lg font-bold text-foreground mb-2">Automated Document Review</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        No more chasing paperwork. Set your requirements and we'll collect and verify documents before approval.
-                      </p>
-                      <ul className="space-y-2 text-sm text-muted-foreground">
-                        <li className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                          Business licenses
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                          Insurance certificates
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                          Health permits & more
-                        </li>
-                      </ul>
-                    </CardContent>
-                  </Card>
-                </AnimatedCard>
-
-                <AnimatedCard index={2}>
-                  <Card className="border-2 border-primary/10 h-full">
-                    <CardContent className="p-6">
-                      <motion.div 
-                        className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4"
-                        whileHover={{ scale: 1.1, rotate: -5 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                      >
-                        <CreditCard className="h-6 w-6 text-primary-foreground" />
-                      </motion.div>
-                      <h3 className="text-lg font-bold text-foreground mb-2">Protected Payments</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Funds are held securely and released to you 24 hours after the booking ends. Full protection against disputes.
-                      </p>
-                      <ul className="space-y-2 text-sm text-muted-foreground">
-                        <li className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                          Secure escrow payments
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                          24-hour safety window
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                          Optional security deposits
-                        </li>
-                      </ul>
-                    </CardContent>
-                  </Card>
-                </AnimatedCard>
-              </div>
-
-              <div className="text-center">
-                <Button size="lg" variant="dark-shine" className="gap-2" asChild>
-                  <Link to="/rent-my-commercial-kitchen">
-                    Learn More About Renting
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
             </div>
-          </div>
-        </section>
-
-        {/* ==================== FAQ SECTION ==================== */}
-        <section className="py-16 md:py-20 bg-muted/30">
-          <div className="container">
-            <div className="max-w-3xl mx-auto">
-              <div className="text-center mb-10">
-                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium mb-4">
-                  <HelpCircle className="h-4 w-4" />
-                  Common Questions
-                </div>
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                  Frequently Asked Questions
-                </h2>
-              </div>
-
-              <Accordion type="single" collapsible className="w-full space-y-3">
-                {faqs.map((faq, index) => (
-                  <motion.div
-                    key={index}
-                    initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <AccordionItem 
-                      value={`item-${index}`} 
-                      className="bg-card border border-border rounded-xl px-5 data-[state=open]:border-primary/30 transition-colors"
-                    >
-                      <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-4">
-                        {faq.question}
-                      </AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground pb-4">
-                        {faq.answer}
-                      </AccordionContent>
-                    </AccordionItem>
-                  </motion.div>
-                ))}
-              </Accordion>
-
-              <motion.div 
-                className="text-center mt-8"
-                initial={shouldReduceMotion ? {} : { opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-              >
-                <p className="text-sm text-muted-foreground mb-3">
-                  Still have questions?
-                </p>
-                <Button variant="outline" className="gap-2" asChild>
-                  <Link to="/help">
-                    Visit Help Center
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* ==================== FINAL CTA ==================== */}
-        <section className="py-20 md:py-24 bg-gradient-to-br from-foreground via-foreground to-primary/90 text-primary-foreground relative overflow-hidden">
-          {/* Decorative elements */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-72 h-72 bg-primary rounded-full blur-3xl" />
-          </div>
-          
-          <div className="container relative z-10">
-            <motion.div 
-              className="max-w-2xl mx-auto text-center"
-              initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
-              <motion.div
-                initial={shouldReduceMotion ? {} : { scale: 0.9 }}
-                whileInView={{ scale: 1 }}
-                viewport={{ once: true }}
-                className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium mb-6"
-              >
-                <Sparkles className="h-4 w-4" />
-                Free to list • No monthly fees
-              </motion.div>
-              
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                Ready to get started?
-              </h2>
-              <p className="text-lg md:text-xl opacity-90 mb-10">
-                Create your first listing in under 5 minutes.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Button 
-                  size="lg" 
-                  className="gap-2 px-8 h-12 text-base bg-white text-foreground hover:bg-white/90"
-                  asChild
-                >
-                  <Link to="/list">
-                    Create Free Listing
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline"
-                  className="gap-2 px-8 h-12 text-base border-white/30 text-white hover:bg-white/10"
-                  asChild
-                >
-                  <Link to="/contact">
-                    Talk to Us
-                  </Link>
-                </Button>
-              </div>
-              
-              {/* Trust indicators */}
-              <motion.div 
-                className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm opacity-80"
-                initial={shouldReduceMotion ? {} : { opacity: 0 }}
-                whileInView={{ opacity: 0.8 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.3 }}
-              >
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" />
-                  No credit card required
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Setup in minutes
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Cancel anytime
-                </div>
-              </motion.div>
-            </motion.div>
-          </div>
-        </section>
-
+          </section>
+        )}
       </main>
 
       <Footer />
