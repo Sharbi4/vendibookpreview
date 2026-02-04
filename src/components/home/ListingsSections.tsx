@@ -92,39 +92,11 @@ const ListingsSections = () => {
       <div className="absolute top-0 right-0 w-[400px] h-[300px] bg-gradient-to-bl from-emerald-500/5 to-transparent rounded-full blur-3xl" aria-hidden="true" />
       
       <div className="container space-y-12 relative z-10">
-        {/* For Sale Section */}
-        {saleListings.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-bold text-foreground">Featured For Sale</h2>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate('/search?mode=sale')}
-                className="text-primary font-medium hover:bg-primary/5"
-              >
-                View all
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-              {saleListings.map((listing) => (
-                <ListingCard 
-                  key={listing.id} 
-                  listing={listing} 
-                  hostVerified={hostVerificationMap[listing.host_id] ?? false}
-                  compact
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* For Rent Section */}
+        {/* For Rent Section - RENTAL FIRST */}
         {rentListings.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-bold text-foreground">Featured For Rent</h2>
+              <h2 className="text-xl font-bold text-foreground">Featured Rentals</h2>
               <Button 
                 variant="ghost" 
                 size="sm"
@@ -137,6 +109,34 @@ const ListingsSections = () => {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {rentListings.map((listing) => (
+                <ListingCard 
+                  key={listing.id} 
+                  listing={listing} 
+                  hostVerified={hostVerificationMap[listing.host_id] ?? false}
+                  compact
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* For Sale Section - Secondary */}
+        {saleListings.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-xl font-bold text-foreground">Available For Sale</h2>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate('/search?mode=sale')}
+                className="text-primary font-medium hover:bg-primary/5"
+              >
+                View all
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              {saleListings.map((listing) => (
                 <ListingCard 
                   key={listing.id} 
                   listing={listing} 

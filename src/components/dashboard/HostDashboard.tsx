@@ -95,8 +95,8 @@ const HostDashboard = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Storefront Button */}
-          <Button variant="outline" size="sm" asChild className="h-9 rounded-xl">
+          {/* Storefront Button - with ID for onboarding */}
+          <Button id="storefront-button" variant="outline" size="sm" asChild className="h-9 rounded-xl">
             <Link to={`/profile/${user?.id}`}>
               <ExternalLink className="h-4 w-4 mr-1.5" />
               My Storefront
@@ -192,7 +192,7 @@ const HostDashboard = () => {
             <TabsTrigger value="overview" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
               Overview
             </TabsTrigger>
-            <TabsTrigger value="inventory" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <TabsTrigger id="inventory-tab" value="inventory" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
               Inventory
             </TabsTrigger>
             {userType !== 'seller' && (
