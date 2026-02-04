@@ -387,7 +387,7 @@ const Header = () => {
         </div>
 
         {/* Centered Search - Desktop */}
-        <div className="hidden md:flex flex-1 justify-center max-w-2xl mx-6">
+        <div className="hidden lg:flex flex-1 justify-center max-w-2xl mx-6">
           <button
             onClick={() => navigate('/search')}
             className="w-full flex items-center gap-4 px-6 py-3.5 rounded-full border border-border bg-white hover:bg-muted/30 text-muted-foreground text-base font-medium shadow-sm transition-all duration-200 group"
@@ -398,7 +398,7 @@ const Header = () => {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-3">
+        <nav className="hidden lg:flex items-center gap-3">
           <Link 
             to="/how-it-works" 
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -408,7 +408,7 @@ const Header = () => {
         </nav>
 
         {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-2 ml-4">
+        <div className="hidden lg:flex items-center gap-2 ml-4">
           {user && (
             <Button 
               variant="dark-shine"
@@ -528,8 +528,8 @@ const Header = () => {
           <LanguageSwitcher />
         </div>
 
-        {/* Mobile Actions - hide when search is open */}
-        <div className={`flex md:hidden items-center gap-1 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+        {/* Mobile & Tablet Actions - hide when search is open */}
+        <div className={`flex lg:hidden items-center gap-1 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
           <Link
             to="/how-it-works"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
@@ -538,10 +538,10 @@ const Header = () => {
           </Link>
           {user && <NotificationCenter />}
           <Button 
-            variant="ghost" 
+            variant="outline" 
             size="icon" 
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="text-foreground"
+            className="text-foreground bg-background border-border"
           >
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>

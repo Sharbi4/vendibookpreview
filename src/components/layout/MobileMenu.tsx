@@ -66,7 +66,7 @@ const MobileMenu = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
             onClick={onClose}
           />
 
@@ -76,7 +76,7 @@ const MobileMenu = ({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] bg-background z-50 md:hidden shadow-2xl flex flex-col"
+            className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] bg-background z-50 lg:hidden shadow-2xl flex flex-col"
           >
             {/* Header Area */}
             <div className="flex items-center justify-between p-5 border-b border-border">

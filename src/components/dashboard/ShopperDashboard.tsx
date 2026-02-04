@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, CheckCircle2, Clock, XCircle, Store, Loader2 } from 'lucide-react';
+import { Calendar, CheckCircle2, Clock, XCircle, Store, Loader2, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ShopperBookingCard from './ShopperBookingCard';
@@ -52,11 +52,19 @@ const ShopperDashboard = () => {
               </p>
             </div>
           </div>
-          <Button asChild className="bg-foreground text-background hover:bg-foreground/90">
-            <Link to="/search">
-              Browse Listings
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild className="bg-foreground text-background hover:bg-foreground/90">
+              <Link to="/search">
+                Browse Listings
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/help" className="flex items-center gap-2">
+                <HelpCircle className="h-4 w-4" />
+                Support
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
 
