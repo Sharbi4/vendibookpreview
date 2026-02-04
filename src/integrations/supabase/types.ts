@@ -832,6 +832,7 @@ export type Database = {
           rental_buffer_days: number | null
           rental_min_days: number | null
           status: Database["public"]["Enums"]["listing_status"]
+          subcategory: string | null
           title: string
           updated_at: string
           vendibook_freight_enabled: boolean | null
@@ -896,6 +897,7 @@ export type Database = {
           rental_buffer_days?: number | null
           rental_min_days?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
+          subcategory?: string | null
           title: string
           updated_at?: string
           vendibook_freight_enabled?: boolean | null
@@ -960,6 +962,7 @@ export type Database = {
           rental_buffer_days?: number | null
           rental_min_days?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
+          subcategory?: string | null
           title?: string
           updated_at?: string
           vendibook_freight_enabled?: boolean | null

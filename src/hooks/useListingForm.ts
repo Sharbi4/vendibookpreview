@@ -4,6 +4,7 @@ import { ListingFormData, ListingMode, ListingCategory, FulfillmentType, isMobil
 const initialFormData: ListingFormData = {
   mode: null,
   category: null,
+  subcategory: null,
   title: '',
   description: '',
   highlights: [],
@@ -73,7 +74,11 @@ export const useListingForm = () => {
 
   const updateCategory = useCallback((category: ListingCategory) => {
     setFormData(prev => {
-      const newData = { ...prev, category };
+      const newData = { 
+        ...prev, 
+        category,
+        subcategory: null, // Reset subcategory when parent category changes
+      };
       
       // Auto-set fulfillment type and static location for inherently static locations
       if (isStaticLocation(category)) {

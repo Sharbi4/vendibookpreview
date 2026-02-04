@@ -1,6 +1,6 @@
 import React from 'react';
 import { Truck, Store, Building2, MapPin, Tag, ShoppingBag } from 'lucide-react';
-import { ListingFormData, ListingMode, ListingCategory, CATEGORY_LABELS } from '@/types/listing';
+import { ListingFormData, ListingMode, ListingCategory, CATEGORY_LABELS, SUBCATEGORIES_BY_CATEGORY } from '@/types/listing';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 
@@ -96,6 +96,45 @@ export const StepListingType: React.FC<StepListingTypeProps> = ({
           ))}
         </div>
       </div>
+
+      {/* Subcategory Selection - appears after category is selected */}
+      {formData.category && (
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="flex items-center gap-2">
+            <Label className="text-lg font-semibold">What type of {CATEGORY_LABELS[formData.category]}?</Label>
+            <span className="text-sm text-muted-foreground">(Optional)</span>
+          </div>
+          
+          <div className="flex flex-wrap gap-3">
+            {SUBCATEGORIES_BY_CATEGORY[formData.category].map((sub) => (
+              <button
+                key={sub.value}
+                type="button"
+                onClick={() => updateField('subcategory', 
+                  formData.subcategory === sub.value ? null : sub.value
+                )}
+                className={cn(
+                  "px-4 py-2.5 rounded-full border text-sm font-medium transition-all",
+                  formData.subcategory === sub.value
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
+                )}
+              >
+                {sub.label}
+              </button>
+            ))}
+          </div>
+          
+          {/* Show description of selected subcategory */}
+          {formData.subcategory && (
+            <p className="text-sm text-muted-foreground pl-1">
+              {SUBCATEGORIES_BY_CATEGORY[formData.category].find(
+                s => s.value === formData.subcategory
+              )?.description}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 };
