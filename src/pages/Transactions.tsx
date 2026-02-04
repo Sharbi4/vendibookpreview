@@ -175,7 +175,7 @@ const TransactionsPage = () => {
   return (
     <>
       <SEO 
-        title="My Transactions | VendiBook"
+        title="Payments | VendiBook"
         description="View all your bookings and purchases in one place."
       />
       <Header />
@@ -192,20 +192,26 @@ const TransactionsPage = () => {
           </div>
 
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground">Bookings & Purchases</h1>
+            <h1 className="text-3xl font-semibold text-foreground">Payments</h1>
             <p className="text-muted-foreground mt-1">
-              View all your rental bookings and sale transactions in one place.
+              Manage your rental bookings and purchase transactions.
             </p>
           </div>
 
-          {/* Main Tabs */}
+          {/* Main Tabs - Airbnb underline style */}
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="w-full max-w-md grid grid-cols-2 mb-6">
-              <TabsTrigger value="bookings" className="gap-2">
+            <TabsList className="w-full max-w-md justify-start gap-6 h-auto p-0 bg-transparent border-b border-border rounded-none mb-8">
+              <TabsTrigger 
+                value="bookings" 
+                className="flex items-center gap-2 pb-3 px-0 rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground transition-colors"
+              >
                 <Calendar className="h-4 w-4" />
                 Bookings ({totalBookings})
               </TabsTrigger>
-              <TabsTrigger value="purchases" className="gap-2">
+              <TabsTrigger 
+                value="purchases" 
+                className="flex items-center gap-2 pb-3 px-0 rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground transition-colors"
+              >
                 <ShoppingBag className="h-4 w-4" />
                 Purchases ({totalPurchases})
               </TabsTrigger>
@@ -216,8 +222,7 @@ const TransactionsPage = () => {
               {/* My Rentals (as shopper) */}
               <section>
                 <div className="flex items-center gap-2 mb-4">
-                  <Receipt className="h-5 w-5 text-primary" />
-                  <h2 className="text-xl font-semibold">My Rentals</h2>
+                  <h2 className="text-lg font-semibold text-foreground">My Rentals</h2>
                   <span className="text-sm text-muted-foreground">({shopperBookings.length})</span>
                 </div>
                 
@@ -226,13 +231,15 @@ const TransactionsPage = () => {
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 ) : shopperBookings.length === 0 ? (
-                  <div className="bg-muted/30 rounded-xl p-8 text-center border border-border/50">
-                    <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                  <div className="rounded-xl border border-border p-8 text-center bg-card">
+                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                      <Calendar className="h-6 w-6 text-muted-foreground" />
+                    </div>
                     <h4 className="font-semibold mb-1">No rental bookings yet</h4>
                     <p className="text-sm text-muted-foreground mb-4">
                       Your rental bookings will appear here once you book an asset.
                     </p>
-                    <Button asChild>
+                    <Button asChild className="bg-foreground text-background hover:bg-foreground/90">
                       <Link to="/browse">Browse Assets</Link>
                     </Button>
                   </div>
@@ -258,8 +265,7 @@ const TransactionsPage = () => {
               {/* Requests Received (as host) */}
               <section>
                 <div className="flex items-center gap-2 mb-4">
-                  <Package className="h-5 w-5 text-primary" />
-                  <h2 className="text-xl font-semibold">Booking Requests Received</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Booking Requests Received</h2>
                   <span className="text-sm text-muted-foreground">({hostBookings.length})</span>
                 </div>
                 
@@ -268,8 +274,10 @@ const TransactionsPage = () => {
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 ) : hostBookings.length === 0 ? (
-                  <div className="bg-muted/30 rounded-xl p-8 text-center border border-border/50">
-                    <Package className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                  <div className="rounded-xl border border-border p-8 text-center bg-card">
+                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                      <Package className="h-6 w-6 text-muted-foreground" />
+                    </div>
                     <h4 className="font-semibold mb-1">No booking requests</h4>
                     <p className="text-sm text-muted-foreground mb-4">
                       When someone books your listing, it will appear here.
@@ -305,8 +313,7 @@ const TransactionsPage = () => {
               {/* My Purchases (as buyer) */}
               <section>
                 <div className="flex items-center gap-2 mb-4">
-                  <ShoppingBag className="h-5 w-5 text-primary" />
-                  <h2 className="text-xl font-semibold">My Purchases</h2>
+                  <h2 className="text-lg font-semibold text-foreground">My Purchases</h2>
                   <span className="text-sm text-muted-foreground">({buyerTransactions.length})</span>
                 </div>
                 
@@ -315,13 +322,15 @@ const TransactionsPage = () => {
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 ) : buyerTransactions.length === 0 ? (
-                  <div className="bg-muted/30 rounded-xl p-8 text-center border border-border/50">
-                    <ShoppingBag className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                  <div className="rounded-xl border border-border p-8 text-center bg-card">
+                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                      <ShoppingBag className="h-6 w-6 text-muted-foreground" />
+                    </div>
                     <h4 className="font-semibold mb-1">No purchases yet</h4>
                     <p className="text-sm text-muted-foreground mb-4">
                       Items you buy will appear here.
                     </p>
-                    <Button asChild>
+                    <Button asChild className="bg-foreground text-background hover:bg-foreground/90">
                       <Link to="/browse">Browse Assets for Sale</Link>
                     </Button>
                   </div>
@@ -350,8 +359,7 @@ const TransactionsPage = () => {
               {/* My Sales (as seller) */}
               <section>
                 <div className="flex items-center gap-2 mb-4">
-                  <Receipt className="h-5 w-5 text-primary" />
-                  <h2 className="text-xl font-semibold">My Sales</h2>
+                  <h2 className="text-lg font-semibold text-foreground">My Sales</h2>
                   <span className="text-sm text-muted-foreground">({sellerTransactions.length})</span>
                 </div>
                 
@@ -360,8 +368,10 @@ const TransactionsPage = () => {
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 ) : sellerTransactions.length === 0 ? (
-                  <div className="bg-muted/30 rounded-xl p-8 text-center border border-border/50">
-                    <Receipt className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                  <div className="rounded-xl border border-border p-8 text-center bg-card">
+                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                      <Receipt className="h-6 w-6 text-muted-foreground" />
+                    </div>
                     <h4 className="font-semibold mb-1">No sales yet</h4>
                     <p className="text-sm text-muted-foreground mb-4">
                       Items you sell will appear here.

@@ -120,26 +120,24 @@ const HostDashboard = () => {
         isConnectingStripe={isConnecting}
       />
 
-      {/* Stripe Status - Compact badge when connected */}
-      {isConnected && (
-        <StripeStatusCard 
-          isConnected={isConnected}
-          hasAccountStarted={hasAccountStarted}
-          isLoading={stripeLoading}
-          isOpeningDashboard={isOpeningDashboard}
-          onConnect={handleConnectStripe}
-          onOpenDashboard={openStripeDashboard}
-        />
-      )}
-
-      {/* Key Metrics Row - Apple Wallet Style */}
-      <div className={`grid grid-cols-2 gap-3 ${userType === 'hybrid' ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
-      <CompactStatCard 
-        icon={Truck} 
-        label="Listings" 
-        value={stats.published}
-        subtext={stats.drafts > 0 ? `${stats.drafts} drafts` : "Active"}
+      {/* Stripe Status Card - Shows for both states */}
+      <StripeStatusCard 
+        isConnected={isConnected}
+        hasAccountStarted={hasAccountStarted}
+        isLoading={stripeLoading}
+        isOpeningDashboard={isOpeningDashboard}
+        onConnect={handleConnectStripe}
+        onOpenDashboard={openStripeDashboard}
       />
+
+      {/* Key Metrics Row - Airbnb Minimal Style */}
+      <div className={`grid grid-cols-2 gap-4 ${userType === 'hybrid' ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
+        <CompactStatCard 
+          icon={Truck} 
+          label="Listings" 
+          value={stats.published}
+          subtext={stats.drafts > 0 ? `${stats.drafts} drafts` : "Active"}
+        />
         <CompactStatCard 
           icon={Eye} 
           label="Views" 

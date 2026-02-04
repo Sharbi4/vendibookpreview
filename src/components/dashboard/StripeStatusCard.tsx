@@ -1,6 +1,5 @@
-import { Check, Loader2, ExternalLink } from 'lucide-react';
+import { Check, Loader2, ExternalLink, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { StripeLogo } from '@/components/ui/StripeLogo';
 
 interface StripeStatusCardProps {
   isConnected: boolean;
@@ -13,48 +12,68 @@ interface StripeStatusCardProps {
 
 const StripeStatusCard = ({ 
   isConnected, 
+  hasAccountStarted,
   isLoading, 
   isOpeningDashboard,
+  onConnect,
   onOpenDashboard 
 }: StripeStatusCardProps) => {
   if (isLoading) {
     return null;
   }
 
-  // Only show when connected - as a small success badge row
+  // Not connected state - Airbnb style setup card
   if (!isConnected) {
-    return null;
+    return (
+      <div className="rounded-xl border border-border p-5 bg-card">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center shrink-0">
+            <CreditCard className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-foreground mb-1">Set up payouts</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Add a payout method so we can send you money when you receive bookings or sales.
+            </p>
+            <Button 
+              onClick={onConnect}
+              className="bg-foreground text-background hover:bg-foreground/90"
+            >
+              Set up payouts
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
+  // Connected state - Airbnb style success card
   return (
-    <div className="overflow-hidden rounded-2xl p-4 border-0 shadow-xl bg-card">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary rounded-2xl shadow-lg flex items-center justify-center">
-            <Check className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
+    <div className="rounded-xl border border-border p-5 bg-card">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0">
+            <Check className="h-6 w-6 text-primary-foreground" strokeWidth={2.5} />
           </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-              <StripeLogo size="xs" />
-              <span className="text-sm font-semibold text-foreground">Stripe connected</span>
-            </div>
-            <span className="text-xs text-muted-foreground">Payments enabled</span>
+          <div>
+            <p className="font-semibold text-foreground">Stripe connected</p>
+            <p className="text-sm text-muted-foreground">Payments enabled. Funds will be deposited to your account.</p>
           </div>
         </div>
         {onOpenDashboard && (
           <Button 
             onClick={onOpenDashboard}
+            variant="outline"
             size="sm"
-            variant="dark-shine"
-            className="h-8 text-xs gap-1.5 rounded-xl"
+            className="shrink-0 gap-1.5"
             disabled={isOpeningDashboard}
           >
             {isOpeningDashboard ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
-                View Payouts
-                <ExternalLink className="h-3 w-3" />
+                View in Stripe
+                <ExternalLink className="h-4 w-4" />
               </>
             )}
           </Button>
