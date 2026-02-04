@@ -1166,6 +1166,7 @@ export type Database = {
           address1: string | null
           address2: string | null
           avatar_url: string | null
+          bio: string | null
           business_name: string | null
           city: string | null
           created_at: string
@@ -1181,8 +1182,10 @@ export type Database = {
           last_active_at: string | null
           last_name: string | null
           phone_number: string | null
+          pinned_listing_id: string | null
           public_city: string | null
           public_state: string | null
+          shop_policies: Json | null
           state: string | null
           stripe_account_id: string | null
           stripe_identity_session_id: string | null
@@ -1197,6 +1200,7 @@ export type Database = {
           address1?: string | null
           address2?: string | null
           avatar_url?: string | null
+          bio?: string | null
           business_name?: string | null
           city?: string | null
           created_at?: string
@@ -1212,8 +1216,10 @@ export type Database = {
           last_active_at?: string | null
           last_name?: string | null
           phone_number?: string | null
+          pinned_listing_id?: string | null
           public_city?: string | null
           public_state?: string | null
+          shop_policies?: Json | null
           state?: string | null
           stripe_account_id?: string | null
           stripe_identity_session_id?: string | null
@@ -1228,6 +1234,7 @@ export type Database = {
           address1?: string | null
           address2?: string | null
           avatar_url?: string | null
+          bio?: string | null
           business_name?: string | null
           city?: string | null
           created_at?: string
@@ -1243,8 +1250,10 @@ export type Database = {
           last_active_at?: string | null
           last_name?: string | null
           phone_number?: string | null
+          pinned_listing_id?: string | null
           public_city?: string | null
           public_state?: string | null
+          shop_policies?: Json | null
           state?: string | null
           stripe_account_id?: string | null
           stripe_identity_session_id?: string | null
@@ -1255,7 +1264,15 @@ export type Database = {
           username?: string | null
           zip_code?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_pinned_listing_id_fkey"
+            columns: ["pinned_listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       promo_code_uses: {
         Row: {
@@ -1867,6 +1884,7 @@ export type Database = {
         Args: { host_user_id: string }
         Returns: {
           avatar_url: string
+          bio: string
           business_name: string
           created_at: string
           display_name: string
@@ -1877,8 +1895,10 @@ export type Database = {
           identity_verified: boolean
           last_active_at: string
           last_name: string
+          pinned_listing_id: string
           public_city: string
           public_state: string
+          shop_policies: Json
           username: string
         }[]
       }

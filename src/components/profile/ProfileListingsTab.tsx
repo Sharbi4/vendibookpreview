@@ -1,9 +1,10 @@
 import { useState, useMemo, memo } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, PlusSquare, Upload, Loader2, Sparkles } from 'lucide-react';
+import { MapPin, PlusSquare, Upload, Loader2, Sparkles, Pin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ListingCard from '@/components/listing/ListingCard';
+import SoldListingsSection from './SoldListingsSection';
 import { Listing } from '@/types/listing';
 
 interface ProfileListingsTabProps {
@@ -13,6 +14,9 @@ interface ProfileListingsTabProps {
   hostVerified: boolean;
   hostId?: string;
   onListingClick?: (listingId: string) => void;
+  soldListings?: Listing[];
+  soldListingsLoading?: boolean;
+  pinnedListingId?: string | null;
 }
 
 // Category filter chips
@@ -50,7 +54,10 @@ const ProfileListingsTab = ({
   isOwnProfile,
   hostVerified,
   hostId,
-  onListingClick
+  onListingClick,
+  soldListings,
+  soldListingsLoading,
+  pinnedListingId
 }: ProfileListingsTabProps) => {
   const [filter, setFilter] = useState<FilterValue>('all');
 
@@ -77,17 +84,23 @@ const ProfileListingsTab = ({
     return listings.filter(l => l.category === filter);
   }, [listings, filter]);
 
-  // Featured listings (max 3) - newest listings
+  // Pinned listing (if set)
+  const pinnedListing = useMemo(() => {
+    if (!pinnedListingId || !listings) return null;
+    return listings.find(l => l.id === pinnedListingId);
+  }, [listings, pinnedListingId]);
+
+  // Featured listings (max 3) - newest listings, excluding pinned
   const featuredListings = useMemo(() => {
     if (!listings || listings.length <= 3) return [];
     
-    // Sort by created_at (newest first)
-    const sorted = [...listings].sort((a, b) => {
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    });
+    // Sort by created_at (newest first), exclude pinned
+    const sorted = [...listings]
+      .filter(l => l.id !== pinnedListingId)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     
     return sorted.slice(0, 3);
-  }, [listings]);
+  }, [listings, pinnedListingId]);
 
   // Check if we should show filters (more than one type available)
   const showFilters = availableFilters.length > 2;
@@ -135,6 +148,22 @@ const ProfileListingsTab = ({
 
   return (
     <div className="space-y-4">
+      {/* Pinned Listing */}
+      {pinnedListing && filter === 'all' && (
+        <div className="mb-4">
+          <h3 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
+            <Pin className="h-3.5 w-3.5 text-primary" />
+            Pinned
+          </h3>
+          <Link 
+            to={`/listing/${pinnedListing.id}`}
+            onClick={() => onListingClick?.(pinnedListing.id)}
+          >
+            <MemoizedListingCard listing={pinnedListing} hostVerified={hostVerified} />
+          </Link>
+        </div>
+      )}
+
       {/* Featured Listings Section */}
       {featuredListings.length > 0 && filter === 'all' && (
         <div className="mb-4">
@@ -225,6 +254,11 @@ const ProfileListingsTab = ({
             View all
           </Button>
         </div>
+      )}
+
+      {/* Sold Listings Section */}
+      {soldListings && soldListings.length > 0 && (
+        <SoldListingsSection listings={soldListings} isLoading={soldListingsLoading} />
       )}
 
       {/* Own profile - add create button at bottom */}

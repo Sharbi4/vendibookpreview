@@ -16,6 +16,7 @@ import Footer from '@/components/layout/Footer';
 import EnhancedPublicProfileHeader from '@/components/profile/EnhancedPublicProfileHeader';
 import EnhancedPublicProfileStats from '@/components/profile/EnhancedPublicProfileStats';
 import EnhancedPublicProfileTabs from '@/components/profile/EnhancedPublicProfileTabs';
+import ShopPoliciesCard, { ShopPolicies } from '@/components/profile/ShopPoliciesCard';
 import SEO from '@/components/SEO';
 import { 
   useUserStats, 
@@ -24,6 +25,8 @@ import {
   useUserReviewsGiven
 } from '@/hooks/useUserProfile';
 import { useHostResponseTime } from '@/hooks/useHostResponseTime';
+import { useHostBadges } from '@/hooks/useHostBadges';
+import { useSoldListings } from '@/hooks/useSoldListings';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -48,6 +51,9 @@ interface PublicProfileData {
   header_image_url: string | null;
   identity_verified: boolean;
   created_at: string;
+  bio?: string | null;
+  shop_policies?: ShopPolicies | null;
+  pinned_listing_id?: string | null;
 }
 
 // Hook to fetch public profile - supports both userId and username
@@ -61,7 +67,7 @@ const usePublicProfile = (identifier: string | undefined, isUsername: boolean = 
       if (isUsername) {
         const { data: profileByUsername, error } = await supabase
           .from('profiles')
-          .select('id, full_name, first_name, last_name, display_name, username, business_name, public_city, public_state, avatar_url, header_image_url, identity_verified, created_at')
+          .select('id, full_name, first_name, last_name, display_name, username, business_name, public_city, public_state, avatar_url, header_image_url, identity_verified, created_at, bio, shop_policies, pinned_listing_id')
           .eq('username', identifier)
           .single();
         
@@ -80,7 +86,7 @@ const usePublicProfile = (identifier: string | undefined, isUsername: boolean = 
       if (!profile) {
         const { data: directData, error: directError } = await supabase
           .from('profiles')
-          .select('id, full_name, first_name, last_name, display_name, username, business_name, public_city, public_state, avatar_url, header_image_url, identity_verified, created_at')
+          .select('id, full_name, first_name, last_name, display_name, username, business_name, public_city, public_state, avatar_url, header_image_url, identity_verified, created_at, bio, shop_policies, pinned_listing_id')
           .eq('id', identifier)
           .single();
         
@@ -142,6 +148,15 @@ const PublicProfile = () => {
   const { data: reviewsGiven, isLoading: reviewsGivenLoading } = useUserReviewsGiven(actualUserId);
   const { data: responseTimeData } = useHostResponseTime(actualUserId);
   const { data: completedBookings } = useCompletedBookingsCount(actualUserId);
+  const { data: soldListings, isLoading: soldListingsLoading } = useSoldListings(actualUserId);
+  
+  // Calculate host badges
+  const hostBadges = useHostBadges(
+    actualUserId,
+    stats?.averageRating,
+    stats?.totalReviewsReceived,
+    responseTimeData?.isFastResponder
+  );
 
   const isLoading = profileLoading || statsLoading;
   const isHost = (stats?.totalListings || 0) > 0;
@@ -338,6 +353,8 @@ const PublicProfile = () => {
           onViewListings={handleViewListingsClick}
           isMessaging={isMessaging}
           listingContext={listingContext}
+          isTopRated={hostBadges.isTopRated}
+          isSuperhost={hostBadges.isSuperhost}
         />
 
         {/* Content Section */}
@@ -347,6 +364,12 @@ const PublicProfile = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
+          {/* Shop Policies */}
+          <ShopPoliciesCard 
+            policies={profile.shop_policies || null} 
+            isOwnProfile={isOwnProfile} 
+          />
+
           {/* Stats Row */}
           <EnhancedPublicProfileStats
             stats={stats}
@@ -370,6 +393,9 @@ const PublicProfile = () => {
           hostId={actualUserId}
           stats={stats}
           responseTime={responseTimeData?.avgResponseTime}
+          soldListings={soldListings || []}
+          soldListingsLoading={soldListingsLoading}
+          pinnedListingId={profile.pinned_listing_id}
           onListingClick={(listingId) => {
             trackEventToDb('listing_card_click', 'engagement', { 
               listing_id: listingId,
