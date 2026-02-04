@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User, LogOut, LayoutDashboard, Shield, MessageCircle, HelpCircle, ShieldCheck, Clock, TrendingUp, Mic, MicOff, ChevronDown, CheckCircle2, Receipt, Heart, Calendar, ShoppingBag } from 'lucide-react';
+import { Menu, X, Search, User, LogOut, Shield, MessageCircle, HelpCircle, ShieldCheck, Clock, TrendingUp, Mic, MicOff, ChevronDown, CheckCircle2, Heart, CalendarDays, Home, Bell, Globe, Settings, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import MobileMenu from './MobileMenu';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
+import AirbnbMenuItem from '@/components/ui/AirbnbMenuItem';
 
 // Type declarations for Web Speech API
 interface SpeechRecognitionEvent extends Event {
@@ -437,59 +438,72 @@ const Header = () => {
                   <ChevronDown className="h-3.5 w-3.5 opacity-60" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-background">
-                <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                  <LayoutDashboard className="h-4 w-4 mr-2" />
-                  {t('common.dashboard')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/transactions?tab=bookings')}>
-                  <Calendar className="h-4 w-4 mr-2" />
-                  {t('common.bookings')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/transactions?tab=purchases')}>
-                  <ShoppingBag className="h-4 w-4 mr-2" />
-                  {t('common.purchases')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/favorites')}>
-                  <Heart className="h-4 w-4 mr-2" />
-                  {t('common.favorites')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/messages')}>
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  {t('common.messages')}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/account')}>
-                  <User className="h-4 w-4 mr-2" />
-                  {t('common.myAccount')}
-                </DropdownMenuItem>
-                {isVerified ? (
-                  <div className="flex items-center gap-2 px-2 py-1.5 text-sm text-emerald-600">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Verified
-                  </div>
-                ) : (
-                  <DropdownMenuItem onClick={() => navigate('/verify-identity')}>
-                    <Shield className="h-4 w-4 mr-2 text-amber-500" />
-                    Verify Identity
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
+              <DropdownMenuContent align="end" className="w-64 bg-background p-0 rounded-xl shadow-xl border">
+                {/* Group 1: Core User Actions */}
+                <div className="py-2">
+                  <AirbnbMenuItem icon={Heart} label={t('common.favorites')} to="/favorites" />
+                  <AirbnbMenuItem icon={CalendarDays} label={t('common.bookings')} to="/transactions?tab=bookings" />
+                  <AirbnbMenuItem icon={MessageCircle} label={t('common.messages')} to="/messages" />
+                </div>
+                
+                <DropdownMenuSeparator className="my-0" />
+                
+                {/* Group 2: Profile & Notifications */}
+                <div className="py-2">
+                  <AirbnbMenuItem icon={User} label="Profile" to={`/profile/${user?.id}`} />
+                  <AirbnbMenuItem icon={Bell} label="Notifications" onClick={() => {}} />
+                </div>
+                
+                <DropdownMenuSeparator className="my-0" />
+                
+                {/* Group 3: Account Settings */}
+                <div className="py-2">
+                  <AirbnbMenuItem icon={Settings} label={t('common.myAccount')} to="/account" />
+                  <AirbnbMenuItem icon={Globe} label="Language" onClick={() => {}} />
+                  <AirbnbMenuItem icon={HelpCircle} label={t('common.support')} to="/help" />
+                </div>
+                
+                <DropdownMenuSeparator className="my-0" />
+                
+                {/* Group 4: Host Promo */}
+                <div className="py-2">
+                  {!isVerified ? (
+                    <AirbnbMenuItem 
+                      icon={Shield} 
+                      label="Verify Identity" 
+                      subtext="Get verified to unlock all features"
+                      to="/verify-identity"
+                    />
+                  ) : (
+                    <div className="flex items-center gap-2 px-4 py-2 text-sm text-emerald-600">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>Verified</span>
+                    </div>
+                  )}
+                  <AirbnbMenuItem 
+                    icon={Home} 
+                    label="Become a Host" 
+                    subtext="It's easy to get started"
+                    to="/list"
+                    highlight
+                  />
+                </div>
+                
                 {isAdmin && (
-                  <DropdownMenuItem onClick={() => navigate('/admin')}>
-                    <ShieldCheck className="h-4 w-4 mr-2 text-primary" />
-                    {t('common.admin')}
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuSeparator className="my-0" />
+                    <div className="py-2">
+                      <AirbnbMenuItem icon={ShieldCheck} label={t('common.admin')} to="/admin" />
+                    </div>
+                  </>
                 )}
-                <DropdownMenuItem onClick={() => navigate('/help')}>
-                  <HelpCircle className="h-4 w-4 mr-2" />
-                  {t('common.support')}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  {t('common.signOut')}
-                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator className="my-0" />
+                
+                {/* Group 5: Sign Out */}
+                <div className="py-2">
+                  <AirbnbMenuItem icon={LogOut} label={t('common.signOut')} onClick={handleSignOut} />
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (

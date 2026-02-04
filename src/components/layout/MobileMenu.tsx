@@ -1,15 +1,15 @@
 import { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  X, Home, Search, LayoutGrid, MessageSquare, 
+  X, Home, Search, MessageSquare, 
   User, Heart, LogOut, PlusCircle, HelpCircle, 
-  Settings, ShieldCheck, Receipt, Wrench
+  Settings, ShieldCheck, CalendarDays, Bell, Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
+import AirbnbMenuItem from '@/components/ui/AirbnbMenuItem';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -56,11 +56,6 @@ const MobileMenu = ({
     onClose();
   };
 
-  const isActive = (path: string) => {
-    if (path === '/') return location.pathname === '/';
-    return location.pathname.startsWith(path);
-  };
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -90,17 +85,17 @@ const MobileMenu = ({
                   onClick={() => handleNav(`/profile/${user.id}`)}
                   className="flex items-center gap-3"
                 >
-                  <Avatar className="h-10 w-10 border-2 border-primary/20">
+                  <Avatar className="h-12 w-12 border-2 border-border">
                     <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || 'User'} />
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                    <AvatarFallback className="bg-muted text-foreground font-semibold text-lg">
                       {profile?.full_name?.[0]?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="text-left">
-                    <p className="text-sm font-semibold text-foreground">
+                    <p className="text-base font-semibold text-foreground">
                       {profile?.first_name || profile?.full_name?.split(' ')[0] || 'User'}
                     </p>
-                    <p className="text-xs text-primary">View Profile</p>
+                    <p className="text-sm text-muted-foreground">View profile</p>
                   </div>
                 </button>
               ) : (
@@ -121,150 +116,145 @@ const MobileMenu = ({
               </button>
             </div>
 
-            {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto py-4 px-4">
-              {/* Primary Navigation */}
-              <div className="space-y-1">
-                <MobileNavLink
-                  icon={Home}
-                  label="Home"
-                  path="/"
-                  activePath={location.pathname}
-                  onClick={handleNav}
-                />
-                <MobileNavLink
-                  icon={Search}
-                  label="Explore"
-                  path="/search"
-                  activePath={location.pathname}
-                  onClick={handleNav}
-                />
-              </div>
-
+            {/* Scrollable Content - Airbnb Style */}
+            <div className="flex-1 overflow-y-auto">
               {user && (
                 <>
-                  <Separator className="my-4" />
-                  
-                  {/* Account Section */}
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2 px-3">
-                    Account
-                  </p>
-                  <div className="space-y-1">
-                    <MobileNavLink
-                      icon={LayoutGrid}
-                      label="Dashboard"
-                      path="/dashboard"
-                      activePath={location.pathname}
-                      onClick={handleNav}
+                  {/* Core Navigation */}
+                  <div className="py-2">
+                    <AirbnbMenuItem 
+                      icon={Heart} 
+                      label="Wishlists" 
+                      onClick={() => handleNav('/favorites')} 
                     />
-                    <MobileNavLink
-                      icon={MessageSquare}
-                      label="Messages"
-                      path="/messages"
-                      activePath={location.pathname}
-                      onClick={handleNav}
+                    <AirbnbMenuItem 
+                      icon={CalendarDays} 
+                      label="Trips" 
+                      onClick={() => handleNav('/transactions?tab=bookings')} 
                     />
-                    <MobileNavLink
-                      icon={Receipt}
-                      label="Transactions"
-                      path="/transactions"
-                      activePath={location.pathname}
-                      onClick={handleNav}
-                    />
-                    <MobileNavLink
-                      icon={Heart}
-                      label="Wishlist"
-                      path="/favorites"
-                      activePath={location.pathname}
-                      onClick={handleNav}
+                    <AirbnbMenuItem 
+                      icon={MessageSquare} 
+                      label="Messages" 
+                      onClick={() => handleNav('/messages')} 
                     />
                   </div>
 
-                  <Separator className="my-4" />
+                  <div className="h-px bg-border mx-4" />
 
-                  {/* Host Section */}
-                  <div className="space-y-1">
-                    <MobileNavLink
-                      icon={PlusCircle}
-                      label="Host an Asset"
-                      path="/list"
-                      activePath={location.pathname}
-                      onClick={handleNav}
+                  {/* Profile & Notifications */}
+                  <div className="py-2">
+                    <AirbnbMenuItem 
+                      icon={User} 
+                      label="Profile" 
+                      onClick={() => handleNav(`/profile/${user.id}`)} 
+                    />
+                    <AirbnbMenuItem 
+                      icon={Bell} 
+                      label="Notifications" 
+                      onClick={() => {}} 
+                    />
+                  </div>
+
+                  <div className="h-px bg-border mx-4" />
+
+                  {/* Account Settings */}
+                  <div className="py-2">
+                    <AirbnbMenuItem 
+                      icon={Settings} 
+                      label="Account settings" 
+                      onClick={() => handleNav('/account')} 
+                    />
+                    <AirbnbMenuItem 
+                      icon={Globe} 
+                      label="Language & currency" 
+                      onClick={() => {}} 
+                    />
+                    <AirbnbMenuItem 
+                      icon={HelpCircle} 
+                      label="Help Center" 
+                      onClick={() => handleNav('/help')} 
+                    />
+                  </div>
+
+                  <div className="h-px bg-border mx-4" />
+
+                  {/* Hosting Section */}
+                  <div className="py-2">
+                    <AirbnbMenuItem 
+                      icon={PlusCircle} 
+                      label="Become a Host" 
+                      subtext="It's easy to get started"
+                      onClick={() => handleNav('/list')} 
                       highlight
                     />
-                    <MobileNavLink
-                      icon={User}
-                      label="Account Settings"
-                      path="/account"
-                      activePath={location.pathname}
-                      onClick={handleNav}
-                    />
                     {!isVerified && (
-                      <MobileNavLink
-                        icon={ShieldCheck}
-                        label="Verify Identity"
-                        path="/verify-identity"
-                        activePath={location.pathname}
-                        onClick={handleNav}
+                      <AirbnbMenuItem 
+                        icon={ShieldCheck} 
+                        label="Verify Identity" 
+                        onClick={() => handleNav('/verify-identity')} 
                       />
                     )}
                     {isAdmin && (
-                      <MobileNavLink
-                        icon={Settings}
-                        label="Admin Dashboard"
-                        path="/admin"
-                        activePath={location.pathname}
-                        onClick={handleNav}
+                      <AirbnbMenuItem 
+                        icon={Settings} 
+                        label="Admin Dashboard" 
+                        onClick={() => handleNav('/admin')} 
                       />
                     )}
                   </div>
                 </>
               )}
 
-              <Separator className="my-4" />
+              {!user && (
+                <>
+                  <div className="py-2">
+                    <AirbnbMenuItem 
+                      icon={Home} 
+                      label="Home" 
+                      onClick={() => handleNav('/')} 
+                    />
+                    <AirbnbMenuItem 
+                      icon={Search} 
+                      label="Explore" 
+                      onClick={() => handleNav('/search')} 
+                    />
+                  </div>
 
-              {/* Quick Links */}
-              <div className="space-y-1">
-                <MobileNavLink
-                  icon={HelpCircle}
-                  label="Help Center"
-                  path="/help"
-                  activePath={location.pathname}
-                  onClick={handleNav}
-                />
-                <MobileNavLink
-                  icon={Wrench}
-                  label="Tools"
-                  path="/tools"
-                  activePath={location.pathname}
-                  onClick={handleNav}
-                />
-              </div>
+                  <div className="h-px bg-border mx-4" />
+
+                  <div className="py-2">
+                    <AirbnbMenuItem 
+                      icon={HelpCircle} 
+                      label="Help Center" 
+                      onClick={() => handleNav('/help')} 
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
-            {/* Footer Actions - Thumb Zone */}
-            <div className="border-t border-border p-4 bg-muted/30">
+            {/* Footer Actions */}
+            <div className="border-t border-border">
               {user ? (
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-muted-foreground hover:text-foreground"
-                  onClick={handleSignOut}
-                >
-                  <LogOut className="h-5 w-5 mr-3" />
-                  Log out
-                </Button>
+                <div className="py-2">
+                  <AirbnbMenuItem 
+                    icon={LogOut} 
+                    label="Log out" 
+                    onClick={handleSignOut} 
+                  />
+                </div>
               ) : (
-                <div className="flex gap-2">
+                <div className="p-4 space-y-2">
                   <Button
                     variant="outline"
-                    className="flex-1 rounded-xl"
+                    className="w-full rounded-xl h-12 text-base"
                     onClick={() => handleNav('/auth')}
                   >
                     Log in
                   </Button>
                   <Button
                     variant="dark-shine"
-                    className="flex-1 rounded-xl"
+                    className="w-full rounded-xl h-12 text-base"
                     onClick={() => handleNav('/auth?tab=signup')}
                   >
                     Sign up
@@ -276,41 +266,6 @@ const MobileMenu = ({
         </>
       )}
     </AnimatePresence>
-  );
-};
-
-// Helper for Consistent Links
-interface MobileNavLinkProps {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  path: string;
-  activePath: string;
-  onClick: (path: string) => void;
-  highlight?: boolean;
-}
-
-const MobileNavLink = ({ icon: Icon, label, path, activePath, onClick, highlight }: MobileNavLinkProps) => {
-  const isActive = path === '/' ? activePath === '/' : activePath.startsWith(path);
-  
-  return (
-    <button
-      onClick={() => onClick(path)}
-      className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
-        isActive 
-          ? 'bg-primary/10 text-primary font-semibold' 
-          : highlight 
-            ? 'bg-gradient-to-r from-primary/5 to-transparent text-foreground font-medium'
-            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-      }`}
-    >
-      <Icon className={`h-5 w-5 ${isActive ? 'text-primary' : ''}`} />
-      <span className="text-sm">{label}</span>
-      {highlight && !isActive && (
-        <span className="ml-auto text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-          NEW
-        </span>
-      )}
-    </button>
   );
 };
 

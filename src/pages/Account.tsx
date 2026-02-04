@@ -97,7 +97,7 @@ const passwordSchema = z.object({
 
 const Account = () => {
   const navigate = useNavigate();
-  const { user, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const { toast } = useToast();
   
   // Track page views with Google Analytics
@@ -621,46 +621,80 @@ const Account = () => {
     );
   }
 
+  // Sidebar navigation items
+  const sidebarItems = [
+    { id: 'personal', icon: User, label: 'Personal info' },
+    { id: 'security', icon: Key, label: 'Login & security' },
+    { id: 'payments', icon: CreditCard, label: 'Payments & payouts' },
+    { id: 'notifications', icon: Bell, label: 'Notifications' },
+    { id: 'profile', icon: Globe, label: 'Public profile' },
+  ];
+
+  const [activeSection, setActiveSection] = useState('personal');
+
+  const scrollToSection = (id: string) => {
+    setActiveSection(id);
+    const element = document.getElementById(`section-${id}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
-      <main className="flex-1 container py-8 max-w-3xl pb-24 md:pb-8">
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          className="mb-6"
-          onClick={() => navigate('/dashboard')}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
-        </Button>
-
-        {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-2xl font-bold text-foreground">My Account</h1>
-          </div>
-          <p className="text-muted-foreground text-sm mb-4">
-            Manage your account details and what's visible publicly
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link to={`/u/${user?.id}`}>
-                <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                View Public Profile
-              </Link>
-            </Button>
-            <Button variant="ghost" size="sm" onClick={scrollToPublicSection}>
-              <Pencil className="h-3.5 w-3.5 mr-1.5" />
-              Edit Public Info
+      <main className="flex-1">
+        {/* Mobile: Back button */}
+        <div className="md:hidden border-b border-border">
+          <div className="container py-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
             </Button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* SECTION 1: Personal Information (Private) */}
-          <Card className="rounded-2xl border-0 shadow-xl bg-card">
+        <div className="container max-w-6xl py-8 pb-24 md:pb-8">
+          {/* Page Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-semibold text-foreground">Account</h1>
+            <p className="text-muted-foreground mt-1">
+              <span className="font-medium">{profile?.full_name || formData.full_name}</span> · {formData.email} · <Link to={`/profile/${user?.id}`} className="underline hover:text-foreground">Go to profile</Link>
+            </p>
+          </div>
+
+          <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+            {/* Left Sidebar - Desktop Only */}
+            <aside className="hidden lg:block w-64 shrink-0">
+              <nav className="space-y-1 sticky top-24">
+                {sidebarItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => scrollToSection(item.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-colors text-left ${
+                      activeSection === item.id
+                        ? 'bg-muted font-medium text-foreground'
+                        : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                    }`}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {item.label}
+                  </button>
+                ))}
+              </nav>
+            </aside>
+
+            {/* Main Content Area */}
+            <div className="flex-1 min-w-0">
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {/* SECTION 1: Personal Information (Private) */}
+                <div id="section-personal">
+                  <Card className="rounded-2xl border border-border shadow-sm bg-card">
             <CardHeader className="bg-muted/30 border-b border-border rounded-t-2xl">
               <div className="flex items-center justify-between">
                 <div>
@@ -853,9 +887,11 @@ const Account = () => {
               </Collapsible>
             </CardContent>
           </Card>
+                </div>
 
-          {/* SECTION 2: Address (Private) */}
-          <Card className="rounded-2xl border-0 shadow-xl bg-card">
+                {/* SECTION 2: Address (Private) */}
+                <div id="section-security">
+                  <Card className="rounded-2xl border border-border shadow-sm bg-card">
             <CardHeader className="bg-muted/30 border-b border-border rounded-t-2xl">
               <div className="flex items-center justify-between">
                 <div>
@@ -917,9 +953,11 @@ const Account = () => {
               </div>
             </CardContent>
           </Card>
+                </div>
 
-          {/* SECTION 3: Business Information (Mixed) */}
-          <Card className="rounded-2xl border-0 shadow-xl bg-card">
+                {/* SECTION 3: Business Information (Mixed) */}
+                <div id="section-payments">
+                  <Card className="rounded-2xl border border-border shadow-sm bg-card">
             <CardHeader className="bg-muted/30 border-b border-border rounded-t-2xl">
               <div className="flex items-center justify-between">
                 <div>
@@ -951,10 +989,11 @@ const Account = () => {
               </div>
             </CardContent>
           </Card>
+                </div>
 
-          {/* SECTION 4: Public Profile */}
-          <div ref={publicSectionRef}>
-            <Card className="rounded-2xl border-0 shadow-xl bg-card">
+                {/* SECTION 4: Public Profile */}
+                <div id="section-profile" ref={publicSectionRef}>
+                  <Card className="rounded-2xl border border-border shadow-sm bg-card">
               <CardHeader className="bg-muted/30 border-b border-border rounded-t-2xl">
                 <div className="flex items-center justify-between">
                   <div>
@@ -1201,11 +1240,12 @@ const Account = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
+                </div>
 
-          {/* SECTION 5: Trust & Verification */}
-          <Card className="rounded-2xl border-0 shadow-xl bg-card">
-            <CardHeader className="bg-muted/30 border-b border-border rounded-t-2xl">
+                {/* SECTION 5: Trust & Verification */}
+                <div id="section-notifications">
+                  <Card className="rounded-2xl border border-border shadow-sm bg-card">
+                    <CardHeader className="border-b border-border">
               <CardTitle className="text-lg flex items-center gap-2">
                 <div className="p-1.5 bg-primary rounded-lg">
                   <ShieldCheck className="h-4 w-4 text-primary-foreground" />
@@ -1286,26 +1326,25 @@ const Account = () => {
             </CardContent>
           </Card>
 
-          {/* Notification Preferences Link */}
-          <Card className="rounded-2xl border-0 shadow-xl bg-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate('/notification-preferences')}>
-            <CardHeader className="bg-muted/30 border-b border-border rounded-t-2xl">
-              <CardTitle className="flex items-center justify-between text-lg">
-                <span className="flex items-center gap-2">
-                  <div className="p-1.5 bg-primary rounded-lg">
-                    <Bell className="h-4 w-4 text-primary-foreground" />
-                  </div>
-                  Notification Preferences
-                </span>
-                <ExternalLink className="h-4 w-4 text-primary" />
-              </CardTitle>
-              <CardDescription>
-                Manage email and in-app notification settings
-              </CardDescription>
-            </CardHeader>
-          </Card>
+                  {/* Notification Preferences Link */}
+                  <Card className="rounded-2xl border border-border shadow-sm bg-card cursor-pointer hover:bg-muted/50 transition-all" onClick={() => navigate('/notification-preferences')}>
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between text-lg">
+                        <span className="flex items-center gap-2">
+                          <Bell className="h-5 w-5" />
+                          Notification Preferences
+                        </span>
+                        <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                      </CardTitle>
+                      <CardDescription>
+                        Manage email and in-app notification settings
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
+                </div>
 
-          {/* Desktop Save Button */}
-          <div className="hidden md:flex justify-end gap-3">
+                {/* Desktop Save Button */}
+          <div className="hidden md:flex justify-end gap-3 pt-4">
             <Button type="submit" disabled={isSaving || !hasChanges}>
               {isSaving ? (
                 <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</>
@@ -1314,7 +1353,10 @@ const Account = () => {
               )}
             </Button>
           </div>
-        </form>
+              </form>
+            </div>
+          </div>
+        </div>
 
         {/* Mobile Sticky Save Button */}
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur border-t border-border md:hidden z-50">

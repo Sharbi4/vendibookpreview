@@ -10,7 +10,6 @@ import {
   Menu, 
   CreditCard,
   Truck,
-  ShoppingBag,
   User,
   Search
 } from 'lucide-react';
@@ -36,28 +35,17 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
   const location = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  // Navigation Config based on mode
-  const navigation = [
-    {
-      title: mode === 'host' ? 'Management' : 'Activity',
-      items: mode === 'host' ? [
-        { title: 'Overview', icon: LayoutGrid, href: '/dashboard', tab: null },
-        { title: 'Listings', icon: Truck, href: '/dashboard?tab=inventory', tab: 'inventory' },
-        { title: 'Reservations', icon: CalendarDays, href: '/dashboard?tab=bookings', tab: 'bookings' },
-        { title: 'Inbox', icon: MessageSquare, href: '/messages', tab: null },
-      ] : [
-        { title: 'Trips', icon: CalendarDays, href: '/dashboard', tab: null },
-        { title: 'Favorites', icon: Heart, href: '/favorites', tab: null },
-        { title: 'Inbox', icon: MessageSquare, href: '/messages', tab: null },
-      ]
-    },
-    {
-      title: 'Account',
-      items: [
-        { title: 'Wallet', icon: CreditCard, href: '/transactions', tab: null },
-        { title: 'Settings', icon: Settings, href: '/account', tab: null },
-      ]
-    }
+  // Airbnb-style Navigation Config based on mode
+  const navigation = mode === 'host' ? [
+    { title: 'Overview', icon: LayoutGrid, href: '/dashboard', tab: null },
+    { title: 'Listings', icon: Truck, href: '/dashboard?tab=inventory', tab: 'inventory' },
+    { title: 'Reservations', icon: CalendarDays, href: '/dashboard?tab=bookings', tab: 'bookings' },
+    { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null },
+    { title: 'Payments', icon: CreditCard, href: '/transactions', tab: null },
+  ] : [
+    { title: 'Trips', icon: CalendarDays, href: '/dashboard', tab: null },
+    { title: 'Wishlists', icon: Heart, href: '/favorites', tab: null },
+    { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null },
   ];
 
   // Active state logic
@@ -65,17 +53,14 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
     const currentPath = location.pathname;
     const currentTab = new URLSearchParams(location.search).get('tab');
     
-    // If this item has a tab, check for tab match
     if (tab) {
       return currentPath === '/dashboard' && currentTab === tab;
     }
     
-    // For dashboard with no tab (overview), check we're on dashboard with no tab param
     if (href === '/dashboard' && !tab) {
       return currentPath === '/dashboard' && !currentTab;
     }
     
-    // For other pages, exact path match
     return currentPath === href.split('?')[0] && !href.includes('?');
   };
 
@@ -85,107 +70,118 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
   };
 
   const SidebarContent = ({ onLinkClick }: { onLinkClick?: () => void }) => (
-    <div className="flex flex-col h-full py-4">
+    <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="px-4 mb-6">
+      <div className="px-6 py-5 border-b border-border">
         <Link to="/" className="flex items-center gap-2">
           <img src={vendibookFavicon} alt="Vendibook" className="h-8 w-8" />
           <span className="font-semibold text-lg text-foreground">Vendibook</span>
         </Link>
       </div>
 
-      {/* User Profile Snippet */}
-      <div className="px-4 mb-6">
+      {/* User Profile */}
+      <div className="px-6 py-5 border-b border-border">
         <div className="flex items-center gap-3 mb-4">
-          <Avatar className="h-10 w-10 ring-2 ring-border">
+          <Avatar className="h-12 w-12">
             <AvatarImage src={profile?.avatar_url || undefined} />
-            <AvatarFallback className="bg-primary/10 text-primary font-medium">
+            <AvatarFallback className="bg-muted text-foreground font-medium text-lg">
               {profile?.full_name?.[0] || user?.email?.[0]?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">
+            <p className="text-base font-medium text-foreground truncate">
               {profile?.full_name || 'User'}
             </p>
-            <p className="text-xs text-muted-foreground truncate">
-              {user?.email}
+            <p className="text-sm text-muted-foreground">
+              {mode === 'host' ? 'Hosting' : 'Guest'}
             </p>
           </div>
         </div>
         
         {/* Mode Switcher - Only for Hosts */}
         {isHost && (
-          <div id="mode-switch-container" className="flex gap-1 bg-muted p-1 rounded-lg">
+          <div id="mode-switch-container" className="flex border border-border rounded-lg overflow-hidden">
             <button
               onClick={() => onModeChange('shopper')}
               className={cn(
-                "flex-1 text-xs font-medium py-2 rounded-md transition-all",
+                "flex-1 text-sm font-medium py-2.5 transition-all",
                 mode === 'shopper' 
-                  ? "bg-background shadow-sm text-foreground" 
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-foreground text-background" 
+                  : "text-muted-foreground hover:bg-muted"
               )}
             >
-              Buying
+              Guest
             </button>
             <button
               onClick={() => onModeChange('host')}
               className={cn(
-                "flex-1 text-xs font-medium py-2 rounded-md transition-all",
+                "flex-1 text-sm font-medium py-2.5 transition-all",
                 mode === 'host' 
-                  ? "bg-background shadow-sm text-foreground" 
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-foreground text-background" 
+                  : "text-muted-foreground hover:bg-muted"
               )}
             >
-              Hosting
+              Host
             </button>
           </div>
         )}
       </div>
 
-      {/* Nav Links */}
-      <ScrollArea className="flex-1 px-2">
-        <div className="space-y-6">
-          {navigation.map((group, i) => (
-            <div key={i}>
-              <p className="px-2 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                {group.title}
-              </p>
-              <div className="space-y-1">
-                {group.items.map((item) => {
-                  const active = isActive(item.href, item.tab);
-                  return (
-                    <Link
-                      key={item.title}
-                      to={item.href}
-                      onClick={onLinkClick}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                        active 
-                          ? "bg-primary text-primary-foreground shadow-sm" 
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      )}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.title}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+      {/* Nav Links - Clean Airbnb Style */}
+      <ScrollArea className="flex-1">
+        <div className="py-3">
+          {navigation.map((item) => {
+            const active = isActive(item.href, item.tab);
+            return (
+              <Link
+                key={item.title}
+                to={item.href}
+                onClick={onLinkClick}
+                className={cn(
+                  "flex items-center gap-3 px-6 py-3 text-sm transition-colors relative",
+                  active 
+                    ? "text-foreground font-medium" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+              >
+                {/* Active indicator - left border */}
+                {active && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-foreground rounded-r-full" />
+                )}
+                <item.icon className="h-5 w-5" />
+                {item.title}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Settings Section */}
+        <div className="border-t border-border py-3">
+          <Link
+            to="/account"
+            onClick={onLinkClick}
+            className={cn(
+              "flex items-center gap-3 px-6 py-3 text-sm transition-colors",
+              location.pathname === '/account'
+                ? "text-foreground font-medium"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            )}
+          >
+            <Settings className="h-5 w-5" />
+            Settings
+          </Link>
         </div>
       </ScrollArea>
 
       {/* Footer */}
-      <div className="px-4 pt-4 mt-auto border-t border-border">
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-muted-foreground hover:text-foreground"
+      <div className="px-6 py-4 border-t border-border">
+        <button
           onClick={handleSignOut}
+          className="flex items-center gap-3 w-full px-0 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          <LogOut className="h-4 w-4 mr-2" />
-          Sign Out
-        </Button>
+          <LogOut className="h-5 w-5" />
+          Log out
+        </button>
       </div>
     </div>
   );
@@ -193,7 +189,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Mobile Header */}
-      <header className="md:hidden sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+      <header className="md:hidden sticky top-0 z-50 bg-background border-b border-border">
         <div className="flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-3">
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
@@ -210,89 +206,92 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
               <img src={vendibookFavicon} alt="Vendibook" className="h-7 w-7" />
             </Link>
           </div>
-          <span className="font-medium text-foreground">
-            {mode === 'host' ? 'Vendor Console' : 'My Dashboard'}
-          </span>
           <NotificationCenter />
         </div>
       </header>
 
       <div className="flex flex-1">
         {/* Desktop Sidebar */}
-        <aside className="hidden md:flex md:w-60 lg:w-64 flex-col border-r border-border bg-card/50 shrink-0">
+        <aside className="hidden md:flex md:w-60 lg:w-64 flex-col border-r border-border bg-background shrink-0">
           <SidebarContent />
         </aside>
 
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col min-w-0">
-          {/* Desktop Top Bar */}
-          <div className="hidden md:flex items-center justify-between h-14 px-6 border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-40">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Link to="/dashboard" className="hover:text-foreground transition-colors">
-                Dashboard
-              </Link>
-              <span>/</span>
-              <span className="text-foreground font-medium">
-                {mode === 'host' ? 'Vendor Console' : 'My Activity'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
-                <Link to="/help">Help & Support</Link>
-              </Button>
-              <NotificationCenter />
-            </div>
-          </div>
-
           {/* Page Content */}
-          <div className="flex-1 p-4 md:p-6 pb-24 md:pb-6 overflow-auto">
+          <div className="flex-1 p-4 md:p-6 lg:p-8 pb-24 md:pb-6 overflow-auto">
             {children}
           </div>
         </main>
       </div>
 
-      {/* Mobile Bottom Nav */}
+      {/* Mobile Bottom Nav - Airbnb Style */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 pb-safe">
         <div className="flex items-center justify-around h-16">
           <Link 
-            to="/dashboard" 
-            className={cn(
-              "flex flex-col items-center gap-1 px-4 py-2 transition-colors",
-              location.pathname === '/dashboard' ? "text-primary" : "text-muted-foreground"
-            )}
-          >
-            <LayoutGrid className="h-5 w-5" />
-            <span className="text-[10px] font-medium">Home</span>
-          </Link>
-          <Link 
             to="/search" 
             className={cn(
-              "flex flex-col items-center gap-1 px-4 py-2 transition-colors",
-              location.pathname === '/search' ? "text-primary" : "text-muted-foreground"
+              "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
+              location.pathname === '/search' ? "text-rose-500" : "text-muted-foreground"
             )}
           >
-            <Search className="h-5 w-5" />
-            <span className="text-[10px] font-medium">Browse</span>
+            {location.pathname === '/search' && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
+            )}
+            <Search className="h-6 w-6" />
+            <span className="text-[10px] font-medium">Explore</span>
+          </Link>
+          <Link 
+            to="/favorites" 
+            className={cn(
+              "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
+              location.pathname === '/favorites' ? "text-rose-500" : "text-muted-foreground"
+            )}
+          >
+            {location.pathname === '/favorites' && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
+            )}
+            <Heart className="h-6 w-6" />
+            <span className="text-[10px] font-medium">Wishlists</span>
+          </Link>
+          <Link 
+            to="/dashboard" 
+            className={cn(
+              "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
+              location.pathname === '/dashboard' ? "text-rose-500" : "text-muted-foreground"
+            )}
+          >
+            {location.pathname === '/dashboard' && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
+            )}
+            <CalendarDays className="h-6 w-6" />
+            <span className="text-[10px] font-medium">Trips</span>
           </Link>
           <Link 
             to="/messages" 
             className={cn(
-              "flex flex-col items-center gap-1 px-4 py-2 transition-colors",
-              location.pathname === '/messages' ? "text-primary" : "text-muted-foreground"
+              "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
+              location.pathname === '/messages' ? "text-rose-500" : "text-muted-foreground"
             )}
           >
-            <MessageSquare className="h-5 w-5" />
+            {location.pathname === '/messages' && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
+            )}
+            <MessageSquare className="h-6 w-6" />
             <span className="text-[10px] font-medium">Inbox</span>
           </Link>
           <Link 
             to="/account" 
             className={cn(
-              "flex flex-col items-center gap-1 px-4 py-2 transition-colors",
-              location.pathname === '/account' ? "text-primary" : "text-muted-foreground"
+              "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
+              location.pathname === '/account' ? "text-rose-500" : "text-muted-foreground"
             )}
           >
-            <User className="h-5 w-5" />
-            <span className="text-[10px] font-medium">Account</span>
+            {location.pathname === '/account' && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
+            )}
+            <User className="h-6 w-6" />
+            <span className="text-[10px] font-medium">Profile</span>
           </Link>
         </div>
       </nav>
