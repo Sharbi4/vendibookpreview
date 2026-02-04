@@ -8,10 +8,11 @@ import {
   Settings, 
   LogOut, 
   Menu, 
-  CreditCard,
+  BarChart3,
   Truck,
   User,
-  Search
+  Search,
+  Shield
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -40,8 +41,8 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
     { title: 'Overview', icon: LayoutGrid, href: '/dashboard', tab: null },
     { title: 'Listings', icon: Truck, href: '/dashboard?tab=inventory', tab: 'inventory' },
     { title: 'Reservations', icon: CalendarDays, href: '/dashboard?tab=bookings', tab: 'bookings' },
+    { title: 'Reporting', icon: BarChart3, href: '/dashboard?tab=financials', tab: 'financials' },
     { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null },
-    { title: 'Payments', icon: CreditCard, href: '/transactions', tab: null },
   ] : [
     { title: 'Trips', icon: CalendarDays, href: '/dashboard', tab: null },
     { title: 'Wishlists', icon: Heart, href: '/favorites', tab: null },
@@ -155,6 +156,25 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
           })}
         </div>
 
+        {/* Additional Host Links */}
+        {mode === 'host' && (
+          <div className="border-t border-border py-3">
+            <Link
+              to="/verify-identity"
+              onClick={onLinkClick}
+              className={cn(
+                "flex items-center gap-3 px-6 py-3 text-sm transition-colors",
+                location.pathname === '/verify-identity'
+                  ? "text-foreground font-medium"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+            >
+              <Shield className="h-5 w-5" />
+              Identity Verification
+            </Link>
+          </div>
+        )}
+
         {/* Settings Section */}
         <div className="border-t border-border py-3">
           <Link
@@ -168,7 +188,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             )}
           >
             <Settings className="h-5 w-5" />
-            Settings
+            My Account
           </Link>
         </div>
       </ScrollArea>

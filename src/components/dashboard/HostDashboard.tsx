@@ -1,10 +1,9 @@
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Truck, Eye, Loader2, Calendar, BarChart3, DollarSign, Tag, HandCoins, ExternalLink, Grid3X3, List } from 'lucide-react';
+import { Plus, Truck, Eye, Loader2, Calendar, BarChart3, DollarSign, HandCoins, ExternalLink, Grid3X3, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { NextStepCard } from './NextStepCard';
 import { CompactStatCard } from './CompactStatCard';
 import { CompactInsights } from './CompactInsights';
-import StripeStatusCard from './StripeStatusCard';
+import StripeNotificationBubble from './StripeNotificationBubble';
 import HostListingCard from './HostListingCard';
 import BookingRequestsSection from './BookingRequestsSection';
 import SellerSalesSection from './SellerSalesSection';
@@ -23,7 +22,7 @@ import { useRevenueAnalytics } from '@/hooks/useRevenueAnalytics';
 import { useHostOffers } from '@/hooks/useHostOffers';
 import { useAuth } from '@/contexts/AuthContext';
 import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectModal';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 
 const HostDashboard = () => {
   const { user } = useAuth();
@@ -80,16 +79,24 @@ const HostDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Dashboard Header - Corporate Style */}
+      {/* Dashboard Header - Compact Airbnb Style */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-semibold text-foreground">Overview</h2>
-          <p className="text-sm text-muted-foreground">
-            {userType === 'seller' ? 'Manage your sales pipeline.' : 'Manage fleet availability and revenue.'}
-          </p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">Overview</h2>
+            <p className="text-sm text-muted-foreground">
+              {userType === 'seller' ? 'Manage your sales pipeline.' : 'Manage fleet availability and revenue.'}
+            </p>
+          </div>
+          {/* Compact Stripe Notification Bubble */}
+          <StripeNotificationBubble 
+            isConnected={isConnected}
+            isLoading={stripeLoading}
+            onConnect={handleConnectStripe}
+            isConnecting={isConnecting}
+          />
         </div>
         <div className="flex items-center gap-2">
-          {/* Storefront Button - with ID for onboarding */}
           <Button id="storefront-button" variant="outline" size="sm" asChild className="h-9 rounded-xl">
             <Link to={`/profile/${user?.id}`}>
               <ExternalLink className="h-4 w-4 mr-1.5" />
@@ -113,22 +120,6 @@ const HostDashboard = () => {
           draftListings={draftListings.length}
         />
       )}
-
-      {/* Next Step Action Card - Single priority action */}
-      <NextStepCard 
-        onConnectStripe={handleConnectStripe}
-        isConnectingStripe={isConnecting}
-      />
-
-      {/* Stripe Status Card - Shows for both states */}
-      <StripeStatusCard 
-        isConnected={isConnected}
-        hasAccountStarted={hasAccountStarted}
-        isLoading={stripeLoading}
-        isOpeningDashboard={isOpeningDashboard}
-        onConnect={handleConnectStripe}
-        onOpenDashboard={openStripeDashboard}
-      />
 
       {/* Key Metrics Row - Airbnb Minimal Style */}
       <div className={`grid grid-cols-2 gap-4 ${userType === 'hybrid' ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
@@ -170,8 +161,8 @@ const HostDashboard = () => {
         />
       </div>
 
-      {/* Resume Drafts Section */}
-      {!isLoading && draftListings.length > 0 && (
+      {/* Resume Drafts Section - Only show on Overview */}
+      {!isLoading && draftListings.length > 0 && activeTab === 'overview' && (
         <DraftsSection drafts={draftListings} onDelete={deleteListing} />
       )}
 
@@ -216,9 +207,14 @@ const HostDashboard = () => {
         </div>
       )}
 
-      {/* Tab Content: Inventory */}
+      {/* Tab Content: Inventory (Listings & Drafts) */}
       {activeTab === 'inventory' && (
-        <>
+        <div className="space-y-6">
+          {/* Drafts Section - Show in Inventory */}
+          {!isLoading && draftListings.length > 0 && (
+            <DraftsSection drafts={draftListings} onDelete={deleteListing} />
+          )}
+          
           {viewMode === 'table' && isPowerUser ? (
             <OperationsTable 
               listings={listings}
@@ -226,8 +222,8 @@ const HostDashboard = () => {
               onPause={pauseListing}
             />
           ) : (
-            <div className="rounded-2xl border-0 shadow-xl bg-card overflow-hidden">
-              <div className="flex items-center justify-between p-4 bg-muted/30 border-b border-border">
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="flex items-center justify-between p-4 border-b border-border">
                 <h3 className="text-sm font-semibold text-foreground">My Listings</h3>
                 <Button variant="dark-shine" size="sm" asChild className="h-8 text-xs rounded-xl">
                   <Link to="/list">
@@ -241,12 +237,12 @@ const HostDashboard = () => {
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                   </div>
-                ) : listings.length === 0 ? (
+                ) : listings.filter(l => l.status !== 'draft').length === 0 ? (
                   <div className="py-8 text-center">
                     <div className="w-12 h-12 rounded-xl bg-muted mx-auto mb-3 flex items-center justify-center">
                       <Truck className="h-6 w-6 text-muted-foreground" />
                     </div>
-                    <p className="text-sm font-medium text-foreground mb-1">No listings yet</p>
+                    <p className="text-sm font-medium text-foreground mb-1">No published listings yet</p>
                     <p className="text-xs text-muted-foreground mb-4">
                       Create a listing to start earning.
                     </p>
@@ -259,7 +255,7 @@ const HostDashboard = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {listings.map((listing) => (
+                    {listings.filter(l => l.status !== 'draft').map((listing) => (
                       <HostListingCard
                         key={listing.id}
                         listing={listing}
@@ -274,13 +270,19 @@ const HostDashboard = () => {
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
 
-      {/* Tab Content: Bookings */}
-      {activeTab === 'bookings' && userType !== 'seller' && (
-        <div className="p-4 rounded-xl bg-card border border-border">
-          <BookingRequestsSection />
+      {/* Tab Content: Reservations (Bookings & Transactions) */}
+      {activeTab === 'bookings' && (
+        <div className="space-y-6">
+          {userType !== 'seller' && (
+            <div className="p-4 rounded-xl bg-card border border-border">
+              <BookingRequestsSection />
+            </div>
+          )}
+          {/* Include transactions here */}
+          {userType !== 'host' && <SellerSalesSection />}
         </div>
       )}
 
@@ -333,8 +335,6 @@ const HostDashboard = () => {
             )}
           </div>
 
-          {/* Sales Section - For sellers/hybrid */}
-          {userType !== 'host' && <SellerSalesSection />}
         </div>
       )}
 
