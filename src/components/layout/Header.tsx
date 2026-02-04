@@ -529,10 +529,10 @@ const Header = () => {
         </div>
 
         {/* Mobile & Tablet Actions - hide when search is open */}
-        <div className={`flex lg:hidden items-center gap-1 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+        <div className={`flex lg:hidden items-center gap-1 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}> 
           <Link
             to="/how-it-works"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
+            className="hidden sm:inline text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
           >
             {t('common.learnMore')}
           </Link>
@@ -545,8 +545,9 @@ const Header = () => {
           >
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
-          {/* Language Switcher - Far Right */}
-          <LanguageSwitcher />
+          <div className="hidden sm:block">
+            <LanguageSwitcher />
+          </div>
         </div>
       </div>
 

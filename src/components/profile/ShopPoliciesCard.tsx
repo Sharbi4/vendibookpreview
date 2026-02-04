@@ -103,9 +103,10 @@ const ShopPoliciesCard = ({ policies, isOwnProfile, onUpdate }: ShopPoliciesCard
       
       // Reload the page to reflect changes
       window.location.reload();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       toast.error('Failed to update shop policies', {
-        description: error.message,
+        description: message,
       });
     } finally {
       setIsSaving(false);

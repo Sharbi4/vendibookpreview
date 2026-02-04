@@ -6,16 +6,23 @@ import {
   User, Heart, LogOut, PlusCircle, HelpCircle, 
   Settings, ShieldCheck, CalendarDays, Bell, Globe, LayoutDashboard
 } from 'lucide-react';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import AirbnbMenuItem from '@/components/ui/AirbnbMenuItem';
 
+type MobileMenuProfile = {
+  avatar_url?: string | null;
+  full_name?: string | null;
+  first_name?: string | null;
+};
+
 interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  user: any;
-  profile: any;
+  user: SupabaseUser | null;
+  profile: MobileMenuProfile | null;
   isVerified: boolean;
   isAdmin: boolean;
   onSignOut: () => void;
@@ -33,6 +40,7 @@ const MobileMenu = ({
   onNavigate,
 }: MobileMenuProps) => {
   const location = useLocation();
+  const isAuthenticated = Boolean(user?.id);
 
   // Lock body scroll when menu is open
   useEffect(() => {
@@ -66,7 +74,7 @@ const MobileMenu = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/50 z-[100] lg:hidden"
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
             onClick={onClose}
           />
 
@@ -76,13 +84,13 @@ const MobileMenu = ({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] bg-background z-[101] lg:hidden shadow-2xl flex flex-col overflow-hidden"
+            className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] bg-background z-50 lg:hidden shadow-2xl flex flex-col"
           >
             {/* Header Area */}
             <div className="flex items-center justify-between p-5 border-b border-border">
-              {user ? (
+              {isAuthenticated ? (
                 <button 
-                  onClick={() => handleNav(`/profile/${user.id}`)}
+                  onClick={() => handleNav(`/profile/${user?.id}`)}
                   className="flex items-center gap-3"
                 >
                   <Avatar className="h-12 w-12 border-2 border-border">
@@ -118,18 +126,18 @@ const MobileMenu = ({
 
             {/* Scrollable Content - Airbnb Style */}
             <div className="flex-1 overflow-y-auto">
-              {user && (
+              {isAuthenticated && (
                 <>
                   {/* Core Navigation */}
                   <div className="py-2">
                     <AirbnbMenuItem 
                       icon={Heart} 
-                      label="Wishlists" 
+                      label="Favorites" 
                       onClick={() => handleNav('/favorites')} 
                     />
                     <AirbnbMenuItem 
                       icon={CalendarDays} 
-                      label="Trips" 
+                      label="Bookings" 
                       onClick={() => handleNav('/transactions?tab=bookings')} 
                     />
                     <AirbnbMenuItem 
@@ -146,7 +154,7 @@ const MobileMenu = ({
                     <AirbnbMenuItem 
                       icon={User} 
                       label="Profile" 
-                      onClick={() => handleNav(`/profile/${user.id}`)} 
+                      onClick={() => handleNav(`/profile/${user?.id}`)} 
                     />
                     <AirbnbMenuItem 
                       icon={Bell} 
@@ -180,32 +188,26 @@ const MobileMenu = ({
 
                   {/* Hosting Section */}
                   <div className="py-2">
-                    {isVerified ? (
-                      <div className="flex items-center gap-2 px-4 py-2 text-sm text-emerald-600">
-                        <ShieldCheck className="h-4 w-4" />
-                        <span>Identity Verified</span>
-                      </div>
-                    ) : (
-                      <AirbnbMenuItem 
-                        icon={ShieldCheck} 
-                        label="Verify Identity" 
-                        subtext="Unlock all features"
-                        onClick={() => handleNav('/verify-identity')} 
-                      />
-                    )}
-                    <AirbnbMenuItem 
-                      icon={Home} 
-                      label="Become a Host" 
-                      subtext="It's easy to get started"
-                      onClick={() => handleNav('/list')} 
-                      highlight
-                    />
                     <AirbnbMenuItem 
                       icon={PlusCircle} 
                       label="List with Vendibook" 
                       subtext="Rent or sell your assets"
                       onClick={() => handleNav('/how-it-works-host')} 
+                      highlight
                     />
+                    <AirbnbMenuItem 
+                      icon={Home} 
+                      label="Become a Host" 
+                      subtext="It's easy to get started"
+                      onClick={() => handleNav('/list')} 
+                    />
+                    {!isVerified && (
+                      <AirbnbMenuItem 
+                        icon={ShieldCheck} 
+                        label="Verify Identity" 
+                        onClick={() => handleNav('/verify-identity')} 
+                      />
+                    )}
                     {isAdmin && (
                       <AirbnbMenuItem 
                         icon={Settings} 
@@ -217,7 +219,7 @@ const MobileMenu = ({
                 </>
               )}
 
-              {!user && (
+              {!isAuthenticated && (
                 <>
                   <div className="py-2">
                     <AirbnbMenuItem 
@@ -247,7 +249,7 @@ const MobileMenu = ({
 
             {/* Footer Actions */}
             <div className="border-t border-border">
-              {user ? (
+              {isAuthenticated ? (
                 <div className="py-2">
                   <AirbnbMenuItem 
                     icon={LogOut} 

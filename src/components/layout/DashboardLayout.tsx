@@ -22,6 +22,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
+import MobileMenu from './MobileMenu';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -31,10 +32,11 @@ interface DashboardLayoutProps {
 }
 
 export const DashboardLayout = ({ children, mode, onModeChange, isHost }: DashboardLayoutProps) => {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, isVerified } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
 
   // Airbnb-style Navigation Config based on mode
   const navigation = mode === 'host' ? [
@@ -209,7 +211,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Mobile Header */}
-      <header className="md:hidden sticky top-0 z-50 bg-background border-b border-border">
+      <header className="lg:hidden sticky top-0 z-50 bg-background border-b border-border">
         <div className="flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-3">
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
@@ -226,20 +228,42 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
               <img src={vendibookFavicon} alt="Vendibook" className="h-7 w-7" />
             </Link>
           </div>
-          <NotificationCenter />
+          <div className="flex items-center gap-2">
+            <NotificationCenter />
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => setIsAccountMenuOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </header>
 
+      <MobileMenu
+        isOpen={isAccountMenuOpen}
+        onClose={() => setIsAccountMenuOpen(false)}
+        user={user}
+        profile={profile}
+        isVerified={isVerified}
+        isAdmin={false}
+        onSignOut={handleSignOut}
+        onNavigate={navigate}
+      />
+
       <div className="flex flex-1">
         {/* Desktop Sidebar */}
-        <aside className="hidden md:flex md:w-60 lg:w-64 flex-col border-r border-border bg-background shrink-0">
+        <aside className="hidden lg:flex lg:w-64 flex-col border-r border-border bg-background shrink-0">
           <SidebarContent />
         </aside>
 
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col min-w-0">
           {/* Desktop Header Bar */}
-          <div className="hidden md:flex items-center justify-end gap-3 px-6 py-3 border-b border-border bg-background">
+          <div className="hidden lg:flex items-center justify-end gap-3 px-6 py-3 border-b border-border bg-background">
             <NotificationCenter />
             <Link to="/account">
               <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
@@ -251,14 +275,14 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             </Link>
           </div>
           {/* Page Content */}
-          <div className="flex-1 p-4 md:p-6 lg:p-8 pb-24 md:pb-6 overflow-auto">
+          <div className="flex-1 p-4 md:p-6 lg:p-8 pb-24 lg:pb-6 overflow-auto">
             {children}
           </div>
         </main>
       </div>
 
       {/* Mobile Bottom Nav - Airbnb Style */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 pb-safe">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 pb-safe">
         <div className="flex items-center justify-around h-16">
           <Link 
             to="/search" 
