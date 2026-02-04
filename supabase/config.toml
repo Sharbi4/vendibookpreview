@@ -170,3 +170,6 @@ verify_jwt = false
 
 [functions.generate-service-token]
 verify_jwt = false
+
+[functions.search-listings]
+verify_jwt = false
