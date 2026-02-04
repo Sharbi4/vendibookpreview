@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { 
   Calendar, Clock, Building2, Zap, Star, Share2, Flag, 
   ShieldAlert, MapPin, MessageCircle, MoreHorizontal, Eye,
-  ShieldCheck
+  ShieldCheck, Loader2
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -19,7 +19,8 @@ import {
 import { VerifiedBadgeImage } from '@/components/verification/VerificationBadge';
 import { cn } from '@/lib/utils';
 import { getPublicDisplayName, getDisplayInitials } from '@/lib/displayName';
-import { Loader2 } from 'lucide-react';
+import TopRatedBadge from './TopRatedBadge';
+import AboutSection from './AboutSection';
 
 interface PublicProfileData {
   id: string;
@@ -35,6 +36,7 @@ interface PublicProfileData {
   header_image_url?: string | null;
   identity_verified: boolean;
   created_at: string;
+  bio?: string | null;
 }
 
 interface EnhancedPublicProfileHeaderProps {
@@ -56,6 +58,8 @@ interface EnhancedPublicProfileHeaderProps {
   onViewListings: () => void;
   isMessaging: boolean;
   listingContext: string | null;
+  isTopRated?: boolean;
+  isSuperhost?: boolean;
 }
 
 const EnhancedPublicProfileHeader = ({
@@ -73,6 +77,8 @@ const EnhancedPublicProfileHeader = ({
   onViewListings,
   isMessaging,
   listingContext,
+  isTopRated,
+  isSuperhost,
 }: EnhancedPublicProfileHeaderProps) => {
   const navigate = useNavigate();
   const displayName = getPublicDisplayName(profile);
@@ -246,6 +252,13 @@ const EnhancedPublicProfileHeader = ({
               className="flex items-center justify-center md:justify-start gap-2 flex-wrap mb-3"
             >
               <TooltipProvider delayDuration={200}>
+                {/* Top Rated / Superhost Badge */}
+                {(isTopRated || isSuperhost) && (
+                  <motion.div variants={badgeVariants}>
+                    <TopRatedBadge isTopRated={isTopRated} isSuperhost={isSuperhost} />
+                  </motion.div>
+                )}
+
                 {/* Verified Badge */}
                 <motion.div variants={badgeVariants}>
                   <Tooltip>
@@ -355,6 +368,17 @@ const EnhancedPublicProfileHeader = ({
                 </>
               )}
             </motion.div>
+
+            {/* About/Bio Section */}
+            {(profile.bio || isOwnProfile) && (
+              <motion.div variants={itemVariants} className="mt-4 max-w-xl">
+                <AboutSection 
+                  bio={profile.bio || null} 
+                  isOwnProfile={isOwnProfile}
+                  displayName={displayName}
+                />
+              </motion.div>
+            )}
           </div>
 
           {/* Desktop CTA Block */}

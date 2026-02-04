@@ -26,6 +26,9 @@ interface EnhancedPublicProfileTabsProps {
   onListingClick?: (listingId: string) => void;
   onMessageHost?: () => void;
   onViewListings?: () => void;
+  soldListings?: Listing[];
+  soldListingsLoading?: boolean;
+  pinnedListingId?: string | null;
 }
 
 const EnhancedPublicProfileTabs = forwardRef<HTMLDivElement, EnhancedPublicProfileTabsProps>(({
@@ -44,6 +47,9 @@ const EnhancedPublicProfileTabs = forwardRef<HTMLDivElement, EnhancedPublicProfi
   onListingClick,
   onMessageHost,
   onViewListings,
+  soldListings,
+  soldListingsLoading,
+  pinnedListingId,
 }, ref) => {
   const tabs = [
     {
@@ -120,6 +126,9 @@ const EnhancedPublicProfileTabs = forwardRef<HTMLDivElement, EnhancedPublicProfi
               hostVerified={hostVerified}
               hostId={hostId}
               onListingClick={onListingClick}
+              soldListings={soldListings}
+              soldListingsLoading={soldListingsLoading}
+              pinnedListingId={pinnedListingId}
             />
           </motion.div>
         </TabsContent>
