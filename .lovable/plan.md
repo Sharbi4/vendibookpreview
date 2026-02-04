@@ -1,205 +1,353 @@
 
-# Homepage Optimization: Performance, UX & CLS Fixes
 
-## Issues Summary
+# Add Subcategories to Listing Creation Wizard
 
-Based on analysis of `Index.tsx`, `ListingsSections.tsx`, `AnnouncementBanner.tsx`, `NewsletterPopup.tsx`, and `SEO.tsx`:
+## Overview
 
-| Issue | Severity | Impact |
-|-------|----------|--------|
-| Data fetching waterfall (lazy load → then fetch) | High | Slow time-to-content |
-| Aggressive verification redirect | Medium | Frustrating UX, navigation hijacking |
-| CLS from images without dimensions | Medium | Poor Core Web Vitals score |
-| Inline BNPL banner code | Low | Maintainability |
-| SEO schema missing details | Low | Missed SERP features |
+Add a **subcategory** field to listing creation that allows hosts to specify a more detailed type within each main category. This enables better filtering and helps renters/buyers find exactly what they need.
+
+---
+
+## Proposed Subcategories (5 per category)
+
+| Main Category | Subcategories |
+|---------------|---------------|
+| **Food Truck** | Full-Service Kitchen, Coffee & Beverage, BBQ & Smoker, Pizza Truck, Ice Cream & Dessert |
+| **Food Trailer** | Concession Trailer, Catering Trailer, BBQ Pit Trailer, Mobile Bar, Specialty Food Trailer |
+| **Ghost Kitchen** | Commercial Kitchen, Cottage Kitchen, Bakery Kitchen, Prep Kitchen, Shared Commissary |
+| **Vendor Lot** | Festival Ground, Farmers Market Spot, Brewery/Bar Patio, Private Event Space, Street Corner Spot |
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Fix the Verification Redirect (UX)
+### Phase 1: Database Migration
 
-**Current Behavior (Problem)**:
+Add a new `subcategory` column to the `listings` table:
+
+```sql
+ALTER TABLE listings 
+ADD COLUMN subcategory text;
+
+-- Add index for filtering performance
+CREATE INDEX idx_listings_subcategory ON listings(subcategory);
+```
+
+The column is nullable so existing listings don't break, and new listings can optionally specify a subcategory.
+
+---
+
+### Phase 2: Type Definitions
+
+**File: `src/types/listing.ts`**
+
+Add new type and constants:
+
 ```typescript
-useEffect(() => {
-  if (!isLoading && user && !isVerified) {
-    // Hard redirect to /verify-identity
-    navigate('/verify-identity');
-  }
-}, ...);
-```
+// Subcategory type - string union for each main category
+export type FoodTruckSubcategory = 
+  | 'full_service_kitchen' 
+  | 'coffee_beverage' 
+  | 'bbq_smoker' 
+  | 'pizza_truck' 
+  | 'ice_cream_dessert';
 
-**New Behavior**:
-- Replace redirect with a dismissible banner at the top of the page
-- Banner shows only for logged-in, unverified users who haven't dismissed it
-- Uses the existing `Alert` component with a CTA button
+export type FoodTrailerSubcategory = 
+  | 'concession_trailer' 
+  | 'catering_trailer' 
+  | 'bbq_pit_trailer' 
+  | 'mobile_bar' 
+  | 'specialty_food';
 
-**New File**: `src/components/home/VerificationBanner.tsx`
-```typescript
-// Shows a non-blocking alert for unverified users
-// "Verify your identity to unlock booking" + Verify Now button + Dismiss (X)
-// Respects localStorage dismissal state
-```
+export type GhostKitchenSubcategory = 
+  | 'commercial_kitchen' 
+  | 'cottage_kitchen' 
+  | 'bakery_kitchen' 
+  | 'prep_kitchen' 
+  | 'shared_commissary';
 
-### Phase 2: Fix CLS (Image Dimensions)
+export type VendorLotSubcategory = 
+  | 'festival_ground' 
+  | 'farmers_market' 
+  | 'brewery_patio' 
+  | 'private_event' 
+  | 'street_corner';
 
-**Problem**: Payment logos use CSS-only sizing without explicit `width` and `height`:
-```tsx
-<img src={affirmLogo} alt="Affirm" className="h-7 md:h-9" />
-```
+export type ListingSubcategory = 
+  | FoodTruckSubcategory 
+  | FoodTrailerSubcategory 
+  | GhostKitchenSubcategory 
+  | VendorLotSubcategory;
 
-**Fix**: Add explicit `width` and `height` attributes to reserve space before load:
-```tsx
-<img 
-  src={affirmLogo} 
-  alt="Affirm" 
-  width={80}      // Add explicit width
-  height={28}     // Add explicit height
-  className="h-7 md:h-9 w-auto object-contain" 
-/>
-```
+// Subcategory options mapped by parent category
+export const SUBCATEGORIES_BY_CATEGORY: Record<ListingCategory, { 
+  value: string; 
+  label: string; 
+  description: string 
+}[]> = {
+  food_truck: [
+    { value: 'full_service_kitchen', label: 'Full-Service Kitchen', description: 'Complete cooking setup for any cuisine' },
+    { value: 'coffee_beverage', label: 'Coffee & Beverage', description: 'Espresso, smoothies, and specialty drinks' },
+    { value: 'bbq_smoker', label: 'BBQ & Smoker', description: 'Built-in smoker and grill setup' },
+    { value: 'pizza_truck', label: 'Pizza Truck', description: 'Wood-fired or deck oven for pizza' },
+    { value: 'ice_cream_dessert', label: 'Ice Cream & Dessert', description: 'Freezers and soft-serve equipment' },
+  ],
+  food_trailer: [
+    { value: 'concession_trailer', label: 'Concession Trailer', description: 'Classic fair-style food service' },
+    { value: 'catering_trailer', label: 'Catering Trailer', description: 'High-volume event catering setup' },
+    { value: 'bbq_pit_trailer', label: 'BBQ Pit Trailer', description: 'Dedicated smoker and BBQ pit' },
+    { value: 'mobile_bar', label: 'Mobile Bar', description: 'Beverage service with bar setup' },
+    { value: 'specialty_food', label: 'Specialty Food Trailer', description: 'Unique cuisine or concept builds' },
+  ],
+  ghost_kitchen: [
+    { value: 'commercial_kitchen', label: 'Commercial Kitchen', description: 'Full commercial-grade facility' },
+    { value: 'cottage_kitchen', label: 'Cottage Kitchen', description: 'Licensed home kitchen for cottage food' },
+    { value: 'bakery_kitchen', label: 'Bakery Kitchen', description: 'Ovens, mixers, and pastry equipment' },
+    { value: 'prep_kitchen', label: 'Prep Kitchen', description: 'Prep-only space for off-site cooking' },
+    { value: 'shared_commissary', label: 'Shared Commissary', description: 'Multi-vendor shared kitchen space' },
+  ],
+  vendor_lot: [
+    { value: 'festival_ground', label: 'Festival Ground', description: 'High-traffic event and festival spots' },
+    { value: 'farmers_market', label: 'Farmers Market Spot', description: 'Weekly market vendor locations' },
+    { value: 'brewery_patio', label: 'Brewery/Bar Patio', description: 'Partnered taproom or bar location' },
+    { value: 'private_event', label: 'Private Event Space', description: 'Bookable for private functions' },
+    { value: 'street_corner', label: 'Street Corner Spot', description: 'Permitted street vending locations' },
+  ],
+};
 
-**Files Affected**:
-- `src/pages/Index.tsx` (BNPL logos)
-- `src/components/home/AnnouncementBanner.tsx` (add min-height to container)
-
-### Phase 3: Extract BNPL Banner Component
-
-**Problem**: 35+ lines of inline JSX in `Index.tsx` for the payments banner makes the file messy.
-
-**Solution**: Extract to `src/components/home/PaymentsBanner.tsx`
-
-This component will:
-- Contain all BNPL banner styling and content
-- Import logos internally
-- Include proper image dimensions (from Phase 2)
-- Be simpler to test and modify independently
-
-### Phase 4: Optimize Data Fetching (Eliminate Waterfall)
-
-**Current Problem Flow**:
-```text
-1. Index.tsx renders
-2. Suspense boundary starts loading ListingsSections chunk
-3. ListingsSections mounts
-4. useQuery starts fetching listings data  ← WATERFALL
-5. Data arrives, component renders
-```
-
-**Optimized Flow**: Prefetch data in parallel with lazy component loading.
-
-**Implementation**:
-```typescript
-// In Index.tsx - start fetching immediately, before lazy load completes
-import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-
-// Prefetch listings data at module level or in useEffect
-const prefetchHomeListings = async (queryClient: QueryClient) => {
-  await queryClient.prefetchQuery({
-    queryKey: ['home-listings'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('listings')
-        .select('*')
-        .eq('status', 'published')
-        .order('published_at', { ascending: false })
-        .limit(12);  // Only fetch what we display
-      return data;
-    },
-    staleTime: 30000, // 30 seconds
-  });
+// Labels for display
+export const SUBCATEGORY_LABELS: Record<string, string> = {
+  // Food Truck
+  full_service_kitchen: 'Full-Service Kitchen',
+  coffee_beverage: 'Coffee & Beverage',
+  bbq_smoker: 'BBQ & Smoker',
+  pizza_truck: 'Pizza Truck',
+  ice_cream_dessert: 'Ice Cream & Dessert',
+  // Food Trailer
+  concession_trailer: 'Concession Trailer',
+  catering_trailer: 'Catering Trailer',
+  bbq_pit_trailer: 'BBQ Pit Trailer',
+  mobile_bar: 'Mobile Bar',
+  specialty_food: 'Specialty Food Trailer',
+  // Ghost Kitchen
+  commercial_kitchen: 'Commercial Kitchen',
+  cottage_kitchen: 'Cottage Kitchen',
+  bakery_kitchen: 'Bakery Kitchen',
+  prep_kitchen: 'Prep Kitchen',
+  shared_commissary: 'Shared Commissary',
+  // Vendor Lot
+  festival_ground: 'Festival Ground',
+  farmers_market: 'Farmers Market Spot',
+  brewery_patio: 'Brewery/Bar Patio',
+  private_event: 'Private Event Space',
+  street_corner: 'Street Corner Spot',
 };
 ```
 
-**Alternative Approach** (if prefetch is complex): Move the data fetching up to `Index.tsx` and pass data as props to `ListingsSections`, so data loads in parallel with the lazy chunk.
-
-### Phase 5: Limit Listings Query
-
-**Current**: Fetches ALL published listings
-```typescript
-.eq('status', 'published')
-.order('published_at', { ascending: false });
-// Returns potentially hundreds of rows
-```
-
-**Fix**: Add `.limit(12)` since we only display 6 sale + 6 rent max:
-```typescript
-.eq('status', 'published')
-.order('published_at', { ascending: false })
-.limit(12);  // Only need 12 for homepage display
-```
-
-### Phase 6: Reserve Space for AnnouncementBanner
-
-**Problem**: If the banner loads asynchronously or text wraps differently, it can cause layout shift.
-
-**Fix**: Add `min-height` to ensure consistent space reservation:
-```tsx
-<div className="w-full bg-muted border-b border-border py-2.5 px-4 min-h-[44px]">
-```
-
-This reserves ~44px (padding + line height) so content below doesn't jump.
-
----
-
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/pages/Index.tsx` | Remove redirect useEffect, add VerificationBanner, replace inline BNPL with PaymentsBanner, add data prefetch |
-| `src/components/home/VerificationBanner.tsx` | **New file** - dismissible verification prompt |
-| `src/components/home/PaymentsBanner.tsx` | **New file** - extracted BNPL banner with proper image dimensions |
-| `src/components/home/ListingsSections.tsx` | Add `.limit(12)` to query |
-| `src/components/home/AnnouncementBanner.tsx` | Add `min-h-[44px]` class |
-
----
-
-## Technical Details
-
-### VerificationBanner Component Structure
+**Update `ListingFormData` interface:**
 
 ```typescript
-interface VerificationBannerProps {
-  userId: string;
+export interface ListingFormData {
+  mode: ListingMode | null;
+  category: ListingCategory | null;
+  subcategory: string | null;  // NEW FIELD
+  // ... rest of fields
 }
-
-// Uses Alert component with:
-// - ShieldCheck icon
-// - "Verify your identity to unlock booking" message
-// - "Verify Now" button (Link to /verify-identity)
-// - Dismiss X button (sets localStorage flag)
 ```
 
-### PaymentsBanner Component Structure
+**Update `Listing` interface:**
 
 ```typescript
-// Self-contained component with:
-// - affirm-logo.png import
-// - afterpay-logo.jpg import  
-// - Explicit width/height on images
-// - "Now accepting flexible payments" messaging
-// - "Learn more" CTA to /payments
+export interface Listing {
+  // ... existing fields
+  subcategory?: string | null;  // NEW FIELD
+}
 ```
 
-### Data Prefetch Strategy
+---
 
-Using React Query's `prefetchQuery` allows the data fetch to start immediately when Index.tsx mounts, running in parallel with the lazy-loaded component chunk download. This eliminates the sequential waterfall.
+### Phase 3: Form Hook Updates
+
+**File: `src/hooks/useListingForm.ts`**
+
+Add `subcategory: null` to `initialFormData` and clear subcategory when category changes:
+
+```typescript
+const initialFormData: ListingFormData = {
+  mode: null,
+  category: null,
+  subcategory: null,  // NEW
+  // ... rest
+};
+
+// In updateCategory callback - reset subcategory when category changes
+const updateCategory = useCallback((category: ListingCategory) => {
+  setFormData(prev => {
+    const newData = { 
+      ...prev, 
+      category,
+      subcategory: null,  // Reset subcategory when parent category changes
+    };
+    // ... existing logic
+    return newData;
+  });
+}, []);
+```
 
 ---
 
-## Benefits
+### Phase 4: UI Component Updates
 
-| Improvement | Before | After |
-|-------------|--------|-------|
-| Verification UX | Hard redirect hijacks navigation | Dismissible banner, user stays on homepage |
-| CLS Score | Images cause layout shift | Reserved dimensions, no shift |
-| Time to Content | Sequential: load chunk → then fetch data | Parallel: chunk + data load together |
-| Data Transfer | Fetches ALL listings | Fetches only 12 needed |
-| Code Organization | 35+ lines inline JSX | Clean component extraction |
+**File: `src/components/listing-wizard/StepListingType.tsx`**
+
+Add subcategory selection that appears after selecting a main category:
+
+```text
+Current Flow:
+1. Select Mode (Rent / Sale)
+2. Select Category (Food Truck / Food Trailer / Ghost Kitchen / Vendor Lot)
+
+New Flow:
+1. Select Mode (Rent / Sale)
+2. Select Category (Food Truck / Food Trailer / Ghost Kitchen / Vendor Lot)
+3. Select Subcategory (5 options based on selected category) ← NEW
+```
+
+**UI Design for Subcategory Selection:**
+
+- Appears conditionally only after a category is selected
+- Uses pill/chip style buttons (smaller than category cards)
+- Horizontal scrollable on mobile, grid on desktop
+- Optional field (can proceed without selecting)
+
+```tsx
+{/* Subcategory Selection - appears after category is selected */}
+{formData.category && (
+  <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div className="flex items-center gap-2">
+      <Label className="text-lg font-semibold">What type of {CATEGORY_LABELS[formData.category]}?</Label>
+      <span className="text-sm text-muted-foreground">(Optional)</span>
+    </div>
+    
+    <div className="flex flex-wrap gap-3">
+      {SUBCATEGORIES_BY_CATEGORY[formData.category].map((sub) => (
+        <button
+          key={sub.value}
+          type="button"
+          onClick={() => updateField('subcategory', 
+            formData.subcategory === sub.value ? null : sub.value
+          )}
+          className={cn(
+            "px-4 py-2.5 rounded-full border text-sm font-medium transition-all",
+            formData.subcategory === sub.value
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
+          )}
+        >
+          {sub.label}
+        </button>
+      ))}
+    </div>
+    
+    {/* Show description of selected subcategory */}
+    {formData.subcategory && (
+      <p className="text-sm text-muted-foreground pl-1">
+        {SUBCATEGORIES_BY_CATEGORY[formData.category].find(
+          s => s.value === formData.subcategory
+        )?.description}
+      </p>
+    )}
+  </div>
+)}
+```
 
 ---
 
-## SEO Schema Enhancement (Optional)
+### Phase 5: Wizard Integration
 
-The current `generateOrganizationSchema` already includes `logo` and `sameAs` social links. The `generateWebSiteSchema` already includes `SearchAction`. These are correctly implemented - no changes needed.
+**File: `src/components/listing-wizard/ListingWizard.tsx`**
+
+Update the listing save logic to include `subcategory`:
+
+```typescript
+// In the saveListing function, add subcategory to the listing data
+const listingData = {
+  // ... existing fields
+  subcategory: formData.subcategory,
+};
+```
+
+---
+
+## Files to Create/Modify
+
+| File | Action | Changes |
+|------|--------|---------|
+| Database | Migration | Add `subcategory` text column + index |
+| `src/types/listing.ts` | Modify | Add subcategory types, constants, update interfaces |
+| `src/hooks/useListingForm.ts` | Modify | Add `subcategory` to initial state, reset on category change |
+| `src/components/listing-wizard/StepListingType.tsx` | Modify | Add subcategory pill selector UI |
+| `src/components/listing-wizard/ListingWizard.tsx` | Modify | Include subcategory in save payload |
+| `src/integrations/supabase/types.ts` | Auto-updated | Will reflect new column after migration |
+
+---
+
+## Validation Rules
+
+- **Subcategory is optional** - hosts can leave it blank
+- **Must match parent category** - if food_truck is selected, only food truck subcategories are valid
+- **Cleared on category change** - prevents invalid combinations
+
+---
+
+## Future Filtering Support
+
+This enables future filtering on browse/search pages:
+
+```typescript
+// Example filter query
+const { data } = await supabase
+  .from('listings')
+  .select('*')
+  .eq('category', 'ghost_kitchen')
+  .eq('subcategory', 'bakery_kitchen')  // Filter by specific type
+  .eq('status', 'published');
+```
+
+---
+
+## Visual Preview
+
+```text
+Step 1: Listing Type
+
+┌─────────────────────────────────────────────────────────────┐
+│ What do you want to do?                                     │
+│                                                             │
+│  ┌──────────────────┐  ┌──────────────────┐                │
+│  │ 🏷️ For Rent      │  │ 🛍️ For Sale      │                │
+│  │ Rent out your... │  │ Sell your asset  │                │
+│  └──────────────────┘  └──────────────────┘                │
+│                                                             │
+│ What are you listing?                                       │
+│                                                             │
+│  ┌──────────────────┐  ┌──────────────────┐                │
+│  │ 🚚 Food Truck   ✓│  │ 🚚 Food Trailer  │                │
+│  └──────────────────┘  └──────────────────┘                │
+│  ┌──────────────────┐  ┌──────────────────┐                │
+│  │ 🏢 Ghost Kitchen │  │ 📍 Vendor Lot    │                │
+│  └──────────────────┘  └──────────────────┘                │
+│                                                             │
+│ What type of Food Truck? (Optional)          ← NEW SECTION │
+│                                                             │
+│  ┌────────────────┐ ┌────────────────┐ ┌──────────────┐   │
+│  │ Full-Service  ✓│ │ Coffee & Bev   │ │ BBQ & Smoker │   │
+│  └────────────────┘ └────────────────┘ └──────────────┘   │
+│  ┌─────────────┐ ┌──────────────────────┐                  │
+│  │ Pizza Truck │ │ Ice Cream & Dessert  │                  │
+│  └─────────────┘ └──────────────────────┘                  │
+│                                                             │
+│  "Complete cooking setup for any cuisine"   ← Description  │
+└─────────────────────────────────────────────────────────────┘
+```
+
