@@ -18,7 +18,8 @@ const ListingsSections = () => {
         .from('listings')
         .select('*')
         .eq('status', 'published')
-        .order('published_at', { ascending: false });
+        .order('published_at', { ascending: false })
+        .limit(12);
       
       if (error) throw error;
       return data;

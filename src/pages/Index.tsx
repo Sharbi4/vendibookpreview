@@ -1,24 +1,22 @@
 import { useEffect, lazy, Suspense } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import HeroWalkthrough from '@/components/home/HeroWalkthrough';
 import AnnouncementBanner from '@/components/home/AnnouncementBanner';
+import VerificationBanner from '@/components/home/VerificationBanner';
+import PaymentsBanner from '@/components/home/PaymentsBanner';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
-import affirmLogo from '@/assets/affirm-logo.png';
-import afterpayLogo from '@/assets/afterpay-logo.jpg';
 import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
+import { supabase } from '@/integrations/supabase/client';
 
 // Lazy load below-the-fold components for faster initial load
 const ListingsSections = lazy(() => import('@/components/home/ListingsSections'));
 const SupplySection = lazy(() => import('@/components/home/SupplySection'));
-
 const CategoryCarousels = lazy(() => import('@/components/home/CategoryCarousels'));
 const FinalCTA = lazy(() => import('@/components/home/FinalCTA'));
 
@@ -36,20 +34,32 @@ const SectionSkeleton = () => (
 
 const Index = () => {
   const { user, isVerified, isLoading } = useAuth();
-  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
   // Track page views with Google Analytics
   usePageTracking();
 
+  // Prefetch listings data in parallel with lazy component loading
   useEffect(() => {
-    if (!isLoading && user && !isVerified) {
-      const hasSeenVerificationPrompt = localStorage.getItem(`verification_prompted_${user.id}`);
-      if (!hasSeenVerificationPrompt) {
-        localStorage.setItem(`verification_prompted_${user.id}`, 'true');
-        navigate('/verify-identity');
-      }
-    }
-  }, [user, isVerified, isLoading, navigate]);
+    queryClient.prefetchQuery({
+      queryKey: ['home-listings'],
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from('listings')
+          .select('*')
+          .eq('status', 'published')
+          .order('published_at', { ascending: false })
+          .limit(12);
+        
+        if (error) throw error;
+        return data;
+      },
+      staleTime: 30000, // 30 seconds
+    });
+  }, [queryClient]);
+
+  // Show verification banner for logged-in, unverified users
+  const showVerificationBanner = !isLoading && user && !isVerified;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -62,6 +72,8 @@ const Index = () => {
       <Header />
       <AnnouncementBanner />
       
+      {showVerificationBanner && <VerificationBanner userId={user.id} />}
+      
       <main className="flex-1">
         {/* 1. Hero with animated walkthrough - above the fold */}
         <HeroWalkthrough />
@@ -70,51 +82,16 @@ const Index = () => {
           {/* 2. For Sale & For Rent Sections */}
           <ListingsSections />
 
-          {/* BNPL Banner - Premium design */}
-          <section className="py-10 bg-gradient-to-r from-muted/50 via-primary/5 to-muted/50 border-y border-border/50 relative overflow-hidden">
-            {/* Subtle decorative element */}
-            <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none" aria-hidden="true" />
-            
-            <div className="container relative z-10">
-              <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
-                <div className="text-center md:text-left">
-                  <p className="text-lg md:text-xl font-bold text-foreground mb-1">
-                    Now accepting flexible payments
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Let buyers pay over time — you get paid upfront
-                  </p>
-                </div>
-                <div className="flex items-center gap-8">
-                  <img 
-                    src={affirmLogo} 
-                    alt="Affirm" 
-                    className="h-7 md:h-9 object-contain dark:invert opacity-90 hover:opacity-100 transition-opacity" 
-                  />
-                  <img 
-                    src={afterpayLogo} 
-                    alt="Afterpay" 
-                    className="h-6 md:h-7 object-contain dark:invert opacity-90 hover:opacity-100 transition-opacity" 
-                  />
-                </div>
-                <Button variant="dark-shine" size="sm" className="gap-2 px-6" asChild>
-                  <Link to="/payments">
-                    Learn more
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </section>
+          {/* 3. BNPL Banner */}
+          <PaymentsBanner />
           
-          {/* 3. Supply Section (Owners/Hosts + AI tools callout) */}
+          {/* 4. Supply Section (Owners/Hosts + AI tools callout) */}
           <SupplySection />
           
-          
-          {/* 6. SEO Lists - Browse by Category */}
+          {/* 5. SEO Lists - Browse by Category */}
           <CategoryCarousels />
           
-          {/* 7. Final CTA */}
+          {/* 6. Final CTA */}
           <FinalCTA />
         </Suspense>
       </main>
