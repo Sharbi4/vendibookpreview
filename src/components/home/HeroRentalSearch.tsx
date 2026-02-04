@@ -67,7 +67,7 @@ const HeroRentalSearch = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-          className="bg-white rounded-full shadow-2xl p-2 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-0 max-w-3xl mx-auto"
+          className="bg-white rounded-3xl md:rounded-full shadow-2xl p-4 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-0 max-w-3xl mx-auto"
         >
           {/* Location Input */}
           <div className="flex-1 px-4 py-3 md:py-2 md:border-r border-border">
@@ -148,10 +148,11 @@ const HeroRentalSearch = () => {
           <Button
             onClick={handleSearch}
             size="lg"
-            className="rounded-full h-12 w-12 md:h-14 md:w-14 p-0 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg flex-shrink-0"
+            className="rounded-full h-12 w-full md:h-14 md:w-14 p-0 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg flex-shrink-0"
           >
             <Search className="h-5 w-5" />
-            <span className="sr-only">Search</span>
+            <span className="md:hidden ml-2">Search</span>
+            <span className="sr-only md:not-sr-only hidden">Search</span>
           </Button>
         </motion.div>
 
