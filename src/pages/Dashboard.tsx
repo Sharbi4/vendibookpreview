@@ -97,7 +97,7 @@ const Dashboard = () => {
                     }`}
                   >
                     <ShoppingBag className="h-4 w-4 inline mr-1.5" />
-                    Buying
+                    Buy / Rent
                   </Label>
                   <Switch 
                     id="mode-switch"
@@ -110,7 +110,7 @@ const Dashboard = () => {
                       currentMode === 'host' ? 'text-foreground' : 'text-muted-foreground'
                     }`}
                   >
-                    Hosting
+                    Host / Sell
                   </Label>
                 </div>
               )}
