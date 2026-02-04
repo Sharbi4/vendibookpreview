@@ -1,374 +1,285 @@
 
-# Pro Dashboard Architecture - Turo/Airbnb-Style Navigation System
+# Onboarding Ecosystem Enhancement Plan
 
-## Executive Summary
+## Summary
 
-Transform the current dashboard from a simple page with cards into a full "App-like" experience with persistent sidebar navigation (desktop) and bottom navigation (mobile). This creates the "tech-forward" feel expected from modern marketplace platforms like Airbnb, Turo, and DoorDash.
-
----
-
-## Current State Analysis
-
-### What Exists Today
-
-| Component | Current Behavior | Issue |
-|-----------|-----------------|-------|
-| `Dashboard.tsx` | Self-contained page with Header + Footer | No persistent navigation between dashboard sections |
-| `HostDashboard.tsx` | Internal tabs (Overview/Inventory/Bookings/Financials) | Tabs are local state, not URL-based; no sidebar |
-| `ShopperDashboard.tsx` | Internal tabs (Pending/Approved/Past) | Same issues as HostDashboard |
-| `Header.tsx` | Global header with dropdown menu | Dashboard controls buried in dropdown |
-| Mobile Navigation | Hamburger menu only | No app-like bottom nav bar |
-
-### What's Missing
-
-1. **Persistent Sidebar** (Desktop) - Always-visible navigation for dashboard sections
-2. **Bottom Navigation** (Mobile) - Thumb-friendly app-like nav bar
-3. **URL-Based Tabs** - Navigation state persisted in URL for deep linking
-4. **Mode Switcher in Sidebar** - Host/Shopper toggle always accessible
-5. **User Profile Snippet** - Avatar + name visible in sidebar
+Complete the "Context-Aware Spotlight Tour" implementation by adding missing target element IDs and enhancing the zero-state onboarding wizard with a more professional, corporate-grade aesthetic.
 
 ---
 
-## Architecture Overview
+## Current Implementation Status
+
+The core spotlight tour system already exists and is well-implemented:
+- Cinema-style SVG mask cutout with dark backdrop
+- Animated glow ring around target elements
+- Step-by-step navigation with progress dots
+- localStorage persistence for completion state
+- Auto-scroll to target elements
+
+**What's missing**: Target element IDs that the tour references.
+
+---
+
+## Changes Required
+
+### 1. Add Target IDs to DashboardLayout.tsx
+
+The mode switcher needs an ID for the first tour step:
 
 ```text
-Desktop Layout:
-┌──────────────────────────────────────────────────────────────────┐
-│  Mobile Header (hidden on desktop)                               │
-├────────────┬─────────────────────────────────────────────────────┤
-│            │  Breadcrumb: Dashboard / Overview                   │
-│  SIDEBAR   ├─────────────────────────────────────────────────────┤
-│  (240px)   │                                                     │
-│            │                                                     │
-│  - Avatar  │           MAIN CONTENT AREA                         │
-│  - Mode    │           (HostDashboard / ShopperDashboard)        │
-│    Toggle  │                                                     │
-│            │                                                     │
-│  SECTIONS  │                                                     │
-│  ─────────│                                                     │
-│  Overview  │                                                     │
-│  Listings  │                                                     │
-│  Bookings  │                                                     │
-│  Inbox     │                                                     │
-│            │                                                     │
-│  ACCOUNT   │                                                     │
-│  ─────────│                                                     │
-│  Wallet    │                                                     │
-│  Settings  │                                                     │
-│            │                                                     │
-│  [Sign Out]│                                                     │
-├────────────┴─────────────────────────────────────────────────────┤
-│  Bottom Nav (hidden on desktop)                                  │
-└──────────────────────────────────────────────────────────────────┘
+Location: src/components/layout/DashboardLayout.tsx
+Element: Mode switcher container (around line 117-142)
+Add: id="mode-switch-container"
+```
 
-Mobile Layout:
-┌─────────────────────────────────────┐
-│  ☰ Logo    "My Dashboard"    🔔     │  <-- Mobile Header
-├─────────────────────────────────────┤
-│                                     │
-│      MAIN CONTENT AREA              │
-│      (Full width, scrollable)       │
-│                                     │
-│                                     │
-├─────────────────────────────────────┤
-│  🏠    🛒    💬    👤              │  <-- Bottom Nav (Fixed)
-│ Home  Shop  Inbox Account           │
-└─────────────────────────────────────┘
+This allows the spotlight to highlight the Buying/Hosting toggle.
+
+---
+
+### 2. Add Target IDs to ShopperDashboard.tsx
+
+For the shopper tour to work:
+
+```text
+Location: src/components/dashboard/ShopperDashboard.tsx
+
+Change 1: Zero-state hero
+- Line 25 (DiscoveryHeroCard wrapper)
+- Add: id="discovery-hero" wrapper div
+
+Change 2: Add BecomeHostCard
+- Import and render BecomeHostCard component
+- Wrap with id="become-host-card"
+- Only show for non-hosts in zero-state
 ```
 
 ---
 
-## Implementation Plan
+### 3. Verify HostDashboard.tsx IDs
 
-### Phase 1: Create DashboardLayout Component
+Current status:
+- `id="storefront-button"` - Already exists (line 93)
+- `id="inventory-tab"` - Missing
 
-**New File:** `src/components/layout/DashboardLayout.tsx`
+The host tour references `inventory-tab` but the current implementation uses URL-based tabs in the sidebar, not visible tabs in the dashboard. 
 
-This is the core layout shell that wraps dashboard content and provides:
-
-1. **Desktop Sidebar** (hidden on mobile)
-   - User avatar + name + email snippet
-   - Mode toggle (Buying/Hosting) with pill-style switcher
-   - Navigation groups with icons and active states
-   - Sign out button at bottom
-
-2. **Mobile Header** (hidden on desktop)
-   - Hamburger menu trigger
-   - Logo/title
-   - Notification bell
-
-3. **Mobile Slide-Out Menu** (using Sheet component)
-   - Same content as sidebar
-   - Slides in from left when hamburger tapped
-
-4. **Mobile Bottom Navigation** (fixed at bottom)
-   - 4 core actions: Home, Shop, Inbox, Account
-   - Active state highlighting
-   - Safe area padding for notched devices
-
-5. **Desktop Top Bar**
-   - Breadcrumb navigation
-   - Help & Support link
-   - Notification center
-
-**Navigation Configuration:**
-
-```typescript
-// Host Mode Navigation
-const hostNavigation = [
-  {
-    title: 'Management',
-    items: [
-      { title: 'Overview', icon: LayoutGrid, href: '/dashboard' },
-      { title: 'Listings', icon: Truck, href: '/dashboard?tab=inventory' },
-      { title: 'Reservations', icon: CalendarDays, href: '/dashboard?tab=bookings' },
-      { title: 'Inbox', icon: MessageSquare, href: '/messages' },
-    ]
-  },
-  {
-    title: 'Account',
-    items: [
-      { title: 'Wallet', icon: CreditCard, href: '/transactions' },
-      { title: 'Settings', icon: Settings, href: '/account' },
-    ]
-  }
-];
-
-// Shopper Mode Navigation
-const shopperNavigation = [
-  {
-    title: 'Activity',
-    items: [
-      { title: 'Trips', icon: CalendarDays, href: '/dashboard' },
-      { title: 'Favorites', icon: Heart, href: '/favorites' },
-      { title: 'Inbox', icon: MessageSquare, href: '/messages' },
-    ]
-  },
-  // ... Account group same as above
-];
-```
-
-**Props Interface:**
-
-```typescript
-interface DashboardLayoutProps {
-  children: React.ReactNode;
-  mode: 'host' | 'shopper';
-  onModeChange: (mode: 'host' | 'shopper') => void;
-}
-```
+**Solution**: Update the tour step to reference the sidebar navigation item instead, OR add an ID to a relevant element on the overview page.
 
 ---
 
-### Phase 2: Update Dashboard.tsx
+### 4. Enhance HostOnboardingWizard.tsx (Optional Polish)
 
-**File:** `src/pages/Dashboard.tsx`
+Upgrade from basic cards to the corporate-grade styling:
 
-Changes:
-1. Remove existing Header/Footer (DashboardLayout handles this)
-2. Remove sticky context bar (moved to sidebar)
-3. Wrap content in DashboardLayout
-4. Pass mode and onModeChange to layout
-5. Keep loading state and auth redirect logic
+**Current Features:**
+- Two path cards (Rental Fleet / Asset Sales)
+- Basic feature lists with checkmarks
+- Simple CTA buttons
 
-```typescript
-// Simplified structure
-const Dashboard = () => {
-  const { user, isLoading, hasRole } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
-  
-  const currentMode = searchParams.get('view') === 'host' ? 'host' : 'shopper';
-  
-  const handleModeChange = (newMode: 'host' | 'shopper') => {
-    setSearchParams({ view: newMode });
-  };
-
-  // ... auth checks ...
-
-  return (
-    <DashboardLayout mode={currentMode} onModeChange={handleModeChange}>
-      {currentMode === 'host' ? <HostDashboard /> : <ShopperDashboard />}
-    </DashboardLayout>
-  );
-};
-```
+**Enhancements:**
+- Add "Set up your Vendor Profile" header badge
+- Improve card visual hierarchy with gradient backgrounds
+- Add building/store icons in header badges
+- Enhance button variants (dark-shine for rent, emerald for sale)
 
 ---
 
-### Phase 3: Refactor HostDashboard.tsx
+## Implementation Details
 
-**File:** `src/components/dashboard/HostDashboard.tsx`
+### File 1: DashboardLayout.tsx
 
-Changes:
-1. Read `tab` from URL search params instead of local state
-2. Remove the internal TabsList (navigation is now in sidebar)
-3. Keep TabsContent for rendering the correct section
-4. Preserve all existing functionality (Stripe, listings, analytics)
+Add ID to the mode switcher container:
 
 ```typescript
-// URL-controlled tabs
-const [searchParams] = useSearchParams();
-const tab = searchParams.get('tab') || 'overview';
-
-// Render based on URL tab
-return (
-  <div className="space-y-6">
-    {/* Header with actions - keep */}
-    {/* Stats row - keep */}
-    
-    {/* Content based on tab */}
-    {tab === 'overview' && <OverviewContent ... />}
-    {tab === 'inventory' && <InventoryContent ... />}
-    {tab === 'bookings' && <BookingsContent ... />}
-    {tab === 'financials' && <FinancialsContent ... />}
+// Around line 117
+{isHost && (
+  <div id="mode-switch-container" className="flex gap-1 bg-muted p-1 rounded-lg">
+    <button onClick={() => onModeChange('shopper')} ...>Buying</button>
+    <button onClick={() => onModeChange('host')} ...>Hosting</button>
   </div>
-);
+)}
 ```
-
-The internal tabs UI is removed because the sidebar now controls navigation via URL params.
 
 ---
 
-### Phase 4: Update ShopperDashboard.tsx (Minor)
+### File 2: ShopperDashboard.tsx
 
-**File:** `src/components/dashboard/ShopperDashboard.tsx`
-
-Changes:
-1. Keep internal tabs for booking status (Pending/Approved/Past) - these are content filters, not navigation
-2. Remove the sidebar right column (BecomeHostCard) - this is now accessible via sidebar
-3. Simplify to single-column layout
-
----
-
-## Technical Details
-
-### Sidebar Active State Logic
+Add IDs to zero-state elements and include BecomeHostCard:
 
 ```typescript
-const isActive = (href: string) => {
-  // Exact path match
-  if (location.pathname === href.split('?')[0]) {
-    // If href has query params, check those too
-    if (href.includes('?')) {
-      const param = href.split('?')[1];
-      return location.search.includes(param);
-    }
-    // Root match (e.g., /dashboard with no tab = overview)
-    return !location.search.includes('tab=');
-  }
-  return false;
-};
-```
+// Import
+import BecomeHostCard from './BecomeHostCard';
+import { useAuth } from '@/contexts/AuthContext';
 
-### Mode Toggle Styling
+// Inside component
+const { hasRole } = useAuth();
+const isHost = hasRole('host');
 
-```typescript
-// Pill-style toggle in sidebar
-<div className="flex gap-1 bg-muted p-1 rounded-lg">
-  <button
-    onClick={() => onModeChange('shopper')}
-    className={cn(
-      "flex-1 text-xs font-medium py-1.5 rounded-md transition-all",
-      mode === 'shopper' 
-        ? "bg-background shadow-sm text-foreground" 
-        : "text-muted-foreground hover:text-foreground"
-    )}
-  >
-    Buying
-  </button>
-  <button
-    onClick={() => onModeChange('host')}
-    className={cn(
-      "flex-1 text-xs font-medium py-1.5 rounded-md transition-all",
-      mode === 'host' 
-        ? "bg-background shadow-sm text-foreground" 
-        : "text-muted-foreground hover:text-foreground"
-    )}
-  >
-    Hosting
-  </button>
-</div>
-```
-
-### Mobile Bottom Nav Safe Area
-
-```typescript
-// Uses safe-area-inset for iPhone X+ notch
-<nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 pb-safe">
-  {/* pb-safe is a Tailwind utility that adds padding-bottom: env(safe-area-inset-bottom) */}
-```
-
-Add to tailwind.config.js:
-```javascript
-theme: {
-  extend: {
-    padding: {
-      'safe': 'env(safe-area-inset-bottom)',
-    },
-  },
+// Zero-state return (around line 22-29)
+if (!isLoading && bookings.length === 0) {
+  return (
+    <div className="space-y-8">
+      <div id="discovery-hero">
+        <DiscoveryHeroCard />
+      </div>
+      <DiscoveryGrid />
+      {!isHost && (
+        <div id="become-host-card">
+          <BecomeHostCard />
+        </div>
+      )}
+    </div>
+  );
 }
 ```
 
 ---
 
-## Files to Create/Modify
+### File 3: Update DashboardOnboarding.tsx Tour Steps
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/components/layout/DashboardLayout.tsx` | **Create** | New layout component with sidebar + bottom nav |
-| `src/pages/Dashboard.tsx` | **Modify** | Simplify to use DashboardLayout, remove Header/Footer |
-| `src/components/dashboard/HostDashboard.tsx` | **Modify** | Remove TabsList, read tab from URL, simplify structure |
-| `src/components/dashboard/ShopperDashboard.tsx` | **Modify** | Remove sidebar column, keep internal status tabs |
-| `tailwind.config.ts` | **Modify** | Add `pb-safe` utility for bottom nav safe area |
+The current `inventory-tab` reference won't work since tabs moved to sidebar. Update to target a visible element:
 
----
+**Option A**: Change target to storefront button area (already works)
 
-## Component Dependencies
+**Option B**: Add a new visible element in HostDashboard overview that can be spotlighted
 
-```text
-DashboardLayout.tsx uses:
-├── Sheet, SheetContent, SheetTrigger (existing)
-├── Button (existing)
-├── Avatar, AvatarFallback, AvatarImage (existing)
-├── ScrollArea (existing)
-├── useAuth (existing)
-├── useLocation, Link, useNavigate (react-router-dom)
-└── NotificationCenter (existing)
+Recommended: Keep the tour focused on the most impactful elements:
+1. Mode Switch (how to toggle roles)
+2. Storefront Button (public profile link)
+3. "Add Asset" button (primary action)
+
+Updated host steps:
+
+```typescript
+const hostSteps: Step[] = [
+  {
+    targetId: 'mode-switch-container',
+    title: 'Two Modes, One Account',
+    description: 'Switch between "Buying" and "Hosting" instantly. No need to log out.',
+    position: 'bottom',
+    align: 'end'
+  },
+  {
+    targetId: 'storefront-button',
+    title: 'Your Public Storefront',
+    description: 'This is your digital business card. Share this link to drive direct bookings.',
+    position: 'bottom',
+    align: 'start'
+  },
+  {
+    targetId: 'add-asset-button',
+    title: 'List Your First Asset',
+    description: 'Add a food truck, trailer, or kitchen to start earning revenue.',
+    position: 'bottom',
+    align: 'end'
+  }
+];
 ```
 
-No new dependencies required - all UI components already exist.
+Then add `id="add-asset-button"` to the "Add Asset" button in HostDashboard.
 
 ---
 
-## Key Benefits
+### File 4: HostOnboardingWizard.tsx (Visual Enhancement)
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Clicks to access Settings | 2 (menu dropdown) | 1 (sidebar always visible) |
-| Navigation visibility | Hidden in dropdown | Always visible |
-| Mobile experience | Hamburger menu only | App-like bottom nav |
-| URL deep linking | Local state only | Full URL support |
-| Mode switching | Sticky bar at top | Sidebar toggle (persistent) |
-| Scalability | Add items to dropdown | Add line to nav config |
+Enhance the corporate styling:
+
+```typescript
+// Update the header section
+<Card className="border-0 shadow-xl bg-gradient-to-br from-card to-muted/20">
+  <CardContent className="p-8 text-center">
+    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full 
+                    bg-primary/10 text-primary text-sm font-medium mb-5">
+      <Building2 className="h-4 w-4" />
+      Set up your Vendor Profile
+    </div>
+    <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+      Welcome to the professional side of Vendibook.
+    </h2>
+    <p className="text-muted-foreground max-w-lg mx-auto">
+      Choose how you want to operate. You can always add more listing types later.
+    </p>
+  </CardContent>
+</Card>
+
+// Update card buttons
+<Button variant="dark-shine" className="w-full">
+  Start Rental Business
+  <ArrowRight className="h-4 w-4 ml-2" />
+</Button>
+
+<Button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white">
+  List Item for Sale
+  <ArrowRight className="h-4 w-4 ml-2" />
+</Button>
+```
+
+---
+
+## Files to Modify
+
+| File | Change Type | Description |
+|------|-------------|-------------|
+| `src/components/layout/DashboardLayout.tsx` | Minor | Add `id="mode-switch-container"` |
+| `src/components/dashboard/ShopperDashboard.tsx` | Medium | Add wrapper IDs, import BecomeHostCard |
+| `src/components/dashboard/HostDashboard.tsx` | Minor | Add `id="add-asset-button"` to Add Asset button |
+| `src/components/onboarding/DashboardOnboarding.tsx` | Minor | Update host steps to use correct target IDs |
+| `src/components/dashboard/HostOnboardingWizard.tsx` | Medium | Enhance visual styling |
+
+---
+
+## Technical Notes
+
+### Spotlight Positioning
+
+The current implementation uses `position: 'fixed'` with calculated coordinates based on `getBoundingClientRect()`. This works well but has one consideration:
+
+- The popover calculates position on mount and listens to resize/scroll
+- For elements in the sidebar (desktop), the position will be correct
+- For elements that may be off-screen initially, `scrollIntoView` is called first
+
+### localStorage Key
+
+The completion state uses: `vendibook_dashboard_onboarding_v1`
+
+If you want to reset for testing, clear this key or increment the version.
+
+### Mode-Specific Tours
+
+The current implementation already handles mode-specific tours:
+- Host mode: Shows management-focused steps
+- Shopper mode: Shows discovery-focused steps
+
+This means users get a relevant tour based on which mode they're viewing.
+
+---
+
+## Expected User Experience
+
+### First-Time Host Flow
+
+1. User logs in with host role
+2. 1-second delay for UI to settle
+3. Screen dims with spotlight on mode switcher
+4. User clicks "Next" -> spotlight moves to storefront button
+5. User clicks "Next" -> spotlight moves to Add Asset button
+6. User clicks "Finish" -> tour ends, localStorage flagged
+
+### First-Time Shopper Flow
+
+1. User logs in (no host role)
+2. 1-second delay
+3. Screen dims with spotlight on discovery hero
+4. User clicks "Next" -> spotlight moves to BecomeHostCard
+5. User clicks "Finish" -> tour ends
 
 ---
 
 ## Accessibility Considerations
 
-1. **Keyboard Navigation**: All sidebar items are keyboard accessible
-2. **Screen Readers**: Proper ARIA labels on navigation groups
-3. **Focus Management**: Focus trap in mobile sheet menu
-4. **High Contrast**: Uses semantic color tokens for active states
+The current implementation includes:
+- `aria-label="Skip tour"` on close button
+- Keyboard-accessible buttons
+- Focus trap within the popover
 
----
-
-## Mobile-First Responsive Behavior
-
-| Breakpoint | Sidebar | Bottom Nav | Header |
-|------------|---------|------------|--------|
-| `< 768px` (mobile) | Hidden (Sheet) | Visible | Mobile header |
-| `>= 768px` (tablet+) | Visible (240px) | Hidden | Desktop top bar |
-
-The transition is handled with Tailwind's `md:` prefix:
-- `md:hidden` - Hide on desktop
-- `hidden md:flex` - Show on desktop only
+No additional accessibility work needed.
