@@ -6,11 +6,111 @@ export type FulfillmentType = 'pickup' | 'delivery' | 'both' | 'on_site';
 
 export type ListingStatus = 'draft' | 'published' | 'paused';
 
+// Subcategory types for each main category
+export type FoodTruckSubcategory = 
+  | 'full_service_kitchen' 
+  | 'coffee_beverage' 
+  | 'bbq_smoker' 
+  | 'pizza_truck' 
+  | 'ice_cream_dessert';
+
+export type FoodTrailerSubcategory = 
+  | 'concession_trailer' 
+  | 'catering_trailer' 
+  | 'bbq_pit_trailer' 
+  | 'mobile_bar' 
+  | 'specialty_food';
+
+export type GhostKitchenSubcategory = 
+  | 'commercial_kitchen' 
+  | 'cottage_kitchen' 
+  | 'bakery_kitchen' 
+  | 'prep_kitchen' 
+  | 'shared_commissary';
+
+export type VendorLotSubcategory = 
+  | 'festival_ground' 
+  | 'farmers_market' 
+  | 'brewery_patio' 
+  | 'private_event' 
+  | 'street_corner';
+
+export type ListingSubcategory = 
+  | FoodTruckSubcategory 
+  | FoodTrailerSubcategory 
+  | GhostKitchenSubcategory 
+  | VendorLotSubcategory;
+
+// Subcategory options mapped by parent category
+export const SUBCATEGORIES_BY_CATEGORY: Record<ListingCategory, { 
+  value: string; 
+  label: string; 
+  description: string 
+}[]> = {
+  food_truck: [
+    { value: 'full_service_kitchen', label: 'Full-Service Kitchen', description: 'Complete cooking setup for any cuisine' },
+    { value: 'coffee_beverage', label: 'Coffee & Beverage', description: 'Espresso, smoothies, and specialty drinks' },
+    { value: 'bbq_smoker', label: 'BBQ & Smoker', description: 'Built-in smoker and grill setup' },
+    { value: 'pizza_truck', label: 'Pizza Truck', description: 'Wood-fired or deck oven for pizza' },
+    { value: 'ice_cream_dessert', label: 'Ice Cream & Dessert', description: 'Freezers and soft-serve equipment' },
+  ],
+  food_trailer: [
+    { value: 'concession_trailer', label: 'Concession Trailer', description: 'Classic fair-style food service' },
+    { value: 'catering_trailer', label: 'Catering Trailer', description: 'High-volume event catering setup' },
+    { value: 'bbq_pit_trailer', label: 'BBQ Pit Trailer', description: 'Dedicated smoker and BBQ pit' },
+    { value: 'mobile_bar', label: 'Mobile Bar', description: 'Beverage service with bar setup' },
+    { value: 'specialty_food', label: 'Specialty Food Trailer', description: 'Unique cuisine or concept builds' },
+  ],
+  ghost_kitchen: [
+    { value: 'commercial_kitchen', label: 'Commercial Kitchen', description: 'Full commercial-grade facility' },
+    { value: 'cottage_kitchen', label: 'Cottage Kitchen', description: 'Licensed home kitchen for cottage food' },
+    { value: 'bakery_kitchen', label: 'Bakery Kitchen', description: 'Ovens, mixers, and pastry equipment' },
+    { value: 'prep_kitchen', label: 'Prep Kitchen', description: 'Prep-only space for off-site cooking' },
+    { value: 'shared_commissary', label: 'Shared Commissary', description: 'Multi-vendor shared kitchen space' },
+  ],
+  vendor_lot: [
+    { value: 'festival_ground', label: 'Festival Ground', description: 'High-traffic event and festival spots' },
+    { value: 'farmers_market', label: 'Farmers Market Spot', description: 'Weekly market vendor locations' },
+    { value: 'brewery_patio', label: 'Brewery/Bar Patio', description: 'Partnered taproom or bar location' },
+    { value: 'private_event', label: 'Private Event Space', description: 'Bookable for private functions' },
+    { value: 'street_corner', label: 'Street Corner Spot', description: 'Permitted street vending locations' },
+  ],
+};
+
+// Labels for display
+export const SUBCATEGORY_LABELS: Record<string, string> = {
+  // Food Truck
+  full_service_kitchen: 'Full-Service Kitchen',
+  coffee_beverage: 'Coffee & Beverage',
+  bbq_smoker: 'BBQ & Smoker',
+  pizza_truck: 'Pizza Truck',
+  ice_cream_dessert: 'Ice Cream & Dessert',
+  // Food Trailer
+  concession_trailer: 'Concession Trailer',
+  catering_trailer: 'Catering Trailer',
+  bbq_pit_trailer: 'BBQ Pit Trailer',
+  mobile_bar: 'Mobile Bar',
+  specialty_food: 'Specialty Food Trailer',
+  // Ghost Kitchen
+  commercial_kitchen: 'Commercial Kitchen',
+  cottage_kitchen: 'Cottage Kitchen',
+  bakery_kitchen: 'Bakery Kitchen',
+  prep_kitchen: 'Prep Kitchen',
+  shared_commissary: 'Shared Commissary',
+  // Vendor Lot
+  festival_ground: 'Festival Ground',
+  farmers_market: 'Farmers Market Spot',
+  brewery_patio: 'Brewery/Bar Patio',
+  private_event: 'Private Event Space',
+  street_corner: 'Street Corner Spot',
+};
+
 export interface Listing {
   id: string;
   host_id: string;
   mode: ListingMode;
   category: ListingCategory;
+  subcategory?: string | null;
   status: ListingStatus;
   title: string;
   description: string;
@@ -409,6 +509,7 @@ export const FREIGHT_CATEGORY_LABELS: Record<FreightCategory, string> = {
 export interface ListingFormData {
   mode: ListingMode | null;
   category: ListingCategory | null;
+  subcategory: string | null;
   title: string;
   description: string;
   highlights: string[];

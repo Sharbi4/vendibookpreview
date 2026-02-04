@@ -551,6 +551,7 @@ export const ListingWizard: React.FC = () => {
         host_id: user.id,
         mode: formData.mode!,
         category: formData.category!,
+        subcategory: formData.subcategory || null,
         status: shouldPublishDirectly ? 'published' : 'draft',
         title: formData.title,
         description: formData.description,
