@@ -115,7 +115,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
         
         {/* Mode Switcher - Only for Hosts */}
         {isHost && (
-          <div className="flex gap-1 bg-muted p-1 rounded-lg">
+          <div id="mode-switch-container" className="flex gap-1 bg-muted p-1 rounded-lg">
             <button
               onClick={() => onModeChange('shopper')}
               className={cn(

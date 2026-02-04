@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, DollarSign, ArrowRight, Building2, Store, Check } from 'lucide-react';
+import { Calendar, DollarSign, ArrowRight, Building2, Check } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 

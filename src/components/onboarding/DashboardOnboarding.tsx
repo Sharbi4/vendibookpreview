@@ -29,14 +29,14 @@ const hostSteps: Step[] = [
     title: 'Your Public Storefront',
     description: 'This is your digital business card. Share this link on Instagram or Google Maps to drive direct bookings.',
     position: 'bottom',
-    align: 'end'
+    align: 'start'
   },
   {
-    targetId: 'inventory-tab',
-    title: 'Fleet Operations',
-    description: 'Managing multiple kitchens? Use the Inventory tab for a high-density status board.',
+    targetId: 'add-asset-button',
+    title: 'List Your First Asset',
+    description: 'Add a food truck, trailer, or kitchen to start earning revenue.',
     position: 'bottom',
-    align: 'center'
+    align: 'end'
   }
 ];
 
