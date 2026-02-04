@@ -16,8 +16,6 @@ import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import EnhancedPhotoGallery from '@/components/listing-detail/EnhancedPhotoGallery';
-import EnhancedBookingSummaryCard from '@/components/listing-detail/EnhancedBookingSummaryCard';
-import EnhancedInquiryForm from '@/components/listing-detail/EnhancedInquiryForm';
 import EnhancedHostCard from '@/components/listing-detail/EnhancedHostCard';
 import ReviewsSection from '@/components/reviews/ReviewsSection';
 import RequirementsModal from '@/components/listing-detail/RequirementsModal';
@@ -29,7 +27,9 @@ import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
 import { FavoriteButton } from '@/components/listing/FavoriteButton';
 import CompactTrustSection from '@/components/trust/CompactTrustSection';
 import CancellationPolicyCard from '@/components/trust/CancellationPolicyCard';
-import AvailabilitySection from '@/components/listing-detail/AvailabilitySection';
+import { TechSpecsGrid } from '@/components/listing-detail/TechSpecsGrid';
+import { InlineAvailabilityCalendar } from '@/components/listing-detail/InlineAvailabilityCalendar';
+import { BookingWidget } from '@/components/listing-detail/BookingWidget';
 import OwnerBanner from '@/components/listing-detail/OwnerBanner';
 import { useListing } from '@/hooks/useListing';
 import { useListingAverageRating } from '@/hooks/useReviews';
@@ -316,6 +316,16 @@ const ListingDetail = () => {
               {/* Divider */}
               <div className="border-t border-border" />
 
+              {/* Technical Specifications - NEW */}
+              <TechSpecsGrid
+                category={listing.category}
+                lengthInches={listing.length_inches}
+                widthInches={listing.width_inches}
+                heightInches={listing.height_inches}
+                weightLbs={listing.weight_lbs}
+                amenities={listing.amenities}
+              />
+
               {/* Quick Highlights - Clean grid */}
               <EnhancedQuickHighlights
                 fulfillmentType={listing.fulfillment_type}
@@ -376,6 +386,18 @@ const ListingDetail = () => {
                 </>
               )}
 
+              {/* Inline Availability Calendar - Rentals only (NEW) */}
+              {isRental && (
+                <>
+                  <InlineAvailabilityCalendar
+                    listingId={listing.id}
+                    availableFrom={listing.available_from}
+                    availableTo={listing.available_to}
+                  />
+                  <div className="border-t border-border" />
+                </>
+              )}
+
               {/* Host Section */}
               <EnhancedHostCard
                 hostId={listing.host_id}
@@ -406,45 +428,28 @@ const ListingDetail = () => {
               <CompactTrustSection />
             </div>
 
-            {/* Right Column - Booking/Inquiry Form (Desktop) - Sticky */}
+            {/* Right Column - Booking/Inquiry Widget (Desktop) - Sticky */}
             <div id="booking-widget" className="hidden lg:block">
               <div className="sticky top-24 space-y-6">
-              {isOwner ? (
-                <OwnerBanner listingId={listing.id} variant="card" />
-              ) : isRental ? (
-                <EnhancedBookingSummaryCard
+                <BookingWidget
                   listingId={listing.id}
                   listingTitle={listing.title}
                   hostId={listing.host_id}
+                  isOwner={isOwner || false}
+                  isRental={isRental}
                   priceDaily={listing.price_daily}
                   priceWeekly={listing.price_weekly}
+                  priceHourly={(listing as any).price_hourly}
                   availableFrom={listing.available_from}
                   availableTo={listing.available_to}
                   instantBook={listing.instant_book || false}
-                  coverImage={listing.cover_image_url}
-                />
-              ) : (
-                <EnhancedInquiryForm
-                  listingId={listing.id}
-                  hostId={listing.host_id}
-                  listingTitle={listing.title}
+                  hourlyEnabled={(listing as any).hourly_enabled || false}
                   priceSale={listing.price_sale}
                   fulfillmentType={listing.fulfillment_type}
                   deliveryFee={listing.delivery_fee}
-                  deliveryRadiusMiles={listing.delivery_radius_miles}
-                  pickupLocation={listing.pickup_location_text || listing.address}
                   vendibookFreightEnabled={listing.vendibook_freight_enabled || false}
                   freightPayer={(listing.freight_payer === 'seller' ? 'seller' : 'buyer') as 'buyer' | 'seller'}
-                  originAddress={listing.address}
-                  weightLbs={listing.weight_lbs}
-                  lengthInches={listing.length_inches}
-                  widthInches={listing.width_inches}
-                  heightInches={listing.height_inches}
-                  freightCategory={listing.freight_category}
-                  acceptCardPayment={listing.accept_card_payment ?? true}
-                  acceptCashPayment={listing.accept_cash_payment ?? false}
                 />
-              )}
               </div>
             </div>
           </div>
