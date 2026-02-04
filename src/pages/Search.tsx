@@ -1,9 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import Fuse from 'fuse.js';
 import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet, Truck, LayoutGrid, Map, Columns } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
-import { format, parseISO, eachDayOfInterval } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { usePageTracking } from '@/hooks/usePageTracking';
@@ -31,48 +30,41 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Listing, CATEGORY_LABELS, ListingCategory, ListingMode, AMENITIES_BY_CATEGORY } from '@/types/listing';
-import { calculateDistance } from '@/lib/geolocation';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
 import SEO from '@/components/SEO';
 import JsonLd, { generateItemListSchema, generateSearchBreadcrumbSchema, ProductListItem } from '@/components/JsonLd';
 
-// Fetch all blocked dates and bookings for availability filtering
-interface UnavailableDates {
-  [listingId: string]: string[];
-}
-
-// Extended listing type with coordinates
-interface ListingWithCoords extends Listing {
+// Extended listing type with server-computed fields
+interface SearchListing extends Listing {
   latitude?: number | null;
   longitude?: number | null;
+  distance_miles?: number | null;
+  host_verified?: boolean;
+  is_available?: boolean;
+  can_deliver?: boolean;
 }
 
-// Popular features for quick filter bar
-const POPULAR_FEATURES = [
-  { id: 'generator', label: 'Generator', icon: Zap },
-  { id: 'electrical_hookup', label: 'Electric Hookup', icon: Plug },
-  { id: 'electric_hookup', label: 'Electric Hookup', icon: Plug },
-  { id: 'refrigerator', label: 'Refrigerator', icon: Refrigerator },
-  { id: 'fryer', label: 'Fryer', icon: Flame },
-  { id: 'hood_system', label: 'Hood System', icon: Wind },
-  { id: 'wifi', label: 'WiFi', icon: Wifi },
-  { id: 'parking_available', label: 'Parking', icon: Car },
-  { id: 'security', label: '24/7 Security', icon: Shield },
-  { id: 'water_hookup', label: 'Water Hookup', icon: Droplet },
-];
+interface SearchResponse {
+  listings: SearchListing[];
+  total_count: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
 
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -91,6 +83,7 @@ const Search = () => {
   const initialRadius = searchParams.get('radius');
   const initialSort = searchParams.get('sort') as 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance' || 'newest';
   const initialInstantBook = searchParams.get('instant') === 'true';
+  const initialPage = parseInt(searchParams.get('page') || '1', 10);
   
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [mode, setMode] = useState<ListingMode | 'all'>(initialMode);
@@ -113,307 +106,58 @@ const Search = () => {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
   const [viewMode, setViewMode] = useState<'grid' | 'map' | 'split'>('split');
+  const [page, setPage] = useState(initialPage);
 
   // Google Maps API key for map view
   const { apiKey: mapToken, isLoading: isMapTokenLoading, error: mapTokenError } = useGoogleMapsToken();
-
 
   // Quick booking modal state
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
-  // Fetch all published listings with coordinates
-  const { data: listings = [], isLoading: isLoadingListings } = useQuery({
-    queryKey: ['search-listings'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .eq('status', 'published')
-        .order('created_at', { ascending: false });
+  // Build search request params for edge function
+  const searchRequestParams = useMemo(() => ({
+    query: searchQuery.trim() || undefined,
+    mode: mode !== 'all' ? mode : undefined,
+    category: category !== 'all' ? category : undefined,
+    latitude: locationCoords?.[1],
+    longitude: locationCoords?.[0],
+    radius_miles: searchRadius,
+    start_date: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
+    end_date: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
+    amenities: selectedAmenities.length > 0 ? selectedAmenities : undefined,
+    min_price: priceRange[0] > 0 ? priceRange[0] : undefined,
+    max_price: priceRange[1] !== Infinity ? priceRange[1] : undefined,
+    instant_book_only: instantBookOnly || undefined,
+    verified_hosts_only: verifiedHostsOnly || undefined,
+    delivery_capable: deliveryFilterEnabled || undefined,
+    page,
+    page_size: 20,
+    sort_by: sortBy === 'price-low' ? 'price_low' : sortBy === 'price-high' ? 'price_high' : sortBy,
+  }), [searchQuery, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, deliveryFilterEnabled, page, sortBy]);
+
+  // Fetch listings from edge function
+  const { data: searchResults, isLoading: isLoadingListings } = useQuery({
+    queryKey: ['search-listings', searchRequestParams],
+    queryFn: async (): Promise<SearchResponse> => {
+      const { data, error } = await supabase.functions.invoke('search-listings', {
+        body: searchRequestParams,
+      });
       
       if (error) throw error;
-      return data as ListingWithCoords[];
+      return data as SearchResponse;
     },
+    placeholderData: (previousData) => previousData, // Keep previous data while loading
   });
 
-  // Fetch host verification status for all listings using RPC (bypasses RLS)
-  const hostIds = useMemo(() => [...new Set(listings.map(l => l.host_id).filter(Boolean) as string[])], [listings]);
-  
-  const { data: hostProfiles = [] } = useQuery({
-    queryKey: ['host-profiles', hostIds],
-    queryFn: async () => {
-      if (hostIds.length === 0) return [];
-      const { data, error } = await supabase
-        .rpc('get_host_verification_status', { host_ids: hostIds });
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: hostIds.length > 0,
-  });
-
-  // Create a map of host_id -> identity_verified
-  const hostVerificationMap = useMemo(() => {
-    const map: Record<string, boolean> = {};
-    hostProfiles.forEach(profile => {
-      map[profile.id] = profile.identity_verified ?? false;
-    });
-    return map;
-  }, [hostProfiles]);
-
-  // Fetch unavailable dates for all listings (blocked dates + approved bookings)
-  const { data: unavailableDates = {} } = useQuery({
-    queryKey: ['search-unavailable-dates', listings.map(l => l.id)],
-    queryFn: async () => {
-      if (listings.length === 0) return {};
-      
-      const listingIds = listings.map(l => l.id);
-      
-      // Fetch blocked dates
-      const { data: blockedData } = await supabase
-        .from('listing_blocked_dates')
-        .select('listing_id, blocked_date')
-        .in('listing_id', listingIds);
-      
-      // Fetch approved bookings
-      const { data: bookingData } = await supabase
-        .from('booking_requests')
-        .select('listing_id, start_date, end_date')
-        .in('listing_id', listingIds)
-        .eq('status', 'approved');
-      
-      const result: UnavailableDates = {};
-      
-      // Initialize all listings
-      listingIds.forEach(id => {
-        result[id] = [];
-      });
-      
-      // Add blocked dates
-      blockedData?.forEach(bd => {
-        if (!result[bd.listing_id]) result[bd.listing_id] = [];
-        result[bd.listing_id].push(bd.blocked_date);
-      });
-      
-      // Add booked date ranges
-      bookingData?.forEach(booking => {
-        if (!result[booking.listing_id]) result[booking.listing_id] = [];
-        const dates = eachDayOfInterval({
-          start: parseISO(booking.start_date),
-          end: parseISO(booking.end_date),
-        });
-        dates.forEach(d => {
-          result[booking.listing_id].push(format(d, 'yyyy-MM-dd'));
-        });
-      });
-      
-      return result;
-    },
-    enabled: listings.length > 0,
-  });
-
-  // Set up Fuse.js for fuzzy search
-  const fuse = useMemo(() => {
-    return new Fuse(listings, {
-      keys: [
-        { name: 'title', weight: 0.4 },
-        { name: 'description', weight: 0.2 },
-        { name: 'address', weight: 0.2 },
-        { name: 'pickup_location_text', weight: 0.2 },
-      ],
-      threshold: 0.4,
-      includeScore: true,
-      ignoreLocation: true,
-    });
-  }, [listings]);
-
-  // Check if a listing is available for the selected date range
-  const isListingAvailableForDates = (listingId: string): boolean => {
-    if (!dateRange?.from || !dateRange?.to) return true;
-    
-    const unavailable = unavailableDates[listingId] || [];
-    const requestedDates = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
-    
-    return !requestedDates.some(date => 
-      unavailable.includes(format(date, 'yyyy-MM-dd'))
-    );
-  };
-
-  // Check if a listing is within the search radius
-  const isListingWithinRadius = (listing: ListingWithCoords): boolean => {
-    if (!locationCoords) return true;
-    
-    if (listing.latitude == null || listing.longitude == null) return true; // Include if no coords stored
-    
-    const distance = calculateDistance(
-      locationCoords[1], // lat
-      locationCoords[0], // lng
-      listing.latitude,
-      listing.longitude
-    );
-    
-    return distance <= searchRadius;
-  };
-
-  // Check if a listing can deliver to the user's location (for filtering)
-  const canListingDeliverToLocation = (listing: ListingWithCoords): boolean => {
-    if (!locationCoords) return true;
-    if (!deliveryFilterEnabled) return true;
-    
-    return checkListingDeliveryCapability(listing);
-  };
-
-  // Check delivery capability for badge display (always checks, not dependent on filter)
-  const checkListingDeliveryCapability = (listing: ListingWithCoords): boolean => {
-    if (!locationCoords) return false;
-    
-    // Listing must support delivery
-    if (listing.fulfillment_type !== 'delivery' && listing.fulfillment_type !== 'both') {
-      return false;
-    }
-    
-    // Listing must have delivery radius set
-    if (!listing.delivery_radius_miles) return false;
-    
-    // Listing must have coordinates
-    if (listing.latitude == null || listing.longitude == null) return false;
-    
-    // Calculate distance from listing to user's location
-    const distance = calculateDistance(
-      listing.latitude,
-      listing.longitude,
-      locationCoords[1], // user lat
-      locationCoords[0]  // user lng
-    );
-    
-    return distance <= listing.delivery_radius_miles;
-  };
-
-  // Get distance for display
-  const getListingDistance = (listing: ListingWithCoords): number | null => {
-    if (!locationCoords) return null;
-    
-    if (listing.latitude == null || listing.longitude == null) return null;
-    
-    return calculateDistance(
-      locationCoords[1],
-      locationCoords[0],
-      listing.latitude,
-      listing.longitude
-    );
-  };
-
-  // Apply all filters
-  const filteredListings = useMemo(() => {
-    let results: ListingWithCoords[] = [];
-    let scoreMap: Record<string, number> = {};
-
-    // Apply fuzzy search if query exists
-    if (searchQuery.trim()) {
-      const fuseResults = fuse.search(searchQuery);
-      results = fuseResults.map(result => result.item);
-      // Store scores for relevance sorting (lower score = better match)
-      fuseResults.forEach(result => {
-        scoreMap[result.item.id] = result.score ?? 1;
-      });
-    } else {
-      results = [...listings];
-    }
-
-    // Filter by mode
-    if (mode !== 'all') {
-      results = results.filter(listing => listing.mode === mode);
-    }
-
-    // Filter by category
-    if (category !== 'all') {
-      results = results.filter(listing => listing.category === category);
-    }
-
-    // Filter by location radius
-    if (locationCoords) {
-      results = results.filter(listing => isListingWithinRadius(listing));
-    }
-
-    // Filter by price range (only apply max if it's not Infinity)
-    results = results.filter(listing => {
-      const price = listing.mode === 'rent' 
-        ? (listing.price_daily || 0) 
-        : (listing.price_sale || 0);
-      const meetsMin = price >= priceRange[0];
-      const meetsMax = priceRange[1] === Infinity || price <= priceRange[1];
-      return meetsMin && meetsMax;
-    });
-
-    // Filter by date availability
-    if (dateRange?.from && dateRange?.to) {
-      results = results.filter(listing => isListingAvailableForDates(listing.id));
-    }
-
-    // Filter by amenities
-    if (selectedAmenities.length > 0) {
-      results = results.filter(listing => {
-        const listingAmenities = listing.amenities || [];
-        return selectedAmenities.every(amenity => listingAmenities.includes(amenity));
-      });
-    }
-
-    // Filter by delivery to user's location
-    if (deliveryFilterEnabled && locationCoords) {
-      results = results.filter(listing => canListingDeliverToLocation(listing));
-    }
-
-    // Filter by Instant Book
-    if (instantBookOnly) {
-      results = results.filter(listing => listing.mode === 'rent' && listing.instant_book === true);
-    }
-
-    // Filter by Verified Hosts
-    if (verifiedHostsOnly) {
-      results = results.filter(listing => hostVerificationMap[listing.host_id] === true);
-    }
-
-    // Apply sorting
-    if (sortBy === 'relevance' && searchQuery.trim()) {
-      // Sort by Fuse.js score (lower = better match)
-      results = results.sort((a, b) => {
-        const scoreA = scoreMap[a.id] ?? 1;
-        const scoreB = scoreMap[b.id] ?? 1;
-        return scoreA - scoreB;
-      });
-    } else if (sortBy === 'distance' && locationCoords) {
-      results = results.sort((a, b) => {
-        const distA = getListingDistance(a);
-        const distB = getListingDistance(b);
-        if (distA === null && distB === null) return 0;
-        if (distA === null) return 1;
-        if (distB === null) return -1;
-        return distA - distB;
-      });
-    } else if (sortBy === 'newest') {
-      results = results.sort((a, b) => 
-        new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime()
-      );
-    } else if (sortBy === 'price-low') {
-      results = results.sort((a, b) => {
-        const priceA = a.mode === 'rent' ? (a.price_daily || 0) : (a.price_sale || 0);
-        const priceB = b.mode === 'rent' ? (b.price_daily || 0) : (b.price_sale || 0);
-        return priceA - priceB;
-      });
-    } else if (sortBy === 'price-high') {
-      results = results.sort((a, b) => {
-        const priceA = a.mode === 'rent' ? (a.price_daily || 0) : (a.price_sale || 0);
-        const priceB = b.mode === 'rent' ? (b.price_daily || 0) : (b.price_sale || 0);
-        return priceB - priceA;
-      });
-    }
-
-    return results;
-  }, [listings, searchQuery, mode, category, locationCoords, searchRadius, priceRange, dateRange, selectedAmenities, deliveryFilterEnabled, instantBookOnly, verifiedHostsOnly, hostVerificationMap, fuse, unavailableDates, sortBy]);
+  const listings = searchResults?.listings ?? [];
+  const totalCount = searchResults?.total_count ?? 0;
+  const totalPages = searchResults?.total_pages ?? 0;
 
   // Update URL params
   const handleSearch = (value: string) => {
     setSearchQuery(value);
+    setPage(1); // Reset to page 1 on new search
     const params = new URLSearchParams(searchParams);
     if (value.trim()) {
       params.set('q', value);
@@ -430,40 +174,47 @@ const Search = () => {
         params.delete('sort');
       }
     }
+    params.delete('page');
     setSearchParams(params);
   };
 
   const handleModeChange = (value: string) => {
     const newMode = value as ListingMode | 'all';
     setMode(newMode);
+    setPage(1);
     const params = new URLSearchParams(searchParams);
     if (newMode !== 'all') {
       params.set('mode', newMode);
     } else {
       params.delete('mode');
     }
+    params.delete('page');
     setSearchParams(params);
   };
 
   const handleCategoryChange = (value: string) => {
     const newCategory = value as ListingCategory | 'all';
     setCategory(newCategory);
+    setPage(1);
     const params = new URLSearchParams(searchParams);
     if (newCategory !== 'all') {
       params.set('category', newCategory);
     } else {
       params.delete('category');
     }
+    params.delete('page');
     setSearchParams(params);
   };
 
   const handleLocationSelect = (location: { name: string; coordinates: [number, number] } | null) => {
+    setPage(1);
     if (location) {
       setLocationCoords(location.coordinates);
       const params = new URLSearchParams(searchParams);
       params.set('lat', location.coordinates[1].toString());
       params.set('lng', location.coordinates[0].toString());
       params.set('radius', searchRadius.toString());
+      params.delete('page');
       setSearchParams(params);
     } else {
       setLocationCoords(null);
@@ -471,21 +222,25 @@ const Search = () => {
       params.delete('lat');
       params.delete('lng');
       params.delete('radius');
+      params.delete('page');
       setSearchParams(params);
     }
   };
 
   const handleRadiusChange = (radius: number) => {
     setSearchRadius(radius);
+    setPage(1);
     if (locationCoords) {
       const params = new URLSearchParams(searchParams);
       params.set('radius', radius.toString());
+      params.delete('page');
       setSearchParams(params);
     }
   };
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
     setDateRange(range);
+    setPage(1);
     const params = new URLSearchParams(searchParams);
     if (range?.from && range?.to) {
       params.set('start', format(range.from, 'yyyy-MM-dd'));
@@ -494,6 +249,7 @@ const Search = () => {
       params.delete('start');
       params.delete('end');
     }
+    params.delete('page');
     setSearchParams(params);
   };
 
@@ -511,22 +267,26 @@ const Search = () => {
     setInstantBookOnly(false);
     setVerifiedHostsOnly(false);
     setSortBy('newest');
+    setPage(1);
     setSearchParams({});
   };
 
   const handleSortChange = (value: string) => {
     const newSort = value as 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance';
     setSortBy(newSort);
+    setPage(1);
     const params = new URLSearchParams(searchParams);
     if (newSort !== 'newest') {
       params.set('sort', newSort);
     } else {
       params.delete('sort');
     }
+    params.delete('page');
     setSearchParams(params);
   };
 
   const toggleAmenity = (amenityId: string) => {
+    setPage(1);
     setSelectedAmenities(prev =>
       prev.includes(amenityId)
         ? prev.filter(a => a !== amenityId)
@@ -536,24 +296,41 @@ const Search = () => {
 
   const handleInstantBookChange = (enabled: boolean) => {
     setInstantBookOnly(enabled);
+    setPage(1);
     const params = new URLSearchParams(searchParams);
     if (enabled) {
       params.set('instant', 'true');
     } else {
       params.delete('instant');
     }
+    params.delete('page');
     setSearchParams(params);
   };
 
   const handleVerifiedHostsChange = (enabled: boolean) => {
     setVerifiedHostsOnly(enabled);
+    setPage(1);
     const params = new URLSearchParams(searchParams);
     if (enabled) {
       params.set('verified', 'true');
     } else {
       params.delete('verified');
     }
+    params.delete('page');
     setSearchParams(params);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    const params = new URLSearchParams(searchParams);
+    if (newPage > 1) {
+      params.set('page', newPage.toString());
+    } else {
+      params.delete('page');
+    }
+    setSearchParams(params);
+    // Scroll to top of results
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const getAmenityLabel = (amenityId: string): string => {
@@ -585,7 +362,7 @@ const Search = () => {
 
   // Generate structured data for Google Shopping / Search indexing
   const itemListSchema = useMemo(() => {
-    const productItems: ProductListItem[] = filteredListings.map(listing => ({
+    const productItems: ProductListItem[] = listings.map(listing => ({
       id: listing.id,
       title: listing.title,
       description: listing.description,
@@ -604,7 +381,7 @@ const Search = () => {
       query: searchQuery || undefined,
       location: locationText || undefined,
     });
-  }, [filteredListings, mode, category, searchQuery, locationText]);
+  }, [listings, mode, category, searchQuery, locationText]);
 
   const breadcrumbSchema = useMemo(() => generateSearchBreadcrumbSchema({
     mode: mode as 'rent' | 'sale' | 'all',
@@ -636,8 +413,40 @@ const Search = () => {
       ? (mode === 'rent' ? 'rent' : 'buy') 
       : 'rent or buy';
     const locationLabel = locationText ? ` in ${locationText}` : '';
-    return `Browse ${filteredListings.length}+ ${categoryLabel} available to ${modeLabel}${locationLabel}. Verified listings with secure payments on Vendibook.`;
-  }, [category, mode, locationText, filteredListings.length]);
+    return `Browse ${totalCount}+ ${categoryLabel} available to ${modeLabel}${locationLabel}. Verified listings with secure payments on Vendibook.`;
+  }, [category, mode, locationText, totalCount]);
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages: (number | 'ellipsis')[] = [];
+    const maxVisible = 5;
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (page <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('ellipsis');
+        pages.push(totalPages);
+      } else if (page >= totalPages - 2) {
+        pages.push(1);
+        pages.push('ellipsis');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('ellipsis');
+        pages.push(page - 1);
+        pages.push(page);
+        pages.push(page + 1);
+        pages.push('ellipsis');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -731,10 +540,13 @@ const Search = () => {
                   'Loading...'
                 ) : (
                   <>
-                    <span className="font-semibold text-foreground">{filteredListings.length}</span>
-                    {' '}result{filteredListings.length !== 1 ? 's' : ''}
+                    <span className="font-semibold text-foreground">{totalCount}</span>
+                    {' '}result{totalCount !== 1 ? 's' : ''}
                     {searchQuery && (
                       <span className="hidden sm:inline"> for "<span className="text-foreground">{searchQuery}</span>"</span>
+                    )}
+                    {totalPages > 1 && (
+                      <span className="hidden sm:inline text-muted-foreground"> • Page {page} of {totalPages}</span>
                     )}
                   </>
                 )}
@@ -772,8 +584,8 @@ const Search = () => {
                 >
                   <option value="newest">Newest</option>
                   {searchQuery.trim() && <option value="relevance">Relevance</option>}
-                  <option value="price-low">Price: Low</option>
-                  <option value="price-high">Price: High</option>
+                  <option value="price_low">Price: Low</option>
+                  <option value="price_high">Price: High</option>
                   {locationCoords && <option value="distance">Distance</option>}
                 </select>
               </div>
@@ -903,7 +715,7 @@ const Search = () => {
                   <div className="lg:order-2 h-[300px] lg:h-auto lg:sticky lg:top-24 lg:self-start rounded-xl overflow-hidden border border-border shadow-lg z-10">
                     <div className="h-full lg:h-[calc(100vh-140px)]">
                     <SearchResultsMap
-                      listings={filteredListings}
+                      listings={listings}
                       mapToken={mapToken}
                       isLoading={isMapTokenLoading}
                       error={mapTokenError}
@@ -918,26 +730,23 @@ const Search = () => {
                   {/* List Side */}
                   <div className="lg:order-1">
                     <div className="space-y-4">
-                      {filteredListings.length > 0 ? (
+                      {listings.length > 0 ? (
                         <>
-                          {filteredListings.map((listing) => {
-                            const distance = getListingDistance(listing);
-                            const isHostVerified = hostVerificationMap[listing.host_id] ?? false;
-                            const canDeliverToUser = checkListingDeliveryCapability(listing);
+                          {listings.map((listing) => {
                             return (
                               <div key={listing.id} className="relative">
                                 <ListingCard 
                                   listing={listing} 
-                                  hostVerified={isHostVerified}
+                                  hostVerified={listing.host_verified ?? false}
                                   showQuickBook
                                   onQuickBook={handleQuickBook}
-                                  canDeliverToUser={canDeliverToUser}
+                                  canDeliverToUser={listing.can_deliver ?? false}
                                   compact
                                 />
-                                {distance !== null && (
+                                {listing.distance_miles !== null && listing.distance_miles !== undefined && (
                                   <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 z-10">
                                     <Navigation className="h-3 w-3" />
-                                    {distance < 1 ? '< 1' : Math.round(distance)} mi
+                                    {listing.distance_miles < 1 ? '< 1' : Math.round(listing.distance_miles)} mi
                                   </div>
                                 )}
                               </div>
@@ -952,6 +761,43 @@ const Search = () => {
                         />
                       )}
                     </div>
+                    
+                    {/* Pagination for split view */}
+                    {totalPages > 1 && (
+                      <div className="mt-8">
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious 
+                                onClick={() => page > 1 && handlePageChange(page - 1)}
+                                className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                              />
+                            </PaginationItem>
+                            {getPageNumbers().map((pageNum, idx) => (
+                              <PaginationItem key={idx}>
+                                {pageNum === 'ellipsis' ? (
+                                  <span className="px-3 py-2">...</span>
+                                ) : (
+                                  <PaginationLink
+                                    onClick={() => handlePageChange(pageNum)}
+                                    isActive={page === pageNum}
+                                    className="cursor-pointer"
+                                  >
+                                    {pageNum}
+                                  </PaginationLink>
+                                )}
+                              </PaginationItem>
+                            ))}
+                            <PaginationItem>
+                              <PaginationNext 
+                                onClick={() => page < totalPages && handlePageChange(page + 1)}
+                                className={page >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -960,7 +806,7 @@ const Search = () => {
               {viewMode === 'map' && (
                 <div className="h-[600px] rounded-xl overflow-hidden border border-border">
                   <SearchResultsMap
-                    listings={filteredListings}
+                    listings={listings}
                     mapToken={mapToken}
                     isLoading={isMapTokenLoading}
                     error={mapTokenError}
@@ -976,38 +822,33 @@ const Search = () => {
               {/* Listings Grid */}
               {viewMode === 'grid' && (
                 <>
-                  {filteredListings.length > 0 ? (
+                  {listings.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredListings.map((listing, index) => {
-                        const distance = getListingDistance(listing);
-                        const isHostVerified = hostVerificationMap[listing.host_id] ?? false;
-                        const canDeliverToUser = checkListingDeliveryCapability(listing);
-                        return (
-                          <>
-                            <div key={listing.id} className="relative">
-                              <ListingCard 
-                                listing={listing} 
-                                hostVerified={isHostVerified}
-                                showQuickBook
-                                onQuickBook={handleQuickBook}
-                                canDeliverToUser={canDeliverToUser}
-                              />
-                              {distance !== null && (
-                                <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 z-10">
-                                  <Navigation className="h-3 w-3" />
-                                  {distance < 1 ? '< 1' : Math.round(distance)} mi
-                                </div>
-                              )}
-                            </div>
-                            {/* Get alerts after 8th listing */}
-                            {index === 7 && filteredListings.length > 8 && (
-                              <div key="get-alerts" className="col-span-1 sm:col-span-2 lg:col-span-3">
-                                <GetAlertsCard category={category !== 'all' ? category : undefined} radius={searchRadius} />
+                      {listings.map((listing, index) => (
+                        <>
+                          <div key={listing.id} className="relative">
+                            <ListingCard 
+                              listing={listing} 
+                              hostVerified={listing.host_verified ?? false}
+                              showQuickBook
+                              onQuickBook={handleQuickBook}
+                              canDeliverToUser={listing.can_deliver ?? false}
+                            />
+                            {listing.distance_miles !== null && listing.distance_miles !== undefined && (
+                              <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 z-10">
+                                <Navigation className="h-3 w-3" />
+                                {listing.distance_miles < 1 ? '< 1' : Math.round(listing.distance_miles)} mi
                               </div>
                             )}
-                          </>
-                        );
-                      })}
+                          </div>
+                          {/* Get alerts after 8th listing */}
+                          {index === 7 && listings.length > 8 && (
+                            <div key="get-alerts" className="col-span-1 sm:col-span-2 lg:col-span-3">
+                              <GetAlertsCard category={category !== 'all' ? category : undefined} radius={searchRadius} />
+                            </div>
+                          )}
+                        </>
+                      ))}
                     </div>
                   ) : (
                     <NoResultsAlert 
@@ -1018,9 +859,46 @@ const Search = () => {
                   )}
                   
                   {/* Get alerts at bottom if less than 8 results */}
-                  {filteredListings.length > 0 && filteredListings.length <= 8 && (
+                  {listings.length > 0 && listings.length <= 8 && (
                     <div className="mt-6">
                       <GetAlertsCard category={category !== 'all' ? category : undefined} radius={searchRadius} />
+                    </div>
+                  )}
+
+                  {/* Pagination for grid view */}
+                  {totalPages > 1 && (
+                    <div className="mt-8">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious 
+                              onClick={() => page > 1 && handlePageChange(page - 1)}
+                              className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                            />
+                          </PaginationItem>
+                          {getPageNumbers().map((pageNum, idx) => (
+                            <PaginationItem key={idx}>
+                              {pageNum === 'ellipsis' ? (
+                                <span className="px-3 py-2">...</span>
+                              ) : (
+                                <PaginationLink
+                                  onClick={() => handlePageChange(pageNum)}
+                                  isActive={page === pageNum}
+                                  className="cursor-pointer"
+                                >
+                                  {pageNum}
+                                </PaginationLink>
+                              )}
+                            </PaginationItem>
+                          ))}
+                          <PaginationItem>
+                            <PaginationNext 
+                              onClick={() => page < totalPages && handlePageChange(page + 1)}
+                              className={page >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
                     </div>
                   )}
                 </>
@@ -1317,17 +1195,27 @@ const FilterContent = ({
             <div className="space-y-4">
               {availableAmenities.map((group) => (
                 <div key={group.label} className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     {group.label}
                   </p>
-                  <div className="space-y-1">
-                    {group.items.map((item) => (
-                      <label key={item.id} className="flex items-center gap-2 cursor-pointer py-1">
-                        <Checkbox
-                          checked={selectedAmenities.includes(item.id)}
-                          onCheckedChange={() => onAmenityToggle(item.id)}
+                  <div className="flex flex-wrap gap-2">
+                    {group.items.map((amenity) => (
+                      <label
+                        key={amenity.id}
+                        className={cn(
+                          "flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-full border text-xs transition-colors",
+                          selectedAmenities.includes(amenity.id)
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "border-border hover:bg-muted"
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedAmenities.includes(amenity.id)}
+                          onChange={() => onAmenityToggle(amenity.id)}
+                          className="sr-only"
                         />
-                        <span className="text-sm">{item.label}</span>
+                        <span>{amenity.label}</span>
                       </label>
                     ))}
                   </div>
@@ -1335,63 +1223,8 @@ const FilterContent = ({
               ))}
             </div>
           </ScrollArea>
-          {selectedAmenities.length > 0 && (
-            <p className="text-xs text-muted-foreground">
-              {selectedAmenities.length} feature{selectedAmenities.length !== 1 ? 's' : ''} selected
-            </p>
-          )}
         </div>
       )}
-
-      {category === 'all' && (
-        <div className="p-3 bg-muted/50 rounded-lg">
-          <p className="text-xs text-muted-foreground">
-            Select a category above to filter by specific features and amenities.
-          </p>
-        </div>
-      )}
-
-      {/* Price Range Filter */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium flex items-center gap-2">
-          <DollarSign className="h-4 w-4" />
-          Price Range
-        </Label>
-        <div className="flex items-center gap-2 max-w-xs">
-          <div className="relative flex-1">
-            <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="number"
-              placeholder="Min"
-              value={priceRange[0] === 0 ? '' : priceRange[0]}
-              onChange={(e) => {
-                const value = e.target.value === '' ? 0 : parseInt(e.target.value);
-                onPriceRangeChange([value, priceRange[1]]);
-              }}
-              className="pl-8 h-9"
-              min={0}
-            />
-          </div>
-          <span className="text-muted-foreground text-sm">to</span>
-          <div className="relative flex-1">
-            <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="number"
-              placeholder="No max"
-              value={priceRange[1] === Infinity ? '' : priceRange[1]}
-              onChange={(e) => {
-                const value = e.target.value === '' ? Infinity : parseInt(e.target.value);
-                onPriceRangeChange([priceRange[0], value]);
-              }}
-              className="pl-8 h-9"
-              min={0}
-            />
-          </div>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          {mode === 'rent' ? 'Daily rental price' : mode === 'sale' ? 'Sale price' : 'Price per day or sale price'}
-        </p>
-      </div>
     </div>
   );
 };
