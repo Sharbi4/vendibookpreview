@@ -9,6 +9,7 @@ import BuyerSalesSection from './BuyerSalesSection';
 import { BuyerOffersSection } from './BuyerOffersSection';
 import BecomeHostCard from './BecomeHostCard';
 import SwitchToHostCard from './SwitchToHostCard';
+import { DiscoveryHeroCard, DiscoveryGrid } from './DiscoveryGrid';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -20,6 +21,18 @@ const ShopperDashboard = () => {
   const pendingBookings = bookings.filter(b => b.status === 'pending');
   const approvedBookings = bookings.filter(b => b.status === 'approved');
   const pastBookings = bookings.filter(b => ['declined', 'cancelled', 'completed'].includes(b.status));
+
+  // Zero State: Discovery-First Pattern
+  // Show discovery grid when user has no activity at all
+  if (!isLoading && bookings.length === 0) {
+    return (
+      <div className="space-y-8">
+        <DiscoveryHeroCard />
+        <DiscoveryGrid />
+        {!isHost && <BecomeHostCard />}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

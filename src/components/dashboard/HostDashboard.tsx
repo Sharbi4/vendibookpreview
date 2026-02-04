@@ -14,6 +14,8 @@ import { EnhancedAnalytics } from './EnhancedAnalytics';
 import { RevenueAnalyticsCard } from './RevenueAnalyticsCard';
 import { GetBookedFasterCard } from './GetBookedFasterCard';
 import { HostOffersSection } from './HostOffersSection';
+import HostOnboardingWizard from './HostOnboardingWizard';
+import ActionRequiredBanner from './ActionRequiredBanner';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
@@ -69,6 +71,15 @@ const HostDashboard = () => {
     publishListing(id);
   };
 
+  // Zero State: Onboarding Wizard Pattern
+  // Show two-path selection when user has no listings at all
+  if (!isLoading && listings.length === 0) {
+    return <HostOnboardingWizard />;
+  }
+
+  // Check if there are actions requiring attention
+  const hasActionRequired = bookingStats.pending > 0 || pendingOffers.length > 0 || draftListings.length > 0;
+
   return (
     <div className="space-y-6">
       {/* Dynamic Header - Context-aware branding */}
@@ -87,6 +98,15 @@ const HostDashboard = () => {
           </Link>
         </Button>
       </div>
+
+      {/* Action Required Banner - Priority over other content */}
+      {hasActionRequired && (
+        <ActionRequiredBanner 
+          pendingRequests={bookingStats.pending}
+          pendingOffers={pendingOffers.length}
+          draftListings={draftListings.length}
+        />
+      )}
 
       {/* A) Next Step Action Card - Single priority action */}
       <NextStepCard 

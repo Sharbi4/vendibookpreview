@@ -68,26 +68,20 @@ const Dashboard = () => {
       <Header />
       
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="py-12 md:py-16 bg-muted/30">
+        {/* Hero Section - Clean Apple-style */}
+        <section className="py-8 md:py-12 bg-muted/30">
           <div className="container max-w-5xl">
             <div className="text-center mb-8">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-                <Sparkles className="h-4 w-4" />
-                {currentMode === 'host' ? 'Hosting Dashboard' : 'Your Dashboard'}
-              </div>
-              
-              <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-4 tracking-tight">
-                {profile?.full_name ? `Welcome back, ${profile.full_name.split(' ')[0]} 👋` : 'Dashboard'}
+              <h1 className="text-2xl md:text-4xl font-bold text-foreground mb-2 tracking-tight">
+                {currentMode === 'host' ? 'Manage Listings' : 'My Trips & Orders'}
               </h1>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              <p className="text-muted-foreground max-w-lg mx-auto">
                 {currentMode === 'host' 
-                  ? 'Manage your listings, reservations, and earnings.' 
-                  : 'Manage listings, bookings, and payouts in one place.'}
+                  ? 'Reservations, offers, and earnings' 
+                  : 'Bookings, purchases, and favorites'}
               </p>
 
-              {/* Mode Switch - Only show for hosts */}
+              {/* Mode Switch - Turo-style toggle */}
               {isHost && (
                 <div className="flex items-center justify-center gap-3 mt-6 p-3 bg-card border border-border rounded-2xl shadow-sm max-w-xs mx-auto">
                   <Label 
