@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import HostDashboard from '@/components/dashboard/HostDashboard';
 import ShopperDashboard from '@/components/dashboard/ShopperDashboard';
 import VerificationProgress from '@/components/verification/VerificationProgress';
@@ -15,7 +16,6 @@ import {
   User,
   Shield,
   ShieldCheck,
-  Home,
   ShoppingBag,
   Heart,
   Sparkles,
@@ -28,9 +28,21 @@ import {
 const Dashboard = () => {
   const { user, profile, roles, isLoading, isVerified, hasRole } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Track page views with Google Analytics
   usePageTracking();
+
+  // URL-based mode detection - default to shopper
+  const currentMode = searchParams.get('view') === 'host' ? 'host' : 'shopper';
+  
+  // Check if user is a host
+  const isHost = hasRole('host');
+
+  // Handle mode toggle
+  const toggleMode = (checked: boolean) => {
+    setSearchParams({ view: checked ? 'host' : 'shopper' });
+  };
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -51,9 +63,6 @@ const Dashboard = () => {
 
   if (!user) return null;
 
-  const isHost = hasRole('host');
-  const isShopper = hasRole('shopper');
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -66,15 +75,45 @@ const Dashboard = () => {
               {/* Badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
                 <Sparkles className="h-4 w-4" />
-                Your Dashboard
+                {currentMode === 'host' ? 'Hosting Dashboard' : 'Your Dashboard'}
               </div>
               
               <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-4 tracking-tight">
                 {profile?.full_name ? `Welcome back, ${profile.full_name.split(' ')[0]} 👋` : 'Dashboard'}
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                Manage listings, bookings, and payouts in one place.
+                {currentMode === 'host' 
+                  ? 'Manage your listings, reservations, and earnings.' 
+                  : 'Manage listings, bookings, and payouts in one place.'}
               </p>
+
+              {/* Mode Switch - Only show for hosts */}
+              {isHost && (
+                <div className="flex items-center justify-center gap-3 mt-6 p-3 bg-card border border-border rounded-2xl shadow-sm max-w-xs mx-auto">
+                  <Label 
+                    htmlFor="mode-switch" 
+                    className={`text-sm font-medium cursor-pointer transition-colors ${
+                      currentMode === 'shopper' ? 'text-foreground' : 'text-muted-foreground'
+                    }`}
+                  >
+                    <ShoppingBag className="h-4 w-4 inline mr-1.5" />
+                    Buying
+                  </Label>
+                  <Switch 
+                    id="mode-switch"
+                    checked={currentMode === 'host'} 
+                    onCheckedChange={toggleMode}
+                  />
+                  <Label 
+                    htmlFor="mode-switch" 
+                    className={`text-sm font-medium cursor-pointer transition-colors ${
+                      currentMode === 'host' ? 'text-foreground' : 'text-muted-foreground'
+                    }`}
+                  >
+                    Hosting
+                  </Label>
+                </div>
+              )}
             </div>
 
             {/* Quick Action Cards - Mobile optimized: 3 cols on mobile, 5 on tablet+ */}
@@ -152,41 +191,8 @@ const Dashboard = () => {
               </Card>
             </div>
 
-            {/* Dashboard Content - Tabs for dual-role users */}
-            {isHost && isShopper ? (
-              <Tabs defaultValue="host" className="w-full">
-                {/* Enhanced Tab List */}
-                <TabsList className="grid w-full max-w-md grid-cols-2 mb-8 p-1.5 h-auto bg-card border border-border rounded-2xl shadow-sm mx-auto">
-                  <TabsTrigger 
-                    value="host" 
-                    className="flex items-center justify-center gap-2 py-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200"
-                  >
-                    <Home className="h-5 w-5" />
-                    <span className="font-medium">As Host</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="renter" 
-                    className="flex items-center justify-center gap-2 py-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200"
-                  >
-                    <ShoppingBag className="h-5 w-5" />
-                    <span className="font-medium">As Renter</span>
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="host" className="mt-0">
-                  <HostDashboard />
-                </TabsContent>
-                
-                <TabsContent value="renter" className="mt-0">
-                  <ShopperDashboard />
-                </TabsContent>
-              </Tabs>
-            ) : (
-              <>
-                {isHost && <HostDashboard />}
-                {!isHost && <ShopperDashboard />}
-              </>
-            )}
+            {/* Dashboard Content - URL-based mode switching */}
+            {currentMode === 'host' ? <HostDashboard /> : <ShopperDashboard />}
 
             {/* Account Info Card */}
             <div className="mt-8">
