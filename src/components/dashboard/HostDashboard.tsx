@@ -96,7 +96,7 @@ const HostDashboard = () => {
               My Storefront
             </Link>
           </Button>
-          <Button variant="dark-shine" size="sm" asChild className="h-9 rounded-xl">
+          <Button id="add-asset-button" variant="dark-shine" size="sm" asChild className="h-9 rounded-xl">
             <Link to="/list">
               <Plus className="h-4 w-4 mr-1.5" />
               {userType === 'seller' ? 'Sell Item' : 'Add Asset'}

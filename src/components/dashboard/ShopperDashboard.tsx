@@ -8,10 +8,13 @@ import ShopperBookingCard from './ShopperBookingCard';
 import BuyerSalesSection from './BuyerSalesSection';
 import { BuyerOffersSection } from './BuyerOffersSection';
 import { DiscoveryHeroCard, DiscoveryGrid } from './DiscoveryGrid';
+import BecomeHostCard from './BecomeHostCard';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
-
+import { useAuth } from '@/contexts/AuthContext';
 const ShopperDashboard = () => {
   const { bookings, isLoading, stats, cancelBooking, refetch } = useShopperBookings();
+  const { hasRole } = useAuth();
+  const isHost = hasRole('host');
 
   const pendingBookings = bookings.filter(b => b.status === 'pending');
   const approvedBookings = bookings.filter(b => b.status === 'approved');
@@ -22,8 +25,15 @@ const ShopperDashboard = () => {
   if (!isLoading && bookings.length === 0) {
     return (
       <div className="space-y-8">
-        <DiscoveryHeroCard />
+        <div id="discovery-hero">
+          <DiscoveryHeroCard />
+        </div>
         <DiscoveryGrid />
+        {!isHost && (
+          <div id="become-host-card">
+            <BecomeHostCard />
+          </div>
+        )}
       </div>
     );
   }
