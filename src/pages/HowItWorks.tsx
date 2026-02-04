@@ -255,7 +255,7 @@ const HowItWorks = () => {
                   }`}>
                     <PlusCircle className={`h-6 w-6 ${selectedRole === 'seller' ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
                   </div>
-                  <h2 className="text-xl font-bold text-foreground mb-2">Sell or List</h2>
+                  <h2 className="text-xl font-bold text-foreground mb-2">Sell or Host</h2>
                   <p className="text-sm text-muted-foreground">
                     Sell your assets, rent out equipment, or list your space for vendors.
                   </p>
