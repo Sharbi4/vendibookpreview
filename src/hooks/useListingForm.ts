@@ -13,6 +13,14 @@ const initialFormData: ListingFormData = {
   is_static_location: false,
   pickup_location_text: '',
   address: '',
+  // Structured address fields (Airbnb-style)
+  country: 'United States - US',
+  street_address: '',
+  apt_suite: '',
+  city: '',
+  state: '',
+  zip_code: '',
+  show_precise_location: false,
   delivery_fee: '',
   delivery_radius_miles: '',
   pickup_instructions: '',
@@ -151,10 +159,16 @@ export const useListingForm = () => {
         }
         return formData.price_daily.trim().length > 0 && parseFloat(formData.price_daily) > 0;
       case 4:
-        // Location required
+        // Location required - validate structured address fields
         const isStatic = isStaticLocation(formData.category) || formData.is_static_location;
         if (isStatic) {
-          return formData.address.trim().length > 0 && formData.access_instructions.trim().length > 0;
+          // Validate structured address: street, city, state, zip are required
+          const hasValidAddress = 
+            formData.street_address.trim().length > 0 &&
+            formData.city.trim().length > 0 &&
+            formData.state.trim().length > 0 &&
+            formData.zip_code.trim().length > 0;
+          return hasValidAddress && formData.access_instructions.trim().length > 0;
         }
         return !!formData.fulfillment_type && formData.pickup_location_text.trim().length > 0;
       case 5:
