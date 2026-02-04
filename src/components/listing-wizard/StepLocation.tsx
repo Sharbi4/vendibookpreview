@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, Truck, Package, Info, Building2 } from 'lucide-react';
+import { MapPin, Truck, Package, Info, Building2, ChevronDown, Home } from 'lucide-react';
 import { ListingFormData, FulfillmentType } from '@/types/listing';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { LocationSearchInput } from '@/components/search/LocationSearchInput';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface StepLocationProps {
   formData: ListingFormData;
@@ -23,6 +30,67 @@ const fulfillmentOptions: { value: FulfillmentType; label: string; icon: React.R
   { value: 'both', label: 'Pickup + Delivery', icon: <Package className="w-5 h-5" />, description: 'Offer both options' },
 ];
 
+const US_STATES = [
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+];
+
+// Airbnb-style floating label input
+const FloatingLabelInput: React.FC<{
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+}> = ({ label, value, onChange, placeholder, className }) => {
+  return (
+    <div className={cn("relative border border-border rounded-lg focus-within:border-foreground focus-within:ring-1 focus-within:ring-foreground transition-all", className)}>
+      <label className="absolute left-3 top-2 text-xs text-muted-foreground font-medium">
+        {label}
+      </label>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full pt-6 pb-2 px-3 bg-transparent text-foreground text-base outline-none"
+      />
+    </div>
+  );
+};
+
+// Airbnb-style floating label select
+const FloatingLabelSelect: React.FC<{
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  className?: string;
+}> = ({ label, value, onChange, options, className }) => {
+  return (
+    <div className={cn("relative border border-border rounded-lg focus-within:border-foreground focus-within:ring-1 focus-within:ring-foreground transition-all", className)}>
+      <label className="absolute left-3 top-2 text-xs text-muted-foreground font-medium z-10">
+        {label}
+      </label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className="w-full pt-6 pb-2 px-3 h-auto border-0 bg-transparent text-foreground text-base outline-none focus:ring-0 shadow-none">
+          <SelectValue placeholder="Select..." />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};
+
 export const StepLocation: React.FC<StepLocationProps> = ({
   formData,
   updateField,
@@ -33,30 +101,114 @@ export const StepLocation: React.FC<StepLocationProps> = ({
 }) => {
   // Track selected coordinates for location inputs (not persisted, just for UI validation)
   const [pickupCoordinates, setPickupCoordinates] = useState<[number, number] | null>(null);
+
+  // Static location - Airbnb-style structured address form
   if (isStaticLocation) {
     return (
-      <div className="space-y-6">
-        <div className="p-4 bg-card border border-border rounded-xl flex items-start gap-3">
-          <Info className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
-          <p className="text-sm text-muted-foreground">
-            This is a fixed on-site location. Customers will come to this address.
+      <div className="space-y-8 max-w-xl mx-auto">
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-semibold text-foreground">Confirm your address</h2>
+          <p className="text-muted-foreground">
+            Your address is only shared with guests after they've made a reservation.
           </p>
         </div>
 
-        {/* Full Address */}
-        <div className="space-y-2">
-          <Label htmlFor="address" className="text-base font-medium">Full Address *</Label>
-          <Textarea
-            id="address"
-            value={formData.address}
-            onChange={(e) => updateField('address', e.target.value)}
-            placeholder="123 Main Street, Suite 100, City, State ZIP"
-            rows={2}
+        {/* Structured Address Form - Airbnb Style */}
+        <div className="space-y-0">
+          {/* Country/Region */}
+          <FloatingLabelSelect
+            label="Country / region"
+            value={formData.country || 'United States - US'}
+            onChange={(value) => updateField('country', value)}
+            options={[
+              { value: 'United States - US', label: 'United States - US' },
+              { value: 'Canada - CA', label: 'Canada - CA' },
+              { value: 'Mexico - MX', label: 'Mexico - MX' },
+            ]}
+            className="rounded-b-none"
+          />
+
+          {/* Street Address */}
+          <FloatingLabelInput
+            label="Street address"
+            value={formData.street_address}
+            onChange={(value) => updateField('street_address', value)}
+            placeholder="123 Main Street"
+            className="rounded-none border-t-0"
+          />
+
+          {/* Apt, suite, unit */}
+          <FloatingLabelInput
+            label="Apt, suite, unit (if applicable)"
+            value={formData.apt_suite}
+            onChange={(value) => updateField('apt_suite', value)}
+            placeholder=""
+            className="rounded-none border-t-0"
+          />
+
+          {/* City */}
+          <FloatingLabelInput
+            label="City / town"
+            value={formData.city}
+            onChange={(value) => updateField('city', value)}
+            placeholder="Austin"
+            className="rounded-none border-t-0"
+          />
+
+          {/* State */}
+          <FloatingLabelSelect
+            label="State / territory"
+            value={formData.state}
+            onChange={(value) => updateField('state', value)}
+            options={US_STATES.map(s => ({ value: s, label: s }))}
+            className="rounded-none border-t-0"
+          />
+
+          {/* ZIP Code */}
+          <FloatingLabelInput
+            label="ZIP code"
+            value={formData.zip_code}
+            onChange={(value) => updateField('zip_code', value)}
+            placeholder="78701"
+            className="rounded-t-none border-t-0"
           />
         </div>
 
+        {/* Show Precise Location Toggle */}
+        <div className="pt-4 border-t border-border">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <h4 className="font-medium text-foreground">Show your listing's precise location</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Make it clear to guests where your place is located. We'll only share your address after
+                they've made a reservation.{' '}
+                <button className="underline font-medium text-foreground">Learn more</button>
+              </p>
+            </div>
+            <Switch
+              checked={formData.show_precise_location}
+              onCheckedChange={(checked) => updateField('show_precise_location', checked)}
+            />
+          </div>
+
+          {/* Map Preview Placeholder */}
+          <div className="mt-4 rounded-xl overflow-hidden border border-border bg-muted/30 h-48 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-2">
+                <Home className="w-6 h-6 text-primary" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {formData.show_precise_location 
+                  ? "We'll show your exact location."
+                  : "We'll share your approximate location."}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Access Instructions */}
-        <div className="space-y-2">
+        <div className="space-y-2 pt-4 border-t border-border">
           <Label htmlFor="access_instructions" className="text-base font-medium">Access Instructions *</Label>
           <Textarea
             id="access_instructions"
@@ -64,6 +216,7 @@ export const StepLocation: React.FC<StepLocationProps> = ({
             onChange={(e) => updateField('access_instructions', e.target.value)}
             placeholder="How do guests access the space? Any gate codes, parking instructions, or check-in procedures?"
             rows={3}
+            className="resize-none"
           />
         </div>
 
@@ -87,6 +240,7 @@ export const StepLocation: React.FC<StepLocationProps> = ({
             onChange={(e) => updateField('location_notes', e.target.value)}
             placeholder="Utilities included, parking availability, nearby amenities..."
             rows={3}
+            className="resize-none"
           />
         </div>
       </div>
@@ -130,16 +284,76 @@ export const StepLocation: React.FC<StepLocationProps> = ({
             </p>
           </div>
 
-          {/* Full Address */}
-          <div className="space-y-2">
-            <Label htmlFor="address" className="text-base font-medium">Full Address *</Label>
-            <Textarea
-              id="address"
-              value={formData.address}
-              onChange={(e) => updateField('address', e.target.value)}
-              placeholder="123 Main Street, Suite 100, City, State ZIP"
-              rows={2}
+          {/* Airbnb-style Structured Address Form */}
+          <div className="max-w-xl space-y-0">
+            <FloatingLabelSelect
+              label="Country / region"
+              value={formData.country || 'United States - US'}
+              onChange={(value) => updateField('country', value)}
+              options={[
+                { value: 'United States - US', label: 'United States - US' },
+                { value: 'Canada - CA', label: 'Canada - CA' },
+                { value: 'Mexico - MX', label: 'Mexico - MX' },
+              ]}
+              className="rounded-b-none"
             />
+
+            <FloatingLabelInput
+              label="Street address"
+              value={formData.street_address}
+              onChange={(value) => updateField('street_address', value)}
+              placeholder="123 Main Street"
+              className="rounded-none border-t-0"
+            />
+
+            <FloatingLabelInput
+              label="Apt, suite, unit (if applicable)"
+              value={formData.apt_suite}
+              onChange={(value) => updateField('apt_suite', value)}
+              placeholder=""
+              className="rounded-none border-t-0"
+            />
+
+            <FloatingLabelInput
+              label="City / town"
+              value={formData.city}
+              onChange={(value) => updateField('city', value)}
+              placeholder="Austin"
+              className="rounded-none border-t-0"
+            />
+
+            <FloatingLabelSelect
+              label="State / territory"
+              value={formData.state}
+              onChange={(value) => updateField('state', value)}
+              options={US_STATES.map(s => ({ value: s, label: s }))}
+              className="rounded-none border-t-0"
+            />
+
+            <FloatingLabelInput
+              label="ZIP code"
+              value={formData.zip_code}
+              onChange={(value) => updateField('zip_code', value)}
+              placeholder="78701"
+              className="rounded-t-none border-t-0"
+            />
+          </div>
+
+          {/* Show Precise Location Toggle */}
+          <div className="pt-4 border-t border-border max-w-xl">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <h4 className="font-medium text-foreground">Show your listing's precise location</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Make it clear to guests where your place is located. We'll only share your address after
+                  they've made a reservation.
+                </p>
+              </div>
+              <Switch
+                checked={formData.show_precise_location}
+                onCheckedChange={(checked) => updateField('show_precise_location', checked)}
+              />
+            </div>
           </div>
 
           {/* Access Instructions */}
@@ -151,6 +365,7 @@ export const StepLocation: React.FC<StepLocationProps> = ({
               onChange={(e) => updateField('access_instructions', e.target.value)}
               placeholder="How do guests access the asset? Any gate codes, parking instructions, or check-in procedures?"
               rows={3}
+              className="resize-none"
             />
           </div>
 
@@ -174,6 +389,7 @@ export const StepLocation: React.FC<StepLocationProps> = ({
               onChange={(e) => updateField('location_notes', e.target.value)}
               placeholder="Utilities included, parking availability, nearby amenities..."
               rows={3}
+              className="resize-none"
             />
           </div>
         </div>

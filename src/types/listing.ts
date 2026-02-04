@@ -517,7 +517,16 @@ export interface ListingFormData {
   fulfillment_type: FulfillmentType | null;
   is_static_location: boolean;
   pickup_location_text: string;
+  // Legacy single address field (deprecated, kept for backwards compatibility)
   address: string;
+  // Structured address fields (Airbnb-style)
+  country: string;
+  street_address: string;
+  apt_suite: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  show_precise_location: boolean;
   delivery_fee: string;
   delivery_radius_miles: string;
   pickup_instructions: string;
