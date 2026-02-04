@@ -258,47 +258,109 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
         </div>
       )}
 
-      {/* Item Dimensions - Only show for sale listings with mobile assets */}
+      {/* Physical Specifications - Consolidated "Spec Sheet" */}
       {formData.mode === 'sale' && (formData.category === 'food_truck' || formData.category === 'food_trailer') && (
-        <div className="space-y-4 p-4 rounded-xl border border-border bg-card">
+        <div className="bg-muted/30 border border-border rounded-xl p-5 space-y-4">
           <div className="flex items-center gap-2">
-            <Package className="h-5 w-5 text-primary" />
-            <Label className="text-base font-medium">Item Dimensions</Label>
-            <InfoTooltip content="Provide accurate dimensions for freight cost estimates. This helps buyers understand shipping costs." />
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg">
+              <Ruler className="h-4 w-4" />
+            </div>
+            <div>
+              <Label className="text-base font-semibold">Physical Specifications</Label>
+              <p className="text-xs text-muted-foreground">Required for shipping estimates</p>
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground">
-            These dimensions are used to calculate accurate freight estimates for buyers.
-          </p>
           
-          <div className="grid grid-cols-2 gap-4">
-            {/* Weight */}
-            <div className="space-y-2">
-              <Label htmlFor="weight_lbs" className="flex items-center gap-1.5 text-sm">
-                <Scale className="h-3.5 w-3.5" />
-                Weight (lbs)
+          {/* 4-Column Dimensions Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="length_inches" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Length
               </Label>
-              <Input
-                id="weight_lbs"
-                type="number"
-                min="0"
-                step="1"
-                value={formData.weight_lbs}
-                onChange={(e) => updateField('weight_lbs', e.target.value)}
-                placeholder="e.g., 5000"
-              />
+              <div className="relative">
+                <Input
+                  id="length_inches"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={formData.length_inches}
+                  onChange={(e) => updateField('length_inches', e.target.value)}
+                  placeholder="0"
+                  className="pr-8 bg-background"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">in</span>
+              </div>
             </div>
 
-            {/* Freight Category */}
-            <div className="space-y-2">
-              <Label htmlFor="freight_category" className="flex items-center gap-1.5 text-sm">
-                <Package className="h-3.5 w-3.5" />
+            <div className="space-y-1.5">
+              <Label htmlFor="width_inches" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Width
+              </Label>
+              <div className="relative">
+                <Input
+                  id="width_inches"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={formData.width_inches}
+                  onChange={(e) => updateField('width_inches', e.target.value)}
+                  placeholder="0"
+                  className="pr-8 bg-background"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">in</span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="height_inches" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Height
+              </Label>
+              <div className="relative">
+                <Input
+                  id="height_inches"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={formData.height_inches}
+                  onChange={(e) => updateField('height_inches', e.target.value)}
+                  placeholder="0"
+                  className="pr-8 bg-background"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">in</span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="weight_lbs" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Weight
+              </Label>
+              <div className="relative">
+                <Input
+                  id="weight_lbs"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={formData.weight_lbs}
+                  onChange={(e) => updateField('weight_lbs', e.target.value)}
+                  placeholder="0"
+                  className="pr-8 bg-background"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">lbs</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Freight Type Dropdown */}
+          <div className="pt-2 border-t border-border/50">
+            <div className="flex items-center gap-4">
+              <Label htmlFor="freight_category" className="text-sm font-medium whitespace-nowrap">
                 Freight Type
               </Label>
               <Select
                 value={formData.freight_category || ''}
                 onValueChange={(value) => updateField('freight_category', value as FreightCategory)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="max-w-xs">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -312,61 +374,8 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            {/* Length */}
-            <div className="space-y-2">
-              <Label htmlFor="length_inches" className="flex items-center gap-1.5 text-sm">
-                <Ruler className="h-3.5 w-3.5" />
-                Length (in)
-              </Label>
-              <Input
-                id="length_inches"
-                type="number"
-                min="0"
-                step="1"
-                value={formData.length_inches}
-                onChange={(e) => updateField('length_inches', e.target.value)}
-                placeholder="e.g., 240"
-              />
-            </div>
-
-            {/* Width */}
-            <div className="space-y-2">
-              <Label htmlFor="width_inches" className="flex items-center gap-1.5 text-sm">
-                <Ruler className="h-3.5 w-3.5" />
-                Width (in)
-              </Label>
-              <Input
-                id="width_inches"
-                type="number"
-                min="0"
-                step="1"
-                value={formData.width_inches}
-                onChange={(e) => updateField('width_inches', e.target.value)}
-                placeholder="e.g., 96"
-              />
-            </div>
-
-            {/* Height */}
-            <div className="space-y-2">
-              <Label htmlFor="height_inches" className="flex items-center gap-1.5 text-sm">
-                <Ruler className="h-3.5 w-3.5" />
-                Height (in)
-              </Label>
-              <Input
-                id="height_inches"
-                type="number"
-                min="0"
-                step="1"
-                value={formData.height_inches}
-                onChange={(e) => updateField('height_inches', e.target.value)}
-                placeholder="e.g., 120"
-              />
-            </div>
-          </div>
-
           <p className="text-xs text-muted-foreground">
-            💡 Tip: Typical food truck dimensions are 16-26 ft long (192-312 in), 7-8 ft wide (84-96 in), and 8-10 ft tall (96-120 in).
+            💡 Typical food truck dimensions: 16-26 ft long (192-312 in), 7-8 ft wide (84-96 in), 8-10 ft tall (96-120 in)
           </p>
         </div>
       )}
