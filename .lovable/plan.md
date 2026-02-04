@@ -1,429 +1,301 @@
 
-# Corporate Command Center Dashboard Redesign
 
-## Overview
+# Rental-First Marketplace Transformation Plan
 
-Transform the dashboard from a consumer-app style interface (big icons, decorative cards, "Welcome back" banners) into a professional, data-dense "Command Center" suitable for corporate fleet managers with multiple assets. This follows the Shopify/Stripe/Airbnb Pro design paradigm.
+## Executive Summary
+
+Transform Vendibook from a generic "Buy or Sell" marketplace into a **Rental-First, Turo/Airbnb-style marketplace** with the philosophy: "Don't buy a food truck. Rent one." This includes a new immersive hero, refined navigation, and a guided onboarding experience for the dashboard.
 
 ---
 
 ## Current State Analysis
 
-### What Needs to Change
+### Homepage (`src/pages/Index.tsx`)
+- Uses `HeroWalkthrough` with a carousel-style "Buy or Rent" walkthrough
+- Shows both "For Sale" and "For Rent" sections equally
+- `SupplySection` focuses on selling/renting generically
+- No clear rental-first messaging
 
-| Issue | Current State | Target State |
-|-------|---------------|--------------|
-| Hero Section | Large gray banner with centered title, decorative Quick Action cards | Clean sticky header with email/identity context |
-| Quick Action Cards | 5 icon cards (Bookings, Purchases, etc.) cluttering the hero | Removed - consolidated into sub-dashboards |
-| Account Info Card | Separate card at bottom showing email, roles, verification | Moved to sticky header or removed (redundant) |
-| Verification Progress | Always visible card | Only shown if not verified (alert style) |
-| Storefront Button | Missing | Prominent in HostDashboard header |
-| View Modes | Grid cards only | Grid + Table toggle for corporate users |
-| Host Tools Section | Separate card at bottom | Consolidated or removed |
+### Navigation (`src/components/layout/Header.tsx` & `MobileMenu.tsx`)
+- Header has a large search bar, dropdown menu, and mobile hamburger
+- No "Active Link" pattern - links don't visually indicate current page
+- Mobile menu is a standard slide-in panel, not a "cinema-style" full experience
+- Missing the Airbnb-style "Hamburger + Avatar" pill button
+
+### Dashboard Onboarding
+- `HostOnboardingWizard.tsx` exists but is basic
+- No guided "spotlight tour" for new users
+- No onboarding for the context switch feature
 
 ---
 
-## Phase 1: Dashboard.tsx - The Clean Shell
+## Phase 1: New Immersive Hero - `HeroRentalSearch.tsx`
 
-### Changes
+### Concept
+Replace `HeroWalkthrough` with an immersive, full-screen hero featuring:
+- Dark cinematic background image with gradient overlay
+- "Don't buy a food truck. Rent one." headline
+- Turo/Airbnb-style floating search pill with: Location, Asset Type, Dates
+- Search defaults to `mode=rent`
 
-1. **Remove the decorative Hero Section** (lines 72-174)
-   - Remove the gray `bg-muted/30` hero section
-   - Remove the 5 Quick Action Cards (Bookings, Purchases, Rentals, Favorites, Account)
-   - Replace with a compact sticky header
+### Technical Details
+- Create new `src/components/home/HeroRentalSearch.tsx`
+- Uses existing `hero-food-truck.jpg` as background
+- Integrates with existing date picker component (`Calendar`)
+- Motion animations using `framer-motion` (already installed)
+- Form submits to `/search?mode=rent&location=...&start=...`
 
-2. **Create Professional Sticky Header**
-   - Left: Mode icon + Title + User email (small text)
-   - Right: Context toggle (for hosts)
-   - Uses `sticky top-16 z-30 bg-background/95 backdrop-blur`
-
-3. **Move Verification to Alert Position**
-   - Only show if `!isVerified`
-   - Compact alert-style banner instead of full card
-
-4. **Remove Account Info Card** (lines 191-273)
-   - This info is redundant when shown in header
-   - Keeps dashboard focused on operations
-
-### New Structure
-
+### Search Pill Structure
 ```text
-┌──────────────────────────────────────────────────────────────┐
-│ HEADER (Global Nav)                                          │
-├──────────────────────────────────────────────────────────────┤
-│ STICKY CONTEXT BAR                                           │
-│ ┌────────────────────────────────────────────────────────┐  │
-│ │ [Icon] Vendor Console • user@email.com   [Buy|Host]    │  │
-│ └────────────────────────────────────────────────────────┘  │
-├──────────────────────────────────────────────────────────────┤
-│ VERIFICATION ALERT (only if !isVerified)                     │
-├──────────────────────────────────────────────────────────────┤
-│ HOST/SHOPPER DASHBOARD (Full Content)                        │
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│  Where         │  What            │  When           │  [🔍 Search]   │
+│  Los Angeles   │  Any Vehicle     │  Add dates      │                │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Phase 2: HostDashboard.tsx - Corporate Operations
-
-### Key Changes
-
-1. **Add "View Storefront" Button**
-   - Prominently placed next to "New Listing" button
-   - Links to `/profile/{user.id}`
-   - Uses `ExternalLink` icon to indicate it opens the public view
-
-2. **Add Grid/Table View Toggle**
-   - For users with 3+ listings (power users)
-   - Grid mode: Current HostListingCard layout
-   - Table mode: New OperationsTable component
-
-3. **Reorganize Tabs**
-   - Overview (default): Action items + quick analytics
-   - Inventory: Listings with view toggle
-   - Bookings: For rentals
-   - Financials: Revenue + Stripe
-
-4. **Remove "Host Tools" Card** (lines 333-350)
-   - Clutter - can be accessed from main navigation
-
-5. **Move SellerSalesSection into Financials Tab**
-   - Consolidates financial data in one place
-
-### New Header Structure
-
-```text
-┌──────────────────────────────────────────────────────────────┐
-│ Overview                                                      │
-│ "Manage fleet availability and revenue."                      │
-│                                   [Storefront] [Add Asset]    │
-└──────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Phase 3: Create OperationsTable Component
+## Phase 2: Rental Benefits Section - `RentalBenefits.tsx`
 
 ### Purpose
-A dense data table for fleet managers to monitor all assets at a glance without scrolling through cards.
+Replace the generic `SupplySection` messaging with a focused "Why Rent?" value proposition.
 
-### Structure
+### Create `src/components/home/RentalBenefits.tsx`
+**Three Key Benefits:**
+1. **Low Capital, High Speed** - Test concepts without $50k commitment
+2. **Verified & Insured** - ID verification, escrow payments, safety built-in
+3. **Flexible Terms** - Weekend festivals to year-long leases
+
+### Design
+- Clean 3-column grid on desktop, stacked on mobile
+- Each benefit has icon in a rounded container + title + description
+- Premium whitespace and typography
+
+---
+
+## Phase 3: Updated Index.tsx Structure
+
+### New Page Flow
+1. **HeroRentalSearch** - Full-screen immersive search (replaces `HeroWalkthrough`)
+2. **RentalBenefits** - Why rent value prop (new)
+3. **ListingsSections** - Keep but reorder: Rentals first, then Sales
+4. **PaymentsBanner** - Keep as-is (BNPL is relevant)
+5. **BecomeHostSection** - Dark-themed host acquisition CTA (refactored from `SupplySection`)
+6. **FinalCTA** - Keep as-is
+
+### Key Changes
+- Remove `CategoryCarousels` (clutter)
+- Move AI Tools callout to `/list` page where it's contextual
+- Remove `HeroWalkthrough` entirely
+
+---
+
+## Phase 4: Navigation Upgrades
+
+### 4.1 Create `ActiveLink.tsx` Component
+
+**File:** `src/components/layout/ActiveLink.tsx`
+
+A reusable link component that:
+- Detects current route using `useLocation()`
+- Applies active styles (bold text, subtle background pill)
+- Supports exact vs prefix matching
+
+### 4.2 Header.tsx Enhancements
+
+**Updates:**
+1. **Backdrop Blur** - Add `backdrop-blur-xl` for frosted glass effect on scroll
+2. **Center Navigation** - Add tab-style links: "Explore" | "How it Works" | "Dashboard"
+3. **Airbnb-Style User Pill** - Replace current dropdown with "hamburger + avatar" pill button
+4. **Simplified Right Actions** - "Become a Host" (for non-hosts) + User Pill
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│ Asset Name        | Status    | Type    | Views | Price | ⋮  │
+│ [Logo]     Explore | How it Works     [Become Host] [☰ 👤]  │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### 4.3 MobileMenu.tsx - Cinema Experience
+
+**Transform to full-screen experience:**
+1. Use `framer-motion` for smooth slide animations
+2. Large touch targets (minimum 48px height)
+3. Active state indicators (background pill + icon fill)
+4. Bottom-anchored CTAs (thumb-zone friendly)
+5. Lock body scroll when open
+
+**Structure:**
+```text
+┌──────────────────────────────────────────────────────────────┐
+│  [Avatar] Welcome, John            [X Close]                 │
+│           View Profile                                        │
 ├──────────────────────────────────────────────────────────────┤
-│ Taco Truck LA     | Published | Truck   | 1,234 | $150  | ⋮  │
-│ Ghost Kitchen SF  | Paused    | Kitchen |   89  | $200  | ⋮  │
-│ Food Trailer OC   | Draft     | Trailer |    0  | $75   | ⋮  │
+│  🏠 Home                                                      │
+│  🔍 Explore                                                   │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━                   │
+│  📊 Dashboard                                                 │
+│  💬 Messages                                                  │
+│  📋 Transactions                                              │
+│  ❤️ Wishlist                                                  │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━                   │
+│  ➕ Host an Asset  (highlighted)                             │
+│  👤 Account                                                   │
+├──────────────────────────────────────────────────────────────┤
+│  [Log Out]                                                    │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### Features
-- Sortable columns (future enhancement)
-- Quick actions via dropdown menu (View, Edit, Pause/Publish)
-- Status badges with colors
-- Performance indicators (views, favorites)
+---
+
+## Phase 5: Dashboard Onboarding Tour
+
+### 5.1 Create `DashboardOnboarding.tsx`
+
+**File:** `src/components/onboarding/DashboardOnboarding.tsx`
+
+A "spotlight tour" component that:
+- Shows first-time users key features via dimmed overlay + spotlight effect
+- Steps through features: Mode Switch, Storefront Button, Operations Tab
+- Uses localStorage to track completion (`vendibook_dashboard_onboarding_v1`)
+- Renders after 1-second delay to ensure UI is ready
+
+**Technical Approach:**
+- Use `framer-motion` for animations
+- Calculate element positions via `getBoundingClientRect()`
+- Clip-path or SVG mask for spotlight effect
+- Popover positioned relative to target element
+
+### 5.2 Dashboard.tsx Integration
+
+**Add IDs to key elements:**
+- `id="mode-switch-container"` on the host/shopper toggle
+- `id="storefront-button"` on the View Storefront button (in HostDashboard)
+- `id="operations-tab"` on the Inventory tab (or Operations view toggle)
+
+**Mount the onboarding:**
+```tsx
+const [showOnboarding, setShowOnboarding] = useState(false);
+
+useEffect(() => {
+  const hasSeen = localStorage.getItem('vendibook_dashboard_onboarding_v1');
+  if (!hasSeen && !isLoading) {
+    setTimeout(() => setShowOnboarding(true), 1000);
+  }
+}, [isLoading]);
+```
+
+### 5.3 Tour Steps
+
+**For Host Mode:**
+1. Mode Switch - "Two Modes, One Account. Switch instantly."
+2. Storefront Button - "Your public profile. Share it anywhere."
+3. Inventory Tab - "Manage all assets from one place."
+
+**For Shopper Mode:**
+1. Discovery Grid - "Start searching for your perfect asset."
+2. Become Host Card - "Have idle equipment? Switch roles and earn."
 
 ---
 
-## Phase 4: HostListingCard Button Cleanup
+## Phase 6: Enhanced HostOnboardingWizard
 
-### Current Issue
-Too many buttons with inconsistent styling:
-- View, Edit, Availability (outline)
-- Make Featured, Notary (dark-shine)
-- Pause, Publish, Delete (mixed)
+### Upgrade to "Corporate" Style
 
-### Solution
-Group actions into Primary and Secondary:
+**Current:** Simple two-path cards (Rent vs Sell)
+**Enhanced:**
+- More professional terminology ("Rental Fleet" vs "Asset Sales")
+- Feature bullets for each path
+- Better visual hierarchy
 
 ```text
-┌──────────────────────────────────────────────────────────────┐
-│ PRIMARY ACTIONS (Always visible)                             │
-│ [View] [Edit] [Calendar]                                     │
-│                                                              │
-│ MARKETING ACTIONS (Visually separated, amber accent)        │
-│ [⭐ Boost] [🛡️ Notary]                                       │
-│                                                              │
-│ STATUS ACTIONS (Right side)                                  │
-│ [Pause/Publish] [🗑️]                                        │
-└──────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│  Set up your Vendor Profile                                        │
+│  "Welcome to the professional side of Vendibook."                  │
+├────────────────────────────────┬────────────────────────────────────┤
+│  📅 RENTAL FLEET               │  💰 ASSET SALES                    │
+│                                │                                    │
+│  Generate recurring revenue    │  List equipment for sale to       │
+│  from trucks, trailers, or     │  thousands of verified buyers.    │
+│  kitchens.                     │                                    │
+│                                │                                    │
+│  ✓ Recurring revenue tools     │  ✓ Escrow payment protection      │
+│  ✓ Availability calendar       │  ✓ Verified buyer network         │
+│  ✓ Automated contracts         │  ✓ Nationwide freight             │
+│                                │                                    │
+│  [Start Rental Business]       │  [List Item for Sale]             │
+└────────────────────────────────┴────────────────────────────────────┘
 ```
-
-### Consistent Styling
-- All buttons: `h-9 rounded-xl`
-- Primary actions: `variant="outline"`
-- Marketing upsells: `variant="secondary"` with amber styling
-- Publish: `variant="default"`
-- Delete: Ghost with destructive colors, pushed to right
 
 ---
 
-## Files to Modify
+## Files Summary
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/pages/Dashboard.tsx` | Major refactor | Remove hero/quick actions, add compact sticky header |
-| `src/components/dashboard/HostDashboard.tsx` | Major refactor | Add Storefront button, view toggle, reorganize tabs |
-| `src/components/dashboard/OperationsTable.tsx` | Create | New table component for fleet management |
-| `src/components/dashboard/HostListingCard.tsx` | Minor update | Consistent button styling and grouping |
-
----
-
-## Detailed Code Changes
-
-### Dashboard.tsx (lines 66-280)
-
-**Remove:**
-- Hero section with gray background (lines 72-174)
-- Quick Action Cards grid
-- Account Info Card (lines 192-273)
-
-**Add:**
-- Compact sticky context bar with:
-  - Mode icon (Store for Host, LayoutGrid for Shopper)
-  - Title ("Vendor Console" / "My Activity")
-  - User email in small text
-  - Toggle switch (for hosts)
-- Verification alert (only if `!isVerified`, compact banner style)
-
-### HostDashboard.tsx
-
-**Header Section (lines 86-100):**
-```tsx
-<div className="flex items-center justify-between">
-  <div>
-    <h2 className="text-xl font-semibold">Overview</h2>
-    <p className="text-sm text-muted-foreground">
-      {userType === 'seller' ? 'Manage your sales pipeline.' : 'Manage fleet availability and revenue.'}
-    </p>
-  </div>
-  <div className="flex items-center gap-2">
-    <Button variant="outline" size="sm" asChild className="rounded-xl">
-      <Link to={`/profile/${user?.id}`}>
-        <ExternalLink className="h-4 w-4 mr-1.5" />
-        My Storefront
-      </Link>
-    </Button>
-    <Button variant="dark-shine" size="sm" asChild className="rounded-xl">
-      <Link to="/list">
-        <Plus className="h-4 w-4 mr-1.5" />
-        Add Asset
-      </Link>
-    </Button>
-  </div>
-</div>
-```
-
-**View Toggle (new state and UI):**
-```tsx
-const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
-const isPowerUser = listings.length > 2;
-
-// In the Inventory tab header:
-{isPowerUser && (
-  <div className="flex items-center gap-1">
-    <Button 
-      variant={viewMode === 'grid' ? 'default' : 'ghost'} 
-      size="icon" 
-      className="h-8 w-8"
-      onClick={() => setViewMode('grid')}
-    >
-      <Grid3X3 className="h-4 w-4" />
-    </Button>
-    <Button 
-      variant={viewMode === 'table' ? 'default' : 'ghost'} 
-      size="icon" 
-      className="h-8 w-8"
-      onClick={() => setViewMode('table')}
-    >
-      <ListFilter className="h-4 w-4" />
-    </Button>
-  </div>
-)}
-```
-
-**Tab Restructure:**
-- Overview: Priority actions + CompactInsights
-- Inventory: Listings (grid or table based on toggle)
-- Bookings: BookingRequestsSection (if not seller)
-- Financials: RevenueAnalyticsCard + SellerSalesSection (consolidated)
-
-**Remove:**
-- Host Tools section (lines 333-350)
-- Standalone SellerSalesSection (moves to Financials tab)
-
-### New OperationsTable.tsx
-
-```tsx
-// Key features:
-- Table with columns: Asset Name (with image), Status, Type, Performance, Price, Actions
-- Status badges with semantic colors (emerald/amber/gray)
-- Performance shows view count with Eye icon
-- Actions dropdown with Edit, Pause/Publish options
-- Links to listing detail pages
-```
-
-### HostListingCard.tsx Button Cleanup
-
-**Lines 265-349 refactored to:**
-```tsx
-<div className="flex items-center gap-2 mt-4 pt-4 border-t border-border flex-wrap">
-  {/* Primary Actions - Always visible */}
-  <Button variant="outline" size="sm" className="h-9 rounded-xl" asChild>
-    <Link to={`/listing/${listing.id}`}>
-      <Eye className="h-4 w-4 mr-1.5" />View
-    </Link>
-  </Button>
-  <Button variant="outline" size="sm" className="h-9 rounded-xl" asChild>
-    <Link to={`/create-listing/${listing.id}`}>
-      <Edit2 className="h-4 w-4 mr-1.5" />Edit
-    </Link>
-  </Button>
-  {isRental && (
-    <Button variant="outline" size="sm" className="h-9 rounded-xl" onClick={() => setShowCalendar(true)}>
-      <Calendar className="h-4 w-4 mr-1.5" />Availability
-    </Button>
-  )}
-  
-  {/* Marketing Upsells - Amber accent */}
-  {isPublished && !isFeatured && (
-    <Button 
-      variant="secondary" 
-      size="sm" 
-      className="h-9 rounded-xl bg-amber-100 text-amber-700 hover:bg-amber-200"
-      onClick={handleFeaturedClick}
-    >
-      <Star className="h-4 w-4 mr-1.5" />Boost
-    </Button>
-  )}
-  {isPublished && isSale && !hasNotary && (
-    <Button 
-      variant="secondary" 
-      size="sm" 
-      className="h-9 rounded-xl bg-blue-100 text-blue-700 hover:bg-blue-200"
-      onClick={handleNotaryCheckout}
-    >
-      <Shield className="h-4 w-4 mr-1.5" />Notary
-    </Button>
-  )}
-  
-  {/* Spacer */}
-  <div className="flex-1" />
-  
-  {/* Status Actions - Right aligned */}
-  {listing.status === 'published' && onPause && (
-    <Button variant="outline" size="sm" className="h-9 rounded-xl" onClick={() => onPause(listing.id)}>
-      <Pause className="h-4 w-4 mr-1.5" />Pause
-    </Button>
-  )}
-  {(listing.status === 'draft' || listing.status === 'paused') && onPublish && (
-    <Button size="sm" className="h-9 rounded-xl" onClick={() => onPublish(listing.id)}>
-      <Play className="h-4 w-4 mr-1.5" />Publish
-    </Button>
-  )}
-  {onDelete && (
-    <Button 
-      variant="ghost" 
-      size="icon"
-      className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10"
-      onClick={() => onDelete(listing.id)}
-    >
-      <Trash2 className="h-4 w-4" />
-    </Button>
-  )}
-</div>
-```
+| `src/components/home/HeroRentalSearch.tsx` | Create | Immersive rental-first hero with search pill |
+| `src/components/home/RentalBenefits.tsx` | Create | "Why Rent?" value proposition section |
+| `src/components/home/BecomeHostSection.tsx` | Create | Dark-themed host acquisition CTA (replace SupplySection) |
+| `src/components/layout/ActiveLink.tsx` | Create | Reusable link with active state detection |
+| `src/components/onboarding/DashboardOnboarding.tsx` | Create | Spotlight tour component |
+| `src/pages/Index.tsx` | Modify | New section order, replace hero |
+| `src/components/layout/Header.tsx` | Modify | Backdrop blur, center nav, user pill |
+| `src/components/layout/MobileMenu.tsx` | Modify | Full-screen cinema experience |
+| `src/pages/Dashboard.tsx` | Modify | Add element IDs, mount onboarding |
+| `src/components/dashboard/HostDashboard.tsx` | Modify | Add `id="storefront-button"` |
+| `src/components/dashboard/HostOnboardingWizard.tsx` | Modify | Corporate upgrade with feature bullets |
+| `src/components/home/ListingsSections.tsx` | Modify | Prioritize rentals over sales |
 
 ---
 
 ## Visual Summary
 
-### Before (Dashboard.tsx)
-
+### Before (Homepage)
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│ HERO (Gray banner)                                           │
-│ "Manage Listings"                                            │
-│ [Toggle Switch]                                              │
-│ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐                          │
-│ │Book││Purch││Rent││Fav ││Acct│  <-- Clutter               │
-│ └────┘ └────┘ └────┘ └────┘ └────┘                          │
-├──────────────────────────────────────────────────────────────┤
-│ [Verification Card - Always visible]                         │
-├──────────────────────────────────────────────────────────────┤
-│ HOST DASHBOARD CONTENT                                       │
-├──────────────────────────────────────────────────────────────┤
-│ [Account Info Card with Email, Roles, Verification]         │
+│ Header                                                        │
+│ HeroWalkthrough (Buy or Rent carousel)                       │
+│ ListingsSections (Sale first, Rent second)                   │
+│ PaymentsBanner                                                │
+│ SupplySection (Generic sell/rent)                            │
+│ CategoryCarousels                                             │
+│ FinalCTA                                                      │
+│ Footer                                                        │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### After (Dashboard.tsx)
-
+### After (Homepage)
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│ GLOBAL HEADER                                                │
-├──────────────────────────────────────────────────────────────┤
-│ STICKY CONTEXT BAR (Compact)                                 │
-│ [🏪] Vendor Console • user@email.com    [Buying ○─── Hosting]│
-├──────────────────────────────────────────────────────────────┤
-│ ⚠️ Complete identity verification [Verify →]  (if needed)    │
-├──────────────────────────────────────────────────────────────┤
-│ HOST DASHBOARD CONTENT                                       │
-│ (Takes full width, no redundant cards)                       │
+│ Header (Glass, Tab Nav)                                       │
+│ HeroRentalSearch (Full-screen, "Don't buy. Rent.")           │
+│ RentalBenefits (Why Rent? 3 columns)                         │
+│ ListingsSections (Rent first, Sale second)                   │
+│ PaymentsBanner                                                │
+│ BecomeHostSection (Dark, Host acquisition)                   │
+│ FinalCTA                                                      │
+│ Footer                                                        │
 └──────────────────────────────────────────────────────────────┘
 ```
-
-### Before (HostDashboard - Listings Tab)
-
-```text
-┌──────────────────────────────────────────────────────────────┐
-│ [Header + New Listing button]                                │
-├──────────────────────────────────────────────────────────────┤
-│ ┌─────────────────────────────────────────────────────────┐ │
-│ │ LISTING CARD 1 (Large)                                  │ │
-│ └─────────────────────────────────────────────────────────┘ │
-│ ┌─────────────────────────────────────────────────────────┐ │
-│ │ LISTING CARD 2 (Large)                                  │ │
-│ └─────────────────────────────────────────────────────────┘ │
-│ ... scroll to see more ...                                   │
-└──────────────────────────────────────────────────────────────┘
-```
-
-### After (HostDashboard - Inventory Tab with Table View)
-
-```text
-┌──────────────────────────────────────────────────────────────┐
-│ Overview                           [Storefront] [Add Asset]  │
-│ "Manage fleet availability..."     [Grid|Table] toggle       │
-├──────────────────────────────────────────────────────────────┤
-│ Asset Name      │ Status    │ Type   │ Views │ Price  │ ⋮   │
-├──────────────────────────────────────────────────────────────┤
-│ Taco Truck LA   │ Published │ Truck  │ 1,234 │ $150   │ ⋮   │
-│ Ghost Kitchen   │ Paused    │ Kitchen│    89 │ $200   │ ⋮   │
-│ Food Trailer    │ Draft     │ Trailer│     0 │ $75    │ ⋮   │
-└──────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Benefits
-
-| Metric | Before | After |
-|--------|--------|-------|
-| Visual noise | High (decorative cards, heroes) | Low (data-focused) |
-| Corporate readiness | Basic (card-only view) | Pro (grid + table toggle) |
-| Storefront visibility | Hidden | Prominent button |
-| Button consistency | Mixed sizes/styles | Unified h-9 rounded-xl |
-| Information density | Low | High (for power users) |
-| Mobile experience | Okay | Preserved (grid default) |
 
 ---
 
 ## Implementation Order
 
-1. Create `OperationsTable.tsx` component
-2. Refactor `HostDashboard.tsx` (add Storefront button, view toggle, reorganize tabs)
-3. Refactor `Dashboard.tsx` (remove hero, add compact header)
-4. Update `HostListingCard.tsx` (consistent button styling)
+1. **Create new components** (HeroRentalSearch, RentalBenefits, BecomeHostSection, ActiveLink, DashboardOnboarding)
+2. **Update Index.tsx** with new section order
+3. **Enhance Header.tsx** (backdrop blur, center nav, user pill)
+4. **Transform MobileMenu.tsx** (cinema experience)
+5. **Wire up Dashboard onboarding** (add IDs, mount tour)
+6. **Upgrade HostOnboardingWizard.tsx** (corporate style)
+7. **Update ListingsSections.tsx** (rentals first)
+
+---
+
+## Dependencies
+
+All required packages are already installed:
+- `framer-motion` - Animations
+- `react-day-picker` + `date-fns` - Date picker in search pill
+- `lucide-react` - Icons
+- Existing `Calendar` component - Date selection
+
