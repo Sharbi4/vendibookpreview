@@ -1,274 +1,281 @@
 
 
-# Unified Supply Dashboard: Contextual Tabs Pattern
+# Public Profile "Micro-Storefront" Enhancement Plan
 
 ## Overview
 
-This plan implements a "Unified Supply Dashboard" that adapts to the user's inventory type, following the Amazon/Airbnb marketplace standard. Instead of creating separate Host and Seller dashboards, we intelligently show/hide tabs and metrics based on what the user actually owns.
-
-**The Core Insight**: A user with a food truck might try to sell it, then decide to rent it out instead. Separate dashboards create friction. A unified dashboard with smart tabs keeps their identity consistent while reducing noise.
+Transform the public profile page from a simple "User Page" into a fully-fledged "Micro-Storefront" optimized for trust and conversion, following Airbnb/Amazon marketplace standards.
 
 ---
 
-## User Type Detection
+## Current State Analysis
 
-We'll analyze the user's listings to determine their type:
+The profile page (`PublicProfile.tsx`) already has solid foundations:
+- Response time badge (via `useHostResponseTime`)
+- Identity verified badge with visual indicator
+- Mobile sticky CTA (lines 386-410)
+- Featured listings section (newest 3 items)
+- Category filter chips
+- Review stats and ratings
+
+**What's Missing:**
+1. "Superhost" / Top Rated badge for high-performing hosts
+2. Shop Policies section (delivery, returns, cancellation)
+3. About/Bio section with storytelling prompts
+4. "Sold" section to demonstrate activity
+5. Contextual message pre-fill from listing context
+6. Pinned/Featured listing (host-controlled)
+
+---
+
+## Phase 1: Enhanced Trust Signals
+
+### 1.1 "Top Rated" Badge
+
+**Logic**: Award badge if host meets criteria:
+- Average rating >= 4.8
+- At least 5 reviews
+- Response time < 2 hours (already tracked as `isFastResponder`)
+- At least 3 completed bookings
+
+**Implementation:**
+- Create new hook `useHostBadges.ts` to calculate badge eligibility
+- Add "Top Rated Vendor" or "Superhost" badge to `EnhancedPublicProfileHeader.tsx`
+- Gold gradient styling similar to verified badge
+
+### 1.2 Reviews Summary Enhancement
+
+**Current**: Shows star rating and count
+**Enhancement**: Add highlight of top strength based on review keywords
+
+**Implementation:**
+- Analyze reviews for common positive keywords (communication, equipment, cleanliness)
+- Display: "4.9 (12 reviews) - Highly rated for communication"
+
+---
+
+## Phase 2: Shop Policies Section
+
+### 2.1 Database Schema Addition
+
+Add new columns to `profiles` table:
+```sql
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bio TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS shop_policies JSONB DEFAULT '{}'::jsonb;
+```
+
+The `shop_policies` JSONB structure:
+```json
+{
+  "delivery_range_miles": 50,
+  "return_policy": "7-day returns on sales",
+  "cancellation_notice": "24 hours",
+  "accepts_deposits": true,
+  "custom_policies": ["Local pickup available", "Insurance required"]
+}
+```
+
+### 2.2 New Component: `ShopPoliciesCard.tsx`
+
+Create a compact, expandable card showing:
+- Delivery/Service area (derived from listings or manual setting)
+- Cancellation policy summary
+- Return policy (for sales)
+- Custom vendor terms
+
+**Location**: Below the stats row, above the tabs
+
+---
+
+## Phase 3: About/Bio Section with Storytelling
+
+### 3.1 Bio Field Addition
+
+**Database**: Add `bio` TEXT column to profiles table
+
+### 3.2 UI Enhancement in `EnhancedPublicProfileHeader.tsx`
+
+Add collapsible "About" section:
+```text
+"I've been in the food truck industry for 8 years. Started with a taco cart 
+and now manage 3 trucks. My favorite thing about hosting is..."
+```
+
+**For hosts with empty bio**: Show prompt "This host hasn't added a bio yet"
+
+**For own profile**: Show "Add your story" CTA linking to account settings
+
+---
+
+## Phase 4: "Sold" Section for Social Proof
+
+### 4.1 Fetch Sold Items
+
+Query listings where `status = 'sold'` for the host.
+
+### 4.2 UI in `ProfileListingsTab.tsx`
+
+After active listings, add a collapsed "Recently Sold" section:
+- Visually distinct (muted/grayscale cards)
+- "Sold" badge overlay
+- Max 6 items shown
+- Demonstrates marketplace activity and builds trust
+
+---
+
+## Phase 5: Contextual Message Pre-fill
+
+### 5.1 Current Behavior (lines 212-221 in PublicProfile.tsx)
+
+The `listingContext` is already captured from URL params (`?from_listing=...`)
+
+### 5.2 Enhancement
+
+When opening a conversation:
+- Pass listing context to the messages page
+- Pre-fill message input with: "Hi! I'm interested in [Listing Title]..."
+
+**Implementation:**
+- Modify `handleMessageHost` to pass listing details to navigation state
+- Update Messages page to read prefill from state
+
+---
+
+## Phase 6: Host-Pinned Featured Listing
+
+### 6.1 Database Addition
+
+```sql
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pinned_listing_id UUID REFERENCES listings(id);
+```
+
+### 6.2 UI in `ProfileListingsTab.tsx`
+
+**Current**: Shows newest 3 listings as "Featured"
+**New**: If `pinned_listing_id` is set, show that listing first with a special "Pinned" badge
+
+**Host Dashboard Integration:**
+- Add "Pin to Profile" action in listing card dropdown
+- Only one listing can be pinned at a time
+
+---
+
+## File Changes Summary
+
+| File | Action | Description |
+|------|--------|-------------|
+| `src/hooks/useHostBadges.ts` | Create | Calculate "Top Rated" eligibility |
+| `src/components/profile/ShopPoliciesCard.tsx` | Create | Display vendor policies |
+| `src/components/profile/AboutSection.tsx` | Create | Bio with storytelling |
+| `src/components/profile/SoldListingsSection.tsx` | Create | Social proof section |
+| `src/components/profile/EnhancedPublicProfileHeader.tsx` | Modify | Add Top Rated badge, bio section |
+| `src/components/profile/ProfileListingsTab.tsx` | Modify | Add Sold section, pinned listing logic |
+| `src/components/profile/EnhancedPublicProfileTabs.tsx` | Modify | Add Policies tab or inline section |
+| `src/pages/PublicProfile.tsx` | Modify | Integrate new sections, fetch policies |
+| `src/hooks/useUserProfile.ts` | Modify | Fetch bio and shop_policies |
+| Database migration | Create | Add `bio`, `shop_policies`, `pinned_listing_id` columns |
+
+---
+
+## Implementation Order
+
+1. **Database Migration** - Add new profile columns
+2. **useHostBadges Hook** - Calculate Top Rated status
+3. **ShopPoliciesCard** - Display vendor terms
+4. **AboutSection** - Bio with prompts
+5. **SoldListingsSection** - Social proof
+6. **Pinned Listing** - Host-controlled featured item
+7. **Message Pre-fill** - Contextual inquiry enhancement
+8. **Account Settings** - UI to edit bio and policies
+
+---
+
+## Visual Mockup
 
 ```text
-┌────────────────────────────────────────────────────────────┐
-│ User Type Detection                                        │
-├────────────────────────────────────────────────────────────┤
-│                                                            │
-│  SELLER: All listings have mode === 'sale'                 │
-│  • Default to "Offers" tab                                 │
-│  • Hide "Requests" (booking requests) tab                  │
-│  • Show HandCoins icon for Offers metric                   │
-│  • Header: "Seller Console"                                │
-│                                                            │
-│  HOST: All listings have mode === 'rent'                   │
-│  • Default to "Requests" tab (booking requests)            │
-│  • Hide "Offers" tab (unless they have pending offers)     │
-│  • Show Calendar icon for Requests metric                  │
-│  • Header: "Host Dashboard"                                │
-│                                                            │
-│  HYBRID: Mix of 'rent' and 'sale' listings                 │
-│  • Show all tabs                                           │
-│  • Show both metrics                                       │
-│  • Header: "Vendor Dashboard"                              │
-│                                                            │
-│  NEW USER: No listings yet                                 │
-│  • Defaults to HOST behavior                               │
-│  • Header: "Host Dashboard"                                │
-│                                                            │
-└────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│ HEADER                                                      │
+│ ┌──────┐  "John's Mobile Kitchens"                         │
+│ │Avatar│  📍 Los Angeles, CA                               │
+│ │  ✓   │  [Verified] [Top Rated ⭐] [~1hr response]        │
+│ └──────┘                                                    │
+│          "I've been in the food truck industry for 8 years. │
+│           My favorite part is seeing new entrepreneurs..."  │
+│          [Read more]                                        │
+│                                                             │
+│          [Message Host] [View Listings (5)]                 │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ STATS ROW                                                   │
+│  [5 Listings] [4.9★ 12 reviews] [28 Booked]                │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ SHOP POLICIES (Collapsible)                                 │
+│ 📦 Delivery within 50 miles  |  ↩️ 7-day returns           │
+│ ⏰ 24hr cancellation notice  |  💳 Deposits accepted       │
+│ [View full policies]                                        │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ TABS: [Listings (5)] [Reviews (12)]                        │
+├─────────────────────────────────────────────────────────────┤
+│ 📌 PINNED LISTING                                          │
+│ ┌─────────────────────────────────────────────────────────┐│
+│ │ Featured Taco Truck - $45,000                          ││
+│ │ "My best-seller, fully equipped"                       ││
+│ └─────────────────────────────────────────────────────────┘│
+│                                                             │
+│ ALL LISTINGS                                                │
+│ [Card 1] [Card 2] [Card 3]                                 │
+│                                                             │
+│ RECENTLY SOLD (Collapsed)                                   │
+│ [Sold Card 1] [Sold Card 2] [Sold Card 3]                  │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ MOBILE STICKY CTA (Bottom)                                  │
+│ [Message about listing] [View Listings (5)]                 │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Implementation Details
+## Technical Notes
 
-### Phase 1: Add userType Detection
+### Top Rated Badge Criteria
 
-Add a `useMemo` hook to calculate the user's type based on their listings:
-
-```tsx
-const userType = useMemo(() => {
-  const hasRentals = listings.some(l => l.mode === 'rent');
-  const hasSales = listings.some(l => l.mode === 'sale');
-  if (hasRentals && hasSales) return 'hybrid';
-  if (hasSales) return 'seller';
-  return 'host'; // Default for empty or rental-only
-}, [listings]);
+```typescript
+const isTopRated = useMemo(() => {
+  return (
+    stats?.averageRating >= 4.8 &&
+    stats?.totalReviewsReceived >= 5 &&
+    responseTimeData?.isFastResponder &&
+    completedBookings >= 3
+  );
+}, [stats, responseTimeData, completedBookings]);
 ```
 
----
+### Shop Policies JSONB Query
 
-### Phase 2: Dynamic Header
-
-Replace static header with context-aware branding:
-
-| User Type | Icon | Title |
-|-----------|------|-------|
-| `seller` | Tag | "Seller Console" |
-| `host` | Truck | "Host Dashboard" |
-| `hybrid` | Truck | "Vendor Dashboard" |
-
-Includes a "New Listing" / "Sell Item" button that adapts text to context.
-
----
-
-### Phase 3: Adaptive Metrics Row
-
-Current implementation (lines 74-100) shows all 4 metrics regardless of user type. 
-
-**New behavior**:
-
-| Metric | Show When |
-|--------|-----------|
-| Listings | Always |
-| Views | Always |
-| Requests (Calendar icon) | `userType !== 'seller'` |
-| Offers (HandCoins icon) | `userType !== 'host'` |
-| Revenue | Always |
-
-For **hybrid** users, we show 5 metrics in a scrollable row or switch to a 5-column grid on desktop.
-
----
-
-### Phase 4: Smart Tabs
-
-Current TabsList (lines 109-135) shows 5 static tabs: Listings, Offers, Requests, Analytics, Revenue.
-
-**New logic**:
-
-| Tab | Visibility |
-|-----|------------|
-| Listings | Always visible |
-| Offers | Hidden if `userType === 'host'` AND `pendingOffers.length === 0` |
-| Requests | Hidden if `userType === 'seller'` |
-| Analytics | Always visible |
-| Revenue | Always visible |
-
-**Default tab selection**:
-- `seller` → defaults to "Listings" (no auto-switch needed since Offers is second)
-- `host` → defaults to "Listings"
-- `hybrid` → defaults to "Listings"
-
-If a seller accidentally lands on "Requests" tab, we auto-redirect them to "Offers".
-
----
-
-### Phase 5: Conditional Sales Section
-
-Current implementation (line 276) always shows `<SellerSalesSection />`.
-
-**New behavior**: Only render if `userType !== 'host'` (seller or hybrid).
-
----
-
-### Phase 6: Controlled Tabs with Auto-Redirect
-
-Switch from uncontrolled `<Tabs defaultValue="listings">` to controlled `<Tabs value={activeTab} onValueChange={setActiveTab}>`:
-
-```tsx
-const [activeTab, setActiveTab] = useState('listings');
-
-useEffect(() => {
-  // If pure seller lands on "bookings" tab, redirect to "offers"
-  if (!isLoading && userType === 'seller' && activeTab === 'bookings') {
-    setActiveTab('offers');
-  }
-}, [isLoading, userType, activeTab]);
+```typescript
+const { data } = await supabase
+  .from('profiles')
+  .select('bio, shop_policies, pinned_listing_id')
+  .eq('id', hostId)
+  .single();
 ```
 
----
+### Sold Listings Query
 
-## Visual Changes Summary
-
-### For Pure Sellers (mode === 'sale' only):
-
-**Before**: Sees confusing "Requests" tab with 0 items
-**After**: 
-- Header shows "Seller Console" with Tag icon
-- Only sees: Listings | Offers | Analytics | Revenue
-- Metrics show: Listings, Views, Offers, Revenue (no "Requests")
-- SellerSalesSection shows at bottom
-
-### For Pure Hosts (mode === 'rent' only):
-
-**Before**: Sees "Offers" tab they'll never use
-**After**:
-- Header shows "Host Dashboard" with Truck icon
-- Only sees: Listings | Requests | Analytics | Revenue
-- Metrics show: Listings, Views, Requests, Revenue (no "Offers")
-- GetBookedFasterCard shows (rental optimization tips)
-- SellerSalesSection hidden
-
-### For Hybrid Users:
-
-**Before**: Same as everyone else, but this is correct
-**After**:
-- Header shows "Vendor Dashboard" with Truck icon
-- Sees all tabs: Listings | Offers | Requests | Analytics | Revenue
-- Metrics show all 5 in responsive grid
-- Both sections visible
-
----
-
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/components/dashboard/HostDashboard.tsx` | Add userType detection, controlled tabs, conditional rendering |
-
----
-
-## Detailed Code Structure
-
-### New Imports (line 2)
-```tsx
-import { useMemo, useState, useEffect } from 'react';
-import { HandCoins } from 'lucide-react';
+```typescript
+const { data: soldListings } = await supabase
+  .from('listings')
+  .select('*')
+  .eq('host_id', hostId)
+  .eq('status', 'sold')
+  .order('updated_at', { ascending: false })
+  .limit(6);
 ```
-
-### userType Calculation (after line 33)
-```tsx
-const userType = useMemo(() => {
-  const hasRentals = listings.some(l => l.mode === 'rent');
-  const hasSales = listings.some(l => l.mode === 'sale');
-  if (hasRentals && hasSales) return 'hybrid';
-  if (hasSales) return 'seller';
-  return 'host';
-}, [listings]);
-
-const [activeTab, setActiveTab] = useState('listings');
-
-useEffect(() => {
-  if (!isLoading && userType === 'seller' && activeTab === 'bookings') {
-    setActiveTab('offers');
-  }
-}, [isLoading, userType, activeTab]);
-```
-
-### Dynamic Header (new section at ~line 54)
-```tsx
-<div className="flex items-center justify-between">
-  <div className="flex items-center gap-2">
-    {userType === 'seller' ? <Tag className="h-5 w-5" /> : <Truck className="h-5 w-5" />}
-    <h1 className="text-xl font-semibold">
-      {userType === 'seller' ? 'Seller Console' : 
-       userType === 'hybrid' ? 'Vendor Dashboard' : 'Host Dashboard'}
-    </h1>
-  </div>
-  <Button variant="dark-shine" size="sm" asChild>
-    <Link to="/list">
-      <Plus className="h-3.5 w-3.5 mr-1.5" />
-      {userType === 'seller' ? 'Sell Item' : 'New Listing'}
-    </Link>
-  </Button>
-</div>
-```
-
-### Conditional Metrics (lines 74-100)
-Show Request metric only for non-sellers, Offers metric only for non-hosts.
-
-### Controlled Tabs (line 108)
-```tsx
-<Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-```
-
-### Conditional Tab Triggers (lines 113-127)
-- Hide Offers trigger if `userType === 'host' && pendingOffers.length === 0`
-- Hide Requests trigger if `userType === 'seller'`
-
-### Conditional SellerSalesSection (line 276)
-```tsx
-{userType !== 'host' && <SellerSalesSection />}
-```
-
-### Conditional GetBookedFasterCard (line 253)
-```tsx
-{userType !== 'seller' && <GetBookedFasterCard />}
-```
-
----
-
-## Benefits
-
-| Aspect | Before | After |
-|--------|--------|-------|
-| Tab clarity | All users see all tabs | Relevant tabs only |
-| Cognitive load | 5 tabs always | 4 tabs for focused users |
-| Header identity | Generic "Host" | Contextual (Seller/Host/Vendor) |
-| Metric relevance | All 4 metrics | Only applicable metrics |
-| UX consistency | Same for everyone | Adapts to business model |
-
----
-
-## Edge Cases Handled
-
-1. **New user with no listings**: Defaults to "Host" mode (most common use case for rentals marketplace)
-2. **User changes listing mode**: On next refresh, `userType` recalculates and UI adapts
-3. **Host receives an offer**: Offers tab appears even for pure hosts if `pendingOffers.length > 0`
-4. **Deep link to hidden tab**: `useEffect` auto-redirects to appropriate tab
 
