@@ -1,7 +1,6 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Truck, Eye, Loader2, Calendar, BarChart3, DollarSign, Tag, HandCoins, ExternalLink, Grid3X3, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NextStepCard } from './NextStepCard';
 import { CompactStatCard } from './CompactStatCard';
 import { CompactInsights } from './CompactInsights';
@@ -28,6 +27,7 @@ import { useMemo, useState, useEffect } from 'react';
 
 const HostDashboard = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing, updateListingPrice } = useHostListings();
   const { stats: bookingStats } = useHostBookings();
   const { isConnected, hasAccountStarted, isLoading: stripeLoading, connectStripe, isConnecting, openStripeDashboard, isOpeningDashboard } = useStripeConnect();
@@ -36,6 +36,9 @@ const HostDashboard = () => {
   const { pendingOffers } = useHostOffers();
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+
+  // URL-controlled tab
+  const activeTab = searchParams.get('tab') || 'overview';
 
   // Determine user type based on listing modes
   const userType = useMemo(() => {
@@ -48,15 +51,6 @@ const HostDashboard = () => {
 
   // Corporate/Power User detection
   const isPowerUser = listings.length > 2;
-
-  // Controlled tabs with auto-redirect for sellers
-  const [activeTab, setActiveTab] = useState('overview');
-
-  useEffect(() => {
-    if (!isLoading && userType === 'seller' && activeTab === 'bookings') {
-      setActiveTab('overview');
-    }
-  }, [isLoading, userType, activeTab]);
 
   // Filter drafts for the DraftsSection
   const draftListings = useMemo(() => 
@@ -183,58 +177,33 @@ const HostDashboard = () => {
         <DraftsSection drafts={draftListings} onDelete={deleteListing} />
       )}
 
-      {/* Workspace Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex items-center justify-between mb-4">
-          <TabsList className={`grid bg-muted/50 p-1 rounded-lg h-10 ${
-            userType === 'hybrid' ? 'grid-cols-4' : userType === 'seller' ? 'grid-cols-3' : 'grid-cols-4'
-          }`}>
-            <TabsTrigger value="overview" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              Overview
-            </TabsTrigger>
-            <TabsTrigger id="inventory-tab" value="inventory" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              Inventory
-            </TabsTrigger>
-            {userType !== 'seller' && (
-              <TabsTrigger value="bookings" className="relative rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                Bookings
-                {bookingStats.pending > 0 && (
-                  <span className="ml-1.5 px-1.5 py-0.5 text-[10px] bg-amber-500 text-white rounded-full">
-                    {bookingStats.pending}
-                  </span>
-                )}
-              </TabsTrigger>
-            )}
-            <TabsTrigger value="financials" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              Financials
-            </TabsTrigger>
-          </TabsList>
-
-          {/* View Toggle for Power Users */}
-          {isPowerUser && activeTab === 'inventory' && (
-            <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg">
-              <Button 
-                variant={viewMode === 'grid' ? 'default' : 'ghost'} 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={() => setViewMode('grid')}
-              >
-                <Grid3X3 className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant={viewMode === 'table' ? 'default' : 'ghost'} 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={() => setViewMode('table')}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+      {/* View Toggle for Power Users - Only on Inventory */}
+      {isPowerUser && activeTab === 'inventory' && (
+        <div className="flex items-center justify-end mb-4">
+          <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg">
+            <Button 
+              variant={viewMode === 'grid' ? 'default' : 'ghost'} 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={() => setViewMode('grid')}
+            >
+              <Grid3X3 className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant={viewMode === 'table' ? 'default' : 'ghost'} 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={() => setViewMode('table')}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
+      )}
 
-        {/* Tab: Overview (Inbox Zero) */}
-        <TabsContent value="overview" className="mt-0 space-y-6">
+      {/* Tab Content: Overview */}
+      {activeTab === 'overview' && (
+        <div className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               {/* Priority: Bookings & Offers */}
@@ -246,10 +215,12 @@ const HostDashboard = () => {
               <CompactInsights />
             </div>
           </div>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* Tab: Inventory */}
-        <TabsContent value="inventory" className="mt-0">
+      {/* Tab Content: Inventory */}
+      {activeTab === 'inventory' && (
+        <>
           {viewMode === 'table' && isPowerUser ? (
             <OperationsTable 
               listings={listings}
@@ -305,17 +276,19 @@ const HostDashboard = () => {
               </div>
             </div>
           )}
-        </TabsContent>
+        </>
+      )}
 
-        {/* Tab: Bookings */}
-        <TabsContent value="bookings" className="mt-0">
-          <div className="p-4 rounded-xl bg-card border border-border">
-            <BookingRequestsSection />
-          </div>
-        </TabsContent>
+      {/* Tab Content: Bookings */}
+      {activeTab === 'bookings' && userType !== 'seller' && (
+        <div className="p-4 rounded-xl bg-card border border-border">
+          <BookingRequestsSection />
+        </div>
+      )}
 
-        {/* Tab: Financials (Consolidated) */}
-        <TabsContent value="financials" className="mt-0 space-y-6">
+      {/* Tab Content: Financials */}
+      {activeTab === 'financials' && (
+        <div className="space-y-6">
           {/* Revenue Analytics */}
           <div className="p-4 rounded-xl bg-card border border-border">
             {revenueLoading ? (
@@ -364,8 +337,8 @@ const HostDashboard = () => {
 
           {/* Sales Section - For sellers/hybrid */}
           {userType !== 'host' && <SellerSalesSection />}
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
 
       {/* Stripe Connect Modal */}
       <StripeConnectModal
