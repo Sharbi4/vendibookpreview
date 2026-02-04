@@ -149,6 +149,7 @@ const Account = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [activeSection, setActiveSection] = useState('personal');
 
   useEffect(() => {
     if (!user) {
@@ -629,8 +630,6 @@ const Account = () => {
     { id: 'notifications', icon: Bell, label: 'Notifications' },
     { id: 'profile', icon: Globe, label: 'Public profile' },
   ];
-
-  const [activeSection, setActiveSection] = useState('personal');
 
   const scrollToSection = (id: string) => {
     setActiveSection(id);
