@@ -1,272 +1,205 @@
 
-# Server-Side Search Refactor: Scalable Architecture
+# Homepage Optimization: Performance, UX & CLS Fixes
 
-## Problem Summary
+## Issues Summary
 
-The current `Search.tsx` has **three critical scalability issues**:
+Based on analysis of `Index.tsx`, `ListingsSections.tsx`, `AnnouncementBanner.tsx`, `NewsletterPopup.tsx`, and `SEO.tsx`:
 
-1. **Full Table Download**: Fetches ALL published listings on page load (`SELECT * FROM listings WHERE status = 'published'`), then filters client-side with JavaScript and Fuse.js
-2. **N+1 Query Waterfall**: After fetching listings, triggers separate queries for:
-   - Host verification status (`get_host_verification_status` RPC)
-   - Unavailable dates (blocked_dates + booking_requests)
-3. **No Pagination**: All results render at once with no lazy loading
-
-With 47 listings today, this is unnoticeable. At 500+ listings, the page will become slow. At 5,000+, it will be unusable.
-
----
-
-## Solution Architecture
-
-Move all filtering to the server via a new **unified search edge function** that:
-- Accepts all filter parameters in a single request
-- Performs location-based radius filtering server-side
-- Joins host verification data inline
-- Pre-computes availability based on date ranges
-- Returns paginated, sorted results
-
-```text
-CURRENT FLOW (Client-side):
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│  Fetch ALL  │ -> │ Fetch Host  │ -> │ Filter with │
-│  Listings   │    │  Profiles   │    │ JavaScript  │
-│  (N rows)   │    │  (N+1)      │    │ Fuse.js     │
-└─────────────┘    └─────────────┘    └─────────────┘
-
-NEW FLOW (Server-side):
-┌─────────────────────────────────────────────────────────┐
-│  POST /functions/v1/search-listings                     │
-│  ─────────────────────────────────────────────────────  │
-│  • Receive filters: category, mode, location, dates,    │
-│    radius, amenities, price, pagination                 │
-│  • Apply filters in SQL                                 │
-│  • Calculate distance using Haversine                   │
-│  • Join profiles for host_verified                      │
-│  • Check availability inline                            │
-│  • Return paginated results + total count               │
-└─────────────────────────────────────────────────────────┘
-```
+| Issue | Severity | Impact |
+|-------|----------|--------|
+| Data fetching waterfall (lazy load → then fetch) | High | Slow time-to-content |
+| Aggressive verification redirect | Medium | Frustrating UX, navigation hijacking |
+| CLS from images without dimensions | Medium | Poor Core Web Vitals score |
+| Inline BNPL banner code | Low | Maintainability |
+| SEO schema missing details | Low | Missed SERP features |
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Create Server-Side Search Edge Function
+### Phase 1: Fix the Verification Redirect (UX)
 
-**File**: `supabase/functions/search-listings/index.ts`
-
-The edge function will accept:
+**Current Behavior (Problem)**:
 ```typescript
-interface SearchRequest {
-  // Filters
-  query?: string;          // Text search on title, description, address
-  mode?: 'rent' | 'sale';  // Listing mode filter
-  category?: string;       // Category filter
-  latitude?: number;       // User location for radius
-  longitude?: number;
-  radius_miles?: number;   // Default 25
-  
-  // Date availability (for rentals)
-  start_date?: string;     // YYYY-MM-DD
-  end_date?: string;
-  
-  // Additional filters
-  amenities?: string[];    // Required amenities
-  min_price?: number;
-  max_price?: number;
-  instant_book_only?: boolean;
-  verified_hosts_only?: boolean;
-  delivery_capable?: boolean;
-  
-  // Pagination & sorting
-  page?: number;           // Default 1
-  page_size?: number;      // Default 20, max 50
-  sort_by?: 'newest' | 'price_low' | 'price_high' | 'distance' | 'relevance';
-}
+useEffect(() => {
+  if (!isLoading && user && !isVerified) {
+    // Hard redirect to /verify-identity
+    navigate('/verify-identity');
+  }
+}, ...);
 ```
 
-Returns:
+**New Behavior**:
+- Replace redirect with a dismissible banner at the top of the page
+- Banner shows only for logged-in, unverified users who haven't dismissed it
+- Uses the existing `Alert` component with a CTA button
+
+**New File**: `src/components/home/VerificationBanner.tsx`
 ```typescript
-interface SearchResponse {
-  listings: Array<{
-    ...listing,
-    distance_miles?: number;
-    host_verified: boolean;
-    is_available: boolean;  // For rental date filtering
-  }>;
-  total_count: number;
-  page: number;
-  page_size: number;
-  total_pages: number;
-}
+// Shows a non-blocking alert for unverified users
+// "Verify your identity to unlock booking" + Verify Now button + Dismiss (X)
+// Respects localStorage dismissal state
 ```
 
-### Phase 2: Server-Side Filtering Logic
+### Phase 2: Fix CLS (Image Dimensions)
 
-The edge function will:
-
-1. **Text Search**: Use PostgreSQL `ILIKE` on title, description, address (Fuse.js removed)
-2. **Location Filtering**: Apply Haversine distance calculation in JavaScript after fetching nearby candidates (bounding box optimization first)
-3. **Date Availability**: Exclude listings with conflicts in `listing_blocked_dates` or `booking_requests`
-4. **Joined Data**: Query `profiles.identity_verified` in the same response
-5. **Pagination**: Use `.range(offset, offset + pageSize - 1)`
-
-### Phase 3: Update `Search.tsx` to Use Edge Function
-
-Replace the current client-side approach:
-
-```typescript
-// BEFORE (current)
-const { data: listings } = useQuery({
-  queryKey: ['search-listings'],
-  queryFn: async () => {
-    const { data } = await supabase
-      .from('listings')
-      .select('*')
-      .eq('status', 'published');
-    return data;
-  },
-});
-// + Fuse.js filtering + multiple separate queries
-
-// AFTER (new)
-const { data: searchResults, isLoading } = useQuery({
-  queryKey: ['search-listings', filters, page],
-  queryFn: async () => {
-    const { data, error } = await supabase.functions.invoke('search-listings', {
-      body: {
-        query: searchQuery,
-        mode: mode !== 'all' ? mode : undefined,
-        category: category !== 'all' ? category : undefined,
-        latitude: locationCoords?.[1],
-        longitude: locationCoords?.[0],
-        radius_miles: searchRadius,
-        start_date: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
-        end_date: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
-        amenities: selectedAmenities.length > 0 ? selectedAmenities : undefined,
-        min_price: priceRange[0] > 0 ? priceRange[0] : undefined,
-        max_price: priceRange[1] !== Infinity ? priceRange[1] : undefined,
-        instant_book_only: instantBookOnly || undefined,
-        verified_hosts_only: verifiedHostsOnly || undefined,
-        page,
-        page_size: 20,
-        sort_by: sortBy,
-      }
-    });
-    return data;
-  },
-  keepPreviousData: true,  // Smooth pagination transitions
-});
+**Problem**: Payment logos use CSS-only sizing without explicit `width` and `height`:
+```tsx
+<img src={affirmLogo} alt="Affirm" className="h-7 md:h-9" />
 ```
 
-### Phase 4: Add Pagination UI
-
-Add pagination controls at the bottom of results:
-
-```typescript
-// New component or inline
-<Pagination>
-  <PaginationContent>
-    <PaginationItem>
-      <PaginationPrevious 
-        onClick={() => setPage(p => Math.max(1, p - 1))}
-        disabled={page === 1}
-      />
-    </PaginationItem>
-    {/* Page numbers */}
-    <PaginationItem>
-      <PaginationNext 
-        onClick={() => setPage(p => p + 1)}
-        disabled={page >= searchResults?.total_pages}
-      />
-    </PaginationItem>
-  </PaginationContent>
-</Pagination>
+**Fix**: Add explicit `width` and `height` attributes to reserve space before load:
+```tsx
+<img 
+  src={affirmLogo} 
+  alt="Affirm" 
+  width={80}      // Add explicit width
+  height={28}     // Add explicit height
+  className="h-7 md:h-9 w-auto object-contain" 
+/>
 ```
 
-### Phase 5: Remove Client-Side Filtering Code
+**Files Affected**:
+- `src/pages/Index.tsx` (BNPL logos)
+- `src/components/home/AnnouncementBanner.tsx` (add min-height to container)
 
-Delete from `Search.tsx`:
-- `Fuse.js` import and setup (lines 3, 216-228)
-- `filteredListings` useMemo (lines 307-412)
-- Separate `hostProfiles` and `unavailableDates` queries (lines 143-213)
-- Client-side distance calculation helpers (lines 243-304)
+### Phase 3: Extract BNPL Banner Component
+
+**Problem**: 35+ lines of inline JSX in `Index.tsx` for the payments banner makes the file messy.
+
+**Solution**: Extract to `src/components/home/PaymentsBanner.tsx`
+
+This component will:
+- Contain all BNPL banner styling and content
+- Import logos internally
+- Include proper image dimensions (from Phase 2)
+- Be simpler to test and modify independently
+
+### Phase 4: Optimize Data Fetching (Eliminate Waterfall)
+
+**Current Problem Flow**:
+```text
+1. Index.tsx renders
+2. Suspense boundary starts loading ListingsSections chunk
+3. ListingsSections mounts
+4. useQuery starts fetching listings data  ← WATERFALL
+5. Data arrives, component renders
+```
+
+**Optimized Flow**: Prefetch data in parallel with lazy component loading.
+
+**Implementation**:
+```typescript
+// In Index.tsx - start fetching immediately, before lazy load completes
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+
+// Prefetch listings data at module level or in useEffect
+const prefetchHomeListings = async (queryClient: QueryClient) => {
+  await queryClient.prefetchQuery({
+    queryKey: ['home-listings'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(12);  // Only fetch what we display
+      return data;
+    },
+    staleTime: 30000, // 30 seconds
+  });
+};
+```
+
+**Alternative Approach** (if prefetch is complex): Move the data fetching up to `Index.tsx` and pass data as props to `ListingsSections`, so data loads in parallel with the lazy chunk.
+
+### Phase 5: Limit Listings Query
+
+**Current**: Fetches ALL published listings
+```typescript
+.eq('status', 'published')
+.order('published_at', { ascending: false });
+// Returns potentially hundreds of rows
+```
+
+**Fix**: Add `.limit(12)` since we only display 6 sale + 6 rent max:
+```typescript
+.eq('status', 'published')
+.order('published_at', { ascending: false })
+.limit(12);  // Only need 12 for homepage display
+```
+
+### Phase 6: Reserve Space for AnnouncementBanner
+
+**Problem**: If the banner loads asynchronously or text wraps differently, it can cause layout shift.
+
+**Fix**: Add `min-height` to ensure consistent space reservation:
+```tsx
+<div className="w-full bg-muted border-b border-border py-2.5 px-4 min-h-[44px]">
+```
+
+This reserves ~44px (padding + line height) so content below doesn't jump.
+
+---
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/pages/Index.tsx` | Remove redirect useEffect, add VerificationBanner, replace inline BNPL with PaymentsBanner, add data prefetch |
+| `src/components/home/VerificationBanner.tsx` | **New file** - dismissible verification prompt |
+| `src/components/home/PaymentsBanner.tsx` | **New file** - extracted BNPL banner with proper image dimensions |
+| `src/components/home/ListingsSections.tsx` | Add `.limit(12)` to query |
+| `src/components/home/AnnouncementBanner.tsx` | Add `min-h-[44px]` class |
 
 ---
 
 ## Technical Details
 
-### Edge Function SQL Strategy
+### VerificationBanner Component Structure
 
-**Bounding Box Optimization for Location**:
-```sql
--- First narrow with bounding box (uses indexes)
-WHERE latitude BETWEEN :lat - :delta AND :lat + :delta
-  AND longitude BETWEEN :lng - :delta AND :lng + :delta
--- Then precise Haversine in JavaScript for final filtering
-```
-
-**Availability Check**:
-```sql
--- Exclude listings with blocked dates in range
-WHERE NOT EXISTS (
-  SELECT 1 FROM listing_blocked_dates bd
-  WHERE bd.listing_id = listings.id
-    AND bd.blocked_date BETWEEN :start AND :end
-)
--- Exclude listings with approved bookings in range
-AND NOT EXISTS (
-  SELECT 1 FROM booking_requests br
-  WHERE br.listing_id = listings.id
-    AND br.status = 'approved'
-    AND br.start_date <= :end
-    AND br.end_date >= :start
-)
-```
-
-**Host Verification Join**:
 ```typescript
-// In edge function, after fetching listings
-const hostIds = [...new Set(listings.map(l => l.host_id).filter(Boolean))];
-const { data: profiles } = await supabaseClient
-  .from('profiles')
-  .select('id, identity_verified')
-  .in('id', hostIds);
+interface VerificationBannerProps {
+  userId: string;
+}
 
-// Merge into listings
-listings.forEach(l => {
-  l.host_verified = profiles.find(p => p.id === l.host_id)?.identity_verified ?? false;
-});
+// Uses Alert component with:
+// - ShieldCheck icon
+// - "Verify your identity to unlock booking" message
+// - "Verify Now" button (Link to /verify-identity)
+// - Dismiss X button (sets localStorage flag)
 ```
 
-### Files to Modify
+### PaymentsBanner Component Structure
 
-| File | Action | Description |
-|------|--------|-------------|
-| `supabase/functions/search-listings/index.ts` | Create | New unified search edge function |
-| `supabase/config.toml` | Modify | Add function configuration |
-| `src/pages/Search.tsx` | Modify | Replace client queries with edge function call, add pagination |
-
-### Config Update
-
-```toml
-[functions.search-listings]
-verify_jwt = false
+```typescript
+// Self-contained component with:
+// - affirm-logo.png import
+// - afterpay-logo.jpg import  
+// - Explicit width/height on images
+// - "Now accepting flexible payments" messaging
+// - "Learn more" CTA to /payments
 ```
+
+### Data Prefetch Strategy
+
+Using React Query's `prefetchQuery` allows the data fetch to start immediately when Index.tsx mounts, running in parallel with the lazy-loaded component chunk download. This eliminates the sequential waterfall.
 
 ---
 
 ## Benefits
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Initial payload | ALL listings (N × ~2KB each) | 20 listings (~40KB) |
-| Network requests | 3+ sequential | 1 |
-| Client CPU | High (Fuse.js + filtering) | Minimal (render only) |
-| Time to interactive | O(N) | O(1) |
-| Works at 10,000 listings | No | Yes |
+| Improvement | Before | After |
+|-------------|--------|-------|
+| Verification UX | Hard redirect hijacks navigation | Dismissible banner, user stays on homepage |
+| CLS Score | Images cause layout shift | Reserved dimensions, no shift |
+| Time to Content | Sequential: load chunk → then fetch data | Parallel: chunk + data load together |
+| Data Transfer | Fetches ALL listings | Fetches only 12 needed |
+| Code Organization | 35+ lines inline JSX | Clean component extraction |
 
 ---
 
-## Note on HowItWorks Gallery
+## SEO Schema Enhancement (Optional)
 
-The "Featured Assets Gallery" mentioned in your audit was **already removed** during the previous refactor. The HowItWorks page now uses the "Traffic Controller" pattern with role-based content (buyer vs. seller). No further changes needed there.
+The current `generateOrganizationSchema` already includes `logo` and `sameAs` social links. The `generateWebSiteSchema` already includes `SearchAction`. These are correctly implemented - no changes needed.
