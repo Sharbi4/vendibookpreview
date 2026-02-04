@@ -20,8 +20,10 @@ import {
   Percent,
   Target,
   Repeat,
-  Zap
+  Zap,
+  Eye
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -36,6 +38,56 @@ const HostReporting = () => {
   const { analytics, isLoading } = useRevenueAnalytics();
   const { openStripeDashboard, isOpeningDashboard } = useStripeConnect();
   const [timeRange, setTimeRange] = useState('30d');
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = () => {
+    if (!analytics) return;
+    setIsExporting(true);
+
+    try {
+      const overviewData = [
+        { Metric: 'Total Lifetime Earnings', Value: analytics.totalEarnings },
+        { Metric: 'Total Paid Out', Value: analytics.totalPaidOut },
+        { Metric: 'Pending Payout', Value: analytics.pendingPayout },
+        { Metric: 'Revenue (This Month)', Value: analytics.revenueThisMonth },
+        { Metric: 'Revenue (Last Month)', Value: analytics.revenueLastMonth },
+        { Metric: 'Total Transactions', Value: analytics.totalTransactions },
+        { Metric: 'Average Order Value', Value: analytics.averageOrderValue },
+      ];
+
+      const monthlyData = analytics.monthlyRevenue.map(m => ({
+        Month: m.month,
+        Revenue: m.revenue,
+        Payouts: m.payouts
+      }));
+
+      const transactionData = analytics.payoutHistory.map(p => ({
+        Date: new Date(p.created_at).toLocaleDateString(),
+        Listing: p.listing_title,
+        Amount: p.amount,
+        'Your Payout': p.seller_payout,
+        'Platform Fee': p.platform_fee,
+        Status: p.status,
+      }));
+
+      const wb = XLSX.utils.book_new();
+      
+      const wsOverview = XLSX.utils.json_to_sheet(overviewData);
+      XLSX.utils.book_append_sheet(wb, wsOverview, 'Overview');
+
+      const wsMonthly = XLSX.utils.json_to_sheet(monthlyData);
+      XLSX.utils.book_append_sheet(wb, wsMonthly, 'Monthly Performance');
+
+      const wsTransactions = XLSX.utils.json_to_sheet(transactionData);
+      XLSX.utils.book_append_sheet(wb, wsTransactions, 'Recent Transactions');
+
+      XLSX.writeFile(wb, `Vendibook_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+    } catch (error) {
+      console.error("Export failed", error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const chartData = analytics?.monthlyRevenue || [];
 
@@ -99,9 +151,14 @@ const HostReporting = () => {
                 {isOpeningDashboard ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
                 Stripe Dashboard
               </Button>
-              <Button variant="outline" className="gap-2 rounded-xl border-border hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-200">
-                <Download className="h-4 w-4" />
-                Export
+              <Button 
+                variant="outline" 
+                className="gap-2 rounded-xl border-border hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-200"
+                onClick={handleExport}
+                disabled={isLoading || !analytics || isExporting}
+              >
+                {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                Export Report
               </Button>
             </div>
           </div>
