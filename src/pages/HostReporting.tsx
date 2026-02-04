@@ -151,14 +151,9 @@ const HostReporting = () => {
                 {isOpeningDashboard ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
                 Stripe Dashboard
               </Button>
-              <Button 
-                variant="outline" 
-                className="gap-2 rounded-xl border-border hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-200"
-                onClick={handleExport}
-                disabled={isLoading || !analytics || isExporting}
-              >
-                {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                Export Report
+              <Button variant="outline" className="gap-2 rounded-xl border-border hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-200">
+                <Download className="h-4 w-4" />
+                Export
               </Button>
             </div>
           </div>
