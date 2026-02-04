@@ -29,7 +29,7 @@ const BecomeHostSection = () => {
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                   <DollarSign className="h-5 w-5 text-primary" />
                 </div>
-                <span className="text-background/80">Secure payments held in escrow</span>
+                <span className="text-background/80">Built-in booking & calendar management</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
