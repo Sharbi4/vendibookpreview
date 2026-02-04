@@ -70,7 +70,7 @@ const Hero = () => {
   const parallax3 = scrollY * 0.2;
 
   return (
-    <section className="relative overflow-hidden pt-2 pb-6 mx-4 mt-4 rounded-3xl">
+    <section className="relative overflow-hidden pt-2 pb-6 mx-4 mt-4 rounded-[3rem]">
       {/* Hero background image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"

@@ -14,7 +14,13 @@ import {
   Loader2,
   BarChart3,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Users,
+  Calendar,
+  Percent,
+  Target,
+  Repeat,
+  Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -52,12 +58,12 @@ const HostReporting = () => {
       <Header />
       
       <main className="flex-1 container max-w-7xl py-8">
-        {/* Header with Orange Theme */}
+        {/* Header with Dark Shine Design */}
         <div className="p-6 rounded-2xl bg-card border border-border mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-[#FF5124]/10 flex items-center justify-center">
-                <BarChart3 className="h-6 w-6 text-[#FF5124]" />
+              <div className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center">
+                <BarChart3 className="h-6 w-6 text-background" />
               </div>
               <div>
                 <Link 
@@ -74,7 +80,7 @@ const HostReporting = () => {
             
             <div className="flex items-center gap-3">
               <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-[140px] rounded-xl">
+                <SelectTrigger className="w-[140px] rounded-xl border-border">
                   <SelectValue placeholder="Last 30 days" />
                 </SelectTrigger>
                 <SelectContent>
@@ -86,14 +92,14 @@ const HostReporting = () => {
               </Select>
               <Button 
                 variant="outline" 
-                className="gap-2 rounded-xl"
+                className="gap-2 rounded-xl border-border hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-200"
                 onClick={() => openStripeDashboard()}
                 disabled={isOpeningDashboard}
               >
                 {isOpeningDashboard ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
                 Stripe Dashboard
               </Button>
-              <Button variant="outline" className="gap-2 rounded-xl">
+              <Button variant="outline" className="gap-2 rounded-xl border-border hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-200">
                 <Download className="h-4 w-4" />
                 Export
               </Button>
@@ -107,79 +113,103 @@ const HostReporting = () => {
           </div>
         ) : (
           <>
-            {/* Key Metrics - 6 Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            {/* Key Metrics - Primary Row */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
               <MetricCard 
                 title="Total Earnings" 
                 value={`$${(analytics?.totalEarnings || 0).toLocaleString()}`} 
                 icon={DollarSign}
-                iconBg="bg-[#FF5124]/10"
-                iconColor="text-[#FF5124]"
+                highlight
               />
               <MetricCard 
                 title="This Month" 
                 value={`$${(analytics?.revenueThisMonth || 0).toLocaleString()}`} 
                 icon={TrendingUp}
                 trend={analytics?.revenueTrend}
-                iconBg="bg-emerald-100"
-                iconColor="text-emerald-600"
               />
               <MetricCard 
                 title="Last Month" 
                 value={`$${(analytics?.revenueLastMonth || 0).toLocaleString()}`} 
                 icon={Clock}
-                iconBg="bg-blue-100"
-                iconColor="text-blue-600"
               />
               <MetricCard 
                 title="Total Paid Out" 
                 value={`$${(analytics?.totalPaidOut || 0).toLocaleString()}`} 
                 icon={Wallet}
-                iconBg="bg-purple-100"
-                iconColor="text-purple-600"
               />
               <MetricCard 
                 title="Pending Payout" 
                 value={`$${(analytics?.pendingPayout || 0).toLocaleString()}`} 
                 icon={Receipt}
-                iconBg="bg-amber-100"
-                iconColor="text-amber-600"
+                highlight={(analytics?.pendingPayout ?? 0) > 0}
               />
               <MetricCard 
                 title="Avg Order Value" 
                 value={`$${(analytics?.averageOrderValue || 0).toFixed(0)}`} 
-                subtitle={`${analytics?.totalTransactions || 0} transactions`}
+                subtitle={`${analytics?.totalTransactions || 0} orders`}
                 icon={CreditCard}
-                iconBg="bg-slate-100"
-                iconColor="text-slate-600"
               />
             </div>
 
-            {/* Revenue Trend Card */}
+            {/* Secondary Metrics - Insights Row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <MetricCard 
+                title="Total Transactions" 
+                value={analytics?.totalTransactions || 0} 
+                subtitle="Completed bookings"
+                icon={Calendar}
+              />
+              <MetricCard 
+                title="Platform Fees" 
+                value={`$${((analytics?.totalEarnings || 0) * 0.10).toFixed(0)}`} 
+                subtitle="~10% service fee"
+                icon={Percent}
+              />
+              <MetricCard 
+                title="Net Earnings" 
+                value={`$${((analytics?.totalEarnings || 0) * 0.90).toFixed(0)}`} 
+                subtitle="After fees"
+                icon={Target}
+              />
+              <MetricCard 
+                title="Payout Rate" 
+                value={`${analytics?.totalEarnings ? ((analytics?.totalPaidOut / analytics.totalEarnings) * 100).toFixed(0) : 0}%`} 
+                subtitle="Earnings paid out"
+                icon={Zap}
+              />
+            </div>
+
+            {/* Revenue Trend Card - Dark Shine */}
             {analytics?.revenueTrend !== undefined && analytics.revenueTrend !== 0 && (
-              <div className={`p-4 rounded-2xl border mb-8 ${analytics.revenueTrend > 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+              <div className="p-4 rounded-2xl border border-border bg-card mb-8">
                 <div className="flex items-center gap-3">
-                  {analytics.revenueTrend > 0 ? (
-                    <ArrowUpRight className="h-5 w-5 text-emerald-600" />
-                  ) : (
-                    <ArrowDownRight className="h-5 w-5 text-red-600" />
-                  )}
-                  <span className={`font-medium ${analytics.revenueTrend > 0 ? 'text-emerald-700' : 'text-red-700'}`}>
-                    {analytics.revenueTrend > 0 ? '+' : ''}{analytics.revenueTrend}% vs last month
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    ${analytics.revenueThisMonth.toLocaleString()} this month vs ${analytics.revenueLastMonth.toLocaleString()} last month
-                  </span>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${analytics.revenueTrend > 0 ? 'bg-foreground' : 'bg-red-600'}`}>
+                    {analytics.revenueTrend > 0 ? (
+                      <ArrowUpRight className="h-5 w-5 text-background" />
+                    ) : (
+                      <ArrowDownRight className="h-5 w-5 text-white" />
+                    )}
+                  </div>
+                  <div>
+                    <span className="font-semibold text-foreground">
+                      {analytics.revenueTrend > 0 ? '+' : ''}{analytics.revenueTrend}% vs last month
+                    </span>
+                    <p className="text-sm text-muted-foreground">
+                      ${analytics.revenueThisMonth.toLocaleString()} this month vs ${analytics.revenueLastMonth.toLocaleString()} last month
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Charts Section */}
             <div className="grid lg:grid-cols-3 gap-6 mb-8">
-              <Card className="lg:col-span-2 rounded-2xl border-border/60">
+              <Card className="lg:col-span-2 rounded-2xl border-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-[#FF5124]" />
+                    <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center">
+                      <BarChart3 className="h-4 w-4 text-background" />
+                    </div>
                     Revenue & Payouts
                   </CardTitle>
                   <CardDescription>Monthly breakdown of earnings and payouts</CardDescription>
@@ -219,10 +249,12 @@ const HostReporting = () => {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-2xl border-border/60">
+              <Card className="rounded-2xl border-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Receipt className="h-5 w-5 text-[#FF5124]" />
+                    <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center">
+                      <Receipt className="h-4 w-4 text-background" />
+                    </div>
                     Transaction History
                   </CardTitle>
                   <CardDescription>Recent sales and payouts</CardDescription>
@@ -231,14 +263,14 @@ const HostReporting = () => {
                   {analytics?.payoutHistory && analytics.payoutHistory.length > 0 ? (
                     <div className="space-y-3">
                       {analytics.payoutHistory.map((payout) => (
-                        <div key={payout.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+                        <div key={payout.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors border border-border/50">
                           <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${
-                            payout.payout_completed_at ? 'bg-emerald-100' : 'bg-amber-100'
+                            payout.payout_completed_at ? 'bg-foreground' : 'bg-foreground/70'
                           }`}>
                             {payout.payout_completed_at ? (
-                              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                              <CheckCircle2 className="h-4 w-4 text-background" />
                             ) : (
-                              <Clock className="h-4 w-4 text-amber-600" />
+                              <Clock className="h-4 w-4 text-background" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -269,14 +301,14 @@ const HostReporting = () => {
               </Card>
             </div>
 
-            {/* Pending Payout Summary */}
+            {/* Pending Payout Summary - Dark Shine */}
             {(analytics?.pendingPayout ?? 0) > 0 && (
-              <Card className="rounded-2xl border-[#FF5124]/30 bg-[#FF5124]/5">
+              <Card className="rounded-2xl border-foreground/30 bg-foreground/5">
                 <CardContent className="p-6">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-[#FF5124]/10 flex items-center justify-center">
-                        <Wallet className="h-6 w-6 text-[#FF5124]" />
+                      <div className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center">
+                        <Wallet className="h-6 w-6 text-background" />
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Ready for Payout</p>
@@ -284,7 +316,7 @@ const HostReporting = () => {
                       </div>
                     </div>
                     <Button 
-                      className="bg-[#FF5124] hover:bg-[#FF5124]/90 rounded-xl"
+                      className="bg-foreground text-background hover:bg-foreground/90 rounded-xl"
                       onClick={() => openStripeDashboard()}
                       disabled={isOpeningDashboard}
                     >
@@ -309,22 +341,22 @@ const MetricCard = ({
   subtitle,
   icon: Icon, 
   trend,
-  iconBg,
-  iconColor
+  highlight
 }: {
   title: string;
-  value: string;
+  value: string | number;
   subtitle?: string;
   icon: React.ComponentType<{ className?: string }>;
   trend?: number;
-  iconBg: string;
-  iconColor: string;
+  highlight?: boolean;
 }) => (
-  <Card className="rounded-2xl border-border/60">
+  <Card className={`rounded-2xl border-border hover:border-foreground/30 transition-all duration-200 shadow-sm ${
+    highlight ? 'border-foreground/50 bg-foreground/5' : ''
+  }`}>
     <CardContent className="p-4">
       <div className="flex items-center gap-3 mb-3">
-        <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center`}>
-          <Icon className={`h-4 w-4 ${iconColor}`} />
+        <div className="w-9 h-9 rounded-lg bg-foreground flex items-center justify-center">
+          <Icon className="h-4 w-4 text-background" />
         </div>
         <p className="text-xs font-medium text-muted-foreground">{title}</p>
       </div>
