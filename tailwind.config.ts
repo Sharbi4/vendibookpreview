@@ -81,6 +81,9 @@ export default {
         xl: "1rem",
         "2xl": "1.25rem",
       },
+      padding: {
+        'safe': 'env(safe-area-inset-bottom)',
+      },
       boxShadow: {
         card: "var(--shadow-card)",
         "card-hover": "var(--shadow-card-hover)",
