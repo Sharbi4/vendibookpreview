@@ -1,353 +1,246 @@
 
 
-# Add Subcategories to Listing Creation Wizard
+# Listing Wizard UX Overhaul: Split-Screen Layout & Field Consolidation
 
 ## Overview
 
-Add a **subcategory** field to listing creation that allows hosts to specify a more detailed type within each main category. This enables better filtering and helps renters/buyers find exactly what they need.
+This plan addresses three core UX issues in the Listing Wizard:
+
+1. **The "Blind" Wizard Problem** - Users can't see their listing preview until clicking a hidden button
+2. **Step 3 Overload** - Pricing step contains too many unrelated sections (price, availability, deposits, payment methods, freight)
+3. **Disconnected Field Grouping** - Dimensions float separately, instructions are far from their toggles
 
 ---
 
-## Proposed Subcategories (5 per category)
+## Phase 1: Split-Screen Layout (Desktop)
 
-| Main Category | Subcategories |
-|---------------|---------------|
-| **Food Truck** | Full-Service Kitchen, Coffee & Beverage, BBQ & Smoker, Pizza Truck, Ice Cream & Dessert |
-| **Food Trailer** | Concession Trailer, Catering Trailer, BBQ Pit Trailer, Mobile Bar, Specialty Food Trailer |
-| **Ghost Kitchen** | Commercial Kitchen, Cottage Kitchen, Bakery Kitchen, Prep Kitchen, Shared Commissary |
-| **Vendor Lot** | Festival Ground, Farmers Market Spot, Brewery/Bar Patio, Private Event Space, Street Corner Spot |
+Transform the wizard from a single-column layout to a 2-column layout on large screens.
+
+**Current Layout (lines 952-964 of ListingWizard.tsx):**
+```
+container max-w-2xl → single column form
+```
+
+**New Layout:**
+```
+container max-w-7xl → 12-column grid
+├── Left (7-8 cols): Form + Navigation
+└── Right (4-5 cols): Sticky Preview + Checklist
+```
+
+### Changes to `ListingWizard.tsx`:
+
+1. **Expand container width** from `max-w-2xl` to `max-w-7xl`
+2. **Add 12-column grid layout** with responsive breakpoints
+3. **Move preview to persistent right sidebar** (currently in modal only)
+4. **Add sticky positioning** with `top-24` for header clearance
+5. **Show live ListingCardPreview** with real-time form data
+6. **Display PublishChecklist** below preview showing missing requirements
+7. **Hide right column on mobile** (`hidden lg:block`)
+
+### Mobile Behavior:
+- Preview button remains for modal access
+- Form stays single-column full-width
+- All simplification improvements still apply
 
 ---
 
-## Implementation Plan
+## Phase 2: Simplify StepPricing.tsx
 
-### Phase 1: Database Migration
+Restructure the pricing step into clear visual sections with reduced cognitive load.
 
-Add a new `subcategory` column to the `listings` table:
+### Current Structure (743 lines):
+- AI Pricing Assistant (large gradient card)
+- Rental/Sale suggestions display
+- Price inputs
+- Payout estimates
+- Availability dates (rental)
+- Instant Book toggle (rental)
+- Security Deposit (rental)
+- Payment Methods (sale)
+- Freight Settings (sale)
 
-```sql
-ALTER TABLE listings 
-ADD COLUMN subcategory text;
+### New Structure:
 
--- Add index for filtering performance
-CREATE INDEX idx_listings_subcategory ON listings(subcategory);
-```
+**Section 1: Core Price (Hero)**
+- Larger price inputs (`text-2xl` for rental, `text-3xl` for sale)
+- AI button moved to inline header (subtle ghost button)
+- Payout estimate immediately below
 
-The column is nullable so existing listings don't break, and new listings can optionally specify a subcategory.
+**Section 2: Financial Settings (2-column grid)**
+| Left Column: Protection | Right Column: Settings |
+|------------------------|----------------------|
+| Security Deposit (rental) | Instant Book toggle |
+| Payment Methods (sale) | Availability Window |
 
----
+**Section 3: Logistics (separated)**
+- Freight Settings (sale only) - keep existing card
 
-### Phase 2: Type Definitions
-
-**File: `src/types/listing.ts`**
-
-Add new type and constants:
-
-```typescript
-// Subcategory type - string union for each main category
-export type FoodTruckSubcategory = 
-  | 'full_service_kitchen' 
-  | 'coffee_beverage' 
-  | 'bbq_smoker' 
-  | 'pizza_truck' 
-  | 'ice_cream_dessert';
-
-export type FoodTrailerSubcategory = 
-  | 'concession_trailer' 
-  | 'catering_trailer' 
-  | 'bbq_pit_trailer' 
-  | 'mobile_bar' 
-  | 'specialty_food';
-
-export type GhostKitchenSubcategory = 
-  | 'commercial_kitchen' 
-  | 'cottage_kitchen' 
-  | 'bakery_kitchen' 
-  | 'prep_kitchen' 
-  | 'shared_commissary';
-
-export type VendorLotSubcategory = 
-  | 'festival_ground' 
-  | 'farmers_market' 
-  | 'brewery_patio' 
-  | 'private_event' 
-  | 'street_corner';
-
-export type ListingSubcategory = 
-  | FoodTruckSubcategory 
-  | FoodTrailerSubcategory 
-  | GhostKitchenSubcategory 
-  | VendorLotSubcategory;
-
-// Subcategory options mapped by parent category
-export const SUBCATEGORIES_BY_CATEGORY: Record<ListingCategory, { 
-  value: string; 
-  label: string; 
-  description: string 
-}[]> = {
-  food_truck: [
-    { value: 'full_service_kitchen', label: 'Full-Service Kitchen', description: 'Complete cooking setup for any cuisine' },
-    { value: 'coffee_beverage', label: 'Coffee & Beverage', description: 'Espresso, smoothies, and specialty drinks' },
-    { value: 'bbq_smoker', label: 'BBQ & Smoker', description: 'Built-in smoker and grill setup' },
-    { value: 'pizza_truck', label: 'Pizza Truck', description: 'Wood-fired or deck oven for pizza' },
-    { value: 'ice_cream_dessert', label: 'Ice Cream & Dessert', description: 'Freezers and soft-serve equipment' },
-  ],
-  food_trailer: [
-    { value: 'concession_trailer', label: 'Concession Trailer', description: 'Classic fair-style food service' },
-    { value: 'catering_trailer', label: 'Catering Trailer', description: 'High-volume event catering setup' },
-    { value: 'bbq_pit_trailer', label: 'BBQ Pit Trailer', description: 'Dedicated smoker and BBQ pit' },
-    { value: 'mobile_bar', label: 'Mobile Bar', description: 'Beverage service with bar setup' },
-    { value: 'specialty_food', label: 'Specialty Food Trailer', description: 'Unique cuisine or concept builds' },
-  ],
-  ghost_kitchen: [
-    { value: 'commercial_kitchen', label: 'Commercial Kitchen', description: 'Full commercial-grade facility' },
-    { value: 'cottage_kitchen', label: 'Cottage Kitchen', description: 'Licensed home kitchen for cottage food' },
-    { value: 'bakery_kitchen', label: 'Bakery Kitchen', description: 'Ovens, mixers, and pastry equipment' },
-    { value: 'prep_kitchen', label: 'Prep Kitchen', description: 'Prep-only space for off-site cooking' },
-    { value: 'shared_commissary', label: 'Shared Commissary', description: 'Multi-vendor shared kitchen space' },
-  ],
-  vendor_lot: [
-    { value: 'festival_ground', label: 'Festival Ground', description: 'High-traffic event and festival spots' },
-    { value: 'farmers_market', label: 'Farmers Market Spot', description: 'Weekly market vendor locations' },
-    { value: 'brewery_patio', label: 'Brewery/Bar Patio', description: 'Partnered taproom or bar location' },
-    { value: 'private_event', label: 'Private Event Space', description: 'Bookable for private functions' },
-    { value: 'street_corner', label: 'Street Corner Spot', description: 'Permitted street vending locations' },
-  ],
-};
-
-// Labels for display
-export const SUBCATEGORY_LABELS: Record<string, string> = {
-  // Food Truck
-  full_service_kitchen: 'Full-Service Kitchen',
-  coffee_beverage: 'Coffee & Beverage',
-  bbq_smoker: 'BBQ & Smoker',
-  pizza_truck: 'Pizza Truck',
-  ice_cream_dessert: 'Ice Cream & Dessert',
-  // Food Trailer
-  concession_trailer: 'Concession Trailer',
-  catering_trailer: 'Catering Trailer',
-  bbq_pit_trailer: 'BBQ Pit Trailer',
-  mobile_bar: 'Mobile Bar',
-  specialty_food: 'Specialty Food Trailer',
-  // Ghost Kitchen
-  commercial_kitchen: 'Commercial Kitchen',
-  cottage_kitchen: 'Cottage Kitchen',
-  bakery_kitchen: 'Bakery Kitchen',
-  prep_kitchen: 'Prep Kitchen',
-  shared_commissary: 'Shared Commissary',
-  // Vendor Lot
-  festival_ground: 'Festival Ground',
-  farmers_market: 'Farmers Market Spot',
-  brewery_patio: 'Brewery/Bar Patio',
-  private_event: 'Private Event Space',
-  street_corner: 'Street Corner Spot',
-};
-```
-
-**Update `ListingFormData` interface:**
-
-```typescript
-export interface ListingFormData {
-  mode: ListingMode | null;
-  category: ListingCategory | null;
-  subcategory: string | null;  // NEW FIELD
-  // ... rest of fields
-}
-```
-
-**Update `Listing` interface:**
-
-```typescript
-export interface Listing {
-  // ... existing fields
-  subcategory?: string | null;  // NEW FIELD
-}
-```
+### Key Changes:
+1. **Replace large AI card** with inline ghost button in section header
+2. **Increase price input prominence** with larger text and height
+3. **Use `grid md:grid-cols-2`** for financial settings
+4. **Add section headers** with uppercase labels ("PROTECTION", "SETTINGS")
+5. **Consolidate availability dates** into compact inline format
 
 ---
 
-### Phase 3: Form Hook Updates
+## Phase 3: Consolidate Dimensions in StepDetails.tsx
 
-**File: `src/hooks/useListingForm.ts`**
+Group physical specifications into a cohesive "spec sheet" style card.
 
-Add `subcategory: null` to `initialFormData` and clear subcategory when category changes:
+### Current Structure (lines 261-372):
+- Separate card with 2-column + 3-column grids
+- Labels with individual icons
 
-```typescript
-const initialFormData: ListingFormData = {
-  mode: null,
-  category: null,
-  subcategory: null,  // NEW
-  // ... rest
-};
-
-// In updateCategory callback - reset subcategory when category changes
-const updateCategory = useCallback((category: ListingCategory) => {
-  setFormData(prev => {
-    const newData = { 
-      ...prev, 
-      category,
-      subcategory: null,  // Reset subcategory when parent category changes
-    };
-    // ... existing logic
-    return newData;
-  });
-}, []);
+### New Structure:
 ```
+┌─────────────────────────────────────────────────────┐
+│ [Ruler] Physical Specifications                      │
+│ Required for shipping estimates                      │
+├─────────────────────────────────────────────────────┤
+│  LENGTH      WIDTH       HEIGHT       WEIGHT        │
+│  [    ] in  [    ] in   [    ] in    [    ] lbs    │
+├─────────────────────────────────────────────────────┤
+│  Freight Type: [Dropdown]                           │
+└─────────────────────────────────────────────────────┘
+```
+
+### Key Changes:
+1. **Single 4-column grid** for all dimensions
+2. **Unit labels inside inputs** (absolute positioned right)
+3. **Uppercase mini-labels** for cleaner hierarchy
+4. **Consolidated header** with icon and description
+5. **Background styling** with `bg-muted/30 border-border`
 
 ---
 
-### Phase 4: UI Component Updates
+## Phase 4: Context-Pair Instructions in StepLocation.tsx
 
-**File: `src/components/listing-wizard/StepListingType.tsx`**
+Move instruction textareas inside their parent selection cards for better context.
 
-Add subcategory selection that appears after selecting a main category:
+### Current Flow:
+1. Select fulfillment type
+2. Show location input
+3. Show instructions separately below
 
-```text
-Current Flow:
-1. Select Mode (Rent / Sale)
-2. Select Category (Food Truck / Food Trailer / Ghost Kitchen / Vendor Lot)
+### New Flow:
+1. Select fulfillment type
+2. Expand selected option to reveal:
+   - Location input (inside card)
+   - Instructions textarea (inside card)
 
-New Flow:
-1. Select Mode (Rent / Sale)
-2. Select Category (Food Truck / Food Trailer / Ghost Kitchen / Vendor Lot)
-3. Select Subcategory (5 options based on selected category) ← NEW
-```
+This pairs context directly with the relevant fields.
 
-**UI Design for Subcategory Selection:**
+---
 
-- Appears conditionally only after a category is selected
-- Uses pill/chip style buttons (smaller than category cards)
-- Horizontal scrollable on mobile, grid on desktop
-- Optional field (can proceed without selecting)
+## Technical Implementation
 
+### Files to Modify:
+
+| File | Changes |
+|------|---------|
+| `src/components/listing-wizard/ListingWizard.tsx` | Split-screen layout, persistent preview sidebar |
+| `src/components/listing-wizard/StepPricing.tsx` | Restructure into 3 sections, inline AI button, 2-col grid |
+| `src/components/listing-wizard/StepDetails.tsx` | 4-column dimensions grid |
+| `src/components/listing-wizard/StepLocation.tsx` | Inline instructions in selection cards |
+| `src/components/listing-wizard/ListingCardPreview.tsx` | Accept formData props directly for preview |
+
+---
+
+## Detailed Code Changes
+
+### 1. ListingWizard.tsx (lines 952-1030)
+
+**Replace content container with split-screen layout:**
+
+- Change `max-w-2xl` to `max-w-7xl`
+- Add `grid grid-cols-1 lg:grid-cols-12 gap-8`
+- Left column: `lg:col-span-7 xl:col-span-8` with form and navigation
+- Right column: `hidden lg:block lg:col-span-5 xl:col-span-4` with sticky preview
+- Add `Eye` icon header for preview section
+- Include `ListingCardPreview` with mapped formData
+- Show `PublishChecklist` below preview
+
+### 2. StepPricing.tsx
+
+**Section 1 - Core Price:**
+- Header with inline AI button: `flex justify-between`
+- Price inputs with `text-2xl font-bold h-14` (rental) or `text-3xl font-bold h-16` (sale)
+- Payout estimate card immediately after
+
+**Section 2 - Financial Settings:**
+- Divider: `<div className="h-px bg-border" />`
+- Grid: `grid md:grid-cols-2 gap-6`
+- Column headers: `text-sm font-medium text-muted-foreground uppercase tracking-wider`
+- Cards with consistent styling: `p-4 rounded-xl border border-border bg-card`
+
+**Section 3 - Logistics:**
+- Keep existing freight card for sales
+- Remove from rental flow (not applicable)
+
+### 3. StepDetails.tsx (lines 261-372)
+
+**Replace current dimensions layout with:**
 ```tsx
-{/* Subcategory Selection - appears after category is selected */}
-{formData.category && (
-  <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
-    <div className="flex items-center gap-2">
-      <Label className="text-lg font-semibold">What type of {CATEGORY_LABELS[formData.category]}?</Label>
-      <span className="text-sm text-muted-foreground">(Optional)</span>
+<div className="bg-muted/30 border border-border rounded-xl p-5 space-y-4">
+  <div className="flex items-center gap-2">
+    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg">
+      <Ruler className="h-4 w-4" />
     </div>
-    
-    <div className="flex flex-wrap gap-3">
-      {SUBCATEGORIES_BY_CATEGORY[formData.category].map((sub) => (
-        <button
-          key={sub.value}
-          type="button"
-          onClick={() => updateField('subcategory', 
-            formData.subcategory === sub.value ? null : sub.value
-          )}
-          className={cn(
-            "px-4 py-2.5 rounded-full border text-sm font-medium transition-all",
-            formData.subcategory === sub.value
-              ? "bg-primary text-primary-foreground border-primary"
-              : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
-          )}
-        >
-          {sub.label}
-        </button>
-      ))}
+    <div>
+      <Label className="text-base font-semibold">Physical Specifications</Label>
+      <p className="text-xs text-muted-foreground">Required for shipping estimates</p>
     </div>
-    
-    {/* Show description of selected subcategory */}
-    {formData.subcategory && (
-      <p className="text-sm text-muted-foreground pl-1">
-        {SUBCATEGORIES_BY_CATEGORY[formData.category].find(
-          s => s.value === formData.subcategory
-        )?.description}
-      </p>
-    )}
   </div>
-)}
+  
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    {/* Length, Width, Height, Weight with inline unit labels */}
+  </div>
+  
+  {/* Freight Type dropdown */}
+</div>
 ```
 
----
+### 4. StepLocation.tsx
 
-### Phase 5: Wizard Integration
-
-**File: `src/components/listing-wizard/ListingWizard.tsx`**
-
-Update the listing save logic to include `subcategory`:
-
-```typescript
-// In the saveListing function, add subcategory to the listing data
-const listingData = {
-  // ... existing fields
-  subcategory: formData.subcategory,
-};
-```
+**Restructure fulfillment options to include inline fields:**
+- When "Pickup" is selected, expand to show location + instructions inside the card
+- When "Delivery" is selected, expand to show base location + delivery options inside
+- Use `animate-in fade-in-50` for smooth expansion
 
 ---
 
-## Files to Create/Modify
+## Visual Hierarchy Improvements
 
-| File | Action | Changes |
-|------|--------|---------|
-| Database | Migration | Add `subcategory` text column + index |
-| `src/types/listing.ts` | Modify | Add subcategory types, constants, update interfaces |
-| `src/hooks/useListingForm.ts` | Modify | Add `subcategory` to initial state, reset on category change |
-| `src/components/listing-wizard/StepListingType.tsx` | Modify | Add subcategory pill selector UI |
-| `src/components/listing-wizard/ListingWizard.tsx` | Modify | Include subcategory in save payload |
-| `src/integrations/supabase/types.ts` | Auto-updated | Will reflect new column after migration |
-
----
-
-## Validation Rules
-
-- **Subcategory is optional** - hosts can leave it blank
-- **Must match parent category** - if food_truck is selected, only food truck subcategories are valid
-- **Cleared on category change** - prevents invalid combinations
+| Element | Before | After |
+|---------|--------|-------|
+| Daily price input | `text-lg` | `text-2xl font-bold h-14` |
+| Sale price input | `text-xl` | `text-3xl font-bold h-16` |
+| AI button | Large gradient card (50+ lines) | Inline ghost button (1 line) |
+| Section headers | Mixed styles | Consistent uppercase labels |
+| Dimensions | 2x3 floating grids | 1x4 row in spec card |
+| Preview | Hidden modal | Always-visible sticky sidebar |
 
 ---
 
-## Future Filtering Support
+## Benefits Summary
 
-This enables future filtering on browse/search pages:
-
-```typescript
-// Example filter query
-const { data } = await supabase
-  .from('listings')
-  .select('*')
-  .eq('category', 'ghost_kitchen')
-  .eq('subcategory', 'bakery_kitchen')  // Filter by specific type
-  .eq('status', 'published');
-```
+| Improvement | User Impact |
+|-------------|-------------|
+| Split-screen preview | Instant visual feedback while editing |
+| Simplified pricing | Reduced cognitive load, faster completion |
+| Grouped dimensions | Clear "spec sheet" mental model |
+| Inline instructions | Context preserved, less scrolling |
+| Publish checklist | Clear progress, no surprises |
 
 ---
 
-## Visual Preview
+## Mobile Considerations
 
-```text
-Step 1: Listing Type
-
-┌─────────────────────────────────────────────────────────────┐
-│ What do you want to do?                                     │
-│                                                             │
-│  ┌──────────────────┐  ┌──────────────────┐                │
-│  │ 🏷️ For Rent      │  │ 🛍️ For Sale      │                │
-│  │ Rent out your... │  │ Sell your asset  │                │
-│  └──────────────────┘  └──────────────────┘                │
-│                                                             │
-│ What are you listing?                                       │
-│                                                             │
-│  ┌──────────────────┐  ┌──────────────────┐                │
-│  │ 🚚 Food Truck   ✓│  │ 🚚 Food Trailer  │                │
-│  └──────────────────┘  └──────────────────┘                │
-│  ┌──────────────────┐  ┌──────────────────┐                │
-│  │ 🏢 Ghost Kitchen │  │ 📍 Vendor Lot    │                │
-│  └──────────────────┘  └──────────────────┘                │
-│                                                             │
-│ What type of Food Truck? (Optional)          ← NEW SECTION │
-│                                                             │
-│  ┌────────────────┐ ┌────────────────┐ ┌──────────────┐   │
-│  │ Full-Service  ✓│ │ Coffee & Bev   │ │ BBQ & Smoker │   │
-│  └────────────────┘ └────────────────┘ └──────────────┘   │
-│  ┌─────────────┐ ┌──────────────────────┐                  │
-│  │ Pizza Truck │ │ Ice Cream & Dessert  │                  │
-│  └─────────────┘ └──────────────────────┘                  │
-│                                                             │
-│  "Complete cooking setup for any cuisine"   ← Description  │
-└─────────────────────────────────────────────────────────────┘
-```
+All changes maintain mobile compatibility:
+- Split-screen hidden on `< lg` breakpoints
+- Preview button remains for modal access
+- Simplified sections still apply to single-column
+- Touch-friendly input sizes maintained
 
