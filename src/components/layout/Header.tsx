@@ -266,6 +266,7 @@ const Header = () => {
   const hasSuggestions = filteredRecent.length > 0 || filteredPopular.length > 0;
 
   return (
+    <>
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm supports-[backdrop-filter]:bg-background/80">
       <div className="container max-w-7xl mx-auto px-4 flex h-16 items-center justify-between">
         {/* Logo - hide when mobile search is open */}
@@ -550,19 +551,20 @@ const Header = () => {
           </div>
         </div>
       </div>
-
-      {/* Mobile Menu - Redesigned */}
-      <MobileMenu
-        isOpen={isMenuOpen}
-        onClose={() => setIsMenuOpen(false)}
-        user={user}
-        profile={profile}
-        isVerified={isVerified}
-        isAdmin={isAdmin}
-        onSignOut={handleSignOut}
-        onNavigate={navigate}
-      />
     </header>
+
+    {/* Mobile Menu - Rendered outside header to avoid stacking context issues from backdrop-blur */}
+    <MobileMenu
+      isOpen={isMenuOpen}
+      onClose={() => setIsMenuOpen(false)}
+      user={user}
+      profile={profile}
+      isVerified={isVerified}
+      isAdmin={isAdmin}
+      onSignOut={handleSignOut}
+      onNavigate={navigate}
+    />
+  </>
   );
 };
 

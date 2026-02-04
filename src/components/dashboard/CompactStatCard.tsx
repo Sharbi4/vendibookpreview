@@ -1,4 +1,5 @@
 import { LucideIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
@@ -8,13 +9,15 @@ interface CompactStatCardProps {
   value: number | string;
   subtext?: string;
   highlight?: boolean;
+  href?: string;
 }
 
-export const CompactStatCard = ({ icon: Icon, label, value, subtext, highlight }: CompactStatCardProps) => {
-  return (
+export const CompactStatCard = ({ icon: Icon, label, value, subtext, highlight, href }: CompactStatCardProps) => {
+  const content = (
     <Card className={cn(
       "rounded-2xl border border-border bg-card hover:border-foreground/30 transition-all duration-200 shadow-sm",
-      highlight && "border-foreground/50 bg-foreground/5"
+      highlight && "border-foreground/50 bg-foreground/5",
+      href && "cursor-pointer hover:shadow-md"
     )}>
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
@@ -33,6 +36,12 @@ export const CompactStatCard = ({ icon: Icon, label, value, subtext, highlight }
       </CardContent>
     </Card>
   );
+
+  if (href) {
+    return <Link to={href}>{content}</Link>;
+  }
+
+  return content;
 };
 
 export default CompactStatCard;

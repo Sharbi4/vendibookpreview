@@ -25,7 +25,7 @@ const AirbnbMenuItem = ({
 }: AirbnbMenuItemProps) => {
   const content = (
     <div className={cn(
-      "flex items-center justify-between w-full px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer",
+      "flex items-center justify-between w-full px-4 py-3 min-h-[48px] hover:bg-muted/50 active:bg-muted transition-colors cursor-pointer",
       highlight && "bg-gradient-to-r from-primary/5 to-transparent",
       className
     )}>

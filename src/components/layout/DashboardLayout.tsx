@@ -41,7 +41,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
   // Airbnb-style Navigation Config based on mode
   const navigation = mode === 'host' ? [
     { title: 'Overview', icon: LayoutGrid, href: '/dashboard?view=host', tab: null },
-    { title: 'Listings', icon: Truck, href: '/dashboard?view=host&tab=inventory', tab: 'inventory' },
+    { title: 'Listings', icon: Truck, href: '/host/listings', tab: null },
     { title: 'Booking Manager', icon: CalendarDays, href: '/host/bookings', tab: null },
     { title: 'Reporting', icon: BarChart3, href: '/host/reporting', tab: null },
     { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null },

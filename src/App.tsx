@@ -84,6 +84,7 @@ const Payments = lazy(() => import("./pages/Payments"));
 const Rentals = lazy(() => import("./pages/Rentals"));
 const EnterpriseOnboarding = lazy(() => import("./pages/EnterpriseOnboarding"));
 const HostBookings = lazy(() => import("./pages/HostBookings"));
+const HostListings = lazy(() => import("./pages/HostListings"));
 const HostReporting = lazy(() => import("./pages/HostReporting"));
 const HowItWorksHost = lazy(() => import("./pages/HowItWorksHost"));
 const HowItWorksSeller = lazy(() => import("./pages/HowItWorksSeller"));
@@ -140,6 +141,7 @@ const AnimatedRoutes = () => {
           <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
           <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
           <Route path="/host/bookings" element={<PageTransition><HostBookings /></PageTransition>} />
+          <Route path="/host/listings" element={<PageTransition><HostListings /></PageTransition>} />
           <Route path="/host/reporting" element={<PageTransition><HostReporting /></PageTransition>} />
           <Route path="/create-listing" element={<Navigate to="/list" replace />} />
           <Route path="/listing/:id" element={<PageTransition><ListingDetail /></PageTransition>} />

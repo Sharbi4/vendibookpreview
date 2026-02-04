@@ -161,6 +161,7 @@ const HostDashboard = () => {
           label="Listings" 
           value={stats.published}
           subtext={stats.drafts > 0 ? `${stats.drafts} drafts` : "Active"}
+          href="/host/listings"
         />
         <CompactStatCard 
           icon={Eye} 

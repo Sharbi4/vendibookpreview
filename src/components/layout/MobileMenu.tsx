@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Home, Search, MessageSquare, 
   User, Heart, LogOut, PlusCircle, HelpCircle, 
-  Settings, ShieldCheck, CalendarDays, Bell, Globe, LayoutDashboard
+  Settings, ShieldCheck, CalendarDays, Globe, LayoutDashboard, Store, ExternalLink
 } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
@@ -41,6 +41,11 @@ const MobileMenu = ({
 }: MobileMenuProps) => {
   const location = useLocation();
   const isAuthenticated = Boolean(user?.id);
+  
+  // Context-aware: detect if user is on dashboard pages
+  const isDashboardContext = location.pathname.startsWith('/dashboard') || 
+                             location.pathname.startsWith('/host/') ||
+                             location.pathname.startsWith('/messages');
 
   // Lock body scroll when menu is open
   useEffect(() => {
@@ -68,23 +73,23 @@ const MobileMenu = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop - z-[90] to sit above header's backdrop-blur */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            className="fixed inset-0 bg-black/50 z-[90] lg:hidden"
             onClick={onClose}
           />
 
-          {/* Menu Drawer - Right Side Slide */}
+          {/* Menu Drawer - z-[100] to ensure it's always on top */}
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] bg-background z-50 lg:hidden shadow-2xl flex flex-col"
+            className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] bg-background z-[100] lg:hidden shadow-2xl flex flex-col"
           >
             {/* Header Area */}
             <div className="flex items-center justify-between p-5 border-b border-border">
@@ -124,10 +129,78 @@ const MobileMenu = ({
               </button>
             </div>
 
-            {/* Scrollable Content - Airbnb Style */}
+            {/* Scrollable Content - Context-Aware Navigation */}
             <div className="flex-1 overflow-y-auto">
-              {isAuthenticated && (
+              {isAuthenticated && isDashboardContext ? (
+                /* DASHBOARD CONTEXT: Global/Escape actions only - no redundant dashboard links */
                 <>
+                  {/* Return to Public Site */}
+                  <div className="py-2">
+                    <AirbnbMenuItem 
+                      icon={Home} 
+                      label="Return to Home" 
+                      subtext="Exit dashboard"
+                      onClick={() => handleNav('/')} 
+                    />
+                    <AirbnbMenuItem 
+                      icon={Search} 
+                      label="Browse Listings" 
+                      onClick={() => handleNav('/search')} 
+                    />
+                  </div>
+
+                  <div className="h-px bg-border mx-4" />
+
+                  {/* Storefront - Primary action for hosts */}
+                  <div className="py-2">
+                    <AirbnbMenuItem 
+                      icon={Store} 
+                      label="View My Storefront" 
+                      subtext="See your public profile"
+                      onClick={() => handleNav(`/u/${user?.id}`)} 
+                      highlight
+                    />
+                  </div>
+
+                  <div className="h-px bg-border mx-4" />
+
+                  {/* Account & Support */}
+                  <div className="py-2">
+                    <AirbnbMenuItem 
+                      icon={User} 
+                      label="Account Settings" 
+                      onClick={() => handleNav('/account')} 
+                    />
+                    <AirbnbMenuItem 
+                      icon={HelpCircle} 
+                      label="Help Center" 
+                      onClick={() => handleNav('/help')} 
+                    />
+                    {isAdmin && (
+                      <AirbnbMenuItem 
+                        icon={Settings} 
+                        label="Admin Dashboard" 
+                        onClick={() => handleNav('/admin')} 
+                      />
+                    )}
+                  </div>
+                </>
+              ) : isAuthenticated ? (
+                /* PUBLIC PAGE CONTEXT: Full navigation for logged-in users */
+                <>
+                  {/* Primary Actions */}
+                  <div className="py-2">
+                    <AirbnbMenuItem 
+                      icon={LayoutDashboard} 
+                      label="Go to Dashboard" 
+                      subtext="Manage your listings & bookings"
+                      onClick={() => handleNav('/dashboard?view=host')} 
+                      highlight
+                    />
+                  </div>
+
+                  <div className="h-px bg-border mx-4" />
+
                   {/* Core Navigation */}
                   <div className="py-2">
                     <AirbnbMenuItem 
@@ -137,7 +210,7 @@ const MobileMenu = ({
                     />
                     <AirbnbMenuItem 
                       icon={CalendarDays} 
-                      label="Bookings" 
+                      label="My Bookings" 
                       onClick={() => handleNav('/transactions?tab=bookings')} 
                     />
                     <AirbnbMenuItem 
@@ -149,57 +222,34 @@ const MobileMenu = ({
 
                   <div className="h-px bg-border mx-4" />
 
-                  {/* Profile & Notifications */}
-                  <div className="py-2">
-                    <AirbnbMenuItem 
-                      icon={User} 
-                      label="Profile" 
-                      onClick={() => handleNav(`/profile/${user?.id}`)} 
-                    />
-                    <AirbnbMenuItem 
-                      icon={Bell} 
-                      label="Notifications" 
-                      onClick={() => {}} 
-                    />
-                  </div>
-
-                  <div className="h-px bg-border mx-4" />
-
-                  {/* Account Settings */}
-                  <div className="py-2">
-                    <AirbnbMenuItem 
-                      icon={LayoutDashboard} 
-                      label="Dashboard" 
-                      onClick={() => handleNav('/dashboard')} 
-                    />
-                    <AirbnbMenuItem 
-                      icon={Globe} 
-                      label="Language & currency" 
-                      onClick={() => {}} 
-                    />
-                    <AirbnbMenuItem 
-                      icon={HelpCircle} 
-                      label="Help Center" 
-                      onClick={() => handleNav('/help')} 
-                    />
-                  </div>
-
-                  <div className="h-px bg-border mx-4" />
-
                   {/* Hosting Section */}
                   <div className="py-2">
                     <AirbnbMenuItem 
                       icon={PlusCircle} 
                       label="List with Vendibook" 
                       subtext="Rent or sell your assets"
-                      onClick={() => handleNav('/how-it-works-host')} 
-                      highlight
+                      onClick={() => handleNav('/list')} 
                     />
                     <AirbnbMenuItem 
-                      icon={Home} 
-                      label="Become a Host" 
-                      subtext="It's easy to get started"
-                      onClick={() => handleNav('/list')} 
+                      icon={Store} 
+                      label="View My Storefront" 
+                      onClick={() => handleNav(`/u/${user?.id}`)} 
+                    />
+                  </div>
+
+                  <div className="h-px bg-border mx-4" />
+
+                  {/* Account & Support */}
+                  <div className="py-2">
+                    <AirbnbMenuItem 
+                      icon={User} 
+                      label="Account Settings" 
+                      onClick={() => handleNav('/account')} 
+                    />
+                    <AirbnbMenuItem 
+                      icon={HelpCircle} 
+                      label="Help Center" 
+                      onClick={() => handleNav('/help')} 
                     />
                     {!isVerified && (
                       <AirbnbMenuItem 
@@ -217,9 +267,8 @@ const MobileMenu = ({
                     )}
                   </div>
                 </>
-              )}
-
-              {!isAuthenticated && (
+              ) : (
+                /* LOGGED OUT: Minimal navigation */
                 <>
                   <div className="py-2">
                     <AirbnbMenuItem 
@@ -229,7 +278,7 @@ const MobileMenu = ({
                     />
                     <AirbnbMenuItem 
                       icon={Search} 
-                      label="Explore" 
+                      label="Explore Listings" 
                       onClick={() => handleNav('/search')} 
                     />
                   </div>
@@ -237,6 +286,12 @@ const MobileMenu = ({
                   <div className="h-px bg-border mx-4" />
 
                   <div className="py-2">
+                    <AirbnbMenuItem 
+                      icon={PlusCircle} 
+                      label="Become a Host" 
+                      subtext="Start earning today"
+                      onClick={() => handleNav('/how-it-works-host')} 
+                    />
                     <AirbnbMenuItem 
                       icon={HelpCircle} 
                       label="Help Center" 
