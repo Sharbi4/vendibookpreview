@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, CreditCard, FileText, UserCheck, Calendar, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostListings } from '@/hooks/useHostListings';
@@ -118,7 +117,7 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
   // Loading state
   if (stripeLoading || listingsLoading || bookingsLoading) {
     return (
-      <div className="flex items-center justify-center py-4 rounded-2xl bg-card border-0 shadow-xl">
+      <div className="flex items-center justify-center py-4 rounded-xl border border-border bg-card">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
@@ -132,46 +131,43 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
   const Icon = nextStep.icon;
 
   return (
-    <Card className="border-0 shadow-xl rounded-2xl">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-4">
-          <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-primary text-primary-foreground shadow-lg flex items-center justify-center">
-            <Icon className="h-6 w-6" />
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-foreground text-sm leading-tight">
-              {nextStep.title}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {nextStep.description}
-            </p>
-          </div>
-
-          <div className="flex-shrink-0">
-            {nextStep.action.to ? (
-              <Button size="sm" variant="dark-shine" asChild className="gap-1.5">
-                <Link to={nextStep.action.to}>
-                  {nextStep.action.label}
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </Button>
-            ) : (
-              <Button 
-                size="sm" 
-                variant="dark-shine"
-                onClick={nextStep.action.onClick}
-                disabled={isConnectingStripe}
-                className="gap-1.5"
-              >
-                {isConnectingStripe ? 'Connecting...' : nextStep.action.label}
-                {!isConnectingStripe && <ArrowRight className="h-3.5 w-3.5" />}
-              </Button>
-            )}
-          </div>
+    <div className="rounded-xl border border-border p-4 bg-card">
+      <div className="flex items-center gap-4">
+        <div className="shrink-0 w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+          <Icon className="h-6 w-6 text-muted-foreground" />
         </div>
-      </CardContent>
-    </Card>
+        
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-foreground text-sm">
+            {nextStep.title}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {nextStep.description}
+          </p>
+        </div>
+
+        <div className="shrink-0">
+          {nextStep.action.to ? (
+            <Button size="sm" className="bg-foreground text-background hover:bg-foreground/90 gap-1.5" asChild>
+              <Link to={nextStep.action.to}>
+                {nextStep.action.label}
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          ) : (
+            <Button 
+              size="sm" 
+              className="bg-foreground text-background hover:bg-foreground/90 gap-1.5"
+              onClick={nextStep.action.onClick}
+              disabled={isConnectingStripe}
+            >
+              {isConnectingStripe ? 'Connecting...' : nextStep.action.label}
+              {!isConnectingStripe && <ArrowRight className="h-3.5 w-3.5" />}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 
