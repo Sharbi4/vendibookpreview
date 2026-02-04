@@ -32,6 +32,7 @@ import { StripeConnectModal } from './StripeConnectModal';
 import { PublishSuccessModal } from './PublishSuccessModal';
 import { StripeConnectBanner } from './StripeConnectBanner';
 import { ListingPreviewModal } from './ListingPreviewModal';
+import { WizardPreviewSidebar } from './WizardPreviewSidebar';
 
 const STEPS = ['Type', 'Details', 'Pricing', 'Location', 'Documents', 'Media', 'Review'];
 
@@ -949,82 +950,118 @@ export const ListingWizard: React.FC = () => {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="container max-w-2xl mx-auto px-4 py-8">
-        {/* Contextual help tips */}
-        <StepHelpTips
-          currentStep={currentStep}
-          mode={formData.mode}
-          dismissed={dismissedTips.has(currentStep)}
-          onDismiss={() => setDismissedTips(prev => new Set([...prev, currentStep]))}
-        />
-        
-        <div className="bg-card rounded-2xl shadow-sm border p-6 md:p-8">
-          {renderStep()}
-        </div>
-
-        {/* Navigation */}
-        <div className="flex items-center justify-between mt-6">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={prevStep}
-              disabled={currentStep === 1 || isSaving}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
+      {/* Content - Split Screen Layout */}
+      <div className="container max-w-7xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Left Column: Form */}
+          <div className="lg:col-span-7 xl:col-span-8 space-y-6">
+            {/* Contextual help tips */}
+            <StepHelpTips
+              currentStep={currentStep}
+              mode={formData.mode}
+              dismissed={dismissedTips.has(currentStep)}
+              onDismiss={() => setDismissedTips(prev => new Set([...prev, currentStep]))}
+            />
             
-            {/* Preview button - show when there's enough content */}
-            {(formData.title || formData.description) && (
-              <Button
-                variant="ghost"
-                onClick={() => setShowPreviewModal(true)}
-                className="text-muted-foreground"
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                Preview
-              </Button>
-            )}
-          </div>
+            <div className="bg-card rounded-2xl shadow-sm border p-6 md:p-8">
+              {/* Mobile step indicator */}
+              <div className="lg:hidden mb-6">
+                <span className="text-sm font-medium text-muted-foreground">Step {currentStep} of {STEPS.length}</span>
+                <h2 className="text-xl font-bold mt-1">{STEPS[currentStep - 1]}</h2>
+              </div>
+              
+              {renderStep()}
+            </div>
 
-          <div className="flex items-center gap-3">
-            {currentStep === 7 ? (
-              <>
+            {/* Navigation */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => saveListing(false)}
-                  disabled={isSaving || !formData.mode || !formData.category}
+                  onClick={prevStep}
+                  disabled={currentStep === 1 || isSaving}
                 >
-                  {isSaving ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Save className="w-4 h-4 mr-2" />
-                  )}
-                  Save Draft
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
                 </Button>
-                <Button
-                  onClick={() => saveListing(true)}
-                  disabled={isSaving || !canPublish() || (requiresStripeConnect && !isOnboardingComplete)}
-                  title={requiresStripeConnect && !isOnboardingComplete ? 'Connect Stripe to publish' : undefined}
-                >
-                  {isSaving ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Send className="w-4 h-4 mr-2" />
-                  )}
-                  {requiresStripeConnect && !isOnboardingComplete ? 'Connect Stripe to Publish' : 'Publish'}
-                </Button>
-              </>
-            ) : (
-              <Button
-                onClick={nextStep}
-                disabled={!validateStep(currentStep)}
-              >
-                Next
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            )}
+                
+                {/* Preview button - show on mobile when there's enough content */}
+                {(formData.title || formData.description) && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowPreviewModal(true)}
+                    className="text-muted-foreground lg:hidden"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Preview
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3">
+                {currentStep === 7 ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => saveListing(false)}
+                      disabled={isSaving || !formData.mode || !formData.category}
+                    >
+                      {isSaving ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Save className="w-4 h-4 mr-2" />
+                      )}
+                      Save Draft
+                    </Button>
+                    <Button
+                      onClick={() => saveListing(true)}
+                      disabled={isSaving || !canPublish() || (requiresStripeConnect && !isOnboardingComplete)}
+                      title={requiresStripeConnect && !isOnboardingComplete ? 'Connect Stripe to publish' : undefined}
+                    >
+                      {isSaving ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4 mr-2" />
+                      )}
+                      {requiresStripeConnect && !isOnboardingComplete ? 'Connect Stripe to Publish' : 'Publish'}
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    onClick={nextStep}
+                    disabled={!validateStep(currentStep)}
+                  >
+                    Next
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Live Preview (Desktop only) */}
+          <div className="hidden lg:block lg:col-span-5 xl:col-span-4">
+            <WizardPreviewSidebar
+              formData={formData}
+              previewImageUrls={allPreviewImageUrls}
+              currentStep={currentStep}
+              isStripeConnected={isOnboardingComplete}
+              onStepClick={(stepId) => {
+                const stepMap: Record<string, number> = {
+                  'photos': 6,
+                  'headline': 2,
+                  'includes': 2,
+                  'pricing': 3,
+                  'availability': 3,
+                  'location': 4,
+                  'documents': 5,
+                  'stripe': 7,
+                  'review': 7,
+                };
+                const step = stepMap[stepId];
+                if (step) goToStep(step);
+              }}
+            />
           </div>
         </div>
       </div>

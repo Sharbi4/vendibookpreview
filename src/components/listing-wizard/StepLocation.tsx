@@ -182,145 +182,172 @@ export const StepLocation: React.FC<StepLocationProps> = ({
       {/* Show mobile fulfillment options if NOT static */}
       {!formData.is_static_location && (
         <>
-          {/* Fulfillment Type */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium">Fulfillment Options *</Label>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {fulfillmentOptions.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => updateField('fulfillment_type', option.value)}
-              className={cn(
-                "p-4 rounded-xl border-2 text-left transition-all",
-                formData.fulfillment_type === option.value
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-muted-foreground"
-              )}
-            >
-              <div className={cn(
-                "mb-2",
-                formData.fulfillment_type === option.value ? "text-primary" : "text-muted-foreground"
-              )}>
-                {option.icon}
-              </div>
-              <h4 className={cn(
-                "font-medium text-sm",
-                formData.fulfillment_type === option.value ? "text-primary" : "text-foreground"
-              )}>
-                {option.label}
-              </h4>
-              <p className="text-xs text-muted-foreground mt-1">{option.description}</p>
-            </button>
-          ))}
-        </div>
-      </div>
+          {/* Fulfillment Type - Cards with inline fields */}
+          <div className="space-y-3">
+            <Label className="text-base font-medium">Fulfillment Options *</Label>
+            <div className="space-y-3">
+              {fulfillmentOptions.map((option) => {
+                const isSelected = formData.fulfillment_type === option.value;
+                const showPickupFields = isSelected && (option.value === 'pickup' || option.value === 'both');
+                const showDeliveryFields = isSelected && (option.value === 'delivery' || option.value === 'both');
+                
+                return (
+                  <div
+                    key={option.value}
+                    className={cn(
+                      "rounded-xl border-2 transition-all overflow-hidden",
+                      isSelected
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-muted-foreground"
+                    )}
+                  >
+                    {/* Option Header */}
+                    <button
+                      type="button"
+                      onClick={() => updateField('fulfillment_type', option.value)}
+                      className="w-full p-4 text-left flex items-start gap-3"
+                    >
+                      <div className={cn(
+                        "mt-0.5",
+                        isSelected ? "text-primary" : "text-muted-foreground"
+                      )}>
+                        {option.icon}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className={cn(
+                          "font-medium",
+                          isSelected ? "text-primary" : "text-foreground"
+                        )}>
+                          {option.label}
+                        </h4>
+                        <p className="text-sm text-muted-foreground">{option.description}</p>
+                      </div>
+                    </button>
+                    
+                    {/* Inline Fields - Pickup */}
+                    {showPickupFields && (
+                      <div className="px-4 pb-4 pt-2 border-t border-border/50 space-y-4 animate-in fade-in-50 duration-200">
+                        <div className="space-y-2">
+                          <Label htmlFor="pickup_location_text" className="text-sm font-medium">
+                            {option.value === 'both' ? 'Pickup Location' : 'Location'} *
+                          </Label>
+                          <LocationSearchInput
+                            value={formData.pickup_location_text}
+                            onChange={(value) => updateField('pickup_location_text', value)}
+                            onLocationSelect={(location) => {
+                              if (location) {
+                                setPickupCoordinates(location.coordinates);
+                              } else {
+                                setPickupCoordinates(null);
+                              }
+                            }}
+                            selectedCoordinates={pickupCoordinates}
+                            placeholder="City, State (e.g., Austin, TX)"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            General area only. Exact address shared after booking.
+                          </p>
+                        </div>
 
-      {/* Pickup Location */}
-      {(formData.fulfillment_type === 'pickup' || formData.fulfillment_type === 'both') && (
-        <>
-          <div className="space-y-2">
-            <Label htmlFor="pickup_location_text" className="text-base font-medium">Pickup Location *</Label>
-            <LocationSearchInput
-              value={formData.pickup_location_text}
-              onChange={(value) => updateField('pickup_location_text', value)}
-              onLocationSelect={(location) => {
-                if (location) {
-                  setPickupCoordinates(location.coordinates);
-                } else {
-                  setPickupCoordinates(null);
-                }
-              }}
-              selectedCoordinates={pickupCoordinates}
-              placeholder="City, State (e.g., Austin, TX)"
-            />
-            <p className="text-sm text-muted-foreground">
-              Enter a general area. Exact address shared after booking.
-            </p>
-          </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="pickup_instructions" className="text-sm font-medium">
+                            Pickup Instructions
+                          </Label>
+                          <Textarea
+                            id="pickup_instructions"
+                            value={formData.pickup_instructions}
+                            onChange={(e) => updateField('pickup_instructions', e.target.value)}
+                            placeholder="Any special instructions for pickup?"
+                            rows={2}
+                            className="resize-none"
+                          />
+                        </div>
+                      </div>
+                    )}
 
-          <div className="space-y-2">
-            <Label htmlFor="pickup_instructions" className="text-base font-medium">Pickup Instructions (Optional)</Label>
-            <Textarea
-              id="pickup_instructions"
-              value={formData.pickup_instructions}
-              onChange={(e) => updateField('pickup_instructions', e.target.value)}
-              placeholder="Any special instructions for pickup?"
-              rows={2}
-            />
-          </div>
-        </>
-      )}
+                    {/* Inline Fields - Delivery */}
+                    {showDeliveryFields && (
+                      <div className={cn(
+                        "px-4 pb-4 space-y-4 animate-in fade-in-50 duration-200",
+                        showPickupFields ? "pt-4 border-t border-border/50" : "pt-2 border-t border-border/50"
+                      )}>
+                        {/* Base Location for Delivery Only */}
+                        {option.value === 'delivery' && (
+                          <div className="space-y-2">
+                            <Label htmlFor="delivery_base_location" className="text-sm font-medium">
+                              Your Base Location *
+                            </Label>
+                            <LocationSearchInput
+                              value={formData.pickup_location_text}
+                              onChange={(value) => updateField('pickup_location_text', value)}
+                              onLocationSelect={(location) => {
+                                if (location) {
+                                  setPickupCoordinates(location.coordinates);
+                                } else {
+                                  setPickupCoordinates(null);
+                                }
+                              }}
+                              selectedCoordinates={pickupCoordinates}
+                              placeholder="City, State (e.g., Austin, TX)"
+                            />
+                          </div>
+                        )}
 
-      {/* Delivery Options */}
-      {(formData.fulfillment_type === 'delivery' || formData.fulfillment_type === 'both') && (
-        <>
-          {formData.fulfillment_type === 'delivery' && (
-            <div className="space-y-2">
-              <Label htmlFor="pickup_location_text" className="text-base font-medium">Your Base Location *</Label>
-              <LocationSearchInput
-                value={formData.pickup_location_text}
-                onChange={(value) => updateField('pickup_location_text', value)}
-                onLocationSelect={(location) => {
-                  if (location) {
-                    setPickupCoordinates(location.coordinates);
-                  } else {
-                    setPickupCoordinates(null);
-                  }
-                }}
-                selectedCoordinates={pickupCoordinates}
-                placeholder="City, State (e.g., Austin, TX)"
-              />
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="delivery_fee" className="text-sm font-medium">Delivery Fee</Label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                              <Input
+                                id="delivery_fee"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={formData.delivery_fee}
+                                onChange={(e) => updateField('delivery_fee', e.target.value)}
+                                placeholder="0.00"
+                                className="pl-7"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="delivery_radius_miles" className="text-sm font-medium">Radius</Label>
+                            <div className="relative">
+                              <Input
+                                id="delivery_radius_miles"
+                                type="number"
+                                min="0"
+                                value={formData.delivery_radius_miles}
+                                onChange={(e) => updateField('delivery_radius_miles', e.target.value)}
+                                placeholder="50"
+                                className="pr-12"
+                              />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">miles</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="delivery_instructions" className="text-sm font-medium">
+                            Delivery Instructions
+                          </Label>
+                          <Textarea
+                            id="delivery_instructions"
+                            value={formData.delivery_instructions}
+                            onChange={(e) => updateField('delivery_instructions', e.target.value)}
+                            placeholder="Any special requirements for delivery?"
+                            rows={2}
+                            className="resize-none"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          )}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="delivery_fee" className="text-base font-medium">Delivery Fee (Optional)</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                <Input
-                  id="delivery_fee"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.delivery_fee}
-                  onChange={(e) => updateField('delivery_fee', e.target.value)}
-                  placeholder="0.00"
-                  className="pl-7"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="delivery_radius_miles" className="text-base font-medium">Delivery Radius (Optional)</Label>
-              <div className="relative">
-                <Input
-                  id="delivery_radius_miles"
-                  type="number"
-                  min="0"
-                  value={formData.delivery_radius_miles}
-                  onChange={(e) => updateField('delivery_radius_miles', e.target.value)}
-                  placeholder="50"
-                  className="pr-12"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">miles</span>
-              </div>
-            </div>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="delivery_instructions" className="text-base font-medium">Delivery Instructions (Optional)</Label>
-            <Textarea
-              id="delivery_instructions"
-              value={formData.delivery_instructions}
-              onChange={(e) => updateField('delivery_instructions', e.target.value)}
-              placeholder="Any special requirements for delivery?"
-              rows={2}
-            />
-          </div>
-        </>
-      )}
         </>
       )}
     </div>

@@ -162,131 +162,89 @@ export const StepPricing: React.FC<StepPricingProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* AI Suggestions Button */}
-      <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse pointer-events-none" />
-        <div className="relative flex items-start gap-3">
-          <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md">
-            <Sparkles className="w-5 h-5 text-white" />
-          </div>
-          <div className="flex-1">
-            <h4 className="font-semibold text-foreground mb-1">AI Pricing Assistant</h4>
-            <p className="text-sm text-muted-foreground mb-3">
-              Get smart pricing suggestions based on your listing details, equipment, and location.
-            </p>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleGetSuggestions}
-              disabled={isLoadingSuggestions}
-              className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
-            >
-              {isLoadingSuggestions ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Analyzing market...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Get AI Suggestions
-                </>
-              )}
-            </Button>
-          </div>
+    <div className="space-y-8">
+      {/* Section 1: Core Price */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-primary" />
+            {isRental ? 'Rental Rates' : 'Sale Price'}
+          </h3>
+          {/* Inline AI Button - subtle */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleGetSuggestions}
+            disabled={isLoadingSuggestions}
+            className="text-primary h-8"
+          >
+            {isLoadingSuggestions ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+                Analyzing...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5 mr-2" />
+                AI Pricing
+              </>
+            )}
+          </Button>
         </div>
-      </div>
 
-      {isRental ? (
-        <>
-          {/* Rental Suggestions Display */}
-          {rentalSuggestions && (
-            <div className="bg-card border border-border rounded-xl p-4 space-y-4">
-              <h4 className="font-medium text-foreground flex items-center gap-2">
-                <Target className="w-4 h-4 text-primary" />
-                Suggested Pricing
-              </h4>
-              
-              <div className="grid grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  onClick={() => applyRentalSuggestion('low')}
-                  className="p-3 rounded-lg border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-left"
-                >
-                  <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
-                    <TrendingDown className="w-3 h-3" />
-                    Budget
-                  </div>
-                  <div className="font-semibold text-foreground">${rentalSuggestions.daily_low}/day</div>
-                  <div className="text-xs text-muted-foreground">${rentalSuggestions.weekly_low}/week</div>
-                </button>
-                
-                <button
-                  type="button"
-                  onClick={() => applyRentalSuggestion('suggested')}
-                  className="p-3 rounded-lg border-2 border-primary bg-primary/10 hover:bg-primary/15 transition-all text-left shadow-sm"
-                >
-                  <div className="flex items-center gap-1 text-primary text-xs mb-1">
-                    <Target className="w-3 h-3" />
-                    Recommended
-                  </div>
-                  <div className="font-semibold text-foreground">${rentalSuggestions.daily_suggested}/day</div>
-                  <div className="text-xs text-muted-foreground">${rentalSuggestions.weekly_suggested}/week</div>
-                </button>
-                
-                <button
-                  type="button"
-                  onClick={() => applyRentalSuggestion('high')}
-                  className="p-3 rounded-lg border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-left"
-                >
-                  <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
-                    <TrendingUp className="w-3 h-3" />
-                    Premium
-                  </div>
-                  <div className="font-semibold text-foreground">${rentalSuggestions.daily_high}/day</div>
-                  <div className="text-xs text-muted-foreground">${rentalSuggestions.weekly_high}/week</div>
-                </button>
-              </div>
-
-              {/* Confidence and Factors */}
-              {rentalSuggestions.confidence && (
-                <div className="flex items-center gap-2 text-xs">
-                  <span className={`px-2 py-0.5 rounded-full font-medium ${
-                    rentalSuggestions.confidence === 'high' 
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                      : rentalSuggestions.confidence === 'medium'
-                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                      : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                  }`}>
-                    {rentalSuggestions.confidence} confidence
-                  </span>
-                  {rentalSuggestions.factors && rentalSuggestions.factors.length > 0 && (
-                    <span className="text-muted-foreground">
-                      Based on: {rentalSuggestions.factors.slice(0, 3).join(', ')}
-                    </span>
-                  )}
+        {isRental ? (
+          <>
+            {/* Rental Suggestions - Compact */}
+            {rentalSuggestions && (
+              <div className="bg-muted/50 border border-border rounded-xl p-4 space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => applyRentalSuggestion('low')}
+                    className="p-2 rounded-lg border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-center"
+                  >
+                    <div className="flex items-center justify-center gap-1 text-muted-foreground text-xs mb-0.5">
+                      <TrendingDown className="w-3 h-3" />
+                      Budget
+                    </div>
+                    <div className="font-semibold text-sm">${rentalSuggestions.daily_low}/day</div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => applyRentalSuggestion('suggested')}
+                    className="p-2 rounded-lg border-2 border-primary bg-primary/10 hover:bg-primary/15 transition-all text-center"
+                  >
+                    <div className="flex items-center justify-center gap-1 text-primary text-xs mb-0.5">
+                      <Target className="w-3 h-3" />
+                      Best
+                    </div>
+                    <div className="font-semibold text-sm">${rentalSuggestions.daily_suggested}/day</div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => applyRentalSuggestion('high')}
+                    className="p-2 rounded-lg border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-center"
+                  >
+                    <div className="flex items-center justify-center gap-1 text-muted-foreground text-xs mb-0.5">
+                      <TrendingUp className="w-3 h-3" />
+                      Premium
+                    </div>
+                    <div className="font-semibold text-sm">${rentalSuggestions.daily_high}/day</div>
+                  </button>
                 </div>
-              )}
-              
-              <p className="text-sm text-muted-foreground italic">
-                {rentalSuggestions.reasoning}
-              </p>
-            </div>
-          )}
+                <p className="text-xs text-muted-foreground text-center">{rentalSuggestions.reasoning}</p>
+              </div>
+            )}
 
-          {/* Rental Pricing */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <DollarSign className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold">Rental Pricing</h3>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Price Inputs - More Prominent */}
+            <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="price_daily" className="text-base font-medium">Daily Rate *</Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
                   <Input
                     id="price_daily"
                     type="number"
@@ -294,17 +252,18 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                     step="0.01"
                     value={formData.price_daily}
                     onChange={(e) => updateField('price_daily', e.target.value)}
-                    placeholder="0.00"
-                    className="pl-7 text-lg"
+                    placeholder="0"
+                    className="pl-9 text-2xl font-bold h-14"
                   />
                 </div>
-                <p className="text-sm text-muted-foreground">Price per day</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="price_weekly" className="text-base font-medium">Weekly Rate (Optional)</Label>
+                <Label htmlFor="price_weekly" className="text-base font-medium text-muted-foreground">
+                  Weekly Rate <span className="text-xs text-green-600">(Save 15%)</span>
+                </Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
                   <Input
                     id="price_weekly"
                     type="number"
@@ -312,272 +271,84 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                     step="0.01"
                     value={formData.price_weekly}
                     onChange={(e) => updateField('price_weekly', e.target.value)}
-                    placeholder="0.00"
-                    className="pl-7 text-lg"
+                    placeholder="0"
+                    className="pl-9 text-xl h-14"
                   />
                 </div>
-                <p className="text-sm text-muted-foreground">Offer a discount for weekly rentals</p>
               </div>
             </div>
 
-            {/* Payout Estimate for Rentals */}
+            {/* Payout Estimate - Compact */}
             {(rentalPayoutEstimates.daily || rentalPayoutEstimates.weekly) && (
-              <div className="bg-card rounded-xl p-4 border border-border">
-                <div className="flex items-start gap-3">
-                  <div className="p-2.5 bg-muted rounded-xl">
-                    <Wallet className="w-5 h-5 text-foreground" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-foreground mb-2">Estimated Payout</h4>
-                    <div className="space-y-2">
-                      {rentalPayoutEstimates.daily && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Daily rental:</span>
-                          <div className="text-right">
-                            <span className="font-semibold text-primary">
-                              {formatCurrency(rentalPayoutEstimates.daily.hostReceives)}
-                            </span>
-                            <span className="text-xs text-muted-foreground ml-2">
-                              ({formatCurrency(rentalPayoutEstimates.daily.hostFee)} fee)
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                      {rentalPayoutEstimates.weekly && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Weekly rental:</span>
-                          <div className="text-right">
-                            <span className="font-semibold text-primary">
-                              {formatCurrency(rentalPayoutEstimates.weekly.hostReceives)}
-                            </span>
-                            <span className="text-xs text-muted-foreground ml-2">
-                              ({formatCurrency(rentalPayoutEstimates.weekly.hostFee)} fee)
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-start gap-1.5 mt-3 text-xs text-muted-foreground">
-                      <Info className="w-3 h-3 mt-0.5 shrink-0" />
-                      <span>Platform fee is {RENTAL_HOST_FEE_PERCENT}% of the rental price</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Availability */}
-          <div className="space-y-4 pt-6 border-t">
-            <div className="flex items-center gap-2 mb-4">
-              <Calendar className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold">Availability (Optional)</h3>
-            </div>
-
-            <p className="text-sm text-muted-foreground mb-4">
-              Set a date range when your listing is available. Leave blank for open availability.
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="available_from">Available From</Label>
-                <Input
-                  id="available_from"
-                  type="date"
-                  value={formData.available_from}
-                  onChange={(e) => updateField('available_from', e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="available_to">Available Until</Label>
-                <Input
-                  id="available_to"
-                  type="date"
-                  value={formData.available_to}
-                  onChange={(e) => updateField('available_to', e.target.value)}
-                  min={formData.available_from || new Date().toISOString().split('T')[0]}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Instant Book Toggle */}
-          <div className="pt-6 border-t">
-            <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 pointer-events-none" />
-              <div className="relative flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3 flex-1">
-                  <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md">
-                    <Zap className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-semibold text-foreground">Instant Book</h4>
-                      <InfoTooltip 
-                        content="When enabled, renters can book and pay immediately. Documents are still reviewed - if rejected, the booking is cancelled and payment is fully refunded." 
-                      />
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Allow renters to book immediately without waiting for approval. Booking is confirmed once documents are reviewed.
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  checked={formData.instant_book}
-                  onCheckedChange={(checked) => updateField('instant_book', checked)}
-                />
-              </div>
-              
-              {formData.instant_book && (
-                <div className="mt-4 p-3 bg-card rounded-lg border border-border">
-                  <p className="text-xs text-muted-foreground">
-                    <strong className="text-primary">How it works:</strong> Renters pay immediately when booking. 
-                    Your required documents will still be reviewed. If documents are approved, the booking is confirmed. 
-                    If not approved, the booking is automatically cancelled and the renter receives a full refund.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Security Deposit */}
-          <div className="pt-6 border-t">
-            <div className="bg-card rounded-xl p-4 border border-border">
-              <div className="flex items-start gap-3">
-                <div className="p-2.5 bg-muted rounded-xl">
-                  <Wallet className="w-5 h-5 text-foreground" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-semibold text-foreground">Security Deposit</h4>
-                    <InfoTooltip 
-                      content="A refundable security deposit is charged at booking and returned after the rental ends without damage or delays." 
-                    />
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Protect your equipment with a refundable deposit. Returned in full if no damage or late returns.
-                  </p>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="deposit_amount" className="text-sm">Deposit Amount (Optional)</Label>
-                    <div className="relative max-w-xs">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                      <Input
-                        id="deposit_amount"
-                        type="number"
-                        min="0"
-                        step="50"
-                        value={formData.deposit_amount}
-                        onChange={(e) => updateField('deposit_amount', e.target.value)}
-                        placeholder="0.00"
-                        className="pl-7"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Leave blank for no deposit. Typical deposits are $200-$1,000 depending on equipment value.
-                    </p>
-                  </div>
-
-                  {parseFloat(formData.deposit_amount) > 0 && (
-                    <div className="mt-4 p-3 bg-muted rounded-lg border border-border">
-                      <p className="text-xs text-muted-foreground">
-                        <strong className="text-primary">How it works:</strong> The ${parseFloat(formData.deposit_amount).toLocaleString()} deposit is charged when the booking is confirmed. 
-                        After the rental ends, you can release the deposit in full or deduct for any damage/late fees.
-                      </p>
-                    </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/60">
+                <Wallet className="w-4 h-4 text-muted-foreground shrink-0" />
+                <div className="flex-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                  {rentalPayoutEstimates.daily && (
+                    <span>
+                      Daily: <span className="font-semibold text-primary">{formatCurrency(rentalPayoutEstimates.daily.hostReceives)}</span>
+                      <span className="text-xs text-muted-foreground ml-1">({RENTAL_HOST_FEE_PERCENT}% fee)</span>
+                    </span>
                   )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      ) : (
-        <>
-          {/* Sale Suggestions Display */}
-          {saleSuggestions && (
-            <div className="bg-card border border-border rounded-xl p-4 space-y-4">
-              <h4 className="font-medium text-foreground flex items-center gap-2">
-                <Target className="w-4 h-4 text-primary" />
-                Suggested Pricing
-              </h4>
-              
-              <div className="grid grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  onClick={() => applySaleSuggestion('low')}
-                  className="p-3 rounded-lg border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-left"
-                >
-                  <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
-                    <TrendingDown className="w-3 h-3" />
-                    Quick Sale
-                  </div>
-                  <div className="font-semibold text-foreground">${saleSuggestions.sale_low.toLocaleString()}</div>
-                </button>
-                
-                <button
-                  type="button"
-                  onClick={() => applySaleSuggestion('suggested')}
-                  className="p-3 rounded-lg border-2 border-primary bg-primary/10 hover:bg-primary/15 transition-all text-left shadow-sm"
-                >
-                  <div className="flex items-center gap-1 text-primary text-xs mb-1">
-                    <Target className="w-3 h-3" />
-                    Recommended
-                  </div>
-                  <div className="font-semibold text-foreground">${saleSuggestions.sale_suggested.toLocaleString()}</div>
-                </button>
-                
-                <button
-                  type="button"
-                  onClick={() => applySaleSuggestion('high')}
-                  className="p-3 rounded-lg border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-left"
-                >
-                  <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
-                    <TrendingUp className="w-3 h-3" />
-                    Premium
-                  </div>
-                  <div className="font-semibold text-foreground">${saleSuggestions.sale_high.toLocaleString()}</div>
-                </button>
-              </div>
-
-              {/* Confidence and Factors */}
-              {saleSuggestions.confidence && (
-                <div className="flex items-center gap-2 text-xs">
-                  <span className={`px-2 py-0.5 rounded-full font-medium ${
-                    saleSuggestions.confidence === 'high' 
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                      : saleSuggestions.confidence === 'medium'
-                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                      : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                  }`}>
-                    {saleSuggestions.confidence} confidence
-                  </span>
-                  {saleSuggestions.factors && saleSuggestions.factors.length > 0 && (
-                    <span className="text-muted-foreground">
-                      Based on: {saleSuggestions.factors.slice(0, 3).join(', ')}
+                  {rentalPayoutEstimates.weekly && (
+                    <span>
+                      Weekly: <span className="font-semibold text-primary">{formatCurrency(rentalPayoutEstimates.weekly.hostReceives)}</span>
                     </span>
                   )}
                 </div>
-              )}
-              
-              <p className="text-sm text-muted-foreground italic">
-                {saleSuggestions.reasoning}
-              </p>
-            </div>
-          )}
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {/* Sale Suggestions - Compact */}
+            {saleSuggestions && (
+              <div className="bg-muted/50 border border-border rounded-xl p-4 space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => applySaleSuggestion('low')}
+                    className="p-2 rounded-lg border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-center"
+                  >
+                    <div className="flex items-center justify-center gap-1 text-muted-foreground text-xs mb-0.5">
+                      <TrendingDown className="w-3 h-3" />
+                      Quick
+                    </div>
+                    <div className="font-semibold text-sm">${saleSuggestions.sale_low.toLocaleString()}</div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => applySaleSuggestion('suggested')}
+                    className="p-2 rounded-lg border-2 border-primary bg-primary/10 hover:bg-primary/15 transition-all text-center"
+                  >
+                    <div className="flex items-center justify-center gap-1 text-primary text-xs mb-0.5">
+                      <Target className="w-3 h-3" />
+                      Best
+                    </div>
+                    <div className="font-semibold text-sm">${saleSuggestions.sale_suggested.toLocaleString()}</div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => applySaleSuggestion('high')}
+                    className="p-2 rounded-lg border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-center"
+                  >
+                    <div className="flex items-center justify-center gap-1 text-muted-foreground text-xs mb-0.5">
+                      <TrendingUp className="w-3 h-3" />
+                      Premium
+                    </div>
+                    <div className="font-semibold text-sm">${saleSuggestions.sale_high.toLocaleString()}</div>
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground text-center">{saleSuggestions.reasoning}</p>
+              </div>
+            )}
 
-          {/* Sale Pricing */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <DollarSign className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold">Sale Price</h3>
-            </div>
-
-            <div className="space-y-2 max-w-sm">
+            {/* Sale Price Input - Hero */}
+            <div className="max-w-md">
               <Label htmlFor="price_sale" className="text-base font-medium">Asking Price *</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+              <div className="relative mt-2">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-xl">$</span>
                 <Input
                   id="price_sale"
                   type="number"
@@ -586,157 +357,158 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                   value={formData.price_sale}
                   onChange={(e) => updateField('price_sale', e.target.value)}
                   placeholder="0.00"
-                  className="pl-7 text-xl"
+                  className="pl-10 text-3xl font-bold h-16"
                 />
               </div>
-              <p className="text-sm text-muted-foreground">
-                Set a competitive price based on market value and condition.
-              </p>
             </div>
 
-            {/* Payout Estimate for Sales - Only show when card payment is enabled */}
+            {/* Payout Estimate - Compact */}
             {salePayoutEstimate && formData.accept_card_payment && (
-              <div className="rounded-lg p-3 border border-border/60 bg-muted/30 max-w-sm">
-                <div className="flex items-center gap-2 mb-2">
-                  <Wallet className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground">
-                    {formData.vendibook_freight_enabled && formData.freight_payer === 'seller' 
-                      ? 'Payout Estimate (Free Shipping)' 
-                      : 'Estimated Payout'}
-                  </span>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/60 max-w-md">
+                <Wallet className="w-4 h-4 text-muted-foreground shrink-0" />
+                <div className="flex-1 text-sm">
+                  <span>You receive: </span>
+                  <span className="font-semibold text-primary">{formatCurrency(salePayoutEstimate.sellerReceives)}</span>
+                  <span className="text-xs text-muted-foreground ml-2">({SALE_SELLER_FEE_PERCENT}% fee)</span>
                 </div>
-                
-                <div className="space-y-1 text-sm">
-                  {/* Item price */}
-                  <div className="flex items-center justify-between text-muted-foreground">
-                    <span>Item price</span>
-                    <span>{formatCurrency(salePayoutEstimate.salePrice)}</span>
-                  </div>
-                  
-                  {/* Platform fee - small and transparent */}
-                  <div className="flex items-center justify-between text-xs text-muted-foreground/70">
-                    <span>Platform fee ({SALE_SELLER_FEE_PERCENT}%)</span>
-                    <span>-{formatCurrency(salePayoutEstimate.sellerFee)}</span>
-                  </div>
-                  
-                  {/* Freight deduction (seller-paid) */}
-                  {salePayoutEstimate.freightDeduction > 0 && (
-                    <div className="flex items-center justify-between text-xs text-muted-foreground/70">
-                      <span className="flex items-center gap-1">
-                        Freight (seller-paid)
-                        <InfoTooltip
-                          content="Free shipping is a seller-paid incentive. Freight is deducted from your earnings."
-                          iconClassName="h-3 w-3"
-                        />
-                      </span>
-                      <span>-{formatCurrency(salePayoutEstimate.freightDeduction)}</span>
-                    </div>
-                  )}
-                  
-                  {/* Estimated payout */}
-                  <div className="flex items-center justify-between pt-1.5 mt-1 border-t border-border/50">
-                    <span className="text-foreground font-medium">You receive</span>
-                    <span className="font-semibold text-primary">
-                      {formatCurrency(salePayoutEstimate.sellerReceives)}
-                    </span>
-                  </div>
-                </div>
-                
-                {formData.vendibook_freight_enabled && formData.freight_payer === 'seller' && (
-                  <p className="text-[10px] text-muted-foreground/60 mt-2">
-                    Freight estimate is approximate
-                  </p>
-                )}
               </div>
             )}
-          </div>
+          </>
+        )}
+      </section>
 
-          {/* Payment Method Options */}
-          <div className="pt-6 border-t">
-            <div className="flex items-center gap-2 mb-4">
-              <CreditCard className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold">Accepted Payment Methods</h3>
+      <div className="h-px bg-border" />
+
+      {/* Section 2: Financial Settings - 2-column grid */}
+      <section className="grid md:grid-cols-2 gap-6">
+        {/* Left Column: Protection */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Protection</h4>
+          
+          {isRental ? (
+            <div className="p-4 rounded-xl border border-border bg-card">
+              <div className="flex items-center justify-between mb-2">
+                <Label className="font-medium">Security Deposit</Label>
+                <InfoTooltip content="Refundable amount held during rental" />
+              </div>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                <Input
+                  type="number"
+                  min="0"
+                  step="50"
+                  value={formData.deposit_amount}
+                  onChange={(e) => updateField('deposit_amount', e.target.value)}
+                  placeholder="e.g., 500"
+                  className="pl-7"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Typical deposits are $200-$1,000 depending on equipment value.
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              Select how buyers can pay for your item. You can enable both options.
-            </p>
-
-            <div className="space-y-4">
-              {/* Pay by Card (Stripe) */}
-              <div className="flex items-start space-x-3 p-4 rounded-lg border border-border bg-card hover:border-primary/30 transition-colors">
-                <Checkbox
-                  id="accept_card_payment"
-                  checked={formData.accept_card_payment}
-                  onCheckedChange={(checked) => updateField('accept_card_payment', !!checked)}
-                  className="mt-0.5"
-                />
-                <div className="flex-1">
-                  <Label
-                    htmlFor="accept_card_payment"
-                    className="flex items-center gap-2 text-base font-medium cursor-pointer"
-                  >
+          ) : (
+            <div className="p-4 rounded-xl border border-border bg-card">
+              <Label className="font-medium mb-3 block">Payment Methods</Label>
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <Checkbox 
+                    checked={formData.accept_card_payment} 
+                    onCheckedChange={(c) => updateField('accept_card_payment', !!c)} 
+                  />
+                  <div className="flex items-center gap-2">
                     <CreditCard className="w-4 h-4 text-primary" />
-                    Pay by Card (Online)
-                  </Label>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Accept secure online payments via Stripe. Funds are deposited to your connected Stripe account after sale confirmation.
-                  </p>
-                  {formData.accept_card_payment && (
-                    <div className="mt-3">
-                      <StripeConnectBanner variant="compact" />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Pay in Person */}
-              <div className="flex items-start space-x-3 p-4 rounded-lg border border-border bg-card hover:border-primary/30 transition-colors">
-                <Checkbox
-                  id="accept_cash_payment"
-                  checked={formData.accept_cash_payment}
-                  onCheckedChange={(checked) => updateField('accept_cash_payment', !!checked)}
-                  className="mt-0.5"
-                />
-                <div className="flex-1">
-                  <Label
-                    htmlFor="accept_cash_payment"
-                    className="flex items-center gap-2 text-base font-medium cursor-pointer"
-                  >
+                    <span className="text-sm">Pay by Card (Online)</span>
+                  </div>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <Checkbox 
+                    checked={formData.accept_cash_payment} 
+                    onCheckedChange={(c) => updateField('accept_cash_payment', !!c)} 
+                  />
+                  <div className="flex items-center gap-2">
                     <Banknote className="w-4 h-4 text-green-600" />
-                    Pay in Person
-                  </Label>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Accept cash or other payments at pickup/delivery. You'll arrange payment directly with the buyer.
-                  </p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1.5 flex items-center gap-1">
-                    <Check className="w-3 h-3" />
-                    No platform fee on in-person payments
-                  </p>
-                </div>
+                    <span className="text-sm">Pay in Person</span>
+                  </div>
+                </label>
               </div>
-
-              {/* Validation Warning */}
               {!formData.accept_card_payment && !formData.accept_cash_payment && (
-                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                  <p className="text-sm text-destructive flex items-center gap-2">
-                    <Info className="w-4 h-4" />
-                    Please select at least one payment method.
-                  </p>
-                </div>
+                <p className="text-xs text-destructive mt-3 flex items-center gap-1">
+                  <Info className="w-3 h-3" />
+                  Select at least one payment method
+                </p>
               )}
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* Vendibook Freight Settings (Pod 1) */}
-          <div className="pt-6 border-t">
-            <FreightSettingsCard
-              enabled={formData.vendibook_freight_enabled}
-              payer={formData.freight_payer}
-              onEnabledChange={(enabled) => updateField('vendibook_freight_enabled', enabled)}
-              onPayerChange={(payer) => updateField('freight_payer', payer)}
-            />
-          </div>
-        </>
+        {/* Right Column: Settings */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Settings</h4>
+          
+          {isRental && (
+            <div className="p-4 rounded-xl border border-border bg-card flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-500" />
+                  <Label className="font-medium">Instant Book</Label>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Auto-accept bookings from verified users
+                </p>
+              </div>
+              <Switch
+                checked={formData.instant_book}
+                onCheckedChange={(checked) => updateField('instant_book', checked)}
+              />
+            </div>
+          )}
+          
+          {/* Availability Window - Compact */}
+          {isRental && (
+            <div className="p-4 rounded-xl border border-border bg-card space-y-3">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-muted-foreground" />
+                <Label className="font-medium">Availability Window</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="date"
+                  className="text-sm flex-1"
+                  value={formData.available_from}
+                  onChange={(e) => updateField('available_from', e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                />
+                <span className="text-muted-foreground text-sm">to</span>
+                <Input
+                  type="date"
+                  className="text-sm flex-1"
+                  value={formData.available_to}
+                  onChange={(e) => updateField('available_to', e.target.value)}
+                  min={formData.available_from || new Date().toISOString().split('T')[0]}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Leave blank for open availability</p>
+            </div>
+          )}
+
+          {/* Stripe Banner for card payments */}
+          {formData.accept_card_payment && !isRental && (
+            <StripeConnectBanner variant="compact" />
+          )}
+        </div>
+      </section>
+
+      {/* Section 3: Logistics (Sale only) */}
+      {!isRental && (
+        <section className="pt-6 border-t border-border">
+          <FreightSettingsCard
+            enabled={formData.vendibook_freight_enabled}
+            payer={formData.freight_payer}
+            onEnabledChange={(enabled) => updateField('vendibook_freight_enabled', enabled)}
+            onPayerChange={(payer) => updateField('freight_payer', payer)}
+          />
+        </section>
       )}
     </div>
   );
