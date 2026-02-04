@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Plus, Truck, Eye, Loader2, Calendar, BarChart3, DollarSign, Wrench, Tag } from 'lucide-react';
+import { Plus, Truck, Eye, Loader2, Calendar, BarChart3, DollarSign, Wrench, Tag, HandCoins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NextStepCard } from './NextStepCard';
@@ -21,7 +21,7 @@ import { useListingAnalytics } from '@/hooks/useListingAnalytics';
 import { useRevenueAnalytics } from '@/hooks/useRevenueAnalytics';
 import { useHostOffers } from '@/hooks/useHostOffers';
 import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectModal';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 const HostDashboard = () => {
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing, updateListingPrice } = useHostListings();
@@ -31,6 +31,25 @@ const HostDashboard = () => {
   const { analytics: revenueAnalytics, isLoading: revenueLoading } = useRevenueAnalytics();
   const { pendingOffers } = useHostOffers();
   const [showStripeModal, setShowStripeModal] = useState(false);
+
+  // Determine user type based on listing modes
+  const userType = useMemo(() => {
+    const hasRentals = listings.some(l => l.mode === 'rent');
+    const hasSales = listings.some(l => l.mode === 'sale');
+    if (hasRentals && hasSales) return 'hybrid';
+    if (hasSales) return 'seller';
+    return 'host'; // Default for empty or rental-only
+  }, [listings]);
+
+  // Controlled tabs with auto-redirect for sellers
+  const [activeTab, setActiveTab] = useState('listings');
+
+  useEffect(() => {
+    // If pure seller lands on "bookings" tab, redirect to "offers"
+    if (!isLoading && userType === 'seller' && activeTab === 'bookings') {
+      setActiveTab('offers');
+    }
+  }, [isLoading, userType, activeTab]);
 
   // Filter drafts for the DraftsSection
   const draftListings = useMemo(() => 
@@ -52,6 +71,23 @@ const HostDashboard = () => {
 
   return (
     <div className="space-y-6">
+      {/* Dynamic Header - Context-aware branding */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {userType === 'seller' ? <Tag className="h-5 w-5 text-primary" /> : <Truck className="h-5 w-5 text-primary" />}
+          <h1 className="text-xl font-semibold text-foreground">
+            {userType === 'seller' ? 'Seller Console' : 
+             userType === 'hybrid' ? 'Vendor Dashboard' : 'Host Dashboard'}
+          </h1>
+        </div>
+        <Button variant="dark-shine" size="sm" asChild className="rounded-xl">
+          <Link to="/list">
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            {userType === 'seller' ? 'Sell Item' : 'New Listing'}
+          </Link>
+        </Button>
+      </div>
+
       {/* A) Next Step Action Card - Single priority action */}
       <NextStepCard 
         onConnectStripe={handleConnectStripe}
@@ -70,8 +106,8 @@ const HostDashboard = () => {
         />
       )}
 
-      {/* B) Key Metrics Row - Tight labels */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* B) Key Metrics Row - Adaptive based on userType */}
+      <div className={`grid grid-cols-2 gap-3 ${userType === 'hybrid' ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
         <CompactStatCard 
           icon={Truck} 
           label="Listings" 
@@ -84,13 +120,26 @@ const HostDashboard = () => {
           value={analytics?.totalViews || 0}
           subtext="Last 30 days"
         />
-        <CompactStatCard 
-          icon={Calendar} 
-          label="Requests" 
-          value={bookingStats.pending}
-          subtext="Awaiting response"
-          highlight={bookingStats.pending > 0}
-        />
+        {/* Show Requests metric only for non-sellers */}
+        {userType !== 'seller' && (
+          <CompactStatCard 
+            icon={Calendar} 
+            label="Requests" 
+            value={bookingStats.pending}
+            subtext="Awaiting response"
+            highlight={bookingStats.pending > 0}
+          />
+        )}
+        {/* Show Offers metric only for non-hosts (or hosts with pending offers) */}
+        {(userType !== 'host' || pendingOffers.length > 0) && (
+          <CompactStatCard 
+            icon={HandCoins} 
+            label="Offers" 
+            value={pendingOffers.length}
+            subtext="Pending review"
+            highlight={pendingOffers.length > 0}
+          />
+        )}
         <CompactStatCard 
           icon={DollarSign} 
           label="Revenue" 
@@ -104,28 +153,36 @@ const HostDashboard = () => {
         <DraftsSection drafts={draftListings} onDelete={deleteListing} />
       )}
 
-      {/* C) Listings Module - Primary work area */}
-      <Tabs defaultValue="listings" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 mb-4 bg-muted/50 p-1 rounded-lg h-10">
+      {/* C) Listings Module - Primary work area with smart tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className={`grid w-full mb-4 bg-muted/50 p-1 rounded-lg h-10 ${
+          userType === 'hybrid' ? 'grid-cols-5' : 'grid-cols-4'
+        }`}>
           <TabsTrigger value="listings" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
             Listings
           </TabsTrigger>
-          <TabsTrigger value="offers" className="relative rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            Offers
-            {pendingOffers.length > 0 && (
-              <span className="ml-1.5 px-1.5 py-0.5 text-[10px] bg-primary text-primary-foreground rounded-full">
-                {pendingOffers.length}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="bookings" className="relative rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            Requests
-            {bookingStats.pending > 0 && (
-              <span className="ml-1.5 px-1.5 py-0.5 text-[10px] bg-amber-500 text-white rounded-full">
-                {bookingStats.pending}
-              </span>
-            )}
-          </TabsTrigger>
+          {/* Show Offers tab for sellers/hybrid OR hosts with pending offers */}
+          {(userType !== 'host' || pendingOffers.length > 0) && (
+            <TabsTrigger value="offers" className="relative rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              Offers
+              {pendingOffers.length > 0 && (
+                <span className="ml-1.5 px-1.5 py-0.5 text-[10px] bg-primary text-primary-foreground rounded-full">
+                  {pendingOffers.length}
+                </span>
+              )}
+            </TabsTrigger>
+          )}
+          {/* Show Requests tab only for hosts/hybrid */}
+          {userType !== 'seller' && (
+            <TabsTrigger value="bookings" className="relative rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              Requests
+              {bookingStats.pending > 0 && (
+                <span className="ml-1.5 px-1.5 py-0.5 text-[10px] bg-amber-500 text-white rounded-full">
+                  {bookingStats.pending}
+                </span>
+              )}
+            </TabsTrigger>
+          )}
           <TabsTrigger value="analytics" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
             Analytics
           </TabsTrigger>
@@ -249,8 +306,8 @@ const HostDashboard = () => {
       {/* D) Insights - Collapsed by default */}
       <CompactInsights />
 
-      {/* E) Get Booked Faster Tips */}
-      <GetBookedFasterCard />
+      {/* E) Get Booked Faster Tips - Only for hosts/hybrid */}
+      {userType !== 'seller' && <GetBookedFasterCard />}
 
       {/* F) Host Tools - Minimal link */}
       <div className="rounded-xl p-4 bg-card border border-border shadow-lg">
@@ -272,8 +329,8 @@ const HostDashboard = () => {
         </div>
       </div>
 
-      {/* Sales Section */}
-      <SellerSalesSection />
+      {/* Sales Section - Only for sellers/hybrid */}
+      {userType !== 'host' && <SellerSalesSection />}
 
       {/* Stripe Connect Modal */}
       <StripeConnectModal
