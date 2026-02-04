@@ -82,6 +82,9 @@ const BlogCategory = lazy(() => import("./pages/BlogCategory"));
 const DynamicCityPage = lazy(() => import("./pages/DynamicCityPage"));
 const Payments = lazy(() => import("./pages/Payments"));
 const Rentals = lazy(() => import("./pages/Rentals"));
+const EnterpriseOnboarding = lazy(() => import("./pages/EnterpriseOnboarding"));
+const HostBookings = lazy(() => import("./pages/HostBookings"));
+const HostReporting = lazy(() => import("./pages/HostReporting"));
 
 // City landing pages - direct imports since they're lightweight wrappers
 import {
@@ -134,6 +137,8 @@ const AnimatedRoutes = () => {
           <Route path="/activation" element={<PageTransition><Activation /></PageTransition>} />
           <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
           <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
+          <Route path="/host/bookings" element={<PageTransition><HostBookings /></PageTransition>} />
+          <Route path="/host/reporting" element={<PageTransition><HostReporting /></PageTransition>} />
           <Route path="/create-listing" element={<Navigate to="/list" replace />} />
           <Route path="/listing/:id" element={<PageTransition><ListingDetail /></PageTransition>} />
           {/* Profile routes */}
@@ -206,6 +211,9 @@ const AnimatedRoutes = () => {
           
           {/* Commercial kitchen rental landing page */}
           <Route path="/rent-my-commercial-kitchen" element={<PageTransition><RentMyCommercialKitchen /></PageTransition>} />
+          
+          {/* Enterprise onboarding for multi-kitchen operators */}
+          <Route path="/enterprise-onboarding" element={<PageTransition><EnterpriseOnboarding /></PageTransition>} />
           
           {/* Pricing Calculator */}
           <Route path="/pricing-calculator" element={<PageTransition><PricingCalculator /></PageTransition>} />

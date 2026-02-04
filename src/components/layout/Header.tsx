@@ -405,6 +405,14 @@ const Header = () => {
           >
             {t('common.learnMore')}
           </Link>
+          {user && (
+            <Link 
+              to="/how-it-works" 
+              className="text-sm font-medium px-4 py-2 hover:bg-muted rounded-full transition-colors"
+            >
+              List with Vendibook
+            </Link>
+          )}
         </nav>
 
         {/* Desktop Actions */}
