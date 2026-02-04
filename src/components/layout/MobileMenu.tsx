@@ -66,7 +66,7 @@ const MobileMenu = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            className="fixed inset-0 bg-black/50 z-[100] lg:hidden"
             onClick={onClose}
           />
 
@@ -76,7 +76,7 @@ const MobileMenu = ({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] bg-background z-50 lg:hidden shadow-2xl flex flex-col"
+            className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] bg-background z-[101] lg:hidden shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header Area */}
             <div className="flex items-center justify-between p-5 border-b border-border">
@@ -180,20 +180,32 @@ const MobileMenu = ({
 
                   {/* Hosting Section */}
                   <div className="py-2">
+                    {isVerified ? (
+                      <div className="flex items-center gap-2 px-4 py-2 text-sm text-emerald-600">
+                        <ShieldCheck className="h-4 w-4" />
+                        <span>Identity Verified</span>
+                      </div>
+                    ) : (
+                      <AirbnbMenuItem 
+                        icon={ShieldCheck} 
+                        label="Verify Identity" 
+                        subtext="Unlock all features"
+                        onClick={() => handleNav('/verify-identity')} 
+                      />
+                    )}
+                    <AirbnbMenuItem 
+                      icon={Home} 
+                      label="Become a Host" 
+                      subtext="It's easy to get started"
+                      onClick={() => handleNav('/list')} 
+                      highlight
+                    />
                     <AirbnbMenuItem 
                       icon={PlusCircle} 
                       label="List with Vendibook" 
                       subtext="Rent or sell your assets"
                       onClick={() => handleNav('/how-it-works-host')} 
-                      highlight
                     />
-                    {!isVerified && (
-                      <AirbnbMenuItem 
-                        icon={ShieldCheck} 
-                        label="Verify Identity" 
-                        onClick={() => handleNav('/verify-identity')} 
-                      />
-                    )}
                     {isAdmin && (
                       <AirbnbMenuItem 
                         icon={Settings} 
