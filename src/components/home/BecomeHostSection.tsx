@@ -29,13 +29,13 @@ const BecomeHostSection = () => {
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                   <DollarSign className="h-5 w-5 text-primary" />
                 </div>
-                <span className="text-background/80">Earn up to $3,000/month per asset</span>
+                <span className="text-background/80">Secure payments held in escrow</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                   <Shield className="h-5 w-5 text-primary" />
                 </div>
-                <span className="text-background/80">$1M liability protection included</span>
+                <span className="text-background/80">Verified renters with ID checks</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
