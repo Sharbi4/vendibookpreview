@@ -1,281 +1,333 @@
 
 
-# Public Profile "Micro-Storefront" Enhancement Plan
+# Dashboard Refactor: Apple/Amazon "Action-First" Zero State Pattern
 
 ## Overview
 
-Transform the public profile page from a simple "User Page" into a fully-fledged "Micro-Storefront" optimized for trust and conversion, following Airbnb/Amazon marketplace standards.
+This plan implements the marketplace design principles outlined in the request: transforming empty states into onboarding/discovery opportunities, prioritizing "Action Required" over passive reporting, and ensuring the Switch Pattern feels like Turo's seamless context switching.
 
 ---
 
 ## Current State Analysis
 
-The profile page (`PublicProfile.tsx`) already has solid foundations:
-- Response time badge (via `useHostResponseTime`)
-- Identity verified badge with visual indicator
-- Mobile sticky CTA (lines 386-410)
-- Featured listings section (newest 3 items)
-- Category filter chips
-- Review stats and ratings
+### What's Working Well
+1. URL-based mode switching (`?view=host` / `?view=shopper`) is already implemented
+2. `HostDashboard` already has smart `userType` detection (seller/host/hybrid)
+3. `NextStepCard` prioritizes actions intelligently
+4. Real-time subscriptions for instant updates
 
-**What's Missing:**
-1. "Superhost" / Top Rated badge for high-performing hosts
-2. Shop Policies section (delivery, returns, cancellation)
-3. About/Bio section with storytelling prompts
-4. "Sold" section to demonstrate activity
-5. Contextual message pre-fill from listing context
-6. Pinned/Featured listing (host-controlled)
+### What Needs Improvement
 
----
-
-## Phase 1: Enhanced Trust Signals
-
-### 1.1 "Top Rated" Badge
-
-**Logic**: Award badge if host meets criteria:
-- Average rating >= 4.8
-- At least 5 reviews
-- Response time < 2 hours (already tracked as `isFastResponder`)
-- At least 3 completed bookings
-
-**Implementation:**
-- Create new hook `useHostBadges.ts` to calculate badge eligibility
-- Add "Top Rated Vendor" or "Superhost" badge to `EnhancedPublicProfileHeader.tsx`
-- Gold gradient styling similar to verified badge
-
-### 1.2 Reviews Summary Enhancement
-
-**Current**: Shows star rating and count
-**Enhancement**: Add highlight of top strength based on review keywords
-
-**Implementation:**
-- Analyze reviews for common positive keywords (communication, equipment, cleanliness)
-- Display: "4.9 (12 reviews) - Highly rated for communication"
+| Issue | Current Behavior | Target Behavior |
+|-------|-----------------|-----------------|
+| Empty Shopper Dashboard | Shows "No bookings yet" with empty stats | Shows Discovery Grid (like Amazon homepage) |
+| Empty Host Dashboard | Shows "No listings yet" message | Shows Onboarding Wizard with 2 paths (Rent vs Sell) |
+| Header Clutter | Sparkles badge, hero section with stats always visible | Clean Apple-style header, contextual labels |
+| Stats Overload | Always shows 4 stat cards (even if all zeros) | Hide stats for new users, show Discovery instead |
+| Action vs Reporting | Stats displayed equally with action items | "Action Required" alert banner takes priority |
 
 ---
 
-## Phase 2: Shop Policies Section
+## Phase 1: Dashboard.tsx Header Cleanup
 
-### 2.1 Database Schema Addition
+### Changes
+1. Simplify the hero section to be more compact
+2. Make the mode switch more prominent with clear visual context
+3. Update title to be action-oriented:
+   - Host mode: "Host Command Center" or "Manage Listings"
+   - Shopper mode: "My Trips & Orders"
+4. Remove the generic "Your Dashboard" subtitle, replace with contextual hints
 
-Add new columns to `profiles` table:
-```sql
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bio TEXT;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS shop_policies JSONB DEFAULT '{}'::jsonb;
+### Header Structure
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│  [Welcome, John]                                             │
+│                                                              │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │ Buy / Rent  ○────────  Host / Sell                      ││
+│  │                  ^^^^                                   ││
+│  │                 Toggle                                  ││
+│  └─────────────────────────────────────────────────────────┘│
+│                                                              │
+│  [Quick Actions: Bookings | Purchases | Rentals | Favorites]│
+└──────────────────────────────────────────────────────────────┘
 ```
 
-The `shop_policies` JSONB structure:
-```json
-{
-  "delivery_range_miles": 50,
-  "return_policy": "7-day returns on sales",
-  "cancellation_notice": "24 hours",
-  "accepts_deposits": true,
-  "custom_policies": ["Local pickup available", "Insurance required"]
+---
+
+## Phase 2: ShopperDashboard.tsx - Discovery-First Zero State
+
+### Current Problem
+When `bookings.length === 0`, user sees:
+- 4 stat cards all showing "0"
+- Empty tabs with "No pending requests"
+- Browse Listings CTA buried below
+
+### Solution: Amazon Homepage Pattern
+
+When the shopper has no activity, show a **Discovery Grid** instead of empty metrics:
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│  🔍 Ready to start?                                          │
+│                                                              │
+│  "Find the perfect truck, kitchen, or parking spot today."  │
+│                                                              │
+│  [Start Browsing] (Primary CTA)                              │
+└──────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────┐
+│  DISCOVER CATEGORIES                                         │
+│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐             │
+│ │  🚚 Trucks  │ │  👨‍🍳 Kitchens│ │  📍 Lots    │             │
+│ │  Browse →   │ │  Browse →   │ │  Browse →   │             │
+│ └─────────────┘ └─────────────┘ └─────────────┘             │
+└──────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────┐
+│  [Become a Host Banner - if not already a host]             │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Active State (has bookings)
+- Show **Upcoming & Pending** section prominently at top
+- Move Past Activity to collapsed/tabbed section below
+- Keep the Become Host upsell in sidebar
+
+### Implementation
+1. Add conditional rendering based on `bookings.length === 0`
+2. Create `DiscoveryGrid` component with category cards linking to `/search?category=...`
+3. Keep existing `BecomeHostCard` for non-hosts
+
+---
+
+## Phase 3: HostDashboard.tsx - Onboarding Wizard Zero State
+
+### Current Problem
+When `listings.length === 0`:
+- Shows "No listings yet" message
+- Generic "New Listing" button
+- User doesn't know the difference between rent/sell paths
+
+### Solution: Two-Path Onboarding Wizard
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│  Welcome to your Host Dashboard                              │
+│                                                              │
+│  "You're all set up. Now, what would you like to list?"      │
+│                                                              │
+│  ┌─────────────────────────┐  ┌─────────────────────────┐   │
+│  │  📅 RENT OUT AN ASSET   │  │  💰 SELL AN ASSET       │   │
+│  │                         │  │                         │   │
+│  │  Generate recurring     │  │  List your equipment    │   │
+│  │  income from your truck,│  │  for sale to thousands  │   │
+│  │  trailer, or kitchen.   │  │  of verified buyers.    │   │
+│  │                         │  │                         │   │
+│  │  [Start Listing →]      │  │  [Sell Now →]           │   │
+│  └─────────────────────────┘  └─────────────────────────┘   │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Implementation
+1. Add conditional rendering when `listings.length === 0`
+2. Create `HostOnboardingWizard` component with two path cards
+3. Link to `/list?mode=rent` and `/list?mode=sale`
+
+---
+
+## Phase 4: Action Required Alert Banner
+
+### Concept
+Instead of burying pending requests in stats, show a prominent **Action Required** banner when the host has items needing attention.
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│  ⚠️ ACTION REQUIRED                                          │
+│                                                              │
+│  You have 3 pending requests and 2 new offers.               │
+│                                                              │
+│  [Review Requests]                                           │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Trigger Conditions
+- `bookingStats.pending > 0`
+- `pendingOffers.length > 0`
+- Draft listings with incomplete setup
+
+### Implementation
+Enhance existing `NextStepCard` or create dedicated `ActionRequiredBanner` component that appears above all content when actions are needed.
+
+---
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/pages/Dashboard.tsx` | Simplify header, update titles to be action-oriented |
+| `src/components/dashboard/ShopperDashboard.tsx` | Add Discovery Grid zero state, reorganize active state |
+| `src/components/dashboard/HostDashboard.tsx` | Add Onboarding Wizard zero state, enhance Action Required visibility |
+| `src/components/dashboard/DiscoveryGrid.tsx` | Create new component for category cards |
+| `src/components/dashboard/HostOnboardingWizard.tsx` | Create new component for two-path onboarding |
+| `src/components/dashboard/ActionRequiredBanner.tsx` | Create prominent alert banner |
+
+---
+
+## Detailed Implementation
+
+### Dashboard.tsx Changes (lines 72-117)
+
+1. **Simplify hero section** - Remove Sparkles badge, make title dynamic
+2. **Update mode switch labels** - Already done ("Buy / Rent" / "Host / Sell")
+3. **Add transition animations** - Smooth fade between modes
+
+```tsx
+// Title changes based on mode
+<h1 className="text-2xl md:text-3xl font-bold">
+  {currentMode === 'host' ? 'Manage Listings' : 'My Trips & Orders'}
+</h1>
+
+// Subtitle is contextual
+<p className="text-muted-foreground">
+  {currentMode === 'host' 
+    ? 'Reservations, offers, and earnings' 
+    : 'Bookings, purchases, and favorites'}
+</p>
+```
+
+### ShopperDashboard.tsx - Zero State Logic
+
+```tsx
+// Early return for zero state
+if (!isLoading && bookings.length === 0 && !hasOffers && !hasPurchases) {
+  return (
+    <div className="space-y-8">
+      <DiscoveryHeroCard />
+      <DiscoveryGrid />
+      {!isHost && <BecomeHostBanner />}
+    </div>
+  );
 }
 ```
 
-### 2.2 New Component: `ShopPoliciesCard.tsx`
+### HostDashboard.tsx - Zero State Logic
 
-Create a compact, expandable card showing:
-- Delivery/Service area (derived from listings or manual setting)
-- Cancellation policy summary
-- Return policy (for sales)
-- Custom vendor terms
+```tsx
+// Early return for zero state
+if (!isLoading && listings.length === 0) {
+  return (
+    <div className="space-y-6">
+      <HostOnboardingWizard />
+    </div>
+  );
+}
 
-**Location**: Below the stats row, above the tabs
+// Active state - show Action Required at top
+return (
+  <div className="space-y-6">
+    {(bookingStats.pending > 0 || pendingOffers.length > 0) && (
+      <ActionRequiredBanner 
+        pendingRequests={bookingStats.pending}
+        pendingOffers={pendingOffers.length}
+      />
+    )}
+    {/* Rest of dashboard */}
+  </div>
+);
+```
 
 ---
 
-## Phase 3: About/Bio Section with Storytelling
+## New Component: DiscoveryGrid
 
-### 3.1 Bio Field Addition
+```tsx
+const categories = [
+  { title: 'Food Trucks', icon: Truck, href: '/search?category=food-truck', desc: 'Taco trucks, pizza ovens, ice cream' },
+  { title: 'Kitchens', icon: ChefHat, href: '/search?category=commercial-kitchen', desc: 'Licensed prep spaces' },
+  { title: 'Vendor Lots', icon: MapPin, href: '/search?category=vendor-lot', desc: 'Prime vending locations' },
+];
 
-**Database**: Add `bio` TEXT column to profiles table
+// Grid layout with hover effects, links to filtered search
+```
 
-### 3.2 UI Enhancement in `EnhancedPublicProfileHeader.tsx`
+---
 
-Add collapsible "About" section:
+## New Component: HostOnboardingWizard
+
+Two large cards side by side:
+1. **Rent** - Links to `/list?mode=rent`
+2. **Sell** - Links to `/list?mode=sale`
+
+Each card has:
+- Icon (Calendar for rent, DollarSign for sell)
+- Title
+- Description
+- CTA button
+
+---
+
+## Visual Summary
+
 ```text
-"I've been in the food truck industry for 8 years. Started with a taco cart 
-and now manage 3 trucks. My favorite thing about hosting is..."
+BEFORE (Empty Shopper Dashboard):
+┌──────────────────────┐
+│ Stats: 0 | 0 | 0 | 0 │
+│ Empty Tabs           │
+│ "No bookings yet"    │
+│ [Browse Listings]    │
+└──────────────────────┘
+
+AFTER (Discovery Mode):
+┌──────────────────────┐
+│ "Ready to start?"    │
+│ [Start Browsing]     │
+│ ┌────┐┌────┐┌────┐   │
+│ │🚚  ││👨‍🍳  ││📍  │   │
+│ └────┘└────┘└────┘   │
+│ [Become a Host]      │
+└──────────────────────┘
 ```
 
-**For hosts with empty bio**: Show prompt "This host hasn't added a bio yet"
+```text
+BEFORE (Empty Host Dashboard):
+┌──────────────────────┐
+│ "No listings yet"    │
+│ [New Listing]        │
+└──────────────────────┘
 
-**For own profile**: Show "Add your story" CTA linking to account settings
-
----
-
-## Phase 4: "Sold" Section for Social Proof
-
-### 4.1 Fetch Sold Items
-
-Query listings where `status = 'sold'` for the host.
-
-### 4.2 UI in `ProfileListingsTab.tsx`
-
-After active listings, add a collapsed "Recently Sold" section:
-- Visually distinct (muted/grayscale cards)
-- "Sold" badge overlay
-- Max 6 items shown
-- Demonstrates marketplace activity and builds trust
-
----
-
-## Phase 5: Contextual Message Pre-fill
-
-### 5.1 Current Behavior (lines 212-221 in PublicProfile.tsx)
-
-The `listingContext` is already captured from URL params (`?from_listing=...`)
-
-### 5.2 Enhancement
-
-When opening a conversation:
-- Pass listing context to the messages page
-- Pre-fill message input with: "Hi! I'm interested in [Listing Title]..."
-
-**Implementation:**
-- Modify `handleMessageHost` to pass listing details to navigation state
-- Update Messages page to read prefill from state
-
----
-
-## Phase 6: Host-Pinned Featured Listing
-
-### 6.1 Database Addition
-
-```sql
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pinned_listing_id UUID REFERENCES listings(id);
+AFTER (Onboarding Wizard):
+┌──────────────────────┐
+│ "What would you      │
+│  like to list?"      │
+│ ┌────────┐┌────────┐ │
+│ │ 📅 RENT ││ 💰 SELL │ │
+│ │ Start →││ Start →│ │
+│ └────────┘└────────┘ │
+└──────────────────────┘
 ```
 
-### 6.2 UI in `ProfileListingsTab.tsx`
-
-**Current**: Shows newest 3 listings as "Featured"
-**New**: If `pinned_listing_id` is set, show that listing first with a special "Pinned" badge
-
-**Host Dashboard Integration:**
-- Add "Pin to Profile" action in listing card dropdown
-- Only one listing can be pinned at a time
-
 ---
 
-## File Changes Summary
+## Benefits
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/hooks/useHostBadges.ts` | Create | Calculate "Top Rated" eligibility |
-| `src/components/profile/ShopPoliciesCard.tsx` | Create | Display vendor policies |
-| `src/components/profile/AboutSection.tsx` | Create | Bio with storytelling |
-| `src/components/profile/SoldListingsSection.tsx` | Create | Social proof section |
-| `src/components/profile/EnhancedPublicProfileHeader.tsx` | Modify | Add Top Rated badge, bio section |
-| `src/components/profile/ProfileListingsTab.tsx` | Modify | Add Sold section, pinned listing logic |
-| `src/components/profile/EnhancedPublicProfileTabs.tsx` | Modify | Add Policies tab or inline section |
-| `src/pages/PublicProfile.tsx` | Modify | Integrate new sections, fetch policies |
-| `src/hooks/useUserProfile.ts` | Modify | Fetch bio and shop_policies |
-| Database migration | Create | Add `bio`, `shop_policies`, `pinned_listing_id` columns |
+| Metric | Before | After |
+|--------|--------|-------|
+| Empty state bounce | High (nothing to do) | Low (discovery paths) |
+| Host onboarding clarity | Generic "New Listing" | Clear rent vs sell paths |
+| Action visibility | Buried in stats | Prominent alert banner |
+| Cognitive load | 5+ sections always visible | Context-appropriate content |
+| First-time user experience | Confusing empty tables | Guided discovery/onboarding |
 
 ---
 
 ## Implementation Order
 
-1. **Database Migration** - Add new profile columns
-2. **useHostBadges Hook** - Calculate Top Rated status
-3. **ShopPoliciesCard** - Display vendor terms
-4. **AboutSection** - Bio with prompts
-5. **SoldListingsSection** - Social proof
-6. **Pinned Listing** - Host-controlled featured item
-7. **Message Pre-fill** - Contextual inquiry enhancement
-8. **Account Settings** - UI to edit bio and policies
-
----
-
-## Visual Mockup
-
-```text
-┌─────────────────────────────────────────────────────────────┐
-│ HEADER                                                      │
-│ ┌──────┐  "John's Mobile Kitchens"                         │
-│ │Avatar│  📍 Los Angeles, CA                               │
-│ │  ✓   │  [Verified] [Top Rated ⭐] [~1hr response]        │
-│ └──────┘                                                    │
-│          "I've been in the food truck industry for 8 years. │
-│           My favorite part is seeing new entrepreneurs..."  │
-│          [Read more]                                        │
-│                                                             │
-│          [Message Host] [View Listings (5)]                 │
-└─────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────┐
-│ STATS ROW                                                   │
-│  [5 Listings] [4.9★ 12 reviews] [28 Booked]                │
-└─────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────┐
-│ SHOP POLICIES (Collapsible)                                 │
-│ 📦 Delivery within 50 miles  |  ↩️ 7-day returns           │
-│ ⏰ 24hr cancellation notice  |  💳 Deposits accepted       │
-│ [View full policies]                                        │
-└─────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────┐
-│ TABS: [Listings (5)] [Reviews (12)]                        │
-├─────────────────────────────────────────────────────────────┤
-│ 📌 PINNED LISTING                                          │
-│ ┌─────────────────────────────────────────────────────────┐│
-│ │ Featured Taco Truck - $45,000                          ││
-│ │ "My best-seller, fully equipped"                       ││
-│ └─────────────────────────────────────────────────────────┘│
-│                                                             │
-│ ALL LISTINGS                                                │
-│ [Card 1] [Card 2] [Card 3]                                 │
-│                                                             │
-│ RECENTLY SOLD (Collapsed)                                   │
-│ [Sold Card 1] [Sold Card 2] [Sold Card 3]                  │
-└─────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────┐
-│ MOBILE STICKY CTA (Bottom)                                  │
-│ [Message about listing] [View Listings (5)]                 │
-└─────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Technical Notes
-
-### Top Rated Badge Criteria
-
-```typescript
-const isTopRated = useMemo(() => {
-  return (
-    stats?.averageRating >= 4.8 &&
-    stats?.totalReviewsReceived >= 5 &&
-    responseTimeData?.isFastResponder &&
-    completedBookings >= 3
-  );
-}, [stats, responseTimeData, completedBookings]);
-```
-
-### Shop Policies JSONB Query
-
-```typescript
-const { data } = await supabase
-  .from('profiles')
-  .select('bio, shop_policies, pinned_listing_id')
-  .eq('id', hostId)
-  .single();
-```
-
-### Sold Listings Query
-
-```typescript
-const { data: soldListings } = await supabase
-  .from('listings')
-  .select('*')
-  .eq('host_id', hostId)
-  .eq('status', 'sold')
-  .order('updated_at', { ascending: false })
-  .limit(6);
-```
+1. Create `DiscoveryGrid` component
+2. Create `HostOnboardingWizard` component
+3. Create `ActionRequiredBanner` component
+4. Update `ShopperDashboard.tsx` with zero state logic
+5. Update `HostDashboard.tsx` with zero state logic and action banner
+6. Simplify `Dashboard.tsx` header
 
