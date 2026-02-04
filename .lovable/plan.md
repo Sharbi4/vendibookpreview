@@ -1,276 +1,38 @@
 
-# Airbnb-Style Dashboard & Dropdown Menu Redesign
+# Airbnb-Style Dashboard Redesign Plan
 
-## Overview
+## Summary
 
-Transform the current dashboard layout and header dropdown menu to match the clean, minimalist Airbnb design system shown in the reference screenshots. This redesign focuses on:
-
-1. **Header Dropdown Menu** - Match Airbnb's simple icon + text layout with clean separators
-2. **Account Settings Page** - Two-column layout with left sidebar navigation
-3. **Dashboard Layout** - Cleaner aesthetics with Airbnb-style visual hierarchy
+Redesign the dashboard pages (Account.tsx, Transactions.tsx, HostDashboard.tsx, ShopperDashboard.tsx) and related components to match Airbnb's clean, minimalist design language as shown in the reference screenshots. Special focus on Payments/Stripe integration sections with branded styling.
 
 ---
 
 ## Design Analysis from Reference Screenshots
 
-### Screenshot 1: Airbnb Homepage Dropdown Menu
+### Key Airbnb Design Patterns Observed:
 
-Key elements observed:
-- Clean white background with no visible border radius overuse
-- Simple icon (20-24px) + text layout per item
-- Generous padding (16px vertical) per menu item
-- Clear visual sections with subtle dividers
-- "Become a host" promotional section with small image
-- Notification badge (red circle with count)
-- Menu items: Wishlists, Trips, Messages, Profile, Notifications, Account settings, Languages & currency, Help Center, [separator], Become a host, Refer a Host, Find a co-host, Gift cards, Log out
+1. **Account Settings Layout**
+   - Two-column layout with sticky left sidebar navigation
+   - Section titles use 24px semibold, no icons in header
+   - Field rows: Label → Value/Status → "Edit"/"Add" action link aligned right
+   - Clean separators between field groups
+   - FAQ/info boxes at bottom with pink/red icon accents
 
-### Screenshot 2: Airbnb Account Settings
+2. **Payments Section Pattern**
+   - Sub-tabs within section (Payments, Payouts, Service fee)
+   - Black filled buttons for primary actions ("Manage payments", "Add payment method")
+   - Section groupings with clear headers
+   - Gift card and coupon sections
 
-Key elements observed:
-- Minimal header with just logo + "Done" button
-- Two-column layout (sidebar 300px + content area)
-- Left sidebar: "Account settings" title + navigation items with icons
-- Navigation items have generous spacing (56px height each)
-- Right content area shows form fields with "Edit" / "Add" action links
-- Clean typography hierarchy
-- Fields show value + action link aligned right
+3. **Privacy/Toggle Settings**
+   - Toggle switches aligned right
+   - Description text below toggle title
+   - Section groupings (Read receipts, Listings, Reviews)
 
----
-
-## Implementation Plan
-
-### Phase 1: Redesign Header Dropdown Menu
-
-**File:** `src/components/layout/Header.tsx`
-
-**Changes:**
-
-1. **Increase dropdown width** from `w-48` to `w-64` (256px)
-2. **Add more padding** to menu items (py-3 instead of default)
-3. **Increase icon size** from h-4 to h-5
-4. **Add icon spacing** margin-right from mr-2 to mr-3
-5. **Restructure menu sections** to match Airbnb groupings:
-   - Group 1: Wishlists, Trips, Messages
-   - Group 2: Profile, Notifications
-   - Group 3: Account settings, Languages & currency, Help Center
-   - Separator
-   - Group 4: Become a host (with promotional styling), Gift cards
-   - Separator
-   - Group 5: Log out
-
-6. **Add notification badge** to Notifications item (red circle with count)
-7. **Style "Become a host"** with subtle highlight background
-
-**Visual Changes:**
-
-```text
-Current:                          Airbnb-Style:
-┌─────────────┐                   ┌──────────────────────┐
-│ 🏠 Dashboard│                   │ ♡  Wishlists         │
-│ 📅 Bookings │                   │ 📅 Trips             │
-│ 🛒 Purchases│                   │ 💬 Messages          │
-│ ───────────│                   │ ────────────────────│
-│ ♡ Favorites│                   │ 👤 Profile           │
-│ 💬 Messages │                   │ 🔔 Notifications   1 │
-│ ───────────│                   │ ────────────────────│
-│ 👤 Account │                   │ ⚙️ Account settings  │
-│ ✅ Verified │                   │ 🌐 Language & curre..│
-│ ───────────│                   │ ❓ Help Center       │
-│ 🛡️ Admin   │                   │ ────────────────────│
-│ ❓ Support │                   │ 🏠 Become a host     │
-│ ───────────│                   │    It's easy to...   │
-│ 🚪 Sign Out│                   │ ────────────────────│
-└─────────────┘                   │ 🚪 Log out           │
-                                  └──────────────────────┘
-```
-
-**Code Structure:**
-
-```typescript
-<DropdownMenuContent 
-  align="end" 
-  className="w-64 bg-background p-0 rounded-xl shadow-xl border"
->
-  {/* Group 1: Core user actions */}
-  <div className="py-2">
-    <AirbnbMenuItem icon={Heart} label="Wishlists" to="/favorites" />
-    <AirbnbMenuItem icon={CalendarDays} label="Trips" to="/dashboard" />
-    <AirbnbMenuItem icon={MessageCircle} label="Messages" to="/messages" />
-  </div>
-  
-  <DropdownMenuSeparator className="my-0" />
-  
-  {/* Group 2: Profile & Notifications */}
-  <div className="py-2">
-    <AirbnbMenuItem icon={User} label="Profile" to={`/profile/${user.id}`} />
-    <AirbnbMenuItem 
-      icon={Bell} 
-      label="Notifications" 
-      badge={unreadCount}  // Show red badge
-    />
-  </div>
-  
-  {/* ... more groups */}
-</DropdownMenuContent>
-```
-
----
-
-### Phase 2: Create AirbnbMenuItem Component
-
-**File:** `src/components/ui/AirbnbMenuItem.tsx` (new)
-
-A reusable menu item component matching Airbnb's style:
-
-```typescript
-interface AirbnbMenuItemProps {
-  icon: LucideIcon;
-  label: string;
-  to?: string;
-  onClick?: () => void;
-  badge?: number;
-  subtext?: string;
-}
-
-const AirbnbMenuItem = ({ icon: Icon, label, to, onClick, badge, subtext }: AirbnbMenuItemProps) => {
-  const content = (
-    <div className="flex items-center justify-between w-full px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer">
-      <div className="flex items-center gap-3">
-        <Icon className="h-5 w-5 text-foreground" />
-        <div>
-          <span className="text-sm font-normal text-foreground">{label}</span>
-          {subtext && (
-            <p className="text-xs text-muted-foreground">{subtext}</p>
-          )}
-        </div>
-      </div>
-      {badge && badge > 0 && (
-        <span className="h-5 min-w-5 flex items-center justify-center bg-rose-500 text-white text-xs font-medium rounded-full px-1.5">
-          {badge}
-        </span>
-      )}
-    </div>
-  );
-  
-  if (to) return <Link to={to}>{content}</Link>;
-  return <button onClick={onClick}>{content}</button>;
-};
-```
-
----
-
-### Phase 3: Redesign Account Settings Page
-
-**File:** `src/pages/Account.tsx`
-
-Transform from current card-based layout to Airbnb's two-column design:
-
-**Current Layout:**
-```text
-┌─────────────────────────────────────────┐
-│            Header                       │
-├─────────────────────────────────────────┤
-│  ┌─────────────────────────────────┐   │
-│  │      Profile Card               │   │
-│  │    [Avatar] Name                │   │
-│  │    [Form Fields]                │   │
-│  └─────────────────────────────────┘   │
-│  ┌─────────────────────────────────┐   │
-│  │     Security Card               │   │
-│  │    [Password Fields]            │   │
-│  └─────────────────────────────────┘   │
-├─────────────────────────────────────────┤
-│            Footer                       │
-└─────────────────────────────────────────┘
-```
-
-**Airbnb-Style Layout:**
-```text
-┌─────────────────────────────────────────────────────┐
-│   [Logo]                           [Done Button]    │
-├─────────────────────────────────────────────────────┤
-│                                                     │
-│  Account settings          Personal information     │
-│                                                     │
-│  ┌─────────────────┐      ┌─────────────────────┐  │
-│  │ 👤 Personal info│      │ Legal name          │  │
-│  │ 🔐 Login & sec. │      │ John Doe        Edit│  │
-│  │ 🔒 Privacy      │      │                     │  │
-│  │ 🔔 Notifications│      │ Email address       │  │
-│  │ 💳 Payments     │      │ j***@email.com  Edit│  │
-│  │ 🌐 Language     │      │                     │  │
-│  └─────────────────┘      │ Phone numbers       │  │
-│                           │ +1 ***-***-1234 Edit│  │
-│                           └─────────────────────┘  │
-│                                                     │
-└─────────────────────────────────────────────────────┘
-```
-
-**Implementation:**
-
-1. **Create AccountLayout component** with sidebar + content area
-2. **Settings sections:**
-   - Personal information
-   - Login & security
-   - Privacy (placeholder)
-   - Notifications (placeholder)
-   - Payments
-   - Languages & currency (placeholder)
-
-3. **Use URL routing** for active section (`/account`, `/account/security`, `/account/payments`)
-
-4. **Form field display pattern:**
-   - Field label (bold)
-   - Current value or "Not provided" 
-   - Action link (Edit/Add) aligned right
-   - Optional helper text
-
----
-
-### Phase 4: Update Dashboard Layout Aesthetics
-
-**File:** `src/components/layout/DashboardLayout.tsx`
-
-Refine to match Airbnb's cleaner aesthetic:
-
-1. **Sidebar styling:**
-   - Remove uppercase section headers
-   - Increase item padding (py-3)
-   - Remove background fill on active items, use left border instead
-   - Use lighter text weight for items
-
-2. **Mode switcher:**
-   - Make it more subtle (smaller, outline style)
-   - Move to bottom of sidebar near sign out
-
-3. **Desktop top bar:**
-   - Simplify breadcrumb
-   - Add user name on right side
-
-4. **Bottom mobile nav:**
-   - Match Airbnb: 5 items max
-   - Use thin line above active icon
-
-**Sidebar Item Style Change:**
-
-```text
-Current:                    Airbnb-Style:
-┌──────────────────┐       ┌──────────────────┐
-│ MANAGEMENT       │       │ Overview         │
-│ ▓▓ Overview ▓▓▓▓│       │ │                │
-│    Listings      │       │ │ Listings       │
-│    Reservations  │       │   Reservations   │
-│    Inbox         │       │   Inbox          │
-│ ───────────────│       │                  │
-│ ACCOUNT          │       │ Messages         │
-│    Wallet        │       │ Payments         │
-│    Settings      │       │                  │
-└──────────────────┘       │ Settings         │
-                           │                  │
-                           │ ──────────────── │
-                           │ Log out          │
-                           └──────────────────┘
-```
+4. **Professional Hosting Tools**
+   - Enable toggle with description and "Learn more" link
+   - Input field with Save/Copy buttons inline
+   - Tip text and policy links
 
 ---
 
@@ -278,54 +40,292 @@ Current:                    Airbnb-Style:
 
 | File | Change Type | Description |
 |------|-------------|-------------|
-| `src/components/layout/Header.tsx` | Major | Redesign dropdown menu with Airbnb styling |
-| `src/components/ui/AirbnbMenuItem.tsx` | Create | New reusable menu item component |
-| `src/pages/Account.tsx` | Major | Two-column layout with sidebar navigation |
-| `src/components/layout/DashboardLayout.tsx` | Medium | Cleaner sidebar styling, refined aesthetics |
-| `src/components/layout/MobileMenu.tsx` | Medium | Update styling to match new aesthetic |
+| `src/pages/Account.tsx` | Major | Redesign to Airbnb field row pattern with Edit/Add links |
+| `src/pages/Transactions.tsx` | Medium | Rename to "Payments & payouts", add Airbnb-style sub-tabs |
+| `src/components/dashboard/StripeStatusCard.tsx` | Medium | Redesign with Airbnb payments section styling |
+| `src/components/dashboard/NextStepCard.tsx` | Minor | Cleaner Airbnb styling |
+| `src/components/dashboard/HostDashboard.tsx` | Minor | Polish stat cards and section headers |
+| `src/components/dashboard/ShopperDashboard.tsx` | Minor | Polish tabs and zero-state styling |
+| `src/components/account/AirbnbFieldRow.tsx` | Create | Reusable field row component |
+| `src/components/account/AirbnbInfoCard.tsx` | Create | FAQ/info card with icon accent |
 
 ---
 
-## Visual Style Guide
+## Implementation Details
+
+### 1. New Component: AirbnbFieldRow.tsx
+
+A reusable field row component matching Airbnb's pattern:
+
+```
+┌─────────────────────────────────────────────────────┐
+│ Legal name                                     Edit │
+│ Shawnna Harbin                                      │
+├─────────────────────────────────────────────────────┤
+│ Email address                                  Edit │
+│ s***n@vendibook.com                                │
+├─────────────────────────────────────────────────────┤
+│ Phone numbers                                  Add  │
+│ Add a number so confirmed guests can get in touch. │
+│ You can add other numbers and choose how...         │
+└─────────────────────────────────────────────────────┘
+```
+
+**Props:**
+- `label: string` - Field label (bold)
+- `value: string | null` - Current value or "Not provided"
+- `description?: string` - Optional helper text
+- `action: 'Edit' | 'Add' | 'Start' | 'Create'` - Action link text
+- `onAction: () => void` - Click handler
+- `locked?: boolean` - Show lock indicator instead of action
+- `showDivider?: boolean` - Show bottom border
+
+---
+
+### 2. New Component: AirbnbInfoCard.tsx
+
+FAQ/Info cards with pink/red icon accents (like Airbnb's "Why isn't my info shown here?"):
+
+```typescript
+interface AirbnbInfoCardProps {
+  icon: LucideIcon;
+  iconColor?: 'pink' | 'red' | 'orange';
+  title: string;
+  description: string;
+}
+```
+
+**Visual:**
+- Light gray background card
+- Colored icon in circle (pink/red accent)
+- Bold title + muted description
+
+---
+
+### 3. Redesign Account.tsx
+
+**Current State:** Form inputs directly editable in cards
+
+**New State:** Airbnb's read-only display with "Edit" modal pattern
+
+**Section Structure:**
+
+```text
+Personal information
+├─ Legal name          → "Shawnna Harbin"        [Edit]
+├─ Preferred first name → "Not provided"         [Add]
+├─ Email address       → "s***n@vendibook.com"   [Edit]
+├─ Phone numbers       → "Not provided"          [Add]
+│  └─ (helper text: Add a number so guests can...)
+├─ Identity verification → "Not started"         [Start]
+├─ Residential address → "Not provided"          [Add]
+└─ Mailing address     → "Not provided"          [Add]
+
+[Info Cards]
+├─ Why isn't my info shown here?
+├─ Which details can be edited?
+└─ What info is shared with others?
+```
+
+**Login & security:**
+```text
+Login
+├─ Password            → "Created" / "Not created"  [Update/Create]
+
+Social accounts
+├─ Google              → "Connected" / "Not connected" [Connect/Disconnect]
+
+Account
+├─ Deactivate your account → "This action cannot be undone" [Deactivate]
+```
+
+**Payments:**
+```text
+[Sub-tabs: Payments | Payouts | Service fee]
+
+Your payments
+├─ Keep track of all your payments and refunds.
+└─ [Manage payments] button (black filled)
+
+Payment methods
+├─ Add a payment method using our secure payment system...
+└─ [Add payment method] button (black filled)
+
+Payout methods (for hosts)
+├─ Stripe status: Connected / Not connected
+└─ [Manage with Stripe] / [Connect Stripe] button
+
+Gift credit
+└─ [Add gift card] button
+
+Coupons
+└─ "Your coupons" (empty state or list)
+```
+
+---
+
+### 4. Redesign Transactions.tsx → Payments Page
+
+**Changes:**
+- Rename page title to "Payments"
+- Add sub-tabs matching Airbnb: "Payments" | "Payouts" | "Service fee"
+- Payments tab: Your purchases + payment methods
+- Payouts tab: Your sales + payout account (Stripe)
+- Service fee tab: Fee breakdown and explanation
+
+**Stripe Integration Visual:**
+```text
+┌─────────────────────────────────────────────────────┐
+│ Payouts                                             │
+│                                                     │
+│ Your payouts                                        │
+│ When you receive a payment, we'll transfer funds   │
+│ to your payout account.                             │
+│                                                     │
+│ ┌─────────────────────────────────────────────────┐│
+│ │ ● Stripe connected                              ││
+│ │   Payments enabled. Funds deposited to *4242.   ││
+│ │                              [View in Stripe →] ││
+│ └─────────────────────────────────────────────────┘│
+│                                                     │
+│ Payout schedule                                     │
+│ Your next payout will be processed on Feb 5, 2025  │
+│                                   [Change schedule] │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+### 5. Enhance StripeStatusCard.tsx
+
+**Current:** Simple success badge
+
+**New:** Full Airbnb-style section with connection status and action
+
+```typescript
+// When NOT connected:
+<div className="border rounded-xl p-4">
+  <h4 className="font-medium">Set up payouts</h4>
+  <p className="text-muted-foreground text-sm">
+    Add a payout method so we can send you money.
+  </p>
+  <Button variant="default" className="mt-4 bg-foreground text-background">
+    Set up payouts
+  </Button>
+</div>
+
+// When connected:
+<div className="border rounded-xl p-4">
+  <div className="flex items-center gap-3">
+    <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+      <Check className="h-5 w-5 text-primary-foreground" />
+    </div>
+    <div>
+      <p className="font-medium">Stripe connected</p>
+      <p className="text-sm text-muted-foreground">Payments enabled</p>
+    </div>
+  </div>
+  <Button variant="outline" className="mt-4">
+    View in Stripe
+    <ExternalLink className="ml-2 h-4 w-4" />
+  </Button>
+</div>
+```
+
+---
+
+### 6. Dashboard Polish
+
+**HostDashboard.tsx:**
+- Simplify header to match Airbnb's minimal style
+- Remove heavy shadows on stat cards
+- Use border-only cards with subtle hover states
+- Section headers: Simple text, no card wrapper
+
+**ShopperDashboard.tsx:**
+- Simplify tabs to match Airbnb's underline-only active state
+- Remove heavy badge styling on tab counts
+- Clean zero-state illustrations
+
+---
+
+## Visual Style Guide (Airbnb Alignment)
 
 ### Typography
-- Menu items: 14px, normal weight (not medium)
-- Section labels: Remove uppercase, use 13px muted text
-- Page titles: 24px, semibold
-
-### Spacing
-- Menu item padding: 12px horizontal, 12px vertical
-- Sidebar item height: 48px
-- Content area padding: 24px
+- Section titles: 22px, semibold (text-foreground)
+- Field labels: 16px, medium (text-foreground)
+- Field values: 14px, regular (text-muted-foreground)
+- Action links: 14px, medium, underline (text-foreground)
 
 ### Colors
-- Active states: No filled background, use left border or underline
-- Hover states: Very subtle muted background (muted/30)
-- Notification badge: Rose-500 (#f43f5e)
+- Primary accent: Keep current orange/primary for brand consistency
+- Stripe accent: Purple (#635bff) for Stripe-related elements
+- Info card icons: Pink/rose for privacy notices
 
-### Borders & Shadows
-- Dropdown: Subtle shadow, 12px border-radius
-- Cards: Minimal border, no shadow (or very subtle)
-- Separators: 1px muted border
+### Spacing
+- Section padding: 24px vertical between sections
+- Field row padding: 16px vertical
+- Sidebar item height: 48px
+
+### Buttons
+- Primary actions: Black filled button (bg-foreground text-background)
+- Secondary: Outline with border
+- Action links: Underlined text, no button wrapper
+
+### Borders & Cards
+- Cards: 1px border, 12px border-radius
+- Minimal shadows (only for elevated elements)
+- Separators: 1px border-border
 
 ---
 
-## Mobile Considerations
+## Technical Implementation Notes
 
-The mobile menu will receive similar updates:
-- Cleaner item styling
-- Remove uppercase section headers
-- Larger touch targets (48px height minimum)
-- Notification badge support
+### Edit Modal Pattern
+
+Instead of inline form inputs, implement modal-based editing:
+
+1. Click "Edit" on field row
+2. Opens dialog/drawer with form inputs
+3. Save updates the field and closes modal
+4. Field row displays updated value
+
+This matches Airbnb's pattern and simplifies the main page layout.
+
+### State Management
+
+- Each section maintains its own edit state
+- Use existing form validation schemas
+- Preserve current save logic, just change UI trigger
+
+### Mobile Responsiveness
+
+- Left sidebar becomes top horizontal tabs on mobile
+- Field rows stack vertically
+- Action links become full-width buttons
 
 ---
 
 ## Implementation Order
 
-1. Create `AirbnbMenuItem` component (foundation)
-2. Update `Header.tsx` dropdown menu
-3. Update `MobileMenu.tsx` for consistency
-4. Refactor `Account.tsx` to two-column layout
-5. Refine `DashboardLayout.tsx` sidebar styling
+1. Create `AirbnbFieldRow.tsx` component
+2. Create `AirbnbInfoCard.tsx` component
+3. Refactor `Account.tsx` to use new components
+4. Enhance `StripeStatusCard.tsx` with Airbnb payments styling
+5. Redesign `Transactions.tsx` with sub-tabs
+6. Polish `HostDashboard.tsx` and `ShopperDashboard.tsx`
 
-This order ensures each step builds on the previous, with the component library established first before larger layout changes.
+---
+
+## Expected User Experience
+
+### Before:
+- Forms with visible input fields everywhere
+- Heavy card styling with shadows
+- Cluttered visual hierarchy
+
+### After:
+- Clean read-only display with clear "Edit" actions
+- Minimal, breathable whitespace
+- Clear visual hierarchy with Airbnb's proven patterns
+- Stripe/payments section feels native and trustworthy
