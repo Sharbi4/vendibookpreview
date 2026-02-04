@@ -1,301 +1,326 @@
 
-
-# Rental-First Marketplace Transformation Plan
+# Turo/Airbnb-Style Listing Detail Page Transformation
 
 ## Executive Summary
 
-Transform Vendibook from a generic "Buy or Sell" marketplace into a **Rental-First, Turo/Airbnb-style marketplace** with the philosophy: "Don't buy a food truck. Rent one." This includes a new immersive hero, refined navigation, and a guided onboarding experience for the dashboard.
+Transform the Listing Detail page from an "Information Hiding" pattern (modals, buttons, hidden data) to a "Direct Manipulation" pattern (visible calendar, inline date pickers, instant pricing updates). This follows the Turo/Airbnb conversion optimization strategy: "What You See Is What You Pay."
 
 ---
 
 ## Current State Analysis
 
-### Homepage (`src/pages/Index.tsx`)
-- Uses `HeroWalkthrough` with a carousel-style "Buy or Rent" walkthrough
-- Shows both "For Sale" and "For Rent" sections equally
-- `SupplySection` focuses on selling/renting generically
-- No clear rental-first messaging
+### What Exists
+| Component | Current Behavior | Issue |
+|-----------|-----------------|-------|
+| `EnhancedBookingSummaryCard` | Shows price, requires "Check availability" click to open modal | Hides calendar, extra click = friction |
+| `RequestDatesModal` | Full calendar with hourly/daily selection | Good functionality, but hidden in modal |
+| `AvailabilityCalendarDisplay` | Exists but not used in main layout | Wasted component - should be inline |
+| `EnhancedQuickHighlights` | Shows some specs, but only for sale listings | Dimensions/power hidden for rentals |
+| `PricingSection` | Static price display | No live price calculation |
 
-### Navigation (`src/components/layout/Header.tsx` & `MobileMenu.tsx`)
-- Header has a large search bar, dropdown menu, and mobile hamburger
-- No "Active Link" pattern - links don't visually indicate current page
-- Mobile menu is a standard slide-in panel, not a "cinema-style" full experience
-- Missing the Airbnb-style "Hamburger + Avatar" pill button
-
-### Dashboard Onboarding
-- `HostOnboardingWizard.tsx` exists but is basic
-- No guided "spotlight tour" for new users
-- No onboarding for the context switch feature
-
----
-
-## Phase 1: New Immersive Hero - `HeroRentalSearch.tsx`
-
-### Concept
-Replace `HeroWalkthrough` with an immersive, full-screen hero featuring:
-- Dark cinematic background image with gradient overlay
-- "Don't buy a food truck. Rent one." headline
-- Turo/Airbnb-style floating search pill with: Location, Asset Type, Dates
-- Search defaults to `mode=rent`
-
-### Technical Details
-- Create new `src/components/home/HeroRentalSearch.tsx`
-- Uses existing `hero-food-truck.jpg` as background
-- Integrates with existing date picker component (`Calendar`)
-- Motion animations using `framer-motion` (already installed)
-- Form submits to `/search?mode=rent&location=...&start=...`
-
-### Search Pill Structure
-```text
-┌──────────────────────────────────────────────────────────────────────┐
-│  Where         │  What            │  When           │  [🔍 Search]   │
-│  Los Angeles   │  Any Vehicle     │  Add dates      │                │
-└──────────────────────────────────────────────────────────────────────┘
-```
+### Key Data Available
+- `price_daily`, `price_weekly`, `price_hourly` - Full pricing tiers
+- `hourly_enabled`, `daily_enabled` - Rental mode toggles
+- `useHourlyAvailability` hook - Complete availability logic
+- `useBlockedDates` hook - Blocked/booked/buffer dates
+- Amenities with power specs: `generator`, `shore_power`, `hot_water_heater`
+- Physical specs: `length_inches`, `width_inches`, `height_inches`, `weight_lbs`
 
 ---
 
-## Phase 2: Rental Benefits Section - `RentalBenefits.tsx`
+## Phase 1: Inline Booking Widget (Right Column)
 
-### Purpose
-Replace the generic `SupplySection` messaging with a focused "Why Rent?" value proposition.
+### 1.1 Create `BookingWidget.tsx`
 
-### Create `src/components/home/RentalBenefits.tsx`
-**Three Key Benefits:**
-1. **Low Capital, High Speed** - Test concepts without $50k commitment
-2. **Verified & Insured** - ID verification, escrow payments, safety built-in
-3. **Flexible Terms** - Weekend festivals to year-long leases
-
-### Design
-- Clean 3-column grid on desktop, stacked on mobile
-- Each benefit has icon in a rounded container + title + description
-- Premium whitespace and typography
-
----
-
-## Phase 3: Updated Index.tsx Structure
-
-### New Page Flow
-1. **HeroRentalSearch** - Full-screen immersive search (replaces `HeroWalkthrough`)
-2. **RentalBenefits** - Why rent value prop (new)
-3. **ListingsSections** - Keep but reorder: Rentals first, then Sales
-4. **PaymentsBanner** - Keep as-is (BNPL is relevant)
-5. **BecomeHostSection** - Dark-themed host acquisition CTA (refactored from `SupplySection`)
-6. **FinalCTA** - Keep as-is
-
-### Key Changes
-- Remove `CategoryCarousels` (clutter)
-- Move AI Tools callout to `/list` page where it's contextual
-- Remove `HeroWalkthrough` entirely
-
----
-
-## Phase 4: Navigation Upgrades
-
-### 4.1 Create `ActiveLink.tsx` Component
-
-**File:** `src/components/layout/ActiveLink.tsx`
-
-A reusable link component that:
-- Detects current route using `useLocation()`
-- Applies active styles (bold text, subtle background pill)
-- Supports exact vs prefix matching
-
-### 4.2 Header.tsx Enhancements
-
-**Updates:**
-1. **Backdrop Blur** - Add `backdrop-blur-xl` for frosted glass effect on scroll
-2. **Center Navigation** - Add tab-style links: "Explore" | "How it Works" | "Dashboard"
-3. **Airbnb-Style User Pill** - Replace current dropdown with "hamburger + avatar" pill button
-4. **Simplified Right Actions** - "Become a Host" (for non-hosts) + User Pill
-
-```text
-┌──────────────────────────────────────────────────────────────┐
-│ [Logo]     Explore | How it Works     [Become Host] [☰ 👤]  │
-└──────────────────────────────────────────────────────────────┘
-```
-
-### 4.3 MobileMenu.tsx - Cinema Experience
-
-**Transform to full-screen experience:**
-1. Use `framer-motion` for smooth slide animations
-2. Large touch targets (minimum 48px height)
-3. Active state indicators (background pill + icon fill)
-4. Bottom-anchored CTAs (thumb-zone friendly)
-5. Lock body scroll when open
+Replace `EnhancedBookingSummaryCard` with a new component that exposes date/time selection directly (no modal required for initial interaction).
 
 **Structure:**
 ```text
-┌──────────────────────────────────────────────────────────────┐
-│  [Avatar] Welcome, John            [X Close]                 │
-│           View Profile                                        │
-├──────────────────────────────────────────────────────────────┤
-│  🏠 Home                                                      │
-│  🔍 Explore                                                   │
-│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━                   │
-│  📊 Dashboard                                                 │
-│  💬 Messages                                                  │
-│  📋 Transactions                                              │
-│  ❤️ Wishlist                                                  │
-│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━                   │
-│  ➕ Host an Asset  (highlighted)                             │
-│  👤 Account                                                   │
-├──────────────────────────────────────────────────────────────┤
-│  [Log Out]                                                    │
-└──────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│  $150 /day                    ⚡ Instant│
+│  $900/week for 7+ days                  │
+├─────────────────────────────────────────┤
+│  ┌─────────────┬──────────────┐        │
+│  │ CHECK-IN    │  CHECK-OUT   │        │
+│  │ Feb 10      │  Feb 14      │ ▾      │
+│  └─────────────┴──────────────┘        │
+│                                         │
+│  ┌─────────────┬──────────────┐        │
+│  │ START TIME  │  END TIME    │ (hourly)│
+│  │ 10:00 AM    │  6:00 PM     │ ▾      │
+│  └─────────────┴──────────────┘        │
+├─────────────────────────────────────────┤
+│  4 days × $150                    $600  │
+│  Service fee                       $77  │
+│  ─────────────────────────────────────  │
+│  Total                            $677  │
+├─────────────────────────────────────────┤
+│  [        Request to Book         ]     │
+│                                         │
+│  You won't be charged yet               │
+├─────────────────────────────────────────┤
+│  🛡️ 100% money-back guarantee          │
+└─────────────────────────────────────────┘
 ```
+
+**Key Features:**
+1. **Inline Popover Calendars** - Click date fields to open inline calendar popovers (not full modals)
+2. **Live Price Calculation** - Uses existing `calculateRentalFees` as dates change
+3. **Time Selectors** - Only shown if `hourly_enabled` is true
+4. **Supports Both Modes** - Rental (dates/times) vs Sale (Buy Now / Make Offer)
+
+**Technical Implementation:**
+- Uses `Popover` with `Calendar` component for date selection
+- Leverages existing `useHourlyAvailability` and `useBlockedDates` hooks
+- Calculates fees with `calculateRentalFees` from `lib/commissions.ts`
+- Preserves existing modal as fallback for complex hourly scheduling
+
+### 1.2 Update Sale Mode Widget
+
+For sale listings, the widget shows:
+- Price prominently
+- Fulfillment options (pickup, delivery, freight)
+- "Buy Now" + "Make Offer" CTAs
+- Freight estimate integration
 
 ---
 
-## Phase 5: Dashboard Onboarding Tour
+## Phase 2: Inline Availability Calendar (Left Column)
 
-### 5.1 Create `DashboardOnboarding.tsx`
+### 2.1 Create `InlineAvailabilityCalendar.tsx`
 
-**File:** `src/components/onboarding/DashboardOnboarding.tsx`
+Add a 2-month calendar view directly in the main content area (below description, above reviews).
 
-A "spotlight tour" component that:
-- Shows first-time users key features via dimmed overlay + spotlight effect
-- Steps through features: Mode Switch, Storefront Button, Operations Tab
-- Uses localStorage to track completion (`vendibook_dashboard_onboarding_v1`)
-- Renders after 1-second delay to ensure UI is ready
-
-**Technical Approach:**
-- Use `framer-motion` for animations
-- Calculate element positions via `getBoundingClientRect()`
-- Clip-path or SVG mask for spotlight effect
-- Popover positioned relative to target element
-
-### 5.2 Dashboard.tsx Integration
-
-**Add IDs to key elements:**
-- `id="mode-switch-container"` on the host/shopper toggle
-- `id="storefront-button"` on the View Storefront button (in HostDashboard)
-- `id="operations-tab"` on the Inventory tab (or Operations view toggle)
-
-**Mount the onboarding:**
-```tsx
-const [showOnboarding, setShowOnboarding] = useState(false);
-
-useEffect(() => {
-  const hasSeen = localStorage.getItem('vendibook_dashboard_onboarding_v1');
-  if (!hasSeen && !isLoading) {
-    setTimeout(() => setShowOnboarding(true), 1000);
-  }
-}, [isLoading]);
-```
-
-### 5.3 Tour Steps
-
-**For Host Mode:**
-1. Mode Switch - "Two Modes, One Account. Switch instantly."
-2. Storefront Button - "Your public profile. Share it anywhere."
-3. Inventory Tab - "Manage all assets from one place."
-
-**For Shopper Mode:**
-1. Discovery Grid - "Start searching for your perfect asset."
-2. Become Host Card - "Have idle equipment? Switch roles and earn."
-
----
-
-## Phase 6: Enhanced HostOnboardingWizard
-
-### Upgrade to "Corporate" Style
-
-**Current:** Simple two-path cards (Rent vs Sell)
-**Enhanced:**
-- More professional terminology ("Rental Fleet" vs "Asset Sales")
-- Feature bullets for each path
-- Better visual hierarchy
-
+**Structure:**
 ```text
-┌─────────────────────────────────────────────────────────────────────┐
-│  Set up your Vendor Profile                                        │
-│  "Welcome to the professional side of Vendibook."                  │
-├────────────────────────────────┬────────────────────────────────────┤
-│  📅 RENTAL FLEET               │  💰 ASSET SALES                    │
-│                                │                                    │
-│  Generate recurring revenue    │  List equipment for sale to       │
-│  from trucks, trailers, or     │  thousands of verified buyers.    │
-│  kitchens.                     │                                    │
-│                                │                                    │
-│  ✓ Recurring revenue tools     │  ✓ Escrow payment protection      │
-│  ✓ Availability calendar       │  ✓ Verified buyer network         │
-│  ✓ Automated contracts         │  ✓ Nationwide freight             │
-│                                │                                    │
-│  [Start Rental Business]       │  [List Item for Sale]             │
-└────────────────────────────────┴────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│  Availability                                               │
+│  Prices may vary by day. Select dates on the right to book. │
+├─────────────────────────────────────────────────────────────┤
+│  ◄ February 2026          March 2026 ►                      │
+│  ┌───────────────────┐   ┌───────────────────┐             │
+│  │ S  M  T  W  T  F  S│   │ S  M  T  W  T  F  S│             │
+│  │       1  2  3  4  5│   │                   1│             │
+│  │ 6  7  8  9 10 11 12│   │ 2  3  4  5  6  7  8│             │
+│  │13 14 15 16 17 18 19│   │ 9 10 11 12 13 14 15│             │
+│  │20 21 22 23 24 25 26│   │16 17 18 19 20 21 22│             │
+│  │27 28               │   │23 24 25 26 27 28 29│             │
+│  └───────────────────┘   │30 31              │             │
+│                          └───────────────────┘             │
+│                                                             │
+│  Legend: ◯ Available  ● Booked  ◐ Limited  ○ Blocked       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Key Features:**
+1. **Dual-Month View** - Airbnb-style side-by-side months on desktop
+2. **Color-Coded Status** - Uses existing `AvailabilityCalendarDisplay` status logic
+3. **Responsive** - Single month on mobile
+4. **Read-Only** - For scanning availability; selection happens in right widget
+5. **Tooltips** - Hover for detailed status
+
+**Technical Implementation:**
+- Reuses logic from existing `AvailabilityCalendarDisplay`
+- Uses `useBlockedDates` hook for booked/blocked/buffer dates
+- Navigation with `addMonths`/`subMonths` from date-fns
+- Only renders for rental listings (`mode === 'rent'`)
+
+---
+
+## Phase 3: Technical Specifications Grid
+
+### 3.1 Create `TechSpecsGrid.tsx`
+
+Expose the "hidden" wizard data (dimensions, power, water) in an icon-rich, scannable grid.
+
+**Structure:**
+```text
+┌─────────────────────────────────────────────────────────────┐
+│  Technical Specifications                                   │
+├──────────────────┬──────────────────┬──────────────────┬────┤
+│  📏 Dimensions   │  ⚖️ Weight       │  ⚡ Power        │  💧│
+│  16'L × 8'W      │  8,500 lbs       │  Generator + 50A │  Hot│
+├──────────────────┴──────────────────┴──────────────────┴────┤
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Data Mapping:**
+| Source Field | Display |
+|--------------|---------|
+| `length_inches`, `width_inches`, `height_inches` | "16'L × 8'W × 10'H" |
+| `weight_lbs` | "8,500 lbs" |
+| `amenities.includes('generator')` | "Generator Included" |
+| `amenities.includes('shore_power')` | "+ 50A Shore Power" |
+| `amenities.includes('hot_water_heater')` | "Hot/Cold Water" |
+
+**Show For:**
+- Food trucks and food trailers (categories with physical specs)
+- Both rental and sale modes
+
+---
+
+## Phase 4: Update ListingDetail.tsx Layout
+
+### 4.1 Restructure Content Sections
+
+**New Order (Left Column):**
+1. Title & Meta (unchanged)
+2. Host Snippet (unchanged)
+3. **Technical Specifications** (NEW - `TechSpecsGrid`)
+4. Description (unchanged)
+5. Amenities/What's Included (unchanged)
+6. **Inline Availability Calendar** (NEW - rentals only)
+7. Host Card (unchanged)
+8. Reviews (unchanged)
+9. Policies (unchanged)
+
+**Right Column:**
+1. **BookingWidget** (replaces `EnhancedBookingSummaryCard` and `EnhancedInquiryForm`)
+
+### 4.2 Integration Points
+
+```tsx
+// Rental listings
+{isRental ? (
+  <BookingWidget 
+    listing={listing}
+    host={host}
+    isOwner={isOwner}
+  />
+) : (
+  <BookingWidget 
+    listing={listing}
+    host={host}
+    isOwner={isOwner}
+    mode="sale"
+  />
+)}
 ```
 
 ---
 
-## Files Summary
+## Files to Create/Modify
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/components/home/HeroRentalSearch.tsx` | Create | Immersive rental-first hero with search pill |
-| `src/components/home/RentalBenefits.tsx` | Create | "Why Rent?" value proposition section |
-| `src/components/home/BecomeHostSection.tsx` | Create | Dark-themed host acquisition CTA (replace SupplySection) |
-| `src/components/layout/ActiveLink.tsx` | Create | Reusable link with active state detection |
-| `src/components/onboarding/DashboardOnboarding.tsx` | Create | Spotlight tour component |
-| `src/pages/Index.tsx` | Modify | New section order, replace hero |
-| `src/components/layout/Header.tsx` | Modify | Backdrop blur, center nav, user pill |
-| `src/components/layout/MobileMenu.tsx` | Modify | Full-screen cinema experience |
-| `src/pages/Dashboard.tsx` | Modify | Add element IDs, mount onboarding |
-| `src/components/dashboard/HostDashboard.tsx` | Modify | Add `id="storefront-button"` |
-| `src/components/dashboard/HostOnboardingWizard.tsx` | Modify | Corporate upgrade with feature bullets |
-| `src/components/home/ListingsSections.tsx` | Modify | Prioritize rentals over sales |
+| `src/components/listing-detail/BookingWidget.tsx` | Create | New unified booking/inquiry widget with inline date selection |
+| `src/components/listing-detail/InlineAvailabilityCalendar.tsx` | Create | 2-month calendar for main content area |
+| `src/components/listing-detail/TechSpecsGrid.tsx` | Create | Physical/power specifications grid |
+| `src/pages/ListingDetail.tsx` | Modify | Integrate new components, restructure layout |
+| `src/components/listing-detail/StickyMobileCTA.tsx` | Modify | Update to use BookingWidget date state |
 
 ---
 
-## Visual Summary
+## Component Interactions
 
-### Before (Homepage)
 ```text
-┌──────────────────────────────────────────────────────────────┐
-│ Header                                                        │
-│ HeroWalkthrough (Buy or Rent carousel)                       │
-│ ListingsSections (Sale first, Rent second)                   │
-│ PaymentsBanner                                                │
-│ SupplySection (Generic sell/rent)                            │
-│ CategoryCarousels                                             │
-│ FinalCTA                                                      │
-│ Footer                                                        │
-└──────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                      ListingDetail.tsx                      │
+├─────────────────────────────────────────────────────────────┤
+│  Left Column                    │  Right Column (Sticky)    │
+│  ────────────────────           │  ─────────────────────    │
+│  ┌─────────────────┐            │  ┌──────────────────┐    │
+│  │ TechSpecsGrid   │            │  │  BookingWidget   │    │
+│  │ (dimensions,    │            │  │  - Date popovers │    │
+│  │  power, weight) │            │  │  - Time select   │    │
+│  └─────────────────┘            │  │  - Live pricing  │    │
+│                                 │  │  - Book CTA      │    │
+│  ┌─────────────────┐            │  └──────────────────┘    │
+│  │ InlineCalendar  │            │                          │
+│  │ (read-only,     │            │                          │
+│  │  2-month view)  │            │                          │
+│  └─────────────────┘            │                          │
+└─────────────────────────────────────────────────────────────┘
+                          ▲
+                          │ Uses
+                          ▼
+         ┌────────────────────────────────────┐
+         │         useHourlyAvailability      │
+         │         useBlockedDates            │
+         │         calculateRentalFees        │
+         └────────────────────────────────────┘
 ```
 
-### After (Homepage)
-```text
-┌──────────────────────────────────────────────────────────────┐
-│ Header (Glass, Tab Nav)                                       │
-│ HeroRentalSearch (Full-screen, "Don't buy. Rent.")           │
-│ RentalBenefits (Why Rent? 3 columns)                         │
-│ ListingsSections (Rent first, Sale second)                   │
-│ PaymentsBanner                                                │
-│ BecomeHostSection (Dark, Host acquisition)                   │
-│ FinalCTA                                                      │
-│ Footer                                                        │
-└──────────────────────────────────────────────────────────────┘
+---
+
+## Technical Details
+
+### BookingWidget Props
+```typescript
+interface BookingWidgetProps {
+  listing: Listing;
+  host: HostProfile | null;
+  isOwner: boolean;
+}
 ```
+
+### InlineAvailabilityCalendar Props
+```typescript
+interface InlineAvailabilityCalendarProps {
+  listingId: string;
+  availableFrom?: string | null;
+  availableTo?: string | null;
+}
+```
+
+### TechSpecsGrid Props
+```typescript
+interface TechSpecsGridProps {
+  category: ListingCategory;
+  lengthInches?: number | null;
+  widthInches?: number | null;
+  heightInches?: number | null;
+  weightLbs?: number | null;
+  amenities?: string[];
+}
+```
+
+---
+
+## Key Hooks Reuse
+
+The implementation leverages existing, battle-tested hooks:
+
+1. **`useHourlyAvailability`** - Provides:
+   - `settings` (priceHourly, hourlyEnabled, dailyEnabled, etc.)
+   - `getDayAvailabilityInfo(date)` - Returns status for calendar coloring
+   - `getAvailableWindowsForDate(date)` - Time slots for hourly booking
+   - `calculateHourlyPrice(hours)` / `calculateDailyPrice(days)`
+
+2. **`useBlockedDates`** - Provides:
+   - `blockedDates`, `bookedDates`, `bufferDates`
+   - `isDateUnavailable(date)` - For disabling calendar dates
+
+3. **`calculateRentalFees(basePrice)`** - Returns:
+   - `{ subtotal, renterFee, hostFee, customerTotal, hostReceives, platformFee }`
+
+---
+
+## Mobile Considerations
+
+1. **BookingWidget** - Full-width on mobile, sticky at bottom option
+2. **InlineAvailabilityCalendar** - Single month on mobile, horizontal scroll for dual
+3. **TechSpecsGrid** - 2-column grid on mobile (vs 4 on desktop)
+4. **StickyMobileCTA** - Remains as footer CTA, syncs with BookingWidget state
+
+---
+
+## Benefits
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Clicks to see availability | 1 (open modal) | 0 (inline calendar) |
+| Clicks to see pricing | 2 (select dates in modal) | 0 (live update on date change) |
+| Tech specs visibility | Hidden in description | Prominent icon grid |
+| Conversion friction | High (modal-heavy) | Low (direct manipulation) |
+| Mobile UX | Modal covers screen | Inline + sticky CTA |
 
 ---
 
 ## Implementation Order
 
-1. **Create new components** (HeroRentalSearch, RentalBenefits, BecomeHostSection, ActiveLink, DashboardOnboarding)
-2. **Update Index.tsx** with new section order
-3. **Enhance Header.tsx** (backdrop blur, center nav, user pill)
-4. **Transform MobileMenu.tsx** (cinema experience)
-5. **Wire up Dashboard onboarding** (add IDs, mount tour)
-6. **Upgrade HostOnboardingWizard.tsx** (corporate style)
-7. **Update ListingsSections.tsx** (rentals first)
-
----
-
-## Dependencies
-
-All required packages are already installed:
-- `framer-motion` - Animations
-- `react-day-picker` + `date-fns` - Date picker in search pill
-- `lucide-react` - Icons
-- Existing `Calendar` component - Date selection
-
+1. Create `TechSpecsGrid.tsx` component
+2. Create `InlineAvailabilityCalendar.tsx` component
+3. Create `BookingWidget.tsx` component
+4. Update `ListingDetail.tsx` to integrate all three
+5. Update `StickyMobileCTA.tsx` for state sync
