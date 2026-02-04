@@ -32,7 +32,7 @@ const HeroRentalSearch = () => {
   };
 
   return (
-    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden m-4 rounded-[60px]">
+    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden m-4 rounded-[60px] z-0">
       {/* Immersive Background */}
       <div className="absolute inset-0 z-0">
         <img
