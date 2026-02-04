@@ -1,200 +1,312 @@
 
-# Turo/Airbnb-Style Listing Detail Page Transformation
+# Pro Dashboard Architecture - Turo/Airbnb-Style Navigation System
 
 ## Executive Summary
 
-Transform the Listing Detail page from an "Information Hiding" pattern (modals, buttons, hidden data) to a "Direct Manipulation" pattern (visible calendar, inline date pickers, instant pricing updates). This follows the Turo/Airbnb conversion optimization strategy: "What You See Is What You Pay."
+Transform the current dashboard from a simple page with cards into a full "App-like" experience with persistent sidebar navigation (desktop) and bottom navigation (mobile). This creates the "tech-forward" feel expected from modern marketplace platforms like Airbnb, Turo, and DoorDash.
 
 ---
 
 ## Current State Analysis
 
-### What Exists
+### What Exists Today
+
 | Component | Current Behavior | Issue |
 |-----------|-----------------|-------|
-| `EnhancedBookingSummaryCard` | Shows price, requires "Check availability" click to open modal | Hides calendar, extra click = friction |
-| `RequestDatesModal` | Full calendar with hourly/daily selection | Good functionality, but hidden in modal |
-| `AvailabilityCalendarDisplay` | Exists but not used in main layout | Wasted component - should be inline |
-| `EnhancedQuickHighlights` | Shows some specs, but only for sale listings | Dimensions/power hidden for rentals |
-| `PricingSection` | Static price display | No live price calculation |
+| `Dashboard.tsx` | Self-contained page with Header + Footer | No persistent navigation between dashboard sections |
+| `HostDashboard.tsx` | Internal tabs (Overview/Inventory/Bookings/Financials) | Tabs are local state, not URL-based; no sidebar |
+| `ShopperDashboard.tsx` | Internal tabs (Pending/Approved/Past) | Same issues as HostDashboard |
+| `Header.tsx` | Global header with dropdown menu | Dashboard controls buried in dropdown |
+| Mobile Navigation | Hamburger menu only | No app-like bottom nav bar |
 
-### Key Data Available
-- `price_daily`, `price_weekly`, `price_hourly` - Full pricing tiers
-- `hourly_enabled`, `daily_enabled` - Rental mode toggles
-- `useHourlyAvailability` hook - Complete availability logic
-- `useBlockedDates` hook - Blocked/booked/buffer dates
-- Amenities with power specs: `generator`, `shore_power`, `hot_water_heater`
-- Physical specs: `length_inches`, `width_inches`, `height_inches`, `weight_lbs`
+### What's Missing
+
+1. **Persistent Sidebar** (Desktop) - Always-visible navigation for dashboard sections
+2. **Bottom Navigation** (Mobile) - Thumb-friendly app-like nav bar
+3. **URL-Based Tabs** - Navigation state persisted in URL for deep linking
+4. **Mode Switcher in Sidebar** - Host/Shopper toggle always accessible
+5. **User Profile Snippet** - Avatar + name visible in sidebar
 
 ---
 
-## Phase 1: Inline Booking Widget (Right Column)
+## Architecture Overview
 
-### 1.1 Create `BookingWidget.tsx`
-
-Replace `EnhancedBookingSummaryCard` with a new component that exposes date/time selection directly (no modal required for initial interaction).
-
-**Structure:**
 ```text
-┌─────────────────────────────────────────┐
-│  $150 /day                    ⚡ Instant│
-│  $900/week for 7+ days                  │
-├─────────────────────────────────────────┤
-│  ┌─────────────┬──────────────┐        │
-│  │ CHECK-IN    │  CHECK-OUT   │        │
-│  │ Feb 10      │  Feb 14      │ ▾      │
-│  └─────────────┴──────────────┘        │
-│                                         │
-│  ┌─────────────┬──────────────┐        │
-│  │ START TIME  │  END TIME    │ (hourly)│
-│  │ 10:00 AM    │  6:00 PM     │ ▾      │
-│  └─────────────┴──────────────┘        │
-├─────────────────────────────────────────┤
-│  4 days × $150                    $600  │
-│  Service fee                       $77  │
-│  ─────────────────────────────────────  │
-│  Total                            $677  │
-├─────────────────────────────────────────┤
-│  [        Request to Book         ]     │
-│                                         │
-│  You won't be charged yet               │
-├─────────────────────────────────────────┤
-│  🛡️ 100% money-back guarantee          │
-└─────────────────────────────────────────┘
+Desktop Layout:
+┌──────────────────────────────────────────────────────────────────┐
+│  Mobile Header (hidden on desktop)                               │
+├────────────┬─────────────────────────────────────────────────────┤
+│            │  Breadcrumb: Dashboard / Overview                   │
+│  SIDEBAR   ├─────────────────────────────────────────────────────┤
+│  (240px)   │                                                     │
+│            │                                                     │
+│  - Avatar  │           MAIN CONTENT AREA                         │
+│  - Mode    │           (HostDashboard / ShopperDashboard)        │
+│    Toggle  │                                                     │
+│            │                                                     │
+│  SECTIONS  │                                                     │
+│  ─────────│                                                     │
+│  Overview  │                                                     │
+│  Listings  │                                                     │
+│  Bookings  │                                                     │
+│  Inbox     │                                                     │
+│            │                                                     │
+│  ACCOUNT   │                                                     │
+│  ─────────│                                                     │
+│  Wallet    │                                                     │
+│  Settings  │                                                     │
+│            │                                                     │
+│  [Sign Out]│                                                     │
+├────────────┴─────────────────────────────────────────────────────┤
+│  Bottom Nav (hidden on desktop)                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+Mobile Layout:
+┌─────────────────────────────────────┐
+│  ☰ Logo    "My Dashboard"    🔔     │  <-- Mobile Header
+├─────────────────────────────────────┤
+│                                     │
+│      MAIN CONTENT AREA              │
+│      (Full width, scrollable)       │
+│                                     │
+│                                     │
+├─────────────────────────────────────┤
+│  🏠    🛒    💬    👤              │  <-- Bottom Nav (Fixed)
+│ Home  Shop  Inbox Account           │
+└─────────────────────────────────────┘
 ```
 
-**Key Features:**
-1. **Inline Popover Calendars** - Click date fields to open inline calendar popovers (not full modals)
-2. **Live Price Calculation** - Uses existing `calculateRentalFees` as dates change
-3. **Time Selectors** - Only shown if `hourly_enabled` is true
-4. **Supports Both Modes** - Rental (dates/times) vs Sale (Buy Now / Make Offer)
-
-**Technical Implementation:**
-- Uses `Popover` with `Calendar` component for date selection
-- Leverages existing `useHourlyAvailability` and `useBlockedDates` hooks
-- Calculates fees with `calculateRentalFees` from `lib/commissions.ts`
-- Preserves existing modal as fallback for complex hourly scheduling
-
-### 1.2 Update Sale Mode Widget
-
-For sale listings, the widget shows:
-- Price prominently
-- Fulfillment options (pickup, delivery, freight)
-- "Buy Now" + "Make Offer" CTAs
-- Freight estimate integration
-
 ---
 
-## Phase 2: Inline Availability Calendar (Left Column)
+## Implementation Plan
 
-### 2.1 Create `InlineAvailabilityCalendar.tsx`
+### Phase 1: Create DashboardLayout Component
 
-Add a 2-month calendar view directly in the main content area (below description, above reviews).
+**New File:** `src/components/layout/DashboardLayout.tsx`
 
-**Structure:**
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  Availability                                               │
-│  Prices may vary by day. Select dates on the right to book. │
-├─────────────────────────────────────────────────────────────┤
-│  ◄ February 2026          March 2026 ►                      │
-│  ┌───────────────────┐   ┌───────────────────┐             │
-│  │ S  M  T  W  T  F  S│   │ S  M  T  W  T  F  S│             │
-│  │       1  2  3  4  5│   │                   1│             │
-│  │ 6  7  8  9 10 11 12│   │ 2  3  4  5  6  7  8│             │
-│  │13 14 15 16 17 18 19│   │ 9 10 11 12 13 14 15│             │
-│  │20 21 22 23 24 25 26│   │16 17 18 19 20 21 22│             │
-│  │27 28               │   │23 24 25 26 27 28 29│             │
-│  └───────────────────┘   │30 31              │             │
-│                          └───────────────────┘             │
-│                                                             │
-│  Legend: ◯ Available  ● Booked  ◐ Limited  ○ Blocked       │
-└─────────────────────────────────────────────────────────────┘
+This is the core layout shell that wraps dashboard content and provides:
+
+1. **Desktop Sidebar** (hidden on mobile)
+   - User avatar + name + email snippet
+   - Mode toggle (Buying/Hosting) with pill-style switcher
+   - Navigation groups with icons and active states
+   - Sign out button at bottom
+
+2. **Mobile Header** (hidden on desktop)
+   - Hamburger menu trigger
+   - Logo/title
+   - Notification bell
+
+3. **Mobile Slide-Out Menu** (using Sheet component)
+   - Same content as sidebar
+   - Slides in from left when hamburger tapped
+
+4. **Mobile Bottom Navigation** (fixed at bottom)
+   - 4 core actions: Home, Shop, Inbox, Account
+   - Active state highlighting
+   - Safe area padding for notched devices
+
+5. **Desktop Top Bar**
+   - Breadcrumb navigation
+   - Help & Support link
+   - Notification center
+
+**Navigation Configuration:**
+
+```typescript
+// Host Mode Navigation
+const hostNavigation = [
+  {
+    title: 'Management',
+    items: [
+      { title: 'Overview', icon: LayoutGrid, href: '/dashboard' },
+      { title: 'Listings', icon: Truck, href: '/dashboard?tab=inventory' },
+      { title: 'Reservations', icon: CalendarDays, href: '/dashboard?tab=bookings' },
+      { title: 'Inbox', icon: MessageSquare, href: '/messages' },
+    ]
+  },
+  {
+    title: 'Account',
+    items: [
+      { title: 'Wallet', icon: CreditCard, href: '/transactions' },
+      { title: 'Settings', icon: Settings, href: '/account' },
+    ]
+  }
+];
+
+// Shopper Mode Navigation
+const shopperNavigation = [
+  {
+    title: 'Activity',
+    items: [
+      { title: 'Trips', icon: CalendarDays, href: '/dashboard' },
+      { title: 'Favorites', icon: Heart, href: '/favorites' },
+      { title: 'Inbox', icon: MessageSquare, href: '/messages' },
+    ]
+  },
+  // ... Account group same as above
+];
 ```
 
-**Key Features:**
-1. **Dual-Month View** - Airbnb-style side-by-side months on desktop
-2. **Color-Coded Status** - Uses existing `AvailabilityCalendarDisplay` status logic
-3. **Responsive** - Single month on mobile
-4. **Read-Only** - For scanning availability; selection happens in right widget
-5. **Tooltips** - Hover for detailed status
+**Props Interface:**
 
-**Technical Implementation:**
-- Reuses logic from existing `AvailabilityCalendarDisplay`
-- Uses `useBlockedDates` hook for booked/blocked/buffer dates
-- Navigation with `addMonths`/`subMonths` from date-fns
-- Only renders for rental listings (`mode === 'rent'`)
-
----
-
-## Phase 3: Technical Specifications Grid
-
-### 3.1 Create `TechSpecsGrid.tsx`
-
-Expose the "hidden" wizard data (dimensions, power, water) in an icon-rich, scannable grid.
-
-**Structure:**
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  Technical Specifications                                   │
-├──────────────────┬──────────────────┬──────────────────┬────┤
-│  📏 Dimensions   │  ⚖️ Weight       │  ⚡ Power        │  💧│
-│  16'L × 8'W      │  8,500 lbs       │  Generator + 50A │  Hot│
-├──────────────────┴──────────────────┴──────────────────┴────┤
-└─────────────────────────────────────────────────────────────┘
+```typescript
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+  mode: 'host' | 'shopper';
+  onModeChange: (mode: 'host' | 'shopper') => void;
+}
 ```
 
-**Data Mapping:**
-| Source Field | Display |
-|--------------|---------|
-| `length_inches`, `width_inches`, `height_inches` | "16'L × 8'W × 10'H" |
-| `weight_lbs` | "8,500 lbs" |
-| `amenities.includes('generator')` | "Generator Included" |
-| `amenities.includes('shore_power')` | "+ 50A Shore Power" |
-| `amenities.includes('hot_water_heater')` | "Hot/Cold Water" |
+---
 
-**Show For:**
-- Food trucks and food trailers (categories with physical specs)
-- Both rental and sale modes
+### Phase 2: Update Dashboard.tsx
+
+**File:** `src/pages/Dashboard.tsx`
+
+Changes:
+1. Remove existing Header/Footer (DashboardLayout handles this)
+2. Remove sticky context bar (moved to sidebar)
+3. Wrap content in DashboardLayout
+4. Pass mode and onModeChange to layout
+5. Keep loading state and auth redirect logic
+
+```typescript
+// Simplified structure
+const Dashboard = () => {
+  const { user, isLoading, hasRole } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  const currentMode = searchParams.get('view') === 'host' ? 'host' : 'shopper';
+  
+  const handleModeChange = (newMode: 'host' | 'shopper') => {
+    setSearchParams({ view: newMode });
+  };
+
+  // ... auth checks ...
+
+  return (
+    <DashboardLayout mode={currentMode} onModeChange={handleModeChange}>
+      {currentMode === 'host' ? <HostDashboard /> : <ShopperDashboard />}
+    </DashboardLayout>
+  );
+};
+```
 
 ---
 
-## Phase 4: Update ListingDetail.tsx Layout
+### Phase 3: Refactor HostDashboard.tsx
 
-### 4.1 Restructure Content Sections
+**File:** `src/components/dashboard/HostDashboard.tsx`
 
-**New Order (Left Column):**
-1. Title & Meta (unchanged)
-2. Host Snippet (unchanged)
-3. **Technical Specifications** (NEW - `TechSpecsGrid`)
-4. Description (unchanged)
-5. Amenities/What's Included (unchanged)
-6. **Inline Availability Calendar** (NEW - rentals only)
-7. Host Card (unchanged)
-8. Reviews (unchanged)
-9. Policies (unchanged)
+Changes:
+1. Read `tab` from URL search params instead of local state
+2. Remove the internal TabsList (navigation is now in sidebar)
+3. Keep TabsContent for rendering the correct section
+4. Preserve all existing functionality (Stripe, listings, analytics)
 
-**Right Column:**
-1. **BookingWidget** (replaces `EnhancedBookingSummaryCard` and `EnhancedInquiryForm`)
+```typescript
+// URL-controlled tabs
+const [searchParams] = useSearchParams();
+const tab = searchParams.get('tab') || 'overview';
 
-### 4.2 Integration Points
+// Render based on URL tab
+return (
+  <div className="space-y-6">
+    {/* Header with actions - keep */}
+    {/* Stats row - keep */}
+    
+    {/* Content based on tab */}
+    {tab === 'overview' && <OverviewContent ... />}
+    {tab === 'inventory' && <InventoryContent ... />}
+    {tab === 'bookings' && <BookingsContent ... />}
+    {tab === 'financials' && <FinancialsContent ... />}
+  </div>
+);
+```
 
-```tsx
-// Rental listings
-{isRental ? (
-  <BookingWidget 
-    listing={listing}
-    host={host}
-    isOwner={isOwner}
-  />
-) : (
-  <BookingWidget 
-    listing={listing}
-    host={host}
-    isOwner={isOwner}
-    mode="sale"
-  />
-)}
+The internal tabs UI is removed because the sidebar now controls navigation via URL params.
+
+---
+
+### Phase 4: Update ShopperDashboard.tsx (Minor)
+
+**File:** `src/components/dashboard/ShopperDashboard.tsx`
+
+Changes:
+1. Keep internal tabs for booking status (Pending/Approved/Past) - these are content filters, not navigation
+2. Remove the sidebar right column (BecomeHostCard) - this is now accessible via sidebar
+3. Simplify to single-column layout
+
+---
+
+## Technical Details
+
+### Sidebar Active State Logic
+
+```typescript
+const isActive = (href: string) => {
+  // Exact path match
+  if (location.pathname === href.split('?')[0]) {
+    // If href has query params, check those too
+    if (href.includes('?')) {
+      const param = href.split('?')[1];
+      return location.search.includes(param);
+    }
+    // Root match (e.g., /dashboard with no tab = overview)
+    return !location.search.includes('tab=');
+  }
+  return false;
+};
+```
+
+### Mode Toggle Styling
+
+```typescript
+// Pill-style toggle in sidebar
+<div className="flex gap-1 bg-muted p-1 rounded-lg">
+  <button
+    onClick={() => onModeChange('shopper')}
+    className={cn(
+      "flex-1 text-xs font-medium py-1.5 rounded-md transition-all",
+      mode === 'shopper' 
+        ? "bg-background shadow-sm text-foreground" 
+        : "text-muted-foreground hover:text-foreground"
+    )}
+  >
+    Buying
+  </button>
+  <button
+    onClick={() => onModeChange('host')}
+    className={cn(
+      "flex-1 text-xs font-medium py-1.5 rounded-md transition-all",
+      mode === 'host' 
+        ? "bg-background shadow-sm text-foreground" 
+        : "text-muted-foreground hover:text-foreground"
+    )}
+  >
+    Hosting
+  </button>
+</div>
+```
+
+### Mobile Bottom Nav Safe Area
+
+```typescript
+// Uses safe-area-inset for iPhone X+ notch
+<nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 pb-safe">
+  {/* pb-safe is a Tailwind utility that adds padding-bottom: env(safe-area-inset-bottom) */}
+```
+
+Add to tailwind.config.js:
+```javascript
+theme: {
+  extend: {
+    padding: {
+      'safe': 'env(safe-area-inset-bottom)',
+    },
+  },
+}
 ```
 
 ---
@@ -203,124 +315,60 @@ Expose the "hidden" wizard data (dimensions, power, water) in an icon-rich, scan
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/components/listing-detail/BookingWidget.tsx` | Create | New unified booking/inquiry widget with inline date selection |
-| `src/components/listing-detail/InlineAvailabilityCalendar.tsx` | Create | 2-month calendar for main content area |
-| `src/components/listing-detail/TechSpecsGrid.tsx` | Create | Physical/power specifications grid |
-| `src/pages/ListingDetail.tsx` | Modify | Integrate new components, restructure layout |
-| `src/components/listing-detail/StickyMobileCTA.tsx` | Modify | Update to use BookingWidget date state |
+| `src/components/layout/DashboardLayout.tsx` | **Create** | New layout component with sidebar + bottom nav |
+| `src/pages/Dashboard.tsx` | **Modify** | Simplify to use DashboardLayout, remove Header/Footer |
+| `src/components/dashboard/HostDashboard.tsx` | **Modify** | Remove TabsList, read tab from URL, simplify structure |
+| `src/components/dashboard/ShopperDashboard.tsx` | **Modify** | Remove sidebar column, keep internal status tabs |
+| `tailwind.config.ts` | **Modify** | Add `pb-safe` utility for bottom nav safe area |
 
 ---
 
-## Component Interactions
+## Component Dependencies
 
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│                      ListingDetail.tsx                      │
-├─────────────────────────────────────────────────────────────┤
-│  Left Column                    │  Right Column (Sticky)    │
-│  ────────────────────           │  ─────────────────────    │
-│  ┌─────────────────┐            │  ┌──────────────────┐    │
-│  │ TechSpecsGrid   │            │  │  BookingWidget   │    │
-│  │ (dimensions,    │            │  │  - Date popovers │    │
-│  │  power, weight) │            │  │  - Time select   │    │
-│  └─────────────────┘            │  │  - Live pricing  │    │
-│                                 │  │  - Book CTA      │    │
-│  ┌─────────────────┐            │  └──────────────────┘    │
-│  │ InlineCalendar  │            │                          │
-│  │ (read-only,     │            │                          │
-│  │  2-month view)  │            │                          │
-│  └─────────────────┘            │                          │
-└─────────────────────────────────────────────────────────────┘
-                          ▲
-                          │ Uses
-                          ▼
-         ┌────────────────────────────────────┐
-         │         useHourlyAvailability      │
-         │         useBlockedDates            │
-         │         calculateRentalFees        │
-         └────────────────────────────────────┘
+DashboardLayout.tsx uses:
+├── Sheet, SheetContent, SheetTrigger (existing)
+├── Button (existing)
+├── Avatar, AvatarFallback, AvatarImage (existing)
+├── ScrollArea (existing)
+├── useAuth (existing)
+├── useLocation, Link, useNavigate (react-router-dom)
+└── NotificationCenter (existing)
 ```
+
+No new dependencies required - all UI components already exist.
 
 ---
 
-## Technical Details
-
-### BookingWidget Props
-```typescript
-interface BookingWidgetProps {
-  listing: Listing;
-  host: HostProfile | null;
-  isOwner: boolean;
-}
-```
-
-### InlineAvailabilityCalendar Props
-```typescript
-interface InlineAvailabilityCalendarProps {
-  listingId: string;
-  availableFrom?: string | null;
-  availableTo?: string | null;
-}
-```
-
-### TechSpecsGrid Props
-```typescript
-interface TechSpecsGridProps {
-  category: ListingCategory;
-  lengthInches?: number | null;
-  widthInches?: number | null;
-  heightInches?: number | null;
-  weightLbs?: number | null;
-  amenities?: string[];
-}
-```
-
----
-
-## Key Hooks Reuse
-
-The implementation leverages existing, battle-tested hooks:
-
-1. **`useHourlyAvailability`** - Provides:
-   - `settings` (priceHourly, hourlyEnabled, dailyEnabled, etc.)
-   - `getDayAvailabilityInfo(date)` - Returns status for calendar coloring
-   - `getAvailableWindowsForDate(date)` - Time slots for hourly booking
-   - `calculateHourlyPrice(hours)` / `calculateDailyPrice(days)`
-
-2. **`useBlockedDates`** - Provides:
-   - `blockedDates`, `bookedDates`, `bufferDates`
-   - `isDateUnavailable(date)` - For disabling calendar dates
-
-3. **`calculateRentalFees(basePrice)`** - Returns:
-   - `{ subtotal, renterFee, hostFee, customerTotal, hostReceives, platformFee }`
-
----
-
-## Mobile Considerations
-
-1. **BookingWidget** - Full-width on mobile, sticky at bottom option
-2. **InlineAvailabilityCalendar** - Single month on mobile, horizontal scroll for dual
-3. **TechSpecsGrid** - 2-column grid on mobile (vs 4 on desktop)
-4. **StickyMobileCTA** - Remains as footer CTA, syncs with BookingWidget state
-
----
-
-## Benefits
+## Key Benefits
 
 | Metric | Before | After |
 |--------|--------|-------|
-| Clicks to see availability | 1 (open modal) | 0 (inline calendar) |
-| Clicks to see pricing | 2 (select dates in modal) | 0 (live update on date change) |
-| Tech specs visibility | Hidden in description | Prominent icon grid |
-| Conversion friction | High (modal-heavy) | Low (direct manipulation) |
-| Mobile UX | Modal covers screen | Inline + sticky CTA |
+| Clicks to access Settings | 2 (menu dropdown) | 1 (sidebar always visible) |
+| Navigation visibility | Hidden in dropdown | Always visible |
+| Mobile experience | Hamburger menu only | App-like bottom nav |
+| URL deep linking | Local state only | Full URL support |
+| Mode switching | Sticky bar at top | Sidebar toggle (persistent) |
+| Scalability | Add items to dropdown | Add line to nav config |
 
 ---
 
-## Implementation Order
+## Accessibility Considerations
 
-1. Create `TechSpecsGrid.tsx` component
-2. Create `InlineAvailabilityCalendar.tsx` component
-3. Create `BookingWidget.tsx` component
-4. Update `ListingDetail.tsx` to integrate all three
-5. Update `StickyMobileCTA.tsx` for state sync
+1. **Keyboard Navigation**: All sidebar items are keyboard accessible
+2. **Screen Readers**: Proper ARIA labels on navigation groups
+3. **Focus Management**: Focus trap in mobile sheet menu
+4. **High Contrast**: Uses semantic color tokens for active states
+
+---
+
+## Mobile-First Responsive Behavior
+
+| Breakpoint | Sidebar | Bottom Nav | Header |
+|------------|---------|------------|--------|
+| `< 768px` (mobile) | Hidden (Sheet) | Visible | Mobile header |
+| `>= 768px` (tablet+) | Visible (240px) | Hidden | Desktop top bar |
+
+The transition is handled with Tailwind's `md:` prefix:
+- `md:hidden` - Hide on desktop
+- `hidden md:flex` - Show on desktop only
