@@ -38,14 +38,14 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
 
   // Airbnb-style Navigation Config based on mode
   const navigation = mode === 'host' ? [
-    { title: 'Overview', icon: LayoutGrid, href: '/dashboard', tab: null },
-    { title: 'Listings', icon: Truck, href: '/dashboard?tab=inventory', tab: 'inventory' },
-    { title: 'Reservations', icon: CalendarDays, href: '/dashboard?tab=bookings', tab: 'bookings' },
-    { title: 'Reporting', icon: BarChart3, href: '/dashboard?tab=financials', tab: 'financials' },
+    { title: 'Overview', icon: LayoutGrid, href: '/dashboard?view=host', tab: null },
+    { title: 'Listings', icon: Truck, href: '/dashboard?view=host&tab=inventory', tab: 'inventory' },
+    { title: 'Booking Manager', icon: CalendarDays, href: '/host/bookings', tab: null },
+    { title: 'Reporting', icon: BarChart3, href: '/host/reporting', tab: null },
     { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null },
   ] : [
-    { title: 'Trips', icon: CalendarDays, href: '/dashboard', tab: null },
-    { title: 'Wishlists', icon: Heart, href: '/favorites', tab: null },
+    { title: 'Bookings', icon: CalendarDays, href: '/dashboard', tab: null },
+    { title: 'Favorites', icon: Heart, href: '/favorites', tab: null },
     { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null },
   ];
 
@@ -111,7 +111,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                   : "text-muted-foreground hover:bg-muted"
               )}
             >
-              Guest
+              Kitchen Pro
             </button>
             <button
               onClick={() => onModeChange('host')}
@@ -122,7 +122,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                   : "text-muted-foreground hover:bg-muted"
               )}
             >
-              Host
+              Host / Seller
             </button>
           </div>
         )}
@@ -238,6 +238,18 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
 
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col min-w-0">
+          {/* Desktop Header Bar */}
+          <div className="hidden md:flex items-center justify-end gap-3 px-6 py-3 border-b border-border bg-background">
+            <NotificationCenter />
+            <Link to="/account">
+              <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
+                <AvatarImage src={profile?.avatar_url || undefined} />
+                <AvatarFallback className="bg-muted text-foreground text-sm">
+                  {profile?.full_name?.[0] || user?.email?.[0]?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
+          </div>
           {/* Page Content */}
           <div className="flex-1 p-4 md:p-6 lg:p-8 pb-24 md:pb-6 overflow-auto">
             {children}
@@ -272,7 +284,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
             )}
             <Heart className="h-6 w-6" />
-            <span className="text-[10px] font-medium">Wishlists</span>
+            <span className="text-[10px] font-medium">Favorites</span>
           </Link>
           <Link 
             to="/dashboard" 
@@ -285,7 +297,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
             )}
             <CalendarDays className="h-6 w-6" />
-            <span className="text-[10px] font-medium">Trips</span>
+            <span className="text-[10px] font-medium">Bookings</span>
           </Link>
           <Link 
             to="/messages" 

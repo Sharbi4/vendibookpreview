@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User, LogOut, Shield, MessageCircle, HelpCircle, ShieldCheck, Clock, TrendingUp, Mic, MicOff, ChevronDown, CheckCircle2, Heart, CalendarDays, Home, Bell, Globe, Settings, Gift } from 'lucide-react';
+import { Menu, X, Search, User, LogOut, Shield, MessageCircle, HelpCircle, ShieldCheck, Clock, TrendingUp, Mic, MicOff, ChevronDown, CheckCircle2, Heart, CalendarDays, Home, Bell, Globe, Settings, Gift, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -405,14 +405,6 @@ const Header = () => {
           >
             {t('common.learnMore')}
           </Link>
-          {user && (
-            <Link 
-              to="/how-it-works" 
-              className="text-sm font-medium px-4 py-2 hover:bg-muted rounded-full transition-colors"
-            >
-              List with Vendibook
-            </Link>
-          )}
         </nav>
 
         {/* Desktop Actions */}
@@ -466,7 +458,7 @@ const Header = () => {
                 
                 {/* Group 3: Account Settings */}
                 <div className="py-2">
-                  <AirbnbMenuItem icon={Settings} label={t('common.myAccount')} to="/account" />
+                  <AirbnbMenuItem icon={LayoutDashboard} label={t('common.dashboard')} to="/dashboard" />
                   <AirbnbMenuItem icon={Globe} label="Language" onClick={() => {}} />
                   <AirbnbMenuItem icon={HelpCircle} label={t('common.support')} to="/help" />
                 </div>

@@ -50,13 +50,13 @@ const HostBookings = () => {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Button variant="ghost" size="sm" asChild className="-ml-2">
-                <Link to="/dashboard">
+                <Link to="/dashboard?view=host">
                   <ArrowLeft className="h-4 w-4 mr-1" />
                   Dashboard
                 </Link>
               </Button>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight">Reservations</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Bookings</h1>
             <p className="text-muted-foreground">Manage all your incoming and active bookings.</p>
           </div>
         </div>

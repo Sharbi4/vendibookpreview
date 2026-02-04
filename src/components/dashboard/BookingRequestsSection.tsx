@@ -183,11 +183,11 @@ const BookingRequestsSection = () => {
         <h3 className="text-sm font-medium text-muted-foreground">Booking Requests</h3>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button variant="outline" size="sm" className="gap-2 border-border bg-card hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-200">
               <Filter className="h-4 w-4" />
               {docFilter === 'all' ? 'Filter by Docs' : filterLabel[docFilter].split(' (')[0]}
               {docFilter !== 'all' && (
-                <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary/10 text-primary rounded">
+                <span className="ml-1 px-1.5 py-0.5 text-xs bg-foreground text-background rounded">
                   Active
                 </span>
               )}
@@ -246,17 +246,17 @@ const BookingRequestsSection = () => {
 
       {/* Tabs */}
       <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="pending" className="relative">
+        <TabsList className="grid w-full grid-cols-4 bg-muted/50 border border-border p-1 rounded-xl">
+          <TabsTrigger value="pending" className="relative rounded-lg data-[state=active]:bg-foreground data-[state=active]:text-background transition-all duration-200">
             Pending
             {stats.pending > 0 && (
-              <span className="ml-2 px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded-full">
+              <span className="ml-2 px-2 py-0.5 text-xs bg-foreground/20 text-foreground data-[state=active]:bg-background/20 data-[state=active]:text-background rounded-full">
                 {stats.pending}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="approved">Approved</TabsTrigger>
-          <TabsTrigger value="completed" className="relative">
+          <TabsTrigger value="approved" className="rounded-lg data-[state=active]:bg-foreground data-[state=active]:text-background transition-all duration-200">Approved</TabsTrigger>
+          <TabsTrigger value="completed" className="relative rounded-lg data-[state=active]:bg-foreground data-[state=active]:text-background transition-all duration-200">
             <History className="h-3.5 w-3.5 mr-1" />
             History
             {completedBookings.length > 0 && (
@@ -265,7 +265,7 @@ const BookingRequestsSection = () => {
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="declined">Declined</TabsTrigger>
+          <TabsTrigger value="declined" className="rounded-lg data-[state=active]:bg-foreground data-[state=active]:text-background transition-all duration-200">Declined</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending" className="mt-4">
@@ -343,7 +343,7 @@ const CompletedBookingCard = ({ booking }: { booking: any }) => {
             className="w-full h-full object-cover"
           />
           <div className={`absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-medium ${
-            isCompleted ? 'bg-primary/90 text-primary-foreground' : 'bg-muted text-muted-foreground'
+            isCompleted ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'
           }`}>
             {isCompleted ? 'Completed' : 'Cancelled'}
           </div>
@@ -371,7 +371,7 @@ const CompletedBookingCard = ({ booking }: { booking: any }) => {
 
           {/* Renter Info */}
           <div className="flex items-center gap-2 mb-3">
-            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-medium text-primary">
+            <div className="h-6 w-6 rounded-full bg-foreground flex items-center justify-center text-[10px] font-medium text-background">
               {shopperInitials}
             </div>
             <span className="text-xs text-muted-foreground">{booking.shopper?.full_name || 'Guest'}</span>

@@ -16,19 +16,16 @@ const StatCard = ({
   subtext,
 }: StatCardProps) => {
   return (
-    <div className="relative overflow-hidden rounded-xl p-6 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-      {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
-      
-      <div className="relative flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-md">
-          <Icon className="h-6 w-6 text-white" />
+    <div className="rounded-xl p-4 border border-border bg-card hover:border-foreground/30 transition-all duration-200 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center">
+          <Icon className="h-5 w-5 text-background" />
         </div>
         <div>
           <p className="text-2xl font-bold text-foreground">{value}</p>
-          <p className="text-sm text-muted-foreground">{label}</p>
+          <p className="text-xs text-muted-foreground">{label}</p>
           {subtext && (
-            <p className="text-xs text-muted-foreground mt-1">{subtext}</p>
+            <p className="text-[10px] text-muted-foreground/70">{subtext}</p>
           )}
         </div>
       </div>

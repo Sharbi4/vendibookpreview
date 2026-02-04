@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Truck, Eye, Loader2, Calendar, BarChart3, DollarSign, HandCoins, ExternalLink, Grid3X3, List } from 'lucide-react';
+import { Plus, Truck, Eye, Loader2, Calendar, BarChart3, DollarSign, HandCoins, ExternalLink, Grid3X3, List, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CompactStatCard } from './CompactStatCard';
 import { CompactInsights } from './CompactInsights';
@@ -79,36 +79,62 @@ const HostDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Dashboard Header - Compact Airbnb Style */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div>
-            <h2 className="text-xl font-semibold text-foreground">Overview</h2>
-            <p className="text-sm text-muted-foreground">
-              {userType === 'seller' ? 'Manage your sales pipeline.' : 'Manage fleet availability and revenue.'}
-            </p>
+      {/* Dashboard Header - Dark Shine Design */}
+      <div className="p-6 rounded-2xl bg-card border border-border shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center">
+              <LayoutGrid className="h-6 w-6 text-background" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">Overview</h2>
+              <p className="text-sm text-muted-foreground">
+                {userType === 'seller' ? 'Manage your sales pipeline.' : 'Manage fleet availability and revenue.'}
+              </p>
+            </div>
           </div>
-          {/* Compact Stripe Notification Bubble */}
+          
+          {/* Action Buttons - Even Row Layout with Dark Shine */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <Link 
+              to="/host/bookings"
+              className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
+            >
+              <Calendar className="h-4 w-4" />
+              Bookings
+            </Link>
+            <Link 
+              to="/host/reporting"
+              className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Reporting
+            </Link>
+            <Link 
+              to={`/profile/${user?.id}`}
+              className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Storefront
+            </Link>
+            <Link 
+              to="/list"
+              className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
+            >
+              <Plus className="h-4 w-4" />
+              {userType === 'seller' ? 'Sell Item' : 'Add Asset'}
+            </Link>
+          </div>
+        </div>
+        
+        {/* Stripe Status - Inline */}
+        <div className="mt-4 pt-4 border-t border-border">
           <StripeNotificationBubble 
             isConnected={isConnected}
             isLoading={stripeLoading}
             onConnect={handleConnectStripe}
             isConnecting={isConnecting}
           />
-        </div>
-        <div className="flex items-center gap-2">
-          <Button id="storefront-button" variant="outline" size="sm" asChild className="h-9 rounded-xl">
-            <Link to={`/profile/${user?.id}`}>
-              <ExternalLink className="h-4 w-4 mr-1.5" />
-              My Storefront
-            </Link>
-          </Button>
-          <Button id="add-asset-button" variant="dark-shine" size="sm" asChild className="h-9 rounded-xl">
-            <Link to="/list">
-              <Plus className="h-4 w-4 mr-1.5" />
-              {userType === 'seller' ? 'Sell Item' : 'Add Asset'}
-            </Link>
-          </Button>
         </div>
       </div>
 
@@ -195,8 +221,12 @@ const HostDashboard = () => {
         <div className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              {/* Priority: Bookings & Offers */}
-              {userType !== 'seller' && <BookingRequestsSection />}
+              {/* Priority: Bookings & Offers - Only show if there are pending requests */}
+              {userType !== 'seller' && bookingStats.pending > 0 && (
+                <div className="rounded-2xl border border-border/60 bg-card p-4">
+                  <BookingRequestsSection />
+                </div>
+              )}
               <HostOffersSection />
             </div>
             <div className="space-y-6">
@@ -276,8 +306,8 @@ const HostDashboard = () => {
       {/* Tab Content: Reservations (Bookings & Transactions) */}
       {activeTab === 'bookings' && (
         <div className="space-y-6">
-          {userType !== 'seller' && (
-            <div className="p-4 rounded-xl bg-card border border-border">
+          {userType !== 'seller' && bookingStats.pending > 0 && (
+            <div className="p-4 rounded-2xl bg-card border border-border/60">
               <BookingRequestsSection />
             </div>
           )}

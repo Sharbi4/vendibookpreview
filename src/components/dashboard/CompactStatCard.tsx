@@ -13,23 +13,21 @@ interface CompactStatCardProps {
 export const CompactStatCard = ({ icon: Icon, label, value, subtext, highlight }: CompactStatCardProps) => {
   return (
     <Card className={cn(
-      "border-0 shadow-lg hover:shadow-xl transition-all",
-      highlight && "ring-2 ring-primary/30"
+      "rounded-2xl border border-border bg-card hover:border-foreground/30 transition-all duration-200 shadow-sm",
+      highlight && "border-foreground/50 bg-foreground/5"
     )}>
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <div className={cn(
-            "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg",
-            highlight ? "bg-primary text-primary-foreground" : "bg-muted"
+            "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center",
+            highlight ? "bg-foreground text-background" : "bg-foreground text-background"
           )}>
-            <Icon className={cn(
-              "h-5 w-5",
-              highlight ? "text-primary-foreground" : "text-muted-foreground"
-            )} />
+            <Icon className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-2xl font-bold text-foreground leading-none tracking-tight">{value}</p>
             <p className="text-xs text-muted-foreground mt-1">{label}</p>
+            {subtext && <p className="text-[10px] text-muted-foreground/70">{subtext}</p>}
           </div>
         </div>
       </CardContent>

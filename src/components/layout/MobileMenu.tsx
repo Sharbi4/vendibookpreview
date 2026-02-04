@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Home, Search, MessageSquare, 
   User, Heart, LogOut, PlusCircle, HelpCircle, 
-  Settings, ShieldCheck, CalendarDays, Bell, Globe
+  Settings, ShieldCheck, CalendarDays, Bell, Globe, LayoutDashboard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -160,9 +160,9 @@ const MobileMenu = ({
                   {/* Account Settings */}
                   <div className="py-2">
                     <AirbnbMenuItem 
-                      icon={Settings} 
-                      label="Account settings" 
-                      onClick={() => handleNav('/account')} 
+                      icon={LayoutDashboard} 
+                      label="Dashboard" 
+                      onClick={() => handleNav('/dashboard')} 
                     />
                     <AirbnbMenuItem 
                       icon={Globe} 
@@ -182,9 +182,9 @@ const MobileMenu = ({
                   <div className="py-2">
                     <AirbnbMenuItem 
                       icon={PlusCircle} 
-                      label="Become a Host" 
-                      subtext="It's easy to get started"
-                      onClick={() => handleNav('/list')} 
+                      label="List with Vendibook" 
+                      subtext="Rent or sell your assets"
+                      onClick={() => handleNav('/how-it-works-host')} 
                       highlight
                     />
                     {!isVerified && (
