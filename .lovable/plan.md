@@ -1,217 +1,275 @@
 
-# Onboarding Ecosystem Enhancement Plan
+# Airbnb-Style Dashboard & Dropdown Menu Redesign
 
-## Summary
+## Overview
 
-Complete the "Context-Aware Spotlight Tour" implementation by adding missing target element IDs and enhancing the zero-state onboarding wizard with a more professional, corporate-grade aesthetic.
+Transform the current dashboard layout and header dropdown menu to match the clean, minimalist Airbnb design system shown in the reference screenshots. This redesign focuses on:
 
----
-
-## Current Implementation Status
-
-The core spotlight tour system already exists and is well-implemented:
-- Cinema-style SVG mask cutout with dark backdrop
-- Animated glow ring around target elements
-- Step-by-step navigation with progress dots
-- localStorage persistence for completion state
-- Auto-scroll to target elements
-
-**What's missing**: Target element IDs that the tour references.
+1. **Header Dropdown Menu** - Match Airbnb's simple icon + text layout with clean separators
+2. **Account Settings Page** - Two-column layout with left sidebar navigation
+3. **Dashboard Layout** - Cleaner aesthetics with Airbnb-style visual hierarchy
 
 ---
 
-## Changes Required
+## Design Analysis from Reference Screenshots
 
-### 1. Add Target IDs to DashboardLayout.tsx
+### Screenshot 1: Airbnb Homepage Dropdown Menu
 
-The mode switcher needs an ID for the first tour step:
+Key elements observed:
+- Clean white background with no visible border radius overuse
+- Simple icon (20-24px) + text layout per item
+- Generous padding (16px vertical) per menu item
+- Clear visual sections with subtle dividers
+- "Become a host" promotional section with small image
+- Notification badge (red circle with count)
+- Menu items: Wishlists, Trips, Messages, Profile, Notifications, Account settings, Languages & currency, Help Center, [separator], Become a host, Refer a Host, Find a co-host, Gift cards, Log out
+
+### Screenshot 2: Airbnb Account Settings
+
+Key elements observed:
+- Minimal header with just logo + "Done" button
+- Two-column layout (sidebar 300px + content area)
+- Left sidebar: "Account settings" title + navigation items with icons
+- Navigation items have generous spacing (56px height each)
+- Right content area shows form fields with "Edit" / "Add" action links
+- Clean typography hierarchy
+- Fields show value + action link aligned right
+
+---
+
+## Implementation Plan
+
+### Phase 1: Redesign Header Dropdown Menu
+
+**File:** `src/components/layout/Header.tsx`
+
+**Changes:**
+
+1. **Increase dropdown width** from `w-48` to `w-64` (256px)
+2. **Add more padding** to menu items (py-3 instead of default)
+3. **Increase icon size** from h-4 to h-5
+4. **Add icon spacing** margin-right from mr-2 to mr-3
+5. **Restructure menu sections** to match Airbnb groupings:
+   - Group 1: Wishlists, Trips, Messages
+   - Group 2: Profile, Notifications
+   - Group 3: Account settings, Languages & currency, Help Center
+   - Separator
+   - Group 4: Become a host (with promotional styling), Gift cards
+   - Separator
+   - Group 5: Log out
+
+6. **Add notification badge** to Notifications item (red circle with count)
+7. **Style "Become a host"** with subtle highlight background
+
+**Visual Changes:**
 
 ```text
-Location: src/components/layout/DashboardLayout.tsx
-Element: Mode switcher container (around line 117-142)
-Add: id="mode-switch-container"
+Current:                          Airbnb-Style:
+┌─────────────┐                   ┌──────────────────────┐
+│ 🏠 Dashboard│                   │ ♡  Wishlists         │
+│ 📅 Bookings │                   │ 📅 Trips             │
+│ 🛒 Purchases│                   │ 💬 Messages          │
+│ ───────────│                   │ ────────────────────│
+│ ♡ Favorites│                   │ 👤 Profile           │
+│ 💬 Messages │                   │ 🔔 Notifications   1 │
+│ ───────────│                   │ ────────────────────│
+│ 👤 Account │                   │ ⚙️ Account settings  │
+│ ✅ Verified │                   │ 🌐 Language & curre..│
+│ ───────────│                   │ ❓ Help Center       │
+│ 🛡️ Admin   │                   │ ────────────────────│
+│ ❓ Support │                   │ 🏠 Become a host     │
+│ ───────────│                   │    It's easy to...   │
+│ 🚪 Sign Out│                   │ ────────────────────│
+└─────────────┘                   │ 🚪 Log out           │
+                                  └──────────────────────┘
 ```
 
-This allows the spotlight to highlight the Buying/Hosting toggle.
-
----
-
-### 2. Add Target IDs to ShopperDashboard.tsx
-
-For the shopper tour to work:
-
-```text
-Location: src/components/dashboard/ShopperDashboard.tsx
-
-Change 1: Zero-state hero
-- Line 25 (DiscoveryHeroCard wrapper)
-- Add: id="discovery-hero" wrapper div
-
-Change 2: Add BecomeHostCard
-- Import and render BecomeHostCard component
-- Wrap with id="become-host-card"
-- Only show for non-hosts in zero-state
-```
-
----
-
-### 3. Verify HostDashboard.tsx IDs
-
-Current status:
-- `id="storefront-button"` - Already exists (line 93)
-- `id="inventory-tab"` - Missing
-
-The host tour references `inventory-tab` but the current implementation uses URL-based tabs in the sidebar, not visible tabs in the dashboard. 
-
-**Solution**: Update the tour step to reference the sidebar navigation item instead, OR add an ID to a relevant element on the overview page.
-
----
-
-### 4. Enhance HostOnboardingWizard.tsx (Optional Polish)
-
-Upgrade from basic cards to the corporate-grade styling:
-
-**Current Features:**
-- Two path cards (Rental Fleet / Asset Sales)
-- Basic feature lists with checkmarks
-- Simple CTA buttons
-
-**Enhancements:**
-- Add "Set up your Vendor Profile" header badge
-- Improve card visual hierarchy with gradient backgrounds
-- Add building/store icons in header badges
-- Enhance button variants (dark-shine for rent, emerald for sale)
-
----
-
-## Implementation Details
-
-### File 1: DashboardLayout.tsx
-
-Add ID to the mode switcher container:
+**Code Structure:**
 
 ```typescript
-// Around line 117
-{isHost && (
-  <div id="mode-switch-container" className="flex gap-1 bg-muted p-1 rounded-lg">
-    <button onClick={() => onModeChange('shopper')} ...>Buying</button>
-    <button onClick={() => onModeChange('host')} ...>Hosting</button>
+<DropdownMenuContent 
+  align="end" 
+  className="w-64 bg-background p-0 rounded-xl shadow-xl border"
+>
+  {/* Group 1: Core user actions */}
+  <div className="py-2">
+    <AirbnbMenuItem icon={Heart} label="Wishlists" to="/favorites" />
+    <AirbnbMenuItem icon={CalendarDays} label="Trips" to="/dashboard" />
+    <AirbnbMenuItem icon={MessageCircle} label="Messages" to="/messages" />
   </div>
-)}
+  
+  <DropdownMenuSeparator className="my-0" />
+  
+  {/* Group 2: Profile & Notifications */}
+  <div className="py-2">
+    <AirbnbMenuItem icon={User} label="Profile" to={`/profile/${user.id}`} />
+    <AirbnbMenuItem 
+      icon={Bell} 
+      label="Notifications" 
+      badge={unreadCount}  // Show red badge
+    />
+  </div>
+  
+  {/* ... more groups */}
+</DropdownMenuContent>
 ```
 
 ---
 
-### File 2: ShopperDashboard.tsx
+### Phase 2: Create AirbnbMenuItem Component
 
-Add IDs to zero-state elements and include BecomeHostCard:
+**File:** `src/components/ui/AirbnbMenuItem.tsx` (new)
+
+A reusable menu item component matching Airbnb's style:
 
 ```typescript
-// Import
-import BecomeHostCard from './BecomeHostCard';
-import { useAuth } from '@/contexts/AuthContext';
+interface AirbnbMenuItemProps {
+  icon: LucideIcon;
+  label: string;
+  to?: string;
+  onClick?: () => void;
+  badge?: number;
+  subtext?: string;
+}
 
-// Inside component
-const { hasRole } = useAuth();
-const isHost = hasRole('host');
-
-// Zero-state return (around line 22-29)
-if (!isLoading && bookings.length === 0) {
-  return (
-    <div className="space-y-8">
-      <div id="discovery-hero">
-        <DiscoveryHeroCard />
-      </div>
-      <DiscoveryGrid />
-      {!isHost && (
-        <div id="become-host-card">
-          <BecomeHostCard />
+const AirbnbMenuItem = ({ icon: Icon, label, to, onClick, badge, subtext }: AirbnbMenuItemProps) => {
+  const content = (
+    <div className="flex items-center justify-between w-full px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer">
+      <div className="flex items-center gap-3">
+        <Icon className="h-5 w-5 text-foreground" />
+        <div>
+          <span className="text-sm font-normal text-foreground">{label}</span>
+          {subtext && (
+            <p className="text-xs text-muted-foreground">{subtext}</p>
+          )}
         </div>
+      </div>
+      {badge && badge > 0 && (
+        <span className="h-5 min-w-5 flex items-center justify-center bg-rose-500 text-white text-xs font-medium rounded-full px-1.5">
+          {badge}
+        </span>
       )}
     </div>
   );
-}
+  
+  if (to) return <Link to={to}>{content}</Link>;
+  return <button onClick={onClick}>{content}</button>;
+};
 ```
 
 ---
 
-### File 3: Update DashboardOnboarding.tsx Tour Steps
+### Phase 3: Redesign Account Settings Page
 
-The current `inventory-tab` reference won't work since tabs moved to sidebar. Update to target a visible element:
+**File:** `src/pages/Account.tsx`
 
-**Option A**: Change target to storefront button area (already works)
+Transform from current card-based layout to Airbnb's two-column design:
 
-**Option B**: Add a new visible element in HostDashboard overview that can be spotlighted
-
-Recommended: Keep the tour focused on the most impactful elements:
-1. Mode Switch (how to toggle roles)
-2. Storefront Button (public profile link)
-3. "Add Asset" button (primary action)
-
-Updated host steps:
-
-```typescript
-const hostSteps: Step[] = [
-  {
-    targetId: 'mode-switch-container',
-    title: 'Two Modes, One Account',
-    description: 'Switch between "Buying" and "Hosting" instantly. No need to log out.',
-    position: 'bottom',
-    align: 'end'
-  },
-  {
-    targetId: 'storefront-button',
-    title: 'Your Public Storefront',
-    description: 'This is your digital business card. Share this link to drive direct bookings.',
-    position: 'bottom',
-    align: 'start'
-  },
-  {
-    targetId: 'add-asset-button',
-    title: 'List Your First Asset',
-    description: 'Add a food truck, trailer, or kitchen to start earning revenue.',
-    position: 'bottom',
-    align: 'end'
-  }
-];
+**Current Layout:**
+```text
+┌─────────────────────────────────────────┐
+│            Header                       │
+├─────────────────────────────────────────┤
+│  ┌─────────────────────────────────┐   │
+│  │      Profile Card               │   │
+│  │    [Avatar] Name                │   │
+│  │    [Form Fields]                │   │
+│  └─────────────────────────────────┘   │
+│  ┌─────────────────────────────────┐   │
+│  │     Security Card               │   │
+│  │    [Password Fields]            │   │
+│  └─────────────────────────────────┘   │
+├─────────────────────────────────────────┤
+│            Footer                       │
+└─────────────────────────────────────────┘
 ```
 
-Then add `id="add-asset-button"` to the "Add Asset" button in HostDashboard.
+**Airbnb-Style Layout:**
+```text
+┌─────────────────────────────────────────────────────┐
+│   [Logo]                           [Done Button]    │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│  Account settings          Personal information     │
+│                                                     │
+│  ┌─────────────────┐      ┌─────────────────────┐  │
+│  │ 👤 Personal info│      │ Legal name          │  │
+│  │ 🔐 Login & sec. │      │ John Doe        Edit│  │
+│  │ 🔒 Privacy      │      │                     │  │
+│  │ 🔔 Notifications│      │ Email address       │  │
+│  │ 💳 Payments     │      │ j***@email.com  Edit│  │
+│  │ 🌐 Language     │      │                     │  │
+│  └─────────────────┘      │ Phone numbers       │  │
+│                           │ +1 ***-***-1234 Edit│  │
+│                           └─────────────────────┘  │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+**Implementation:**
+
+1. **Create AccountLayout component** with sidebar + content area
+2. **Settings sections:**
+   - Personal information
+   - Login & security
+   - Privacy (placeholder)
+   - Notifications (placeholder)
+   - Payments
+   - Languages & currency (placeholder)
+
+3. **Use URL routing** for active section (`/account`, `/account/security`, `/account/payments`)
+
+4. **Form field display pattern:**
+   - Field label (bold)
+   - Current value or "Not provided" 
+   - Action link (Edit/Add) aligned right
+   - Optional helper text
 
 ---
 
-### File 4: HostOnboardingWizard.tsx (Visual Enhancement)
+### Phase 4: Update Dashboard Layout Aesthetics
 
-Enhance the corporate styling:
+**File:** `src/components/layout/DashboardLayout.tsx`
 
-```typescript
-// Update the header section
-<Card className="border-0 shadow-xl bg-gradient-to-br from-card to-muted/20">
-  <CardContent className="p-8 text-center">
-    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full 
-                    bg-primary/10 text-primary text-sm font-medium mb-5">
-      <Building2 className="h-4 w-4" />
-      Set up your Vendor Profile
-    </div>
-    <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-      Welcome to the professional side of Vendibook.
-    </h2>
-    <p className="text-muted-foreground max-w-lg mx-auto">
-      Choose how you want to operate. You can always add more listing types later.
-    </p>
-  </CardContent>
-</Card>
+Refine to match Airbnb's cleaner aesthetic:
 
-// Update card buttons
-<Button variant="dark-shine" className="w-full">
-  Start Rental Business
-  <ArrowRight className="h-4 w-4 ml-2" />
-</Button>
+1. **Sidebar styling:**
+   - Remove uppercase section headers
+   - Increase item padding (py-3)
+   - Remove background fill on active items, use left border instead
+   - Use lighter text weight for items
 
-<Button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white">
-  List Item for Sale
-  <ArrowRight className="h-4 w-4 ml-2" />
-</Button>
+2. **Mode switcher:**
+   - Make it more subtle (smaller, outline style)
+   - Move to bottom of sidebar near sign out
+
+3. **Desktop top bar:**
+   - Simplify breadcrumb
+   - Add user name on right side
+
+4. **Bottom mobile nav:**
+   - Match Airbnb: 5 items max
+   - Use thin line above active icon
+
+**Sidebar Item Style Change:**
+
+```text
+Current:                    Airbnb-Style:
+┌──────────────────┐       ┌──────────────────┐
+│ MANAGEMENT       │       │ Overview         │
+│ ▓▓ Overview ▓▓▓▓│       │ │                │
+│    Listings      │       │ │ Listings       │
+│    Reservations  │       │   Reservations   │
+│    Inbox         │       │   Inbox          │
+│ ───────────────│       │                  │
+│ ACCOUNT          │       │ Messages         │
+│    Wallet        │       │ Payments         │
+│    Settings      │       │                  │
+└──────────────────┘       │ Settings         │
+                           │                  │
+                           │ ──────────────── │
+                           │ Log out          │
+                           └──────────────────┘
 ```
 
 ---
@@ -220,66 +278,54 @@ Enhance the corporate styling:
 
 | File | Change Type | Description |
 |------|-------------|-------------|
-| `src/components/layout/DashboardLayout.tsx` | Minor | Add `id="mode-switch-container"` |
-| `src/components/dashboard/ShopperDashboard.tsx` | Medium | Add wrapper IDs, import BecomeHostCard |
-| `src/components/dashboard/HostDashboard.tsx` | Minor | Add `id="add-asset-button"` to Add Asset button |
-| `src/components/onboarding/DashboardOnboarding.tsx` | Minor | Update host steps to use correct target IDs |
-| `src/components/dashboard/HostOnboardingWizard.tsx` | Medium | Enhance visual styling |
+| `src/components/layout/Header.tsx` | Major | Redesign dropdown menu with Airbnb styling |
+| `src/components/ui/AirbnbMenuItem.tsx` | Create | New reusable menu item component |
+| `src/pages/Account.tsx` | Major | Two-column layout with sidebar navigation |
+| `src/components/layout/DashboardLayout.tsx` | Medium | Cleaner sidebar styling, refined aesthetics |
+| `src/components/layout/MobileMenu.tsx` | Medium | Update styling to match new aesthetic |
 
 ---
 
-## Technical Notes
+## Visual Style Guide
 
-### Spotlight Positioning
+### Typography
+- Menu items: 14px, normal weight (not medium)
+- Section labels: Remove uppercase, use 13px muted text
+- Page titles: 24px, semibold
 
-The current implementation uses `position: 'fixed'` with calculated coordinates based on `getBoundingClientRect()`. This works well but has one consideration:
+### Spacing
+- Menu item padding: 12px horizontal, 12px vertical
+- Sidebar item height: 48px
+- Content area padding: 24px
 
-- The popover calculates position on mount and listens to resize/scroll
-- For elements in the sidebar (desktop), the position will be correct
-- For elements that may be off-screen initially, `scrollIntoView` is called first
+### Colors
+- Active states: No filled background, use left border or underline
+- Hover states: Very subtle muted background (muted/30)
+- Notification badge: Rose-500 (#f43f5e)
 
-### localStorage Key
-
-The completion state uses: `vendibook_dashboard_onboarding_v1`
-
-If you want to reset for testing, clear this key or increment the version.
-
-### Mode-Specific Tours
-
-The current implementation already handles mode-specific tours:
-- Host mode: Shows management-focused steps
-- Shopper mode: Shows discovery-focused steps
-
-This means users get a relevant tour based on which mode they're viewing.
+### Borders & Shadows
+- Dropdown: Subtle shadow, 12px border-radius
+- Cards: Minimal border, no shadow (or very subtle)
+- Separators: 1px muted border
 
 ---
 
-## Expected User Experience
+## Mobile Considerations
 
-### First-Time Host Flow
-
-1. User logs in with host role
-2. 1-second delay for UI to settle
-3. Screen dims with spotlight on mode switcher
-4. User clicks "Next" -> spotlight moves to storefront button
-5. User clicks "Next" -> spotlight moves to Add Asset button
-6. User clicks "Finish" -> tour ends, localStorage flagged
-
-### First-Time Shopper Flow
-
-1. User logs in (no host role)
-2. 1-second delay
-3. Screen dims with spotlight on discovery hero
-4. User clicks "Next" -> spotlight moves to BecomeHostCard
-5. User clicks "Finish" -> tour ends
+The mobile menu will receive similar updates:
+- Cleaner item styling
+- Remove uppercase section headers
+- Larger touch targets (48px height minimum)
+- Notification badge support
 
 ---
 
-## Accessibility Considerations
+## Implementation Order
 
-The current implementation includes:
-- `aria-label="Skip tour"` on close button
-- Keyboard-accessible buttons
-- Focus trap within the popover
+1. Create `AirbnbMenuItem` component (foundation)
+2. Update `Header.tsx` dropdown menu
+3. Update `MobileMenu.tsx` for consistency
+4. Refactor `Account.tsx` to two-column layout
+5. Refine `DashboardLayout.tsx` sidebar styling
 
-No additional accessibility work needed.
+This order ensures each step builds on the previous, with the component library established first before larger layout changes.
