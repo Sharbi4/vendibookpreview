@@ -262,17 +262,18 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
               </div>
             </div>
 
-            {/* Actions */}
+            {/* Actions - Consistent h-9 rounded-xl styling */}
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border flex-wrap">
-              <Button variant="outline" size="sm" asChild>
+              {/* Primary Actions - Always visible */}
+              <Button variant="outline" size="sm" className="h-9 rounded-xl" asChild>
                 <Link to={`/listing/${listing.id}`}>
-                  <Eye className="h-4 w-4 mr-1" />
+                  <Eye className="h-4 w-4 mr-1.5" />
                   View
                 </Link>
               </Button>
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" className="h-9 rounded-xl" asChild>
                 <Link to={`/create-listing/${listing.id}`}>
-                  <Edit2 className="h-4 w-4 mr-1" />
+                  <Edit2 className="h-4 w-4 mr-1.5" />
                   Edit
                 </Link>
               </Button>
@@ -280,67 +281,75 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
                 <Button 
                   variant="outline" 
                   size="sm"
+                  className="h-9 rounded-xl"
                   onClick={() => setShowCalendar(true)}
                 >
-                  <Calendar className="h-4 w-4 mr-1" />
+                  <Calendar className="h-4 w-4 mr-1.5" />
                   Availability
                 </Button>
               )}
-              {/* Featured Add-on Button */}
+
+              {/* Marketing Upsells - Amber/Blue accent */}
               {isPublished && !isFeatured && (
                 <Button 
-                  variant="dark-shine" 
+                  variant="secondary" 
                   size="sm"
                   onClick={handleFeaturedClick}
-                  className="rounded-xl"
+                  className="h-9 rounded-xl bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50"
                 >
-                  <Star className="h-4 w-4 mr-1" />
-                  Make Featured
+                  <Star className="h-4 w-4 mr-1.5" />
+                  Boost
                 </Button>
               )}
-              {/* Notary Add-on Button (Sale listings only) */}
               {isPublished && isSale && !hasNotary && (
                 <Button 
-                  variant="dark-shine" 
+                  variant="secondary" 
                   size="sm"
                   onClick={handleNotaryCheckout}
                   disabled={isLoadingNotary}
-                  className="rounded-xl"
+                  className="h-9 rounded-xl bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
                 >
                   {isLoadingNotary ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <>
-                      <Shield className="h-4 w-4 mr-1" />
+                      <Shield className="h-4 w-4 mr-1.5" />
                       Notary
                     </>
                   )}
                 </Button>
               )}
+
+              {/* Spacer */}
+              <div className="flex-1" />
+
+              {/* Status Actions - Right aligned */}
               {listing.status === 'published' && onPause && (
                 <Button 
                   variant="outline" 
                   size="sm"
+                  className="h-9 rounded-xl"
                   onClick={() => onPause(listing.id)}
                 >
-                  <Pause className="h-4 w-4 mr-1" />
+                  <Pause className="h-4 w-4 mr-1.5" />
                   Pause
                 </Button>
               )}
               {(listing.status === 'draft' || listing.status === 'paused') && onPublish && (
                 <Button 
                   size="sm"
+                  className="h-9 rounded-xl"
                   onClick={() => onPublish(listing.id)}
                 >
-                  <Play className="h-4 w-4 mr-1" />
+                  <Play className="h-4 w-4 mr-1.5" />
                   Publish
                 </Button>
               )}
               {onDelete && (
                 <Button 
                   variant="ghost" 
-                  size="sm"
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10 ml-auto"
+                  size="icon"
+                  className="h-9 w-9 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
                   onClick={() => onDelete(listing.id)}
                 >
                   <Trash2 className="h-4 w-4" />
