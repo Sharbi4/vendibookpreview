@@ -1,153 +1,272 @@
 
-# HowItWorks Page Refactor: Traffic Controller Pattern
+# Server-Side Search Refactor: Scalable Architecture
 
-## Problem Analysis
+## Problem Summary
 
-The current `/how-it-works` page has significant UX issues:
+The current `Search.tsx` has **three critical scalability issues**:
 
-1. **Split Audience Problem**: The page tries to serve both Hosts/Sellers AND Buyers/Renters simultaneously, confusing everyone
-2. **Buried Actionable Content**: The "Three Options" cards (Sell/Rent/Vendor Lots) are pushed below a decorative gallery
-3. **Redundant Landing Pages**: You already have high-converting specialized pages (`/sell-my-food-truck`, `/rent-my-commercial-kitchen`, `/vendor-lots`) that this page fails to leverage
-4. **Visual Noise**: Excessive animations, floating orbs, and decorative backgrounds distract from the instructional purpose
-5. **Missing Buyer Journey**: Buyers/Renters who want to understand "how to book/buy" are ignored until the FAQ
+1. **Full Table Download**: Fetches ALL published listings on page load (`SELECT * FROM listings WHERE status = 'published'`), then filters client-side with JavaScript and Fuse.js
+2. **N+1 Query Waterfall**: After fetching listings, triggers separate queries for:
+   - Host verification status (`get_host_verification_status` RPC)
+   - Unavailable dates (blocked_dates + booking_requests)
+3. **No Pagination**: All results render at once with no lazy loading
 
-## Solution: Traffic Controller Pattern
+With 47 listings today, this is unnoticeable. At 500+ listings, the page will become slow. At 5,000+, it will be unusable.
 
-Transform the page into a role-selection hub that routes users to the right experience:
+---
+
+## Solution Architecture
+
+Move all filtering to the server via a new **unified search edge function** that:
+- Accepts all filter parameters in a single request
+- Performs location-based radius filtering server-side
+- Joins host verification data inline
+- Pre-computes availability based on date ranges
+- Returns paginated, sorted results
 
 ```text
-+------------------------------------------+
-|  HERO: "What would you like to do?"      |
-+------------------------------------------+
-|                                          |
-|  +----------------+  +----------------+  |
-|  | I want to BUY  |  | I want to SELL |  |
-|  | or RENT        |  | or HOST        |  |
-|  +----------------+  +----------------+  |
-|                                          |
-+------------------------------------------+
-                    |
-          +---------+---------+
-          |                   |
-    BUYER/RENTER         SELLER/HOST
-          |                   |
-    Show inline          Route to:
-    walkthrough          - /sell-my-food-truck
-    (since no           - /rent-my-commercial-kitchen
-    dedicated           - /vendor-lots
-    page exists)
+CURRENT FLOW (Client-side):
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  Fetch ALL  │ -> │ Fetch Host  │ -> │ Filter with │
+│  Listings   │    │  Profiles   │    │ JavaScript  │
+│  (N rows)   │    │  (N+1)      │    │ Fuse.js     │
+└─────────────┘    └─────────────┘    └─────────────┘
+
+NEW FLOW (Server-side):
+┌─────────────────────────────────────────────────────────┐
+│  POST /functions/v1/search-listings                     │
+│  ─────────────────────────────────────────────────────  │
+│  • Receive filters: category, mode, location, dates,    │
+│    radius, amenities, price, pagination                 │
+│  • Apply filters in SQL                                 │
+│  • Calculate distance using Haversine                   │
+│  • Join profiles for host_verified                      │
+│  • Check availability inline                            │
+│  • Return paginated results + total count               │
+└─────────────────────────────────────────────────────────┘
 ```
+
+---
 
 ## Implementation Plan
 
-### Phase 1: Add Role Selection State
-- Add `useState` for tracking user selection: `'none' | 'buyer' | 'seller'`
-- URL state sync via `useSearchParams` for shareability (e.g., `?role=buyer`)
+### Phase 1: Create Server-Side Search Edge Function
 
-### Phase 2: Redesign Hero Section
-- Replace the busy hero with a clean role-selection interface
-- Two prominent cards: "I'm looking to buy or rent" vs "I want to sell or list"
-- Remove decorative background images and floating orbs
-- Keep trust badges but make them smaller
+**File**: `supabase/functions/search-listings/index.ts`
 
-### Phase 3: Conditional Content Rendering
+The edge function will accept:
+```typescript
+interface SearchRequest {
+  // Filters
+  query?: string;          // Text search on title, description, address
+  mode?: 'rent' | 'sale';  // Listing mode filter
+  category?: string;       // Category filter
+  latitude?: number;       // User location for radius
+  longitude?: number;
+  radius_miles?: number;   // Default 25
+  
+  // Date availability (for rentals)
+  start_date?: string;     // YYYY-MM-DD
+  end_date?: string;
+  
+  // Additional filters
+  amenities?: string[];    // Required amenities
+  min_price?: number;
+  max_price?: number;
+  instant_book_only?: boolean;
+  verified_hosts_only?: boolean;
+  delivery_capable?: boolean;
+  
+  // Pagination & sorting
+  page?: number;           // Default 1
+  page_size?: number;      // Default 20, max 50
+  sort_by?: 'newest' | 'price_low' | 'price_high' | 'distance' | 'relevance';
+}
+```
 
-**If user selects "Seller/Host":**
-- Show a 3-card grid linking to specialized pages:
-  - Sell a Food Truck -> `/sell-my-food-truck`
-  - Rent Out a Kitchen -> `/rent-my-commercial-kitchen`
-  - List a Vendor Lot -> `/vendor-lots`
-- Each card has a brief description and "Learn More" CTA
+Returns:
+```typescript
+interface SearchResponse {
+  listings: Array<{
+    ...listing,
+    distance_miles?: number;
+    host_verified: boolean;
+    is_available: boolean;  // For rental date filtering
+  }>;
+  total_count: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+```
 
-**If user selects "Buyer/Renter":**
-- Show the buyer walkthrough inline (since no dedicated page exists):
-  - Step 1: Browse verified listings
-  - Step 2: Request booking or checkout
-  - Step 3: Coordinate pickup/delivery
-  - Step 4: Complete transaction securely
-- Include FAQ relevant to buyers
-- CTA: "Start Browsing" -> `/search`
+### Phase 2: Server-Side Filtering Logic
 
-### Phase 4: Streamline Shared Sections
-- Move "Why Vendibook" features section to appear for both roles
-- Keep Testimonials but reduce to 2-3 key quotes
-- Keep FAQ section with role-specific filtering
-- Remove the image gallery entirely (belongs on Browse page)
-- Simplify the stats bar
+The edge function will:
 
-### Phase 5: Clean Up Visual Design
-- Reduce motion animations (many users find them distracting)
-- Use cleaner section backgrounds (remove gradient orbs)
-- Make the page scannable with clear visual hierarchy
+1. **Text Search**: Use PostgreSQL `ILIKE` on title, description, address (Fuse.js removed)
+2. **Location Filtering**: Apply Haversine distance calculation in JavaScript after fetching nearby candidates (bounding box optimization first)
+3. **Date Availability**: Exclude listings with conflicts in `listing_blocked_dates` or `booking_requests`
+4. **Joined Data**: Query `profiles.identity_verified` in the same response
+5. **Pagination**: Use `.range(offset, offset + pageSize - 1)`
+
+### Phase 3: Update `Search.tsx` to Use Edge Function
+
+Replace the current client-side approach:
+
+```typescript
+// BEFORE (current)
+const { data: listings } = useQuery({
+  queryKey: ['search-listings'],
+  queryFn: async () => {
+    const { data } = await supabase
+      .from('listings')
+      .select('*')
+      .eq('status', 'published');
+    return data;
+  },
+});
+// + Fuse.js filtering + multiple separate queries
+
+// AFTER (new)
+const { data: searchResults, isLoading } = useQuery({
+  queryKey: ['search-listings', filters, page],
+  queryFn: async () => {
+    const { data, error } = await supabase.functions.invoke('search-listings', {
+      body: {
+        query: searchQuery,
+        mode: mode !== 'all' ? mode : undefined,
+        category: category !== 'all' ? category : undefined,
+        latitude: locationCoords?.[1],
+        longitude: locationCoords?.[0],
+        radius_miles: searchRadius,
+        start_date: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
+        end_date: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
+        amenities: selectedAmenities.length > 0 ? selectedAmenities : undefined,
+        min_price: priceRange[0] > 0 ? priceRange[0] : undefined,
+        max_price: priceRange[1] !== Infinity ? priceRange[1] : undefined,
+        instant_book_only: instantBookOnly || undefined,
+        verified_hosts_only: verifiedHostsOnly || undefined,
+        page,
+        page_size: 20,
+        sort_by: sortBy,
+      }
+    });
+    return data;
+  },
+  keepPreviousData: true,  // Smooth pagination transitions
+});
+```
+
+### Phase 4: Add Pagination UI
+
+Add pagination controls at the bottom of results:
+
+```typescript
+// New component or inline
+<Pagination>
+  <PaginationContent>
+    <PaginationItem>
+      <PaginationPrevious 
+        onClick={() => setPage(p => Math.max(1, p - 1))}
+        disabled={page === 1}
+      />
+    </PaginationItem>
+    {/* Page numbers */}
+    <PaginationItem>
+      <PaginationNext 
+        onClick={() => setPage(p => p + 1)}
+        disabled={page >= searchResults?.total_pages}
+      />
+    </PaginationItem>
+  </PaginationContent>
+</Pagination>
+```
+
+### Phase 5: Remove Client-Side Filtering Code
+
+Delete from `Search.tsx`:
+- `Fuse.js` import and setup (lines 3, 216-228)
+- `filteredListings` useMemo (lines 307-412)
+- Separate `hostProfiles` and `unavailableDates` queries (lines 143-213)
+- Client-side distance calculation helpers (lines 243-304)
 
 ---
 
 ## Technical Details
 
-### File Changes
+### Edge Function SQL Strategy
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/pages/HowItWorks.tsx` | Modify | Complete refactor with role-based routing |
-
-### New Component Structure
-
-```text
-HowItWorks.tsx
-├── RoleSelectionHero (new internal section)
-│   ├── BuyerCard -> sets role to 'buyer'
-│   └── SellerCard -> sets role to 'seller'
-├── SellerPathOptions (shows when role === 'seller')
-│   ├── SellFoodTruckCard -> Link to /sell-my-food-truck
-│   ├── RentKitchenCard -> Link to /rent-my-commercial-kitchen
-│   └── VendorLotsCard -> Link to /vendor-lots
-├── BuyerWalkthrough (shows when role === 'buyer')
-│   ├── Step-by-step process
-│   └── "Start Browsing" CTA
-├── WhyVendibook (shared, always visible after selection)
-├── Testimonials (shared, condensed)
-├── FAQ (shared, with role filtering)
-└── FinalCTA
+**Bounding Box Optimization for Location**:
+```sql
+-- First narrow with bounding box (uses indexes)
+WHERE latitude BETWEEN :lat - :delta AND :lat + :delta
+  AND longitude BETWEEN :lng - :delta AND :lng + :delta
+-- Then precise Haversine in JavaScript for final filtering
 ```
 
-### State Management
+**Availability Check**:
+```sql
+-- Exclude listings with blocked dates in range
+WHERE NOT EXISTS (
+  SELECT 1 FROM listing_blocked_dates bd
+  WHERE bd.listing_id = listings.id
+    AND bd.blocked_date BETWEEN :start AND :end
+)
+-- Exclude listings with approved bookings in range
+AND NOT EXISTS (
+  SELECT 1 FROM booking_requests br
+  WHERE br.listing_id = listings.id
+    AND br.status = 'approved'
+    AND br.start_date <= :end
+    AND br.end_date >= :start
+)
+```
 
+**Host Verification Join**:
 ```typescript
-type UserRole = 'none' | 'buyer' | 'seller';
+// In edge function, after fetching listings
+const hostIds = [...new Set(listings.map(l => l.host_id).filter(Boolean))];
+const { data: profiles } = await supabaseClient
+  .from('profiles')
+  .select('id, identity_verified')
+  .in('id', hostIds);
 
-const [selectedRole, setSelectedRole] = useState<UserRole>(() => {
-  const urlRole = searchParams.get('role');
-  return (urlRole === 'buyer' || urlRole === 'seller') ? urlRole : 'none';
+// Merge into listings
+listings.forEach(l => {
+  l.host_verified = profiles.find(p => p.id === l.host_id)?.identity_verified ?? false;
 });
 ```
 
-### URL Behavior
-- `/how-it-works` - Shows role selection
-- `/how-it-works?role=buyer` - Shows buyer walkthrough directly
-- `/how-it-works?role=seller` - Shows seller path options directly
+### Files to Modify
 
-### Removed Elements
-- Gallery section (lines 251-278)
-- Floating gradient orbs
-- Background images in hero
-- Excessive motion animations
+| File | Action | Description |
+|------|--------|-------------|
+| `supabase/functions/search-listings/index.ts` | Create | New unified search edge function |
+| `supabase/config.toml` | Modify | Add function configuration |
+| `src/pages/Search.tsx` | Modify | Replace client queries with edge function call, add pagination |
 
-### New Buyer Walkthrough Steps
+### Config Update
 
-| Step | Title | Description |
-|------|-------|-------------|
-| 1 | Find Your Asset | Browse food trucks, trailers, kitchens, and vendor lots |
-| 2 | Verify & Connect | All sellers are identity-verified. Message to ask questions |
-| 3 | Secure Checkout | Pay safely with card, Affirm, or Afterpay. Funds held in escrow |
-| 4 | Complete Transaction | Pickup, delivery, or freight. Confirm when satisfied |
+```toml
+[functions.search-listings]
+verify_jwt = false
+```
 
 ---
 
 ## Benefits
 
-1. **Clear User Segmentation**: Users immediately identify their role and get relevant content
-2. **Leverages Existing Assets**: Routes sellers to your high-converting specialized pages
-3. **Fills the Buyer Gap**: Creates a proper walkthrough for buyers who currently have no guidance
-4. **Reduced Cognitive Load**: Cleaner design with less visual noise
-5. **Better Analytics**: URL params allow tracking which role is more common
-6. **Improved SEO**: Shareable deep-links for specific user journeys
+| Metric | Before | After |
+|--------|--------|-------|
+| Initial payload | ALL listings (N × ~2KB each) | 20 listings (~40KB) |
+| Network requests | 3+ sequential | 1 |
+| Client CPU | High (Fuse.js + filtering) | Minimal (render only) |
+| Time to interactive | O(N) | O(1) |
+| Works at 10,000 listings | No | Yes |
+
+---
+
+## Note on HowItWorks Gallery
+
+The "Featured Assets Gallery" mentioned in your audit was **already removed** during the previous refactor. The HowItWorks page now uses the "Traffic Controller" pattern with role-based content (buyer vs. seller). No further changes needed there.
