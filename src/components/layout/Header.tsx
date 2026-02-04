@@ -265,7 +265,7 @@ const Header = () => {
   const hasSuggestions = filteredRecent.length > 0 || filteredPopular.length > 0;
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background border-b border-border shadow-sm">
+    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm supports-[backdrop-filter]:bg-background/80">
       <div className="container max-w-7xl mx-auto px-4 flex h-16 items-center justify-between">
         {/* Logo - hide when mobile search is open */}
         <Link 

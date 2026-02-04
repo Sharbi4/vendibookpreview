@@ -2,7 +2,8 @@ import { useEffect, lazy, Suspense } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import HeroWalkthrough from '@/components/home/HeroWalkthrough';
+import HeroRentalSearch from '@/components/home/HeroRentalSearch';
+import RentalBenefits from '@/components/home/RentalBenefits';
 import AnnouncementBanner from '@/components/home/AnnouncementBanner';
 import VerificationBanner from '@/components/home/VerificationBanner';
 import PaymentsBanner from '@/components/home/PaymentsBanner';
@@ -16,8 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Lazy load below-the-fold components for faster initial load
 const ListingsSections = lazy(() => import('@/components/home/ListingsSections'));
-const SupplySection = lazy(() => import('@/components/home/SupplySection'));
-const CategoryCarousels = lazy(() => import('@/components/home/CategoryCarousels'));
+const BecomeHostSection = lazy(() => import('@/components/home/BecomeHostSection'));
 const FinalCTA = lazy(() => import('@/components/home/FinalCTA'));
 
 // Minimal loading fallback for lazy sections
@@ -75,21 +75,21 @@ const Index = () => {
       {showVerificationBanner && <VerificationBanner userId={user.id} />}
       
       <main className="flex-1">
-        {/* 1. Hero with animated walkthrough - above the fold */}
-        <HeroWalkthrough />
+        {/* 1. Hero - Immersive Rental-First Search */}
+        <HeroRentalSearch />
         
+        {/* 2. Rental Benefits - Why Rent? */}
+        <RentalBenefits />
+
         <Suspense fallback={<SectionSkeleton />}>
-          {/* 2. For Sale & For Rent Sections */}
+          {/* 3. Listings - Rentals First, Then Sales */}
           <ListingsSections />
 
-          {/* 3. BNPL Banner */}
+          {/* 4. BNPL Banner */}
           <PaymentsBanner />
           
-          {/* 4. Supply Section (Owners/Hosts + AI tools callout) */}
-          <SupplySection />
-          
-          {/* 5. SEO Lists - Browse by Category */}
-          <CategoryCarousels />
+          {/* 5. Become a Host CTA (Dark themed) */}
+          <BecomeHostSection />
           
           {/* 6. Final CTA */}
           <FinalCTA />

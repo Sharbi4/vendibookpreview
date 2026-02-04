@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import HostDashboard from '@/components/dashboard/HostDashboard';
 import ShopperDashboard from '@/components/dashboard/ShopperDashboard';
+import DashboardOnboarding from '@/components/onboarding/DashboardOnboarding';
 import { 
   Loader2, 
   Store,
@@ -20,6 +21,7 @@ const Dashboard = () => {
   const { user, isLoading, isVerified, hasRole } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   usePageTracking();
 
@@ -29,6 +31,21 @@ const Dashboard = () => {
 
   const toggleMode = (checked: boolean) => {
     setSearchParams({ view: checked ? 'host' : 'shopper' });
+  };
+
+  // Check for onboarding on mount
+  useEffect(() => {
+    const hasSeen = localStorage.getItem('vendibook_dashboard_onboarding_v1');
+    if (!hasSeen && !isLoading && user) {
+      // Small delay to ensure UI renders
+      const timer = setTimeout(() => setShowOnboarding(true), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, user]);
+
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('vendibook_dashboard_onboarding_v1', 'true');
+    setShowOnboarding(false);
   };
 
   useEffect(() => {
@@ -77,7 +94,7 @@ const Dashboard = () => {
 
               {/* Context Toggle - Only for Hosts */}
               {isHost && (
-                <div className="flex items-center gap-2">
+                <div id="mode-switch-container" className="flex items-center gap-2">
                   <Label 
                     htmlFor="mode-switch" 
                     className={`text-sm cursor-pointer transition-colors ${
@@ -136,6 +153,14 @@ const Dashboard = () => {
       </main>
 
       <Footer />
+
+      {/* Dashboard Onboarding Tour */}
+      {showOnboarding && (
+        <DashboardOnboarding 
+          mode={currentMode} 
+          onComplete={handleOnboardingComplete}
+        />
+      )}
     </div>
   );
 };
