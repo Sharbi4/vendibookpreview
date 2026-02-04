@@ -140,46 +140,36 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="text-center space-y-3 pb-2">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10">
-          <DollarSign className="w-7 h-7 text-primary" />
-        </div>
-        <h2 className="text-2xl font-bold text-foreground">Set your pricing</h2>
-        <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-          Set competitive rates to attract renters.
-        </p>
-      </div>
-
-      {/* AI Pricing Assistant */}
-      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+      {/* Page Header with Inline AI Button */}
+      <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
-            <Sparkles className="w-5 h-5 text-primary-foreground" />
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+            <DollarSign className="w-6 h-6 text-primary" />
           </div>
-          <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-sm text-foreground">AI Pricing Assistant</h4>
-            <p className="text-xs text-muted-foreground">
-              Get smart pricing suggestions based on market data.
+          <div>
+            <h2 className="text-xl font-bold text-foreground">Set your pricing</h2>
+            <p className="text-muted-foreground text-sm">
+              Set competitive rates to attract renters.
             </p>
           </div>
         </div>
         <Button
           type="button"
+          variant="ghost"
           size="sm"
           onClick={handleGetSuggestions}
           disabled={isLoadingSuggestions}
-          className="w-full"
+          className="text-primary h-8 shrink-0"
         >
           {isLoadingSuggestions ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Analyzing...
+              <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+              Analyzing
             </>
           ) : (
             <>
-              <Sparkles className="w-4 h-4 mr-2" />
-              Get AI Suggestions
+              <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+              AI Help
             </>
           )}
         </Button>
