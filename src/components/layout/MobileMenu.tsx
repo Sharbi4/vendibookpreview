@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Home, Search, MessageSquare, 
   User, Heart, LogOut, PlusCircle, HelpCircle, 
-  Settings, ShieldCheck, CalendarDays, Globe, LayoutDashboard, Store, ExternalLink
+  Settings, ShieldCheck, CalendarDays, Globe, LayoutDashboard, Store, ExternalLink, Truck
 } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
@@ -229,6 +229,12 @@ const MobileMenu = ({
                       label="List with Vendibook" 
                       subtext="Rent or sell your assets"
                       onClick={() => handleNav('/list')} 
+                    />
+                    <AirbnbMenuItem 
+                      icon={Truck} 
+                      label="Become a Host" 
+                      subtext="Learn how hosting works"
+                      onClick={() => handleNav('/how-it-works-host')} 
                     />
                     <AirbnbMenuItem 
                       icon={Store} 
