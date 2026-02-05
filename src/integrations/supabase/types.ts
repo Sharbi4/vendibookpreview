@@ -655,6 +655,68 @@ export type Database = {
           },
         ]
       }
+      listing_events: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_time: string | null
+          event_date: string | null
+          event_type: string
+          host_id: string
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          is_recurring: boolean | null
+          listing_id: string
+          recurrence_pattern: string | null
+          start_time: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_time?: string | null
+          event_date?: string | null
+          event_type?: string
+          host_id: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_recurring?: boolean | null
+          listing_id: string
+          recurrence_pattern?: string | null
+          start_time?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_time?: string | null
+          event_date?: string | null
+          event_type?: string
+          host_id?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_recurring?: boolean | null
+          listing_id?: string
+          recurrence_pattern?: string | null
+          start_time?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_events_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_leads: {
         Row: {
           created_at: string
