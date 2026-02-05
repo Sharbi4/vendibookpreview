@@ -381,13 +381,6 @@ const EnhancedPublicProfileHeader = ({
             >
               <Calendar className="h-4 w-4" />
               <span>Member since {memberSince}</span>
-              {isHost && stats?.totalListings && stats.totalListings > 0 && (
-                <>
-                  <span className="text-border">•</span>
-                  <MapPin className="h-4 w-4" />
-                  <span>{stats.totalListings} listing{stats.totalListings !== 1 ? 's' : ''}</span>
-                </>
-              )}
             </motion.div>
 
             {/* About/Bio Section */}

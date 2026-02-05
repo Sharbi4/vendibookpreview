@@ -376,15 +376,6 @@ const PublicProfile = () => {
             />
           )}
 
-          {/* Photo Gallery */}
-          {isHost && (
-            <StorefrontGallerySection 
-              listings={listings as Listing[] | undefined} 
-              isLoading={listingsLoading}
-              hostName={displayName}
-            />
-          )}
-
           {/* Shop Policies */}
           <ShopPoliciesCard 
             policies={profile.shop_policies || null} 
@@ -427,6 +418,22 @@ const PublicProfile = () => {
           onMessageHost={handleMessageHost}
           onViewListings={handleViewListingsClick}
         />
+
+        {/* Photo Gallery - Below Listings */}
+        {isHost && (
+          <motion.div 
+            className="container py-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <StorefrontGallerySection 
+              listings={listings as Listing[] | undefined} 
+              isLoading={listingsLoading}
+              hostName={displayName}
+            />
+          </motion.div>
+        )}
       </main>
 
       {/* Section 2: Mobile Sticky CTA with glass-premium styling */}
