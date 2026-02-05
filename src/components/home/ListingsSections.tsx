@@ -185,7 +185,7 @@ const ListingsSections = () => {
         {saleListings.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-bold text-foreground">Available For Sale</h2>
+              <h2 className="text-xl font-bold text-foreground">Featured for Sale</h2>
               <Button 
                 variant="ghost" 
                 size="sm"
