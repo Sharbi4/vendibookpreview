@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { CheckoutOverlay } from '@/components/checkout';
-import { ValidatedInput, validators } from '@/components/ui/validated-input';
+import { validators } from '@/components/ui/validated-input';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackPurchase, trackInitiateCheckout } from '@/lib/facebookCAPI';
 import { calculateDistance } from '@/lib/geolocation';
@@ -22,7 +22,7 @@ import WizardHeader, { WizardStep } from '@/components/shared/WizardHeader';
 import StickySummary from '@/components/shared/StickySummary';
 
 // Step components
-import { PurchaseStepDelivery, PurchaseStepInfo, PurchaseStepReview } from '@/components/purchase-wizard';
+import { PurchaseStepDelivery, PurchaseStepInfo, PurchaseStepReview, type BuyerInfo } from '@/components/purchase-wizard';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 type CheckoutStep = 'information' | 'delivery' | 'review';
@@ -61,11 +61,29 @@ const SaleCheckout = () => {
   // Multi-step state
   const [currentStep, setCurrentStep] = useState<CheckoutStep>('information');
   
-  // Customer info
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
+  // Customer info - structured buyer info
+  const [buyerInfo, setBuyerInfo] = useState<BuyerInfo>({
+    firstName: '',
+    lastName: '',
+    businessName: '',
+    email: '',
+    phone: '',
+    address1: '',
+    address2: '',
+    city: '',
+    state: '',
+    zipCode: '',
+  });
+  
+  const updateBuyerInfo = <K extends keyof BuyerInfo>(field: K, value: BuyerInfo[K]) => {
+    setBuyerInfo(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Legacy fields for backward compatibility - computed from buyerInfo
+  const name = `${buyerInfo.firstName} ${buyerInfo.lastName}`.trim();
+  const email = buyerInfo.email;
+  const phone = buyerInfo.phone;
+  const address = `${buyerInfo.address1}${buyerInfo.address2 ? ', ' + buyerInfo.address2 : ''}, ${buyerInfo.city}, ${buyerInfo.state} ${buyerInfo.zipCode}`.trim();
   
   // Fulfillment
   const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>('pickup');
@@ -87,10 +105,14 @@ const SaleCheckout = () => {
   type PaymentMethod = 'card' | 'cash';
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
 
-  // Initialize user data
+  // Initialize user data from profile
   useEffect(() => {
-    if (profile?.full_name && !name) setName(profile.full_name);
-    if (user?.email && !email) setEmail(user.email);
+    if (profile?.full_name && !buyerInfo.firstName) {
+      const nameParts = profile.full_name.split(' ');
+      updateBuyerInfo('firstName', nameParts[0] || '');
+      updateBuyerInfo('lastName', nameParts.slice(1).join(' ') || '');
+    }
+    if (user?.email && !buyerInfo.email) updateBuyerInfo('email', user.email);
   }, [profile, user]);
 
   // Check for accepted offer to get negotiated price
@@ -157,11 +179,15 @@ const SaleCheckout = () => {
     }
   }, [listing]);
 
-  // Field validators
+  // Field validators for new structured buyer info
   const fieldValidators = {
-    name: validators.compose(
-      validators.required('Full name is required'),
-      validators.minLength(2, 'Name must be at least 2 characters')
+    firstName: validators.compose(
+      validators.required('First name is required'),
+      validators.minLength(2, 'First name must be at least 2 characters')
+    ),
+    lastName: validators.compose(
+      validators.required('Last name is required'),
+      validators.minLength(2, 'Last name must be at least 2 characters')
     ),
     email: validators.compose(
       validators.required('Email is required'),
@@ -171,7 +197,13 @@ const SaleCheckout = () => {
       validators.required('Phone number is required'),
       validators.phone('Please enter a valid phone number')
     ),
-    address: validators.required('Address is required'),
+    address1: validators.required('Street address is required'),
+    city: validators.required('City is required'),
+    state: validators.required('State is required'),
+    zipCode: validators.compose(
+      validators.required('ZIP code is required'),
+      validators.zipCode('Invalid ZIP code format')
+    ),
   };
 
   // Derived values - Use accepted offer price if available, otherwise listing price
@@ -281,15 +313,28 @@ const SaleCheckout = () => {
     }
     
     if (step === 'information') {
-      const nameError = fieldValidators.name(name);
-      const emailError = fieldValidators.email(email);
-      const phoneError = fieldValidators.phone(phone);
-      const addressError = fieldValidators.address(address);
+      const firstNameError = fieldValidators.firstName(buyerInfo.firstName);
+      const lastNameError = fieldValidators.lastName(buyerInfo.lastName);
+      const emailError = fieldValidators.email(buyerInfo.email);
+      const phoneError = fieldValidators.phone(buyerInfo.phone);
+      const address1Error = fieldValidators.address1(buyerInfo.address1);
+      const cityError = fieldValidators.city(buyerInfo.city);
+      const stateError = fieldValidators.state(buyerInfo.state);
+      const zipCodeError = fieldValidators.zipCode(buyerInfo.zipCode);
       
-      setFieldErrors({ name: nameError, email: emailError, phone: phoneError, address: addressError });
-      setTouchedFields(new Set(['name', 'email', 'phone', 'address']));
+      setFieldErrors({ 
+        firstName: firstNameError, 
+        lastName: lastNameError, 
+        email: emailError, 
+        phone: phoneError, 
+        address1: address1Error,
+        city: cityError,
+        state: stateError,
+        zipCode: zipCodeError,
+      });
+      setTouchedFields(new Set(['firstName', 'lastName', 'email', 'phone', 'address1', 'city', 'state', 'zipCode']));
       
-      const firstError = nameError || emailError || phoneError || addressError;
+      const firstError = firstNameError || lastNameError || emailError || phoneError || address1Error || cityError || stateError || zipCodeError;
       if (firstError) {
         toast({ title: 'Missing information', description: firstError, variant: 'destructive' });
         return false;
@@ -341,9 +386,9 @@ const SaleCheckout = () => {
             fulfillment_type: isVendibookFreight ? 'vendibook_freight' : fulfillmentSelected,
             delivery_address: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryAddress.trim() : null,
             delivery_instructions: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryInstructions.trim() : null,
-            buyer_name: name.trim(),
-            buyer_email: email.trim(),
-            buyer_phone: phone.trim() || null,
+            buyer_name: `${buyerInfo.firstName} ${buyerInfo.lastName}`.trim(),
+            buyer_email: buyerInfo.email.trim(),
+            buyer_phone: buyerInfo.phone.trim() || null,
             status: 'pending_cash',
             platform_fee: 0,
             seller_payout: priceSale,
@@ -370,10 +415,10 @@ const SaleCheckout = () => {
           contentName: listing.title,
           contentType: 'product',
           userData: {
-            email: email.trim(),
-            phone: phone.trim() || undefined,
-            firstName: name.split(' ')[0],
-            lastName: name.split(' ').slice(1).join(' ') || undefined,
+            email: buyerInfo.email.trim(),
+            phone: buyerInfo.phone.trim() || undefined,
+            firstName: buyerInfo.firstName,
+            lastName: buyerInfo.lastName || undefined,
           },
         });
         
@@ -408,9 +453,9 @@ const SaleCheckout = () => {
           fulfillment_type: isVendibookFreight ? 'vendibook_freight' : fulfillmentSelected,
           delivery_address: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryAddress.trim() : null,
           delivery_instructions: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryInstructions.trim() : null,
-          buyer_name: name.trim(),
-          buyer_email: email.trim(),
-          buyer_phone: phone.trim() || null,
+          buyer_name: `${buyerInfo.firstName} ${buyerInfo.lastName}`.trim(),
+          buyer_email: buyerInfo.email.trim(),
+          buyer_phone: buyerInfo.phone.trim() || null,
           vendibook_freight_enabled: isVendibookFreight,
           freight_payer: isVendibookFreight ? freightPayer : 'buyer',
           freight_cost: isVendibookFreight ? freightCost : 0,
@@ -429,10 +474,10 @@ const SaleCheckout = () => {
         contentName: listing.title,
         numItems: 1,
         userData: {
-          email: email.trim(),
-          phone: phone.trim() || undefined,
-          firstName: name.split(' ')[0],
-          lastName: name.split(' ').slice(1).join(' ') || undefined,
+          email: buyerInfo.email.trim(),
+          phone: buyerInfo.phone.trim() || undefined,
+          firstName: buyerInfo.firstName,
+          lastName: buyerInfo.lastName || undefined,
         },
       });
       
@@ -551,14 +596,8 @@ const SaleCheckout = () => {
                     >
                       {currentStep === 'information' && (
                         <PurchaseStepInfo
-                          name={name}
-                          setName={setName}
-                          email={email}
-                          setEmail={setEmail}
-                          phone={phone}
-                          setPhone={setPhone}
-                          address={address}
-                          setAddress={setAddress}
+                          buyerInfo={buyerInfo}
+                          updateBuyerInfo={updateBuyerInfo}
                           deliveryInstructions={deliveryInstructions}
                           setDeliveryInstructions={setDeliveryInstructions}
                           fulfillmentSelected={fulfillmentSelected}
@@ -612,10 +651,7 @@ const SaleCheckout = () => {
                           totalPrice={totalPrice}
                           fulfillmentSelected={fulfillmentSelected}
                           deliveryAddress={deliveryAddress}
-                          name={name}
-                          email={email}
-                          phone={phone}
-                          address={address}
+                          buyerInfo={buyerInfo}
                           hasValidEstimate={hasValidEstimate}
                           estimate={estimate}
                           isFreightSellerPaid={isFreightSellerPaid}
