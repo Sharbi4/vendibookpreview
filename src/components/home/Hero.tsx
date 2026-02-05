@@ -105,8 +105,16 @@ const Hero = () => {
             className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight animate-fade-in"
             style={{ animationDelay: '0.15s', animationFillMode: 'backwards' }}
           >
-            The marketplace for food business
+            Rent it. Buy it. Find your spot.
           </h1>
+          
+          {/* Subheader */}
+          <p 
+            className="text-base md:text-lg text-white/90 mt-3 max-w-2xl mx-auto animate-fade-in"
+            style={{ animationDelay: '0.25s', animationFillMode: 'backwards' }}
+          >
+            From turnkey rentals and trucks for sale to premium food truck parks—launch your food business this weekend with verified assets and spaces.
+          </p>
           
 
           {/* CTA Buttons */}
