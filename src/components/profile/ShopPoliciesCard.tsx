@@ -199,11 +199,16 @@ const ShopPoliciesCard = ({ policies, isOwnProfile, onUpdate }: ShopPoliciesCard
 
   return (
     <>
-    <div className="bg-card/50 backdrop-blur-sm rounded-xl p-4 border border-border/50">
-      <div className="flex items-center justify-between mb-3">
+    <div className="glass-premium rounded-2xl p-5 border border-border/50 shadow-lg relative overflow-hidden">
+      {/* Premium gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+      
+      <div className="relative flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Shield className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-medium text-foreground">Shop Policies</h3>
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Shield className="h-4 w-4 text-primary" />
+          </div>
+          <h3 className="text-sm font-semibold text-foreground">Shop Policies</h3>
         </div>
         {isOwnProfile && (
           <Button variant="ghost" size="sm" className="h-7 px-2" onClick={handleOpenEditModal}>
@@ -212,7 +217,7 @@ const ShopPoliciesCard = ({ policies, isOwnProfile, onUpdate }: ShopPoliciesCard
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-2">
         {visibleItems.map((item, index) => (
           <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
             <item.icon className="h-3.5 w-3.5 flex-shrink-0" />
