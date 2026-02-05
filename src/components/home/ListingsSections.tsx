@@ -137,7 +137,7 @@ const ListingsSections = () => {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => navigate('/vendor-lots')}
+                onClick={() => navigate('/vendor-spaces')}
                 className="text-primary font-medium hover:bg-primary/5"
               >
                 View all

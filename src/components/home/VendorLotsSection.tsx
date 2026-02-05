@@ -47,7 +47,7 @@ const VendorLotsSection = () => {
             Vendor Space Owners
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            Got a Lot? List It.
+            Got a Space? List It.
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Own a parking lot, vacant space, or commercial property? Help food trucks, trailers, 
@@ -104,14 +104,14 @@ const VendorLotsSection = () => {
                 className="w-full"
                 onClick={() => navigate('/list')}
               >
-                List Your Lot
+                List Your Space
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button 
                 variant="outline" 
                 size="lg" 
                 className="w-full border-primary/30 hover:bg-gradient-to-r hover:from-primary/10 hover:to-amber-500/10"
-                onClick={() => navigate('/vendor-lots')}
+                onClick={() => navigate('/vendor-spaces')}
               >
                 Browse Vendor Spaces
               </Button>

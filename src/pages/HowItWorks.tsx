@@ -147,7 +147,7 @@ const sellerPathOptions = [
     icon: MapPin,
     title: "List a Vendor Space",
     description: "Turn your parking lot or space into passive income for food vendors.",
-    link: "/vendor-lots",
+    link: "/vendor-spaces",
     features: ["Hourly or daily bookings", "Define amenities & rules", "Zero hassle setup"],
   },
 ];

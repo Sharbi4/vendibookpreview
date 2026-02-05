@@ -73,7 +73,7 @@ export const CATEGORY_DEFINITIONS: CategoryDefinition[] = [
     icon: MapPin,
     definition: 'A designated parking or operating location where mobile vendors can set up and sell.',
     bestFor: ['Consistent daily locations', 'Vendor events and markets', 'Food truck parks'],
-    example: 'Book a vendor spot for the weekend, or list your lot to host vendors.',
+    example: 'Book a vendor spot for the weekend, or list your space to host vendors.',
     browseHref: '/search?category=vendor_lot',
     listHref: '/list',
   },

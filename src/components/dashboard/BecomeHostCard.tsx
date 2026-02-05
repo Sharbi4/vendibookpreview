@@ -46,7 +46,7 @@ const BecomeHostCard = () => {
           </Link>
           
           <Link 
-            to="/vendor-lots" 
+            to="/vendor-spaces" 
             className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors group"
           >
             <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center">
