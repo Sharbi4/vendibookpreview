@@ -17,6 +17,8 @@ import EnhancedPublicProfileHeader from '@/components/profile/EnhancedPublicProf
 import EnhancedPublicProfileStats from '@/components/profile/EnhancedPublicProfileStats';
 import EnhancedPublicProfileTabs from '@/components/profile/EnhancedPublicProfileTabs';
 import ShopPoliciesCard, { ShopPolicies } from '@/components/profile/ShopPoliciesCard';
+import StorefrontEventsSection from '@/components/profile/StorefrontEventsSection';
+import StorefrontGallerySection from '@/components/profile/StorefrontGallerySection';
 import SEO from '@/components/SEO';
 import { 
   useUserStats, 
@@ -27,6 +29,7 @@ import {
 import { useHostResponseTime } from '@/hooks/useHostResponseTime';
 import { useHostBadges } from '@/hooks/useHostBadges';
 import { useSoldListings } from '@/hooks/useSoldListings';
+import { useHostEvents } from '@/hooks/useHostEvents';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -149,6 +152,7 @@ const PublicProfile = () => {
   const { data: responseTimeData } = useHostResponseTime(actualUserId);
   const { data: completedBookings } = useCompletedBookingsCount(actualUserId);
   const { data: soldListings, isLoading: soldListingsLoading } = useSoldListings(actualUserId);
+  const { data: hostEvents, isLoading: eventsLoading } = useHostEvents(actualUserId);
   
   // Calculate host badges
   const hostBadges = useHostBadges(
@@ -357,13 +361,30 @@ const PublicProfile = () => {
           isSuperhost={hostBadges.isSuperhost}
         />
 
-        {/* Content Section */}
+        {/* Content Section - Mini Website Layout */}
         <motion.div 
           className="container py-6 space-y-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
+          {/* Events Section */}
+          {isHost && (
+            <StorefrontEventsSection 
+              events={hostEvents || []} 
+              isLoading={eventsLoading} 
+            />
+          )}
+
+          {/* Photo Gallery */}
+          {isHost && (
+            <StorefrontGallerySection 
+              listings={listings as Listing[] | undefined} 
+              isLoading={listingsLoading}
+              hostName={displayName}
+            />
+          )}
+
           {/* Shop Policies */}
           <ShopPoliciesCard 
             policies={profile.shop_policies || null} 
@@ -408,14 +429,15 @@ const PublicProfile = () => {
         />
       </main>
 
-      {/* Section 2: Mobile Sticky CTA */}
+      {/* Section 2: Mobile Sticky CTA with glass-premium styling */}
       {!isOwnProfile && isHost && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border shadow-lg z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 12px)' }}>
+        <div className="md:hidden fixed bottom-0 left-0 right-0 glass-premium border-t border-border/50 shadow-2xl z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 12px)' }}>
           <div className="flex gap-2 px-4 py-3 max-w-lg mx-auto">
             <Button 
+              variant="dark-shine"
               onClick={handleMessageHost} 
               disabled={isMessaging}
-              className="flex-1 h-11 rounded-lg font-medium"
+              className="flex-1 h-11 rounded-xl font-medium shadow-lg"
             >
               {isMessaging ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -427,7 +449,7 @@ const PublicProfile = () => {
             <Button 
               variant="outline" 
               onClick={handleViewListingsClick}
-              className="flex-1 h-11 rounded-lg font-medium"
+              className="flex-1 h-11 rounded-xl font-medium border-border/50"
             >
               View Listings ({stats?.totalListings || 0})
             </Button>
