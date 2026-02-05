@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { MapPin, Star, Calendar } from 'lucide-react';
+import { Star, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface EnhancedPublicProfileStatsProps {
@@ -18,16 +18,6 @@ const EnhancedPublicProfileStats = ({
   isHost 
 }: EnhancedPublicProfileStatsProps) => {
   const statItems = [
-    {
-      label: 'Listings',
-      value: stats?.totalListings || 0,
-      icon: MapPin,
-      color: 'from-violet-500 to-purple-600',
-      bgColor: 'bg-violet-50 dark:bg-violet-950/30',
-      iconBg: 'bg-violet-100 dark:bg-violet-900/50',
-      textColor: 'text-violet-700 dark:text-violet-300',
-      show: isHost,
-    },
     {
       label: 'Rating',
       value: stats?.averageRating ? stats.averageRating.toFixed(1) : '—',
