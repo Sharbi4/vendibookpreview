@@ -115,7 +115,7 @@ export const StepLocation: React.FC<StepLocationProps> = ({
           </p>
         </div>
 
-        {/* Structured Address Form - Airbnb Style */}
+        {/* Structured Address Form - Old School Style with Validation */}
         <div className="space-y-0">
           {/* Country/Region */}
           <FloatingLabelSelect
@@ -130,51 +130,71 @@ export const StepLocation: React.FC<StepLocationProps> = ({
             className="rounded-b-none"
           />
 
-          {/* Street Address */}
+          {/* Address Line 1 */}
           <FloatingLabelInput
-            label="Street address"
+            label="Address Line 1 *"
             value={formData.street_address}
             onChange={(value) => updateField('street_address', value)}
             placeholder="123 Main Street"
-            className="rounded-none border-t-0"
+            className={cn(
+              "rounded-none border-t-0",
+              !formData.street_address.trim() && "border-destructive/50"
+            )}
           />
 
-          {/* Apt, suite, unit */}
+          {/* Address Line 2 */}
           <FloatingLabelInput
-            label="Apt, suite, unit (if applicable)"
+            label="Address Line 2 (Optional)"
             value={formData.apt_suite}
             onChange={(value) => updateField('apt_suite', value)}
-            placeholder=""
+            placeholder="Apt, Suite, Unit, etc."
             className="rounded-none border-t-0"
           />
 
           {/* City */}
           <FloatingLabelInput
-            label="City / town"
+            label="City *"
             value={formData.city}
             onChange={(value) => updateField('city', value)}
             placeholder="Austin"
-            className="rounded-none border-t-0"
+            className={cn(
+              "rounded-none border-t-0",
+              !formData.city.trim() && "border-destructive/50"
+            )}
           />
 
-          {/* State */}
-          <FloatingLabelSelect
-            label="State / territory"
-            value={formData.state}
-            onChange={(value) => updateField('state', value)}
-            options={US_STATES.map(s => ({ value: s, label: s }))}
-            className="rounded-none border-t-0"
-          />
-
-          {/* ZIP Code */}
-          <FloatingLabelInput
-            label="ZIP code"
-            value={formData.zip_code}
-            onChange={(value) => updateField('zip_code', value)}
-            placeholder="78701"
-            className="rounded-t-none border-t-0"
-          />
+          {/* State & ZIP in 2-column layout */}
+          <div className="grid grid-cols-2">
+            <FloatingLabelSelect
+              label="State *"
+              value={formData.state}
+              onChange={(value) => updateField('state', value)}
+              options={US_STATES.map(s => ({ value: s, label: s }))}
+              className={cn(
+                "rounded-none border-t-0 rounded-bl-lg",
+                !formData.state && "border-destructive/50"
+              )}
+            />
+            <FloatingLabelInput
+              label="ZIP Code *"
+              value={formData.zip_code}
+              onChange={(value) => updateField('zip_code', value)}
+              placeholder="78701"
+              className={cn(
+                "rounded-none border-t-0 border-l-0 rounded-br-lg",
+                !formData.zip_code.trim() && "border-destructive/50"
+              )}
+            />
+          </div>
         </div>
+        
+        {/* Validation Message */}
+        {(!formData.street_address.trim() || !formData.city.trim() || !formData.state || !formData.zip_code.trim()) && (
+          <p className="text-sm text-destructive flex items-center gap-1.5">
+            <Info className="w-4 h-4" />
+            Please fill in all required address fields
+          </p>
+        )}
 
         {/* Map Preview with Google Geocoding */}
         <div className="pt-4 border-t border-border">
@@ -285,7 +305,7 @@ export const StepLocation: React.FC<StepLocationProps> = ({
             </p>
           </div>
 
-          {/* Airbnb-style Structured Address Form */}
+          {/* Full Structured Address Form - Old School Style with Validation */}
           <div className="max-w-xl space-y-0">
             <FloatingLabelSelect
               label="Country / region"
@@ -300,45 +320,68 @@ export const StepLocation: React.FC<StepLocationProps> = ({
             />
 
             <FloatingLabelInput
-              label="Street address"
+              label="Address Line 1 *"
               value={formData.street_address}
               onChange={(value) => updateField('street_address', value)}
               placeholder="123 Main Street"
-              className="rounded-none border-t-0"
+              className={cn(
+                "rounded-none border-t-0",
+                !formData.street_address.trim() && "border-destructive/50"
+              )}
             />
 
             <FloatingLabelInput
-              label="Apt, suite, unit (if applicable)"
+              label="Address Line 2 (Optional)"
               value={formData.apt_suite}
               onChange={(value) => updateField('apt_suite', value)}
-              placeholder=""
+              placeholder="Apt, Suite, Unit, etc."
               className="rounded-none border-t-0"
             />
 
             <FloatingLabelInput
-              label="City / town"
+              label="City *"
               value={formData.city}
               onChange={(value) => updateField('city', value)}
               placeholder="Austin"
-              className="rounded-none border-t-0"
+              className={cn(
+                "rounded-none border-t-0",
+                !formData.city.trim() && "border-destructive/50"
+              )}
             />
 
-            <FloatingLabelSelect
-              label="State / territory"
-              value={formData.state}
-              onChange={(value) => updateField('state', value)}
-              options={US_STATES.map(s => ({ value: s, label: s }))}
-              className="rounded-none border-t-0"
-            />
-
-            <FloatingLabelInput
-              label="ZIP code"
-              value={formData.zip_code}
-              onChange={(value) => updateField('zip_code', value)}
-              placeholder="78701"
-              className="rounded-t-none border-t-0"
-            />
+            <div className="grid grid-cols-2">
+              <FloatingLabelSelect
+                label="State *"
+                value={formData.state}
+                onChange={(value) => updateField('state', value)}
+                options={US_STATES.map(s => ({ value: s, label: s }))}
+                className={cn(
+                  "rounded-none border-t-0 rounded-bl-lg",
+                  !formData.state && "border-destructive/50"
+                )}
+              />
+              <FloatingLabelInput
+                label="ZIP Code *"
+                value={formData.zip_code}
+                onChange={(value) => updateField('zip_code', value)}
+                placeholder="78701"
+                className={cn(
+                  "rounded-none border-t-0 border-l-0 rounded-br-lg",
+                  !formData.zip_code.trim() && "border-destructive/50"
+                )}
+              />
+            </div>
           </div>
+          
+          {/* Validation Message */}
+          {(!formData.street_address.trim() || !formData.city.trim() || !formData.state || !formData.zip_code.trim()) && (
+            <div className="max-w-xl">
+              <p className="text-sm text-destructive flex items-center gap-1.5">
+                <Info className="w-4 h-4" />
+                Please fill in all required address fields
+              </p>
+            </div>
+          )}
 
           {/* Map Preview with Google Geocoding */}
           <div className="max-w-xl">
@@ -464,40 +507,77 @@ export const StepLocation: React.FC<StepLocationProps> = ({
                             {option.value === 'both' ? 'Pickup Location' : 'Location'} *
                           </Label>
                           
-                          {/* Structured Address Fields */}
+                          {/* Full Structured Address Fields - Old School Style */}
                           <div className="space-y-0">
                             <FloatingLabelInput
-                              label="City / town"
-                              value={formData.city}
-                              onChange={(value) => updateField('city', value)}
-                              placeholder="Austin"
-                              className="rounded-b-none"
+                              label="Address Line 1 *"
+                              value={formData.street_address}
+                              onChange={(value) => updateField('street_address', value)}
+                              placeholder="123 Main Street"
+                              className={cn(
+                                "rounded-b-none",
+                                !formData.street_address.trim() && "border-destructive/50"
+                              )}
                             />
-                            <FloatingLabelSelect
-                              label="State"
-                              value={formData.state}
-                              onChange={(value) => updateField('state', value)}
-                              options={US_STATES.map(s => ({ value: s, label: s }))}
+                            <FloatingLabelInput
+                              label="Address Line 2 (Optional)"
+                              value={formData.apt_suite}
+                              onChange={(value) => updateField('apt_suite', value)}
+                              placeholder="Apt, Suite, Unit, etc."
                               className="rounded-none border-t-0"
                             />
                             <FloatingLabelInput
-                              label="ZIP code"
-                              value={formData.zip_code}
-                              onChange={(value) => updateField('zip_code', value)}
-                              placeholder="78701"
-                              className="rounded-t-none border-t-0"
+                              label="City *"
+                              value={formData.city}
+                              onChange={(value) => updateField('city', value)}
+                              placeholder="Austin"
+                              className={cn(
+                                "rounded-none border-t-0",
+                                !formData.city.trim() && "border-destructive/50"
+                              )}
                             />
+                            <div className="grid grid-cols-2">
+                              <FloatingLabelSelect
+                                label="State *"
+                                value={formData.state}
+                                onChange={(value) => updateField('state', value)}
+                                options={US_STATES.map(s => ({ value: s, label: s }))}
+                                className={cn(
+                                  "rounded-none border-t-0 rounded-bl-lg",
+                                  !formData.state && "border-destructive/50"
+                                )}
+                              />
+                              <FloatingLabelInput
+                                label="ZIP Code *"
+                                value={formData.zip_code}
+                                onChange={(value) => updateField('zip_code', value)}
+                                placeholder="78701"
+                                className={cn(
+                                  "rounded-none border-t-0 border-l-0 rounded-br-lg",
+                                  !formData.zip_code.trim() && "border-destructive/50"
+                                )}
+                              />
+                            </div>
                           </div>
+                          
+                          {/* Validation Messages */}
+                          {(!formData.street_address.trim() || !formData.city.trim() || !formData.state || !formData.zip_code.trim()) && (
+                            <p className="text-xs text-destructive flex items-center gap-1">
+                              <Info className="w-3 h-3" />
+                              Please fill in all required address fields
+                            </p>
+                          )}
                           
                           {/* Map Preview */}
                           <LocationMapPreview
                             city={formData.city}
                             state={formData.state}
                             zipCode={formData.zip_code}
+                            streetAddress={formData.street_address}
                             showPreciseLocation={false}
                             onCoordinatesChange={setLocationCoordinates}
                             onValidationChange={setIsLocationValid}
-                            className="h-40"
+                            className="h-48"
                           />
                           
                           <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -535,40 +615,77 @@ export const StepLocation: React.FC<StepLocationProps> = ({
                               Your Base Location *
                             </Label>
                             
-                            {/* Structured Address Fields */}
+                            {/* Full Structured Address Fields - Old School Style */}
                             <div className="space-y-0">
                               <FloatingLabelInput
-                                label="City / town"
-                                value={formData.city}
-                                onChange={(value) => updateField('city', value)}
-                                placeholder="Austin"
-                                className="rounded-b-none"
+                                label="Address Line 1 *"
+                                value={formData.street_address}
+                                onChange={(value) => updateField('street_address', value)}
+                                placeholder="123 Main Street"
+                                className={cn(
+                                  "rounded-b-none",
+                                  !formData.street_address.trim() && "border-destructive/50"
+                                )}
                               />
-                              <FloatingLabelSelect
-                                label="State"
-                                value={formData.state}
-                                onChange={(value) => updateField('state', value)}
-                                options={US_STATES.map(s => ({ value: s, label: s }))}
+                              <FloatingLabelInput
+                                label="Address Line 2 (Optional)"
+                                value={formData.apt_suite}
+                                onChange={(value) => updateField('apt_suite', value)}
+                                placeholder="Apt, Suite, Unit, etc."
                                 className="rounded-none border-t-0"
                               />
                               <FloatingLabelInput
-                                label="ZIP code"
-                                value={formData.zip_code}
-                                onChange={(value) => updateField('zip_code', value)}
-                                placeholder="78701"
-                                className="rounded-t-none border-t-0"
+                                label="City *"
+                                value={formData.city}
+                                onChange={(value) => updateField('city', value)}
+                                placeholder="Austin"
+                                className={cn(
+                                  "rounded-none border-t-0",
+                                  !formData.city.trim() && "border-destructive/50"
+                                )}
                               />
+                              <div className="grid grid-cols-2">
+                                <FloatingLabelSelect
+                                  label="State *"
+                                  value={formData.state}
+                                  onChange={(value) => updateField('state', value)}
+                                  options={US_STATES.map(s => ({ value: s, label: s }))}
+                                  className={cn(
+                                    "rounded-none border-t-0 rounded-bl-lg",
+                                    !formData.state && "border-destructive/50"
+                                  )}
+                                />
+                                <FloatingLabelInput
+                                  label="ZIP Code *"
+                                  value={formData.zip_code}
+                                  onChange={(value) => updateField('zip_code', value)}
+                                  placeholder="78701"
+                                  className={cn(
+                                    "rounded-none border-t-0 border-l-0 rounded-br-lg",
+                                    !formData.zip_code.trim() && "border-destructive/50"
+                                  )}
+                                />
+                              </div>
                             </div>
+                            
+                            {/* Validation Messages */}
+                            {(!formData.street_address.trim() || !formData.city.trim() || !formData.state || !formData.zip_code.trim()) && (
+                              <p className="text-xs text-destructive flex items-center gap-1">
+                                <Info className="w-3 h-3" />
+                                Please fill in all required address fields
+                              </p>
+                            )}
                             
                             {/* Map Preview */}
                             <LocationMapPreview
                               city={formData.city}
                               state={formData.state}
                               zipCode={formData.zip_code}
+                              streetAddress={formData.street_address}
                               showPreciseLocation={false}
                               onCoordinatesChange={setLocationCoordinates}
                               onValidationChange={setIsLocationValid}
-                              className="h-40"
+                              className="h-48"
                             />
                           </div>
                         )}
