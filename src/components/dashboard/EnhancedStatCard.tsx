@@ -56,7 +56,7 @@ const EnhancedStatCard = ({
   const isNumeric = typeof value === 'number' || !isNaN(parseInt(value.toString()));
 
   return (
-    <Card className="border-0 shadow-lg hover:shadow-xl transition-all group">
+    <Card className="border border-border shadow-md hover:shadow-lg transition-all group">
       <CardContent className="p-5">
         {/* Icon with container */}
         <div className="flex items-start justify-between mb-3">

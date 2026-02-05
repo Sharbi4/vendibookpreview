@@ -118,7 +118,7 @@ export const GetBookedFasterCard = () => {
   }
 
   return (
-    <Card className="border-0 shadow-xl rounded-2xl">
+    <Card className="border border-border shadow-md rounded-2xl">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/30 transition-colors rounded-t-2xl"

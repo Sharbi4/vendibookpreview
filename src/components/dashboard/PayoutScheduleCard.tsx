@@ -52,7 +52,7 @@ export const PayoutScheduleCard = ({
   const recentPastPayouts = pastPayouts.slice(0, 5);
 
   return (
-    <Card className="border-0 shadow-xl overflow-hidden">
+    <Card className="border border-border shadow-md overflow-hidden">
       <CardHeader className="pb-3 bg-muted/30 border-b border-border">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold flex items-center gap-2">

@@ -51,7 +51,7 @@ export const AIInsightsCard = () => {
   };
 
   return (
-    <Card className="border-0 shadow-xl overflow-hidden">
+    <Card className="border border-border shadow-md overflow-hidden">
       <CardHeader className="pb-3 bg-muted/30 border-b border-border">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">

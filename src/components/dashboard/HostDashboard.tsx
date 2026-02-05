@@ -231,7 +231,7 @@ const HostDashboard = () => {
             <div className="lg:col-span-2 space-y-6">
               {/* Priority: Bookings & Offers - Only show if there are pending requests */}
               {userType !== 'seller' && bookingStats.pending > 0 && (
-                <div className="rounded-2xl border border-border/60 bg-card p-4">
+                <div className="rounded-2xl border border-border bg-card p-4">
                   <BookingRequestsSection />
                 </div>
               )}
@@ -315,7 +315,7 @@ const HostDashboard = () => {
       {activeTab === 'bookings' && (
         <div className="space-y-6">
           {userType !== 'seller' && bookingStats.pending > 0 && (
-            <div className="p-4 rounded-2xl bg-card border border-border/60">
+            <div className="p-4 rounded-2xl bg-card border border-border">
               <BookingRequestsSection />
             </div>
           )}

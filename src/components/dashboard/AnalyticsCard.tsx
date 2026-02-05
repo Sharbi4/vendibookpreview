@@ -35,7 +35,7 @@ export const AnalyticsCard = ({ analytics }: AnalyticsCardProps) => {
   };
 
   return (
-    <Card className="border-0 shadow-lg bg-gradient-to-br from-card to-card/80">
+    <Card className="border border-border shadow-md bg-gradient-to-br from-card to-card/80">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-lg">
           <div className="icon-gradient-container">

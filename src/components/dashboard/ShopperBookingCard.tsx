@@ -268,7 +268,7 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
     }
   };
   return (
-    <div className="overflow-hidden rounded-xl border-0 shadow-xl bg-card">
+    <div className="overflow-hidden rounded-xl border border-border shadow-md bg-card">
       <div className="flex flex-col sm:flex-row">
         {/* Image */}
         <div className="sm:w-40 h-32 sm:h-auto flex-shrink-0">

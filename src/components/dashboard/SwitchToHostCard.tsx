@@ -7,7 +7,7 @@ const SwitchToHostCard = () => {
   const navigate = useNavigate();
 
   return (
-    <Card className="border-0 shadow-xl">
+    <Card className="border border-border shadow-md">
       <CardContent className="p-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">

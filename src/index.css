@@ -49,7 +49,7 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 85%;
+    --border: 0 0% 75%;
     --input: 0 0% 85%;
     --ring: 14 100% 57%;
 
@@ -72,7 +72,7 @@
     --shadow-card-hover: 0 4px 12px rgb(0 0 0 / 0.08);
 
     /* Dashboard Unified Tokens */
-    --dashboard-border: 0 0% 82%;
+    --dashboard-border: 0 0% 70%;
     --dashboard-card-bg: 0 0% 100%;
     --dashboard-section-gap: 1.5rem;
     
@@ -115,8 +115,8 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 95%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
+    --border: 0 0% 30%;
+    --input: 0 0% 30%;
     --ring: 14 100% 57%;
     
     --sidebar-background: 0 0% 10%;

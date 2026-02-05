@@ -16,7 +16,7 @@ interface PathCardProps {
 
 const PathCard = ({ title, subtitle, description, features, icon: Icon, href, ctaText, variant }: PathCardProps) => (
   <Link to={href} className="block h-full">
-    <Card className="border-0 shadow-xl hover:shadow-2xl transition-all group cursor-pointer h-full bg-card">
+    <Card className="border border-border shadow-md hover:shadow-lg transition-all group cursor-pointer h-full bg-card">
       <CardContent className="p-6 md:p-8 flex flex-col h-full">
         {/* Icon */}
         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-105 transition-transform shadow-lg ${
@@ -65,7 +65,7 @@ const HostOnboardingWizard = () => {
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
-      <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-muted/20">
+      <Card className="border border-border shadow-md bg-gradient-to-br from-card to-muted/20">
         <CardContent className="p-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-5">
             <Building2 className="h-4 w-4" />

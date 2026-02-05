@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 
 const BecomeHostCard = () => {
   return (
-    <Card className="border-0 shadow-xl overflow-hidden relative">
+    <Card className="border border-border shadow-md overflow-hidden relative">
       {/* Decorative gradient blob */}
       <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-primary/20 to-emerald-500/20 rounded-full blur-3xl" />
       

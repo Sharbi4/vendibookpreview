@@ -95,7 +95,7 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
       {/* Revenue Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Earnings */}
-        <div className="rounded-2xl bg-card p-5 border-0 shadow-lg hover:shadow-xl transition-all">
+        <div className="rounded-2xl bg-card p-5 border border-border shadow-md hover:shadow-lg transition-all">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-2xl bg-[#635bff]/10 flex items-center justify-center">
               <DollarSign className="h-5 w-5 text-[#635bff]" />
@@ -117,7 +117,7 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
         </div>
 
         {/* Paid Out */}
-        <div className="rounded-2xl bg-card p-5 border-0 shadow-lg hover:shadow-xl transition-all">
+        <div className="rounded-2xl bg-card p-5 border border-border shadow-md hover:shadow-lg transition-all">
           <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-3">
             <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           </div>
@@ -128,7 +128,7 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
         </div>
 
         {/* Pending Payout */}
-        <div className="rounded-2xl bg-card p-5 border-0 shadow-lg hover:shadow-xl transition-all">
+        <div className="rounded-2xl bg-card p-5 border border-border shadow-md hover:shadow-lg transition-all">
           <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
             <Clock className="h-5 w-5 text-primary" />
           </div>
@@ -139,7 +139,7 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
         </div>
 
         {/* Average Order Value */}
-        <div className="rounded-2xl bg-card p-5 border-0 shadow-lg hover:shadow-xl transition-all">
+        <div className="rounded-2xl bg-card p-5 border border-border shadow-md hover:shadow-lg transition-all">
           <div className="w-10 h-10 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-3">
             <Wallet className="h-5 w-5 text-purple-600" />
           </div>
@@ -153,7 +153,7 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
       {/* Charts Row */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Monthly Revenue Chart */}
-        <Card className="border-0 shadow-xl">
+        <Card className="border border-border shadow-md">
           <CardHeader className="pb-2 bg-muted/30 border-b border-border">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
@@ -216,7 +216,7 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
         </Card>
 
         {/* Revenue vs Payouts Bar Chart */}
-        <Card className="border-0 shadow-xl">
+        <Card className="border border-border shadow-md">
           <CardHeader className="pb-2 bg-muted/30 border-b border-border">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
@@ -290,7 +290,7 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
       />
 
       {/* Payout History */}
-      <Card className="border-0 shadow-xl">
+      <Card className="border border-border shadow-md">
         <CardHeader className="pb-3 bg-muted/30 border-b border-border">
           <CardTitle className="text-base font-semibold flex items-center justify-between">
             <div className="flex items-center gap-2">

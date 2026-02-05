@@ -53,7 +53,7 @@ const DraftsSection = ({ drafts, onDelete }: DraftsSectionProps) => {
         {drafts.slice(0, 3).map((draft) => (
           <div 
             key={draft.id}
-            className="flex items-center gap-3 p-2 rounded-lg bg-card/80 border border-border/50 hover:border-primary/30 transition-all group"
+            className="flex items-center gap-3 p-2 rounded-lg bg-card/80 border border-border hover:border-primary/30 transition-all group"
           >
             {/* Thumbnail */}
             <div className="w-12 h-12 rounded-md overflow-hidden flex-shrink-0 bg-muted">

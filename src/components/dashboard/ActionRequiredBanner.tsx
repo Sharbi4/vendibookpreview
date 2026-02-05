@@ -48,7 +48,7 @@ const ActionRequiredBanner = ({ pendingRequests, pendingOffers, draftListings = 
   const primaryAction = actionItems[0];
 
   return (
-    <Card className="border-0 shadow-xl bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
+    <Card className="border border-amber-300 dark:border-amber-700 shadow-md bg-amber-50 dark:bg-amber-950/20">
       <CardContent className="p-4">
         <div className="flex items-center gap-4">
           <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-amber-500 text-white shadow-lg flex items-center justify-center">

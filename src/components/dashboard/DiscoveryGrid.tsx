@@ -12,7 +12,7 @@ interface CategoryCardProps {
 
 const CategoryCard = ({ title, icon: Icon, href, description }: CategoryCardProps) => (
   <Link to={href}>
-    <Card className="border-0 shadow-lg hover:shadow-xl transition-all group cursor-pointer h-full">
+    <Card className="border border-border shadow-md hover:shadow-lg transition-all group cursor-pointer h-full">
       <CardContent className="p-5">
         <div className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-lg">
           <Icon className="h-6 w-6" />
@@ -55,7 +55,7 @@ const categories = [
 ];
 
 export const DiscoveryHeroCard = () => (
-  <Card className="border-0 shadow-xl">
+  <Card className="border border-border shadow-md">
     <CardContent className="p-8 text-center">
       <div className="w-16 h-16 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center mx-auto mb-5 shadow-lg">
         <Search className="h-8 w-8" />

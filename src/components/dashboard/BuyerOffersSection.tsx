@@ -265,7 +265,7 @@ export const BuyerOffersSection = () => {
 
   if (isLoading) {
     return (
-      <Card className="border-0 shadow-xl">
+      <Card className="border border-border shadow-md">
         <CardContent className="p-8">
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -280,7 +280,7 @@ export const BuyerOffersSection = () => {
   }
 
   return (
-    <Card className="border-0 shadow-xl">
+    <Card className="border border-border shadow-md">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">

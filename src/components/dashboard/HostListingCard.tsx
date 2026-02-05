@@ -155,7 +155,7 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
 
   return (
     <>
-      <div className="rounded-2xl border-0 shadow-xl bg-card overflow-hidden hover:shadow-2xl transition-all">
+      <div className="rounded-2xl border border-border shadow-md bg-card overflow-hidden hover:shadow-lg transition-all">
         <div className="flex flex-col sm:flex-row">
           {/* Image */}
           <div className="sm:w-48 h-40 sm:h-auto flex-shrink-0">

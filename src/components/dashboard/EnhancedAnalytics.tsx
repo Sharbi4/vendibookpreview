@@ -161,7 +161,7 @@ export const EnhancedAnalytics = ({ analytics, stats, bookingStats }: EnhancedAn
       {/* Charts Row */}
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Views Over Time Chart */}
-        <Card className="lg:col-span-2 border-0 shadow-lg bg-gradient-to-br from-card to-card/80">
+        <Card className="lg:col-span-2 border border-border shadow-md bg-gradient-to-br from-card to-card/80">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <Eye className="h-4 w-4 text-primary" />
@@ -218,7 +218,7 @@ export const EnhancedAnalytics = ({ analytics, stats, bookingStats }: EnhancedAn
         </Card>
 
         {/* Booking Status Pie Chart */}
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-card to-card/80">
+        <Card className="border border-border shadow-md bg-gradient-to-br from-card to-card/80">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <Users className="h-4 w-4 text-primary" />
@@ -276,7 +276,7 @@ export const EnhancedAnalytics = ({ analytics, stats, bookingStats }: EnhancedAn
       {/* Top Listings & Weekly Performance */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Top Listings */}
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-card to-card/80">
+        <Card className="border border-border shadow-md bg-gradient-to-br from-card to-card/80">
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <ArrowUpRight className="h-4 w-4 text-primary" />
@@ -332,7 +332,7 @@ export const EnhancedAnalytics = ({ analytics, stats, bookingStats }: EnhancedAn
         </Card>
 
         {/* Weekly Performance Bar Chart */}
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-card to-card/80">
+        <Card className="border border-border shadow-md bg-gradient-to-br from-card to-card/80">
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <Calendar className="h-4 w-4 text-primary" />
