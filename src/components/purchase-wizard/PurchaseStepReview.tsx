@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import WhatsIncluded from '@/components/shared/WhatsIncluded';
 import WhatHappensNext, { getSalePickupSteps, getSaleFreightSteps, getSaleLocalDeliverySteps } from '@/components/shared/WhatHappensNext';
 import { EscrowInfoPopover, FeesInfoPopover } from '@/components/shared/InfoPopover';
+import type { BuyerInfo } from './PurchaseStepInfo';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 
@@ -20,10 +21,7 @@ interface PurchaseStepReviewProps {
   totalPrice: number;
   fulfillmentSelected: FulfillmentSelection;
   deliveryAddress: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
+  buyerInfo: BuyerInfo;
   // Freight details
   hasValidEstimate: boolean;
   estimate: any;
@@ -50,10 +48,7 @@ const PurchaseStepReview = ({
   totalPrice,
   fulfillmentSelected,
   deliveryAddress,
-  name,
-  email,
-  phone,
-  address,
+  buyerInfo,
   hasValidEstimate,
   estimate,
   isFreightSellerPaid = false,
@@ -69,6 +64,12 @@ const PurchaseStepReview = ({
   onEditInfo,
   onSubmit,
 }: PurchaseStepReviewProps) => {
+  // Compute display values from buyerInfo
+  const displayName = buyerInfo.businessName 
+    ? `${buyerInfo.businessName} (${buyerInfo.firstName} ${buyerInfo.lastName})`
+    : `${buyerInfo.firstName} ${buyerInfo.lastName}`;
+  const displayAddress = `${buyerInfo.address1}${buyerInfo.address2 ? ', ' + buyerInfo.address2 : ''}, ${buyerInfo.city}, ${buyerInfo.state} ${buyerInfo.zipCode}`;
+  
   // Get the right timeline based on fulfillment
   const getTimelineSteps = () => {
     if (fulfillmentSelected === 'vendibook_freight') return getSaleFreightSteps();
@@ -182,19 +183,19 @@ const PurchaseStepReview = ({
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
             <span className="text-muted-foreground">Name</span>
-            <p className="font-medium text-foreground">{name}</p>
+            <p className="font-medium text-foreground">{displayName}</p>
           </div>
           <div>
             <span className="text-muted-foreground">Email</span>
-            <p className="font-medium text-foreground truncate">{email}</p>
+            <p className="font-medium text-foreground truncate">{buyerInfo.email}</p>
           </div>
           <div>
             <span className="text-muted-foreground">Phone</span>
-            <p className="font-medium text-foreground">{phone}</p>
+            <p className="font-medium text-foreground">{buyerInfo.phone}</p>
           </div>
-          <div>
+          <div className="col-span-2">
             <span className="text-muted-foreground">Address</span>
-            <p className="font-medium text-foreground truncate">{address}</p>
+            <p className="font-medium text-foreground">{displayAddress}</p>
           </div>
         </div>
       </div>
