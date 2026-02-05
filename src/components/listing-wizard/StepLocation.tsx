@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { MapPin, Truck, Package, Info, Building2, ChevronDown, Home } from 'lucide-react';
+import { MapPin, Truck, Package, Info, Building2 } from 'lucide-react';
 import { ListingFormData, FulfillmentType } from '@/types/listing';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
-import { LocationSearchInput } from '@/components/search/LocationSearchInput';
 import { LocationMapPreview } from './LocationMapPreview';
 import {
   Select,
@@ -100,8 +99,7 @@ export const StepLocation: React.FC<StepLocationProps> = ({
   isCategoryStaticLocation,
   onToggleStaticLocation,
 }) => {
-  // Track selected coordinates for location inputs (not persisted, just for UI validation)
-  const [pickupCoordinates, setPickupCoordinates] = useState<[number, number] | null>(null);
+  // Track validation state for location (from map preview)
   const [isLocationValid, setIsLocationValid] = useState(false);
   const [locationCoordinates, setLocationCoordinates] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -461,25 +459,50 @@ export const StepLocation: React.FC<StepLocationProps> = ({
                     {/* Inline Fields - Pickup */}
                     {showPickupFields && (
                       <div className="px-4 pb-4 pt-2 border-t border-border/50 space-y-4 animate-in fade-in-50 duration-200">
-                        <div className="space-y-2">
-                          <Label htmlFor="pickup_location_text" className="text-sm font-medium">
+                        <div className="space-y-4">
+                          <Label className="text-sm font-medium">
                             {option.value === 'both' ? 'Pickup Location' : 'Location'} *
                           </Label>
-                          <LocationSearchInput
-                            value={formData.pickup_location_text}
-                            onChange={(value) => updateField('pickup_location_text', value)}
-                            onLocationSelect={(location) => {
-                              if (location) {
-                                setPickupCoordinates(location.coordinates);
-                              } else {
-                                setPickupCoordinates(null);
-                              }
-                            }}
-                            selectedCoordinates={pickupCoordinates}
-                            placeholder="City, State (e.g., Austin, TX)"
+                          
+                          {/* Structured Address Fields */}
+                          <div className="space-y-0">
+                            <FloatingLabelInput
+                              label="City / town"
+                              value={formData.city}
+                              onChange={(value) => updateField('city', value)}
+                              placeholder="Austin"
+                              className="rounded-b-none"
+                            />
+                            <FloatingLabelSelect
+                              label="State"
+                              value={formData.state}
+                              onChange={(value) => updateField('state', value)}
+                              options={US_STATES.map(s => ({ value: s, label: s }))}
+                              className="rounded-none border-t-0"
+                            />
+                            <FloatingLabelInput
+                              label="ZIP code"
+                              value={formData.zip_code}
+                              onChange={(value) => updateField('zip_code', value)}
+                              placeholder="78701"
+                              className="rounded-t-none border-t-0"
+                            />
+                          </div>
+                          
+                          {/* Map Preview */}
+                          <LocationMapPreview
+                            city={formData.city}
+                            state={formData.state}
+                            zipCode={formData.zip_code}
+                            showPreciseLocation={false}
+                            onCoordinatesChange={setLocationCoordinates}
+                            onValidationChange={setIsLocationValid}
+                            className="h-40"
                           />
-                          <p className="text-xs text-muted-foreground">
-                            General area only. Exact address shared after booking.
+                          
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Info className="w-3 h-3" />
+                            Approximate area shown. Exact address shared after booking.
                           </p>
                         </div>
 
@@ -507,22 +530,45 @@ export const StepLocation: React.FC<StepLocationProps> = ({
                       )}>
                         {/* Base Location for Delivery Only */}
                         {option.value === 'delivery' && (
-                          <div className="space-y-2">
-                            <Label htmlFor="delivery_base_location" className="text-sm font-medium">
+                          <div className="space-y-4">
+                            <Label className="text-sm font-medium">
                               Your Base Location *
                             </Label>
-                            <LocationSearchInput
-                              value={formData.pickup_location_text}
-                              onChange={(value) => updateField('pickup_location_text', value)}
-                              onLocationSelect={(location) => {
-                                if (location) {
-                                  setPickupCoordinates(location.coordinates);
-                                } else {
-                                  setPickupCoordinates(null);
-                                }
-                              }}
-                              selectedCoordinates={pickupCoordinates}
-                              placeholder="City, State (e.g., Austin, TX)"
+                            
+                            {/* Structured Address Fields */}
+                            <div className="space-y-0">
+                              <FloatingLabelInput
+                                label="City / town"
+                                value={formData.city}
+                                onChange={(value) => updateField('city', value)}
+                                placeholder="Austin"
+                                className="rounded-b-none"
+                              />
+                              <FloatingLabelSelect
+                                label="State"
+                                value={formData.state}
+                                onChange={(value) => updateField('state', value)}
+                                options={US_STATES.map(s => ({ value: s, label: s }))}
+                                className="rounded-none border-t-0"
+                              />
+                              <FloatingLabelInput
+                                label="ZIP code"
+                                value={formData.zip_code}
+                                onChange={(value) => updateField('zip_code', value)}
+                                placeholder="78701"
+                                className="rounded-t-none border-t-0"
+                              />
+                            </div>
+                            
+                            {/* Map Preview */}
+                            <LocationMapPreview
+                              city={formData.city}
+                              state={formData.state}
+                              zipCode={formData.zip_code}
+                              showPreciseLocation={false}
+                              onCoordinatesChange={setLocationCoordinates}
+                              onValidationChange={setIsLocationValid}
+                              className="h-40"
                             />
                           </div>
                         )}

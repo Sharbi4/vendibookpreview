@@ -172,7 +172,12 @@ export const useListingForm = () => {
             formData.zip_code.trim().length > 0;
           return hasValidAddress && formData.access_instructions.trim().length > 0;
         }
-        return !!formData.fulfillment_type && formData.pickup_location_text.trim().length > 0;
+        // For mobile assets, validate city, state, zip (not full street address)
+        const hasValidMobileLocation = 
+          formData.city.trim().length > 0 &&
+          formData.state.trim().length > 0 &&
+          formData.zip_code.trim().length > 0;
+        return !!formData.fulfillment_type && hasValidMobileLocation;
       case 5:
         // Documents step - always valid (documents are optional)
         return true;
