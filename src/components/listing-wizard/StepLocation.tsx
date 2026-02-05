@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { LocationSearchInput } from '@/components/search/LocationSearchInput';
+import { LocationMapPreview } from './LocationMapPreview';
 import {
   Select,
   SelectContent,
@@ -101,6 +102,8 @@ export const StepLocation: React.FC<StepLocationProps> = ({
 }) => {
   // Track selected coordinates for location inputs (not persisted, just for UI validation)
   const [pickupCoordinates, setPickupCoordinates] = useState<[number, number] | null>(null);
+  const [isLocationValid, setIsLocationValid] = useState(false);
+  const [locationCoordinates, setLocationCoordinates] = useState<{ lat: number; lng: number } | null>(null);
 
   // Static location - Airbnb-style structured address form
   if (isStaticLocation) {
@@ -175,35 +178,35 @@ export const StepLocation: React.FC<StepLocationProps> = ({
           />
         </div>
 
-        {/* Show Precise Location Toggle */}
+        {/* Map Preview with Google Geocoding */}
         <div className="pt-4 border-t border-border">
+          <h4 className="font-medium text-foreground mb-4">Location Preview</h4>
+          <LocationMapPreview
+            city={formData.city}
+            state={formData.state}
+            zipCode={formData.zip_code}
+            streetAddress={formData.street_address}
+            showPreciseLocation={formData.show_precise_location}
+            onCoordinatesChange={setLocationCoordinates}
+            onValidationChange={setIsLocationValid}
+            className="h-48"
+          />
+        </div>
+
+        {/* Show Precise Location Toggle */}
+        <div className="pt-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <h4 className="font-medium text-foreground">Show your listing's precise location</h4>
               <p className="text-sm text-muted-foreground mt-1">
                 Make it clear to guests where your place is located. We'll only share your address after
-                they've made a reservation.{' '}
-                <button className="underline font-medium text-foreground">Learn more</button>
+                they've made a reservation.
               </p>
             </div>
             <Switch
               checked={formData.show_precise_location}
               onCheckedChange={(checked) => updateField('show_precise_location', checked)}
             />
-          </div>
-
-          {/* Map Preview Placeholder */}
-          <div className="mt-4 rounded-xl overflow-hidden border border-border bg-muted/30 h-48 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-2">
-                <Home className="w-6 h-6 text-primary" />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {formData.show_precise_location 
-                  ? "We'll show your exact location."
-                  : "We'll share your approximate location."}
-              </p>
-            </div>
           </div>
         </div>
 
@@ -339,8 +342,23 @@ export const StepLocation: React.FC<StepLocationProps> = ({
             />
           </div>
 
+          {/* Map Preview with Google Geocoding */}
+          <div className="max-w-xl">
+            <h4 className="font-medium text-foreground mb-4">Location Preview</h4>
+            <LocationMapPreview
+              city={formData.city}
+              state={formData.state}
+              zipCode={formData.zip_code}
+              streetAddress={formData.street_address}
+              showPreciseLocation={formData.show_precise_location}
+              onCoordinatesChange={setLocationCoordinates}
+              onValidationChange={setIsLocationValid}
+              className="h-48"
+            />
+          </div>
+
           {/* Show Precise Location Toggle */}
-          <div className="pt-4 border-t border-border max-w-xl">
+          <div className="pt-4 max-w-xl">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <h4 className="font-medium text-foreground">Show your listing's precise location</h4>
