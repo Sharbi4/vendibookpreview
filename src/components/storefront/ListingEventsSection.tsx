@@ -163,34 +163,51 @@ export const ListingEventsSection = ({ listingId, hostId, isOwner = false }: Lis
 
   return (
     <section className="py-8 border-t border-border">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <CalendarDays className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-semibold text-foreground">Events & Updates</h2>
+      {/* Glass header card */}
+      <div className="glass-premium rounded-2xl p-6 mb-6 border border-border/50 relative overflow-hidden">
+        {/* Premium gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/10 pointer-events-none" />
+        
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center icon-gradient-container">
+              <CalendarDays className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">Events & Updates</h2>
+              <p className="text-sm text-muted-foreground">Stay in the loop with this venue</p>
+            </div>
+          </div>
+          {canManage && (
+            <Button
+              variant="dark-shine"
+              size="sm"
+              onClick={() => {
+                setEditingEvent(null);
+                setIsDialogOpen(true);
+              }}
+              className="shadow-lg"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Add Event
+            </Button>
+          )}
         </div>
-        {canManage && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setEditingEvent(null);
-              setIsDialogOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Add Event
-          </Button>
-        )}
       </div>
 
       {isLoading ? (
         <div className="text-center py-8">
-          <p className="text-muted-foreground animate-pulse">Loading events...</p>
+          <div className="glass-card rounded-xl p-8 inline-block">
+            <p className="text-muted-foreground animate-pulse">Loading events...</p>
+          </div>
         </div>
       ) : events.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="py-8 text-center">
-            <CalendarDays className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+        <div className="glass-card rounded-2xl border border-dashed border-border/50 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-muted/20 to-transparent pointer-events-none" />
+          <CardContent className="py-12 text-center relative z-10">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+              <CalendarDays className="h-8 w-8 text-muted-foreground" />
+            </div>
             <p className="text-muted-foreground mb-4">No upcoming events or announcements</p>
             {canManage && (
               <Button
@@ -199,13 +216,14 @@ export const ListingEventsSection = ({ listingId, hostId, isOwner = false }: Lis
                   setEditingEvent(null);
                   setIsDialogOpen(true);
                 }}
+                className="border-primary/30 hover:border-primary/50"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Add Your First Event
               </Button>
             )}
           </CardContent>
-        </Card>
+        </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {events.map((event) => {
@@ -213,48 +231,66 @@ export const ListingEventsSection = ({ listingId, hostId, isOwner = false }: Lis
             const badgeInfo = eventTypeBadges[event.event_type] || eventTypeBadges.event;
 
             return (
-              <Card
+              <div
                 key={event.id}
                 className={cn(
-                  "overflow-hidden transition-shadow hover:shadow-md",
-                  event.event_type === 'announcement' && "border-primary/30 bg-primary/5"
+                  "glass-card rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl border border-border/50 group relative",
+                  event.event_type === 'announcement' && "border-primary/40"
                 )}
               >
-                <CardContent className="p-4">
+                {/* Hover glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                
+                <CardContent className="p-5 relative z-10">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <div className={cn(
+                        "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105",
+                        event.event_type === 'announcement' 
+                          ? "bg-gradient-to-br from-primary/20 to-primary/10" 
+                          : "bg-primary/10"
+                      )}>
                         <Icon className="h-5 w-5 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant={badgeInfo.variant} className="text-xs">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge 
+                            variant={badgeInfo.variant} 
+                            className={cn(
+                              "text-xs font-medium",
+                              event.event_type === 'announcement' && "bg-primary/10 text-primary border-primary/30"
+                            )}
+                          >
                             {badgeInfo.label}
                           </Badge>
                           {event.is_recurring && (
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="outline" className="text-xs bg-accent/50">
                               Recurring
                             </Badge>
                           )}
                         </div>
-                        <h3 className="font-medium text-foreground truncate">{event.title}</h3>
+                        <h3 className="font-semibold text-foreground truncate">{event.title}</h3>
                         {event.description && (
                           <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
                             {event.description}
                           </p>
                         )}
                         {event.event_date && (
-                          <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-                            <CalendarDays className="h-3 w-3" />
-                            <span>{format(new Date(event.event_date), 'EEE, MMM d, yyyy')}</span>
+                          <div className="flex items-center gap-1 mt-3 text-xs">
+                            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50">
+                              <CalendarDays className="h-3 w-3 text-primary" />
+                              <span className="text-foreground font-medium">
+                                {format(new Date(event.event_date), 'EEE, MMM d')}
+                              </span>
+                            </div>
                             {event.start_time && (
-                              <>
-                                <Clock className="h-3 w-3 ml-2" />
-                                <span>
+                              <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50">
+                                <Clock className="h-3 w-3 text-primary" />
+                                <span className="text-foreground font-medium">
                                   {event.start_time.slice(0, 5)}
                                   {event.end_time && ` - ${event.end_time.slice(0, 5)}`}
                                 </span>
-                              </>
+                              </div>
                             )}
                           </div>
                         )}
@@ -265,7 +301,7 @@ export const ListingEventsSection = ({ listingId, hostId, isOwner = false }: Lis
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
+                          className="h-8 w-8 hover:bg-primary/10"
                           onClick={() => handleEdit(event)}
                         >
                           <Edit className="h-4 w-4" />
@@ -273,7 +309,7 @@ export const ListingEventsSection = ({ listingId, hostId, isOwner = false }: Lis
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                           onClick={() => deleteMutation.mutate(event.id)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -282,7 +318,7 @@ export const ListingEventsSection = ({ listingId, hostId, isOwner = false }: Lis
                     )}
                   </div>
                 </CardContent>
-              </Card>
+              </div>
             );
           })}
         </div>
