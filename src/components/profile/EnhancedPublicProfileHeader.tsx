@@ -1,9 +1,10 @@
 import { format } from 'date-fns';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useRef } from 'react';
 import { 
   Calendar, Clock, Building2, Zap, Star, Share2, Flag, 
   ShieldAlert, MapPin, MessageCircle, MoreHorizontal, Eye,
-  ShieldCheck, Loader2
+  ShieldCheck, Loader2, Camera, ImageIcon, X, Pencil
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,6 +22,9 @@ import { cn } from '@/lib/utils';
 import { getPublicDisplayName, getDisplayInitials } from '@/lib/displayName';
 import TopRatedBadge from './TopRatedBadge';
 import AboutSection from './AboutSection';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface PublicProfileData {
   id: string;
@@ -81,10 +85,97 @@ const EnhancedPublicProfileHeader = ({
   isSuperhost,
 }: EnhancedPublicProfileHeaderProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const displayName = getPublicDisplayName(profile);
   const initials = getDisplayInitials(profile);
   const memberSince = format(new Date(profile.created_at), 'MMMM yyyy');
+  
+  // Upload state for own profile
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isUploadingHeader, setIsUploadingHeader] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const headerInputRef = useRef<HTMLInputElement>(null);
 
+  const uploadImage = async (file: File, type: 'avatar' | 'header') => {
+    const isAvatar = type === 'avatar';
+    const setUploading = isAvatar ? setIsUploadingAvatar : setIsUploadingHeader;
+    
+    setUploading(true);
+    
+    try {
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Please select an image file');
+      }
+      
+      const maxSize = isAvatar ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
+      if (file.size > maxSize) {
+        throw new Error(`File too large. Maximum size is ${isAvatar ? '5MB' : '10MB'}`);
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${profile.id}/${type}-${Date.now()}.${fileExt}`;
+      const bucket = isAvatar ? 'avatars' : 'headers';
+
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(fileName);
+
+      const updateField = isAvatar ? 'avatar_url' : 'header_image_url';
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ [updateField]: publicUrl })
+        .eq('id', profile.id);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: 'Image updated',
+        description: `Your ${isAvatar ? 'profile picture' : 'header image'} has been updated.`,
+      });
+
+      // Refresh profile data
+      queryClient.invalidateQueries({ queryKey: ['public-profile'] });
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({
+        title: 'Upload failed',
+        description: error.message || 'Failed to upload image.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeHeader = async () => {
+    setIsUploadingHeader(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ header_image_url: null })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+
+      toast({ title: 'Header removed' });
+      queryClient.invalidateQueries({ queryKey: ['public-profile'] });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: 'Failed to remove header image.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploadingHeader(false);
+    }
+  };
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -121,9 +212,9 @@ const EnhancedPublicProfileHeader = ({
       animate="visible"
       variants={containerVariants}
     >
-      {/* Enhanced glass-premium header with uploadable image support */}
+      {/* Enhanced header with uploadable image support */}
       {profile.header_image_url ? (
-        <div className="absolute inset-0 h-44 md:h-56">
+        <div className="absolute inset-0 h-44 md:h-56 group">
           <img 
             src={profile.header_image_url} 
             alt="" 
@@ -132,9 +223,47 @@ const EnhancedPublicProfileHeader = ({
           {/* Glass overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-card" />
           <div className="absolute inset-0 backdrop-blur-[2px]" style={{ maskImage: 'linear-gradient(to bottom, transparent 60%, black 100%)' }} />
+          
+          {/* Edit overlay for own profile */}
+          {isOwnProfile && (
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="h-9"
+                onClick={() => headerInputRef.current?.click()}
+                disabled={isUploadingHeader}
+              >
+                {isUploadingHeader ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Camera className="h-4 w-4 mr-1.5" />
+                    Change Header
+                  </>
+                )}
+              </Button>
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                className="h-9"
+                onClick={removeHeader}
+                disabled={isUploadingHeader}
+              >
+                <X className="h-4 w-4 mr-1.5" />
+                Remove
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
-        <div className="absolute inset-0 h-44 md:h-56 overflow-hidden pointer-events-none">
+        <div 
+          className={cn(
+            "absolute inset-0 h-44 md:h-56 overflow-hidden",
+            isOwnProfile ? "cursor-pointer group" : "pointer-events-none"
+          )}
+          onClick={isOwnProfile ? () => headerInputRef.current?.click() : undefined}
+        >
           {/* Premium glass gradient background */}
           <div className="absolute inset-0 bg-gradient-to-br from-foreground/5 via-card to-primary/10" />
           
@@ -149,7 +278,7 @@ const EnhancedPublicProfileHeader = ({
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div 
-            className="absolute -bottom-10 -left-10 w-60 h-60 bg-gradient-to-tr from-primary/10 to-amber-500/10 rounded-full blur-2xl"
+            className="absolute -bottom-10 -left-10 w-60 h-60 bg-gradient-to-tr from-primary/10 to-accent/10 rounded-full blur-2xl"
             animate={{ 
               scale: [1.2, 1, 1.2],
               opacity: [0.3, 0.5, 0.3],
@@ -168,27 +297,78 @@ const EnhancedPublicProfileHeader = ({
           
           {/* Subtle grid pattern overlay */}
           <div className="absolute inset-0 bg-dot-pattern opacity-30" />
+          
+          {/* Upload prompt for own profile */}
+          {isOwnProfile && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+              {isUploadingHeader ? (
+                <Loader2 className="h-6 w-6 animate-spin text-white" />
+              ) : (
+                <>
+                  <ImageIcon className="h-8 w-8 mb-2 text-white/80" />
+                  <span className="text-sm font-medium text-white">Add header image</span>
+                  <span className="text-xs text-white/70">Recommended: 1200 x 400px</span>
+                </>
+              )}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Glass card container for profile info */}
+      {/* Hidden file inputs */}
+      <input
+        ref={headerInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) uploadImage(file, 'header');
+        }}
+      />
+      <input
+        ref={avatarInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) uploadImage(file, 'avatar');
+        }}
+      />
+
+      {/* Glass card container for profile info - STRONGER BORDERS */}
       <div className="container pt-28 md:pt-36 pb-6 md:pb-8 relative">
-        <div className="glass-premium rounded-2xl p-6 md:p-8 border border-border/50 shadow-lg">
+        <div className="glass-premium rounded-2xl p-6 md:p-8 border-2 border-border shadow-xl">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-5">
-          {/* Enhanced Avatar */}
+          {/* Enhanced Avatar with upload support for own profile */}
           <motion.div 
             variants={itemVariants}
             className="relative"
             whileHover={{ scale: 1.05 }}
             transition={{ type: 'spring', stiffness: 400, damping: 17 }}
           >
-            <div className="relative">
-              <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-background shadow-xl ring-2 ring-primary/20">
+            <div 
+              className={cn("relative", isOwnProfile && "cursor-pointer group")}
+              onClick={isOwnProfile ? () => avatarInputRef.current?.click() : undefined}
+            >
+              <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-background shadow-xl ring-2 ring-border">
                 <AvatarImage src={profile.avatar_url || undefined} alt={displayName} />
                 <AvatarFallback className="text-xl md:text-2xl font-bold bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
                   {initials}
                 </AvatarFallback>
               </Avatar>
+              
+              {/* Upload overlay for own profile */}
+              {isOwnProfile && (
+                <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  {isUploadingAvatar ? (
+                    <Loader2 className="h-6 w-6 text-white animate-spin" />
+                  ) : (
+                    <Camera className="h-6 w-6 text-white" />
+                  )}
+                </div>
+              )}
               
               {/* Verified badge overlay - positioned at bottom-right with proper offset */}
               {profile.identity_verified && (

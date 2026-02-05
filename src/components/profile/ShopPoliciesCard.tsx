@@ -199,7 +199,7 @@ const ShopPoliciesCard = ({ policies, isOwnProfile, onUpdate }: ShopPoliciesCard
 
   return (
     <>
-    <div className="glass-premium rounded-2xl p-5 border border-border/50 shadow-lg relative overflow-hidden">
+    <div className="glass-premium rounded-2xl p-5 border-2 border-border shadow-lg relative overflow-hidden">
       {/* Premium gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
       

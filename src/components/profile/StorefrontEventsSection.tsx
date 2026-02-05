@@ -59,7 +59,7 @@ const StorefrontEventsSection = ({ events, isLoading }: StorefrontEventsSectionP
       transition={{ delay: 0.2 }}
       className="relative"
     >
-      <div className="glass-premium rounded-2xl p-6 border border-border/50 relative overflow-hidden">
+      <div className="glass-premium rounded-2xl p-6 border-2 border-border relative overflow-hidden">
         {/* Decorative gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-purple-500/5 pointer-events-none" />
         
