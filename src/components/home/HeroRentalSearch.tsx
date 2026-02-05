@@ -18,7 +18,7 @@ const HeroRentalSearch = () => {
 
   const handleSearch = () => {
     const params = new URLSearchParams();
-    if (location) params.set('location', location);
+    if (location) params.set('q', location);
     if (date) params.set('start', format(date, 'yyyy-MM-dd'));
     if (assetType !== 'all') params.set('category', assetType);
     params.set('mode', 'rent');

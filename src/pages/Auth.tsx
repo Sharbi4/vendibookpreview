@@ -29,7 +29,7 @@ const Auth = () => {
 
   useEffect(() => {
     if (user && !isLoading) {
-      navigate(redirectUrl !== '/' ? redirectUrl : '/activation');
+      navigate(redirectUrl !== '/' ? redirectUrl : '/dashboard');
     }
   }, [user, isLoading, navigate, redirectUrl]);
 

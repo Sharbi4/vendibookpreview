@@ -110,6 +110,7 @@ export const useHostListings = () => {
     total: listings.length,
     published: listings.filter(l => l.status === 'published').length,
     drafts: listings.filter(l => l.status === 'draft').length,
+    paused: listings.filter(l => l.status === 'paused').length,
     rentals: listings.filter(l => l.mode === 'rent').length,
     sales: listings.filter(l => l.mode === 'sale').length,
   };

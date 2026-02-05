@@ -287,11 +287,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
         } else {
           trackLoginSuccess('email');
           trackGA4Login('email');
-          toast({
-            title: 'Welcome back!',
-            description: 'You have signed in successfully.',
-          });
-          navigate(redirectUrl !== '/' ? redirectUrl : '/activation');
+          navigate(redirectUrl !== '/' ? redirectUrl : '/dashboard');
         }
       }
     } finally {

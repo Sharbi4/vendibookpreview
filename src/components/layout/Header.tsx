@@ -423,19 +423,13 @@ const Header = () => {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="rounded-full gap-2 pl-1.5">
-                  <Avatar className="h-7 w-7">
+                <Button variant="outline" className="rounded-full gap-2 pl-1.5 pr-3">
+                  <Avatar className="h-8 w-8 ring-2 ring-primary/20">
                     <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || 'User'} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-sm font-semibold">
                       {(profile?.full_name || user.email || 'U').charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="max-w-[100px] truncate">
-                    {profile?.full_name || user.email?.split('@')[0]}
-                  </span>
-                  {!isVerified && (
-                    <Shield className="h-3 w-3 text-amber-500" />
-                  )}
                   <ChevronDown className="h-3.5 w-3.5 opacity-60" />
                 </Button>
               </DropdownMenuTrigger>
