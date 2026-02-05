@@ -92,7 +92,8 @@ const EnhancedPublicProfileStats = ({
               transition: { type: 'spring', stiffness: 400, damping: 17 } 
             }}
             className={cn(
-              'relative overflow-hidden text-center p-4 md:p-5 rounded-2xl border shadow-sm cursor-default',
+              'relative overflow-hidden text-center p-4 md:p-5 rounded-2xl border shadow-lg cursor-default',
+              'glass-premium',
               item.bgColor,
               'border-border/50'
             )}
