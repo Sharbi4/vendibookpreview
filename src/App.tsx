@@ -88,6 +88,7 @@ const HostListings = lazy(() => import("./pages/HostListings"));
 const HostReporting = lazy(() => import("./pages/HostReporting"));
 const HowItWorksHost = lazy(() => import("./pages/HowItWorksHost"));
 const HowItWorksSeller = lazy(() => import("./pages/HowItWorksSeller"));
+const BecomeAHost = lazy(() => import("./pages/BecomeAHost"));
 
 // City landing pages - direct imports since they're lightweight wrappers
 import {
@@ -161,6 +162,7 @@ const AnimatedRoutes = () => {
           <Route path="/how-it-works" element={<PageTransition><HowItWorks /></PageTransition>} />
           <Route path="/how-it-works-host" element={<PageTransition><HowItWorksHost /></PageTransition>} />
           <Route path="/how-it-works-seller" element={<PageTransition><HowItWorksSeller /></PageTransition>} />
+          <Route path="/become-a-host" element={<PageTransition><BecomeAHost /></PageTransition>} />
           <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
           <Route path="/verify-identity" element={<PageTransition><IdentityVerification /></PageTransition>} />
           <Route path="/verification-complete" element={<PageTransition><VerificationComplete /></PageTransition>} />
