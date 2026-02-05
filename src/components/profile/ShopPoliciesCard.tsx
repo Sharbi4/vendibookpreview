@@ -92,7 +92,7 @@ const ShopPoliciesCard = ({ policies, isOwnProfile, onUpdate }: ShopPoliciesCard
 
       const { error } = await supabase
         .from('profiles')
-        .update({ shop_policies: cleanedPolicies })
+        .update({ shop_policies: cleanedPolicies as unknown as import('@/integrations/supabase/types').Json })
         .eq('id', user.id);
 
       if (error) throw error;
