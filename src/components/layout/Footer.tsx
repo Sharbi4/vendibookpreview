@@ -30,7 +30,7 @@ const footerSections: FooterSection[] = [
       { label: 'Food Trucks', href: '/search?category=food_truck' },
       { label: 'Food Trailers', href: '/search?category=food_trailer' },
       { label: 'Ghost Kitchens', href: '/search?category=ghost_kitchen' },
-      { label: 'Vendor Lots', href: '/search?category=vendor_lot' },
+      { label: 'Vendor Spaces', href: '/search?category=vendor_lot' },
     ],
   },
   {

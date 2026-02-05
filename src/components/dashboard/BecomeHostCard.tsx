@@ -52,7 +52,7 @@ const BecomeHostCard = () => {
             <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center">
               <MapPin className="h-5 w-5" />
             </div>
-            <span className="text-sm font-medium text-foreground flex-1">List a Vendor Lot</span>
+            <span className="text-sm font-medium text-foreground flex-1">List a Vendor Space</span>
             <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
           </Link>
         </div>

@@ -44,7 +44,7 @@ const VendorLotsSection = () => {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 bg-accent/20 text-accent-foreground px-4 py-2 rounded-full text-sm font-medium mb-4">
             <MapPin className="h-4 w-4" />
-            Vendor Lot Owners
+            Vendor Space Owners
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
             Got a Lot? List It.
@@ -113,7 +113,7 @@ const VendorLotsSection = () => {
                 className="w-full border-primary/30 hover:bg-gradient-to-r hover:from-primary/10 hover:to-amber-500/10"
                 onClick={() => navigate('/vendor-lots')}
               >
-                Browse Vendor Lots
+                Browse Vendor Spaces
               </Button>
             </div>
 

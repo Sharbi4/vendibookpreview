@@ -47,7 +47,7 @@ const categories = [
     description: 'Licensed commercial kitchens' 
   },
   { 
-    title: 'Vendor Lots', 
+    title: 'Vendor Spaces', 
     icon: MapPin, 
     href: '/search?category=vendor_lot', 
     description: 'Prime vending locations' 

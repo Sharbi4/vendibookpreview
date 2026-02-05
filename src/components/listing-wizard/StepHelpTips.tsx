@@ -22,7 +22,7 @@ const STEP_TIPS: Record<number, TipContent> = {
     tips: [
       'Rentals earn recurring income; sales are one-time transactions',
       'Food trucks and trailers can be rented or sold',
-      'Ghost kitchens and vendor lots are typically rentals',
+      'Ghost kitchens and Vendor Spaces are typically rentals',
     ],
     proTip: 'Not sure? Rentals often generate more total revenue over time.',
   },

@@ -1,6 +1,6 @@
 export type ListingMode = 'rent' | 'sale';
 
-export type ListingCategory = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_lot';
+export type ListingCategory = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_space';
 
 export type FulfillmentType = 'pickup' | 'delivery' | 'both' | 'on_site';
 
@@ -28,18 +28,19 @@ export type GhostKitchenSubcategory =
   | 'prep_kitchen' 
   | 'shared_commissary';
 
-export type VendorLotSubcategory = 
+export type VendorSpaceSubcategory = 
   | 'festival_ground' 
   | 'farmers_market' 
   | 'brewery_patio' 
   | 'private_event' 
-  | 'street_corner';
+  | 'street_corner'
+  | 'food_truck_park';
 
 export type ListingSubcategory = 
   | FoodTruckSubcategory 
   | FoodTrailerSubcategory 
   | GhostKitchenSubcategory 
-  | VendorLotSubcategory;
+  | VendorSpaceSubcategory;
 
 // Subcategory options mapped by parent category
 export const SUBCATEGORIES_BY_CATEGORY: Record<ListingCategory, { 
@@ -68,12 +69,13 @@ export const SUBCATEGORIES_BY_CATEGORY: Record<ListingCategory, {
     { value: 'prep_kitchen', label: 'Prep Kitchen', description: 'Prep-only space for off-site cooking' },
     { value: 'shared_commissary', label: 'Shared Commissary', description: 'Multi-vendor shared kitchen space' },
   ],
-  vendor_lot: [
+  vendor_space: [
     { value: 'festival_ground', label: 'Festival Ground', description: 'High-traffic event and festival spots' },
     { value: 'farmers_market', label: 'Farmers Market Spot', description: 'Weekly market vendor locations' },
     { value: 'brewery_patio', label: 'Brewery/Bar Patio', description: 'Partnered taproom or bar location' },
     { value: 'private_event', label: 'Private Event Space', description: 'Bookable for private functions' },
     { value: 'street_corner', label: 'Street Corner Spot', description: 'Permitted street vending locations' },
+    { value: 'food_truck_park', label: 'Food Truck Park', description: 'Dedicated park with multiple vendor slots and shared amenities' },
   ],
 };
 
@@ -97,12 +99,13 @@ export const SUBCATEGORY_LABELS: Record<string, string> = {
   bakery_kitchen: 'Bakery Kitchen',
   prep_kitchen: 'Prep Kitchen',
   shared_commissary: 'Shared Commissary',
-  // Vendor Lot
+  // Vendor Space
   festival_ground: 'Festival Ground',
   farmers_market: 'Farmers Market Spot',
   brewery_patio: 'Brewery/Bar Patio',
   private_event: 'Private Event Space',
   street_corner: 'Street Corner Spot',
+  food_truck_park: 'Food Truck Park',
 };
 
 export interface Listing {
@@ -150,6 +153,8 @@ export interface Listing {
   // Payment method preferences (for sales)
   accept_cash_payment?: boolean;
   accept_card_payment?: boolean;
+  // Multi-slot capacity for Vendor Spaces
+  total_slots?: number;
 }
 
 // Category-specific amenities
@@ -333,7 +338,7 @@ export const AMENITIES_BY_CATEGORY: Record<ListingCategory, { label: string; ite
       ],
     },
   ],
-  vendor_lot: [
+  vendor_space: [
     {
       label: 'Hookups',
       items: [
@@ -468,7 +473,7 @@ export const LISTING_TAGS: Record<ListingCategory, { general: string[]; rent: st
       'Accepts Offers',
     ],
   },
-  vendor_lot: {
+  vendor_space: {
     general: [
       'Prime Location',
       'High Visibility',
@@ -477,6 +482,7 @@ export const LISTING_TAGS: Record<ListingCategory, { general: string[]; rent: st
       'Long-Term Spots',
       'First-Time Vendor Friendly',
       'Event Ready',
+      'Multiple Slots Available',
     ],
     rent: [
       'Daily Spot',
@@ -571,13 +577,15 @@ export interface ListingFormData {
   proof_notary_enabled: boolean;
   // Featured Listing add-on (for both rentals and sales)
   featured_enabled: boolean;
+  // Multi-slot capacity for Vendor Spaces (default 1)
+  total_slots: number;
 }
 
 export const CATEGORY_LABELS: Record<ListingCategory, string> = {
   food_truck: 'Food Truck',
   food_trailer: 'Food Trailer',
   ghost_kitchen: 'Ghost Kitchen',
-  vendor_lot: 'Vendor Lot',
+  vendor_space: 'Vendor Space',
 };
 
 export const MODE_LABELS: Record<ListingMode, string> = {
@@ -597,5 +605,5 @@ export const isMobileAsset = (category: ListingCategory | null): boolean => {
 };
 
 export const isStaticLocation = (category: ListingCategory | null): boolean => {
-  return category === 'ghost_kitchen' || category === 'vendor_lot';
+  return category === 'ghost_kitchen' || category === 'vendor_space';
 };

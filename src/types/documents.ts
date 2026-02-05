@@ -103,7 +103,7 @@ export const DEFAULT_DOCUMENTS_BY_CATEGORY: Record<ListingCategory, DocumentType
     'business_license',
     'health_department_permit',
   ],
-  vendor_lot: [
+  vendor_space: [
     'business_license',
     'commercial_liability_insurance',
     'work_history_proof',

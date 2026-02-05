@@ -20,7 +20,7 @@ interface CategoryConfig {
 const CATEGORIES: CategoryConfig[] = [
   {
     category: 'vendor_lot',
-    title: 'Vendor Lots',
+    title: 'Vendor Spaces',
     icon: <MapPin className="h-5 w-5 text-white" />,
     description: 'Parking lots & prime spots available hourly, daily, or monthly for your food business',
   },

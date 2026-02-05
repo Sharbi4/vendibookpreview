@@ -56,14 +56,20 @@ const ListingsSections = () => {
     return map;
   }, [hostProfiles]);
 
-  // Split listings by mode
+  // Split listings by mode and category
   const saleListings = useMemo(() => 
     allListings.filter(l => l.mode === 'sale').slice(0, 6), 
     [allListings]
   );
   
   const rentListings = useMemo(() => 
-    allListings.filter(l => l.mode === 'rent').slice(0, 6), 
+    allListings.filter(l => l.mode === 'rent' && l.category !== 'vendor_space').slice(0, 6), 
+    [allListings]
+  );
+
+  // Featured Vendor Spaces - vendor_space category listings
+  const vendorSpaceListings = useMemo(() => 
+    allListings.filter(l => l.category === 'vendor_space').slice(0, 6), 
     [allListings]
   );
 
@@ -109,6 +115,37 @@ const ListingsSections = () => {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {rentListings.map((listing) => (
+                <ListingCard 
+                  key={listing.id} 
+                  listing={listing} 
+                  hostVerified={hostVerificationMap[listing.host_id] ?? false}
+                  compact
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Featured Vendor Spaces Section */}
+        {vendorSpaceListings.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Featured Vendor Spaces</h2>
+                <p className="text-sm text-muted-foreground mt-1">Find the perfect location or food truck park for your business</p>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate('/vendor-lots')}
+                className="text-primary font-medium hover:bg-primary/5"
+              >
+                View all
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              {vendorSpaceListings.map((listing) => (
                 <ListingCard 
                   key={listing.id} 
                   listing={listing} 

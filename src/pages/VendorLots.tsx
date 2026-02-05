@@ -99,15 +99,15 @@ const VendorLots = () => {
   // Get Google Maps API key
   const { apiKey: mapToken, isLoading: mapLoading, error: mapError } = useGoogleMapsToken();
 
-  // Fetch vendor lot listings
+  // Fetch vendor space listings
   const { data: listings = [], isLoading } = useQuery({
-    queryKey: ['vendor-lot-listings'],
+    queryKey: ['vendor-space-listings'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('listings')
         .select('*')
         .eq('status', 'published')
-        .eq('category', 'vendor_lot')
+        .eq('category', 'vendor_space')
         .order('published_at', { ascending: false });
 
       if (error) throw error;
@@ -120,7 +120,7 @@ const VendorLots = () => {
 
   // Fetch host verification status
   const { data: hostProfiles = [] } = useQuery({
-    queryKey: ['vendor-lot-hosts', hostIds],
+    queryKey: ['vendor-space-hosts', hostIds],
     queryFn: async () => {
       if (hostIds.length === 0) return [];
       const { data, error } = await supabase
@@ -135,7 +135,7 @@ const VendorLots = () => {
 
   // Fetch reviews for ratings
   const { data: reviews = [] } = useQuery({
-    queryKey: ['vendor-lot-reviews', listings.map(l => l.id)],
+    queryKey: ['vendor-space-reviews', listings.map(l => l.id)],
     queryFn: async () => {
       if (listings.length === 0) return [];
       const { data, error } = await supabase
@@ -342,10 +342,10 @@ const VendorLots = () => {
         <div className="text-center py-16 bg-secondary/30 rounded-2xl">
           <div className="text-5xl mb-4">🏞️</div>
           <h3 className="text-xl font-semibold text-foreground mb-2">
-            No Vendor Lots Found
+            No Vendor Spaces Found
           </h3>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            No vendor lots match your current filters. Try adjusting your criteria or check back later for new listings.
+            No Vendor Spaces match your current filters. Try adjusting your criteria or check back later for new listings.
           </p>
           <Button onClick={clearFilters} variant="outline">
             Clear All Filters
@@ -358,7 +358,7 @@ const VendorLots = () => {
   return (
     <>
       <SEO
-        title="Vendor Lots for Rent | Find Parking for Food Trucks & Mobile Businesses"
+        title="Vendor Spaces for Rent | Find Parking for Food Trucks & Mobile Businesses"
         description="Discover prime parking lots and vendor spots available hourly, daily, or monthly for your food truck, food trailer, or mobile business. Secure your perfect location today with VendiBook."
       />
       <div className="min-h-screen flex flex-col bg-background">
@@ -372,7 +372,7 @@ const VendorLots = () => {
                 <div>
                   <Badge className="mb-4 bg-primary/20 text-primary border-primary/30">
                     <MapPin className="h-3 w-3 mr-1" />
-                    Vendor Lots
+                    Vendor Spaces
                   </Badge>
                   <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
                     Find Your Perfect Spot
@@ -440,7 +440,7 @@ const VendorLots = () => {
                 <div className="flex items-center gap-2">
                   <p className="text-muted-foreground">
                     <span className="font-semibold text-foreground">{filteredListings.length}</span>{' '}
-                    vendor lot{filteredListings.length !== 1 ? 's' : ''} available
+                    Vendor Space{filteredListings.length !== 1 ? 's' : ''} available
                   </p>
                   {activeFiltersCount > 0 && (
                     <Badge variant="secondary" className="ml-2">
@@ -467,7 +467,7 @@ const VendorLots = () => {
                       <SheetHeader>
                         <SheetTitle>Filters</SheetTitle>
                         <SheetDescription>
-                          Narrow down vendor lots by your preferences
+                          Narrow down Vendor Spaces by your preferences
                         </SheetDescription>
                       </SheetHeader>
                       <div className="mt-6">
@@ -578,10 +578,10 @@ const VendorLots = () => {
             <div className="container">
               <div className="text-center mb-12">
                 <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-                  How Vendor Lots Work
+                  How Vendor Spaces Work
                 </h2>
                 <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Finding and booking a vendor lot is simple. Here's how to get started.
+                  Finding and booking a Vendor Space is simple. Here's how to get started.
                 </p>
               </div>
 

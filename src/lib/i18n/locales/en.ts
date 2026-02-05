@@ -61,7 +61,7 @@ export default {
 
   // Header
   header: {
-    searchPlaceholder: 'Search food trucks, trailers, ghost kitchens, or equipment',
+    searchPlaceholder: 'Search food trucks, trailers, ghost kitchens or vendor spaces',
     mobileSearchPlaceholder: 'Search food trucks, trailers...',
     listening: 'Listening...',
     recent: 'Recent',
@@ -71,12 +71,12 @@ export default {
   // Homepage Hero
   hero: {
     title: 'The marketplace for mobile food businesses',
-    subtitle: 'Rent, buy, or list food trucks, trailers, ghost kitchens, and vendor lots — all in one place.',
+    subtitle: 'Rent, buy, or list food trucks, trailers, ghost kitchens, and Vendor Spaces — all in one place.',
     findAssets: 'Find Assets',
     listYours: 'List Yours',
     walkthrough: {
       step1Title: 'Find',
-      step1Description: 'Browse food trucks, trailers, ghost kitchens, and vendor lots near you.',
+      step1Description: 'Browse food trucks, trailers, ghost kitchens, and Vendor Spaces near you.',
       step2Title: 'Buy or Rent',
       step2Description: 'Secure your asset with verified payments and buyer protection.',
       step3Title: 'List',
@@ -94,7 +94,7 @@ export default {
     food_truck: 'Food Truck',
     food_trailer: 'Food Trailer',
     ghost_kitchen: 'Ghost Kitchen',
-    vendor_lot: 'Vendor Lot',
+    vendor_lot: 'Vendor Space',
   },
 
   // Listing Detail
@@ -347,7 +347,7 @@ export default {
     forRenters: 'For Renters & Buyers',
     forHosts: 'For Hosts & Sellers',
     step1: 'Browse & Discover',
-    step1Desc: 'Search our marketplace for food trucks, trailers, ghost kitchens, and vendor lots in your area.',
+    step1Desc: 'Search our marketplace for food trucks, trailers, ghost kitchens, and Vendor Spaces in your area.',
     step2: 'Book or Buy',
     step2Desc: 'Reserve your dates or make an offer. Pay securely through our platform with buyer protection.',
     step3: 'Start Your Business',

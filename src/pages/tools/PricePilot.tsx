@@ -258,7 +258,7 @@ const PricePilot = () => {
                             <SelectItem value="food_truck">Food Truck</SelectItem>
                             <SelectItem value="food_trailer">Food Trailer</SelectItem>
                             <SelectItem value="ghost_kitchen">Ghost Kitchen</SelectItem>
-                            <SelectItem value="vendor_lot">Vendor Lot</SelectItem>
+                            <SelectItem value="vendor_lot">Vendor Space</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

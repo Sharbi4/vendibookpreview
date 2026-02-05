@@ -33,7 +33,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   food_truck: 'Food Truck',
   food_trailer: 'Food Trailer',
   ghost_kitchen: 'Ghost Kitchen',
-  vendor_lot: 'Vendor Lot',
+  vendor_lot: 'Vendor Space',
 };
 
 const DraftsSection = ({ drafts, onDelete }: DraftsSectionProps) => {

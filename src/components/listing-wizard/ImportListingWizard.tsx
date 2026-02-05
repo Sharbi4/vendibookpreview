@@ -101,7 +101,7 @@ const CATEGORY_OPTIONS: { value: ListingCategory; label: string }[] = [
   { value: 'food_truck', label: 'Food Truck' },
   { value: 'food_trailer', label: 'Food Trailer' },
   { value: 'ghost_kitchen', label: 'Ghost Kitchen' },
-  { value: 'vendor_lot', label: 'Vendor Lot' },
+  { value: 'vendor_lot', label: 'Vendor Space' },
 ];
 
 const MODE_OPTIONS: { value: ListingMode; label: string }[] = [
@@ -285,7 +285,7 @@ export const ImportListingWizard: React.FC = () => {
     } else if (lowerText.includes('ghost kitchen') || lowerText.includes('commercial kitchen') || lowerText.includes('cloud kitchen')) {
       extracted.category = 'ghost_kitchen';
       extracted.autoFilledFields?.add('category');
-    } else if (lowerText.includes('vendor lot') || lowerText.includes('parking spot') || lowerText.includes('vending spot')) {
+    } else if (lowerText.includes('vendor lot') || lowerText.includes('vendor space') || lowerText.includes('parking spot') || lowerText.includes('vending spot')) {
       extracted.category = 'vendor_lot';
       extracted.autoFilledFields?.add('category');
     }

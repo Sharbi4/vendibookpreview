@@ -35,7 +35,7 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
   
   const pageDescription = categoryLabel
     ? `Browse ${categoryLabel.toLowerCase()}s ${modeLabel.toLowerCase()} in ${city.name}, ${city.state}. Find the perfect ${categoryLabel.toLowerCase()} for your business.`
-    : `Rent or buy food trucks, food trailers, ghost kitchens, and vendor lots in ${city.name}, ${city.state}. ${city.tagline}.`;
+    : `Rent or buy food trucks, food trailers, ghost kitchens, and Vendor Spaces in ${city.name}, ${city.state}. ${city.tagline}.`;
 
   const canonicalPath = category 
     ? `/${city.slug}/${category.replace('_', '-')}${mode ? `/${mode}` : ''}`
@@ -77,7 +77,7 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
     },
     { 
       key: 'vendor_lot', 
-      label: 'Vendor Lots', 
+      label: 'Vendor Spaces', 
       icon: MapPin, 
       description: 'Prime vending locations',
       count: Math.floor(city.stats.activeListings * 0.15),

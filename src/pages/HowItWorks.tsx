@@ -106,7 +106,7 @@ const buyerSteps = [
     step: 1,
     icon: Search,
     title: "Find Your Asset",
-    description: "Browse verified food trucks, trailers, commercial kitchens, and vendor lots nationwide.",
+    description: "Browse verified food trucks, trailers, commercial kitchens, and Vendor Spaces nationwide.",
   },
   {
     step: 2,
@@ -145,7 +145,7 @@ const sellerPathOptions = [
   },
   {
     icon: MapPin,
-    title: "List a Vendor Lot",
+    title: "List a Vendor Space",
     description: "Turn your parking lot or space into passive income for food vendors.",
     link: "/vendor-lots",
     features: ["Hourly or daily bookings", "Define amenities & rules", "Zero hassle setup"],
@@ -194,7 +194,7 @@ const HowItWorks = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
         title="How It Works | Vendibook - Buy, Sell & Rent Mobile Food Assets"
-        description="Learn how to buy, sell, or rent food trucks, trailers, commercial kitchens, and vendor lots on Vendibook."
+        description="Learn how to buy, sell, or rent food trucks, trailers, commercial kitchens, and Vendor Spaces on Vendibook."
       />
       <Header />
 
@@ -235,7 +235,7 @@ const HowItWorks = () => {
                   </div>
                   <h2 className="text-xl font-bold text-foreground mb-2">Buy or Rent</h2>
                   <p className="text-sm text-muted-foreground">
-                    Find food trucks, trailers, kitchens, and vendor lots to purchase or rent.
+                    Find food trucks, trailers, kitchens, and Vendor Spaces to purchase or rent.
                   </p>
                 </motion.button>
 

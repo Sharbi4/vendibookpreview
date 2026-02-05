@@ -148,7 +148,7 @@ const Blog = () => {
               Ready to Start Your Mobile Food Business?
             </h2>
             <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-              Browse food trucks, trailers, ghost kitchens, and vendor lots on Vendibook.
+              Browse food trucks, trailers, ghost kitchens, and Vendor Spaces on Vendibook.
             </p>
             <div className="flex gap-3 justify-center flex-wrap">
               <Button size="lg" asChild>

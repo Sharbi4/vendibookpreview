@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Loader2, MapPin, Truck, Building, Info, UserCheck, CheckCircle2 } from 'lucide-react';
+import { Calendar, Loader2, MapPin, Truck, Building, Info, UserCheck, CheckCircle2, Users, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -47,6 +47,8 @@ interface BookingFormProps {
   status: 'draft' | 'published' | 'paused';
   // Instant Book
   instantBook?: boolean;
+  // Multi-slot capacity for Vendor Spaces
+  totalSlots?: number;
 }
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
@@ -70,6 +72,7 @@ const BookingForm = ({
   hoursOfAccess,
   status,
   instantBook = false,
+  totalSlots = 1,
 }: BookingFormProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -82,6 +85,8 @@ const BookingForm = ({
   // Determine if this is a mobile asset or static location
   const isMobileAsset = category === 'food_truck' || category === 'food_trailer';
   const isStaticLocation = category === 'ghost_kitchen' || category === 'vendor_lot';
+  const isVendorSpace = category === 'vendor_lot';
+  const hasMultipleSlots = isVendorSpace && totalSlots > 1;
   
   // Determine available fulfillment options for mobile assets
   const getAvailableFulfillmentOptions = (): FulfillmentSelection[] => {
@@ -108,6 +113,9 @@ const BookingForm = ({
   const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>(defaultFulfillment);
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryInstructionsInput, setDeliveryInstructionsInput] = useState('');
+  
+  // Slots state for Vendor Spaces
+  const [slotsRequested, setSlotsRequested] = useState(1);
 
   // Fetch saved profile data on mount
   useEffect(() => {
@@ -286,6 +294,7 @@ const BookingForm = ({
         total_price: fees.customerTotal,
         fulfillment_selected: fulfillmentSelected,
         is_instant_book: instantBook,
+        slots_requested: isVendorSpace ? slotsRequested : 1,
       };
 
       // Add fulfillment-specific data
@@ -625,6 +634,51 @@ const BookingForm = ({
               </span>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Slots Selector - Vendor Space with Multiple Slots */}
+      {hasMultipleSlots && (
+        <div className="mb-6">
+          <Label className="text-sm font-medium mb-3 block">
+            Number of spaces
+          </Label>
+          <div className="p-4 bg-muted/30 rounded-xl border border-border">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
+                  <Users className="h-4 w-4" />
+                </div>
+                <span className="text-sm text-foreground">Vendor Spaces</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setSlotsRequested(Math.max(1, slotsRequested - 1))}
+                  disabled={slotsRequested <= 1 || !isListingAvailable}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <span className="w-8 text-center font-medium">{slotsRequested}</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setSlotsRequested(Math.min(totalSlots, slotsRequested + 1))}
+                  disabled={slotsRequested >= totalSlots || !isListingAvailable}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {totalSlots} total spaces available at this location
+            </p>
+          </div>
         </div>
       )}
 

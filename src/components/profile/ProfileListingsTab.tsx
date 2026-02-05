@@ -27,7 +27,7 @@ const CATEGORY_FILTERS = [
   { value: 'food_truck', label: 'Food Truck' },
   { value: 'food_trailer', label: 'Food Trailer' },
   { value: 'ghost_kitchen', label: 'Ghost Kitchen' },
-  { value: 'vendor_lot', label: 'Vendor Lot' },
+  { value: 'vendor_lot', label: 'Vendor Space' },
 ] as const;
 
 type FilterValue = typeof CATEGORY_FILTERS[number]['value'];

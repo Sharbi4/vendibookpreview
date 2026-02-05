@@ -27,7 +27,7 @@ export const helpArticles: HelpArticle[] = [
       {
         id: 'overview',
         title: 'Overview',
-        content: `Vendibook connects food entrepreneurs with mobile kitchen assets—food trucks, trailers, ghost kitchens, and vendor lots. Our rental process is designed to be straightforward, secure, and transparent for both renters and hosts.
+        content: `Vendibook connects food entrepreneurs with mobile kitchen assets—food trucks, trailers, ghost kitchens, and Vendor Spaces. Our rental process is designed to be straightforward, secure, and transparent for both renters and hosts.
 
 Whether you're testing a new concept, covering for equipment repairs, or scaling up for an event, Vendibook gives you access to vetted equipment without long-term commitments.`
       },
@@ -36,7 +36,7 @@ Whether you're testing a new concept, covering for equipment repairs, or scaling
         title: 'Finding the Right Listing',
         content: `**Search and Filter**
 Use the search bar to find listings by location, category, or keywords. Filter results by:
-- Asset type (food truck, trailer, ghost kitchen, vendor lot)
+- Asset type (food truck, trailer, ghost kitchen, Vendor Space)
 - Price range
 - Availability dates
 - Amenities and equipment
@@ -2260,7 +2260,7 @@ If you disagree with findings:
         id: 'step-3-listing',
         title: 'Step 3: Create Your First Listing',
         content: `- [ ] Click "Create Listing"
-- [ ] Choose asset type (food truck, trailer, ghost kitchen, vendor lot)
+- [ ] Choose asset type (food truck, trailer, ghost kitchen, Vendor Space)
 - [ ] Select mode (rent or sell)
 - [ ] Upload high-quality photos (minimum 5 recommended)
 - [ ] Write a compelling title and description
@@ -2594,7 +2594,7 @@ You are only charged if:
 - Food trucks: $500-$2,000
 - Trailers: $300-$1,500
 - Ghost kitchens: $500-$1,000
-- Vendor lots: Usually no deposit`
+- Vendor Spaces: Usually no deposit`
       },
       {
         id: 'pre-rental',

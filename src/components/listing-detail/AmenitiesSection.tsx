@@ -141,14 +141,14 @@ const amenityIcons: Record<string, React.ElementType> = {
   commissary_rules: CheckCircle2,
   permit_guidance: CheckCircle2,
   
-  // Vendor Lot - Hookups
+  // Vendor Space - Hookups
   power_110v: Plug,
   power_220v: Zap,
   water_hookup: Droplet,
   sewer_hookup: Archive,
   dump_station: Trash2,
   
-  // Vendor Lot - Site Features
+  // Vendor Space - Site Features
   high_foot_traffic: Users,
   near_nightlife: Star,
   near_office: Building,
@@ -158,13 +158,13 @@ const amenityIcons: Record<string, React.ElementType> = {
   stage_entertainment: Star,
   lighting: Lightbulb,
   
-  // Vendor Lot - Guest Amenities
+  // Vendor Space - Guest Amenities
   restrooms_onsite: DoorOpen,
   handwash_stations: Droplet,
   trash_service: Trash2,
   wifi: Wifi,
   
-  // Vendor Lot - Safety & Access
+  // Vendor Space - Safety & Access
   security_onsite: ShieldCheck,
   gated_lot: Lock,
   cameras: Camera,
@@ -172,7 +172,7 @@ const amenityIcons: Record<string, React.ElementType> = {
   access_24_7: Clock,
   staff_onsite: UserCheck,
   
-  // Vendor Lot - Rules & Positioning
+  // Vendor Space - Rules & Positioning
   exclusive_spot: Star,
   rotating_spots: Rotate3D,
   alcohol_allowed: Beer,

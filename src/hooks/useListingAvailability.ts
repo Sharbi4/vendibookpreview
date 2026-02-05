@@ -18,7 +18,15 @@ interface BookingWithDates extends BookingRequest {
   listing_title?: string;
 }
 
-export const useListingAvailability = (listingId: string) => {
+interface ListingCapacity {
+  total_slots: number;
+  category: string;
+}
+
+export const useListingAvailability = (listingId: string, listingCapacity?: ListingCapacity) => {
+  // Default to 1 slot for backward compatibility
+  const totalSlots = listingCapacity?.total_slots ?? 1;
+  const isVendorSpace = listingCapacity?.category === 'vendor_lot';
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -281,6 +289,66 @@ export const useListingAvailability = (listingId: string) => {
     });
   };
 
+  // Get total slots booked for a specific date (for capacity-based availability)
+  const getSlotsBookedForDate = (date: Date): number => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    let totalSlotsBooked = 0;
+    
+    bookings.forEach(booking => {
+      if (booking.status !== 'approved') return;
+      const start = booking.start_date;
+      const end = booking.end_date;
+      if (dateStr >= start && dateStr <= end) {
+        // Use slots_requested or default to 1 for backward compatibility
+        const slotsRequested = (booking as any).slots_requested ?? 1;
+        totalSlotsBooked += slotsRequested;
+      }
+    });
+    
+    return totalSlotsBooked;
+  };
+
+  // Get remaining slots available for a specific date
+  const getRemainingSlots = (date: Date): number => {
+    if (isDateBlocked(date)) return 0;
+    const slotsBooked = getSlotsBookedForDate(date);
+    return Math.max(0, totalSlots - slotsBooked);
+  };
+
+  // Check if a date is fully booked (all slots taken) - for capacity-based availability
+  const isDateFullyBooked = (date: Date): boolean => {
+    if (isDateBlocked(date)) return true;
+    return getRemainingSlots(date) <= 0;
+  };
+
+  // Check if requested slots are available for a date range
+  const areSlotsAvailable = (startDate: Date, endDate: Date, requestedSlots: number = 1): boolean => {
+    const dates = eachDayOfInterval({ start: startDate, end: endDate });
+    return dates.every(date => {
+      if (isDateBlocked(date)) return false;
+      return getRemainingSlots(date) >= requestedSlots;
+    });
+  };
+
+  // Get minimum remaining slots across a date range
+  const getMinRemainingSlots = (startDate: Date, endDate: Date): number => {
+    const dates = eachDayOfInterval({ start: startDate, end: endDate });
+    let minSlots = totalSlots;
+    
+    dates.forEach(date => {
+      if (isDateBlocked(date)) {
+        minSlots = 0;
+      } else {
+        const remaining = getRemainingSlots(date);
+        if (remaining < minSlots) {
+          minSlots = remaining;
+        }
+      }
+    });
+    
+    return minSlots;
+  };
+
   return {
     blockedDates,
     bookings,
@@ -295,6 +363,14 @@ export const useListingAvailability = (listingId: string) => {
     isDateBlocked,
     isDateBooked,
     isDatePending,
+    // Capacity-based availability
+    totalSlots,
+    isVendorSpace,
+    getSlotsBookedForDate,
+    getRemainingSlots,
+    isDateFullyBooked,
+    areSlotsAvailable,
+    getMinRemainingSlots,
     refetch: fetchData,
   };
 };

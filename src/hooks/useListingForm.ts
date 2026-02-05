@@ -55,6 +55,8 @@ const initialFormData: ListingFormData = {
   proof_notary_enabled: false,
   // Featured Listing add-on (for both rentals and sales)
   featured_enabled: false,
+  // Multi-slot capacity for Vendor Spaces (default 1)
+  total_slots: 1,
 };
 
 const TOTAL_STEPS = 7;

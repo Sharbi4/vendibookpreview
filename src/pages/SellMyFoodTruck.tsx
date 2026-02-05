@@ -190,7 +190,7 @@ const SellMyFoodTruck = () => {
     {
       icon: Truck,
       title: "Built for mobile food assets",
-      description: "Trucks, trailers, kitchens, equipment, and vendor lots."
+      description: "Trucks, trailers, kitchens, equipment, and Vendor Spaces."
     },
     {
       icon: Users,

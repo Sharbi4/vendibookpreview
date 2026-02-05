@@ -322,6 +322,7 @@ export type Database = {
           responded_at: string | null
           shopper_confirmed_at: string | null
           shopper_id: string
+          slots_requested: number | null
           start_date: string
           start_time: string | null
           status: Database["public"]["Enums"]["booking_status"]
@@ -374,6 +375,7 @@ export type Database = {
           responded_at?: string | null
           shopper_confirmed_at?: string | null
           shopper_id: string
+          slots_requested?: number | null
           start_date: string
           start_time?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
@@ -426,6 +428,7 @@ export type Database = {
           responded_at?: string | null
           shopper_confirmed_at?: string | null
           shopper_id?: string
+          slots_requested?: number | null
           start_date?: string
           start_time?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
@@ -834,6 +837,7 @@ export type Database = {
           status: Database["public"]["Enums"]["listing_status"]
           subcategory: string | null
           title: string
+          total_slots: number | null
           updated_at: string
           vendibook_freight_enabled: boolean | null
           video_urls: string[] | null
@@ -899,6 +903,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["listing_status"]
           subcategory?: string | null
           title: string
+          total_slots?: number | null
           updated_at?: string
           vendibook_freight_enabled?: boolean | null
           video_urls?: string[] | null
@@ -964,6 +969,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["listing_status"]
           subcategory?: string | null
           title?: string
+          total_slots?: number | null
           updated_at?: string
           vendibook_freight_enabled?: boolean | null
           video_urls?: string[] | null

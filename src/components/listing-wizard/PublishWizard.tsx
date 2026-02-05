@@ -178,6 +178,9 @@ export const PublishWizard: React.FC = () => {
   
   // Dimensions state (for sale listings)
   const [weightLbs, setWeightLbs] = useState('');
+  
+  // Total slots for Vendor Spaces (multi-slot capacity)
+  const [totalSlots, setTotalSlots] = useState(1);
   const [lengthInches, setLengthInches] = useState('');
   const [widthInches, setWidthInches] = useState('');
   const [heightInches, setHeightInches] = useState('');
@@ -362,6 +365,8 @@ export const PublishWizard: React.FC = () => {
       setWidthInches(data.width_inches?.toString() || '');
       setHeightInches(data.height_inches?.toString() || '');
       setFreightCategory((data.freight_category as FreightCategory) || null);
+      // Set total slots for vendor spaces
+      setTotalSlots(data.total_slots || 1);
       // Set location step fields
       setFulfillmentType((data.fulfillment_type as FulfillmentType) || null);
       setPickupLocationText(data.pickup_location_text || '');
@@ -1097,6 +1102,7 @@ export const PublishWizard: React.FC = () => {
         updateData = {
           available_from: availableFrom || null,
           available_to: availableTo || null,
+          total_slots: listing.category === 'vendor_space' ? totalSlots : 1,
         };
       } else if (step === 'documents') {
         // Save required documents to the database
@@ -2517,6 +2523,44 @@ export const PublishWizard: React.FC = () => {
                     </p>
                   </div>
 
+                  {/* Spaces Available - Only for Vendor Spaces */}
+                  {listing.category === 'vendor_space' && (
+                    <div className="space-y-4 p-4 rounded-xl border border-border bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-5 w-5 text-primary" />
+                        <Label className="text-base font-medium">Spaces Available</Label>
+                        <InfoTooltip content="How many vendors can book this location at the same time? This enables capacity-based availability." />
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Set how many vendor spaces are available. Multiple vendors can book the same dates if you have more than 1 space.
+                      </p>
+                      
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          min={1}
+                          max={100}
+                          value={totalSlots}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value, 10);
+                            if (!isNaN(value) && value >= 1) {
+                              setTotalSlots(value);
+                            }
+                          }}
+                          className="w-24"
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          space{totalSlots !== 1 ? 's' : ''} available
+                        </span>
+                      </div>
+                      {totalSlots > 1 && (
+                        <p className="text-xs text-primary font-medium">
+                          ✓ Multiple vendors can book the same dates
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   <RentalAvailabilityStep
                     listingId={listing.id}
                     listingMode={listing.mode}
@@ -2945,7 +2989,7 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Static Location (Ghost Kitchen, Vendor Lot) or Mobile Asset with Static Toggle */}
+                  {/* Static Location (Ghost Kitchen, Vendor Space) or Mobile Asset with Static Toggle */}
                   {(isStaticLocationFn(listing.category) || isStaticLocation) ? (
                     <div className="space-y-6">
                       <div className="p-4 bg-muted rounded-xl flex items-start gap-3">

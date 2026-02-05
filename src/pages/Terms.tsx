@@ -25,7 +25,7 @@ const Terms = () => {
               <h2 className="text-2xl font-semibold mb-4">2. Description of Service</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Vendibook is an online marketplace that connects hosts who have mobile food business assets (food trucks, 
-                food trailers, ghost kitchens, vendor lots) with shoppers seeking to rent or purchase such assets. 
+                food trailers, ghost kitchens, Vendor Spaces) with shoppers seeking to rent or purchase such assets. 
                 Vendibook facilitates these transactions but is not a party to any rental or sale agreement between hosts and shoppers.
               </p>
             </section>

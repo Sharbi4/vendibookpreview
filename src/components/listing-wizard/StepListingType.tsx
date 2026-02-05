@@ -1,8 +1,9 @@
 import React from 'react';
-import { Truck, Store, Building2, MapPin, Tag, ShoppingBag } from 'lucide-react';
+import { Truck, Store, Building2, MapPin, Tag, ShoppingBag, Users } from 'lucide-react';
 import { ListingFormData, ListingMode, ListingCategory, CATEGORY_LABELS, SUBCATEGORIES_BY_CATEGORY } from '@/types/listing';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 interface StepListingTypeProps {
   formData: ListingFormData;
@@ -19,7 +20,7 @@ const categoryOptions: { value: ListingCategory; label: string; icon: React.Reac
   { value: 'food_truck', label: 'Food Truck', icon: <Truck className="w-6 h-6" />, description: 'Mobile kitchen on wheels' },
   { value: 'food_trailer', label: 'Food Trailer', icon: <Truck className="w-6 h-6" />, description: 'Towable food service unit' },
   { value: 'ghost_kitchen', label: 'Ghost Kitchen', icon: <Building2 className="w-6 h-6" />, description: 'Delivery-only commercial kitchen' },
-  { value: 'vendor_lot', label: 'Vendor Lot', icon: <MapPin className="w-6 h-6" />, description: 'Prime location for food vendors' },
+  { value: 'vendor_lot', label: 'Vendor Space', icon: <MapPin className="w-6 h-6" />, description: 'Prime location for food vendors' },
 ];
 
 export const StepListingType: React.FC<StepListingTypeProps> = ({
@@ -133,6 +134,50 @@ export const StepListingType: React.FC<StepListingTypeProps> = ({
               )?.description}
             </p>
           )}
+        </div>
+      )}
+
+      {/* Total Slots Input - Vendor Space only */}
+      {formData.category === 'vendor_lot' && (
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="flex items-center gap-2">
+            <Label className="text-lg font-semibold">Total Slots Available</Label>
+          </div>
+          <div className="p-6 rounded-2xl border-0 shadow-xl bg-card">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0">
+                <Users className="w-6 h-6" />
+              </div>
+              <div className="flex-1 space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  How many vendors can book this space at the same time? This enables capacity-based availability.
+                </p>
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={formData.total_slots}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value, 10);
+                      if (!isNaN(value) && value >= 1) {
+                        updateField('total_slots', value);
+                      }
+                    }}
+                    className="w-24"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    slot{formData.total_slots !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                {formData.total_slots > 1 && (
+                  <p className="text-xs text-primary font-medium">
+                    ✓ Multiple vendors can book the same dates
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

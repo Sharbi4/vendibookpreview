@@ -224,15 +224,15 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: 'rent-out-vendor-lot-commercial-property-host-guide',
-    title: 'How to Rent Out Your Vendor Lot or Commercial Property: The Complete Host Guide',
+    title: 'How to Rent Out Your Vendor Space or Commercial Property: The Complete Host Guide',
     description: 'Turn your empty lot, parking space, or commercial property into a recurring income stream by hosting food vendors. Learn how to become the kind of host vendors love.',
-    excerpt: 'If you own land, a parking lot, or commercial space—even a small underused area—you might be sitting on one of the simplest income streams in the food world: vendor lots.',
+    excerpt: 'If you own land, a parking lot, or commercial space—even a small underused area—you might be sitting on one of the simplest income streams in the food world: Vendor Spaces.',
     content: `
 <p class="text-lg text-muted-foreground mb-6"><em>By The Vendibook Team | Estimated Read Time: 9 Minutes</em></p>
 
 <p class="text-lg mb-6">If you own land, a parking lot, or commercial space—even a small underused area—you might be sitting on one of the simplest income streams in the food world:</p>
 
-<p class="text-2xl font-bold mb-6">Vendor lots.</p>
+<p class="text-2xl font-bold mb-6">Vendor Spaces.</p>
 
 <p class="mb-6">The mobile food economy is booming, and operators are constantly hunting for:</p>
 
@@ -245,9 +245,9 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <p class="mb-8">If you can offer a clean, compliant, well-managed spot, you can monetize your property—<strong>without building a restaurant</strong>.</p>
 
-<h2 class="text-2xl font-bold mt-10 mb-4">What Counts as a "Vendor Lot"?</h2>
+<h2 class="text-2xl font-bold mt-10 mb-4">What Counts as a "Vendor Space"?</h2>
 
-<p class="mb-4">A vendor lot can be:</p>
+<p class="mb-4">A Vendor Space can be:</p>
 
 <ul class="list-disc pl-6 mb-6 space-y-2">
 <li>Empty land or gravel lot</li>
@@ -280,7 +280,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <h2 class="text-2xl font-bold mt-10 mb-4">Pricing Models That Work</h2>
 
-<p class="mb-4">Vendor lot pricing can be structured in a few ways:</p>
+<p class="mb-4">Vendor Space pricing can be structured in a few ways:</p>
 
 <div class="grid md:grid-cols-2 gap-4 mb-8">
 <div class="bg-muted p-4 rounded-lg">
@@ -303,7 +303,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <p class="mb-8">Most hosts start with <strong>daily/weekly/monthly</strong> because it's clean and simple.</p>
 
-<h2 class="text-2xl font-bold mt-10 mb-4">The "Good Host" Blueprint: How to Run a Vendor Lot Like a Pro</h2>
+<h2 class="text-2xl font-bold mt-10 mb-4">The "Good Host" Blueprint: How to Run a Vendor Space Like a Pro</h2>
 
 <h3 class="text-xl font-bold mt-8 mb-4">1) Set Clear Requirements (And Enforce Them Kindly)</h3>
 
@@ -341,7 +341,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <h3 class="text-xl font-bold mt-8 mb-4">3) Make Setup Easy</h3>
 
-<p class="mb-4">The best vendor lots are frictionless:</p>
+<p class="mb-4">The best Vendor Spaces are frictionless:</p>
 
 <ul class="list-disc pl-6 mb-6 space-y-2">
 <li>Simple check-in instructions</li>
@@ -367,7 +367,7 @@ export const BLOG_POSTS: BlogPost[] = [
 <li>Communicate schedule clearly</li>
 </ul>
 
-<p class="mb-8">The vendor lot is a mini marketplace. <strong>Your job is to run it smoothly.</strong></p>
+<p class="mb-8">The Vendor Space is a mini marketplace. <strong>Your job is to run it smoothly.</strong></p>
 
 <h3 class="text-xl font-bold mt-8 mb-4">5) Build a Rotation Strategy (How to Keep Customers Returning)</h3>
 
@@ -398,11 +398,11 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <p class="mb-8"><strong>The better your listing looks, the higher-quality vendors you attract.</strong></p>
 
-<h2 class="text-2xl font-bold mt-10 mb-4">Vendor Lot Hosting = Recurring Revenue With Real Leverage</h2>
+<h2 class="text-2xl font-bold mt-10 mb-4">Vendor Space Hosting = Recurring Revenue With Real Leverage</h2>
 
 <p class="mb-4">Here's the part that makes this powerful:</p>
 
-<p class="mb-4">A good vendor lot can become:</p>
+<p class="mb-4">A good Vendor Space can become:</p>
 
 <ul class="list-disc pl-6 mb-6 space-y-2">
 <li>A reliable side income stream</li>
@@ -414,7 +414,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <p class="mb-8">You're not just renting land—you're <strong>monetizing traffic + access + experience</strong>.</p>
 
-<h2 class="text-2xl font-bold mt-10 mb-4">Final Checklist: A Great Vendor Lot Host Is…</h2>
+<h2 class="text-2xl font-bold mt-10 mb-4">Final Checklist: A Great Vendor Space Host Is…</h2>
 
 <div class="bg-muted p-6 rounded-lg mb-8">
 <ul class="space-y-3">
@@ -429,17 +429,17 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <p class="mb-8">If you can do that, vendors will stay, customers will return, and your property becomes a <strong>true earning asset</strong>.</p>
 
-<h2 class="text-2xl font-bold mt-10 mb-4">Ready to List Your Vendor Lot?</h2>
+<h2 class="text-2xl font-bold mt-10 mb-4">Ready to List Your Vendor Space?</h2>
 
 <p class="mb-6">Vendibook makes it simple to list your lot, set your availability, and connect with verified food vendors in your area.</p>
 
-<p class="mb-6"><a href="/list" class="text-primary underline font-medium">List your vendor lot today →</a></p>
+<p class="mb-6"><a href="/list" class="text-primary underline font-medium">List your Vendor Space today →</a></p>
     `,
     author: 'Vendibook Team',
     authorRole: 'Editorial',
     datePublished: '2026-01-27',
     category: 'business-tips',
-    tags: ['vendor lot', 'commercial property', 'hosting', 'passive income', 'property management', 'food truck park'],
+    tags: ['Vendor Space', 'commercial property', 'hosting', 'passive income', 'property management', 'food truck park'],
     image: '/images/blog/vendor-lot-hosting.webp',
     readingTime: 9,
     featured: true,
@@ -619,13 +619,13 @@ Find ghost kitchen spaces for rent on Vendibook and start your delivery-only jou
   },
   {
     slug: 'vendor-lot-location-tips',
-    title: '10 Tips for Choosing the Perfect Vendor Lot Location',
-    description: 'Location can make or break your food truck business. Learn how to evaluate and select the best vendor lot for maximum sales.',
-    excerpt: 'The right location is crucial for food truck success. Here are 10 factors to consider when choosing your vendor lot.',
+    title: '10 Tips for Choosing the Perfect Vendor Space Location',
+    description: 'Location can make or break your food truck business. Learn how to evaluate and select the best Vendor Space for maximum sales.',
+    excerpt: 'The right location is crucial for food truck success. Here are 10 factors to consider when choosing your Vendor Space.',
     content: `
-# 10 Tips for Choosing the Perfect Vendor Lot Location
+# 10 Tips for Choosing the Perfect Vendor Space Location
 
-In the food truck business, location isn't just important—it's everything. The right vendor lot can turn a slow day into a profitable one.
+In the food truck business, location isn't just important—it's everything. The right Vendor Space can turn a slow day into a profitable one.
 
 ## 1. Foot Traffic Volume
 
@@ -669,13 +669,13 @@ For evening operations, ensure the area is well-lit and safe for customers and s
 
 ## Find Your Spot
 
-Browse available vendor lots on Vendibook and find your perfect location.
+Browse available Vendor Spaces on Vendibook and find your perfect location.
     `,
     author: 'Vendibook Team',
     authorRole: 'Editorial',
     datePublished: '2024-12-20',
     category: 'business-tips',
-    tags: ['vendor lot', 'location', 'business strategy'],
+    tags: ['Vendor Space', 'location', 'business strategy'],
     readingTime: 5,
   },
   {

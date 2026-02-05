@@ -31,7 +31,7 @@ const Browse = () => {
     <div className="min-h-screen flex flex-col">
       <SEO 
         title="Browse Food Trucks, Trailers & Kitchens | Vendibook"
-        description="Find verified food trucks, trailers, ghost kitchens, and vendor lots. Book or buy with confidence—requirements upfront, secure workflows, and 24/7 support."
+        description="Find verified food trucks, trailers, ghost kitchens, and Vendor Spaces. Book or buy with confidence—requirements upfront, secure workflows, and 24/7 support."
         type="website"
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ 
@@ -55,7 +55,7 @@ const Browse = () => {
           <div className="container relative z-10">
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
-                Find verified trucks, trailers, kitchens, and vendor lots
+                Find verified trucks, trailers, kitchens, and Vendor Spaces
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
                 Book or buy with confidence. Requirements upfront, secure workflows, and real-time status tracking.
@@ -109,7 +109,7 @@ const Browse = () => {
               />
               <CategoryTile
                 icon={<MapPin className="h-8 w-8" />}
-                title="Vendor Lots"
+                title="Vendor Spaces"
                 description="Prime vending locations"
                 href="/search?category=vendor_lot"
               />

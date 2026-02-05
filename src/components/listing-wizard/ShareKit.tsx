@@ -98,7 +98,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     if (listing.category === 'food_truck') tags.push('#FoodTruckForRent', '#FoodTruckLife');
     else if (listing.category === 'food_trailer') tags.push('#FoodTrailer', '#ConcessionTrailer');
     else if (listing.category === 'ghost_kitchen') tags.push('#GhostKitchen', '#CloudKitchen');
-    else if (listing.category === 'vendor_lot') tags.push('#VendorLot', '#FoodVendor');
+    else if (listing.category === 'vendor_lot') tags.push('#VendorSpace', '#FoodVendor');
     if (listing.mode === 'sale') tags.push('#ForSale');
     return tags.slice(0, 4).join(' ');
   };

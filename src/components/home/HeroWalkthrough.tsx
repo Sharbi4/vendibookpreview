@@ -134,7 +134,7 @@ const HeroWalkthrough = () => {
     {
       id: 1,
       title: 'Find Your Perfect Asset',
-      subtitle: 'Browse food trucks, trailers, kitchens & vendor lots',
+      subtitle: 'Browse food trucks, trailers, kitchens & Vendor Spaces',
       icon: <Search className="h-5 w-5" />,
       visual: (
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
@@ -142,7 +142,7 @@ const HeroWalkthrough = () => {
             { name: 'Food Trucks', icon: <Truck className="h-5 w-5 sm:h-6 sm:w-6" /> },
             { name: 'Food Trailers', icon: <Truck className="h-5 w-5 sm:h-6 sm:w-6" /> },
             { name: 'Ghost Kitchens', icon: <Building2 className="h-5 w-5 sm:h-6 sm:w-6" /> },
-            { name: 'Vendor Lots', icon: <Building2 className="h-5 w-5 sm:h-6 sm:w-6" /> },
+            { name: 'Vendor Spaces', icon: <Building2 className="h-5 w-5 sm:h-6 sm:w-6" /> },
           ].map((item, i) => (
             <motion.div
               key={item.name}

@@ -57,7 +57,7 @@ export const generateLocalBusinessSchema = (city: string, state: string) => ({
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',
   name: `Vendibook - ${city}`,
-  description: `Rent or buy food trucks, food trailers, ghost kitchens, and vendor lots in ${city}, ${state}.`,
+  description: `Rent or buy food trucks, food trailers, ghost kitchens, and Vendor Spaces in ${city}, ${state}.`,
   url: `https://vendibook.com/${city.toLowerCase().replace(' ', '-')}/browse`,
   areaServed: {
     '@type': 'City',
@@ -84,7 +84,7 @@ export const generateServiceSchema = () => ({
     url: 'https://vendibook.com',
   },
   serviceType: 'Marketplace',
-  description: 'Rent or buy food trucks, food trailers, ghost kitchens, and vendor lots across the United States.',
+  description: 'Rent or buy food trucks, food trailers, ghost kitchens, and Vendor Spaces across the United States.',
   areaServed: {
     '@type': 'Country',
     name: 'United States',
@@ -110,7 +110,7 @@ export const generateServiceSchema = () => ({
       },
       {
         '@type': 'OfferCatalog',
-        name: 'Vendor Lots',
+        name: 'Vendor Spaces',
         description: 'Prime locations for mobile food vendors',
       },
     ],
@@ -181,7 +181,7 @@ export const generateCityServiceSchema = (
     food_truck: 'Food Trucks',
     food_trailer: 'Food Trailers',
     ghost_kitchen: 'Ghost Kitchens',
-    vendor_lot: 'Vendor Lots',
+    vendor_lot: 'Vendor Spaces',
   };
 
   const modeLabel = mode === 'rent' ? 'for Rent' : 'for Sale';
@@ -229,7 +229,7 @@ export const generateProductSchema = (listing: {
     food_truck: 'Food Truck',
     food_trailer: 'Food Trailer',
     ghost_kitchen: 'Ghost Kitchen',
-    vendor_lot: 'Vendor Lot',
+    vendor_lot: 'Vendor Space',
   };
 
   const categoryLabel = categoryLabels[listing.category] || 'Mobile Food Asset';
@@ -333,7 +333,7 @@ export const generateListingBreadcrumbSchema = (listing: {
     food_truck: 'Food Trucks',
     food_trailer: 'Food Trailers',
     ghost_kitchen: 'Ghost Kitchens',
-    vendor_lot: 'Vendor Lots',
+    vendor_lot: 'Vendor Spaces',
   };
 
   const modeLabel = listing.mode === 'rent' ? 'For Rent' : 'For Sale';
@@ -385,7 +385,7 @@ export const generateItemListSchema = (
     food_truck: 'Food Trucks',
     food_trailer: 'Food Trailers',
     ghost_kitchen: 'Ghost Kitchens',
-    vendor_lot: 'Vendor Lots',
+    vendor_lot: 'Vendor Spaces',
   };
 
   // Build list name based on filters
@@ -451,7 +451,7 @@ export const generateSearchBreadcrumbSchema = (searchParams?: {
     food_truck: 'Food Trucks',
     food_trailer: 'Food Trailers',
     ghost_kitchen: 'Ghost Kitchens',
-    vendor_lot: 'Vendor Lots',
+    vendor_lot: 'Vendor Spaces',
   };
 
   const items = [

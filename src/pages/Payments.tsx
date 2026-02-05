@@ -267,7 +267,7 @@ const Payments = () => {
                     Rentals & Bookings
                   </h2>
                   <p className="text-muted-foreground">
-                    Kitchens • Vendor Lots • Short-Term Trucks
+                    Kitchens • Vendor Spaces • Short-Term Trucks
                   </p>
                 </div>
               </div>

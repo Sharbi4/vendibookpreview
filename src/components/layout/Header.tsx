@@ -54,7 +54,7 @@ const POPULAR_SEARCHES = [
   'Food truck',
   'Food trailer',
   'Ghost kitchen',
-  'Vendor lot',
+  'Vendor Space',
   'BBQ trailer',
   'Taco truck',
   'Coffee cart',
