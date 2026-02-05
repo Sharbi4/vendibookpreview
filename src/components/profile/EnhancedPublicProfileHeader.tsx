@@ -116,43 +116,64 @@ const EnhancedPublicProfileHeader = ({
 
   return (
     <motion.div 
-      className="relative overflow-hidden border-b"
+      className="relative overflow-hidden"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
     >
-      {/* Header image or decorative background */}
+      {/* Enhanced glass-premium header with uploadable image support */}
       {profile.header_image_url ? (
-        <div className="absolute inset-0 h-32 md:h-40">
+        <div className="absolute inset-0 h-44 md:h-56">
           <img 
             src={profile.header_image_url} 
             alt="" 
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card" />
+          {/* Glass overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-card" />
+          <div className="absolute inset-0 backdrop-blur-[2px]" style={{ maskImage: 'linear-gradient(to bottom, transparent 60%, black 100%)' }} />
         </div>
       ) : (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none bg-gradient-to-br from-card via-card to-muted/30">
+        <div className="absolute inset-0 h-44 md:h-56 overflow-hidden pointer-events-none">
+          {/* Premium glass gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-foreground/5 via-card to-primary/10" />
+          
+          {/* Animated gradient orbs */}
           <motion.div 
-            className="absolute -top-20 -right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl"
+            className="absolute -top-20 -right-20 w-80 h-80 bg-gradient-to-br from-primary/15 to-primary/5 rounded-full blur-3xl"
             animate={{ 
-              scale: [1, 1.2, 1],
+              scale: [1, 1.3, 1],
+              opacity: [0.4, 0.7, 0.4],
+              x: [0, 20, 0],
+            }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div 
+            className="absolute -bottom-10 -left-10 w-60 h-60 bg-gradient-to-tr from-primary/10 to-amber-500/10 rounded-full blur-2xl"
+            animate={{ 
+              scale: [1.2, 1, 1.2],
               opacity: [0.3, 0.5, 0.3],
+              y: [0, -15, 0],
             }}
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div 
-            className="absolute -bottom-10 -left-10 w-48 h-48 bg-primary/5 rounded-full blur-2xl"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-radial from-primary/8 to-transparent rounded-full blur-3xl"
             animate={{ 
-              scale: [1.2, 1, 1.2],
+              scale: [1, 1.15, 1],
               opacity: [0.2, 0.4, 0.2],
             }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
           />
+          
+          {/* Subtle grid pattern overlay */}
+          <div className="absolute inset-0 bg-dot-pattern opacity-30" />
         </div>
       )}
 
-      <div className="container py-6 md:py-8 relative">
+      {/* Glass card container for profile info */}
+      <div className="container pt-28 md:pt-36 pb-6 md:pb-8 relative">
+        <div className="glass-premium rounded-2xl p-6 md:p-8 border border-border/50 shadow-lg">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-5">
           {/* Enhanced Avatar */}
           <motion.div 
@@ -417,14 +438,15 @@ const EnhancedPublicProfileHeader = ({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* CTA Buttons */}
+            {/* CTA Buttons with dark-shine styling */}
             {!isOwnProfile && isHost && (
               <div className="flex flex-col gap-2 w-48">
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button 
+                    variant="dark-shine"
                     onClick={onMessageHost} 
                     disabled={isMessaging} 
-                    className="w-full rounded-xl shadow-md"
+                    className="w-full rounded-xl shadow-lg"
                   >
                     {isMessaging ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -438,7 +460,7 @@ const EnhancedPublicProfileHeader = ({
                   <Button 
                     variant="outline" 
                     onClick={onViewListings}
-                    className="w-full rounded-xl"
+                    className="w-full rounded-xl glass-premium border-border/50"
                   >
                     View Listings ({stats?.totalListings || 0})
                   </Button>
@@ -454,6 +476,7 @@ const EnhancedPublicProfileHeader = ({
               </motion.div>
             )}
           </motion.div>
+        </div>
         </div>
       </div>
     </motion.div>
