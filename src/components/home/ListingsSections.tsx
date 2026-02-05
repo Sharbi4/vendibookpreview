@@ -10,21 +10,60 @@ import { Button } from '@/components/ui/button';
 const ListingsSections = () => {
   const navigate = useNavigate();
 
-  // Fetch all published listings
-  const { data: allListings = [], isLoading } = useQuery({
-    queryKey: ['home-listings'],
+  // Fetch rental listings
+  const { data: rentListings = [], isLoading: rentLoading } = useQuery({
+    queryKey: ['home-rent-listings'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('listings')
         .select('*')
         .eq('status', 'published')
+        .eq('mode', 'rent')
+        .neq('category', 'vendor_space')
         .order('published_at', { ascending: false })
-        .limit(12);
+        .limit(6);
       
       if (error) throw error;
       return data;
     },
   });
+
+  // Fetch sale listings (newest first)
+  const { data: saleListings = [], isLoading: saleLoading } = useQuery({
+    queryKey: ['home-sale-listings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('status', 'published')
+        .eq('mode', 'sale')
+        .order('published_at', { ascending: false })
+        .limit(6);
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch vendor space listings
+  const { data: vendorSpaceListings = [], isLoading: vendorLoading } = useQuery({
+    queryKey: ['home-vendor-listings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('status', 'published')
+        .or('category.eq.vendor_space,category.eq.vendor_lot')
+        .order('published_at', { ascending: false })
+        .limit(6);
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Combine all listings for host lookup
+  const allListings = useMemo(() => [...rentListings, ...saleListings, ...vendorSpaceListings], [rentListings, saleListings, vendorSpaceListings]);
 
   // Extract unique host IDs
   const hostIds = useMemo(() => {
@@ -56,22 +95,7 @@ const ListingsSections = () => {
     return map;
   }, [hostProfiles]);
 
-  // Split listings by mode and category
-  const saleListings = useMemo(() => 
-    allListings.filter(l => l.mode === 'sale').slice(0, 6), 
-    [allListings]
-  );
-  
-  const rentListings = useMemo(() => 
-    allListings.filter(l => l.mode === 'rent' && l.category !== 'vendor_space').slice(0, 6), 
-    [allListings]
-  );
-
-  // Featured Vendor Spaces - vendor_space and legacy vendor_lot category listings
-  const vendorSpaceListings = useMemo(() => 
-    allListings.filter(l => l.category === 'vendor_space' || l.category === 'vendor_lot').slice(0, 6), 
-    [allListings]
-  );
+  const isLoading = rentLoading || saleLoading || vendorLoading;
 
   if (isLoading) {
     return (
