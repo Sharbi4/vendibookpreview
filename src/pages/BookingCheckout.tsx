@@ -38,7 +38,7 @@ import { calculateRentalFees } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
-import { BookingInfoModal, type BookingUserInfo } from '@/components/booking';
+import { BookingInfoModal, type BookingUserInfo, SlotSelector } from '@/components/booking';
 import { BookingDocumentUpload, type StagedDocument } from '@/components/booking/BookingDocumentUpload';
 import DateSelectionModal from '@/components/listing-detail/DateSelectionModal';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
@@ -89,9 +89,15 @@ const BookingCheckout = () => {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [stagedDocuments, setStagedDocuments] = useState<StagedDocument[]>([]);
+  
+  // Slot selection state for vendor spaces
+  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+  const [selectedSlotName, setSelectedSlotName] = useState<string | null>(null);
 
   const isMobileAsset = listing?.category === 'food_truck' || listing?.category === 'food_trailer';
-  const isStaticLocation = listing?.category === 'ghost_kitchen' || listing?.category === 'vendor_lot';
+  const isStaticLocation = listing?.category === 'ghost_kitchen' || listing?.category === 'vendor_lot' || listing?.category === 'vendor_space';
+  const isVendorSpace = listing?.category === 'vendor_lot' || listing?.category === 'vendor_space';
+  const hasMultipleSlots = isVendorSpace && ((listing as any)?.total_slots ?? 1) > 1;
 
   // Set initial fulfillment based on listing
   useEffect(() => {
@@ -235,6 +241,9 @@ const BookingCheckout = () => {
         start_time: isHourlyBooking ? startTime : null,
         end_time: isHourlyBooking ? endTime : null,
         duration_hours: isHourlyBooking ? durationHours : null,
+        // Slot selection for vendor spaces
+        slot_number: hasMultipleSlots && selectedSlot ? selectedSlot : null,
+        slot_name: hasMultipleSlots && selectedSlotName ? selectedSlotName : null,
         ...(fulfillmentSelected === 'delivery' && {
           delivery_address: deliveryAddress.trim(),
           delivery_fee_snapshot: listing.delivery_fee || null,
@@ -389,6 +398,122 @@ const BookingCheckout = () => {
             </Link>
           </Button>
         </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // For vendor spaces with multiple slots, require slot selection before dates
+  if (hasMultipleSlots && !selectedSlot) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 container py-8 max-w-2xl">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            asChild 
+            className="mb-6 text-muted-foreground hover:text-foreground"
+          >
+            <Link to={`/listing/${listingId}`}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to listing
+            </Link>
+          </Button>
+          
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-foreground mb-2">Select your vendor space</h1>
+            <p className="text-muted-foreground">Choose which space you'd like to book, then select your dates</p>
+          </div>
+          
+          {/* Listing preview */}
+          <div className="flex gap-4 p-4 bg-card border border-border rounded-xl mb-6">
+            <img
+              src={listing.cover_image_url || listing.image_urls?.[0] || '/placeholder.svg'}
+              alt={listing.title}
+              className="w-20 h-16 object-cover rounded-lg"
+            />
+            <div>
+              <h3 className="font-semibold text-foreground text-sm line-clamp-1">{listing.title}</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                {(listing as any).total_slots || 1} spaces available
+              </p>
+            </div>
+          </div>
+          
+          {/* Slot selector - no dates required yet */}
+          <div className="bg-card border border-border rounded-xl p-6">
+            <Label className="text-sm font-medium flex items-center gap-2 mb-4">
+              <MapPin className="h-4 w-4 text-primary" />
+              Available Spaces
+            </Label>
+            <div className="grid grid-cols-2 gap-2">
+              {Array.from({ length: (listing as any).total_slots || 1 }, (_, i) => {
+                const slotNumber = i + 1;
+                const slotNames = (listing as any).slot_names as string[] | null;
+                const slotName = slotNames && slotNames[i] ? slotNames[i] : `Spot ${slotNumber}`;
+                const isSelected = selectedSlot === slotNumber;
+                
+                return (
+                  <button
+                    key={slotNumber}
+                    type="button"
+                    onClick={() => {
+                      setSelectedSlot(slotNumber);
+                      setSelectedSlotName(slotName);
+                    }}
+                    className={cn(
+                      "relative p-4 rounded-xl border-2 transition-all duration-200 text-left group",
+                      isSelected
+                        ? "glass-premium border-primary shadow-md shadow-primary/10"
+                        : "bg-card border-border hover:border-primary/50 hover:shadow-sm"
+                    )}
+                  >
+                    {isSelected && (
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary/10 to-transparent pointer-events-none" />
+                    )}
+                    <div className="relative z-10 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={cn(
+                            "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+                            isSelected
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted group-hover:bg-primary/10 text-foreground group-hover:text-primary"
+                          )}
+                        >
+                          <MapPin className="h-4 w-4" />
+                        </div>
+                        <span className="text-sm font-medium text-foreground">{slotName}</span>
+                      </div>
+                      {isSelected && <CheckCircle2 className="h-5 w-5 text-primary" />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          
+          {selectedSlot && (
+            <div className="mt-6 text-center">
+              <Button onClick={() => setShowDateModal(true)} variant="dark-shine" size="lg">
+                <Calendar className="h-4 w-4 mr-2" />
+                Continue to Select Dates
+              </Button>
+            </div>
+          )}
+          
+          <DateSelectionModal
+            open={showDateModal}
+            onOpenChange={setShowDateModal}
+            listingId={listingId!}
+            availableFrom={listing.available_from}
+            availableTo={listing.available_to}
+            priceDaily={listing.price_daily}
+            priceWeekly={listing.price_weekly}
+            onDatesSelected={handleDatesSelected}
+          />
+        </main>
         <Footer />
       </div>
     );
@@ -725,6 +850,12 @@ const BookingCheckout = () => {
                     <div className="p-5 space-y-4">
                       {/* Summary */}
                       <div className="space-y-3">
+                        {hasMultipleSlots && selectedSlotName && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Space</span>
+                            <span className="font-medium">{selectedSlotName}</span>
+                          </div>
+                        )}
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground">Dates</span>
                           <span className="font-medium">
@@ -811,6 +942,20 @@ const BookingCheckout = () => {
               </div>
 
               <div className="border-t border-border pt-4">
+                {/* Selected slot for vendor spaces */}
+                {hasMultipleSlots && selectedSlotName && (
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <span className="text-sm font-medium">Space</span>
+                      <p className="text-sm text-muted-foreground">{selectedSlotName}</p>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">
+                      <MapPin className="h-3 w-3 mr-1" />
+                      Selected
+                    </Badge>
+                  </div>
+                )}
+
                 {/* Free cancellation */}
                 <div className="flex items-start gap-2 mb-4">
                   <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
