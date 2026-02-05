@@ -1,6 +1,7 @@
 export type ListingMode = 'rent' | 'sale';
 
-export type ListingCategory = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_space';
+// Include both vendor_space (new) and vendor_lot (legacy) for backward compatibility
+export type ListingCategory = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_space' | 'vendor_lot';
 
 export type FulfillmentType = 'pickup' | 'delivery' | 'both' | 'on_site';
 
@@ -70,6 +71,15 @@ export const SUBCATEGORIES_BY_CATEGORY: Record<ListingCategory, {
     { value: 'shared_commissary', label: 'Shared Commissary', description: 'Multi-vendor shared kitchen space' },
   ],
   vendor_space: [
+    { value: 'festival_ground', label: 'Festival Ground', description: 'High-traffic event and festival spots' },
+    { value: 'farmers_market', label: 'Farmers Market Spot', description: 'Weekly market vendor locations' },
+    { value: 'brewery_patio', label: 'Brewery/Bar Patio', description: 'Partnered taproom or bar location' },
+    { value: 'private_event', label: 'Private Event Space', description: 'Bookable for private functions' },
+    { value: 'street_corner', label: 'Street Corner Spot', description: 'Permitted street vending locations' },
+    { value: 'food_truck_park', label: 'Food Truck Park', description: 'Dedicated park with multiple vendor slots and shared amenities' },
+  ],
+  // Legacy alias for vendor_space
+  vendor_lot: [
     { value: 'festival_ground', label: 'Festival Ground', description: 'High-traffic event and festival spots' },
     { value: 'farmers_market', label: 'Farmers Market Spot', description: 'Weekly market vendor locations' },
     { value: 'brewery_patio', label: 'Brewery/Bar Patio', description: 'Partnered taproom or bar location' },
@@ -392,6 +402,19 @@ export const AMENITIES_BY_CATEGORY: Record<ListingCategory, { label: string; ite
       ],
     },
   ],
+  // Legacy alias for vendor_space
+  vendor_lot: [
+    {
+      label: 'Hookups',
+      items: [
+        { id: 'power_110v', label: 'Power Hookup (110v)' },
+        { id: 'power_220v', label: 'Power Hookup (220v/240v)' },
+        { id: 'water_hookup', label: 'Water Hookup' },
+        { id: 'sewer_hookup', label: 'Sewer Hookup' },
+        { id: 'dump_station', label: 'Dump Station' },
+      ],
+    },
+  ],
 };
 
 // Listing tags for search and filtering
@@ -499,6 +522,16 @@ export const LISTING_TAGS: Record<ListingCategory, { general: string[]; rent: st
       'Accepts Offers',
     ],
   },
+  // Legacy alias
+  vendor_lot: {
+    general: [
+      'Prime Location',
+      'High Visibility',
+      'Multiple Slots Available',
+    ],
+    rent: ['Daily Spot', 'Weekly Spot', 'Monthly Spot'],
+    sale: ['Lease Included', 'Business Included'],
+  },
 };
 
 export type FreightPayer = 'buyer' | 'seller';
@@ -586,6 +619,7 @@ export const CATEGORY_LABELS: Record<ListingCategory, string> = {
   food_trailer: 'Food Trailer',
   ghost_kitchen: 'Ghost Kitchen',
   vendor_space: 'Vendor Space',
+  vendor_lot: 'Vendor Space', // Legacy alias
 };
 
 export const MODE_LABELS: Record<ListingMode, string> = {
@@ -605,5 +639,5 @@ export const isMobileAsset = (category: ListingCategory | null): boolean => {
 };
 
 export const isStaticLocation = (category: ListingCategory | null): boolean => {
-  return category === 'ghost_kitchen' || category === 'vendor_space';
+  return category === 'ghost_kitchen' || category === 'vendor_space' || category === 'vendor_lot';
 };

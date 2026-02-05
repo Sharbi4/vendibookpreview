@@ -108,6 +108,12 @@ export const DEFAULT_DOCUMENTS_BY_CATEGORY: Record<ListingCategory, DocumentType
     'commercial_liability_insurance',
     'work_history_proof',
   ],
+  // Legacy alias
+  vendor_lot: [
+    'business_license',
+    'commercial_liability_insurance',
+    'work_history_proof',
+  ],
 };
 
 // Interface for a required document setting

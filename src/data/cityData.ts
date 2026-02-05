@@ -34,7 +34,7 @@ export const CITY_DATA: Record<string, CityData> = {
       hostsEarning: 12,
     },
     neighborhoods: ['Downtown', 'Montrose', 'The Heights', 'Midtown', 'Galleria', 'Katy'],
-    popularCategories: ['food_truck', 'food_trailer', 'vendor_lot'],
+    popularCategories: ['food_truck', 'food_trailer', 'vendor_space'],
   },
   'los-angeles': {
     slug: 'los-angeles',
@@ -68,7 +68,7 @@ export const CITY_DATA: Record<string, CityData> = {
       hostsEarning: 8,
     },
     neighborhoods: ['Deep Ellum', 'Bishop Arts', 'Uptown', 'Design District', 'Oak Cliff', 'Plano'],
-    popularCategories: ['food_truck', 'food_trailer', 'vendor_lot'],
+    popularCategories: ['food_truck', 'food_trailer', 'vendor_space'],
   },
   phoenix: {
     slug: 'phoenix',
@@ -85,7 +85,7 @@ export const CITY_DATA: Record<string, CityData> = {
       hostsEarning: 6,
     },
     neighborhoods: ['Downtown', 'Scottsdale', 'Tempe', 'Mesa', 'Chandler', 'Gilbert'],
-    popularCategories: ['food_truck', 'food_trailer', 'vendor_lot'],
+    popularCategories: ['food_truck', 'food_trailer', 'vendor_space'],
   },
 };
 
@@ -111,10 +111,10 @@ export const ASSET_TYPES = {
     description: 'Commercial kitchen space for delivery-only concepts',
     icon: '🏭',
   },
-  'vendor-lot': {
-    slug: 'vendor-lot',
+  'vendor-space': {
+    slug: 'vendor-space',
     label: 'Vendor Space',
-    category: 'vendor_lot' as const,
+    category: 'vendor_space' as const,
     description: 'Prime location for mobile food vendors',
     icon: '📍',
   },

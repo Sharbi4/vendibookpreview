@@ -322,7 +322,8 @@ export type Database = {
           responded_at: string | null
           shopper_confirmed_at: string | null
           shopper_id: string
-          slots_requested: number | null
+          slot_name: string | null
+          slot_number: number | null
           start_date: string
           start_time: string | null
           status: Database["public"]["Enums"]["booking_status"]
@@ -375,7 +376,8 @@ export type Database = {
           responded_at?: string | null
           shopper_confirmed_at?: string | null
           shopper_id: string
-          slots_requested?: number | null
+          slot_name?: string | null
+          slot_number?: number | null
           start_date: string
           start_time?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
@@ -428,7 +430,8 @@ export type Database = {
           responded_at?: string | null
           shopper_confirmed_at?: string | null
           shopper_id?: string
-          slots_requested?: number | null
+          slot_name?: string | null
+          slot_number?: number | null
           start_date?: string
           start_time?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
@@ -834,6 +837,7 @@ export type Database = {
           published_at: string | null
           rental_buffer_days: number | null
           rental_min_days: number | null
+          slot_names: string[] | null
           status: Database["public"]["Enums"]["listing_status"]
           subcategory: string | null
           title: string
@@ -900,6 +904,7 @@ export type Database = {
           published_at?: string | null
           rental_buffer_days?: number | null
           rental_min_days?: number | null
+          slot_names?: string[] | null
           status?: Database["public"]["Enums"]["listing_status"]
           subcategory?: string | null
           title: string
@@ -966,6 +971,7 @@ export type Database = {
           published_at?: string | null
           rental_buffer_days?: number | null
           rental_min_days?: number | null
+          slot_names?: string[] | null
           status?: Database["public"]["Enums"]["listing_status"]
           subcategory?: string | null
           title?: string
@@ -1985,6 +1991,7 @@ export type Database = {
         | "food_trailer"
         | "ghost_kitchen"
         | "vendor_lot"
+        | "vendor_space"
       listing_mode: "rent" | "sale"
       listing_status: "draft" | "published" | "paused"
     }
@@ -2146,6 +2153,7 @@ export const Constants = {
         "food_trailer",
         "ghost_kitchen",
         "vendor_lot",
+        "vendor_space",
       ],
       listing_mode: ["rent", "sale"],
       listing_status: ["draft", "published", "paused"],

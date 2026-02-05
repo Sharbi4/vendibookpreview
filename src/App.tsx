@@ -96,22 +96,22 @@ import {
   HoustonBrowse,
   HoustonListFoodTruck,
   HoustonListFoodTrailer,
-  HoustonListVendorLot,
+  HoustonListVendorSpace,
   LosAngelesList,
   LosAngelesBrowse,
   LosAngelesListFoodTruck,
   LosAngelesListFoodTrailer,
-  LosAngelesListVendorLot,
+  LosAngelesListVendorSpace,
   DallasList,
   DallasBrowse,
   DallasListFoodTruck,
   DallasListFoodTrailer,
-  DallasListVendorLot,
+  DallasListVendorSpace,
   PhoenixList,
   PhoenixBrowse,
   PhoenixListFoodTruck,
   PhoenixListFoodTrailer,
-  PhoenixListVendorLot,
+  PhoenixListVendorSpace,
 } from "./pages/city";
 
 const queryClient = new QueryClient();
@@ -248,22 +248,22 @@ const AnimatedRoutes = () => {
           <Route path="/houston/browse" element={<PageTransition><HoustonBrowse /></PageTransition>} />
           <Route path="/houston/list-food-truck" element={<PageTransition><HoustonListFoodTruck /></PageTransition>} />
           <Route path="/houston/list-food-trailer" element={<PageTransition><HoustonListFoodTrailer /></PageTransition>} />
-          <Route path="/houston/list-vendor-lot" element={<PageTransition><HoustonListVendorLot /></PageTransition>} />
+          <Route path="/houston/list-vendor-space" element={<PageTransition><HoustonListVendorSpace /></PageTransition>} />
           <Route path="/los-angeles/list" element={<PageTransition><LosAngelesList /></PageTransition>} />
           <Route path="/los-angeles/browse" element={<PageTransition><LosAngelesBrowse /></PageTransition>} />
           <Route path="/los-angeles/list-food-truck" element={<PageTransition><LosAngelesListFoodTruck /></PageTransition>} />
           <Route path="/los-angeles/list-food-trailer" element={<PageTransition><LosAngelesListFoodTrailer /></PageTransition>} />
-          <Route path="/los-angeles/list-vendor-lot" element={<PageTransition><LosAngelesListVendorLot /></PageTransition>} />
+          <Route path="/los-angeles/list-vendor-space" element={<PageTransition><LosAngelesListVendorSpace /></PageTransition>} />
           <Route path="/dallas/list" element={<PageTransition><DallasList /></PageTransition>} />
           <Route path="/dallas/browse" element={<PageTransition><DallasBrowse /></PageTransition>} />
           <Route path="/dallas/list-food-truck" element={<PageTransition><DallasListFoodTruck /></PageTransition>} />
           <Route path="/dallas/list-food-trailer" element={<PageTransition><DallasListFoodTrailer /></PageTransition>} />
-          <Route path="/dallas/list-vendor-lot" element={<PageTransition><DallasListVendorLot /></PageTransition>} />
+          <Route path="/dallas/list-vendor-space" element={<PageTransition><DallasListVendorSpace /></PageTransition>} />
           <Route path="/phoenix/list" element={<PageTransition><PhoenixList /></PageTransition>} />
           <Route path="/phoenix/browse" element={<PageTransition><PhoenixBrowse /></PageTransition>} />
           <Route path="/phoenix/list-food-truck" element={<PageTransition><PhoenixListFoodTruck /></PageTransition>} />
           <Route path="/phoenix/list-food-trailer" element={<PageTransition><PhoenixListFoodTrailer /></PageTransition>} />
-          <Route path="/phoenix/list-vendor-lot" element={<PageTransition><PhoenixListVendorLot /></PageTransition>} />
+          <Route path="/phoenix/list-vendor-space" element={<PageTransition><PhoenixListVendorSpace /></PageTransition>} />
           
           {/* Dynamic city SEO pages - catches valid city slugs like /houston, /dallas */}
           <Route path="/:citySlug" element={<PageTransition><DynamicCityPage /></PageTransition>} />
