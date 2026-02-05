@@ -77,7 +77,7 @@ const EnhancedPublicProfileTabs = forwardRef<HTMLDivElement, EnhancedPublicProfi
       className="container py-4"
     >
       <Tabs defaultValue="listings" className="w-full">
-        <TabsList className="w-full grid grid-cols-2 mb-6 p-1.5 h-auto bg-muted/50 rounded-2xl sticky top-0 z-10 backdrop-blur-lg border border-border/50 shadow-sm">
+        <TabsList className="w-full grid grid-cols-2 mb-6 p-1.5 h-auto bg-muted/50 rounded-2xl sticky top-0 z-10 backdrop-blur-lg border-2 border-border shadow-md">
           {tabs.map((tab, index) => {
             const Icon = tab.icon;
             return (
