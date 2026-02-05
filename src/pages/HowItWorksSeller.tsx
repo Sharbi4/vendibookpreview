@@ -55,7 +55,7 @@ const benefits = [
   { icon: Shield, title: 'Buyer Protection', description: 'Escrow payments protect both parties' },
   { icon: Zap, title: 'Fast Payouts', description: 'Get paid as soon as the sale completes' },
   { icon: Users, title: 'Verified Buyers', description: 'All buyers are identity verified' },
-  { icon: Star, title: 'No Upfront Fees', description: 'Only pay when you make a sale' },
+  { icon: Star, title: 'No Upfront Fees', description: 'Free to list, pay only when you sell' },
 ];
 
 const HowItWorksSeller = () => {
