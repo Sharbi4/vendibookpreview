@@ -28,6 +28,7 @@ import { FavoriteButton } from '@/components/listing/FavoriteButton';
 import CompactTrustSection from '@/components/trust/CompactTrustSection';
 import CancellationPolicyCard from '@/components/trust/CancellationPolicyCard';
 import { ListingEventsSection } from '@/components/storefront';
+import ListingLocationMap from '@/components/listing-detail/ListingLocationMap';
 import { TechSpecsGrid } from '@/components/listing-detail/TechSpecsGrid';
 import { InlineAvailabilityCalendar } from '@/components/listing-detail/InlineAvailabilityCalendar';
 import { VendorSlotAvailability } from '@/components/listing-detail/VendorSlotAvailability';
@@ -443,6 +444,26 @@ const ListingDetail = () => {
 
               {/* Divider */}
               <div className="border-t border-border" />
+
+              {/* Location Map */}
+              {location && (
+                <>
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-semibold text-foreground">Where you'll be</h2>
+                    <ListingLocationMap
+                      address={listing.address}
+                      className="h-64 md:h-80"
+                    />
+                    {locationShort && (
+                      <p className="text-muted-foreground text-sm flex items-center gap-1.5">
+                        <MapPin className="h-4 w-4" />
+                        {locationShort}
+                      </p>
+                    )}
+                  </div>
+                  <div className="border-t border-border" />
+                </>
+              )}
 
               {/* Policies */}
               <CancellationPolicyCard isRental={isRental} />
