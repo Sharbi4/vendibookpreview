@@ -292,7 +292,7 @@ const PublicProfile = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col bg-premium-gradient">
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -304,7 +304,7 @@ const PublicProfile = () => {
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col bg-premium-gradient">
         <Header />
         <SEO 
           title="Profile Not Found"
@@ -331,7 +331,7 @@ const PublicProfile = () => {
   const seoDescription = `${displayName}${serviceArea ? ` • ${serviceArea}` : ''} on Vendibook. ${isHost ? `${stats?.totalListings || 0} listings available` : 'View profile'}${stats?.averageRating ? ` • ${stats.averageRating.toFixed(1)}★ rating` : ''}.`;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-premium-gradient">
       <SEO 
         title={`${displayName} on Vendibook`}
         description={seoDescription}
