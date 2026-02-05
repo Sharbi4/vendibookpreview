@@ -63,8 +63,8 @@ const RENTAL_DURATIONS = [
 const BENEFITS = [
   {
     icon: Shield,
-    title: "Verified Lot Owners",
-    description: "Every lot owner is verified for your safety and peace of mind."
+    title: "Verified Space Owners",
+    description: "Every space owner is verified for your safety and peace of mind."
   },
   {
     icon: Zap,
@@ -401,7 +401,7 @@ const VendorLots = () => {
                       size="lg"
                       onClick={() => document.getElementById('listings-section')?.scrollIntoView({ behavior: 'smooth' })}
                     >
-                      Browse Available Lots
+                      Browse Available Spaces
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                     <Button 
@@ -409,7 +409,7 @@ const VendorLots = () => {
                       size="lg"
                       onClick={() => navigate('/list')}
                     >
-                      List Your Lot
+                      List Your Space
                     </Button>
                   </div>
                 </div>
@@ -621,14 +621,14 @@ const VendorLots = () => {
           <section className="py-12 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10">
             <div className="container">
               <div className="text-center max-w-2xl mx-auto">
-                <h2 className="text-2xl md:text-3xl font-bold mb-4">Own a Lot?</h2>
+                <h2 className="text-2xl md:text-3xl font-bold mb-4">Own a Space?</h2>
                 <p className="text-muted-foreground mb-6">
                   Turn your parking lot or unused space into a revenue stream. 
                   List it on VendiBook and connect with food vendors looking for prime locations.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button variant="gradient-premium" size="lg" onClick={() => navigate('/list')}>
-                    List Your Lot
+                    List Your Space
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                   <Button variant="outline" size="lg" onClick={() => navigate('/how-it-works')}>

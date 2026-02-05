@@ -121,7 +121,7 @@ const CategoryCarousel = ({ config, listings, hostVerificationMap, isLoading }: 
             variant="ghost"
             size="sm"
             className="ml-2 text-primary"
-            onClick={() => navigate(config.category === 'vendor_lot' ? '/vendor-lots' : `/search?category=${config.category}`)}
+            onClick={() => navigate(config.category === 'vendor_lot' ? '/vendor-spaces' : `/search?category=${config.category}`)}
           >
             View all
           </Button>
