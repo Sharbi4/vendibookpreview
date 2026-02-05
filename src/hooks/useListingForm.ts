@@ -161,23 +161,23 @@ export const useListingForm = () => {
         }
         return formData.price_daily.trim().length > 0 && parseFloat(formData.price_daily) > 0;
       case 4:
-        // Location required - validate structured address fields
+        // Location required - validate structured address fields for ALL listing types
         const isStatic = isStaticLocation(formData.category) || formData.is_static_location;
-        if (isStatic) {
-          // Validate structured address: street, city, state, zip are required
-          const hasValidAddress = 
-            formData.street_address.trim().length > 0 &&
-            formData.city.trim().length > 0 &&
-            formData.state.trim().length > 0 &&
-            formData.zip_code.trim().length > 0;
-          return hasValidAddress && formData.access_instructions.trim().length > 0;
-        }
-        // For mobile assets, validate city, state, zip (not full street address)
-        const hasValidMobileLocation = 
+        
+        // All listings now require full address: street, city, state, zip
+        const hasValidAddress = 
+          formData.street_address.trim().length > 0 &&
           formData.city.trim().length > 0 &&
           formData.state.trim().length > 0 &&
-          formData.zip_code.trim().length > 0;
-        return !!formData.fulfillment_type && hasValidMobileLocation;
+          formData.zip_code.trim().length >= 5;
+        
+        if (isStatic) {
+          // Static locations also need access instructions
+          return hasValidAddress && formData.access_instructions.trim().length > 0;
+        }
+        
+        // Mobile assets need fulfillment type + full address
+        return !!formData.fulfillment_type && hasValidAddress;
       case 5:
         // Documents step - always valid (documents are optional)
         return true;
