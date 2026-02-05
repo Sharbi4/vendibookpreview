@@ -105,16 +105,25 @@ export const SlotSelector = ({
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
-        <Label className="text-sm font-medium">
+        <Label className="text-sm font-medium flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-primary" />
           Select a Vendor Space
         </Label>
-        <Badge variant="secondary" className="text-xs">
+        <Badge 
+          variant="secondary" 
+          className={cn(
+            "text-xs font-medium px-2.5 py-1",
+            availableCount > 0 
+              ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" 
+              : "bg-muted text-muted-foreground"
+          )}
+        >
           {availableCount} of {totalSlots} available
         </Badge>
       </div>
 
       {isLoading ? (
-        <div className="p-4 bg-muted/30 rounded-xl border border-border text-center">
+        <div className="glass-card p-4 rounded-xl border border-border/50 text-center">
           <p className="text-sm text-muted-foreground animate-pulse">
             Checking availability...
           </p>
@@ -132,27 +141,32 @@ export const SlotSelector = ({
               }}
               disabled={slot.isBooked || disabled}
               className={cn(
-                "relative p-3 rounded-xl border-2 transition-all text-left",
+                "relative p-3 rounded-xl border-2 transition-all duration-200 text-left group",
                 slot.isBooked
                   ? "bg-muted/20 border-muted cursor-not-allowed opacity-50"
                   : slot.isSelected
-                  ? "bg-primary/10 border-primary shadow-sm"
+                  ? "glass-premium border-primary shadow-md shadow-primary/10"
                   : "bg-card border-border hover:border-primary/50 hover:shadow-sm"
               )}
             >
-              <div className="flex items-start justify-between">
+              {/* Selected glow effect */}
+              {slot.isSelected && (
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary/10 to-transparent pointer-events-none" />
+              )}
+              
+              <div className="relative z-10 flex items-start justify-between">
                 <div className="flex items-center gap-2">
                   <div
                     className={cn(
-                      "w-6 h-6 rounded-md flex items-center justify-center text-xs font-medium",
+                      "w-7 h-7 rounded-lg flex items-center justify-center transition-colors",
                       slot.isBooked
                         ? "bg-muted text-muted-foreground"
                         : slot.isSelected
                         ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-foreground"
+                        : "bg-muted group-hover:bg-primary/10 text-foreground group-hover:text-primary"
                     )}
                   >
-                    <MapPin className="h-3 w-3" />
+                    <MapPin className="h-3.5 w-3.5" />
                   </div>
                   <span
                     className={cn(
@@ -170,7 +184,7 @@ export const SlotSelector = ({
                 )}
               </div>
               {slot.isBooked && (
-                <span className="text-[10px] text-destructive mt-1 block">
+                <span className="relative z-10 text-[10px] text-destructive mt-1 block font-medium">
                   Booked
                 </span>
               )}

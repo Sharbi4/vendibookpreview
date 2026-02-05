@@ -30,6 +30,7 @@ import CancellationPolicyCard from '@/components/trust/CancellationPolicyCard';
 import { ListingEventsSection } from '@/components/storefront';
 import { TechSpecsGrid } from '@/components/listing-detail/TechSpecsGrid';
 import { InlineAvailabilityCalendar } from '@/components/listing-detail/InlineAvailabilityCalendar';
+import { VendorSlotAvailability } from '@/components/listing-detail/VendorSlotAvailability';
 import { BookingWidget } from '@/components/listing-detail/BookingWidget';
 import OwnerBanner from '@/components/listing-detail/OwnerBanner';
 import { useListing } from '@/hooks/useListing';
@@ -394,6 +395,19 @@ const ListingDetail = () => {
                     listingId={listing.id}
                     availableFrom={listing.available_from}
                     availableTo={listing.available_to}
+                  />
+                  <div className="border-t border-border" />
+                </>
+              )}
+
+              {/* Vendor Slot Availability - Show for vendor spaces with multiple slots */}
+              {(listing.category === 'vendor_lot' || listing.category === 'vendor_space') && 
+               listing.total_slots && listing.total_slots > 1 && (
+                <>
+                  <VendorSlotAvailability
+                    listingId={listing.id}
+                    totalSlots={listing.total_slots}
+                    slotNames={listing.slot_names}
                   />
                   <div className="border-t border-border" />
                 </>
