@@ -294,7 +294,7 @@ const BookingForm = ({
         total_price: fees.customerTotal,
         fulfillment_selected: fulfillmentSelected,
         is_instant_book: instantBook,
-        slots_requested: isVendorSpace ? slotsRequested : 1,
+        slot_number: isVendorSpace && slotsRequested > 0 ? slotsRequested : null,
       };
 
       // Add fulfillment-specific data

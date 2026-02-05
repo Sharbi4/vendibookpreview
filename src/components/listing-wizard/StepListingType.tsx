@@ -20,7 +20,7 @@ const categoryOptions: { value: ListingCategory; label: string; icon: React.Reac
   { value: 'food_truck', label: 'Food Truck', icon: <Truck className="w-6 h-6" />, description: 'Mobile kitchen on wheels' },
   { value: 'food_trailer', label: 'Food Trailer', icon: <Truck className="w-6 h-6" />, description: 'Towable food service unit' },
   { value: 'ghost_kitchen', label: 'Ghost Kitchen', icon: <Building2 className="w-6 h-6" />, description: 'Delivery-only commercial kitchen' },
-  { value: 'vendor_lot', label: 'Vendor Space', icon: <MapPin className="w-6 h-6" />, description: 'Prime location for food vendors' },
+  { value: 'vendor_space', label: 'Vendor Space', icon: <MapPin className="w-6 h-6" />, description: 'Prime location for food vendors' },
 ];
 
 export const StepListingType: React.FC<StepListingTypeProps> = ({
@@ -138,7 +138,7 @@ export const StepListingType: React.FC<StepListingTypeProps> = ({
       )}
 
       {/* Total Slots Input - Vendor Space only */}
-      {formData.category === 'vendor_lot' && (
+      {(formData.category === 'vendor_space' || formData.category === 'vendor_lot') && (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="flex items-center gap-2">
             <Label className="text-lg font-semibold">Total Slots Available</Label>

@@ -17,7 +17,7 @@ const categories: Category[] = [
   { id: 'food_truck', label: 'Food Trucks', icon: Truck },
   { id: 'food_trailer', label: 'Food Trailers', icon: ShoppingCart },
   { id: 'ghost_kitchen', label: 'Ghost Kitchens', icon: Factory },
-  { id: 'vendor_lot', label: 'Vendor Spaces', icon: MapPin },
+  { id: 'vendor_space', label: 'Vendor Spaces', icon: MapPin },
 ];
 
 const CategoryPills = ({ selectedCategory, onSelectCategory }: CategoryPillsProps) => {

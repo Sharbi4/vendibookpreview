@@ -107,6 +107,7 @@ const HeroRentalSearch = () => {
                 <option value="food_truck">Food Truck</option>
                 <option value="food_trailer">Food Trailer</option>
                 <option value="ghost_kitchen">Commercial Kitchen</option>
+                <option value="vendor_space">Vendor Spaces</option>
               </select>
             </div>
           </div>
