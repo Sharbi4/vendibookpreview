@@ -51,8 +51,6 @@ const EarningsCalculator = () => {
 
   const monthlyEarnings = daysPerMonth[0] * dailyRate[0];
   const yearlyEarnings = monthlyEarnings * 12;
-  const platformFee = monthlyEarnings * 0.129; // 12.9% platform fee
-  const netEarnings = monthlyEarnings - platformFee;
 
   return (
     <div className="bg-gradient-to-br from-foreground to-foreground/95 text-background rounded-3xl p-6 md:p-10 relative overflow-hidden">
@@ -160,13 +158,6 @@ const EarningsCalculator = () => {
                 ${yearlyEarnings.toLocaleString()}
               </motion.p>
             </div>
-          </div>
-          <div className="mt-4 pt-4 border-t border-background/10 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-              <span className="text-sm text-background/60">12.9% platform fee = ${Math.round(platformFee).toLocaleString()}</span>
-            </div>
-            <span className="text-sm font-medium text-emerald-400">You keep ${Math.round(netEarnings).toLocaleString()}</span>
           </div>
         </div>
 
@@ -332,7 +323,7 @@ const benefits = [
 const faqs = [
   {
     question: "How much does it cost to list?",
-    answer: "Listing is completely free. We only charge a 12.9% platform fee when you successfully complete a rental. No upfront costs, no monthly fees."
+    answer: "Listing is completely free. We only charge a small platform fee when you successfully complete a rental. No upfront costs, no monthly fees."
   },
   {
     question: "How do I get paid?",
@@ -446,7 +437,7 @@ const HowItWorksHost = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    <span>12.9% platform fee only</span>
+                    <span>Pay only when you earn</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
