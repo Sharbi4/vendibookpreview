@@ -103,11 +103,11 @@ const HeroRentalSearch = () => {
                 onChange={(e) => setAssetType(e.target.value)}
                 className="w-full bg-transparent border-none p-0 text-foreground focus:ring-0 text-sm font-medium outline-none cursor-pointer appearance-none"
               >
-                <option value="all">Any Vehicle or Kitchen</option>
+                <option value="all">Any Type</option>
                 <option value="food_truck">Food Truck</option>
                 <option value="food_trailer">Food Trailer</option>
                 <option value="ghost_kitchen">Commercial Kitchen</option>
-                <option value="vendor_space">Vendor Spaces</option>
+                <option value="vendor_space">Vendor Space</option>
               </select>
             </div>
           </div>
