@@ -264,50 +264,53 @@ const EnhancedPublicProfileHeader = ({
           )}
           onClick={isOwnProfile ? () => headerInputRef.current?.click() : undefined}
         >
-          {/* Premium glass gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-foreground/5 via-card to-primary/10" />
+          {/* Visible gradient background - not all white */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-muted/40" />
           
-          {/* Animated gradient orbs */}
+          {/* Secondary layer for depth */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+          
+          {/* Animated gradient orbs - more visible */}
           <motion.div 
-            className="absolute -top-20 -right-20 w-80 h-80 bg-gradient-to-br from-primary/15 to-primary/5 rounded-full blur-3xl"
+            className="absolute -top-20 -right-20 w-80 h-80 bg-gradient-to-br from-primary/30 to-primary/10 rounded-full blur-3xl"
             animate={{ 
               scale: [1, 1.3, 1],
-              opacity: [0.4, 0.7, 0.4],
+              opacity: [0.5, 0.8, 0.5],
               x: [0, 20, 0],
             }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div 
-            className="absolute -bottom-10 -left-10 w-60 h-60 bg-gradient-to-tr from-primary/10 to-accent/10 rounded-full blur-2xl"
+            className="absolute -bottom-10 -left-10 w-60 h-60 bg-gradient-to-tr from-primary/20 to-accent/15 rounded-full blur-2xl"
             animate={{ 
               scale: [1.2, 1, 1.2],
-              opacity: [0.3, 0.5, 0.3],
+              opacity: [0.4, 0.6, 0.4],
               y: [0, -15, 0],
             }}
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div 
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-radial from-primary/8 to-transparent rounded-full blur-3xl"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-radial from-primary/15 to-transparent rounded-full blur-3xl"
             animate={{ 
               scale: [1, 1.15, 1],
-              opacity: [0.2, 0.4, 0.2],
+              opacity: [0.3, 0.5, 0.3],
             }}
             transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
           />
           
-          {/* Subtle grid pattern overlay */}
-          <div className="absolute inset-0 bg-dot-pattern opacity-30" />
+          {/* Subtle pattern overlay */}
+          <div className="absolute inset-0 bg-dot-pattern opacity-20" />
           
           {/* Upload prompt for own profile */}
           {isOwnProfile && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
               {isUploadingHeader ? (
                 <Loader2 className="h-6 w-6 animate-spin text-white" />
               ) : (
                 <>
-                  <ImageIcon className="h-8 w-8 mb-2 text-white/80" />
+                  <ImageIcon className="h-8 w-8 mb-2 text-white" />
                   <span className="text-sm font-medium text-white">Add header image</span>
-                  <span className="text-xs text-white/70">Recommended: 1200 x 400px</span>
+                  <span className="text-xs text-white/80">Recommended: 1200 x 400px</span>
                 </>
               )}
             </div>
