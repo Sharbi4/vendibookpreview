@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
 import { RequiredDocumentsBanner } from '@/components/documents/RequiredDocumentsBanner';
-import { BookingInfoModal, type BookingUserInfo } from '@/components/booking';
+import { BookingInfoModal, SlotSelector, type BookingUserInfo } from '@/components/booking';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { calculateRentalFees, RENTAL_RENTER_FEE_PERCENT } from '@/lib/commissions';
@@ -49,6 +49,7 @@ interface BookingFormProps {
   instantBook?: boolean;
   // Multi-slot capacity for Vendor Spaces
   totalSlots?: number;
+  slotNames?: string[] | null;
 }
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
@@ -73,6 +74,7 @@ const BookingForm = ({
   status,
   instantBook = false,
   totalSlots = 1,
+  slotNames = null,
 }: BookingFormProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -114,8 +116,14 @@ const BookingForm = ({
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryInstructionsInput, setDeliveryInstructionsInput] = useState('');
   
-  // Slots state for Vendor Spaces
-  const [slotsRequested, setSlotsRequested] = useState(1);
+  // Slots state for Vendor Spaces - now with named slots
+  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+  const [selectedSlotName, setSelectedSlotName] = useState<string | null>(null);
+
+  const handleSlotSelect = (slotNumber: number, slotName: string) => {
+    setSelectedSlot(slotNumber);
+    setSelectedSlotName(slotName);
+  };
 
   // Fetch saved profile data on mount
   useEffect(() => {
@@ -294,7 +302,8 @@ const BookingForm = ({
         total_price: fees.customerTotal,
         fulfillment_selected: fulfillmentSelected,
         is_instant_book: instantBook,
-        slot_number: isVendorSpace && slotsRequested > 0 ? slotsRequested : null,
+        slot_number: isVendorSpace && selectedSlot ? selectedSlot : null,
+        slot_name: isVendorSpace && selectedSlotName ? selectedSlotName : null,
       };
 
       // Add fulfillment-specific data
@@ -639,47 +648,17 @@ const BookingForm = ({
 
       {/* Slots Selector - Vendor Space with Multiple Slots */}
       {hasMultipleSlots && (
-        <div className="mb-6">
-          <Label className="text-sm font-medium mb-3 block">
-            Number of spaces
-          </Label>
-          <div className="p-4 bg-muted/30 rounded-xl border border-border">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
-                  <Users className="h-4 w-4" />
-                </div>
-                <span className="text-sm text-foreground">Vendor Spaces</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setSlotsRequested(Math.max(1, slotsRequested - 1))}
-                  disabled={slotsRequested <= 1 || !isListingAvailable}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <span className="w-8 text-center font-medium">{slotsRequested}</span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setSlotsRequested(Math.min(totalSlots, slotsRequested + 1))}
-                  disabled={slotsRequested >= totalSlots || !isListingAvailable}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {totalSlots} total spaces available at this location
-            </p>
-          </div>
-        </div>
+        <SlotSelector
+          listingId={listingId}
+          totalSlots={totalSlots}
+          slotNames={slotNames}
+          startDate={startDate}
+          endDate={endDate}
+          selectedSlot={selectedSlot}
+          selectedSlotName={selectedSlotName}
+          onSlotSelect={handleSlotSelect}
+          disabled={!isListingAvailable}
+        />
       )}
 
       {/* Static Location Info - Read Only */}

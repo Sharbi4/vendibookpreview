@@ -27,6 +27,7 @@ import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
 import { FavoriteButton } from '@/components/listing/FavoriteButton';
 import CompactTrustSection from '@/components/trust/CompactTrustSection';
 import CancellationPolicyCard from '@/components/trust/CancellationPolicyCard';
+import { ListingEventsSection } from '@/components/storefront';
 import { TechSpecsGrid } from '@/components/listing-detail/TechSpecsGrid';
 import { InlineAvailabilityCalendar } from '@/components/listing-detail/InlineAvailabilityCalendar';
 import { BookingWidget } from '@/components/listing-detail/BookingWidget';
@@ -398,6 +399,14 @@ const ListingDetail = () => {
                 </>
               )}
 
+              {/* Events & Updates Section - Vendor Spaces / Locations */}
+              {(listing.category === 'vendor_lot' || listing.category === 'vendor_space' || listing.category === 'ghost_kitchen') && (
+                <ListingEventsSection
+                  listingId={listing.id}
+                  hostId={listing.host_id}
+                  isOwner={isOwner || false}
+                />
+              )}
               {/* Host Section */}
               <EnhancedHostCard
                 hostId={listing.host_id}
