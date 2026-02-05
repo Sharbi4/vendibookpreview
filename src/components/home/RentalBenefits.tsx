@@ -1,20 +1,20 @@
-import { Zap, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Sparkles, ShieldCheck, MapPin } from 'lucide-react';
 
 const benefits = [
   {
-    icon: Zap,
-    title: 'Low Capital, High Speed',
-    description: 'Why buy when you can rent? Test your concept with a 1-month rental before committing to a 5-year loan.',
+    icon: Sparkles,
+    title: 'Capital Efficiency',
+    description: "Launch and scale. Don't get locked into a 5-year loan. Whether you need a short-term rental to test a concept or a turnkey asset to own, we provide the inventory to scale on your terms.",
   },
   {
     icon: ShieldCheck,
-    title: 'Verified & Insured',
-    description: 'Every host is ID-verified. Payments are held in escrow until you get the keys. Safety is built-in.',
+    title: 'Built-in Trust',
+    description: "Verified & Professional. We've standardized the industry. From Stripe-backed ID verification to secure escrow and digital agreements, we've handled the risk so you can focus on the food.",
   },
   {
-    icon: RefreshCw,
-    title: 'Flexible Terms',
-    description: 'Need a truck for a festival weekend? Or a kitchen for a year? Find terms that fit your timeline.',
+    icon: MapPin,
+    title: 'Strategic Placement',
+    description: 'A home for your business. A great truck needs a great location. Instantly discover and book verified vendor slots, commissary kitchens, and food truck parks with professional logistics.',
   },
 ];
 
