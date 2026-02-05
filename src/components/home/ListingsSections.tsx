@@ -67,9 +67,9 @@ const ListingsSections = () => {
     [allListings]
   );
 
-  // Featured Vendor Spaces - vendor_space category listings
+  // Featured Vendor Spaces - vendor_space and legacy vendor_lot category listings
   const vendorSpaceListings = useMemo(() => 
-    allListings.filter(l => l.category === 'vendor_space').slice(0, 6), 
+    allListings.filter(l => l.category === 'vendor_space' || l.category === 'vendor_lot').slice(0, 6), 
     [allListings]
   );
 
