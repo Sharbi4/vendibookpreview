@@ -157,7 +157,7 @@ export const PublishWizard: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { isOnboardingComplete, isLoading: isStripeLoading, connectStripe, isConnecting } = useStripeConnect();
+  const { isOnboardingComplete, hasAccountStarted, isLoading: isStripeLoading, connectStripe, isConnecting } = useStripeConnect();
 
   const [step, setStep] = useState<PublishStep>('photos');
   const [listing, setListing] = useState<ListingData | null>(null);
@@ -1883,6 +1883,26 @@ export const PublishWizard: React.FC = () => {
                         </div>
                       </div>
                     </div>
+                  ) : hasAccountStarted ? (
+                    <div className="rounded-2xl p-8 border-2 border-amber-200 bg-amber-50/50 text-center">
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center">
+                        <AlertCircle className="w-8 h-8 text-amber-600" />
+                      </div>
+                      <h3 className="font-semibold text-foreground mb-2">Finish Stripe Setup</h3>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        You started connecting your Stripe account but haven't completed the setup. Finish it to receive payments.
+                      </p>
+                      <Button
+                        onClick={handleStripeConnect}
+                        disabled={isConnecting}
+                        className="bg-amber-500 hover:bg-amber-600 text-white border-0 shadow-md h-12 px-6"
+                      >
+                        {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                        <img src={stripeIcon} alt="" className="h-5 w-5 object-cover rounded mr-2" />
+                        Complete Setup
+                        <ExternalLink className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
                   ) : (
                     <div className="rounded-2xl p-8 border border-border bg-muted/30 text-center">
                       <img src={stripeIcon} alt="Stripe" className="w-16 h-16 mx-auto mb-4 rounded-xl object-cover" />
@@ -1921,7 +1941,7 @@ export const PublishWizard: React.FC = () => {
                     { label: 'Title & Description', ok: hasDescription, detail: hasDescription ? '✓ Complete' : 'Missing details' },
                     { label: 'Pricing', ok: hasPricing, detail: hasPricing ? '✓ Set' : 'Required' },
                     { label: 'Location', ok: hasLocation, detail: hasLocation ? '✓ Set' : 'Required' },
-                    { label: 'Stripe', ok: !requiresStripe || isOnboardingComplete, detail: !requiresStripe ? 'Not required' : isOnboardingComplete ? '✓ Connected' : 'Required' },
+                    { label: 'Stripe', ok: !requiresStripe || isOnboardingComplete, detail: !requiresStripe ? 'Not required' : isOnboardingComplete ? '✓ Connected' : hasAccountStarted ? 'Finish setup' : 'Required' },
                   ].map((item) => (
                     <div key={item.label} className={cn("p-4 rounded-xl border flex items-center justify-between", item.ok ? "border-emerald-200 bg-emerald-50" : "border-destructive/30 bg-destructive/5")}>
                       <div className="flex items-center gap-3">
