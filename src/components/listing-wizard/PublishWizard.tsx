@@ -1102,7 +1102,7 @@ export const PublishWizard: React.FC = () => {
         updateData = {
           available_from: availableFrom || null,
           available_to: availableTo || null,
-          total_slots: listing.category === 'vendor_space' ? totalSlots : 1,
+          total_slots: ['vendor_space', 'ghost_kitchen', 'food_truck', 'food_trailer'].includes(listing.category) ? totalSlots : 1,
         };
       } else if (step === 'documents') {
         // Save required documents to the database
@@ -2523,8 +2523,8 @@ export const PublishWizard: React.FC = () => {
                     </p>
                   </div>
 
-                  {/* Spaces Available - Only for Vendor Spaces */}
-                  {listing.category === 'vendor_space' && (
+                  {/* Spaces Available - For categories with multiple slots */}
+                  {['vendor_space', 'ghost_kitchen', 'food_truck', 'food_trailer'].includes(listing.category) && (
                     <div className="space-y-4 p-4 rounded-xl border border-border bg-muted/30">
                       <div className="flex items-center gap-2">
                         <MapPin className="h-5 w-5 text-primary" />

@@ -401,8 +401,8 @@ const ListingDetail = () => {
                 </>
               )}
 
-              {/* Vendor Slot Availability - Show for vendor spaces with multiple slots */}
-              {(listing.category === 'vendor_lot' || listing.category === 'vendor_space') && 
+              {/* Slot Availability - Show for categories with multiple slots */}
+              {['vendor_lot', 'vendor_space', 'ghost_kitchen', 'food_truck', 'food_trailer'].includes(listing.category) && 
                listing.total_slots && listing.total_slots > 1 && (
                 <>
                   <VendorSlotAvailability

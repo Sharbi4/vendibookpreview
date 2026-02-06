@@ -80,7 +80,7 @@ export const VendorSlotAvailability = ({
               <Users className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">Vendor Spaces</h3>
+              <h3 className="font-semibold text-foreground">Available Spaces</h3>
               <p className="text-sm text-muted-foreground">Select your spot</p>
             </div>
           </div>
