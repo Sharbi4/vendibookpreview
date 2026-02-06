@@ -8,6 +8,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import heroBg from '@/assets/hero-food-truck.jpg';
+import type { DateRange } from 'react-day-picker';
 
 // --- Sub-Components ---
 
@@ -31,7 +32,7 @@ const SearchTab = ({ active, label, icon: Icon, onClick }: { active: boolean; la
 const HeroRentalSearch = () => {
   const navigate = useNavigate();
   const [location, setLocation] = useState('');
-  const [date, setDate] = useState<Date>();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [activeTab, setActiveTab] = useState<'rent' | 'buy'>('rent');
   const [assetType, setAssetType] = useState('all');
   const [isDateOpen, setIsDateOpen] = useState(false);
@@ -39,7 +40,8 @@ const HeroRentalSearch = () => {
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (location) params.set('q', location);
-    if (date) params.set('start', format(date, 'yyyy-MM-dd'));
+    if (dateRange?.from) params.set('start', format(dateRange.from, 'yyyy-MM-dd'));
+    if (dateRange?.to) params.set('end', format(dateRange.to, 'yyyy-MM-dd'));
     if (assetType !== 'all') params.set('category', assetType);
     params.set('mode', activeTab === 'rent' ? 'rent' : 'sale');
     navigate(`/search?${params.toString()}`);
@@ -47,6 +49,16 @@ const HeroRentalSearch = () => {
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleSearch();
+  };
+
+  // Format date range for display
+  const formatDateRange = () => {
+    if (!dateRange?.from) return "Add dates";
+    if (!dateRange.to) return format(dateRange.from, "MMM d");
+    if (dateRange.from.getTime() === dateRange.to.getTime()) {
+      return format(dateRange.from, "MMM d");
+    }
+    return `${format(dateRange.from, "MMM d")} - ${format(dateRange.to, "MMM d")}`;
   };
 
   return (
@@ -142,7 +154,7 @@ const HeroRentalSearch = () => {
               </div>
             </div>
 
-            {/* Date Input (Only for Rentals) */}
+            {/* Date Range Input (Only for Rentals) */}
             <AnimatePresence>
               {activeTab === 'rent' && (
                 <motion.div
@@ -156,25 +168,23 @@ const HeroRentalSearch = () => {
                     <PopoverTrigger asChild>
                       <button className="w-full text-left">
                         <span className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-0.5">
-                          Date
+                          Dates
                         </span>
                         <div className="flex items-center gap-2">
                           <CalendarIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <span className={cn("text-base font-medium", date ? "text-foreground" : "text-muted-foreground/60")}>
-                            {date ? format(date, "MMM d") : "Add date"}
+                          <span className={cn("text-base font-medium truncate", dateRange?.from ? "text-foreground" : "text-muted-foreground/60")}>
+                            {formatDateRange()}
                           </span>
                         </div>
                       </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="center">
                       <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={(d) => {
-                          setDate(d);
-                          setIsDateOpen(false);
-                        }}
+                        mode="range"
+                        selected={dateRange}
+                        onSelect={setDateRange}
                         disabled={(date) => date < new Date()}
+                        numberOfMonths={2}
                         initialFocus
                         className="pointer-events-auto"
                       />
