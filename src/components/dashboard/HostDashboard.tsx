@@ -29,7 +29,7 @@ const HostDashboard = () => {
   const [searchParams] = useSearchParams();
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing, updateListingPrice } = useHostListings();
   const { stats: bookingStats } = useHostBookings();
-  const { isConnected, hasAccountStarted, isLoading: stripeLoading, connectStripe, isConnecting, openStripeDashboard, isOpeningDashboard } = useStripeConnect();
+  const { isConnected, isPayoutsEnabled, hasAccountStarted, isLoading: stripeLoading, connectStripe, isConnecting, openStripeDashboard, isOpeningDashboard } = useStripeConnect();
   const { analytics, isLoading: analyticsLoading } = useListingAnalytics();
   const { analytics: revenueAnalytics, isLoading: revenueLoading } = useRevenueAnalytics();
   const { pendingOffers } = useHostOffers();
@@ -138,6 +138,8 @@ const HostDashboard = () => {
         <div className="mt-4 pt-4 border-t border-border">
           <StripeNotificationBubble 
             isConnected={isConnected}
+            hasAccountStarted={hasAccountStarted}
+            isPayoutsEnabled={isPayoutsEnabled}
             isLoading={stripeLoading}
             onConnect={handleConnectStripe}
             isConnecting={isConnecting}

@@ -5,6 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 interface StripeConnectStatus {
   connected: boolean;
   onboarding_complete: boolean;
+  details_submitted?: boolean;
+  payouts_enabled?: boolean;
+  charges_enabled?: boolean;
   account_id?: string;
 }
 
@@ -112,11 +115,13 @@ export const useStripeConnect = () => {
   };
 
   return {
-    // Only consider "connected" when both account exists AND onboarding is complete
-    isConnected: (status?.connected && status?.onboarding_complete) ?? false,
+    // Connected when Stripe reports onboarding details submitted
+    isConnected: status?.onboarding_complete ?? false,
     isOnboardingComplete: status?.onboarding_complete ?? false,
     hasAccountStarted: status?.connected ?? false, // Account created but may not be fully set up
     accountId: status?.account_id,
+    isPayoutsEnabled: status?.payouts_enabled ?? false,
+    isChargesEnabled: status?.charges_enabled ?? false,
     isLoading,
     isConnecting,
     isOpeningDashboard,

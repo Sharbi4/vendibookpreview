@@ -62,13 +62,21 @@ serve(async (req) => {
     
     // Check account status
     const account = await stripe.accounts.retrieve(profile.stripe_account_id);
-    const isComplete = account.details_submitted && account.payouts_enabled;
-    
-    logStep("Account status checked", { 
+
+    // Business rule: "connected" when details are submitted.
+    // UI rule: if payouts aren't enabled yet, show Connected + warning.
+    const detailsSubmitted = !!account.details_submitted;
+    const payoutsEnabled = !!account.payouts_enabled;
+    const chargesEnabled = !!account.charges_enabled;
+
+    const isComplete = detailsSubmitted;
+
+    logStep("Account status checked", {
       accountId: profile.stripe_account_id,
-      detailsSubmitted: account.details_submitted,
-      payoutsEnabled: account.payouts_enabled,
-      isComplete
+      detailsSubmitted,
+      payoutsEnabled,
+      chargesEnabled,
+      isComplete,
     });
 
     // Sync profile if onboarding status changed (both directions)
@@ -83,6 +91,9 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       connected: true,
       onboarding_complete: isComplete,
+      details_submitted: detailsSubmitted,
+      payouts_enabled: payoutsEnabled,
+      charges_enabled: chargesEnabled,
       account_id: profile.stripe_account_id
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
