@@ -92,7 +92,7 @@ const Search = () => {
   const [locationCoords, setLocationCoords] = useState<[number, number] | null>(
     initialLat && initialLng ? [parseFloat(initialLng), parseFloat(initialLat)] : null
   );
-  const [searchRadius, setSearchRadius] = useState(initialRadius ? parseInt(initialRadius) : 25);
+  const [searchRadius, setSearchRadius] = useState(initialRadius ? parseInt(initialRadius) : 100);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, Infinity]);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(
     initialStartDate && initialEndDate
@@ -259,7 +259,7 @@ const Search = () => {
     setCategory('all');
     setLocationText('');
     setLocationCoords(null);
-    setSearchRadius(25);
+    setSearchRadius(100);
     setPriceRange([0, Infinity]);
     setDateRange(undefined);
     setSelectedAmenities([]);

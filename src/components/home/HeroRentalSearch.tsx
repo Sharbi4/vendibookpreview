@@ -45,6 +45,7 @@ const HeroRentalSearch = () => {
     if (selectedLocation) {
       params.set('lat', selectedLocation.coordinates[1].toString());
       params.set('lng', selectedLocation.coordinates[0].toString());
+      params.set('radius', '100'); // Default 100 mile radius
     }
     if (dateRange?.from) params.set('start', format(dateRange.from, 'yyyy-MM-dd'));
     if (dateRange?.to) params.set('end', format(dateRange.to, 'yyyy-MM-dd'));
