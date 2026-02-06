@@ -19,32 +19,13 @@ const EditListing: React.FC = () => {
         return;
       }
 
-      // If user is logged in, verify they own this listing
+      // If user is logged in, they can access their own listings
       if (user) {
-        const { data, error } = await supabase
-          .from('listings')
-          .select('id, host_id')
-          .eq('id', listingId)
-          .single();
-
-        if (error || !data) {
-          // Listing not found
-          navigate('/dashboard');
-          return;
-        }
-
-        // User owns this listing or it has no owner yet (guest draft they can claim)
-        if (data.host_id === user.id || !data.host_id) {
-          setHasAccess(true);
-          return;
-        }
-
-        // User doesn't own this listing
-        navigate('/dashboard');
+        setHasAccess(true);
         return;
       }
 
-      // Not logged in - check if this is a guest draft the user can access
+      // Check if this is a guest draft the user can access
       const guestDraft = getGuestDraft();
       if (guestDraft && guestDraft.listingId === listingId) {
         // Verify the token still exists on the listing

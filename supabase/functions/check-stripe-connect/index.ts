@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
@@ -62,38 +62,26 @@ serve(async (req) => {
     
     // Check account status
     const account = await stripe.accounts.retrieve(profile.stripe_account_id);
-
-    // Business rule: "connected" when details are submitted.
-    // UI rule: if payouts aren't enabled yet, show Connected + warning.
-    const detailsSubmitted = !!account.details_submitted;
-    const payoutsEnabled = !!account.payouts_enabled;
-    const chargesEnabled = !!account.charges_enabled;
-
-    const isComplete = detailsSubmitted;
-
-    logStep("Account status checked", {
+    const isComplete = account.details_submitted && account.payouts_enabled;
+    
+    logStep("Account status checked", { 
       accountId: profile.stripe_account_id,
-      detailsSubmitted,
-      payoutsEnabled,
-      chargesEnabled,
-      isComplete,
+      detailsSubmitted: account.details_submitted,
+      payoutsEnabled: account.payouts_enabled,
+      isComplete
     });
 
-    // Sync profile if onboarding status changed (both directions)
-    if (isComplete !== profile.stripe_onboarding_complete) {
+    // Update profile if onboarding status changed
+    if (isComplete && !profile.stripe_onboarding_complete) {
       await supabaseClient
         .from('profiles')
-        .update({ stripe_onboarding_complete: isComplete })
+        .update({ stripe_onboarding_complete: true })
         .eq('id', user.id);
-      logStep("Profile synced", { stripe_onboarding_complete: isComplete });
     }
 
     return new Response(JSON.stringify({ 
       connected: true,
       onboarding_complete: isComplete,
-      details_submitted: detailsSubmitted,
-      payouts_enabled: payoutsEnabled,
-      charges_enabled: chargesEnabled,
       account_id: profile.stripe_account_id
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

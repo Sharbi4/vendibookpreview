@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChefHat, Truck, Calendar as CalendarIcon, ChevronDown, Store } from 'lucide-react';
+import { Search, MapPin, ChefHat, Truck, Calendar as CalendarIcon, ChevronDown, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { DateRange } from 'react-day-picker';
-import { LocationSearchInput } from '@/components/search/LocationSearchInput';
 import heroBg from '@/assets/hero-food-truck.jpg';
 
 // --- Sub-Components ---
@@ -32,48 +30,23 @@ const SearchTab = ({ active, label, icon: Icon, onClick }: { active: boolean; la
 
 const HeroRentalSearch = () => {
   const navigate = useNavigate();
-  const [locationQuery, setLocationQuery] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState<{ name: string; coordinates: [number, number] } | null>(null);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [location, setLocation] = useState('');
+  const [date, setDate] = useState<Date>();
   const [activeTab, setActiveTab] = useState<'rent' | 'buy'>('rent');
   const [assetType, setAssetType] = useState('all');
   const [isDateOpen, setIsDateOpen] = useState(false);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
-    
-    // Location params
-    if (locationQuery) params.set('q', locationQuery);
-    if (selectedLocation) {
-      params.set('lat', selectedLocation.coordinates[1].toString());
-      params.set('lng', selectedLocation.coordinates[0].toString());
-    }
-    
-    // Date params - support both single date and range
-    if (dateRange?.from) {
-      params.set('start', format(dateRange.from, 'yyyy-MM-dd'));
-      if (dateRange.to) {
-        params.set('end', format(dateRange.to, 'yyyy-MM-dd'));
-      }
-    }
-    
-    // Other filters
+    if (location) params.set('q', location);
+    if (date) params.set('start', format(date, 'yyyy-MM-dd'));
     if (assetType !== 'all') params.set('category', assetType);
     params.set('mode', activeTab === 'rent' ? 'rent' : 'sale');
-    
     navigate(`/search?${params.toString()}`);
   };
 
-  const handleLocationSelect = (location: { name: string; coordinates: [number, number] } | null) => {
-    setSelectedLocation(location);
-  };
-
-  const formatDateDisplay = () => {
-    if (!dateRange?.from) return "Add dates";
-    if (dateRange.to) {
-      return `${format(dateRange.from, "MMM d")} - ${format(dateRange.to, "MMM d")}`;
-    }
-    return format(dateRange.from, "MMM d");
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleSearch();
   };
 
   return (
@@ -92,10 +65,10 @@ const HeroRentalSearch = () => {
           transition={{ duration: 0.8, ease: 'easeOut' }}
         >
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 leading-tight tracking-tight">
-            Rent it. Buy it. Find your spot.
+            Launch this weekend.
           </h1>
           <p className="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto mb-10 font-light">
-            From turnkey rentals and trucks for sale to premium food truck parks—launch your food business this weekend with verified assets and spaces.
+            Find the perfect food truck, trailer, or commercial kitchen to rent or buy near you.
           </p>
         </motion.div>
 
@@ -124,24 +97,27 @@ const HeroRentalSearch = () => {
           </div>
 
           {/* Search Bar - The "Island" */}
-          <div className="bg-white rounded-2xl md:rounded-full shadow-2xl p-3 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-0">
-            {/* Location Input with Geolocation */}
-            <div className="flex-1 px-3 py-1 md:py-1 md:border-r border-border">
+          <div className="bg-white rounded-full shadow-2xl p-2 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-0">
+            {/* Location Input */}
+            <div className="flex-1 px-4 py-3 md:py-2 md:border-r border-border">
               <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold text-left mb-0.5">
                 Location
               </label>
-              <LocationSearchInput
-                value={locationQuery}
-                onChange={setLocationQuery}
-                onLocationSelect={handleLocationSelect}
-                selectedCoordinates={selectedLocation?.coordinates || null}
-                placeholder="City, Zip, or use GPS"
-                className="[&_input]:border-0 [&_input]:shadow-none [&_input]:bg-transparent [&_input]:p-0 [&_input]:h-auto [&_input]:text-sm [&_input]:md:text-base [&_input]:font-medium [&_input]:pl-6 [&>div]:space-y-0 [&_.absolute.left-3]:left-0"
-              />
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="City, Zip, or 'Current Location'"
+                  className="w-full bg-transparent border-none p-0 text-foreground placeholder:text-muted-foreground/60 focus:ring-0 text-base font-medium outline-none truncate"
+                />
+              </div>
             </div>
 
             {/* Asset Type Selector */}
-            <div className="flex-1 px-3 py-2 md:py-2 md:border-r border-border border-t md:border-t-0">
+            <div className="flex-1 px-4 py-3 md:py-2 md:border-r border-border">
               <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold text-left mb-0.5">
                 Type
               </label>
@@ -154,7 +130,7 @@ const HeroRentalSearch = () => {
                 <select
                   value={assetType}
                   onChange={(e) => setAssetType(e.target.value)}
-                  className="w-full bg-transparent border-none p-0 text-foreground focus:ring-0 text-sm md:text-base font-medium outline-none cursor-pointer appearance-none truncate pr-4"
+                  className="w-full bg-transparent border-none p-0 text-foreground focus:ring-0 text-base font-medium outline-none cursor-pointer appearance-none truncate pr-4"
                 >
                   <option value="all">Everything</option>
                   <option value="food_truck">Food Trucks</option>
@@ -166,61 +142,42 @@ const HeroRentalSearch = () => {
               </div>
             </div>
 
-            {/* Date Range Input (Only for Rentals) */}
+            {/* Date Input (Only for Rentals) */}
             <AnimatePresence>
               {activeTab === 'rent' && (
                 <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="flex-1 px-3 py-2 md:py-2 md:border-r border-border border-t md:border-t-0 overflow-hidden"
+                  className="flex-1 px-4 py-3 md:py-2 md:border-r border-border overflow-hidden"
                 >
                   <Popover open={isDateOpen} onOpenChange={setIsDateOpen}>
                     <PopoverTrigger asChild>
                       <button className="w-full text-left">
                         <span className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-0.5">
-                          Dates
+                          Date
                         </span>
                         <div className="flex items-center gap-2">
                           <CalendarIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <span className={cn("text-sm md:text-base font-medium truncate", dateRange?.from ? "text-foreground" : "text-muted-foreground/60")}>
-                            {formatDateDisplay()}
+                          <span className={cn("text-base font-medium", date ? "text-foreground" : "text-muted-foreground/60")}>
+                            {date ? format(date, "MMM d") : "Add date"}
                           </span>
                         </div>
                       </button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 z-[60]" align="center">
+                    <PopoverContent className="w-auto p-0" align="center">
                       <Calendar
-                        mode="range"
-                        selected={dateRange}
-                        onSelect={(range) => {
-                          setDateRange(range);
-                          // Close when range is complete or user clicks same date twice (single date)
-                          if (range?.from && range?.to) {
-                            setIsDateOpen(false);
-                          }
+                        mode="single"
+                        selected={date}
+                        onSelect={(d) => {
+                          setDate(d);
+                          setIsDateOpen(false);
                         }}
-                        numberOfMonths={2}
                         disabled={(date) => date < new Date()}
                         initialFocus
-                        className={cn("p-3 pointer-events-auto")}
+                        className="pointer-events-auto"
                       />
-                      <div className="px-4 pb-3 flex items-center justify-between border-t pt-3">
-                        <p className="text-xs text-muted-foreground">
-                          Select a single date or a range
-                        </p>
-                        {dateRange?.from && (
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => setIsDateOpen(false)}
-                            className="h-7 text-xs"
-                          >
-                            Done
-                          </Button>
-                        )}
-                      </div>
                     </PopoverContent>
                   </Popover>
                 </motion.div>
@@ -228,14 +185,15 @@ const HeroRentalSearch = () => {
             </AnimatePresence>
 
             {/* Search Button */}
-            <div className="p-1 pt-2 md:pt-1">
+            <div className="p-1">
               <Button
                 onClick={handleSearch}
                 size="lg"
-                className="rounded-xl md:rounded-full h-12 w-full md:h-14 md:w-auto md:px-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
+                className="rounded-full h-12 w-full md:h-14 md:w-auto md:px-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
               >
-                <Search className="h-5 w-5 mr-2" />
-                <span>Search</span>
+                <Search className="h-5 w-5 md:mr-2" />
+                <span className="md:hidden">Search</span>
+                <span className="hidden md:inline">Find Spaces</span>
               </Button>
             </div>
           </div>

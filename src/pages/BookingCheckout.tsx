@@ -124,26 +124,10 @@ const BookingCheckout = () => {
     
     // For daily bookings
     if (!listing?.price_daily || rentalDays <= 0) return 0;
-    
-    const priceMonthly = (listing as any)?.price_monthly;
-    const months = Math.floor(rentalDays / 30);
-    const weeksAfterMonths = Math.floor((rentalDays % 30) / 7);
-    const remainingDays = rentalDays % 30 % 7;
-    
-    if (priceMonthly && months > 0) {
-      // Use monthly rate for full months
-      const monthlyPart = months * priceMonthly;
-      const weeklyPart = listing.price_weekly && weeksAfterMonths > 0 
-        ? weeksAfterMonths * listing.price_weekly 
-        : weeksAfterMonths * 7 * listing.price_daily;
-      const dailyPart = remainingDays * listing.price_daily;
-      return monthlyPart + weeklyPart + dailyPart;
-    }
-    
     const weeks = Math.floor(rentalDays / 7);
-    const daysAfterWeeks = rentalDays % 7;
+    const remainingDays = rentalDays % 7;
     if (listing.price_weekly && weeks > 0) {
-      return (weeks * listing.price_weekly) + (daysAfterWeeks * listing.price_daily);
+      return (weeks * listing.price_weekly) + (remainingDays * listing.price_daily);
     }
     return rentalDays * listing.price_daily;
   };

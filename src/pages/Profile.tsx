@@ -41,7 +41,7 @@ const Profile = () => {
   // Host-specific data (only for own profile)
   const { listings: hostListings, stats: hostStats } = useHostListings();
   const { stats: bookingStats } = useHostBookings();
-  const { isConnected: stripeConnected, isPayoutsEnabled, isLoading: stripeLoading, connectStripe, isConnecting } = useStripeConnect();
+  const { isConnected: stripeConnected, isLoading: stripeLoading, connectStripe, isConnecting } = useStripeConnect();
   const { data: responseTimeData } = useHostResponseTime(profileUserId);
 
   const isLoading = profileLoading || statsLoading;
@@ -94,15 +94,15 @@ const Profile = () => {
 
       <main className="flex-1">
         {/* Enhanced Animated Header */}
-          <EnhancedProfileHeader
-            profile={profile}
-            stats={stats}
-            isOwnProfile={isOwnProfile}
-            stripeConnected={isPayoutsEnabled}
-            isFastResponder={responseTimeData?.isFastResponder}
-            avgResponseTime={responseTimeData?.avgResponseTime || undefined}
-            isHost={isHost}
-          />
+        <EnhancedProfileHeader
+          profile={profile}
+          stats={stats}
+          isOwnProfile={isOwnProfile}
+          stripeConnected={stripeConnected}
+          isFastResponder={responseTimeData?.isFastResponder}
+          avgResponseTime={responseTimeData?.avgResponseTime || undefined}
+          isHost={isHost}
+        />
 
         {/* Content Section */}
         <motion.div 
@@ -115,7 +115,7 @@ const Profile = () => {
           {isOwnProfile && (
             <EnhancedProfileNextStepCard
               isVerified={profile.identity_verified || false}
-              stripeConnected={isPayoutsEnabled}
+              stripeConnected={stripeConnected}
               isHost={isHost}
               draftCount={draftCount}
               pendingRequestCount={pendingRequestCount}
@@ -129,14 +129,14 @@ const Profile = () => {
           <EnhancedProfileStatsRow
             stats={stats}
             isVerified={profile.identity_verified || false}
-            stripeConnected={isPayoutsEnabled}
+            stripeConnected={stripeConnected}
             isHost={isHost}
           />
 
           {/* Trust Section - Collapsible */}
           <EnhancedProfileTrustSection
             isVerified={profile.identity_verified || false}
-            stripeConnected={isPayoutsEnabled}
+            stripeConnected={stripeConnected}
             isHost={isHost}
             isOwnProfile={isOwnProfile}
           />

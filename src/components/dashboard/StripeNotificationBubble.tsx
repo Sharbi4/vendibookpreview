@@ -4,8 +4,6 @@ import { cn } from '@/lib/utils';
 
 interface StripeNotificationBubbleProps {
   isConnected: boolean;
-  hasAccountStarted?: boolean;
-  isPayoutsEnabled?: boolean;
   isLoading: boolean;
   onConnect: () => void;
   isConnecting?: boolean;
@@ -13,8 +11,6 @@ interface StripeNotificationBubbleProps {
 
 const StripeNotificationBubble = ({ 
   isConnected, 
-  hasAccountStarted,
-  isPayoutsEnabled,
   isLoading,
   onConnect,
   isConnecting
@@ -22,17 +18,10 @@ const StripeNotificationBubble = ({
   if (isLoading) return null;
 
   if (isConnected) {
-    const showWarning = isPayoutsEnabled === false;
-
     return (
-      <div className={cn(
-        "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium",
-        showWarning
-          ? "bg-muted border border-border text-foreground"
-          : "bg-emerald-50 border border-emerald-200 text-emerald-700"
-      )}>
-        <Check className={cn("h-3.5 w-3.5", showWarning ? "text-muted-foreground" : "text-emerald-700")} />
-        {showWarning ? 'Stripe connected (payouts pending)' : 'Stripe connected'}
+      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium">
+        <Check className="h-3.5 w-3.5" />
+        Stripe connected
       </div>
     );
   }
@@ -47,7 +36,7 @@ const StripeNotificationBubble = ({
       )}
     >
       <AlertCircle className="h-3.5 w-3.5" />
-      {hasAccountStarted ? (isConnecting ? 'Opening…' : 'Finish Stripe setup') : (isConnecting ? 'Connecting...' : 'Connect Stripe to get paid')}
+      {isConnecting ? 'Connecting...' : 'Connect Stripe to get paid'}
     </button>
   );
 };

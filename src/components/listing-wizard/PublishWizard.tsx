@@ -1,21 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, 
-  FileText, Calendar, CreditCard, ChevronRight, Save, Sparkles, 
-  TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, 
-  RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, 
-  Building2, Eye, AlertCircle, Shield, Clock, ChevronDown as ChevronDownIcon, 
-  ChevronUp, GripVertical, Star, Type, ListChecks, Menu
-} from 'lucide-react';
+import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, Sparkles, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle, Shield, Clock, ChevronDown, ChevronUp, GripVertical, Star, Type, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
-import { Progress } from '@/components/ui/progress';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,13 +17,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
@@ -52,7 +36,9 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { LocationSearchInput } from '@/components/search/LocationSearchInput';
+import { AvailabilityStep } from './AvailabilityStep';
 import { RentalAvailabilityStep } from './RentalAvailabilityStep';
+import { PublishChecklist, createChecklistItems } from './PublishChecklist';
 import { PublishSuccessModal } from './PublishSuccessModal';
 import { ListingPreviewModal } from './ListingPreviewModal';
 import { AuthGateModal } from './AuthGateModal';
@@ -69,25 +55,7 @@ import {
   SALE_SELLER_FEE_PERCENT,
 } from '@/lib/commissions';
 
-// --- Types ---
 type PublishStep = 'photos' | 'headline' | 'includes' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'stripe' | 'review';
-
-// Step order for linear flow
-const STEP_ORDER_RENTAL: PublishStep[] = ['photos', 'headline', 'details', 'includes', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review'];
-const STEP_ORDER_SALE: PublishStep[] = ['photos', 'headline', 'details', 'includes', 'pricing', 'location', 'stripe', 'review'];
-
-const STEP_LABELS: Record<PublishStep, string> = {
-  photos: 'Photos',
-  headline: 'Headline',
-  includes: 'Amenities',
-  pricing: 'Pricing',
-  details: 'Details',
-  location: 'Location',
-  availability: 'Availability',
-  documents: 'Documents',
-  stripe: 'Payments',
-  review: 'Review',
-};
 
 interface ListingData {
   id: string;
@@ -120,6 +88,7 @@ interface ListingData {
   width_inches: number | null;
   height_inches: number | null;
   freight_category: string | null;
+  // Location & fulfillment fields
   fulfillment_type: FulfillmentType | null;
   delivery_fee: number | null;
   delivery_radius_miles: number | null;
@@ -131,7 +100,6 @@ interface ListingData {
   is_static_location?: boolean;
   latitude: number | null;
   longitude: number | null;
-  total_slots?: number | null;
 }
 
 interface RentalSuggestions {
@@ -151,25 +119,12 @@ interface SaleSuggestions {
   reasoning: string;
 }
 
-// --- Main Component ---
 export const PublishWizard: React.FC = () => {
   const { listingId } = useParams<{ listingId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { isOnboardingComplete, hasAccountStarted, isLoading: isStripeLoading, connectStripe, isConnecting, refreshStatus } = useStripeConnect();
-
-  // Detect return from Stripe and refresh status
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('stripe') === 'complete' || params.get('stripe') === 'refresh') {
-      // Clear the URL param
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, '', newUrl);
-      // Refresh Stripe status
-      refreshStatus();
-    }
-  }, [refreshStatus]);
+  const { isOnboardingComplete, isLoading: isStripeLoading, connectStripe, isConnecting } = useStripeConnect();
 
   const [step, setStep] = useState<PublishStep>('photos');
   const [listing, setListing] = useState<ListingData | null>(null);
@@ -179,10 +134,6 @@ export const PublishWizard: React.FC = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isGuestDraft, setIsGuestDraft] = useState(false);
   const [isClaimingDraft, setIsClaimingDraft] = useState(false);
-  const [showPublishDialog, setShowPublishDialog] = useState(false);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [tosAgreed, setTosAgreed] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Scroll to top when step changes
   useEffect(() => {
@@ -200,12 +151,11 @@ export const PublishWizard: React.FC = () => {
   const [description, setDescription] = useState('');
   const [priceDaily, setPriceDaily] = useState('');
   const [priceWeekly, setPriceWeekly] = useState('');
-  const [priceMonthly, setPriceMonthly] = useState('');
   const [priceSale, setPriceSale] = useState('');
   const [instantBook, setInstantBook] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
   
-  // Pricing fields
+  // New pricing fields
   const [vendibookFreightEnabled, setVendibookFreightEnabled] = useState(false);
   const [freightPayer, setFreightPayer] = useState<FreightPayer>('buyer');
   const [acceptCardPayment, setAcceptCardPayment] = useState(true);
@@ -226,8 +176,10 @@ export const PublishWizard: React.FC = () => {
   const [originalDescription, setOriginalDescription] = useState<string | null>(null);
   const [showOptimized, setShowOptimized] = useState(false);
   
-  // Dimensions state
+  // Dimensions state (for sale listings)
   const [weightLbs, setWeightLbs] = useState('');
+  
+  // Total slots for Vendor Spaces (multi-slot capacity)
   const [totalSlots, setTotalSlots] = useState(1);
   const [lengthInches, setLengthInches] = useState('');
   const [widthInches, setWidthInches] = useState('');
@@ -252,28 +204,121 @@ export const PublishWizard: React.FC = () => {
   const [availableFrom, setAvailableFrom] = useState<string | null>(null);
   const [availableTo, setAvailableTo] = useState<string | null>(null);
 
-  // Required documents step state
+  // Required documents step state (for rentals)
   const [requiredDocuments, setRequiredDocuments] = useState<RequiredDocumentSetting[]>([]);
   const [globalDeadline, setGlobalDeadline] = useState<DocumentDeadlineType>('before_approval');
   const [deadlineHours, setDeadlineHours] = useState<number>(48);
   const [openDocGroups, setOpenDocGroups] = useState<string[]>(['Identity & Legal']);
 
-  // Get step order based on listing mode
-  const getStepOrder = useCallback(() => {
-    if (!listing) return STEP_ORDER_RENTAL;
-    const baseSteps = listing.mode === 'rent' ? STEP_ORDER_RENTAL : STEP_ORDER_SALE;
-    // Skip stripe step if cash-only
-    if (listing.mode === 'sale' && !acceptCardPayment) {
-      return baseSteps.filter(s => s !== 'stripe');
+  // Auto-save guest draft fields (title, description, pricing) periodically
+  // This uses RLS policy "Allow guest draft updates with token"
+  const saveGuestDraftFields = async () => {
+    if (!isGuestDraft || !listing || !listingId) return;
+    
+    const guestDraft = getGuestDraft();
+    if (!guestDraft || guestDraft.listingId !== listingId) return;
+
+    try {
+      const safeParsePrice = (value: string): number | null => {
+        if (!value || !value.trim()) return null;
+        const cleaned = value.replace(/[^0-9.]/g, '');
+        const parsed = parseFloat(cleaned);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+      };
+
+      const updateData: Record<string, unknown> = {
+        title: title || listing.title,
+        description: description || listing.description,
+        highlights: highlights.length > 0 ? highlights : (listing.highlights || []),
+        amenities: amenities.length > 0 ? amenities : (listing.amenities || []),
+        // Dimensions
+        weight_lbs: parseFloat(weightLbs) || listing.weight_lbs || null,
+        length_inches: parseFloat(lengthInches) || listing.length_inches || null,
+        width_inches: parseFloat(widthInches) || listing.width_inches || null,
+        height_inches: parseFloat(heightInches) || listing.height_inches || null,
+        freight_category: freightCategory || listing.freight_category || null,
+      };
+
+      // Add pricing based on mode
+      if (listing.mode === 'sale') {
+        updateData.price_sale = safeParsePrice(priceSale);
+        updateData.vendibook_freight_enabled = vendibookFreightEnabled;
+        updateData.freight_payer = freightPayer;
+        updateData.accept_card_payment = acceptCardPayment;
+        updateData.accept_cash_payment = acceptCashPayment;
+        updateData.proof_notary_enabled = proofNotaryEnabled;
+        updateData.featured_enabled = featuredEnabled;
+      } else {
+        updateData.price_daily = safeParsePrice(priceDaily);
+        updateData.price_weekly = safeParsePrice(priceWeekly);
+        updateData.instant_book = instantBook;
+        updateData.deposit_amount = safeParsePrice(depositAmount);
+        updateData.featured_enabled = featuredEnabled;
+      }
+
+      // Add location fields
+      const categoryIsStatic = isStaticLocationFn(listing.category);
+      const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation) ? 'on_site' : (fulfillmentType || listing.fulfillment_type || 'pickup');
+      
+      updateData.fulfillment_type = effectiveFulfillmentType;
+      updateData.pickup_location_text = pickupLocationText || listing.pickup_location_text || null;
+      updateData.address = address || listing.address || null;
+      updateData.delivery_fee = parseFloat(deliveryFee) || listing.delivery_fee || null;
+      updateData.delivery_radius_miles = parseFloat(deliveryRadiusMiles) || listing.delivery_radius_miles || null;
+      updateData.pickup_instructions = pickupInstructions || listing.pickup_instructions || null;
+      updateData.delivery_instructions = deliveryInstructions || listing.delivery_instructions || null;
+      updateData.access_instructions = accessInstructions || listing.access_instructions || null;
+      updateData.hours_of_access = hoursOfAccess || listing.hours_of_access || null;
+      updateData.location_notes = locationNotes || listing.location_notes || null;
+
+      // Availability
+      updateData.available_from = availableFrom || listing.available_from || null;
+      updateData.available_to = availableTo || listing.available_to || null;
+
+      const { error } = await supabase
+        .from('listings')
+        .update(updateData)
+        .eq('id', listingId);
+
+      if (error) {
+        console.warn('Guest draft auto-save failed:', error.message);
+      } else {
+        console.log('Guest draft auto-saved successfully');
+      }
+    } catch (err) {
+      console.warn('Guest draft auto-save error:', err);
     }
-    return baseSteps;
-  }, [listing, acceptCardPayment]);
+  };
 
-  const stepOrder = getStepOrder();
-  const currentStepIndex = stepOrder.indexOf(step);
-  const progress = ((currentStepIndex + 1) / stepOrder.length) * 100;
+  // Auto-save guest draft on step change and periodically (every 30s)
+  useEffect(() => {
+    if (!isGuestDraft || !listing) return;
 
-  // --- Fetch Listing ---
+    // Save when step changes
+    saveGuestDraftFields();
+
+    // Set up periodic auto-save
+    const interval = setInterval(() => {
+      saveGuestDraftFields();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, isGuestDraft, listing?.id]);
+
+  // Also save guest draft when user is about to leave the page
+  useEffect(() => {
+    if (!isGuestDraft || !listing) return;
+
+    const handleBeforeUnload = () => {
+      saveGuestDraftFields();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isGuestDraft, listing?.id, title, description, priceSale, priceDaily, priceWeekly]);
+
   useEffect(() => {
     const fetchListing = async () => {
       if (!listingId) return;
@@ -290,6 +335,7 @@ export const PublishWizard: React.FC = () => {
         return;
       }
 
+      // Check if this is a guest draft (no host_id but has guest_draft_token)
       const guestDraft = getGuestDraft();
       if (!data.host_id && guestDraft?.listingId === listingId) {
         setIsGuestDraft(true);
@@ -300,7 +346,6 @@ export const PublishWizard: React.FC = () => {
       setDescription(data.description || '');
       setPriceDaily(data.price_daily?.toString() || '');
       setPriceWeekly(data.price_weekly?.toString() || '');
-      setPriceMonthly((data as any).price_monthly?.toString() || '');
       setPriceSale(data.price_sale?.toString() || '');
       setInstantBook(data.instant_book || false);
       setDepositAmount(data.deposit_amount?.toString() || '');
@@ -312,6 +357,7 @@ export const PublishWizard: React.FC = () => {
       setAcceptCashPayment(data.accept_cash_payment ?? false);
       setProofNotaryEnabled(data.proof_notary_enabled ?? false);
       setFeaturedEnabled((data as any).featured_enabled ?? false);
+      // Set details step fields
       setHighlights(data.highlights || []);
       setAmenities(data.amenities || []);
       setWeightLbs(data.weight_lbs?.toString() || '');
@@ -319,7 +365,9 @@ export const PublishWizard: React.FC = () => {
       setWidthInches(data.width_inches?.toString() || '');
       setHeightInches(data.height_inches?.toString() || '');
       setFreightCategory((data.freight_category as FreightCategory) || null);
+      // Set total slots for vendor spaces
       setTotalSlots(data.total_slots || 1);
+      // Set location step fields
       setFulfillmentType((data.fulfillment_type as FulfillmentType) || null);
       setPickupLocationText(data.pickup_location_text || '');
       setAddress(data.address || '');
@@ -330,8 +378,10 @@ export const PublishWizard: React.FC = () => {
       setAccessInstructions(data.access_instructions || '');
       setHoursOfAccess(data.hours_of_access || '');
       setLocationNotes(data.location_notes || '');
+      // Determine if it's a static location (either by category or toggled)
       const categoryIsStatic = isStaticLocationFn(data.category as ListingCategory);
       setIsStaticLocation(categoryIsStatic || (data.fulfillment_type === 'on_site'));
+      // Availability fields
       setAvailableFrom(data.available_from || null);
       setAvailableTo(data.available_to || null);
 
@@ -343,6 +393,7 @@ export const PublishWizard: React.FC = () => {
           .eq('listing_id', listingId);
 
         if (docsData && docsData.length > 0) {
+          // Map existing documents
           const loadedDocs: RequiredDocumentSetting[] = docsData.map(d => ({
             document_type: d.document_type as DocumentType,
             is_required: d.is_required,
@@ -351,6 +402,7 @@ export const PublishWizard: React.FC = () => {
             description: d.description || undefined,
           }));
           setRequiredDocuments(loadedDocs);
+          // Set global deadline from first document
           if (docsData[0]) {
             setGlobalDeadline(docsData[0].deadline_type as DocumentDeadlineType);
             if (docsData[0].deadline_offset_hours) {
@@ -358,6 +410,7 @@ export const PublishWizard: React.FC = () => {
             }
           }
         } else {
+          // Initialize with defaults based on category
           const defaults = DEFAULT_DOCUMENTS_BY_CATEGORY[data.category as ListingCategory] || [];
           const allDocTypes: DocumentType[] = DOCUMENT_GROUPS.flatMap(g => g.documents);
           const initialDocs: RequiredDocumentSetting[] = allDocTypes.map(docType => ({
@@ -376,462 +429,14 @@ export const PublishWizard: React.FC = () => {
     fetchListing();
   }, [listingId, navigate, toast]);
 
-  // --- Validation ---
-  const isValidPrice = (value: string): boolean => {
-    if (!value || !value.trim()) return false;
-    const cleaned = value.replace(/[^0-9.]/g, '');
-    const parsed = parseFloat(cleaned);
-    return !isNaN(parsed) && parsed > 0;
-  };
-
-  const MIN_DESCRIPTION_LENGTH = 50;
-  const MIN_TITLE_LENGTH = 5;
-  const totalPhotoCount = existingImages.length + images.length;
-  const requiresStripe = acceptCardPayment;
-  const enabledDocsCount = requiredDocuments.filter(d => d.is_required).length;
-
-  const hasPricing = listing?.mode === 'sale' 
-    ? isValidPrice(priceSale) 
-    : isValidPrice(priceDaily);
-  
-  const hasValidTitle = title.trim().length >= MIN_TITLE_LENGTH;
-  const hasValidDescription = description.trim().length >= MIN_DESCRIPTION_LENGTH;
-  const hasDescription = hasValidTitle && hasValidDescription;
-
-  const hasLocation = listing ? (
-    isStaticLocationFn(listing.category) || isStaticLocation
-      ? !!(address && accessInstructions)
-      : !!(fulfillmentType && pickupLocationText)
-  ) : false;
-
-  const canPublish = totalPhotoCount >= 3 && hasPricing && hasDescription && hasLocation && (!requiresStripe || isOnboardingComplete);
-
-  const getValidationErrors = (): string[] => {
-    const errors: string[] = [];
-    if (totalPhotoCount < 3) errors.push(`Add at least 3 photos (currently ${totalPhotoCount})`);
-    if (!hasPricing) errors.push(listing?.mode === 'sale' ? 'Set a sale price greater than $0' : 'Set a daily rate greater than $0');
-    if (!hasValidTitle) errors.push(`Title must be at least ${MIN_TITLE_LENGTH} characters`);
-    if (!hasValidDescription) errors.push(`Description must be at least ${MIN_DESCRIPTION_LENGTH} characters (currently ${description.trim().length})`);
-    if (!hasLocation) errors.push('Complete the location and logistics section');
-    if (requiresStripe && !isOnboardingComplete) errors.push('Connect Stripe to receive payments');
-    return errors;
-  };
-
-  // --- Payout Estimates ---
-  const rentalPayoutEstimates = useMemo(() => {
-    const dailyPrice = parseFloat(priceDaily) || 0;
-    const weeklyPrice = parseFloat(priceWeekly) || 0;
-    return {
-      daily: dailyPrice > 0 ? calculateRentalFees(dailyPrice) : null,
-      weekly: weeklyPrice > 0 ? calculateRentalFees(weeklyPrice) : null,
-    };
-  }, [priceDaily, priceWeekly]);
-
-  const estimatedFreightCost = 500;
-  
-  const salePayoutEstimate = useMemo(() => {
-    const salePriceNum = parseFloat(priceSale) || 0;
-    if (salePriceNum <= 0) return null;
-    const isSellerPaidFreight = vendibookFreightEnabled && freightPayer === 'seller';
-    const freightCost = vendibookFreightEnabled ? estimatedFreightCost : 0;
-    return calculateSaleFees(salePriceNum, freightCost, isSellerPaidFreight);
-  }, [priceSale, vendibookFreightEnabled, freightPayer]);
-
-  // --- Image Upload ---
-  const uploadImages = async (): Promise<string[]> => {
-    if (!user || images.length === 0) return existingImages;
-
-    const uploadedUrls: string[] = [...existingImages];
-
-    for (const file of images) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${listingId}/${Date.now()}.${fileExt}`;
-
-      const { error } = await supabase.storage
-        .from('listing-images')
-        .upload(fileName, file);
-
-      if (error) {
-        console.error('Upload error:', error);
-        continue;
-      }
-
-      const { data: urlData } = supabase.storage
-        .from('listing-images')
-        .getPublicUrl(fileName);
-
-      uploadedUrls.push(urlData.publicUrl);
-    }
-
-    return uploadedUrls;
-  };
-
-  const uploadVideos = async (): Promise<string[]> => {
-    if (!user || videos.length === 0) return existingVideos;
-
-    const uploadedUrls: string[] = [...existingVideos];
-
-    for (const file of videos) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${listingId}/${Date.now()}.${fileExt}`;
-
-      const { error } = await supabase.storage
-        .from('listing-images')
-        .upload(fileName, file);
-
-      if (error) {
-        console.error('Upload error:', error);
-        continue;
-      }
-
-      const { data: urlData } = supabase.storage
-        .from('listing-images')
-        .getPublicUrl(fileName);
-
-      uploadedUrls.push(urlData.publicUrl);
-    }
-
-    return uploadedUrls;
-  };
-
-  // --- Save Step ---
-  const saveStep = async () => {
-    if (!listing || !listingId) return;
-
-    const safeParsePrice = (value: string): number | null => {
-      if (!value || !value.trim()) return null;
-      const cleaned = value.replace(/[^0-9.]/g, '');
-      const parsed = parseFloat(cleaned);
-      return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-    };
-
-    setIsSaving(true);
-
-    try {
-      let imageUrlsToSave = existingImages;
-      let videoUrlsToSave = existingVideos;
-
-      if (images.length > 0) {
-        if (!user) {
-          if (isGuestDraft) setShowAuthModal(true);
-          toast({
-            title: 'Sign in to upload media',
-            description: 'Please sign in to add photos or videos to this listing.',
-            variant: 'destructive',
-          });
-          setIsSaving(false);
-          return;
-        }
-        imageUrlsToSave = await uploadImages();
-        setExistingImages(imageUrlsToSave);
-        setImages([]);
-      }
-
-      if (videos.length > 0) {
-        if (!user) {
-          if (isGuestDraft) setShowAuthModal(true);
-          toast({
-            title: 'Sign in to upload media',
-            variant: 'destructive',
-          });
-          setIsSaving(false);
-          return;
-        }
-        videoUrlsToSave = await uploadVideos();
-        setExistingVideos(videoUrlsToSave);
-        setVideos([]);
-      }
-
-      const categoryIsStatic = isStaticLocationFn(listing.category);
-      const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation)
-        ? 'on_site'
-        : (fulfillmentType || 'pickup');
-
-      const updateData: any = {
-        image_urls: imageUrlsToSave,
-        cover_image_url: imageUrlsToSave?.[0] || null,
-        video_urls: videoUrlsToSave,
-        title,
-        description,
-        highlights,
-        amenities,
-        weight_lbs: parseFloat(weightLbs) || null,
-        length_inches: parseFloat(lengthInches) || null,
-        width_inches: parseFloat(widthInches) || null,
-        height_inches: parseFloat(heightInches) || null,
-        freight_category: freightCategory,
-        fulfillment_type: effectiveFulfillmentType,
-        pickup_location_text: pickupLocationText || null,
-        address: address || null,
-        delivery_fee: parseFloat(deliveryFee) || null,
-        delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
-        pickup_instructions: pickupInstructions || null,
-        delivery_instructions: deliveryInstructions || null,
-        access_instructions: accessInstructions || null,
-        hours_of_access: hoursOfAccess || null,
-        location_notes: locationNotes || null,
-        available_from: availableFrom || null,
-        available_to: availableTo || null,
-        total_slots: totalSlots,
-      };
-
-      if (listing.mode === 'sale') {
-        updateData.price_sale = safeParsePrice(priceSale);
-        updateData.vendibook_freight_enabled = vendibookFreightEnabled;
-        updateData.freight_payer = freightPayer;
-        updateData.accept_card_payment = acceptCardPayment;
-        updateData.accept_cash_payment = acceptCashPayment;
-        updateData.proof_notary_enabled = proofNotaryEnabled;
-        updateData.featured_enabled = featuredEnabled;
-      } else {
-        updateData.price_daily = safeParsePrice(priceDaily);
-        updateData.price_weekly = safeParsePrice(priceWeekly);
-        updateData.instant_book = instantBook;
-        updateData.deposit_amount = safeParsePrice(depositAmount);
-        updateData.featured_enabled = featuredEnabled;
-      }
-
-      const { error } = await supabase
-        .from('listings')
-        .update(updateData)
-        .eq('id', listingId);
-
-      if (error) throw error;
-
-      // Save required documents for rentals
-      if (listing.mode === 'rent' && step === 'documents') {
-        await supabase
-          .from('listing_required_documents')
-          .delete()
-          .eq('listing_id', listingId);
-
-        const docsToInsert = requiredDocuments.filter(d => d.is_required).map(d => ({
-          listing_id: listingId,
-          document_type: d.document_type,
-          is_required: d.is_required,
-          deadline_type: d.deadline_type,
-          deadline_offset_hours: d.deadline_offset_hours,
-          description: d.description,
-        }));
-
-        if (docsToInsert.length > 0) {
-          await supabase
-            .from('listing_required_documents')
-            .insert(docsToInsert);
-        }
-      }
-
-      // Move to next step
-      if (currentStepIndex < stepOrder.length - 1) {
-        setStep(stepOrder[currentStepIndex + 1]);
-      }
-    } catch (error) {
-      console.error('Error saving:', error);
-      toast({
-        title: 'Error saving',
-        description: error instanceof Error ? error.message : 'Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // --- Publish ---
-  const handlePublish = async () => {
-    if (!listing || !listingId || !canPublish) return;
-
-    const safeParsePrice = (value: string): number | null => {
-      if (!value || !value.trim()) return null;
-      const cleaned = value.replace(/[^0-9.]/g, '');
-      const parsed = parseFloat(cleaned);
-      return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-    };
-
-    setIsSaving(true);
-
-    try {
-      let imageUrlsToSave = existingImages;
-      let videoUrlsToSave = existingVideos;
-
-      if (images.length > 0) {
-        if (!user) {
-          if (isGuestDraft) setShowAuthModal(true);
-          toast({ title: 'Sign in to upload media', variant: 'destructive' });
-          return;
-        }
-        imageUrlsToSave = await uploadImages();
-        setExistingImages(imageUrlsToSave);
-        setImages([]);
-      }
-
-      if (videos.length > 0) {
-        if (!user) {
-          if (isGuestDraft) setShowAuthModal(true);
-          toast({ title: 'Sign in to upload media', variant: 'destructive' });
-          return;
-        }
-        videoUrlsToSave = await uploadVideos();
-        setExistingVideos(videoUrlsToSave);
-        setVideos([]);
-      }
-
-      const categoryIsStatic = isStaticLocationFn(listing.category);
-      const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation)
-        ? 'on_site'
-        : (fulfillmentType || 'pickup');
-
-      const baseUpdateData: any = {
-        image_urls: imageUrlsToSave,
-        cover_image_url: imageUrlsToSave?.[0] || null,
-        video_urls: videoUrlsToSave,
-        title,
-        description,
-        highlights,
-        amenities,
-        weight_lbs: parseFloat(weightLbs) || null,
-        length_inches: parseFloat(lengthInches) || null,
-        width_inches: parseFloat(widthInches) || null,
-        height_inches: parseFloat(heightInches) || null,
-        freight_category: freightCategory,
-        fulfillment_type: effectiveFulfillmentType,
-        pickup_location_text: pickupLocationText || null,
-        address: address || null,
-        delivery_fee: parseFloat(deliveryFee) || null,
-        delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
-        pickup_instructions: pickupInstructions || null,
-        delivery_instructions: deliveryInstructions || null,
-        access_instructions: accessInstructions || null,
-        hours_of_access: hoursOfAccess || null,
-        location_notes: locationNotes || null,
-        available_from: availableFrom || null,
-        available_to: availableTo || null,
-      };
-
-      const pricingUpdateData: any = listing.mode === 'sale'
-        ? {
-            price_sale: safeParsePrice(priceSale),
-            vendibook_freight_enabled: vendibookFreightEnabled,
-            freight_payer: freightPayer,
-            accept_card_payment: acceptCardPayment,
-            accept_cash_payment: acceptCashPayment,
-            proof_notary_enabled: proofNotaryEnabled,
-            featured_enabled: featuredEnabled,
-          }
-        : {
-            price_daily: safeParsePrice(priceDaily),
-            price_weekly: safeParsePrice(priceWeekly),
-            price_monthly: safeParsePrice(priceMonthly),
-            instant_book: instantBook,
-            deposit_amount: safeParsePrice(depositAmount),
-            featured_enabled: featuredEnabled,
-          };
-
-      // Handle Proof Notary checkout
-      if (listing.mode === 'sale' && proofNotaryEnabled) {
-        const { error: persistError } = await supabase
-          .from('listings')
-          .update({ ...baseUpdateData, ...pricingUpdateData })
-          .eq('id', listing.id);
-
-        if (persistError) throw persistError;
-
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (!sessionData.session) {
-          toast({ title: 'Please sign in to continue', variant: 'destructive' });
-          return;
-        }
-
-        const { data, error } = await supabase.functions.invoke('create-notary-checkout', {
-          headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
-          body: { listing_id: listing.id },
-        });
-
-        if (error) throw error;
-        if (!data?.url) throw new Error('No checkout URL returned');
-
-        const newWindow = window.open(data.url, '_blank');
-        if (!newWindow) window.location.href = data.url;
-        return;
-      }
-
-      // Handle Featured Listing checkout
-      const listingAlreadyFeatured = !!(listing as any).featured_at;
-      if (featuredEnabled && !listingAlreadyFeatured) {
-        const { error: persistError } = await supabase
-          .from('listings')
-          .update({ ...baseUpdateData, ...pricingUpdateData })
-          .eq('id', listing.id);
-
-        if (persistError) throw persistError;
-
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (!sessionData.session) {
-          toast({ title: 'Please sign in to continue', variant: 'destructive' });
-          return;
-        }
-
-        const { data, error } = await supabase.functions.invoke('create-featured-checkout', {
-          headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
-          body: { listing_id: listing.id },
-        });
-
-        if (error) throw error;
-        if (!data?.url) throw new Error('No checkout URL returned');
-
-        const newWindow = window.open(data.url, '_blank');
-        if (!newWindow) window.location.href = data.url;
-        return;
-      }
-
-      // Standard publish
-      const isFirstTimePublish = !listing.published_at;
-      
-      const { error } = await supabase
-        .from('listings')
-        .update({
-          ...baseUpdateData,
-          ...pricingUpdateData,
-          status: 'published',
-          ...(isFirstTimePublish ? { published_at: new Date().toISOString() } : {}),
-        })
-        .eq('id', listing.id);
-
-      if (error) throw error;
-
-      if (isFirstTimePublish) {
-        supabase.functions.invoke('send-admin-notification', {
-          body: {
-            type: 'new_listing',
-            data: {
-              listing_id: listing.id,
-              title: listing.title,
-              category: listing.category,
-              mode: listing.mode,
-              host_id: user?.id,
-            },
-          },
-        }).catch(err => console.error('Admin notification error:', err));
-      }
-
-      setShowSuccessModal(true);
-    } catch (error) {
-      console.error('Error publishing:', error);
-      toast({
-        title: 'Error publishing',
-        description: error instanceof Error ? error.message : 'Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // --- Auth Handlers ---
+  // Claim guest draft when user signs in
   const handleAuthSuccess = async (userId: string) => {
     if (!listing || !listingId) return;
+
     setIsClaimingDraft(true);
 
+    // Supabase auth can take a beat to persist the session after sign-up.
+    // If we run the claim immediately, the DB request may still be anonymous and fail RLS.
     const waitForSessionUser = async (): Promise<boolean> => {
       for (let i = 0; i < 10; i++) {
         const { data: sessionData } = await supabase.auth.getSession();
@@ -845,7 +450,11 @@ export const PublishWizard: React.FC = () => {
     const hasSession = await waitForSessionUser();
     if (!hasSession) {
       setIsClaimingDraft(false);
-      toast({ title: 'Please sign in to claim your draft', variant: 'destructive' });
+      toast({
+        title: 'Please sign in to claim your draft',
+        description: "Your account was created, but you're not signed in yet. Please sign in and we'll claim the draft automatically.",
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -856,42 +465,359 @@ export const PublishWizard: React.FC = () => {
     }
 
     try {
+      // Helper to safely parse currency / formatted strings
+      const safeParsePrice = (value: string): number | null => {
+        if (!value || !value.trim()) return null;
+        const cleaned = value.replace(/[^0-9.]/g, '');
+        const parsed = parseFloat(cleaned);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+      };
+
+      // Determine effective fulfillment type
+      const categoryIsStatic = isStaticLocationFn(listing.category);
+      const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation)
+        ? 'on_site'
+        : (fulfillmentType || listing.fulfillment_type || 'pickup');
+
+      // Build the update payload with ALL current in-memory form data
+      // This ensures title, description, photos, prices etc. are not lost during auth
+      const updateData: any = {
+        // Claim ownership
+        host_id: userId,
+        guest_draft_token: null,
+
+        // Details - preserve user's edits
+        title: title || listing.title,
+        description: description || listing.description,
+        highlights: highlights.length > 0 ? highlights : (listing.highlights || []),
+        amenities: amenities.length > 0 ? amenities : (listing.amenities || []),
+
+        // Dimensions (for sale listings)
+        weight_lbs: parseFloat(weightLbs) || listing.weight_lbs || null,
+        length_inches: parseFloat(lengthInches) || listing.length_inches || null,
+        width_inches: parseFloat(widthInches) || listing.width_inches || null,
+        height_inches: parseFloat(heightInches) || listing.height_inches || null,
+        freight_category: freightCategory || listing.freight_category || null,
+
+        // Location
+        fulfillment_type: effectiveFulfillmentType,
+        pickup_location_text: pickupLocationText || listing.pickup_location_text || null,
+        address: address || listing.address || null,
+        delivery_fee: parseFloat(deliveryFee) || listing.delivery_fee || null,
+        delivery_radius_miles: parseFloat(deliveryRadiusMiles) || listing.delivery_radius_miles || null,
+        pickup_instructions: pickupInstructions || listing.pickup_instructions || null,
+        delivery_instructions: deliveryInstructions || listing.delivery_instructions || null,
+        access_instructions: accessInstructions || listing.access_instructions || null,
+        hours_of_access: hoursOfAccess || listing.hours_of_access || null,
+        location_notes: locationNotes || listing.location_notes || null,
+
+        // Availability
+        available_from: availableFrom || listing.available_from || null,
+        available_to: availableTo || listing.available_to || null,
+
+        // Existing images (new uploads require auth so we only save existingImages here)
+        image_urls: existingImages.length > 0 ? existingImages : (listing.image_urls || []),
+        cover_image_url: existingImages.length > 0 ? existingImages[0] : (listing.cover_image_url || null),
+      };
+
+      // Add pricing fields based on mode
+      if (listing.mode === 'sale') {
+        updateData.price_sale = safeParsePrice(priceSale) || listing.price_sale || null;
+        updateData.vendibook_freight_enabled = vendibookFreightEnabled;
+        updateData.freight_payer = freightPayer;
+        updateData.accept_card_payment = acceptCardPayment;
+        updateData.accept_cash_payment = acceptCashPayment;
+        updateData.proof_notary_enabled = proofNotaryEnabled;
+        updateData.featured_enabled = featuredEnabled;
+      } else {
+        updateData.price_daily = safeParsePrice(priceDaily) || listing.price_daily || null;
+        updateData.price_weekly = safeParsePrice(priceWeekly) || listing.price_weekly || null;
+        updateData.instant_book = instantBook;
+        updateData.deposit_amount = safeParsePrice(depositAmount) || listing.deposit_amount || null;
+        updateData.featured_enabled = featuredEnabled;
+      }
+
+      // Claim the draft and persist all in-memory form data
       const { error } = await supabase
         .from('listings')
-        .update({ host_id: userId, guest_draft_token: null })
+        .update(updateData)
         .eq('id', listingId)
         .eq('guest_draft_token', guestDraft.token);
 
       if (error) throw error;
 
+      // Update local listing state with persisted data
+      setListing(prev => prev ? { ...prev, ...updateData } : null);
+
+      // Clear localStorage
       clearGuestDraft();
       setIsGuestDraft(false);
       setShowAuthModal(false);
-      toast({ title: 'Draft claimed!', description: 'Your listing is now saved to your account.' });
+
+      toast({
+        title: 'Draft claimed!',
+        description: 'Your listing and all changes are now saved to your account.',
+      });
     } catch (error) {
       console.error('Error claiming draft:', error);
-      toast({ title: 'Error claiming draft', variant: 'destructive' });
+      toast({
+        title: 'Error claiming draft',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setIsClaimingDraft(false);
     }
   };
 
-  // --- Image Handlers ---
+  // For guest drafts, save data to DB before progressing
+  // Auth is only required for publishing, not for step navigation
+  const handleGuestStepSave = async () => {
+    if (isGuestDraft && !user) {
+      // Save guest draft fields to database (RLS allows this with token)
+      await saveGuestDraftFields();
+    }
+  };
+
+  // Allow guests to navigate steps freely; auth is gated at publish
+  const handleDetailsSave = async () => {
+    if (isGuestDraft && !user) {
+      // Save guest draft data and proceed to next step
+      await saveGuestDraftFields();
+      // Move to next step manually
+      const isRentalListing = listing?.mode === 'rent';
+      const skipStripeStep = listing?.mode === 'sale' && !acceptCardPayment;
+      const baseSteps: PublishStep[] = isRentalListing
+        ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
+        : ['photos', 'headline', 'includes', 'pricing', 'location', 'stripe', 'review'];
+      const steps = skipStripeStep ? baseSteps.filter(s => s !== 'stripe') : baseSteps;
+      const currentIndex = steps.indexOf(step);
+      if (currentIndex < steps.length - 1) {
+        setStep(steps[currentIndex + 1]);
+      }
+      return;
+    }
+    // Proceed with normal save for authenticated users
+    await saveStep();
+  };
+
+  // Calculate payout estimates
+  const rentalPayoutEstimates = useMemo(() => {
+    const dailyPrice = parseFloat(priceDaily) || 0;
+    const weeklyPrice = parseFloat(priceWeekly) || 0;
+    
+    return {
+      daily: dailyPrice > 0 ? calculateRentalFees(dailyPrice) : null,
+      weekly: weeklyPrice > 0 ? calculateRentalFees(weeklyPrice) : null,
+    };
+  }, [priceDaily, priceWeekly]);
+
+  const estimatedFreightCost = 500; // Placeholder
+  
+  const salePayoutEstimate = useMemo(() => {
+    const salePriceNum = parseFloat(priceSale) || 0;
+    if (salePriceNum <= 0) return null;
+    
+    const isSellerPaidFreight = vendibookFreightEnabled && freightPayer === 'seller';
+    const freightCost = vendibookFreightEnabled ? estimatedFreightCost : 0;
+    
+    return calculateSaleFees(salePriceNum, freightCost, isSellerPaidFreight);
+  }, [priceSale, vendibookFreightEnabled, freightPayer]);
+
+  const getLocation = () => {
+    if (listing?.address) return listing.address;
+    if (listing?.pickup_location_text) return listing.pickup_location_text;
+    return '';
+  };
+
+  const handleGetSuggestions = async () => {
+    if (!title || !listing?.category) {
+      toast({
+        title: 'Missing information',
+        description: 'Please add a title and category first to get pricing suggestions.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLoadingSuggestions(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('suggest-pricing', {
+        body: {
+          title: title,
+          category: listing.category,
+          location: getLocation(),
+          mode: listing.mode,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (listing.mode === 'rent') {
+        setRentalSuggestions(data as RentalSuggestions);
+      } else {
+        setSaleSuggestions(data as SaleSuggestions);
+      }
+
+      toast({
+        title: 'Suggestions ready!',
+        description: 'AI pricing suggestions have been generated based on your listing details.',
+      });
+    } catch (error) {
+      console.error('Error getting suggestions:', error);
+      toast({
+        title: 'Could not get suggestions',
+        description: error instanceof Error ? error.message : 'Please try again later.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
+  const applyRentalSuggestion = (type: 'low' | 'suggested' | 'high') => {
+    if (!rentalSuggestions) return;
+    
+    const dailyKey = `daily_${type}` as keyof RentalSuggestions;
+    const weeklyKey = `weekly_${type}` as keyof RentalSuggestions;
+    
+    setPriceDaily(String(rentalSuggestions[dailyKey]));
+    setPriceWeekly(String(rentalSuggestions[weeklyKey]));
+  };
+
+  const applySaleSuggestion = (type: 'low' | 'suggested' | 'high') => {
+    if (!saleSuggestions) return;
+    
+    const key = `sale_${type}` as keyof SaleSuggestions;
+    setPriceSale(String(saleSuggestions[key]));
+  };
+
+  // AI Description Optimization
+  const optimizeDescription = async () => {
+    if (!description || description.trim().length < 10) {
+      toast({
+        title: 'Description too short',
+        description: 'Please write at least 10 characters to optimize.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsOptimizing(true);
+    setOriginalDescription(description);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('optimize-description', {
+        body: {
+          rawDescription: description,
+          category: listing?.category,
+          mode: listing?.mode,
+          title: title,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.optimizedDescription) {
+        setDescription(data.optimizedDescription);
+        setShowOptimized(true);
+        toast({
+          title: 'Description optimized!',
+          description: 'Your listing description has been professionally rewritten.',
+        });
+      }
+    } catch (error) {
+      console.error('Error optimizing description:', error);
+      toast({
+        title: 'Optimization failed',
+        description: error instanceof Error ? error.message : 'Please try again later.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
+  const revertDescription = () => {
+    if (originalDescription) {
+      setDescription(originalDescription);
+      setOriginalDescription(null);
+      setShowOptimized(false);
+      toast({
+        title: 'Description reverted',
+        description: 'Your original description has been restored.',
+      });
+    }
+  };
+
+  // Highlights management
+  const addHighlight = () => {
+    if (newHighlight.trim() && highlights.length < 6) {
+      setHighlights(prev => [...prev, newHighlight.trim()]);
+      setNewHighlight('');
+    }
+  };
+
+  const removeHighlight = (index: number) => {
+    setHighlights(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleHighlightKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addHighlight();
+    }
+  };
+
+  // Amenities management
+  const toggleAmenity = (amenityId: string) => {
+    setAmenities(prev => {
+      if (prev.includes(amenityId)) {
+        return prev.filter(a => a !== amenityId);
+      }
+      return [...prev, amenityId];
+    });
+  };
+
+  // Get amenities for the selected category
+  const categoryAmenities = listing?.category
+    ? AMENITIES_BY_CATEGORY[listing.category as ListingCategory]
+    : [];
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setImages(prev => [...prev, ...Array.from(e.target.files!)]);
     }
   };
 
-  const removeExistingImage = (index: number) => {
-    setExistingImages(prev => prev.filter((_, i) => i !== index));
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setVideos(prev => [...prev, ...Array.from(e.target.files!)]);
+    }
   };
 
   const removeImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Photo drag-and-drop
+  const removeExistingImage = (index: number) => {
+    setExistingImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeVideo = (index: number) => {
+    setVideos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingVideo = (index: number) => {
+    setExistingVideos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Photo drag-and-drop reordering
   const allPhotos = useMemo(() => {
     return [
       ...existingImages.map((url, i) => ({ type: 'existing' as const, url, index: i })),
@@ -915,6 +841,10 @@ export const PublishWizard: React.FC = () => {
     setPhotoDragOverIndex(globalIndex);
   };
 
+  const handlePhotoDragLeave = () => {
+    setPhotoDragOverIndex(null);
+  };
+
   const handlePhotoDrop = (e: React.DragEvent, targetIndex: number) => {
     e.preventDefault();
     if (photoDraggedIndex === null || photoDraggedIndex === targetIndex) {
@@ -923,10 +853,12 @@ export const PublishWizard: React.FC = () => {
       return;
     }
 
+    // Reorder the combined array
     const reordered = [...allPhotos];
     const [moved] = reordered.splice(photoDraggedIndex, 1);
     reordered.splice(targetIndex, 0, moved);
 
+    // Split back into existing and new images
     const newExisting: string[] = [];
     const newImages: File[] = [];
     reordered.forEach(item => {
@@ -943,1232 +875,2914 @@ export const PublishWizard: React.FC = () => {
     setPhotoDragOverIndex(null);
   };
 
-  // --- Highlights ---
-  const addHighlight = () => {
-    if (newHighlight.trim() && highlights.length < 6) {
-      setHighlights(prev => [...prev, newHighlight.trim()]);
-      setNewHighlight('');
-    }
-  };
+  const movePhotoToFirst = (globalIndex: number) => {
+    if (globalIndex === 0) return;
+    
+    const reordered = [...allPhotos];
+    const [moved] = reordered.splice(globalIndex, 1);
+    reordered.unshift(moved);
 
-  const removeHighlight = (index: number) => {
-    setHighlights(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // --- Amenities ---
-  const toggleAmenity = (amenityId: string) => {
-    setAmenities(prev => {
-      if (prev.includes(amenityId)) {
-        return prev.filter(a => a !== amenityId);
-      }
-      return [...prev, amenityId];
-    });
-  };
-
-  const categoryAmenities = listing?.category
-    ? AMENITIES_BY_CATEGORY[listing.category as ListingCategory]
-    : [];
-
-  // --- AI Suggestions ---
-  const handleGetSuggestions = async () => {
-    if (!title || !listing?.category) {
-      toast({ title: 'Missing information', description: 'Please add a title first.', variant: 'destructive' });
-      return;
-    }
-
-    setIsLoadingSuggestions(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('suggest-pricing', {
-        body: {
-          title,
-          category: listing.category,
-          location: address || pickupLocationText || '',
-          mode: listing.mode,
-        },
-      });
-
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-
-      if (listing.mode === 'rent') {
-        setRentalSuggestions(data as RentalSuggestions);
+    const newExisting: string[] = [];
+    const newImages: File[] = [];
+    reordered.forEach(item => {
+      if (item.type === 'existing') {
+        newExisting.push(item.url);
       } else {
-        setSaleSuggestions(data as SaleSuggestions);
+        newImages.push(item.file);
       }
+    });
 
-      toast({ title: 'Suggestions ready!' });
-    } catch (error) {
-      console.error('Error getting suggestions:', error);
-      toast({ title: 'Could not get suggestions', variant: 'destructive' });
-    } finally {
-      setIsLoadingSuggestions(false);
+    setExistingImages(newExisting);
+    setImages(newImages);
+  };
+
+  const removePhotoByGlobalIndex = (globalIndex: number) => {
+    const item = allPhotos[globalIndex];
+    if (item.type === 'existing') {
+      removeExistingImage(item.index);
+    } else {
+      removeImage(item.index);
     }
   };
 
-  const applyRentalSuggestion = (type: 'low' | 'suggested' | 'high') => {
-    if (!rentalSuggestions) return;
-    const dailyKey = `daily_${type}` as keyof RentalSuggestions;
-    const weeklyKey = `weekly_${type}` as keyof RentalSuggestions;
-    setPriceDaily(String(rentalSuggestions[dailyKey]));
-    setPriceWeekly(String(rentalSuggestions[weeklyKey]));
+  const uploadImages = async (): Promise<string[]> => {
+    if (!user) {
+      throw new Error('Please sign in to upload photos.');
+    }
+    if (!listingId) {
+      throw new Error('Missing listing id.');
+    }
+
+    const urls: string[] = [...existingImages];
+
+    for (let i = 0; i < images.length; i++) {
+      const file = images[i];
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${user.id}/${listingId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      console.log(`[Upload] Uploading image ${i + 1}/${images.length}: ${file.name} (${file.size} bytes)`);
+
+      const { error: uploadError, data: uploadData } = await supabase.storage
+        .from('listing-images')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type || 'image/jpeg',
+        });
+
+      if (uploadError) {
+        console.error(`[Upload] Failed to upload ${file.name}:`, uploadError);
+        throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`);
+      }
+
+      console.log(`[Upload] Successfully uploaded ${file.name}`, uploadData);
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('listing-images')
+        .getPublicUrl(fileName);
+
+      urls.push(publicUrl);
+    }
+
+    return urls;
   };
 
-  const applySaleSuggestion = (type: 'low' | 'suggested' | 'high') => {
-    if (!saleSuggestions) return;
-    const key = `sale_${type}` as keyof SaleSuggestions;
-    setPriceSale(String(saleSuggestions[key]));
+  const uploadVideos = async (): Promise<string[]> => {
+    if (!user) {
+      throw new Error('Please sign in to upload videos.');
+    }
+    if (!listingId) {
+      throw new Error('Missing listing id.');
+    }
+
+    const urls: string[] = [...existingVideos];
+
+    for (let i = 0; i < videos.length; i++) {
+      const file = videos[i];
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'mp4';
+      const fileName = `${user.id}/${listingId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('listing-videos')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type || 'video/mp4',
+        });
+
+      if (uploadError) {
+        throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`);
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('listing-videos')
+        .getPublicUrl(fileName);
+
+      urls.push(publicUrl);
+    }
+
+    return urls;
   };
 
-  // --- AI Description Optimization ---
-  const optimizeDescription = async () => {
-    if (!description || description.trim().length < 10) {
-      toast({ title: 'Description too short', variant: 'destructive' });
+  const saveStep = async () => {
+    if (!listing) return;
+    setIsSaving(true);
+
+    try {
+      let updateData: any = {};
+
+      if (step === 'photos') {
+        const hasNewImages = images.length > 0;
+        const hasNewVideos = videos.length > 0;
+
+        if (hasNewImages || hasNewVideos) {
+          // User should already be authenticated since we require auth before listing creation
+          if (!user) {
+            toast({
+              title: 'Sign in required',
+              description: 'Please sign in to continue.',
+              variant: 'destructive',
+            });
+            setIsSaving(false);
+            return;
+          }
+
+          let imageUrls = existingImages;
+          let videoUrls = existingVideos;
+
+          if (hasNewImages) {
+            imageUrls = await uploadImages();
+            setExistingImages(imageUrls);
+            setImages([]);
+          }
+
+          if (hasNewVideos) {
+            videoUrls = await uploadVideos();
+            setExistingVideos(videoUrls);
+            setVideos([]);
+          }
+
+          updateData = {
+            image_urls: imageUrls,
+            cover_image_url: imageUrls[0] || null,
+            video_urls: videoUrls,
+          };
+        }
+        // Allow proceeding without photos (guests can add later after auth)
+      } else if (step === 'headline') {
+        // Save title and description
+        updateData = {
+          title,
+          description,
+        };
+      } else if (step === 'includes') {
+        // Save amenities and highlights
+        updateData = {
+          amenities,
+          highlights,
+        };
+      } else if (step === 'pricing') {
+        // Helper function to safely parse price values
+        const safeParsePrice = (value: string): number | null => {
+          if (!value || !value.trim()) return null;
+          const cleaned = value.replace(/[^0-9.]/g, '');
+          const parsed = parseFloat(cleaned);
+          return isNaN(parsed) || parsed <= 0 ? null : parsed;
+        };
+        
+        if (listing.mode === 'sale') {
+          updateData = {
+            price_sale: safeParsePrice(priceSale),
+            vendibook_freight_enabled: vendibookFreightEnabled,
+            freight_payer: freightPayer,
+            accept_card_payment: acceptCardPayment,
+            accept_cash_payment: acceptCashPayment,
+            proof_notary_enabled: proofNotaryEnabled,
+            featured_enabled: featuredEnabled,
+          };
+        } else {
+          updateData = {
+            price_daily: safeParsePrice(priceDaily),
+            price_weekly: safeParsePrice(priceWeekly),
+            instant_book: instantBook,
+            deposit_amount: safeParsePrice(depositAmount),
+            featured_enabled: featuredEnabled,
+          };
+        }
+      } else if (step === 'details') {
+        updateData = {
+          title,
+          description,
+          highlights,
+          amenities,
+          weight_lbs: parseFloat(weightLbs) || null,
+          length_inches: parseFloat(lengthInches) || null,
+          width_inches: parseFloat(widthInches) || null,
+          height_inches: parseFloat(heightInches) || null,
+          freight_category: freightCategory,
+        };
+      } else if (step === 'location') {
+        // Determine if category-based static or manually toggled
+        const categoryIsStatic = isStaticLocationFn(listing.category);
+        const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation) ? 'on_site' : (fulfillmentType || 'pickup');
+
+        updateData = {
+          fulfillment_type: effectiveFulfillmentType,
+          pickup_location_text: pickupLocationText || null,
+          address: address || null,
+          delivery_fee: parseFloat(deliveryFee) || null,
+          delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
+          pickup_instructions: pickupInstructions || null,
+          delivery_instructions: deliveryInstructions || null,
+          access_instructions: accessInstructions || null,
+          hours_of_access: hoursOfAccess || null,
+          location_notes: locationNotes || null,
+        };
+      } else if (step === 'availability') {
+        updateData = {
+          available_from: availableFrom || null,
+          available_to: availableTo || null,
+          total_slots: ['vendor_space', 'ghost_kitchen', 'food_truck', 'food_trailer'].includes(listing.category) ? totalSlots : 1,
+        };
+      } else if (step === 'documents') {
+        // Save required documents to the database
+        const enabledDocs = requiredDocuments.filter(d => d.is_required);
+        
+        // Delete existing documents first
+        await supabase
+          .from('listing_required_documents')
+          .delete()
+          .eq('listing_id', listing.id);
+
+        // Insert new documents
+        if (enabledDocs.length > 0) {
+          const docsToInsert = enabledDocs.map(doc => ({
+            listing_id: listing.id,
+            document_type: doc.document_type,
+            is_required: true,
+            deadline_type: doc.deadline_type,
+            deadline_offset_hours: doc.deadline_offset_hours || null,
+            description: doc.description || null,
+          }));
+
+          const { error: insertError } = await supabase
+            .from('listing_required_documents')
+            .insert(docsToInsert);
+
+          if (insertError) throw insertError;
+        }
+        // No listing update needed, just proceed to next step
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        const { error } = await supabase
+          .from('listings')
+          .update(updateData)
+          .eq('id', listing.id);
+
+        if (error) throw error;
+
+        // Update local state
+        setListing(prev => prev ? { ...prev, ...updateData } : null);
+      }
+
+      // Move to next step - rental listings have availability and documents steps
+      // Skip stripe step if card payment is not enabled (cash-only sales)
+      const isRentalListing = listing.mode === 'rent';
+      const skipStripeStep = listing.mode === 'sale' && !acceptCardPayment;
+      const baseSteps: PublishStep[] = isRentalListing
+        ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
+        : ['photos', 'headline', 'includes', 'pricing', 'location', 'stripe', 'review'];
+      const steps = skipStripeStep ? baseSteps.filter(s => s !== 'stripe') : baseSteps;
+      const currentIndex = steps.indexOf(step);
+      if (currentIndex < steps.length - 1) {
+        setStep(steps[currentIndex + 1]);
+      }
+    } catch (error) {
+      console.error('Error saving:', error);
+      toast({
+        title: 'Error saving',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    // Stripe is only required if card payment is enabled
+    const stripeRequired = acceptCardPayment;
+    if (!listing) return;
+
+    // Validate all required fields before publishing
+    const validationErrors = getValidationErrors();
+    if (validationErrors.length > 0) {
+      toast({
+        title: 'Cannot publish yet',
+        description: validationErrors[0], // Show first error
+        variant: 'destructive',
+      });
       return;
     }
 
-    setIsOptimizing(true);
-    setOriginalDescription(description);
+    if (stripeRequired && !isOnboardingComplete) {
+      toast({
+        title: 'Connect Stripe to receive payments',
+        description: 'You need to complete Stripe onboarding before publishing.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Helper to safely parse currency / formatted strings
+    const safeParsePrice = (value: string): number | null => {
+      if (!value || !value.trim()) return null;
+      const cleaned = value.replace(/[^0-9.]/g, '');
+      const parsed = parseFloat(cleaned);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+    };
+
+    setIsSaving(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('optimize-description', {
-        body: { rawDescription: description, category: listing?.category, mode: listing?.mode, title },
-      });
+      // Persist ALL current in-memory fields before publishing.
+      // Users can jump directly to Review; without this, the DB may still contain placeholders.
+      let imageUrlsToSave = existingImages;
+      let videoUrlsToSave = existingVideos;
+      if (images.length > 0) {
+        // Uploading requires auth.
+        if (!user) {
+          if (isGuestDraft) setShowAuthModal(true);
+          toast({
+            title: 'Sign in to upload media',
+            description: 'Please sign in to add photos or videos to this listing.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        imageUrlsToSave = await uploadImages();
+        setExistingImages(imageUrlsToSave);
+        setImages([]);
+      }
+
+      if (videos.length > 0) {
+        // Uploading requires auth.
+        if (!user) {
+          if (isGuestDraft) setShowAuthModal(true);
+          toast({
+            title: 'Sign in to upload media',
+            description: 'Please sign in to add photos or videos to this listing.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        videoUrlsToSave = await uploadVideos();
+        setExistingVideos(videoUrlsToSave);
+        setVideos([]);
+      }
+
+      // Determine if category-based static or manually toggled
+      const categoryIsStatic = isStaticLocationFn(listing.category);
+      const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation)
+        ? 'on_site'
+        : (fulfillmentType || 'pickup');
+
+      const baseUpdateData: any = {
+        // Media
+        image_urls: imageUrlsToSave,
+        cover_image_url: imageUrlsToSave?.[0] || null,
+        video_urls: videoUrlsToSave,
+
+        // Details
+        title,
+        description,
+        highlights,
+        amenities,
+        weight_lbs: parseFloat(weightLbs) || null,
+        length_inches: parseFloat(lengthInches) || null,
+        width_inches: parseFloat(widthInches) || null,
+        height_inches: parseFloat(heightInches) || null,
+        freight_category: freightCategory,
+
+        // Location
+        fulfillment_type: effectiveFulfillmentType,
+        pickup_location_text: pickupLocationText || null,
+        address: address || null,
+        delivery_fee: parseFloat(deliveryFee) || null,
+        delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
+        pickup_instructions: pickupInstructions || null,
+        delivery_instructions: deliveryInstructions || null,
+        access_instructions: accessInstructions || null,
+        hours_of_access: hoursOfAccess || null,
+        location_notes: locationNotes || null,
+
+        // Availability (optional)
+        available_from: availableFrom || null,
+        available_to: availableTo || null,
+      };
+
+      const pricingUpdateData: any = listing.mode === 'sale'
+        ? {
+            price_sale: safeParsePrice(priceSale),
+            vendibook_freight_enabled: vendibookFreightEnabled,
+            freight_payer: freightPayer,
+            accept_card_payment: acceptCardPayment,
+            accept_cash_payment: acceptCashPayment,
+            proof_notary_enabled: proofNotaryEnabled,
+            featured_enabled: featuredEnabled,
+          }
+        : {
+            price_daily: safeParsePrice(priceDaily),
+            price_weekly: safeParsePrice(priceWeekly),
+            instant_book: instantBook,
+            deposit_amount: safeParsePrice(depositAmount),
+            featured_enabled: featuredEnabled,
+          };
+
+      // If Proof Notary is enabled for a sale listing, redirect to checkout for the $45 fee.
+      // IMPORTANT: persist everything first; webhook will publish after payment.
+      if (listing.mode === 'sale' && proofNotaryEnabled) {
+        const { error: persistError } = await supabase
+          .from('listings')
+          .update({ ...baseUpdateData, ...pricingUpdateData })
+          .eq('id', listing.id);
+
+        if (persistError) throw persistError;
+
+        // Get session for auth
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData.session) {
+          toast({ title: 'Please sign in to continue', variant: 'destructive' });
+          return;
+        }
+
+        const { data, error } = await supabase.functions.invoke('create-notary-checkout', {
+          headers: {
+            Authorization: `Bearer ${sessionData.session.access_token}`,
+          },
+          body: { listing_id: listing.id },
+        });
+
+        if (error) throw error;
+        if (!data?.url) throw new Error('No checkout URL returned');
+
+        // Set up listener for cross-tab communication before opening checkout
+        const handleCheckoutComplete = (event: MessageEvent) => {
+          if (event.data?.type === 'notary-checkout-complete' && event.data?.listingId === listing.id) {
+            // Navigate to the success page
+            window.location.href = event.data.url || `/listing-published?listing_id=${listing.id}&notary_paid=true`;
+          }
+        };
+        
+        try {
+          const channel = new BroadcastChannel('notary-checkout');
+          channel.onmessage = handleCheckoutComplete;
+          // Store channel reference to clean up later if needed
+          (window as any).__notaryCheckoutChannel = channel;
+        } catch (e) {
+          console.log('BroadcastChannel not supported');
+        }
+        
+        const newWindow = window.open(data.url, '_blank');
+        if (!newWindow) window.location.href = data.url;
+
+        return; // Exit early - webhook will handle publishing after payment
+      }
+
+      // If Featured Listing is enabled and not already paid for, redirect to checkout for the $25 fee.
+      // This works for both rental and sale listings.
+      const listingAlreadyFeatured = !!(listing as any).featured_at;
+      if (featuredEnabled && !listingAlreadyFeatured) {
+        const { error: persistError } = await supabase
+          .from('listings')
+          .update({ ...baseUpdateData, ...pricingUpdateData })
+          .eq('id', listing.id);
+
+        if (persistError) throw persistError;
+
+        // Get session for auth
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData.session) {
+          toast({ title: 'Please sign in to continue', variant: 'destructive' });
+          return;
+        }
+
+        const { data, error } = await supabase.functions.invoke('create-featured-checkout', {
+          headers: {
+            Authorization: `Bearer ${sessionData.session.access_token}`,
+          },
+          body: { listing_id: listing.id },
+        });
+
+        if (error) throw error;
+        if (!data?.url) throw new Error('No checkout URL returned');
+
+        // Set up listener for cross-tab communication before opening checkout
+        const handleCheckoutComplete = (event: MessageEvent) => {
+          if (event.data?.type === 'featured-checkout-complete' && event.data?.listingId === listing.id) {
+            window.location.href = event.data.url || `/listing-published?listing_id=${listing.id}&featured_paid=true`;
+          }
+        };
+        
+        try {
+          const channel = new BroadcastChannel('featured-checkout');
+          channel.onmessage = handleCheckoutComplete;
+          (window as any).__featuredCheckoutChannel = channel;
+        } catch (e) {
+          console.log('BroadcastChannel not supported');
+        }
+        
+        const newWindow = window.open(data.url, '_blank');
+        if (!newWindow) window.location.href = data.url;
+
+        return; // Exit early - webhook will handle publishing after payment
+      }
+
+      // Standard publish flow (no add-on fees)
+      // Check if this is a first-time publish or an update to an existing published listing
+      const isFirstTimePublish = !listing.published_at;
+      
+      const { error } = await supabase
+        .from('listings')
+        .update({
+          ...baseUpdateData,
+          ...pricingUpdateData,
+          status: 'published',
+          // Only set published_at if this is the first time publishing
+          ...(isFirstTimePublish ? { published_at: new Date().toISOString() } : {}),
+        })
+        .eq('id', listing.id);
 
       if (error) throw error;
-      if (data?.optimizedDescription) {
-        setDescription(data.optimizedDescription);
-        setShowOptimized(true);
-        toast({ title: 'Description optimized!' });
+
+      // Track analytics - differentiate between new publish and update
+      console.log(`[ANALYTICS] Listing ${isFirstTimePublish ? 'published' : 'updated'}`, { listingId: listing.id });
+
+      // Only send admin notification for first-time publishes, not updates
+      if (isFirstTimePublish) {
+        supabase.functions.invoke('send-admin-notification', {
+          body: {
+            type: 'new_listing',
+            data: {
+              listing_id: listing.id,
+              title: listing.title,
+              category: listing.category,
+              mode: listing.mode,
+              price_daily: priceDaily ? parseFloat(priceDaily.replace(/[^0-9.]/g, '')) : null,
+              price_sale: priceSale ? parseFloat(priceSale.replace(/[^0-9.]/g, '')) : null,
+              address: location,
+              host_id: user?.id,
+              host_name: user?.user_metadata?.full_name || user?.email?.split('@')[0],
+              host_email: user?.email,
+            },
+          },
+        }).catch(err => console.error('Admin notification error:', err));
       }
+
+      setShowSuccessModal(true);
     } catch (error) {
-      console.error('Error optimizing description:', error);
-      toast({ title: 'Optimization failed', variant: 'destructive' });
+      console.error('Error publishing:', error);
+      toast({
+        title: 'Error publishing',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
     } finally {
-      setIsOptimizing(false);
+      setIsSaving(false);
     }
   };
 
-  const revertDescription = () => {
-    if (originalDescription) {
-      setDescription(originalDescription);
-      setOriginalDescription(null);
-      setShowOptimized(false);
-    }
-  };
-
-  // --- Stripe ---
   const handleStripeConnect = async () => {
     try {
       await connectStripe();
-      // Refresh status after user might return
-      setTimeout(refreshStatus, 2000);
     } catch (error) {
       toast({ title: 'Error connecting Stripe', variant: 'destructive' });
     }
   };
 
-  // --- Navigation ---
-  const handleNext = async () => {
-    if (step === 'review') {
-      setShowPublishDialog(true);
-      return;
-    }
-    await saveStep();
+  // TOS agreement state for publish confirmation
+  const [tosAgreed, setTosAgreed] = useState(false);
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+  // Checklist state - with proper validation
+  const totalPhotoCount = existingImages.length + images.length;
+  // Stripe is only required if card payment is enabled (not cash-only)
+  const requiresStripe = acceptCardPayment;
+  const enabledDocsCount = requiredDocuments.filter(d => d.is_required).length;
+
+  // Helper to properly validate price input
+  const isValidPrice = (value: string): boolean => {
+    if (!value || !value.trim()) return false;
+    const cleaned = value.replace(/[^0-9.]/g, '');
+    const parsed = parseFloat(cleaned);
+    return !isNaN(parsed) && parsed > 0;
   };
 
-  const handleBack = () => {
-    if (currentStepIndex > 0) {
-      setStep(stepOrder[currentStepIndex - 1]);
-    } else {
-      navigate('/dashboard');
-    }
+  // Minimum description length
+  const MIN_DESCRIPTION_LENGTH = 50;
+  const MIN_TITLE_LENGTH = 5;
+
+  const hasPricing = listing?.mode === 'sale' 
+    ? isValidPrice(priceSale) 
+    : isValidPrice(priceDaily);
+  
+  const hasValidTitle = title.trim().length >= MIN_TITLE_LENGTH;
+  const hasValidDescription = description.trim().length >= MIN_DESCRIPTION_LENGTH;
+  const hasDescription = hasValidTitle && hasValidDescription;
+
+  const checklistState = {
+    hasPhotos: totalPhotoCount >= 3,
+    hasPricing,
+    hasAvailability: true, // Optional
+    hasDescription,
+    hasLocation: listing ? (
+      isStaticLocationFn(listing.category) || isStaticLocation
+        ? !!(address && accessInstructions)
+        : !!(fulfillmentType && pickupLocationText)
+    ) : false,
+    hasStripe: isOnboardingComplete,
+    isRental: listing?.mode === 'rent',
+    photoCount: totalPhotoCount,
+    requiresStripe, // Pass whether Stripe is required
+    hasDocuments: true, // Documents step is optional, always "complete"
+    documentsCount: enabledDocsCount,
+    descriptionLength: description.trim().length,
+    priceSet: listing?.mode === 'sale' 
+      ? (isValidPrice(priceSale) ? `$${parseFloat(priceSale.replace(/[^0-9.]/g, '')).toLocaleString()}` : undefined)
+      : (isValidPrice(priceDaily) ? `$${parseFloat(priceDaily.replace(/[^0-9.]/g, ''))}/day` : undefined),
   };
 
-  const canProceed = () => {
-    switch (step) {
-      case 'photos':
-        return totalPhotoCount >= 1;
-      case 'headline':
-        return hasValidTitle && description.length >= 10;
-      case 'pricing':
-        return hasPricing;
-      case 'location':
-        return hasLocation;
-      case 'stripe':
-        return !requiresStripe || isOnboardingComplete;
-      default:
-        return true;
-    }
+  const checklistItems = createChecklistItems(checklistState, step);
+  const canPublish = checklistItems.filter(i => i.required).every(i => i.completed);
+
+  // Collect validation errors for publish attempt
+  const getValidationErrors = (): string[] => {
+    const errors: string[] = [];
+    if (totalPhotoCount < 3) errors.push(`Add at least 3 photos (currently ${totalPhotoCount})`);
+    if (!hasPricing) errors.push(listing?.mode === 'sale' ? 'Set a sale price greater than $0' : 'Set a daily rate greater than $0');
+    if (!hasValidTitle) errors.push(`Title must be at least ${MIN_TITLE_LENGTH} characters`);
+    if (!hasValidDescription) errors.push(`Description must be at least ${MIN_DESCRIPTION_LENGTH} characters (currently ${description.trim().length})`);
+    if (!checklistState.hasLocation) errors.push('Complete the location and logistics section');
+    if (requiresStripe && !isOnboardingComplete) errors.push('Connect Stripe to receive payments');
+    return errors;
   };
 
-  // --- Loading State ---
   if (isLoading) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-background gap-4">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-muted-foreground font-medium">Loading your draft...</p>
       </div>
     );
   }
 
   if (!listing) return null;
 
-  // --- Render ---
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans">
+    <div className="min-h-screen bg-background">
       {/* Claiming draft overlay */}
       {isClaimingDraft && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center gap-4">
           <Loader2 className="w-10 h-10 animate-spin text-primary" />
           <p className="text-lg font-medium text-foreground">Saving your draft...</p>
+          <p className="text-sm text-muted-foreground">Syncing your changes to your account</p>
         </div>
       )}
-
-      {/* Top Bar */}
-      <div className="h-16 border-b bg-card/80 backdrop-blur-md sticky top-0 z-50 px-4 flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="gap-2">
-          <X className="w-4 h-4" />
-          <span className="hidden sm:inline">Save & Exit</span>
-        </Button>
-        
-        {/* Progress Dots */}
-        <div className="flex gap-1.5">
-          {stepOrder.map((s, i) => (
+      {/* Header */}
+      <div className="border-b bg-card sticky top-0 z-10">
+        <div className="container max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
             <button
-              key={s}
-              onClick={() => i <= currentStepIndex && setStep(s)}
-              disabled={i > currentStepIndex}
-              className={cn(
-                "h-2 rounded-full transition-all duration-300",
-                i === currentStepIndex ? "bg-primary w-6" : i < currentStepIndex ? "bg-primary/40 w-2 hover:bg-primary/60 cursor-pointer" : "bg-muted w-2"
-              )}
-            />
-          ))}
-        </div>
-
-        <div className="w-20 flex justify-end">
-          <Button variant="ghost" size="sm" onClick={() => setShowPreviewModal(true)}>
-            <Eye className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">Preview</span>
-          </Button>
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Save & exit
+            </button>
+            <h1 className="font-semibold">
+              {CATEGORY_LABELS[listing.category]} · {listing.mode === 'rent' ? 'For Rent' : 'For Sale'}
+            </h1>
+          </div>
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <main className="flex-1 container max-w-xl mx-auto px-4 py-8 md:py-12 pb-32">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {/* Step: Photos */}
-            {step === 'photos' && (
-              <div className="space-y-6">
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold tracking-tight">Showcase your asset</h2>
-                  <p className="text-muted-foreground text-lg mt-2">High-quality photos increase bookings by 40%.</p>
-                </div>
+      <div className="container max-w-4xl mx-auto px-4 py-8">
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Sidebar Checklist - Desktop */}
+          <div className="hidden lg:block">
+            <PublishChecklist
+              items={checklistItems}
+              onItemClick={(id) => setStep(id as PublishStep)}
+              onPublishClick={() => setShowPublishDialog(true)}
+              className="sticky top-24"
+            />
+          </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {allPhotos.map((item, globalIndex) => {
-                    const isDragging = photoDraggedIndex === globalIndex;
-                    const isDragOver = photoDragOverIndex === globalIndex;
-                    const isCover = globalIndex === 0;
-                    const imgSrc = item.type === 'existing' ? item.url : URL.createObjectURL(item.file);
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            {/* Mobile Checklist - hide publish button when on review step to avoid duplicate */}
+            <div className="lg:hidden mb-6">
+              <PublishChecklist
+                items={checklistItems}
+                onItemClick={(id) => setStep(id as PublishStep)}
+                onPublishClick={() => setShowPublishDialog(true)}
+                hidePublishButton={step === 'review'}
+              />
+            </div>
 
-                    return (
-                      <div
-                        key={item.type === 'existing' ? `existing-${item.index}` : `new-${item.index}`}
-                        draggable
-                        onDragStart={(e) => handlePhotoDragStart(e, globalIndex)}
-                        onDragEnd={handlePhotoDragEnd}
-                        onDragOver={(e) => handlePhotoDragOver(e, globalIndex)}
-                        onDrop={(e) => handlePhotoDrop(e, globalIndex)}
-                        className={cn(
-                          "relative aspect-[4/3] rounded-xl overflow-hidden border-2 group cursor-move transition-all",
-                          isDragging && "opacity-50 scale-95",
-                          isDragOver && "border-primary border-dashed bg-primary/5",
-                          isCover ? "border-primary" : "border-border"
-                        )}
-                      >
-                        <img src={imgSrc} alt="" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors" />
-                        <button
-                          onClick={() => item.type === 'existing' ? removeExistingImage(item.index) : removeImage(item.index)}
-                          className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <GripVertical className="w-5 h-5 text-white drop-shadow" />
-                        </div>
-                        {isCover && (
-                          <span className="absolute bottom-2 left-2 text-xs font-medium bg-primary text-primary-foreground px-2 py-1 rounded">
-                            Cover
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
-
-                  {/* Upload button */}
-                  <label className="relative aspect-[4/3] rounded-xl border-2 border-dashed border-border bg-muted/30 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors">
-                    <Camera className="w-8 h-8 text-muted-foreground mb-2" />
-                    <span className="text-sm font-medium text-muted-foreground">Add Photos</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleImageUpload}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                    />
-                  </label>
-                </div>
-
-                <p className="text-center text-sm text-muted-foreground">
-                  {totalPhotoCount < 3 ? (
-                    <span className="text-destructive">Minimum 3 photos required ({3 - totalPhotoCount} more needed)</span>
-                  ) : (
-                    <span className="text-emerald-600">✓ {totalPhotoCount} photos uploaded</span>
-                  )}
-                </p>
-              </div>
-            )}
-
-            {/* Step: Headline */}
-            {step === 'headline' && (
-              <div className="space-y-6">
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold tracking-tight">The basics</h2>
-                  <p className="text-muted-foreground text-lg mt-2">Give your listing a clear title and description.</p>
-                </div>
-
+            <div className="bg-card rounded-2xl shadow-sm border p-6 md:p-8">
+              {/* Step: Media */}
+              {step === 'photos' && (
                 <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="title" className="text-base font-medium">Listing Title</Label>
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Add media</h2>
+                    <p className="text-muted-foreground">
+                      Upload at least 3 photos. Videos are optional. <span className="font-medium text-foreground">Drag to reorder</span> — first image is your cover.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {allPhotos.map((item, globalIndex) => {
+                      const isDragging = photoDraggedIndex === globalIndex;
+                      const isDragOver = photoDragOverIndex === globalIndex;
+                      const isCover = globalIndex === 0;
+                      const imgSrc = item.type === 'existing' ? item.url : URL.createObjectURL(item.file);
+
+                      return (
+                        <div
+                          key={item.type === 'existing' ? `existing-${item.index}` : `new-${item.index}`}
+                          draggable
+                          onDragStart={(e) => handlePhotoDragStart(e, globalIndex)}
+                          onDragEnd={handlePhotoDragEnd}
+                          onDragOver={(e) => handlePhotoDragOver(e, globalIndex)}
+                          onDragLeave={handlePhotoDragLeave}
+                          onDrop={(e) => handlePhotoDrop(e, globalIndex)}
+                          className={cn(
+                            "relative aspect-[4/3] rounded-xl overflow-hidden group cursor-grab active:cursor-grabbing transition-all",
+                            isDragging && "opacity-50 scale-95",
+                            isDragOver && "ring-2 ring-primary ring-offset-2"
+                          )}
+                        >
+                          <img src={imgSrc} alt="" className="w-full h-full object-cover" />
+                          
+                          {/* Cover badge */}
+                          {isCover && (
+                            <div className="absolute top-2 left-2 px-2 py-1 bg-primary text-primary-foreground rounded-md text-xs font-medium flex items-center gap-1">
+                              <Star className="w-3 h-3" />
+                              Cover
+                            </div>
+                          )}
+
+                          {/* Saved badge for existing images */}
+                          {item.type === 'existing' && !isCover && (
+                            <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/50 text-white rounded text-xs">
+                              Saved
+                            </div>
+                          )}
+
+                          {/* Drag handle */}
+                          <div className="absolute top-2 right-10 p-1.5 rounded-lg bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                            <GripVertical className="w-4 h-4" />
+                          </div>
+
+                          {/* Remove button */}
+                          <button
+                            onClick={() => removePhotoByGlobalIndex(globalIndex)}
+                            className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+
+                          {/* Make cover button */}
+                          {!isCover && (
+                            <button
+                              onClick={() => movePhotoToFirst(globalIndex)}
+                              className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white rounded-md text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 flex items-center gap-1"
+                            >
+                              <Star className="w-3 h-3" />
+                              Cover
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                    <label className="aspect-[4/3] rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
+                      <Camera className="w-8 h-8 text-muted-foreground mb-2" />
+                      <span className="text-sm text-muted-foreground">Add photos</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {/* Videos (optional) */}
+                  <div className="border-t pt-6 space-y-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <h3 className="text-base font-semibold text-foreground">Videos (optional)</h3>
+                        <p className="text-sm text-muted-foreground">Add short walkthroughs to increase trust.</p>
+                      </div>
+                      <label className="shrink-0 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:opacity-90 h-10 px-4">
+                        Add videos
+                        <input
+                          type="file"
+                          accept="video/mp4,video/webm,video/quicktime"
+                          multiple
+                          onChange={handleVideoUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {(existingVideos.length > 0 || videos.length > 0) ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {existingVideos.map((url, index) => (
+                          <div key={url} className="relative aspect-video rounded-xl overflow-hidden group bg-muted">
+                            <video src={url} className="w-full h-full object-cover" muted playsInline />
+                            <button
+                              type="button"
+                              onClick={() => removeExistingVideo(index)}
+                              className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                        {videos.map((file, index) => {
+                          const preview = URL.createObjectURL(file);
+                          return (
+                            <div key={`${file.name}-${index}`} className="relative aspect-video rounded-xl overflow-hidden group bg-muted">
+                              <video src={preview} className="w-full h-full object-cover" muted playsInline />
+                              <button
+                                type="button"
+                                onClick={() => removeVideo(index)}
+                                className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground">No videos added yet</div>
+                    )}
+                  </div>
+
+                  <Button onClick={saveStep} disabled={isSaving || allPhotos.length < 3}>
+                    {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                    Continue
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              )}
+
+              {/* Step: Headline & Description */}
+              {step === 'headline' && (
+                <div className="space-y-8">
+                  {/* Page Header */}
+                  <div className="text-center space-y-2">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-2">
+                      <Type className="w-6 h-6 text-primary" />
+                    </div>
+                    <h2 className="text-2xl font-bold">Let's create your listing</h2>
+                    <p className="text-muted-foreground max-w-md mx-auto">
+                      Start with a catchy headline and detailed description that will attract {listing.mode === 'rent' ? 'renters' : 'buyers'}.
+                    </p>
+                  </div>
+
+                  {/* Title Input */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="title" className="text-lg font-semibold">Listing Headline</Label>
+                      <span className={cn(
+                        "text-sm font-medium px-2 py-0.5 rounded-full",
+                        title.length >= MIN_TITLE_LENGTH ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-muted text-muted-foreground"
+                      )}>
+                        {title.length}/80
+                      </span>
+                    </div>
                     <Input
                       id="title"
                       value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      className="h-14 text-lg px-4 rounded-xl border-border/60 focus:border-primary"
-                      placeholder="e.g. Downtown Commercial Kitchen"
+                      onChange={(e) => setTitle(e.target.value.slice(0, 80))}
+                      placeholder="e.g., 2022 Fully Equipped Taco Truck - Ready to Roll"
+                      className="text-lg h-14"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      {title.length < MIN_TITLE_LENGTH && <span className="text-destructive">Min {MIN_TITLE_LENGTH} characters</span>}
+                    <p className="text-sm text-muted-foreground">
+                      💡 Include key details like year, type, specialty, or unique features.
                     </p>
                   </div>
 
+                  {/* Description with AI Builder */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="description" className="text-lg font-semibold">Description</Label>
+                      <div className="flex items-center gap-2">
+                        {showOptimized && originalDescription && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={revertDescription}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <RotateCcw className="w-3 h-3 mr-1" />
+                            Revert
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="relative">
+                      <Textarea
+                        id="description"
+                        value={description}
+                        onChange={(e) => {
+                          setDescription(e.target.value);
+                          if (showOptimized) setShowOptimized(false);
+                        }}
+                        placeholder="Describe your listing in detail. What makes it special? What equipment is included? What's the condition?"
+                        rows={8}
+                        className="resize-none text-base"
+                      />
+                    </div>
+                    
+                    <div className="flex items-start justify-between gap-4">
+                      <p className="text-sm text-muted-foreground">
+                        Be detailed! {listing.mode === 'rent' ? 'Renters' : 'Buyers'} want to know everything about your asset.
+                      </p>
+                      <span className={cn(
+                        "text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap",
+                        description.length >= MIN_DESCRIPTION_LENGTH ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                      )}>
+                        {description.length < MIN_DESCRIPTION_LENGTH ? `${MIN_DESCRIPTION_LENGTH - description.length} more chars needed` : '✓ Good length'}
+                      </span>
+                    </div>
+
+                    {/* AI Optimize Card */}
+                    <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse pointer-events-none" />
+                      <div className="relative flex items-start gap-3">
+                        <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md shrink-0">
+                          <Sparkles className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-foreground mb-1">AI Writing Assistant</h4>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            Let AI polish your description into professional, engaging copy.
+                          </p>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={optimizeDescription}
+                            disabled={isOptimizing || !description || description.length < 10}
+                            className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
+                          >
+                            {isOptimizing ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Optimizing...
+                              </>
+                            ) : showOptimized ? (
+                              <>
+                                <Check className="w-4 h-4 mr-2" />
+                                Optimized!
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="w-4 h-4 mr-2" />
+                                Optimize with AI
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => setStep('photos')}>Back</Button>
+                    <Button 
+                      onClick={saveStep} 
+                      disabled={isSaving || title.trim().length < MIN_TITLE_LENGTH || description.trim().length < MIN_DESCRIPTION_LENGTH}
+                    >
+                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      Continue
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step: What's Included & Key Highlights */}
+              {step === 'includes' && (
+                <div className="space-y-8">
+                  {/* Page Header */}
+                  <div className="text-center space-y-2">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-2">
+                      <ListChecks className="w-6 h-6 text-primary" />
+                    </div>
+                    <h2 className="text-2xl font-bold">What's Included?</h2>
+                    <p className="text-muted-foreground max-w-md mx-auto">
+                      Select features and add highlights to showcase what makes your listing special.
+                    </p>
+                  </div>
+
+                  {/* Amenities - Category specific */}
+                  {categoryAmenities.length > 0 && (
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-lg font-semibold">Features & Amenities</Label>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Select all that apply to your {CATEGORY_LABELS[listing.category].toLowerCase()}.
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-6">
+                        {categoryAmenities.map((group) => (
+                          <div key={group.label} className="space-y-3">
+                            <h4 className="text-sm font-medium text-muted-foreground">{group.label}</h4>
+                            <div className="grid grid-cols-2 gap-3">
+                              {group.items.map((item) => (
+                                <label
+                                  key={item.id}
+                                  className={cn(
+                                    "flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all",
+                                    amenities.includes(item.id)
+                                      ? "border-primary bg-primary/5"
+                                      : "border-border hover:border-primary/50 hover:bg-muted/50"
+                                  )}
+                                >
+                                  <Checkbox
+                                    checked={amenities.includes(item.id)}
+                                    onCheckedChange={() => toggleAmenity(item.id)}
+                                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                  />
+                                  <span className="text-sm font-medium">{item.label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {amenities.length > 0 && (
+                        <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-xl">
+                          <Check className="w-4 h-4 text-primary" />
+                          <span className="text-sm font-medium text-primary">
+                            {amenities.length} feature{amenities.length !== 1 ? 's' : ''} selected
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Key Highlights */}
+                  <div className="space-y-4 pt-6 border-t">
+                    <div>
+                      <Label className="text-lg font-semibold">Key Highlights</Label>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Add up to 6 bullet points to showcase the best features. These appear prominently on your listing.
+                      </p>
+                    </div>
+                    
+                    {highlights.length > 0 && (
+                      <ul className="space-y-2">
+                        {highlights.map((highlight, index) => (
+                          <li
+                            key={index}
+                            className="flex items-center gap-3 p-3 bg-muted rounded-xl"
+                          >
+                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                              <Check className="w-3.5 h-3.5 text-primary" />
+                            </div>
+                            <span className="flex-1 text-sm">{highlight}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeHighlight(index)}
+                              className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {highlights.length < 6 && (
+                      <div className="flex gap-2">
+                        <Input
+                          value={newHighlight}
+                          onChange={(e) => setNewHighlight(e.target.value)}
+                          onKeyDown={handleHighlightKeyDown}
+                          placeholder="e.g., Brand new refrigeration system"
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={addHighlight}
+                          disabled={!newHighlight.trim()}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {highlights.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        💡 Tip: Highlights like "Recently inspected" or "Low mileage" can increase interest.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => setStep('headline')}>Back</Button>
+                    <Button onClick={saveStep} disabled={isSaving}>
+                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      Continue
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step: Pricing */}
+              {step === 'pricing' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Set your price</h2>
+                    <p className="text-muted-foreground">
+                      {listing.mode === 'sale' ? 'Enter your asking price.' : 'Set daily and weekly rates.'}
+                    </p>
+                  </div>
+
+                  {/* AI Suggestions Button */}
+                  <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse pointer-events-none" />
+                    <div className="relative flex items-start gap-3">
+                      <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md">
+                        <Sparkles className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-foreground mb-1">AI Pricing Assistant</h4>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Get smart pricing suggestions based on your listing title, category, and location.
+                        </p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handleGetSuggestions}
+                          disabled={isLoadingSuggestions}
+                          className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
+                        >
+                          {isLoadingSuggestions ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Analyzing market...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              Get AI Suggestions
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {listing.mode === 'sale' ? (
+                    <>
+                      {/* Sale Suggestions Display */}
+                      {saleSuggestions && (
+                        <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+                          <h4 className="font-medium text-foreground flex items-center gap-2">
+                            <Target className="w-4 h-4 text-primary" />
+                            Suggested Pricing
+                          </h4>
+                          
+                          <div className="grid grid-cols-3 gap-3">
+                            <button
+                              type="button"
+                              onClick={() => applySaleSuggestion('low')}
+                              className="p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                            >
+                              <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
+                                <TrendingDown className="w-3 h-3" />
+                                Quick Sale
+                              </div>
+                              <div className="font-semibold text-foreground">${saleSuggestions.sale_low.toLocaleString()}</div>
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={() => applySaleSuggestion('suggested')}
+                              className="p-3 rounded-lg border-2 border-primary bg-primary/5 hover:bg-primary/10 transition-all text-left"
+                            >
+                              <div className="flex items-center gap-1 text-primary text-xs mb-1">
+                                <Target className="w-3 h-3" />
+                                Recommended
+                              </div>
+                              <div className="font-semibold text-foreground">${saleSuggestions.sale_suggested.toLocaleString()}</div>
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={() => applySaleSuggestion('high')}
+                              className="p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                            >
+                              <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
+                                <TrendingUp className="w-3 h-3" />
+                                Premium
+                              </div>
+                              <div className="font-semibold text-foreground">${saleSuggestions.sale_high.toLocaleString()}</div>
+                            </button>
+                          </div>
+                          
+                          <p className="text-sm text-muted-foreground italic">
+                            {saleSuggestions.reasoning}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Sale Price Input */}
+                      <div className="space-y-2">
+                        <Label htmlFor="priceSale" className="text-base font-medium">
+                          Asking Price <span className="text-destructive">*</span>
+                        </Label>
+                        <div className="relative max-w-sm">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                          <Input
+                            id="priceSale"
+                            type="number"
+                            placeholder="0"
+                            value={priceSale}
+                            onChange={(e) => setPriceSale(e.target.value)}
+                            className={cn(
+                              "pl-8 text-xl",
+                              priceSale && !isValidPrice(priceSale) && "border-destructive focus-visible:ring-destructive"
+                            )}
+                          />
+                        </div>
+                        {priceSale && !isValidPrice(priceSale) && (
+                          <p className="text-sm text-destructive">Please enter a valid price greater than $0</p>
+                        )}
+                      </div>
+
+                      {/* Payout Estimate for Sales */}
+                      {salePayoutEstimate && (
+                        <div className="bg-card rounded-xl p-4 border border-border max-w-md">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2.5 bg-muted rounded-xl">
+                              <Wallet className="w-5 h-5 text-foreground" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h4 className="font-semibold text-foreground">
+                                  {vendibookFreightEnabled && freightPayer === 'seller' 
+                                    ? 'Seller Payout Estimate (Free Shipping)' 
+                                    : 'Estimated Payout'}
+                                </h4>
+                              </div>
+                              
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Item price:</span>
+                                <span className="text-sm text-foreground">
+                                  {formatCurrency(salePayoutEstimate.salePrice)}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center justify-between mt-1">
+                                <span className="text-sm text-muted-foreground">Platform commission:</span>
+                                <span className="text-sm text-destructive">
+                                  -{formatCurrency(salePayoutEstimate.sellerFee)}
+                                </span>
+                              </div>
+                              
+                              {salePayoutEstimate.freightDeduction > 0 && (
+                                <div className="flex items-center justify-between mt-1">
+                                  <span className="text-sm text-muted-foreground">Freight (seller-paid):</span>
+                                  <span className="text-sm text-destructive">
+                                    -{formatCurrency(salePayoutEstimate.freightDeduction)}
+                                  </span>
+                                </div>
+                              )}
+                              
+                              <div className="flex items-center justify-between mt-2 pt-2 border-t border-border">
+                                <span className="text-sm font-medium text-foreground">Estimated payout:</span>
+                                <span className="font-semibold text-primary text-lg">
+                                  {formatCurrency(salePayoutEstimate.sellerReceives)}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-start gap-1.5 mt-3 text-xs text-muted-foreground">
+                                <Info className="w-3 h-3 mt-0.5 shrink-0" />
+                                <span>Platform fee is {SALE_SELLER_FEE_PERCENT}% of the sale price</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Payment Method Options */}
+                      <div className="pt-6 border-t">
+                        <div className="flex items-center gap-2 mb-4">
+                          <CreditCard className="w-5 h-5 text-primary" />
+                          <h3 className="text-lg font-semibold">Accepted Payment Methods</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Select how buyers can pay for your item. You can enable both options.
+                        </p>
+
+                        <div className="space-y-4">
+                          <div className="flex items-start space-x-3 p-4 rounded-lg border border-border bg-card hover:border-primary/30 transition-colors">
+                            <Checkbox
+                              id="accept_card_payment"
+                              checked={acceptCardPayment}
+                              onCheckedChange={(checked) => setAcceptCardPayment(!!checked)}
+                              className="mt-0.5"
+                            />
+                            <div className="flex-1">
+                              <Label
+                                htmlFor="accept_card_payment"
+                                className="flex items-center gap-2 text-base font-medium cursor-pointer"
+                              >
+                                <CreditCard className="w-4 h-4 text-primary" />
+                                Pay by Card (Online)
+                              </Label>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Accept secure online payments via Stripe. Funds are deposited to your connected Stripe account after sale confirmation.
+                              </p>
+                              {acceptCardPayment && (
+                                <div className="mt-2 p-2 bg-primary/5 rounded text-xs text-muted-foreground">
+                                  <Info className="w-3 h-3 inline mr-1" />
+                                  Requires Stripe Connect setup to receive payments.
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-start space-x-3 p-4 rounded-lg border border-border bg-card hover:border-primary/30 transition-colors">
+                            <Checkbox
+                              id="accept_cash_payment"
+                              checked={acceptCashPayment}
+                              onCheckedChange={(checked) => setAcceptCashPayment(!!checked)}
+                              className="mt-0.5"
+                            />
+                            <div className="flex-1">
+                              <Label
+                                htmlFor="accept_cash_payment"
+                                className="flex items-center gap-2 text-base font-medium cursor-pointer"
+                              >
+                                <Banknote className="w-4 h-4 text-green-600" />
+                                Pay in Person
+                              </Label>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Accept cash or other payments at pickup/delivery. You'll arrange payment directly with the buyer.
+                              </p>
+                            </div>
+                          </div>
+
+                          {!acceptCardPayment && !acceptCashPayment && (
+                            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                              <p className="text-sm text-destructive flex items-center gap-2">
+                                <Info className="w-4 h-4" />
+                                Please select at least one payment method.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Freight Settings */}
+                      <div className="pt-6 border-t">
+                        <FreightSettingsCard
+                          enabled={vendibookFreightEnabled}
+                          payer={freightPayer}
+                          onEnabledChange={(enabled) => setVendibookFreightEnabled(enabled)}
+                          onPayerChange={(payer) => setFreightPayer(payer)}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Rental Suggestions Display */}
+                      {rentalSuggestions && (
+                        <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+                          <h4 className="font-medium text-foreground flex items-center gap-2">
+                            <Target className="w-4 h-4 text-primary" />
+                            Suggested Pricing
+                          </h4>
+                          
+                          <div className="grid grid-cols-3 gap-3">
+                            <button
+                              type="button"
+                              onClick={() => applyRentalSuggestion('low')}
+                              className="p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                            >
+                              <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
+                                <TrendingDown className="w-3 h-3" />
+                                Budget
+                              </div>
+                              <div className="font-semibold text-foreground">${rentalSuggestions.daily_low}/day</div>
+                              <div className="text-xs text-muted-foreground">${rentalSuggestions.weekly_low}/week</div>
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={() => applyRentalSuggestion('suggested')}
+                              className="p-3 rounded-lg border-2 border-primary bg-primary/5 hover:bg-primary/10 transition-all text-left"
+                            >
+                              <div className="flex items-center gap-1 text-primary text-xs mb-1">
+                                <Target className="w-3 h-3" />
+                                Recommended
+                              </div>
+                              <div className="font-semibold text-foreground">${rentalSuggestions.daily_suggested}/day</div>
+                              <div className="text-xs text-muted-foreground">${rentalSuggestions.weekly_suggested}/week</div>
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={() => applyRentalSuggestion('high')}
+                              className="p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                            >
+                              <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
+                                <TrendingUp className="w-3 h-3" />
+                                Premium
+                              </div>
+                              <div className="font-semibold text-foreground">${rentalSuggestions.daily_high}/day</div>
+                              <div className="text-xs text-muted-foreground">${rentalSuggestions.weekly_high}/week</div>
+                            </button>
+                          </div>
+                          
+                          <p className="text-sm text-muted-foreground italic">
+                            {rentalSuggestions.reasoning}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Rental Pricing Inputs */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="priceDaily" className="text-base font-medium">
+                            Daily Rate <span className="text-destructive">*</span>
+                          </Label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                            <Input
+                              id="priceDaily"
+                              type="number"
+                              placeholder="0"
+                              value={priceDaily}
+                              onChange={(e) => setPriceDaily(e.target.value)}
+                              className={cn(
+                                "pl-8 text-lg",
+                                priceDaily && !isValidPrice(priceDaily) && "border-destructive focus-visible:ring-destructive"
+                              )}
+                            />
+                          </div>
+                          {priceDaily && !isValidPrice(priceDaily) && (
+                            <p className="text-sm text-destructive">Enter a valid daily rate greater than $0</p>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="priceWeekly" className="text-base font-medium">Weekly Rate (optional)</Label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                            <Input
+                              id="priceWeekly"
+                              type="number"
+                              placeholder="0"
+                              value={priceWeekly}
+                              onChange={(e) => setPriceWeekly(e.target.value)}
+                              className="pl-8 text-lg"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Payout Estimate for Rentals */}
+                      {(rentalPayoutEstimates.daily || rentalPayoutEstimates.weekly) && (
+                        <div className="bg-card rounded-xl p-4 border border-border">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2.5 bg-muted rounded-xl">
+                              <Wallet className="w-5 h-5 text-foreground" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-foreground mb-2">Estimated Payout</h4>
+                              <div className="space-y-2">
+                                {rentalPayoutEstimates.daily && (
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground">Daily rental:</span>
+                                    <div className="text-right">
+                                      <span className="font-semibold text-primary">
+                                        {formatCurrency(rentalPayoutEstimates.daily.hostReceives)}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground ml-2">
+                                        ({formatCurrency(rentalPayoutEstimates.daily.hostFee)} fee)
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                                {rentalPayoutEstimates.weekly && (
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground">Weekly rental:</span>
+                                    <div className="text-right">
+                                      <span className="font-semibold text-primary">
+                                        {formatCurrency(rentalPayoutEstimates.weekly.hostReceives)}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground ml-2">
+                                        ({formatCurrency(rentalPayoutEstimates.weekly.hostFee)} fee)
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex items-start gap-1.5 mt-3 text-xs text-muted-foreground">
+                                <Info className="w-3 h-3 mt-0.5 shrink-0" />
+                                <span>Platform fee is {RENTAL_HOST_FEE_PERCENT}% of the rental price</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Instant Book Toggle */}
+                      <div className="pt-4 border-t">
+                        <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+                          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 pointer-events-none" />
+                          <div className="relative flex items-start justify-between gap-4">
+                            <div className="flex items-start gap-3 flex-1">
+                              <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md">
+                                <Zap className="w-5 h-5 text-white" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-semibold text-foreground">Instant Book</h4>
+                                  <InfoTooltip 
+                                    content="When enabled, renters can book and pay immediately. Documents are still reviewed - if rejected, the booking is cancelled and payment is fully refunded." 
+                                  />
+                                </div>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  Allow renters to book immediately without waiting for approval.
+                                </p>
+                              </div>
+                            </div>
+                            <Switch
+                              checked={instantBook}
+                              onCheckedChange={(checked) => setInstantBook(checked)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Security Deposit */}
+                      <div className="pt-4 border-t">
+                        <div className="bg-card rounded-xl p-4 border border-border">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2.5 bg-muted rounded-xl">
+                              <Wallet className="w-5 h-5 text-foreground" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-semibold text-foreground">Security Deposit</h4>
+                                <InfoTooltip 
+                                  content="A refundable security deposit is charged at booking and returned after the rental ends without damage or delays." 
+                                />
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-3">
+                                Protect your equipment with a refundable deposit. Returned in full if no damage or late returns.
+                              </p>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="depositAmount" className="text-sm">Deposit Amount (Optional)</Label>
+                                <div className="relative max-w-xs">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                  <Input
+                                    id="depositAmount"
+                                    type="number"
+                                    min="0"
+                                    step="50"
+                                    value={depositAmount}
+                                    onChange={(e) => setDepositAmount(e.target.value)}
+                                    placeholder="0.00"
+                                    className="pl-7"
+                                  />
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  Leave blank for no deposit. Typical deposits are $200-$1,000 depending on equipment value.
+                                </p>
+                              </div>
+
+                              {parseFloat(depositAmount) > 0 && (
+                                <div className="mt-4 p-3 bg-muted rounded-lg border border-border">
+                                  <p className="text-xs text-muted-foreground">
+                                    <strong className="text-primary">How it works:</strong> The ${parseFloat(depositAmount).toLocaleString()} deposit is charged when the booking is confirmed. 
+                                    After the rental ends, you can release the deposit in full or deduct for any damage/late fees.
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <div className="flex gap-3 pt-4">
+                    <Button variant="outline" onClick={() => setStep('includes')}>Back</Button>
+                    <Button 
+                      onClick={saveStep} 
+                      disabled={isSaving || (listing.mode === 'sale' ? (!isValidPrice(priceSale) || (!acceptCardPayment && !acceptCashPayment)) : !isValidPrice(priceDaily))}
+                    >
+                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      Continue
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step: Availability (Rental only) */}
+              {step === 'availability' && listing.mode === 'rent' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Set availability</h2>
+                    <p className="text-muted-foreground">
+                      Control when your listing is available for bookings.
+                    </p>
+                  </div>
+
+                  {/* Spaces Available - For categories with multiple slots */}
+                  {['vendor_space', 'ghost_kitchen', 'food_truck', 'food_trailer'].includes(listing.category) && (
+                    <div className="space-y-4 p-4 rounded-xl border border-border bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-5 w-5 text-primary" />
+                        <Label className="text-base font-medium">Spaces Available</Label>
+                        <InfoTooltip content="How many vendors can book this location at the same time? This enables capacity-based availability." />
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Set how many vendor spaces are available. Multiple vendors can book the same dates if you have more than 1 space.
+                      </p>
+                      
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          min={1}
+                          max={100}
+                          value={totalSlots}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value, 10);
+                            if (!isNaN(value) && value >= 1) {
+                              setTotalSlots(value);
+                            }
+                          }}
+                          className="w-24"
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          space{totalSlots !== 1 ? 's' : ''} available
+                        </span>
+                      </div>
+                      {totalSlots > 1 && (
+                        <p className="text-xs text-primary font-medium">
+                          ✓ Multiple vendors can book the same dates
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <RentalAvailabilityStep
+                    listingId={listing.id}
+                    listingMode={listing.mode}
+                    availableFrom={availableFrom}
+                    availableTo={availableTo}
+                    priceDaily={listing.price_daily}
+                    priceHourly={(listing as any).price_hourly}
+                    onAvailableFromChange={setAvailableFrom}
+                    onAvailableToChange={setAvailableTo}
+                    onPriceHourlyChange={(price) => {
+                      // Will be saved in saveStep
+                    }}
+                    onSettingsChange={(settings) => {
+                      // Will be saved in saveStep
+                    }}
+                  />
+
+                  <div className="flex gap-3 pt-4">
+                    <Button variant="outline" onClick={() => setStep('pricing')}>Back</Button>
+                    <Button onClick={saveStep} disabled={isSaving}>
+                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      Continue
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step: Details */}
+              {step === 'details' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Add details</h2>
+                    <p className="text-muted-foreground">
+                      {listing.mode === 'rent' ? 'Help renters understand your listing.' : 'Help buyers understand your listing.'}
+                    </p>
+                  </div>
+
+                  {/* Title */}
                   <div className="space-y-2">
-                    <Label htmlFor="description" className="text-base font-medium">Description</Label>
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="title" className="text-base font-medium">
+                        Listing Title <span className="text-destructive">*</span>
+                      </Label>
+                      <span className={cn(
+                        "text-sm",
+                        title.trim().length < MIN_TITLE_LENGTH ? "text-destructive" : "text-muted-foreground"
+                      )}>
+                        {title.length}/80
+                      </span>
+                    </div>
+                    <Input
+                      id="title"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value.slice(0, 80))}
+                      placeholder="e.g., 2022 Fully Equipped Taco Truck"
+                      className={cn(
+                        "text-lg",
+                        title.length > 0 && title.trim().length < MIN_TITLE_LENGTH && "border-destructive focus-visible:ring-destructive"
+                      )}
+                    />
+                    {title.length > 0 && title.trim().length < MIN_TITLE_LENGTH ? (
+                      <p className="text-sm text-destructive">
+                        Title must be at least {MIN_TITLE_LENGTH} characters ({MIN_TITLE_LENGTH - title.trim().length} more needed)
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Make it catchy and descriptive. Include key details like year, type, or specialty.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Description with AI Optimize */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="description" className="text-base font-medium">
+                        Description <span className="text-destructive">*</span>
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        {showOptimized && originalDescription && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={revertDescription}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <RotateCcw className="w-3 h-3 mr-1" />
+                            Revert
+                          </Button>
+                        )}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={optimizeDescription}
+                          disabled={isOptimizing || !description || description.length < 10}
+                          className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 hover:border-primary/40"
+                        >
+                          {isOptimizing ? (
+                            <>
+                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                              Optimizing...
+                            </>
+                          ) : showOptimized ? (
+                            <>
+                              <Check className="w-3 h-3 mr-1 text-green-500" />
+                              Optimized
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3 h-3 mr-1" />
+                              AI Optimize
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                    
                     <Textarea
                       id="description"
                       value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      rows={8}
-                      className="resize-none p-4 text-base rounded-xl border-border/60 focus:border-primary"
-                      placeholder="Describe the equipment, location features, and what makes it special..."
+                      onChange={(e) => {
+                        setDescription(e.target.value);
+                        if (showOptimized) setShowOptimized(false);
+                      }}
+                      placeholder="Describe your listing in detail. What makes it special? What equipment is included? What's the condition?"
+                      rows={6}
+                      className={cn(
+                        "resize-none",
+                        description.length > 0 && description.trim().length < MIN_DESCRIPTION_LENGTH && "border-destructive focus-visible:ring-destructive"
+                      )}
                     />
-                    <div className="flex justify-between items-center pt-1">
-                      <span className={cn("text-xs", description.length < MIN_DESCRIPTION_LENGTH ? "text-destructive" : "text-muted-foreground")}>
-                        {description.length}/{MIN_DESCRIPTION_LENGTH} min characters
+                    
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        {description.length > 0 && description.trim().length < MIN_DESCRIPTION_LENGTH ? (
+                          <p className="text-sm text-destructive">
+                            Description must be at least {MIN_DESCRIPTION_LENGTH} characters ({MIN_DESCRIPTION_LENGTH - description.trim().length} more needed)
+                          </p>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            Be detailed! {listing.mode === 'rent' ? 'Renters' : 'Buyers'} want to know everything about your asset.
+                          </p>
+                        )}
+                      </div>
+                      <span className={cn(
+                        "text-sm whitespace-nowrap",
+                        description.trim().length < MIN_DESCRIPTION_LENGTH ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"
+                      )}>
+                        {description.trim().length}/{MIN_DESCRIPTION_LENGTH}+ chars
                       </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={optimizeDescription}
-                        disabled={isOptimizing || description.length < 10}
-                        className="h-8 text-xs gap-1 text-primary hover:text-primary hover:bg-primary/10"
-                      >
-                        {isOptimizing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                        AI Optimize
+                    </div>
+                    
+                    {!showOptimized && description.length >= 10 && description.trim().length >= MIN_DESCRIPTION_LENGTH && (
+                      <p className="text-xs text-muted-foreground/70">
+                        ✨ Tip: Click AI Optimize for a professional rewrite
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Amenities - Category specific */}
+                  {categoryAmenities.length > 0 && (
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-base font-medium">What's Included</Label>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Select all features and amenities that come with your listing.
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-6">
+                        {categoryAmenities.map((group) => (
+                          <div key={group.label} className="space-y-3">
+                            <h4 className="text-sm font-medium text-muted-foreground">{group.label}</h4>
+                            <div className="grid grid-cols-2 gap-3">
+                              {group.items.map((item) => (
+                                <label
+                                  key={item.id}
+                                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                                    amenities.includes(item.id)
+                                      ? 'border-primary bg-primary/5'
+                                      : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                                  }`}
+                                >
+                                  <Checkbox
+                                    checked={amenities.includes(item.id)}
+                                    onCheckedChange={() => toggleAmenity(item.id)}
+                                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                  />
+                                  <span className="text-sm">{item.label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {amenities.length > 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          {amenities.length} item{amenities.length !== 1 ? 's' : ''} selected
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Item Dimensions - Only for sale listings with mobile assets */}
+                  {listing.mode === 'sale' && (listing.category === 'food_truck' || listing.category === 'food_trailer') && (
+                    <div className="space-y-4 p-4 rounded-xl border border-border bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <Package className="h-5 w-5 text-primary" />
+                        <Label className="text-base font-medium">Item Dimensions</Label>
+                        <InfoTooltip content="Provide accurate dimensions for freight cost estimates. This helps buyers understand shipping costs." />
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        These dimensions are used to calculate accurate freight estimates for buyers.
+                      </p>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Weight */}
+                        <div className="space-y-2">
+                          <Label htmlFor="weight_lbs" className="flex items-center gap-1.5 text-sm">
+                            <Scale className="h-3.5 w-3.5" />
+                            Weight (lbs)
+                          </Label>
+                          <Input
+                            id="weight_lbs"
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={weightLbs}
+                            onChange={(e) => setWeightLbs(e.target.value)}
+                            placeholder="e.g., 5000"
+                          />
+                        </div>
+
+                        {/* Freight Category */}
+                        <div className="space-y-2">
+                          <Label htmlFor="freight_category" className="flex items-center gap-1.5 text-sm">
+                            <Package className="h-3.5 w-3.5" />
+                            Freight Type
+                          </Label>
+                          <select
+                            id="freight_category"
+                            value={freightCategory || ''}
+                            onChange={(e) => setFreightCategory(e.target.value as FreightCategory || null)}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          >
+                            <option value="">Select type</option>
+                            {Object.entries(FREIGHT_CATEGORY_LABELS).map(([value, label]) => (
+                              <option key={value} value={value}>
+                                {label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4">
+                        {/* Length */}
+                        <div className="space-y-2">
+                          <Label htmlFor="length_inches" className="flex items-center gap-1.5 text-sm">
+                            <Ruler className="h-3.5 w-3.5" />
+                            Length (in)
+                          </Label>
+                          <Input
+                            id="length_inches"
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={lengthInches}
+                            onChange={(e) => setLengthInches(e.target.value)}
+                            placeholder="e.g., 240"
+                          />
+                        </div>
+
+                        {/* Width */}
+                        <div className="space-y-2">
+                          <Label htmlFor="width_inches" className="flex items-center gap-1.5 text-sm">
+                            <Ruler className="h-3.5 w-3.5" />
+                            Width (in)
+                          </Label>
+                          <Input
+                            id="width_inches"
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={widthInches}
+                            onChange={(e) => setWidthInches(e.target.value)}
+                            placeholder="e.g., 96"
+                          />
+                        </div>
+
+                        {/* Height */}
+                        <div className="space-y-2">
+                          <Label htmlFor="height_inches" className="flex items-center gap-1.5 text-sm">
+                            <Ruler className="h-3.5 w-3.5" />
+                            Height (in)
+                          </Label>
+                          <Input
+                            id="height_inches"
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={heightInches}
+                            onChange={(e) => setHeightInches(e.target.value)}
+                            placeholder="e.g., 120"
+                          />
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground">
+                        💡 Tip: Typical food truck dimensions are 16-26 ft long (192-312 in), 7-8 ft wide (84-96 in), and 8-10 ft tall (96-120 in).
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Highlights */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Key Highlights (Optional)</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Add up to 6 bullet points to showcase the best features.
+                    </p>
+                    
+                    {highlights.length > 0 && (
+                      <ul className="space-y-2">
+                        {highlights.map((highlight, index) => (
+                          <li
+                            key={index}
+                            className="flex items-center gap-2 p-3 bg-muted rounded-lg"
+                          >
+                            <span className="flex-1">{highlight}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeHighlight(index)}
+                              className="text-muted-foreground hover:text-destructive transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {highlights.length < 6 && (
+                      <div className="flex gap-2">
+                        <Input
+                          value={newHighlight}
+                          onChange={(e) => setNewHighlight(e.target.value)}
+                          onKeyDown={handleHighlightKeyDown}
+                          placeholder="e.g., Brand new refrigeration system"
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={addHighlight}
+                          disabled={!newHighlight.trim()}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    <div className="flex gap-3">
+                      <Button variant="outline" onClick={() => setStep('photos')}>Back</Button>
+                      <Button onClick={handleDetailsSave} disabled={isSaving || !title || !description}>
+                        {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                        {!user && isGuestDraft ? 'Save & Continue' : 'Continue'}
+                        <ChevronRight className="w-4 h-4 ml-2" />
                       </Button>
                     </div>
-                    {showOptimized && originalDescription && (
-                      <Button variant="ghost" size="sm" onClick={revertDescription} className="text-xs gap-1">
-                        <RotateCcw className="w-3 h-3" />
-                        Revert to original
-                      </Button>
+                    {/* Guest reminder */}
+                    {!user && isGuestDraft && (
+                      <p className="text-xs text-muted-foreground text-center">
+                        Sign-in required to save your details.
+                      </p>
                     )}
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Step: Details (Highlights) */}
-            {step === 'details' && (
-              <div className="space-y-6">
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold tracking-tight">Key highlights</h2>
-                  <p className="text-muted-foreground text-lg mt-2">Add up to 6 bullet points to showcase the best features.</p>
-                </div>
-
-                {highlights.length > 0 && (
-                  <ul className="space-y-2">
-                    {highlights.map((highlight, index) => (
-                      <li key={index} className="flex items-center gap-2 p-3 bg-muted rounded-xl">
-                        <Check className="w-4 h-4 text-primary shrink-0" />
-                        <span className="flex-1">{highlight}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeHighlight(index)}
-                          className="text-muted-foreground hover:text-destructive transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                {highlights.length < 6 && (
-                  <div className="flex gap-2">
-                    <Input
-                      value={newHighlight}
-                      onChange={(e) => setNewHighlight(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addHighlight())}
-                      placeholder="e.g., Brand new refrigeration system"
-                      className="flex-1 h-12 rounded-xl"
-                    />
-                    <Button type="button" variant="outline" size="icon" onClick={addHighlight} disabled={!newHighlight.trim()} className="h-12 w-12 rounded-xl">
-                      <Plus className="w-5 h-5" />
-                    </Button>
-                  </div>
-                )}
-
-                {highlights.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center">
-                    💡 Tip: Highlights like "Recently inspected" or "Low mileage" can increase interest.
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Step: Includes (Amenities) */}
-            {step === 'includes' && (
-              <div className="space-y-6">
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold tracking-tight">What's included</h2>
-                  <p className="text-muted-foreground text-lg mt-2">Select all amenities and equipment that come with this listing.</p>
-                </div>
-
+              {/* Step: Location */}
+              {step === 'location' && (
                 <div className="space-y-6">
-                  {categoryAmenities.map((group) => (
-                    <div key={group.label} className="space-y-3">
-                      <h4 className="font-medium text-foreground">{group.label}</h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        {group.items.map((item) => (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => toggleAmenity(item.id)}
-                            className={cn(
-                              "p-3 rounded-xl text-left text-sm font-medium transition-all border-2",
-                              amenities.includes(item.id)
-                                ? "border-primary bg-primary/5 text-primary"
-                                : "border-border hover:border-muted-foreground"
-                            )}
-                          >
-                            <div className="flex items-center gap-2">
-                              {amenities.includes(item.id) && <Check className="w-4 h-4 shrink-0" />}
-                              <span>{item.label}</span>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Step: Pricing */}
-            {step === 'pricing' && (
-              <div className="space-y-6">
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold tracking-tight">Set your rates</h2>
-                  <p className="text-muted-foreground text-lg mt-2">You control your pricing. Change it anytime.</p>
-                </div>
-
-                {/* AI Suggestions */}
-                <div className="relative overflow-hidden rounded-2xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md">
-                      <Sparkles className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-foreground mb-1">AI Pricing Assistant</h4>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Get smart pricing suggestions based on your listing.
-                      </p>
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={handleGetSuggestions}
-                        disabled={isLoadingSuggestions}
-                        className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0"
-                      >
-                        {isLoadingSuggestions ? (
-                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</>
-                        ) : (
-                          <><Sparkles className="w-4 h-4 mr-2" /> Get Suggestions</>
-                        )}
-                      </Button>
-                    </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Location & Fulfillment</h2>
+                    <p className="text-muted-foreground">
+                      {isStaticLocationFn(listing.category) 
+                        ? 'Tell customers how to access your location.'
+                        : 'Set up how customers can get your asset.'}
+                    </p>
                   </div>
-                </div>
 
-                {/* Suggestions Display */}
-                {listing.mode === 'rent' && rentalSuggestions && (
-                  <div className="bg-card border border-border rounded-xl p-4 space-y-4">
-                    <h4 className="font-medium text-foreground flex items-center gap-2">
-                      <Target className="w-4 h-4 text-primary" />
-                      Suggested Pricing
-                    </h4>
-                    <div className="grid grid-cols-3 gap-3">
-                      {(['low', 'suggested', 'high'] as const).map((type) => (
-                        <button
-                          key={type}
-                          type="button"
-                          onClick={() => applyRentalSuggestion(type)}
-                          className={cn(
-                            "p-3 rounded-lg border text-left transition-all",
-                            type === 'suggested' ? "border-2 border-primary bg-primary/5" : "border-border hover:border-primary/50"
-                          )}
-                        >
-                          <div className="text-xs text-muted-foreground mb-1 capitalize">{type === 'suggested' ? 'Recommended' : type === 'low' ? 'Budget' : 'Premium'}</div>
-                          <div className="font-semibold">${rentalSuggestions[`daily_${type}` as keyof RentalSuggestions]}/day</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {listing.mode === 'sale' && saleSuggestions && (
-                  <div className="bg-card border border-border rounded-xl p-4 space-y-4">
-                    <h4 className="font-medium text-foreground flex items-center gap-2">
-                      <Target className="w-4 h-4 text-primary" />
-                      Suggested Pricing
-                    </h4>
-                    <div className="grid grid-cols-3 gap-3">
-                      {(['low', 'suggested', 'high'] as const).map((type) => (
-                        <button
-                          key={type}
-                          type="button"
-                          onClick={() => applySaleSuggestion(type)}
-                          className={cn(
-                            "p-3 rounded-lg border text-left transition-all",
-                            type === 'suggested' ? "border-2 border-primary bg-primary/5" : "border-border hover:border-primary/50"
-                          )}
-                        >
-                          <div className="text-xs text-muted-foreground mb-1 capitalize">{type === 'suggested' ? 'Recommended' : type === 'low' ? 'Quick Sale' : 'Premium'}</div>
-                          <div className="font-semibold">${saleSuggestions[`sale_${type}` as keyof SaleSuggestions]?.toLocaleString()}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Price Inputs */}
-                {listing.mode === 'rent' ? (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label className="text-base">Daily Rate *</Label>
-                        <div className="relative">
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
-                          <Input
-                            type="number"
-                            value={priceDaily}
-                            onChange={(e) => setPriceDaily(e.target.value)}
-                            className="h-16 pl-9 text-2xl font-bold rounded-xl"
-                            placeholder="0"
-                          />
+                  {/* Static Location Toggle - Only for mobile assets (show regardless of current state) */}
+                  {isMobileAsset(listing.category) && (
+                    <div className="p-4 bg-muted/50 rounded-xl border">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-start gap-3">
+                          <Building2 className="w-5 h-5 text-muted-foreground mt-0.5" />
+                          <div>
+                            <Label htmlFor="static-toggle" className="text-base font-medium cursor-pointer">
+                              Static Location
+                            </Label>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              This asset is parked at a fixed location (e.g., permanently stationed at a venue, lot, or property)
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-base">Weekly Rate</Label>
-                        <div className="relative">
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
-                          <Input
-                            type="number"
-                            value={priceWeekly}
-                            onChange={(e) => setPriceWeekly(e.target.value)}
-                            className="h-16 pl-9 text-2xl font-bold rounded-xl"
-                            placeholder="0"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-base">Monthly Rate</Label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
-                        <Input
-                          type="number"
-                          value={priceMonthly}
-                          onChange={(e) => setPriceMonthly(e.target.value)}
-                          className="h-16 pl-9 text-2xl font-bold rounded-xl"
-                          placeholder="0"
+                        <Switch
+                          id="static-toggle"
+                          checked={isStaticLocation}
+                          onCheckedChange={(checked) => {
+                            setIsStaticLocation(checked);
+                            if (checked) {
+                              setFulfillmentType('on_site');
+                            } else {
+                              setFulfillmentType('pickup');
+                            }
+                          }}
                         />
                       </div>
-                      <p className="text-xs text-muted-foreground">Optional. Offer a discount for month-long rentals.</p>
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Label className="text-base">Asking Price *</Label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
-                      <Input
-                        type="number"
-                        value={priceSale}
-                        onChange={(e) => setPriceSale(e.target.value)}
-                        className="h-16 pl-9 text-2xl font-bold rounded-xl"
-                        placeholder="0"
-                      />
-                    </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Payout Estimate */}
-                {listing.mode === 'rent' && rentalPayoutEstimates.daily && (
-                  <div className="bg-muted/50 rounded-xl p-4 border border-border">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Wallet className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">Estimated Payout</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">After {RENTAL_HOST_FEE_PERCENT}% platform fee:</span>
-                      <span className="text-lg font-bold text-primary">{formatCurrency(rentalPayoutEstimates.daily.hostReceives)}/day</span>
-                    </div>
-                  </div>
-                )}
-
-                {listing.mode === 'sale' && salePayoutEstimate && (
-                  <div className="bg-muted/50 rounded-xl p-4 border border-border">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Wallet className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">Estimated Payout</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">After {SALE_SELLER_FEE_PERCENT}% platform fee:</span>
-                      <span className="text-lg font-bold text-primary">{formatCurrency(salePayoutEstimate.sellerReceives)}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Instant Book */}
-                {listing.mode === 'rent' && (
-                  <div className="p-4 rounded-2xl border border-border bg-card flex items-center justify-between">
-                    <div className="flex gap-3">
-                      <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
-                        <Zap className="w-5 h-5" />
+                  {/* Static Location (Ghost Kitchen, Vendor Space) or Mobile Asset with Static Toggle */}
+                  {(isStaticLocationFn(listing.category) || isStaticLocation) ? (
+                    <div className="space-y-6">
+                      <div className="p-4 bg-muted rounded-xl flex items-start gap-3">
+                        <Info className="w-5 h-5 text-muted-foreground mt-0.5" />
+                        <p className="text-sm text-muted-foreground">
+                          {isStaticLocationFn(listing.category)
+                            ? 'This is a fixed on-site location. Customers will come to this address.'
+                            : 'This asset is at a fixed location. Customers will come to pick it up.'}
+                        </p>
                       </div>
-                      <div>
-                        <h4 className="font-semibold">Instant Book</h4>
-                        <p className="text-sm text-muted-foreground">Allow guests to book without manual approval.</p>
+
+                      {/* Full Address */}
+                      <div className="space-y-2">
+                        <Label htmlFor="address" className="text-base font-medium">Full Address *</Label>
+                        <Textarea
+                          id="address"
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          placeholder="123 Main Street, Suite 100, City, State ZIP"
+                          rows={2}
+                        />
+                      </div>
+
+                      {/* Access Instructions */}
+                      <div className="space-y-2">
+                        <Label htmlFor="access_instructions" className="text-base font-medium">Access Instructions *</Label>
+                        <Textarea
+                          id="access_instructions"
+                          value={accessInstructions}
+                          onChange={(e) => setAccessInstructions(e.target.value)}
+                          placeholder="How do guests access the space? Any gate codes, parking instructions, or check-in procedures?"
+                          rows={3}
+                        />
+                      </div>
+
+                      {/* Hours of Access */}
+                      <div className="space-y-2">
+                        <Label htmlFor="hours_of_access" className="text-base font-medium">Hours of Access (Optional)</Label>
+                        <Input
+                          id="hours_of_access"
+                          value={hoursOfAccess}
+                          onChange={(e) => setHoursOfAccess(e.target.value)}
+                          placeholder="e.g., 6 AM - 10 PM daily"
+                        />
+                      </div>
+
+                      {/* Location Notes */}
+                      <div className="space-y-2">
+                        <Label htmlFor="location_notes" className="text-base font-medium">Additional Notes (Optional)</Label>
+                        <Textarea
+                          id="location_notes"
+                          value={locationNotes}
+                          onChange={(e) => setLocationNotes(e.target.value)}
+                          placeholder="Utilities included, parking availability, nearby amenities..."
+                          rows={3}
+                        />
                       </div>
                     </div>
-                    <Switch checked={instantBook} onCheckedChange={setInstantBook} />
-                  </div>
-                )}
+                  ) : (
+                    /* Mobile Asset - Not Static */
+                    <div className="space-y-6">
 
-                {/* Payment Methods (Sale only) */}
-                {listing.mode === 'sale' && (
-                  <div className="space-y-4 pt-4 border-t">
-                    <h4 className="font-semibold flex items-center gap-2">
-                      <CreditCard className="w-5 h-5 text-primary" />
-                      Payment Methods
-                    </h4>
-                    <div className="space-y-3">
-                      <div className={cn("p-4 rounded-xl border-2 transition-colors", acceptCardPayment ? "border-primary bg-primary/5" : "border-border")}>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <CreditCard className="w-5 h-5 text-primary" />
-                            <div>
-                              <span className="font-medium">Pay by Card (Online)</span>
-                              <p className="text-sm text-muted-foreground">Secure Stripe payments</p>
-                            </div>
-                          </div>
-                          <Checkbox checked={acceptCardPayment} onCheckedChange={(c) => setAcceptCardPayment(!!c)} />
+                      {/* Fulfillment Type */}
+                      <div className="space-y-3">
+                        <Label className="text-base font-medium">Fulfillment Options *</Label>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {[
+                            { value: 'pickup' as FulfillmentType, label: 'Pickup Only', icon: <MapPin className="w-5 h-5" />, description: 'Buyer/renter picks up from your location' },
+                            { value: 'delivery' as FulfillmentType, label: 'Delivery Only', icon: <Truck className="w-5 h-5" />, description: 'You deliver to their location' },
+                            { value: 'both' as FulfillmentType, label: 'Pickup + Delivery', icon: <Package className="w-5 h-5" />, description: 'Offer both options' },
+                          ].map((option) => (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onClick={() => setFulfillmentType(option.value)}
+                              className={cn(
+                                "p-4 rounded-xl border-2 text-left transition-all",
+                                fulfillmentType === option.value
+                                  ? "border-primary bg-primary/5"
+                                  : "border-border hover:border-muted-foreground"
+                              )}
+                            >
+                              <div className={cn(
+                                "mb-2",
+                                fulfillmentType === option.value ? "text-primary" : "text-muted-foreground"
+                              )}>
+                                {option.icon}
+                              </div>
+                              <h4 className={cn(
+                                "font-medium text-sm",
+                                fulfillmentType === option.value ? "text-primary" : "text-foreground"
+                              )}>
+                                {option.label}
+                              </h4>
+                              <p className="text-xs text-muted-foreground mt-1">{option.description}</p>
+                            </button>
+                          ))}
                         </div>
                       </div>
-                      <div className={cn("p-4 rounded-xl border-2 transition-colors", acceptCashPayment ? "border-primary bg-primary/5" : "border-border")}>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <Banknote className="w-5 h-5 text-green-600" />
-                            <div>
-                              <span className="font-medium">Pay in Person</span>
-                              <p className="text-sm text-muted-foreground">Cash or direct payment</p>
+
+                      {/* Pickup Location */}
+                      {(fulfillmentType === 'pickup' || fulfillmentType === 'both') && (
+                        <>
+                          <div className="space-y-2">
+                            <Label htmlFor="pickup_location_text" className="text-base font-medium">Pickup Location *</Label>
+                            <LocationSearchInput
+                              value={pickupLocationText}
+                              onChange={(value) => setPickupLocationText(value)}
+                              onLocationSelect={(location) => {
+                                if (location) {
+                                  setPickupCoordinates(location.coordinates);
+                                } else {
+                                  setPickupCoordinates(null);
+                                }
+                              }}
+                              selectedCoordinates={pickupCoordinates}
+                              placeholder="City, State (e.g., Austin, TX)"
+                            />
+                            <p className="text-sm text-muted-foreground">
+                              Enter a general area. Exact address shared after booking.
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="pickup_instructions" className="text-base font-medium">Pickup Instructions (Optional)</Label>
+                            <Textarea
+                              id="pickup_instructions"
+                              value={pickupInstructions}
+                              onChange={(e) => setPickupInstructions(e.target.value)}
+                              placeholder="Any special instructions for pickup?"
+                              rows={2}
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      {/* Delivery Options */}
+                      {(fulfillmentType === 'delivery' || fulfillmentType === 'both') && (
+                        <>
+                          {fulfillmentType === 'delivery' && (
+                            <div className="space-y-2">
+                              <Label htmlFor="delivery_base_location" className="text-base font-medium">Your Base Location *</Label>
+                              <LocationSearchInput
+                                value={pickupLocationText}
+                                onChange={(value) => setPickupLocationText(value)}
+                                onLocationSelect={(location) => {
+                                  if (location) {
+                                    setPickupCoordinates(location.coordinates);
+                                  } else {
+                                    setPickupCoordinates(null);
+                                  }
+                                }}
+                                selectedCoordinates={pickupCoordinates}
+                                placeholder="City, State (e.g., Austin, TX)"
+                              />
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="delivery_fee" className="text-base font-medium">Delivery Fee (Optional)</Label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                <Input
+                                  id="delivery_fee"
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  value={deliveryFee}
+                                  onChange={(e) => setDeliveryFee(e.target.value)}
+                                  placeholder="0.00"
+                                  className="pl-7"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="delivery_radius_miles" className="text-base font-medium">Delivery Radius (Optional)</Label>
+                              <div className="relative">
+                                <Input
+                                  id="delivery_radius_miles"
+                                  type="number"
+                                  min="0"
+                                  value={deliveryRadiusMiles}
+                                  onChange={(e) => setDeliveryRadiusMiles(e.target.value)}
+                                  placeholder="50"
+                                  className="pr-12"
+                                />
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">miles</span>
+                              </div>
                             </div>
                           </div>
-                          <Checkbox checked={acceptCashPayment} onCheckedChange={(c) => setAcceptCashPayment(!!c)} />
-                        </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="delivery_instructions" className="text-base font-medium">Delivery Instructions (Optional)</Label>
+                            <Textarea
+                              id="delivery_instructions"
+                              value={deliveryInstructions}
+                              onChange={(e) => setDeliveryInstructions(e.target.value)}
+                              placeholder="Any special requirements for delivery?"
+                              rows={2}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => setStep(listing.mode === 'rent' ? 'availability' : 'pricing')}>Back</Button>
+                    <Button 
+                      onClick={saveStep} 
+                      disabled={isSaving || (
+                        (isStaticLocationFn(listing.category) || isStaticLocation) 
+                          ? !address || !accessInstructions
+                          : !fulfillmentType || !pickupLocationText
+                      )}
+                    >
+                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      Continue
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step: Required Documents (Rental only) */}
+              {step === 'documents' && listing.mode === 'rent' && (
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Shield className="w-5 h-5 text-primary" />
+                      <h2 className="text-xl font-bold text-foreground">Required Documents</h2>
+                    </div>
+                    <p className="text-muted-foreground">
+                      Specify which documents renters must provide and when they must be submitted.
+                    </p>
+                  </div>
+
+                  {/* Info Banner */}
+                  <div className="bg-card rounded-xl p-4 border border-border">
+                    <div className="flex items-start gap-3">
+                      <Info className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+                      <div className="text-sm">
+                        <p className="text-foreground font-medium mb-1">
+                          {enabledDocsCount === 0
+                            ? 'No documents required'
+                            : `${enabledDocsCount} document${enabledDocsCount > 1 ? 's' : ''} required`}
+                        </p>
+                        <p className="text-muted-foreground">
+                          These documents are required from renters to complete or confirm a booking.
+                        </p>
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
-            )}
 
-            {/* Step: Availability (Rental only) */}
-            {step === 'availability' && listing.mode === 'rent' && (
-              <div className="space-y-6">
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold tracking-tight">Availability</h2>
-                  <p className="text-muted-foreground text-lg mt-2">Set when your listing is available for bookings.</p>
+                  {/* Deadline Selection */}
+                  <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-primary" />
+                      <h4 className="font-medium">When are documents required?</h4>
+                    </div>
+
+                    <RadioGroup
+                      value={globalDeadline}
+                      onValueChange={(value) => {
+                        const deadline = value as DocumentDeadlineType;
+                        setGlobalDeadline(deadline);
+                        setRequiredDocuments(prev =>
+                          prev.map(d => ({
+                            ...d,
+                            deadline_type: deadline,
+                            deadline_offset_hours: deadline === 'after_approval_deadline' ? deadlineHours : undefined,
+                          }))
+                        );
+                      }}
+                      className="space-y-3"
+                    >
+                      {(Object.keys(DEADLINE_TYPE_LABELS) as DocumentDeadlineType[]).map((deadline) => (
+                        <div key={deadline} className="flex items-start gap-3">
+                          <RadioGroupItem value={deadline} id={deadline} className="mt-1" />
+                          <div className="flex-1">
+                            <Label htmlFor={deadline} className="font-medium cursor-pointer">
+                              {DEADLINE_TYPE_LABELS[deadline]}
+                            </Label>
+                            <p className="text-sm text-muted-foreground">
+                              {DEADLINE_TYPE_DESCRIPTIONS[deadline]}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </RadioGroup>
+
+                    {globalDeadline === 'after_approval_deadline' && (
+                      <div className="flex items-center gap-3 pt-2 pl-6">
+                        <Label htmlFor="deadline_hours" className="text-sm whitespace-nowrap">
+                          Submit at least
+                        </Label>
+                        <Input
+                          id="deadline_hours"
+                          type="number"
+                          min="1"
+                          max="168"
+                          value={deadlineHours}
+                          onChange={(e) => {
+                            const hours = parseInt(e.target.value) || 48;
+                            setDeadlineHours(hours);
+                            setRequiredDocuments(prev =>
+                              prev.map(d => ({
+                                ...d,
+                                deadline_offset_hours: hours,
+                              }))
+                            );
+                          }}
+                          className="w-20"
+                        />
+                        <span className="text-sm text-muted-foreground">hours before booking start</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Document Groups */}
+                  <div className="space-y-3">
+                    {DOCUMENT_GROUPS.map((group) => {
+                      const groupDocs = requiredDocuments.filter(d => 
+                        group.documents.includes(d.document_type)
+                      );
+                      const enabledInGroup = groupDocs.filter(d => d.is_required).length;
+                      const isOpen = openDocGroups.includes(group.label);
+
+                      return (
+                        <Collapsible
+                          key={group.label}
+                          open={isOpen}
+                          onOpenChange={() => {
+                            setOpenDocGroups(prev =>
+                              prev.includes(group.label)
+                                ? prev.filter(g => g !== group.label)
+                                : [...prev, group.label]
+                            );
+                          }}
+                        >
+                          <CollapsibleTrigger className="w-full">
+                            <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors">
+                              <div className="flex items-center gap-3">
+                                <FileText className="w-4 h-4 text-muted-foreground" />
+                                <span className="font-medium text-foreground">{group.label}</span>
+                                {enabledInGroup > 0 && (
+                                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                                    {enabledInGroup} selected
+                                  </span>
+                                )}
+                              </div>
+                              {isOpen ? (
+                                <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                              )}
+                            </div>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <div className="mt-2 space-y-2 pl-4">
+                              {group.documents.map((docType) => {
+                                const doc = requiredDocuments.find(d => d.document_type === docType);
+                                return (
+                                  <div
+                                    key={docType}
+                                    className={cn(
+                                      "flex items-start gap-3 p-3 rounded-lg border transition-colors",
+                                      doc?.is_required
+                                        ? "border-primary/30 bg-primary/5"
+                                        : "border-border bg-card"
+                                    )}
+                                  >
+                                    <Switch
+                                      checked={doc?.is_required || false}
+                                      onCheckedChange={() => {
+                                        setRequiredDocuments(prev =>
+                                          prev.map(d =>
+                                            d.document_type === docType
+                                              ? { ...d, is_required: !d.is_required }
+                                              : d
+                                          )
+                                        );
+                                      }}
+                                    />
+                                    <div className="flex-1">
+                                      <Label className="font-medium cursor-pointer">
+                                        {DOCUMENT_TYPE_LABELS[docType]}
+                                      </Label>
+                                      <p className="text-sm text-muted-foreground">
+                                        {DOCUMENT_TYPE_DESCRIPTIONS[docType]}
+                                      </p>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => setStep('location')}>Back</Button>
+                    <Button onClick={saveStep} disabled={isSaving}>
+                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      Continue
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
                 </div>
+              )}
 
-                <RentalAvailabilityStep
-                  listingId={listingId!}
-                  listingMode="rent"
-                  priceDaily={parseFloat(priceDaily) || null}
-                  priceHourly={null}
-                  onPriceHourlyChange={() => {}}
-                  onSettingsChange={() => {}}
-                  availableFrom={availableFrom}
-                  onAvailableFromChange={setAvailableFrom}
-                  availableTo={availableTo}
-                  onAvailableToChange={setAvailableTo}
-                />
-              </div>
-            )}
+              {/* Step: Stripe - Only shown if card payment is enabled */}
+              {step === 'stripe' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Connect Stripe</h2>
+                    <p className="text-muted-foreground">
+                      {acceptCardPayment ? 'Required to receive card payments.' : 'Optional for cash-only listings.'}
+                    </p>
+                  </div>
 
-            {/* Step: Location */}
-            {step === 'location' && (
-              <div className="space-y-6">
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold tracking-tight">Location</h2>
-                  <p className="text-muted-foreground text-lg mt-2">
-                    {isStaticLocationFn(listing.category) ? 'Tell customers how to access your location.' : 'Set up how customers can get your asset.'}
-                  </p>
-                </div>
-
-                {/* Static Location Toggle for Mobile Assets */}
-                {isMobileAsset(listing.category) && (
-                  <div className="p-4 bg-muted/50 rounded-xl border">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-start gap-3">
-                        <Building2 className="w-5 h-5 text-muted-foreground mt-0.5" />
+                  {!acceptCardPayment && (
+                    <div className="relative overflow-hidden rounded-xl p-4 border-2 border-muted bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-muted rounded-xl flex items-center justify-center">
+                          <Banknote className="w-5 h-5 text-green-600" />
+                        </div>
                         <div>
-                          <Label htmlFor="static-toggle" className="font-medium cursor-pointer">Static Location</Label>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            This asset is parked at a fixed location
+                          <p className="font-semibold text-foreground">Cash-only listing</p>
+                          <p className="text-sm text-muted-foreground">Stripe is not required since you're only accepting in-person payments.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {acceptCardPayment && (
+                    isOnboardingComplete ? (
+                      <div className="relative overflow-hidden rounded-xl p-4 border border-border bg-muted/30">
+                        <div className="relative flex items-center gap-3">
+                          <div className="p-1 rounded-lg flex items-center justify-center">
+                            <Check className="w-5 h-5 text-emerald-600" />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <img src={stripeIcon} alt="Stripe" className="h-6 w-6 object-cover rounded-md" />
+                            <span className="font-semibold text-foreground">connected</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground ml-auto">You're ready to receive payments</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="relative overflow-hidden rounded-xl p-6 border border-border bg-muted/30 text-center">
+                        <div className="relative">
+                          <img src={stripeIcon} alt="Stripe" className="w-14 h-14 mx-auto mb-4 rounded-xl object-cover" />
+                          <h3 className="font-semibold text-foreground mb-2">Set up payouts</h3>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Connect to get paid from your listings when you receive bookings or sales.
+                          </p>
+                          <Button 
+                            onClick={handleStripeConnect} 
+                            disabled={isConnecting}
+                            className="bg-[#635bff] hover:bg-[#5147e6] text-white border-0 shadow-md"
+                          >
+                            {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                            <img src={stripeIcon} alt="" className="h-5 w-5 object-cover rounded mr-2" />
+                            Connect Stripe
+                            <ExternalLink className="w-4 h-4 ml-2" />
+                          </Button>
+                        </div>
+                      </div>
+                    )
+                  )}
+
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => setStep(listing.mode === 'rent' ? 'documents' : 'location')}>Back</Button>
+                    <Button 
+                      onClick={() => setStep('review')} 
+                      disabled={acceptCardPayment && !isOnboardingComplete}
+                    >
+                      Continue
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step: Review */}
+              {step === 'review' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Review your listing</h2>
+                    <p className="text-muted-foreground">Here's how your listing will appear to shoppers.</p>
+                  </div>
+
+                  {/* Full Listing Preview Card */}
+                  <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-lg">
+                    {/* Cover Image */}
+                    {existingImages.length > 0 && (
+                      <div className="aspect-video relative">
+                        <img src={existingImages[0]} alt="" className="w-full h-full object-cover" />
+                        {existingImages.length > 1 && (
+                          <div className="absolute bottom-3 right-3 bg-black/70 text-white text-sm px-2.5 py-1 rounded-full">
+                            +{existingImages.length - 1} photos
+                          </div>
+                        )}
+                        {/* Mode & Category Badges */}
+                        <div className="absolute top-3 left-3 flex gap-2">
+                          <span className={cn(
+                            "px-3 py-1 text-xs font-medium rounded-full backdrop-blur-sm",
+                            listing.mode === 'rent'
+                              ? "bg-blue-500/90 text-white"
+                              : "bg-green-500/90 text-white"
+                          )}>
+                            {MODE_LABELS[listing.mode]}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Content */}
+                    <div className="p-5 space-y-4">
+                      {/* Title & Price Row */}
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                            {CATEGORY_LABELS[listing.category]}
+                          </span>
+                          <h3 className="font-bold text-xl text-foreground mt-1">{title || 'Untitled Listing'}</h3>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-2xl font-bold text-primary">
+                            {listing.mode === 'sale'
+                              ? `$${parseFloat(priceSale || '0').toLocaleString()}`
+                              : `$${parseFloat(priceDaily || '0').toLocaleString()}`}
+                          </div>
+                          {listing.mode === 'rent' && (
+                            <div className="text-sm text-muted-foreground">per day</div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Location */}
+                      {(address || pickupLocationText) && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <MapPin className="w-4 h-4" />
+                          <span className="text-sm">{address || pickupLocationText}</span>
+                        </div>
+                      )}
+
+                      {/* Description Preview */}
+                      <p className="text-muted-foreground text-sm line-clamp-3">
+                        {description || 'No description provided.'}
+                      </p>
+
+                      {/* Highlights */}
+                      {highlights.length > 0 && (
+                        <div className="pt-3 border-t border-border">
+                          <div className="flex flex-wrap gap-2">
+                            {highlights.slice(0, 4).map((highlight, i) => (
+                              <span key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                                <Check className="w-3 h-3" />
+                                {highlight}
+                              </span>
+                            ))}
+                            {highlights.length > 4 && (
+                              <span className="text-xs text-muted-foreground">+{highlights.length - 4} more</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Fulfillment Info */}
+                      <div className="pt-3 border-t border-border flex flex-wrap gap-3">
+                        {instantBook && listing.mode === 'rent' && (
+                          <div className="flex items-center gap-1.5 text-sm text-emerald-600">
+                            <Zap className="w-4 h-4" />
+                            <span className="font-medium">Instant Book</span>
+                          </div>
+                        )}
+                        {fulfillmentType && (
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                            {fulfillmentType === 'delivery' ? <Truck className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
+                            <span>{fulfillmentType === 'pickup' ? 'Pickup only' : fulfillmentType === 'delivery' ? 'Delivery available' : fulfillmentType === 'both' ? 'Pickup & Delivery' : 'On-site'}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Missing Requirements Warning */}
+                  {!canPublish && (
+                    <div className="p-4 rounded-xl border border-destructive/30 bg-destructive/10">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
+                        <div>
+                          <p className="font-medium text-destructive">Cannot publish yet</p>
+                          <p className="text-sm text-destructive/80 mt-0.5">
+                            Complete all required checklist items before publishing.
                           </p>
                         </div>
                       </div>
-                      <Switch
-                        id="static-toggle"
-                        checked={isStaticLocation}
-                        onCheckedChange={(checked) => {
-                          setIsStaticLocation(checked);
-                          if (checked) setFulfillmentType('on_site');
-                          else setFulfillmentType('pickup');
-                        }}
-                      />
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Static Location Fields */}
-                {(isStaticLocationFn(listing.category) || isStaticLocation) ? (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-base font-medium">Full Address *</Label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-3.5 text-muted-foreground w-5 h-5" />
-                        <Textarea
-                          value={address}
-                          onChange={(e) => setAddress(e.target.value)}
-                          className="pl-10 resize-none min-h-[80px] rounded-xl"
-                          placeholder="123 Main St, City, State ZIP"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-base font-medium">Access Instructions *</Label>
-                      <Textarea
-                        value={accessInstructions}
-                        onChange={(e) => setAccessInstructions(e.target.value)}
-                        className="min-h-[100px] rounded-xl"
-                        placeholder="Gate codes, parking info, or how to find the unit..."
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-base font-medium">Hours of Access</Label>
-                      <Input
-                        value={hoursOfAccess}
-                        onChange={(e) => setHoursOfAccess(e.target.value)}
-                        className="h-12 rounded-xl"
-                        placeholder="e.g., 6 AM - 10 PM daily"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  /* Mobile Asset - Fulfillment Options */
-                  <div className="space-y-6">
-                    <div className="space-y-3">
-                      <Label className="text-base font-medium">Fulfillment Options *</Label>
-                      <div className="grid grid-cols-1 gap-3">
-                        {[
-                          { value: 'pickup' as FulfillmentType, label: 'Pickup Only', icon: <MapPin className="w-5 h-5" />, desc: 'Buyer picks up from you' },
-                          { value: 'delivery' as FulfillmentType, label: 'Delivery Only', icon: <Truck className="w-5 h-5" />, desc: 'You deliver to them' },
-                          { value: 'both' as FulfillmentType, label: 'Pickup + Delivery', icon: <Package className="w-5 h-5" />, desc: 'Offer both options' },
-                        ].map((option) => (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => setFulfillmentType(option.value)}
-                            className={cn(
-                              "p-4 rounded-xl border-2 text-left transition-all flex items-center gap-4",
-                              fulfillmentType === option.value ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"
-                            )}
-                          >
-                            <div className={cn(fulfillmentType === option.value ? "text-primary" : "text-muted-foreground")}>
-                              {option.icon}
-                            </div>
-                            <div>
-                              <h4 className={cn("font-medium", fulfillmentType === option.value ? "text-primary" : "text-foreground")}>
-                                {option.label}
-                              </h4>
-                              <p className="text-sm text-muted-foreground">{option.desc}</p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Pickup Location */}
-                    {(fulfillmentType === 'pickup' || fulfillmentType === 'both') && (
-                      <div className="space-y-2">
-                        <Label className="text-base font-medium">Pickup Location *</Label>
-                        <LocationSearchInput
-                          value={pickupLocationText}
-                          onChange={(value) => setPickupLocationText(value)}
-                          onLocationSelect={(location) => {
-                            if (location) setPickupCoordinates(location.coordinates);
-                            else setPickupCoordinates(null);
-                          }}
-                          selectedCoordinates={pickupCoordinates}
-                          placeholder="City, State (e.g., Austin, TX)"
-                        />
-                        <p className="text-sm text-muted-foreground">
-                          Exact address shared after booking.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Step: Documents (Rental only) */}
-            {step === 'documents' && listing.mode === 'rent' && (
-              <div className="space-y-6">
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold tracking-tight">Required Documents</h2>
-                  <p className="text-muted-foreground text-lg mt-2">Specify which documents renters must provide.</p>
-                </div>
-
-                <div className="bg-muted/50 rounded-xl p-4 border border-border">
-                  <div className="flex items-start gap-3">
-                    <Shield className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-foreground">
-                        {enabledDocsCount === 0 ? 'No documents required' : `${enabledDocsCount} document${enabledDocsCount > 1 ? 's' : ''} required`}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Documents help verify renters and protect your assets.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Document Groups */}
-                <div className="space-y-3">
-                  {DOCUMENT_GROUPS.map((group) => {
-                    const groupDocs = requiredDocuments.filter(d => group.documents.includes(d.document_type));
-                    const enabledInGroup = groupDocs.filter(d => d.is_required).length;
-                    const isOpen = openDocGroups.includes(group.label);
-
-                    return (
-                      <Collapsible
-                        key={group.label}
-                        open={isOpen}
-                        onOpenChange={() => {
-                          setOpenDocGroups(prev =>
-                            prev.includes(group.label)
-                              ? prev.filter(g => g !== group.label)
-                              : [...prev, group.label]
-                          );
-                        }}
-                      >
-                        <CollapsibleTrigger className="w-full">
-                          <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors">
-                            <div className="flex items-center gap-3">
-                              <FileText className="w-4 h-4 text-muted-foreground" />
-                              <span className="font-medium text-foreground">{group.label}</span>
-                              {enabledInGroup > 0 && (
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                                  {enabledInGroup} selected
-                                </span>
-                              )}
-                            </div>
-                            {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDownIcon className="w-4 h-4 text-muted-foreground" />}
+                  {/* Stripe Connect Panel - Only show if card payments are enabled */}
+                  {requiresStripe && !isOnboardingComplete && (
+                    <div className="p-5 rounded-xl border border-border bg-muted/30">
+                      <div className="flex items-start gap-3">
+                        <img src={stripeIcon} alt="Stripe" className="w-12 h-12 object-cover rounded-xl mt-0.5" />
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-foreground mb-1">
+                            Connect to get paid from your listings
+                          </h3>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            To go live and receive payments, you need to connect your Stripe account. Takes about 2 minutes.
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            <Button size="sm" onClick={handleStripeConnect} disabled={isConnecting} className="bg-[#635bff] hover:bg-[#5147e6] text-white">
+                              {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                              Connect Stripe (2 min)
+                            </Button>
+                            <Button size="sm" variant="dark-shine" onClick={() => navigate('/dashboard')}>
+                              <Save className="w-4 h-4 mr-1" />
+                              Save Draft
+                            </Button>
                           </div>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <div className="mt-2 space-y-2 pl-4">
-                            {group.documents.map((docType) => {
-                              const doc = requiredDocuments.find(d => d.document_type === docType);
-                              return (
-                                <div
-                                  key={docType}
-                                  className={cn(
-                                    "flex items-start gap-3 p-3 rounded-lg border transition-colors",
-                                    doc?.is_required ? "border-primary/30 bg-primary/5" : "border-border bg-card"
-                                  )}
-                                >
-                                  <Switch
-                                    checked={doc?.is_required || false}
-                                    onCheckedChange={() => {
-                                      setRequiredDocuments(prev =>
-                                        prev.map(d =>
-                                          d.document_type === docType ? { ...d, is_required: !d.is_required } : d
-                                        )
-                                      );
-                                    }}
-                                  />
-                                  <div className="flex-1">
-                                    <Label className="font-medium cursor-pointer">{DOCUMENT_TYPE_LABELS[docType]}</Label>
-                                    <p className="text-sm text-muted-foreground">{DOCUMENT_TYPE_DESCRIPTIONS[docType]}</p>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </CollapsibleContent>
-                      </Collapsible>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-            {/* Step: Stripe */}
-            {step === 'stripe' && (
-              <div className="space-y-6">
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold tracking-tight">Get Paid</h2>
-                  <p className="text-muted-foreground text-lg mt-2">
-                    {acceptCardPayment ? 'Connect Stripe to receive card payments.' : 'Stripe is optional for cash-only listings.'}
-                  </p>
-                </div>
-
-                {!acceptCardPayment && (
-                  <div className="rounded-2xl p-6 border-2 border-muted bg-muted/30 text-center">
-                    <Banknote className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                    <h3 className="font-semibold text-foreground mb-2">Cash-only listing</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Stripe is not required since you're only accepting in-person payments.
-                    </p>
-                  </div>
-                )}
-
-                {acceptCardPayment && (
-                  isOnboardingComplete ? (
-                    <div className="rounded-2xl p-6 border border-border bg-muted/30">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
-                          <Check className="w-6 h-6 text-emerald-600" />
+                  {/* Ready to Publish Message */}
+                  {canPublish && isOnboardingComplete && (
+                    <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+                      <div className="relative flex items-center gap-3">
+                        <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md flex items-center justify-center shrink-0">
+                          <Check className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                          <div className="flex items-center gap-2">
-                            <img src={stripeIcon} alt="Stripe" className="h-6 w-6 object-cover rounded-md" />
-                            <span className="font-semibold text-foreground">Connected</span>
-                          </div>
-                          <p className="text-sm text-muted-foreground">You're ready to receive payments</p>
+                          <p className="font-semibold text-foreground">Your listing is ready!</p>
+                          <p className="text-sm text-muted-foreground">Review the preview above and publish when you're ready.</p>
                         </div>
                       </div>
                     </div>
-                  ) : hasAccountStarted ? (
-                    <div className="rounded-2xl p-8 border-2 border-amber-200 bg-amber-50/50 text-center">
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center">
-                        <AlertCircle className="w-8 h-8 text-amber-600" />
-                      </div>
-                      <h3 className="font-semibold text-foreground mb-2">Finish Stripe Setup</h3>
-                      <p className="text-sm text-muted-foreground mb-6">
-                        You started connecting your Stripe account but haven't completed the setup. Finish it to receive payments.
-                      </p>
-                      <Button
-                        onClick={handleStripeConnect}
-                        disabled={isConnecting}
-                        className="bg-amber-500 hover:bg-amber-600 text-white border-0 shadow-md h-12 px-6"
-                      >
-                        {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                        <img src={stripeIcon} alt="" className="h-5 w-5 object-cover rounded mr-2" />
-                        Complete Setup
-                        <ExternalLink className="w-4 h-4 ml-2" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="rounded-2xl p-8 border border-border bg-muted/30 text-center">
-                      <img src={stripeIcon} alt="Stripe" className="w-16 h-16 mx-auto mb-4 rounded-xl object-cover" />
-                      <h3 className="font-semibold text-foreground mb-2">Set up payouts</h3>
-                      <p className="text-sm text-muted-foreground mb-6">
-                        Connect to receive payments when you get bookings or sales.
-                      </p>
-                      <Button
-                        onClick={handleStripeConnect}
-                        disabled={isConnecting}
-                        className="bg-[#635bff] hover:bg-[#5147e6] text-white border-0 shadow-md h-12 px-6"
-                      >
-                        {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                        <img src={stripeIcon} alt="" className="h-5 w-5 object-cover rounded mr-2" />
-                        Connect Stripe
-                        <ExternalLink className="w-4 h-4 ml-2" />
-                      </Button>
-                    </div>
-                  )
-                )}
-              </div>
-            )}
-
-            {/* Step: Review */}
-            {step === 'review' && (
-              <div className="space-y-6">
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold tracking-tight">Ready to publish?</h2>
-                  <p className="text-muted-foreground text-lg mt-2">Review your listing before going live.</p>
-                </div>
-
-                {/* Validation Status */}
-                <div className="space-y-3">
-                  {[
-                    { label: 'Photos', ok: totalPhotoCount >= 3, detail: `${totalPhotoCount} uploaded` },
-                    { label: 'Title & Description', ok: hasDescription, detail: hasDescription ? '✓ Complete' : 'Missing details' },
-                    { label: 'Pricing', ok: hasPricing, detail: hasPricing ? '✓ Set' : 'Required' },
-                    { label: 'Location', ok: hasLocation, detail: hasLocation ? '✓ Set' : 'Required' },
-                    { label: 'Stripe', ok: !requiresStripe || isOnboardingComplete, detail: !requiresStripe ? 'Not required' : isOnboardingComplete ? '✓ Connected' : hasAccountStarted ? 'Finish setup' : 'Required' },
-                  ].map((item) => (
-                    <div key={item.label} className={cn("p-4 rounded-xl border flex items-center justify-between", item.ok ? "border-emerald-200 bg-emerald-50" : "border-destructive/30 bg-destructive/5")}>
-                      <div className="flex items-center gap-3">
-                        {item.ok ? <Check className="w-5 h-5 text-emerald-600" /> : <AlertCircle className="w-5 h-5 text-destructive" />}
-                        <span className="font-medium">{item.label}</span>
-                      </div>
-                      <span className={cn("text-sm", item.ok ? "text-emerald-600" : "text-destructive")}>{item.detail}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Summary */}
-                <div className="bg-card rounded-2xl border p-6 space-y-4">
-                  <h3 className="font-semibold text-lg">Listing Summary</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Category</span>
-                      <p className="font-medium">{CATEGORY_LABELS[listing.category]}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Mode</span>
-                      <p className="font-medium">{listing.mode === 'rent' ? 'For Rent' : 'For Sale'}</p>
-                    </div>
-                    <div className="col-span-2">
-                      <span className="text-muted-foreground">Title</span>
-                      <p className="font-medium">{title || 'Untitled'}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Price</span>
-                      <p className="font-medium">
-                        {listing.mode === 'sale'
-                          ? (priceSale ? `$${parseFloat(priceSale).toLocaleString()}` : 'Not set')
-                          : (priceDaily ? `$${priceDaily}/day` : 'Not set')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {!canPublish && (
-                  <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4">
-                    <h4 className="font-medium text-destructive mb-2 flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4" />
-                      Cannot publish yet
-                    </h4>
-                    <ul className="text-sm text-destructive space-y-1">
-                      {getValidationErrors().map((error, i) => (
-                        <li key={i}>• {error}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </main>
-
-      {/* Sticky Footer Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 pb-safe z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
-        <div className="container max-w-xl mx-auto flex items-center justify-between gap-4">
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={handleBack}
-            className="flex-1 sm:flex-none sm:w-32 rounded-xl h-12"
-          >
-            {currentStepIndex === 0 ? 'Exit' : 'Back'}
-          </Button>
-
-          <Button
-            variant="default"
-            size="lg"
-            onClick={handleNext}
-            disabled={isSaving || !canProceed()}
-            className="flex-1 sm:w-full sm:max-w-xs rounded-xl h-12 text-base font-semibold shadow-xl shadow-primary/20"
-          >
-            {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {step === 'review' ? 'Publish Listing' : 'Continue'}
-          </Button>
-        </div>
-      </div>
-
-      {/* Mobile Step Menu */}
-      <div className="fixed bottom-24 right-4 z-40 lg:hidden">
-        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-          <SheetTrigger asChild>
-            <Button size="icon" variant="outline" className="rounded-full h-12 w-12 shadow-lg bg-background border-primary/20">
-              <Menu className="w-5 h-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Listing Steps</SheetTitle>
-            </SheetHeader>
-            <div className="mt-6 space-y-1">
-              {stepOrder.map((s, i) => (
-                <button
-                  key={s}
-                  onClick={() => {
-                    if (i <= currentStepIndex) {
-                      setStep(s);
-                      setIsMobileMenuOpen(false);
-                    }
-                  }}
-                  disabled={i > currentStepIndex}
-                  className={cn(
-                    "w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-colors flex items-center justify-between",
-                    step === s ? "bg-primary/10 text-primary" : i <= currentStepIndex ? "hover:bg-muted" : "opacity-50 cursor-not-allowed"
                   )}
-                >
-                  <span>{STEP_LABELS[s]}</span>
-                  {i < currentStepIndex && <Check className="w-4 h-4 text-emerald-500" />}
-                </button>
-              ))}
+
+                  <div className="flex flex-wrap gap-3">
+                    <Button variant="outline" onClick={() => setStep('stripe')}>Back</Button>
+                    <Button
+                      variant="dark-shine"
+                      onClick={() => setShowPreviewModal(true)}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Preview as Shopper
+                    </Button>
+                    <Button 
+                      variant="dark-shine"
+                      onClick={() => setShowPublishDialog(true)} 
+                      disabled={isSaving || !canPublish || (requiresStripe && !isOnboardingComplete)}
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      Publish Listing
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
-          </SheetContent>
-        </Sheet>
+          </div>
+        </div>
       </div>
 
       {/* Publish Confirmation Dialog */}
       <AlertDialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Publish your listing?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Your listing will go live and be visible to potential {listing.mode === 'rent' ? 'renters' : 'buyers'}.
+            <AlertDialogTitle className="text-xl">Publish your listing?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p>
+                  Your listing will be visible to all shoppers on VendiBook and you'll start receiving 
+                  {listing?.mode === 'rent' ? ' booking requests' : ' purchase inquiries'}.
+                </p>
+                
+                {/* TOS Checkbox */}
+                <div className="relative overflow-hidden rounded-xl p-3 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+                  <div className="relative flex items-start gap-3">
+                    <Checkbox
+                      id="tos-agreement"
+                      checked={tosAgreed}
+                      onCheckedChange={(checked) => setTosAgreed(checked === true)}
+                      className="mt-0.5"
+                    />
+                    <label htmlFor="tos-agreement" className="text-sm text-foreground cursor-pointer leading-relaxed">
+                      I agree to VendiBook's{' '}
+                      <Link to="/terms" target="_blank" className="text-primary hover:underline font-medium">
+                        Terms of Service
+                      </Link>{' '}
+                      and confirm this listing accurately represents my asset.
+                    </label>
+                  </div>
+                </div>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-
-          <div className="flex items-start gap-3 py-4">
-            <Checkbox
-              id="tos"
-              checked={tosAgreed}
-              onCheckedChange={(checked) => setTosAgreed(!!checked)}
-            />
-            <label htmlFor="tos" className="text-sm text-muted-foreground cursor-pointer leading-snug">
-              I agree to the{' '}
-              <Link to="/terms" target="_blank" className="text-primary underline">Terms of Service</Link>
-              {' '}and{' '}
-              <Link to="/host-terms" target="_blank" className="text-primary underline">Host Agreement</Link>.
-            </label>
-          </div>
-
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
+            <AlertDialogCancel onClick={() => setTosAgreed(false)}>Cancel</AlertDialogCancel>
+            <Button
+              variant="dark-shine"
               onClick={handlePublish}
-              disabled={!tosAgreed || isSaving || !canPublish}
-              className="bg-primary hover:bg-primary/90"
+              disabled={!tosAgreed || isSaving}
+              className={cn(!tosAgreed && "opacity-50 cursor-not-allowed")}
             >
               {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-              Publish Now
-            </AlertDialogAction>
+              Yes, publish
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Modals */}
       <PublishSuccessModal
         open={showSuccessModal}
-        onOpenChange={setShowSuccessModal}
-        listing={{
-          id: listingId!,
+        onOpenChange={(open) => {
+          if (!open) navigate('/dashboard');
+          setShowSuccessModal(open);
+        }}
+        listing={listing ? {
+          id: listing.id,
           title,
           coverImageUrl: existingImages[0] || null,
           category: listing.category,
           mode: listing.mode,
-          address: address || pickupLocationText || null,
+          address: listing.address,
           priceDaily: parseFloat(priceDaily) || null,
           priceWeekly: parseFloat(priceWeekly) || null,
           priceSale: parseFloat(priceSale) || null,
-        }}
-        onViewListing={() => navigate(`/listing/${listingId}`)}
+        } : null}
+        onViewListing={() => navigate(`/listing/${listing?.id}`)}
       />
 
-      <ListingPreviewModal
-        open={showPreviewModal}
-        onOpenChange={setShowPreviewModal}
-        listing={{
-          title,
-          description,
-          category: listing.category,
-          mode: listing.mode,
-          images: existingImages,
-          priceDaily,
-          priceWeekly,
-          priceSale,
-          address: address || '',
-          pickupLocationText: pickupLocationText || '',
-          highlights,
-          amenities,
-          instantBook,
-          fulfillmentType: fulfillmentType,
-          deliveryFee,
-          deliveryRadiusMiles,
-          depositAmount,
-          weightLbs,
-          lengthInches,
-          widthInches,
-          heightInches,
-          hoursOfAccess,
-          availableFrom: availableFrom || undefined,
-          availableTo: availableTo || undefined,
-          acceptCardPayment,
-          acceptCashPayment,
-        }}
-      />
-
+      {/* Auth Gate Modal */}
       <AuthGateModal
         open={showAuthModal}
         onOpenChange={setShowAuthModal}
         onAuthSuccess={handleAuthSuccess}
+        draftId={listingId}
       />
+
+      {/* Listing Preview Modal */}
+      {listing && (
+        <ListingPreviewModal
+          open={showPreviewModal}
+          onOpenChange={setShowPreviewModal}
+          listing={{
+            title,
+            description,
+            category: listing.category,
+            mode: listing.mode,
+            images: existingImages,
+            priceDaily,
+            priceWeekly,
+            priceSale,
+            address,
+            pickupLocationText,
+            highlights,
+            amenities,
+            instantBook,
+            fulfillmentType,
+            deliveryFee,
+            deliveryRadiusMiles,
+            depositAmount,
+            weightLbs,
+            lengthInches,
+            widthInches,
+            heightInches,
+            hoursOfAccess,
+            availableFrom: availableFrom || undefined,
+            availableTo: availableTo || undefined,
+            acceptCardPayment,
+            acceptCashPayment,
+          }}
+          host={user ? {
+            name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'You',
+            avatar: user.user_metadata?.avatar_url || null,
+            memberSince: user.created_at || new Date().toISOString(),
+            isVerified: false,
+          } : undefined}
+        />
+      )}
     </div>
   );
 };
