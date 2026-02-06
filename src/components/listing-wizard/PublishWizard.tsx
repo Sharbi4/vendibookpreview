@@ -188,6 +188,7 @@ export const PublishWizard: React.FC = () => {
   const [description, setDescription] = useState('');
   const [priceDaily, setPriceDaily] = useState('');
   const [priceWeekly, setPriceWeekly] = useState('');
+  const [priceMonthly, setPriceMonthly] = useState('');
   const [priceSale, setPriceSale] = useState('');
   const [instantBook, setInstantBook] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
@@ -287,6 +288,7 @@ export const PublishWizard: React.FC = () => {
       setDescription(data.description || '');
       setPriceDaily(data.price_daily?.toString() || '');
       setPriceWeekly(data.price_weekly?.toString() || '');
+      setPriceMonthly((data as any).price_monthly?.toString() || '');
       setPriceSale(data.price_sale?.toString() || '');
       setInstantBook(data.instant_book || false);
       setDepositAmount(data.deposit_amount?.toString() || '');
@@ -707,6 +709,7 @@ export const PublishWizard: React.FC = () => {
         : {
             price_daily: safeParsePrice(priceDaily),
             price_weekly: safeParsePrice(priceWeekly),
+            price_monthly: safeParsePrice(priceMonthly),
             instant_book: instantBook,
             deposit_amount: safeParsePrice(depositAmount),
             featured_enabled: featuredEnabled,
@@ -1457,32 +1460,48 @@ export const PublishWizard: React.FC = () => {
 
                 {/* Price Inputs */}
                 {listing.mode === 'rent' ? (
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-base">Daily Rate *</Label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
-                        <Input
-                          type="number"
-                          value={priceDaily}
-                          onChange={(e) => setPriceDaily(e.target.value)}
-                          className="h-16 pl-9 text-2xl font-bold rounded-xl"
-                          placeholder="0"
-                        />
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-base">Daily Rate *</Label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
+                          <Input
+                            type="number"
+                            value={priceDaily}
+                            onChange={(e) => setPriceDaily(e.target.value)}
+                            className="h-16 pl-9 text-2xl font-bold rounded-xl"
+                            placeholder="0"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-base">Weekly Rate</Label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
+                          <Input
+                            type="number"
+                            value={priceWeekly}
+                            onChange={(e) => setPriceWeekly(e.target.value)}
+                            className="h-16 pl-9 text-2xl font-bold rounded-xl"
+                            placeholder="0"
+                          />
+                        </div>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-base">Weekly Rate</Label>
+                      <Label className="text-base">Monthly Rate</Label>
                       <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
                         <Input
                           type="number"
-                          value={priceWeekly}
-                          onChange={(e) => setPriceWeekly(e.target.value)}
+                          value={priceMonthly}
+                          onChange={(e) => setPriceMonthly(e.target.value)}
                           className="h-16 pl-9 text-2xl font-bold rounded-xl"
                           placeholder="0"
                         />
                       </div>
+                      <p className="text-xs text-muted-foreground">Optional. Offer a discount for month-long rentals.</p>
                     </div>
                   </div>
                 ) : (
