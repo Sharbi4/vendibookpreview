@@ -77,10 +77,10 @@ const HeroRentalSearch = () => {
           transition={{ duration: 0.8, ease: 'easeOut' }}
         >
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 leading-tight tracking-tight">
-            Launch this weekend.
+            Rent it. Buy it. Find your spot.
           </h1>
           <p className="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto mb-10 font-light">
-            Find the perfect food truck, trailer, or commercial kitchen to rent or buy near you.
+            From turnkey rentals and trucks for sale to premium food truck parks—launch your food business this weekend with verified assets and spaces.
           </p>
         </motion.div>
 
