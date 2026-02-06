@@ -59,12 +59,14 @@ export const StepPricing: React.FC<StepPricingProps> = ({
   const rentalPayoutEstimates = useMemo(() => {
     const dailyPrice = parseFloat(formData.price_daily) || 0;
     const weeklyPrice = parseFloat(formData.price_weekly) || 0;
+    const monthlyPrice = parseFloat(formData.price_monthly) || 0;
     
     return {
       daily: dailyPrice > 0 ? calculateRentalFees(dailyPrice) : null,
       weekly: weeklyPrice > 0 ? calculateRentalFees(weeklyPrice) : null,
+      monthly: monthlyPrice > 0 ? calculateRentalFees(monthlyPrice) : null,
     };
-  }, [formData.price_daily, formData.price_weekly]);
+  }, [formData.price_daily, formData.price_weekly, formData.price_monthly]);
 
   // For sales with seller-paid freight, we need estimated freight cost (placeholder for now)
   const estimatedFreightCost = 500; // Placeholder - in production, this would be dynamically calculated
@@ -278,8 +280,31 @@ export const StepPricing: React.FC<StepPricingProps> = ({
               </div>
             </div>
 
+            {/* Monthly Rate */}
+            <div className="space-y-2">
+              <Label htmlFor="price_monthly" className="text-base font-medium text-muted-foreground">
+                Monthly Rate <span className="text-xs text-green-600">(Best Value)</span>
+              </Label>
+              <div className="relative max-w-xs">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
+                <Input
+                  id="price_monthly"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.price_monthly}
+                  onChange={(e) => updateField('price_monthly', e.target.value)}
+                  placeholder="0"
+                  className="pl-9 text-xl h-14"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Attract long-term renters with a discounted monthly rate.
+              </p>
+            </div>
+
             {/* Payout Estimate - Compact */}
-            {(rentalPayoutEstimates.daily || rentalPayoutEstimates.weekly) && (
+            {(rentalPayoutEstimates.daily || rentalPayoutEstimates.weekly || rentalPayoutEstimates.monthly) && (
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/60">
                 <Wallet className="w-4 h-4 text-muted-foreground shrink-0" />
                 <div className="flex-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
@@ -292,6 +317,11 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                   {rentalPayoutEstimates.weekly && (
                     <span>
                       Weekly: <span className="font-semibold text-primary">{formatCurrency(rentalPayoutEstimates.weekly.hostReceives)}</span>
+                    </span>
+                  )}
+                  {rentalPayoutEstimates.monthly && (
+                    <span>
+                      Monthly: <span className="font-semibold text-primary">{formatCurrency(rentalPayoutEstimates.monthly.hostReceives)}</span>
                     </span>
                   )}
                 </div>

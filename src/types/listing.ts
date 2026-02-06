@@ -141,6 +141,7 @@ export interface Listing {
   location_notes: string | null;
   price_daily: number | null;
   price_weekly: number | null;
+  price_monthly: number | null;
   price_hourly: number | null;
   price_sale: number | null;
   available_from: string | null;
@@ -575,6 +576,7 @@ export interface ListingFormData {
   location_notes: string;
   price_daily: string;
   price_weekly: string;
+  price_monthly: string;
   price_sale: string;
   available_from: string;
   available_to: string;

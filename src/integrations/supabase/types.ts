@@ -896,6 +896,7 @@ export type Database = {
           pickup_location_text: string | null
           price_daily: number | null
           price_hourly: number | null
+          price_monthly: number | null
           price_sale: number | null
           price_weekly: number | null
           proof_notary_enabled: boolean | null
@@ -963,6 +964,7 @@ export type Database = {
           pickup_location_text?: string | null
           price_daily?: number | null
           price_hourly?: number | null
+          price_monthly?: number | null
           price_sale?: number | null
           price_weekly?: number | null
           proof_notary_enabled?: boolean | null
@@ -1030,6 +1032,7 @@ export type Database = {
           pickup_location_text?: string | null
           price_daily?: number | null
           price_hourly?: number | null
+          price_monthly?: number | null
           price_sale?: number | null
           price_weekly?: number | null
           proof_notary_enabled?: boolean | null
