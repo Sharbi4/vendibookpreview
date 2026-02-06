@@ -417,7 +417,7 @@ export const BookingWidget = ({
                   <Popover open={startCalendarOpen} onOpenChange={setStartCalendarOpen}>
                     <PopoverTrigger asChild>
                       <button className="flex flex-col items-start p-3 rounded-xl border border-border bg-muted/30 hover:bg-muted/50 transition-colors text-left">
-                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Check-in</span>
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Start</span>
                         <span className={cn(
                           "text-sm font-medium",
                           startDate ? "text-foreground" : "text-muted-foreground"
@@ -442,7 +442,7 @@ export const BookingWidget = ({
                   <Popover open={endCalendarOpen} onOpenChange={setEndCalendarOpen}>
                     <PopoverTrigger asChild>
                       <button className="flex flex-col items-start p-3 rounded-xl border border-border bg-muted/30 hover:bg-muted/50 transition-colors text-left">
-                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Check-out</span>
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">End</span>
                         <span className={cn(
                           "text-sm font-medium",
                           endDate ? "text-foreground" : "text-muted-foreground"
