@@ -97,7 +97,7 @@ const HeroRentalSearch = () => {
           </div>
 
           {/* Search Bar - The "Island" */}
-          <div className="bg-white rounded-full shadow-2xl p-2 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-0">
+          <div className="bg-white rounded-2xl md:rounded-full shadow-2xl p-3 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-0">
             {/* Location Input */}
             <div className="flex-1 px-4 py-3 md:py-2 md:border-r border-border">
               <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold text-left mb-0.5">
