@@ -14,6 +14,7 @@ import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { DocumentType } from '@/types/documents';
 import type { TablesInsert } from '@/integrations/supabase/types';
+import type { Json } from '@/integrations/supabase/types';
 
 // Shared components
 import { WizardHeader, type WizardStep } from '@/components/shared';
@@ -21,6 +22,7 @@ import { WizardHeader, type WizardStep } from '@/components/shared';
 // Step components
 import BookingStepDates from './steps/BookingStepDates';
 import BookingStepRequirements from './steps/BookingStepRequirements';
+import BookingStepBusinessInfo, { emptyBusinessInfo, type BusinessInfoData } from './steps/BookingStepBusinessInfo';
 import BookingStepDocumentUpload from './steps/BookingStepDocumentUpload';
 import BookingStepDetails from './steps/BookingStepDetails';
 import BookingStepReview from './steps/BookingStepReview';
@@ -87,8 +89,11 @@ const BookingWizard = ({
   // Check if listing has required documents
   const { data: requiredDocs } = useListingRequiredDocuments(listingId);
   const hasRequiredDocs = requiredDocs && requiredDocs.length > 0;
+  
+  // Check if this category requires business info
+  const requiresBusinessInfo = ['food_truck', 'food_trailer', 'ghost_kitchen'].includes(category);
 
-  // Wizard state - add extra step for document upload if documents are required
+  // Wizard state - add extra steps if needed
   // Start at step 2 (Requirements) if dates are pre-selected
   const hasPreselectedDates = initialStartDate && initialEndDate;
   const [currentStep, setCurrentStep] = useState(hasPreselectedDates ? 2 : 1);
@@ -98,6 +103,9 @@ const BookingWizard = ({
   
   // Document upload state
   const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([]);
+  
+  // Business info state
+  const [businessInfo, setBusinessInfo] = useState<BusinessInfoData>(emptyBusinessInfo);
 
   // Form state - initialize from initial dates or draft if available
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -127,9 +135,10 @@ const BookingWizard = ({
   }, [startDate, endDate, fulfillmentSelected, deliveryAddress, message, saveDraft, draftLoaded]);
 
   const isMobileAsset = category === 'food_truck' || category === 'food_trailer';
-  // Steps: 1=Dates, 2=Requirements, 3=DocUpload (if needed), 4=Details, 5=Review
-  // If no docs required: 1=Dates, 2=Requirements, 3=Details, 4=Review
-  const totalSteps = hasRequiredDocs ? 5 : 4;
+  
+  // Dynamic step calculation
+  // Steps: Dates -> Requirements -> [BusinessInfo?] -> [DocUpload?] -> Details -> Review
+  const totalSteps = 4 + (requiresBusinessInfo ? 1 : 0) + (hasRequiredDocs ? 1 : 0);
 
   // Calculate pricing
   const rentalDays = startDate && endDate ? differenceInDays(endDate, startDate) : 0;
@@ -254,6 +263,7 @@ const BookingWizard = ({
         fulfillment_selected: fulfillmentSelected,
         is_instant_book: instantBook,
         deposit_amount: depositAmount,
+        business_info: requiresBusinessInfo ? (businessInfo as unknown as Json) : null,
       };
 
       if (fulfillmentSelected === 'delivery') {
@@ -342,20 +352,44 @@ const BookingWizard = ({
     );
   }
 
-  const stepLabels: WizardStep[] = hasRequiredDocs
-    ? [
-        { step: 1, label: 'Select Dates', short: 'Dates' },
-        { step: 2, label: 'Requirements', short: 'Info' },
-        { step: 3, label: 'Upload Docs', short: 'Upload' },
-        { step: 4, label: 'Details', short: 'Details' },
-        { step: 5, label: 'Review', short: 'Review' },
-      ]
-    : [
-        { step: 1, label: 'Select Dates', short: 'Dates' },
-        { step: 2, label: 'Requirements', short: 'Docs' },
-        { step: 3, label: 'Details', short: 'Details' },
-        { step: 4, label: 'Review', short: 'Review' },
-      ];
+  // Build step labels dynamically based on features
+  const buildStepLabels = (): WizardStep[] => {
+    let stepNum = 1;
+    const steps: WizardStep[] = [
+      { step: stepNum++, label: 'Select Dates', short: 'Dates' },
+      { step: stepNum++, label: 'Requirements', short: 'Info' },
+    ];
+    
+    if (requiresBusinessInfo) {
+      steps.push({ step: stepNum++, label: 'Business Info', short: 'Business' });
+    }
+    
+    if (hasRequiredDocs) {
+      steps.push({ step: stepNum++, label: 'Upload Docs', short: 'Upload' });
+    }
+    
+    steps.push(
+      { step: stepNum++, label: 'Details', short: 'Details' },
+      { step: stepNum++, label: 'Review', short: 'Review' }
+    );
+    
+    return steps;
+  };
+  
+  const stepLabels = buildStepLabels();
+  
+  // Calculate which step number corresponds to which component
+  const getStepNumber = (stepName: 'dates' | 'requirements' | 'business' | 'docs' | 'details' | 'review'): number => {
+    switch (stepName) {
+      case 'dates': return 1;
+      case 'requirements': return 2;
+      case 'business': return requiresBusinessInfo ? 3 : -1;
+      case 'docs': return hasRequiredDocs ? (requiresBusinessInfo ? 4 : 3) : -1;
+      case 'details': return 2 + (requiresBusinessInfo ? 1 : 0) + (hasRequiredDocs ? 1 : 0) + 1;
+      case 'review': return 2 + (requiresBusinessInfo ? 1 : 0) + (hasRequiredDocs ? 1 : 0) + 2;
+      default: return -1;
+    }
+  };
 
   const stepVariants = {
     enter: { opacity: 0, x: 20 },
@@ -388,7 +422,7 @@ const BookingWizard = ({
             exit="exit"
             transition={{ duration: 0.2, ease: 'easeInOut' }}
           >
-            {currentStep === 1 && (
+            {currentStep === getStepNumber('dates') && (
               <BookingStepDates
                 startDate={startDate}
                 endDate={endDate}
@@ -404,7 +438,7 @@ const BookingWizard = ({
               />
             )}
 
-            {currentStep === 2 && (
+            {currentStep === getStepNumber('requirements') && (
               <BookingStepRequirements
                 listingId={listingId}
                 onContinue={handleNext}
@@ -412,7 +446,26 @@ const BookingWizard = ({
               />
             )}
 
-            {currentStep === 3 && (
+            {requiresBusinessInfo && currentStep === getStepNumber('business') && (
+              <BookingStepBusinessInfo
+                data={businessInfo}
+                onChange={setBusinessInfo}
+                onContinue={handleNext}
+                onBack={handleBack}
+              />
+            )}
+
+            {hasRequiredDocs && currentStep === getStepNumber('docs') && (
+              <BookingStepDocumentUpload
+                listingId={listingId}
+                uploadedFiles={stagedFiles}
+                onFilesChange={setStagedFiles}
+                onContinue={handleNext}
+                onBack={handleBack}
+              />
+            )}
+
+            {currentStep === getStepNumber('details') && (
               <BookingStepDetails
                 isMobileAsset={isMobileAsset}
                 fulfillmentType={fulfillmentType}
@@ -432,7 +485,7 @@ const BookingWizard = ({
               />
             )}
 
-            {currentStep === 4 && (
+            {currentStep === getStepNumber('review') && (
               <BookingStepReview
                 listingTitle={listingTitle}
                 startDate={startDate!}

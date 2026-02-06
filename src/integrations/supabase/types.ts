@@ -279,6 +279,7 @@ export type Database = {
         Row: {
           access_instructions_snapshot: string | null
           address_snapshot: string | null
+          business_info: Json | null
           checkout_session_id: string | null
           created_at: string
           delivery_address: string | null
@@ -333,6 +334,7 @@ export type Database = {
         Insert: {
           access_instructions_snapshot?: string | null
           address_snapshot?: string | null
+          business_info?: Json | null
           checkout_session_id?: string | null
           created_at?: string
           delivery_address?: string | null
@@ -387,6 +389,7 @@ export type Database = {
         Update: {
           access_instructions_snapshot?: string | null
           address_snapshot?: string | null
+          business_info?: Json | null
           checkout_session_id?: string | null
           created_at?: string
           delivery_address?: string | null

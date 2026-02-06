@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format, isPast, parseISO } from 'date-fns';
-import { Check, X, Calendar, User, MessageSquare, Loader2, MessageCircle, FileText, DollarSign, FileCheck, FileClock, FileWarning, Zap, Shield, AlertTriangle, Undo2 } from 'lucide-react';
+import { Check, X, Calendar, User, MessageSquare, Loader2, MessageCircle, FileText, DollarSign, FileCheck, FileClock, FileWarning, Zap, Shield, AlertTriangle, Undo2, Building2, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,6 +15,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { MessageDialog } from '@/components/messaging/MessageDialog';
 import { HostDocumentReviewSection } from '@/components/documents/HostDocumentReviewSection';
 import { useDocumentComplianceStatus } from '@/hooks/useRequiredDocuments';
@@ -22,6 +27,19 @@ import InstantBookTimeline from './InstantBookTimeline';
 import BookingPhaseIndicator, { getBookingPhase } from './BookingPhaseIndicator';
 import BookingConfirmationSection from './BookingConfirmationSection';
 import { AddToCalendarButton } from '@/components/booking/AddToCalendarButton';
+
+// Type for business info stored in JSONB
+interface BusinessInfoData {
+  licenseType: string;
+  licenseTypeOther?: string;
+  businessDescription: string;
+  employeesFullTime: string;
+  employeesPartTime: string;
+  hasWorkersComp: string;
+  isCertifiedManager: string;
+  productsToPrepare: string;
+  equipmentToUse: string;
+}
 
 interface BookingRequestCardProps {
   booking: {
@@ -41,6 +59,7 @@ interface BookingRequestCardProps {
     host_confirmed_at?: string | null;
     shopper_confirmed_at?: string | null;
     dispute_status?: string | null;
+    business_info?: unknown;
     listing?: {
       id?: string;
       title: string;
@@ -145,6 +164,7 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showDepositDialog, setShowDepositDialog] = useState(false);
+  const [showBusinessInfo, setShowBusinessInfo] = useState(false);
   const [responseAction, setResponseAction] = useState<'approve' | 'decline'>('approve');
   const [responseMessage, setResponseMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -154,6 +174,9 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
   const [usePartialRefund, setUsePartialRefund] = useState(false);
   const [partialRefundAmount, setPartialRefundAmount] = useState('');
   const [depositAction, setDepositAction] = useState<'refund' | 'partial' | 'forfeit'>('refund');
+  
+  // Parse business info from booking
+  const businessInfo = booking.business_info as BusinessInfoData | null;
   const [depositDeduction, setDepositDeduction] = useState('');
   const [depositNotes, setDepositNotes] = useState('');
 
@@ -416,6 +439,91 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
                 <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <p className="line-clamp-2">{booking.message}</p>
               </div>
+            )}
+
+            {/* Business Info Section - For shared kitchen/food truck/trailer bookings */}
+            {businessInfo && (
+              <Collapsible open={showBusinessInfo} onOpenChange={setShowBusinessInfo} className="mb-3">
+                <CollapsibleTrigger asChild>
+                  <button className="w-full flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border hover:bg-muted/70 transition-colors text-left">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-medium">Applicant Business Details</span>
+                    </div>
+                    {showBusinessInfo ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2">
+                  <div className="p-4 border rounded-lg bg-background space-y-4">
+                    {/* License & Business Description */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-xs text-muted-foreground block mb-1">License Type</span>
+                        <span className="text-sm font-medium">
+                          {businessInfo.licenseType === 'Other' ? businessInfo.licenseTypeOther : businessInfo.licenseType}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-xs text-muted-foreground block mb-1">Employees</span>
+                        <div className="flex items-center gap-2">
+                          <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-sm font-medium">
+                            {businessInfo.employeesFullTime || '0'} FT / {businessInfo.employeesPartTime || '0'} PT
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-xs text-muted-foreground block mb-1">Business Description</span>
+                      <p className="text-sm text-muted-foreground">{businessInfo.businessDescription}</p>
+                    </div>
+
+                    {/* Compliance flags */}
+                    <div className="flex flex-wrap gap-3">
+                      <div className="flex items-center gap-1.5">
+                        {businessInfo.hasWorkersComp === 'yes' ? (
+                          <Check className="h-3.5 w-3.5 text-emerald-600" />
+                        ) : (
+                          <X className="h-3.5 w-3.5 text-muted-foreground" />
+                        )}
+                        <span className="text-xs text-muted-foreground">Worker's Comp</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {businessInfo.isCertifiedManager === 'yes' ? (
+                          <Check className="h-3.5 w-3.5 text-emerald-600" />
+                        ) : (
+                          <X className="h-3.5 w-3.5 text-muted-foreground" />
+                        )}
+                        <span className="text-xs text-muted-foreground">Certified Manager</span>
+                      </div>
+                    </div>
+
+                    {/* Kitchen Use */}
+                    <div className="pt-3 border-t border-border space-y-3">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Intended Kitchen Use</span>
+                      
+                      {businessInfo.productsToPrepare && (
+                        <div className="bg-muted/50 p-3 rounded-md">
+                          <span className="text-xs font-semibold block mb-1">Products to Prepare</span>
+                          <p className="text-sm text-muted-foreground">{businessInfo.productsToPrepare}</p>
+                        </div>
+                      )}
+                      
+                      {businessInfo.equipmentToUse && (
+                        <div className="bg-muted/50 p-3 rounded-md">
+                          <span className="text-xs font-semibold block mb-1">Equipment to Use</span>
+                          <p className="text-sm text-muted-foreground">{businessInfo.equipmentToUse}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             )}
 
             {/* Document Review Section */}
