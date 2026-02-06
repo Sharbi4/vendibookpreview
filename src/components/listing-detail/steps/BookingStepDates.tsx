@@ -85,6 +85,7 @@ const BookingStepDates = ({
               />
             </PopoverContent>
           </Popover>
+          <p className="text-xs text-muted-foreground">When you'll pick up or begin using the rental</p>
         </div>
 
         <div className="space-y-1.5">
@@ -118,6 +119,7 @@ const BookingStepDates = ({
               />
             </PopoverContent>
           </Popover>
+          <p className="text-xs text-muted-foreground">When you'll return or finish using the rental</p>
         </div>
       </div>
 

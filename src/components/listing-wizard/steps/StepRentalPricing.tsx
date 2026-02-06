@@ -275,6 +275,9 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/hour</span>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Price per hour before any fees. Tip: Set this to about 10-15% of your daily rate.
+            </p>
           </div>
         )}
 
@@ -296,6 +299,9 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/day</span>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Your base daily rental price before platform fees.
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -313,6 +319,9 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/wk</span>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Offer a 10-20% discount for 7+ day rentals.
+                </p>
               </div>
             </div>
 
@@ -415,7 +424,7 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
             <div>
               <h4 className="font-semibold text-sm text-foreground">Instant Book</h4>
               <p className="text-xs text-muted-foreground">
-                Allow immediate bookings without approval.
+                Renters can book immediately without waiting for your approval. Listings with instant book get more bookings.
               </p>
             </div>
           </div>

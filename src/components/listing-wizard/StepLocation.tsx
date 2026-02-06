@@ -239,6 +239,9 @@ export const StepLocation: React.FC<StepLocationProps> = ({
             rows={3}
             className="resize-none"
           />
+          <p className="text-xs text-muted-foreground">
+            Shared with renters after booking. Include gate codes, parking info, and any check-in steps.
+          </p>
         </div>
 
         {/* Hours of Access */}
@@ -250,6 +253,9 @@ export const StepLocation: React.FC<StepLocationProps> = ({
             onChange={(e) => updateField('hours_of_access', e.target.value)}
             placeholder="e.g., 6 AM - 10 PM daily"
           />
+          <p className="text-xs text-muted-foreground">
+            Let renters know when they can access the space.
+          </p>
         </div>
 
         {/* Location Notes */}
@@ -263,6 +269,9 @@ export const StepLocation: React.FC<StepLocationProps> = ({
             rows={3}
             className="resize-none"
           />
+          <p className="text-xs text-muted-foreground">
+            Any extra details about utilities, parking, or nearby amenities.
+          </p>
         </div>
       </div>
     );
@@ -598,6 +607,9 @@ export const StepLocation: React.FC<StepLocationProps> = ({
                             rows={2}
                             className="resize-none"
                           />
+                          <p className="text-xs text-muted-foreground">
+                            Shared with renters after booking confirmation.
+                          </p>
                         </div>
                       </div>
                     )}
@@ -706,6 +718,9 @@ export const StepLocation: React.FC<StepLocationProps> = ({
                                 className="pl-7"
                               />
                             </div>
+                            <p className="text-xs text-muted-foreground">
+                              One-time fee added to bookings with delivery.
+                            </p>
                           </div>
 
                           <div className="space-y-2">
@@ -722,6 +737,9 @@ export const StepLocation: React.FC<StepLocationProps> = ({
                               />
                               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">miles</span>
                             </div>
+                            <p className="text-xs text-muted-foreground">
+                              Max distance you'll deliver from your location.
+                            </p>
                           </div>
                         </div>
 
@@ -737,6 +755,9 @@ export const StepLocation: React.FC<StepLocationProps> = ({
                             rows={2}
                             className="resize-none"
                           />
+                          <p className="text-xs text-muted-foreground">
+                            Include timing, access requirements, or setup expectations.
+                          </p>
                         </div>
                       </div>
                     )}
