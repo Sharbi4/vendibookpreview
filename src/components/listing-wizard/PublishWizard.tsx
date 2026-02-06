@@ -157,7 +157,19 @@ export const PublishWizard: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { isOnboardingComplete, hasAccountStarted, isLoading: isStripeLoading, connectStripe, isConnecting } = useStripeConnect();
+  const { isOnboardingComplete, hasAccountStarted, isLoading: isStripeLoading, connectStripe, isConnecting, refreshStatus } = useStripeConnect();
+
+  // Detect return from Stripe and refresh status
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('stripe') === 'complete' || params.get('stripe') === 'refresh') {
+      // Clear the URL param
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+      // Refresh Stripe status
+      refreshStatus();
+    }
+  }, [refreshStatus]);
 
   const [step, setStep] = useState<PublishStep>('photos');
   const [listing, setListing] = useState<ListingData | null>(null);
@@ -1049,6 +1061,8 @@ export const PublishWizard: React.FC = () => {
   const handleStripeConnect = async () => {
     try {
       await connectStripe();
+      // Refresh status after user might return
+      setTimeout(refreshStatus, 2000);
     } catch (error) {
       toast({ title: 'Error connecting Stripe', variant: 'destructive' });
     }
