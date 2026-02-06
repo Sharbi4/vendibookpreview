@@ -384,12 +384,8 @@ const BookingCheckout = () => {
         trackRequestSubmitted(listingId || '', listing.instant_book || false);
       }, 0);
       
-      // Notify host about new request (for non-instant book) - already async
-      if (!listing.instant_book) {
-        supabase.functions.invoke('send-booking-notification', {
-          body: { booking_id: bookingResult.id, event_type: 'submitted' },
-        }).catch(console.error);
-      }
+      // NOTE: Do NOT send booking notification here - notifications are sent
+      // ONLY after payment is confirmed via the stripe-webhook function
       
       // Redirect to Stripe checkout IMMEDIATELY (don't wait for tracking)
       if (checkoutWindow) {

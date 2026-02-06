@@ -497,14 +497,15 @@ serve(async (req) => {
               }
             }
 
-            // Send payment confirmation notification to host
+            // Send booking notification to host - this is the ONLY place where
+            // the host receives notification about new booking requests (after payment confirmed)
             try {
               await supabaseClient.functions.invoke("send-booking-notification", {
-                body: { booking_id: bookingId, event_type: "payment_received" },
+                body: { booking_id: bookingId, event_type: "submitted" },
               });
-              logStep("Payment notification sent", { bookingId });
+              logStep("Booking submitted notification sent to host (after payment)", { bookingId });
             } catch (notifyError) {
-              logStep("WARNING: Failed to send notification", { error: String(notifyError) });
+              logStep("WARNING: Failed to send booking notification", { error: String(notifyError) });
             }
 
             // Send admin notification for booking payment
