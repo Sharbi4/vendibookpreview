@@ -100,7 +100,7 @@ const IMPORT_METHODS = [
 const CATEGORY_OPTIONS: { value: ListingCategory; label: string }[] = [
   { value: 'food_truck', label: 'Food Truck' },
   { value: 'food_trailer', label: 'Food Trailer' },
-  { value: 'ghost_kitchen', label: 'Ghost Kitchen' },
+  { value: 'ghost_kitchen', label: 'Shared Kitchen' },
   { value: 'vendor_lot', label: 'Vendor Space' },
 ];
 

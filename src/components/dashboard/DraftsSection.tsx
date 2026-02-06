@@ -32,7 +32,7 @@ interface DraftsSectionProps {
 const CATEGORY_LABELS: Record<string, string> = {
   food_truck: 'Food Truck',
   food_trailer: 'Food Trailer',
-  ghost_kitchen: 'Ghost Kitchen',
+  ghost_kitchen: 'Shared Kitchen',
   vendor_lot: 'Vendor Space',
 };
 
