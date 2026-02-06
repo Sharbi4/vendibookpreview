@@ -175,6 +175,47 @@ serve(async (req) => {
     const emails: { to: string; subject: string; html: string }[] = [];
     const inAppNotifications: { user_id: string; type: string; title: string; message: string; link: string }[] = [];
 
+    // Parse business info if present
+    const businessInfo = booking.business_info as {
+      licenseType?: string;
+      licenseTypeOther?: string;
+      hasFoodHandlersCert?: boolean;
+      hasKitchenManagerCert?: boolean;
+      hasLiabilityInsurance?: boolean;
+      employeeCount?: string;
+      intendedUse?: string;
+      equipmentNeeded?: string;
+      cuisineType?: string;
+      additionalNotes?: string;
+    } | null;
+
+    // Helper to format business info for email
+    const formatBusinessInfoHtml = () => {
+      if (!businessInfo) return "";
+      
+      const licenseDisplay = businessInfo.licenseType === 'other' 
+        ? businessInfo.licenseTypeOther 
+        : businessInfo.licenseType?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      
+      const certs = [];
+      if (businessInfo.hasFoodHandlersCert) certs.push("Food Handler's Certificate");
+      if (businessInfo.hasKitchenManagerCert) certs.push("Kitchen Manager Certification");
+      if (businessInfo.hasLiabilityInsurance) certs.push("Commercial Liability Insurance");
+      
+      return `
+        <div style="background: #FFF5F2; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #FF5124;">
+          <h3 style="color: #FF5124; font-size: 16px; margin: 0 0 16px 0;">📋 Applicant Business Information</h3>
+          ${licenseDisplay ? `<p style="margin: 0 0 8px 0;"><strong>License Type:</strong> ${licenseDisplay}</p>` : ""}
+          ${businessInfo.cuisineType ? `<p style="margin: 0 0 8px 0;"><strong>Cuisine Type:</strong> ${businessInfo.cuisineType}</p>` : ""}
+          ${businessInfo.employeeCount ? `<p style="margin: 0 0 8px 0;"><strong>Staff Size:</strong> ${businessInfo.employeeCount.replace(/_/g, ' ')}</p>` : ""}
+          ${certs.length > 0 ? `<p style="margin: 0 0 8px 0;"><strong>Certifications:</strong> ${certs.join(", ")}</p>` : `<p style="margin: 0 0 8px 0;"><strong>Certifications:</strong> <em>None provided</em></p>`}
+          ${businessInfo.intendedUse ? `<p style="margin: 0 0 8px 0;"><strong>Intended Use:</strong> ${businessInfo.intendedUse}</p>` : ""}
+          ${businessInfo.equipmentNeeded ? `<p style="margin: 0 0 8px 0;"><strong>Equipment Needed:</strong> ${businessInfo.equipmentNeeded}</p>` : ""}
+          ${businessInfo.additionalNotes ? `<p style="margin: 0;"><strong>Additional Notes:</strong> ${businessInfo.additionalNotes}</p>` : ""}
+        </div>
+      `;
+    };
+
     if (event_type === "submitted") {
       // Email to host about new booking request - only if host wants email notifications
       if (host?.email && hostWantsBookingRequestEmail) {
@@ -193,6 +234,7 @@ serve(async (req) => {
               <p style="margin: 0 0 10px 0;"><strong>Total:</strong> $${booking.total_price}</p>
               ${booking.message ? `<p style="margin: 0;"><strong>Message:</strong> ${booking.message}</p>` : ""}
             </div>
+            ${formatBusinessInfoHtml()}
             <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
               Please review and respond to this request as soon as possible.
             </p>
