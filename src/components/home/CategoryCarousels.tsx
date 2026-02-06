@@ -26,7 +26,7 @@ const CATEGORIES: CategoryConfig[] = [
   },
   {
     category: 'ghost_kitchen',
-    title: 'Ghost Kitchens',
+    title: 'Shared Kitchens',
     icon: <Building2 className="h-5 w-5 text-white" />,
     description: 'Commercial kitchen spaces for delivery-only operations',
   },

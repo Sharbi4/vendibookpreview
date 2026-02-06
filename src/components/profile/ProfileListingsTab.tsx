@@ -26,7 +26,7 @@ const CATEGORY_FILTERS = [
   { value: 'sale', label: 'For Sale' },
   { value: 'food_truck', label: 'Food Truck' },
   { value: 'food_trailer', label: 'Food Trailer' },
-  { value: 'ghost_kitchen', label: 'Ghost Kitchen' },
+  { value: 'ghost_kitchen', label: 'Shared Kitchen' },
   { value: 'vendor_lot', label: 'Vendor Space' },
 ] as const;
 

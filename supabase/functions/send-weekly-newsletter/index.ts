@@ -193,7 +193,7 @@ const generateHtmlEmail = (unsubscribeUrl: string, blogTitle: string, blogUrl: s
               </h2>
               <ul style="margin: 0; padding: 0 0 0 20px; font-size: 14px; color: ${COLORS.gray}; line-height: 1.8;">
                 <li style="margin-bottom: 6px;">A host in Texas closed their first rental within 48 hours of listing.</li>
-                <li style="margin-bottom: 6px;">Ghost kitchen owner now earning recurring monthly income from unused morning hours.</li>
+                <li style="margin-bottom: 6px;">Shared kitchen owner now earning recurring monthly income from unused morning hours.</li>
                 <li>First-time buyer financed a $22k trailer with Affirm—launched their taco business the same week.</li>
               </ul>
             </td>

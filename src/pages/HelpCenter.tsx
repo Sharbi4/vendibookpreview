@@ -167,7 +167,7 @@ const browseTopics = [
 const helpCenterFAQs = [
   { question: 'How do Vendibook rentals work?', answer: 'Vendibook connects you with verified hosts who rent out food trucks, trailers, and mobile kitchens. Browse listings, book securely through our platform, and enjoy protection through escrow payments and 24/7 support.' },
   { question: 'What should I inspect before renting a food truck?', answer: 'Check the refrigeration systems, propane connections, electrical systems, ventilation hood, fire suppression system, and overall cleanliness. Our pre-rental inspection guide covers everything in detail.' },
-  { question: 'How do I start a ghost kitchen?', answer: 'Start by selecting a facility, setting up commercial equipment (NSF-certified), obtaining health permits, and creating a delivery-optimized menu. Our launch checklist walks you through each step.' },
+  { question: 'How do I start a shared kitchen?', answer: 'Start by selecting a facility, setting up commercial equipment (NSF-certified), obtaining health permits, and creating a delivery-optimized menu. Our launch checklist walks you through each step.' },
 ];
 
 const HelpCenter = () => {
@@ -212,7 +212,7 @@ const HelpCenter = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Help Center - Guides for Food Trucks, Trailers & Ghost Kitchens"
+        title="Help Center - Guides for Food Trucks, Trailers & Shared Kitchens"
         description="Find answers fast. Guides for renting, buying, listing, and getting paid on Vendibook."
         canonical="/help"
         type="website"
@@ -393,7 +393,7 @@ const HelpCenter = () => {
                     Food Business Startup Guide
                   </h3>
                   <p className="text-sm text-muted-foreground mb-3">
-                    Complete checklist to launch your food truck, trailer, or ghost kitchen. Covers setup, permits, equipment, costs, and hidden risks.
+                    Complete checklist to launch your food truck, trailer, or shared kitchen. Covers setup, permits, equipment, costs, and hidden risks.
                   </p>
                   <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-4">
                     <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-green-500" /> Step-by-step</span>
@@ -424,7 +424,7 @@ const HelpCenter = () => {
                     Regulations Hub
                   </h3>
                   <p className="text-sm text-muted-foreground mb-3">
-                    State-by-state mobile food regulations, ANSI certifications, cottage food laws, commissary resources, and ghost kitchen compliance.
+                    State-by-state mobile food regulations, ANSI certifications, cottage food laws, commissary resources, and shared kitchen compliance.
                   </p>
                   <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-4">
                     <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-green-500" /> 50 States</span>

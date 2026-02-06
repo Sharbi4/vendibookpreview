@@ -53,7 +53,7 @@ declare global {
 const POPULAR_SEARCHES = [
   'Food truck',
   'Food trailer',
-  'Ghost kitchen',
+  'Shared kitchen',
   'Vendor Space',
   'BBQ trailer',
   'Taco truck',

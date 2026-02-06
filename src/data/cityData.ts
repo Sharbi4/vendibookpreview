@@ -27,7 +27,7 @@ export const CITY_DATA: Record<string, CityData> = {
     supplyHeadline: 'List your asset in Houston',
     supplySubheadline: 'Reach thousands of Houston food entrepreneurs looking for trucks, trailers, and commercial kitchen space.',
     demandHeadline: 'Find rentals in Houston',
-    demandSubheadline: 'Browse food trucks, trailers, ghost kitchens, and Vendor Spaces across Greater Houston.',
+    demandSubheadline: 'Browse food trucks, trailers, shared kitchens, and Vendor Spaces across Greater Houston.',
     stats: {
       activeListings: 45,
       avgDailyRate: 275,
@@ -44,7 +44,7 @@ export const CITY_DATA: Record<string, CityData> = {
     supplyHeadline: 'List your asset in Los Angeles',
     supplySubheadline: 'Connect with LA\'s vibrant food entrepreneur community. High demand, premium rates.',
     demandHeadline: 'Find rentals in Los Angeles',
-    demandSubheadline: 'Browse food trucks, trailers, ghost kitchens, and Vendor Spaces across LA County.',
+    demandSubheadline: 'Browse food trucks, trailers, shared kitchens, and Vendor Spaces across LA County.',
     stats: {
       activeListings: 78,
       avgDailyRate: 350,
@@ -61,7 +61,7 @@ export const CITY_DATA: Record<string, CityData> = {
     supplyHeadline: 'List your asset in Dallas',
     supplySubheadline: 'Dallas food entrepreneurs are actively searching. List your asset and start earning.',
     demandHeadline: 'Find rentals in Dallas',
-    demandSubheadline: 'Browse food trucks, trailers, ghost kitchens, and Vendor Spaces in the DFW metroplex.',
+    demandSubheadline: 'Browse food trucks, trailers, shared kitchens, and Vendor Spaces in the DFW metroplex.',
     stats: {
       activeListings: 32,
       avgDailyRate: 250,
@@ -78,7 +78,7 @@ export const CITY_DATA: Record<string, CityData> = {
     supplyHeadline: 'List your asset in Phoenix',
     supplySubheadline: 'Phoenix food entrepreneurs are searching for trucks, trailers, and kitchen space. Get listed today.',
     demandHeadline: 'Find rentals in Phoenix',
-    demandSubheadline: 'Browse food trucks, trailers, ghost kitchens, and Vendor Spaces across the Valley of the Sun.',
+    demandSubheadline: 'Browse food trucks, trailers, shared kitchens, and Vendor Spaces across the Valley of the Sun.',
     stats: {
       activeListings: 28,
       avgDailyRate: 225,
@@ -104,9 +104,9 @@ export const ASSET_TYPES = {
     description: 'Towable commercial food preparation unit',
     icon: '🏕️',
   },
-  'ghost-kitchen': {
-    slug: 'ghost-kitchen',
-    label: 'Ghost Kitchen',
+  'shared-kitchen': {
+    slug: 'shared-kitchen',
+    label: 'Shared Kitchen',
     category: 'ghost_kitchen' as const,
     description: 'Commercial kitchen space for delivery-only concepts',
     icon: '🏭',

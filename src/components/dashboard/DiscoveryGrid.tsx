@@ -41,7 +41,7 @@ const categories = [
     description: 'Mobile concession trailers' 
   },
   { 
-    title: 'Ghost Kitchens', 
+    title: 'Shared Kitchens', 
     icon: Factory, 
     href: '/search?category=ghost_kitchen', 
     description: 'Licensed commercial kitchens' 

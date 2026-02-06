@@ -394,7 +394,7 @@ const Search = () => {
     if (category !== 'all') {
       parts.push(CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS] || 'Listings');
     } else {
-      parts.push('Food Trucks, Trailers & Ghost Kitchens');
+      parts.push('Food Trucks, Trailers & Shared Kitchens');
     }
     if (mode !== 'all') {
       parts.push(mode === 'rent' ? 'for Rent' : 'for Sale');
@@ -408,7 +408,7 @@ const Search = () => {
   const seoDescription = useMemo(() => {
     const categoryLabel = category !== 'all' 
       ? CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS]?.toLowerCase() 
-      : 'food trucks, trailers, and ghost kitchens';
+      : 'food trucks, trailers, and shared kitchens';
     const modeLabel = mode !== 'all' 
       ? (mode === 'rent' ? 'rent' : 'buy') 
       : 'rent or buy';

@@ -126,7 +126,7 @@ export const generateOrganizationSchema = () => ({
   name: 'Vendibook',
   url: 'https://vendibook.com',
   logo: 'https://vendibook.com/images/vendibook-logo.png',
-  description: 'Rent or buy food trucks, food trailers, ghost kitchens, and Vendor Spaces.',
+  description: 'Rent or buy food trucks, food trailers, shared kitchens, and Vendor Spaces.',
   contactPoint: {
     '@type': 'ContactPoint',
     telephone: '+1-877-8-VENDI-2',

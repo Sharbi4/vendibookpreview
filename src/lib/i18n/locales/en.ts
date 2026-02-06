@@ -61,7 +61,7 @@ export default {
 
   // Header
   header: {
-    searchPlaceholder: 'Search food trucks, trailers, ghost kitchens or vendor spaces',
+    searchPlaceholder: 'Search food trucks, trailers, shared kitchens or vendor spaces',
     mobileSearchPlaceholder: 'Search food trucks, trailers...',
     listening: 'Listening...',
     recent: 'Recent',
@@ -71,12 +71,12 @@ export default {
   // Homepage Hero
   hero: {
     title: 'The marketplace for mobile food businesses',
-    subtitle: 'Rent, buy, or list food trucks, trailers, ghost kitchens, and Vendor Spaces — all in one place.',
+    subtitle: 'Rent, buy, or list food trucks, trailers, shared kitchens, and Vendor Spaces — all in one place.',
     findAssets: 'Find Assets',
     listYours: 'List Yours',
     walkthrough: {
       step1Title: 'Find',
-      step1Description: 'Browse food trucks, trailers, ghost kitchens, and Vendor Spaces near you.',
+      step1Description: 'Browse food trucks, trailers, shared kitchens, and Vendor Spaces near you.',
       step2Title: 'Buy or Rent',
       step2Description: 'Secure your asset with verified payments and buyer protection.',
       step3Title: 'List',
@@ -93,7 +93,7 @@ export default {
   categories: {
     food_truck: 'Food Truck',
     food_trailer: 'Food Trailer',
-    ghost_kitchen: 'Ghost Kitchen',
+    ghost_kitchen: 'Shared Kitchen',
     vendor_lot: 'Vendor Space',
   },
 
@@ -226,7 +226,7 @@ export default {
     // Role selection
     roleQuestion: "I'm here to...",
     roleRent: 'Rent or Buy',
-    roleRentDescription: 'Find food trucks, trailers, ghost kitchens',
+    roleRentDescription: 'Find food trucks, trailers, shared kitchens',
     roleHost: 'List Assets',
     roleHostDescription: 'Rent or sell your equipment',
     
@@ -347,7 +347,7 @@ export default {
     forRenters: 'For Renters & Buyers',
     forHosts: 'For Hosts & Sellers',
     step1: 'Browse & Discover',
-    step1Desc: 'Search our marketplace for food trucks, trailers, ghost kitchens, and Vendor Spaces in your area.',
+    step1Desc: 'Search our marketplace for food trucks, trailers, shared kitchens, and Vendor Spaces in your area.',
     step2: 'Book or Buy',
     step2Desc: 'Reserve your dates or make an offer. Pay securely through our platform with buyer protection.',
     step3: 'Start Your Business',

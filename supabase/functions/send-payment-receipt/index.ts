@@ -111,7 +111,7 @@ const handler = async (req: Request): Promise<Response> => {
       const labels: Record<string, string> = {
         'food_truck': 'Food Truck',
         'food_trailer': 'Food Trailer',
-        'ghost_kitchen': 'Ghost Kitchen',
+        'ghost_kitchen': 'Shared Kitchen',
         'vendor_lot': 'Vendor Lot'
       };
       return labels[cat] || cat;

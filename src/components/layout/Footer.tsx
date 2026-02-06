@@ -29,7 +29,7 @@ const footerSections: FooterSection[] = [
       { label: 'Browse by City', href: '/cities' },
       { label: 'Food Trucks', href: '/search?category=food_truck' },
       { label: 'Food Trailers', href: '/search?category=food_trailer' },
-      { label: 'Ghost Kitchens', href: '/search?category=ghost_kitchen' },
+      { label: 'Shared Kitchens', href: '/search?category=ghost_kitchen' },
       { label: 'Vendor Spaces', href: '/search?category=vendor_lot' },
     ],
   },

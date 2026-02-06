@@ -179,7 +179,7 @@ const SellMyFoodTruck = () => {
         },
         {
           "@type": "OfferCatalog",
-          "name": "Ghost Kitchens for Sale",
+          "name": "Shared Kitchens for Sale",
           "itemListElement": []
         }
       ]

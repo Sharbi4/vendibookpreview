@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 const featuredArticles = [
   {
     slug: 'ghost-kitchen-launch',
-    title: 'Starting a Ghost Kitchen',
+    title: 'Starting a Shared Kitchen',
     description: 'Step-by-step launch checklist for facility selection, equipment, and compliance.',
     icon: ChefHat,
   },

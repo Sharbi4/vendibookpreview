@@ -60,7 +60,7 @@ const HelpArticle = () => {
     'food truck',
     'mobile kitchen',
     'food trailer',
-    'ghost kitchen',
+    'shared kitchen',
     ...article.title.toLowerCase().split(' ').filter(w => w.length > 4),
   ].join(', ');
 
