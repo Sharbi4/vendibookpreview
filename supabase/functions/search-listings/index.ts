@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
       category,
       latitude,
       longitude,
-      radius_miles = 25,
+      radius_miles = 100,
       start_date,
       end_date,
       amenities,
