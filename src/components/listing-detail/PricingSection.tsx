@@ -4,6 +4,7 @@ interface PricingSectionProps {
   isRental: boolean;
   priceDaily?: number | null;
   priceWeekly?: number | null;
+  priceMonthly?: number | null;
   priceSale?: number | null;
   deliveryFee?: number | null;
   fulfillmentType?: string;
@@ -14,6 +15,7 @@ const PricingSection = ({
   isRental,
   priceDaily,
   priceWeekly,
+  priceMonthly,
   priceSale,
   deliveryFee,
   fulfillmentType,
@@ -45,6 +47,12 @@ const PricingSection = ({
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Weekly rate</span>
               <span className="font-medium">${priceWeekly.toLocaleString()}/week</span>
+            </div>
+          )}
+          {priceMonthly && priceMonthly > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Monthly rate</span>
+              <span className="font-medium">${priceMonthly.toLocaleString()}/month</span>
             </div>
           )}
           {hasDelivery && deliveryFee && (

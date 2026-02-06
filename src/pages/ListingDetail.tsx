@@ -372,6 +372,7 @@ const ListingDetail = () => {
                 isRental={isRental}
                 priceDaily={listing.price_daily}
                 priceWeekly={listing.price_weekly}
+                priceMonthly={(listing as any).price_monthly}
                 priceSale={listing.price_sale}
                 deliveryFee={listing.delivery_fee}
                 fulfillmentType={listing.fulfillment_type}
@@ -483,6 +484,7 @@ const ListingDetail = () => {
                   isRental={isRental}
                   priceDaily={listing.price_daily}
                   priceWeekly={listing.price_weekly}
+                  priceMonthly={(listing as any).price_monthly}
                   priceHourly={(listing as any).price_hourly}
                   availableFrom={listing.available_from}
                   availableTo={listing.available_to}
