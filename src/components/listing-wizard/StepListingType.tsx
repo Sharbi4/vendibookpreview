@@ -19,7 +19,7 @@ const modeOptions: { value: ListingMode; label: string; icon: React.ReactNode; d
 const categoryOptions: { value: ListingCategory; label: string; icon: React.ReactNode; description: string }[] = [
   { value: 'food_truck', label: 'Food Truck', icon: <Truck className="w-6 h-6" />, description: 'Mobile kitchen on wheels' },
   { value: 'food_trailer', label: 'Food Trailer', icon: <Truck className="w-6 h-6" />, description: 'Towable food service unit' },
-  { value: 'ghost_kitchen', label: 'Ghost Kitchen', icon: <Building2 className="w-6 h-6" />, description: 'Delivery-only commercial kitchen' },
+  { value: 'ghost_kitchen', label: 'Shared Kitchen', icon: <Building2 className="w-6 h-6" />, description: 'Commercial kitchen space for rent' },
   { value: 'vendor_space', label: 'Vendor Space', icon: <MapPin className="w-6 h-6" />, description: 'Prime location for food vendors' },
 ];
 
