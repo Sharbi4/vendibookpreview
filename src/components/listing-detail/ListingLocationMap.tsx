@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { MapPin, Loader2, AlertCircle } from 'lucide-react';
 import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
 import { cn } from '@/lib/utils';
+
+const GOOGLE_MAP_LIBRARIES: ("places")[] = ["places"];
 
 interface ListingLocationMapProps {
   address?: string | null;
@@ -17,36 +19,32 @@ const mapContainerStyle = {
   height: '100%',
 };
 
-const defaultCenter = { lat: 39.8283, lng: -98.5795 }; // Center of US
-
-export const ListingLocationMap: React.FC<ListingLocationMapProps> = ({
+// Inner component that only renders when API key is available
+const ListingLocationMapInner = memo(({
   address,
   city,
   state,
   zipCode,
   className,
-}) => {
-  const { apiKey, isLoading: isLoadingKey, error: keyError } = useGoogleMapsToken();
+  apiKey,
+}: ListingLocationMapProps & { apiKey: string }) => {
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [geocodeError, setGeocodeError] = useState<string | null>(null);
 
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: apiKey || '',
-    libraries: ['places'],
+    googleMapsApiKey: apiKey,
+    id: 'google-map-script',
+    libraries: GOOGLE_MAP_LIBRARIES,
   });
 
   // Build location string from available data
   const locationString = React.useMemo(() => {
-    // Try full address first
     if (address) return address;
-    
-    // Build from components
     const parts: string[] = [];
     if (city) parts.push(city);
     if (state) parts.push(state);
     if (zipCode) parts.push(zipCode);
-    
     return parts.length > 0 ? parts.join(', ') + ', USA' : null;
   }, [address, city, state, zipCode]);
 
@@ -83,7 +81,7 @@ export const ListingLocationMap: React.FC<ListingLocationMapProps> = ({
   }, [geocodeLocation]);
 
   // Loading state
-  if (isLoadingKey || !isLoaded || isGeocoding) {
+  if (!isLoaded || isGeocoding) {
     return (
       <div className={cn('rounded-xl border border-border bg-muted/30 flex items-center justify-center', className)}>
         <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -95,7 +93,7 @@ export const ListingLocationMap: React.FC<ListingLocationMapProps> = ({
   }
 
   // Error state
-  if (keyError || loadError || geocodeError || !locationString) {
+  if (loadError || geocodeError || !locationString) {
     return (
       <div className={cn('rounded-xl border border-border bg-muted/30 flex items-center justify-center', className)}>
         <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -151,6 +149,37 @@ export const ListingLocationMap: React.FC<ListingLocationMapProps> = ({
       </GoogleMap>
     </div>
   );
+});
+
+ListingLocationMapInner.displayName = 'ListingLocationMapInner';
+
+// Main wrapper component that handles API key loading
+export const ListingLocationMap: React.FC<ListingLocationMapProps> = (props) => {
+  const { apiKey, isLoading, error } = useGoogleMapsToken();
+
+  if (isLoading) {
+    return (
+      <div className={cn('rounded-xl border border-border bg-muted/30 flex items-center justify-center', props.className)}>
+        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span className="text-sm">Loading map...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !apiKey) {
+    return (
+      <div className={cn('rounded-xl border border-border bg-muted/30 flex items-center justify-center', props.className)}>
+        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+          <MapPin className="h-6 w-6" />
+          <span className="text-sm">Map unavailable</span>
+        </div>
+      </div>
+    );
+  }
+
+  return <ListingLocationMapInner {...props} apiKey={apiKey} />;
 };
 
 export default ListingLocationMap;
