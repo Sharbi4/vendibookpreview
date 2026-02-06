@@ -45,6 +45,7 @@ interface BookingWidgetProps {
   // Rental props
   priceDaily?: number | null;
   priceWeekly?: number | null;
+  priceMonthly?: number | null;
   priceHourly?: number | null;
   availableFrom?: string | null;
   availableTo?: string | null;
@@ -66,6 +67,7 @@ export const BookingWidget = ({
   isRental,
   priceDaily,
   priceWeekly,
+  priceMonthly,
   priceHourly,
   availableFrom,
   availableTo,
@@ -128,12 +130,37 @@ export const BookingWidget = ({
   const priceBreakdown = useMemo(() => {
     if (!priceDaily || rentalDays <= 0) return null;
     
-    const weeks = Math.floor(rentalDays / 7);
-    const remainingDays = rentalDays % 7;
+    const months = Math.floor(rentalDays / 30);
+    const weeksAfterMonths = Math.floor((rentalDays % 30) / 7);
+    const remainingDays = rentalDays % 30 % 7;
     
     let basePrice: number;
-    if (priceWeekly && weeks > 0) {
-      basePrice = (weeks * priceWeekly) + (remainingDays * priceDaily);
+    let breakdown: string[] = [];
+    
+    if (priceMonthly && months > 0) {
+      // Use monthly rate for full months
+      const monthlyPart = months * priceMonthly;
+      breakdown.push(`${months} month${months > 1 ? 's' : ''} × $${priceMonthly.toLocaleString()}`);
+      
+      // Use weekly rate for remaining weeks if available
+      const weeklyPart = priceWeekly && weeksAfterMonths > 0 
+        ? weeksAfterMonths * priceWeekly 
+        : weeksAfterMonths * 7 * priceDaily;
+      if (weeksAfterMonths > 0) {
+        breakdown.push(`${weeksAfterMonths} week${weeksAfterMonths > 1 ? 's' : ''}`);
+      }
+      
+      // Use daily rate for remaining days
+      const dailyPart = remainingDays * priceDaily;
+      if (remainingDays > 0) {
+        breakdown.push(`${remainingDays} day${remainingDays > 1 ? 's' : ''}`);
+      }
+      
+      basePrice = monthlyPart + weeklyPart + dailyPart;
+    } else if (priceWeekly) {
+      const weeks = Math.floor(rentalDays / 7);
+      const days = rentalDays % 7;
+      basePrice = (weeks * priceWeekly) + (days * priceDaily);
     } else {
       basePrice = rentalDays * priceDaily;
     }
@@ -145,8 +172,9 @@ export const BookingWidget = ({
       basePrice,
       renterFee: fees.renterFee,
       customerTotal: fees.customerTotal,
+      hasMonthlyDiscount: priceMonthly && months > 0,
     };
-  }, [rentalDays, priceDaily, priceWeekly]);
+  }, [rentalDays, priceDaily, priceWeekly, priceMonthly]);
 
   // Get available time windows for hourly mode
   const availableWindows = useMemo(() => {
