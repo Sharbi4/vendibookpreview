@@ -50,7 +50,7 @@ const HeroRentalSearch = () => {
   };
 
   return (
-    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden m-4 rounded-[60px] z-0">
+    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden mx-0 my-0 md:m-4 rounded-none md:rounded-[40px] lg:rounded-[60px] z-0">
       {/* Background Image with refined gradient */}
       <div className="absolute inset-0 z-0">
         <img src={heroBg} alt="Food truck at sunset" className="w-full h-full object-cover" />
