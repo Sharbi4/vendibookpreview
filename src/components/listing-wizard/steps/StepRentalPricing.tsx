@@ -34,6 +34,7 @@ interface StepRentalPricingProps {
   location: string;
   priceDaily: string;
   priceWeekly: string;
+  priceMonthly: string;
   priceHourly: string;
   depositAmount: string;
   instantBook: boolean;
@@ -41,6 +42,7 @@ interface StepRentalPricingProps {
   dailyEnabled: boolean;
   onPriceDailyChange: (value: string) => void;
   onPriceWeeklyChange: (value: string) => void;
+  onPriceMonthlyChange: (value: string) => void;
   onPriceHourlyChange: (value: string) => void;
   onDepositAmountChange: (value: string) => void;
   onInstantBookChange: (value: boolean) => void;
@@ -55,6 +57,7 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
   location,
   priceDaily,
   priceWeekly,
+  priceMonthly,
   priceHourly,
   depositAmount,
   instantBook,
@@ -62,6 +65,7 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
   dailyEnabled,
   onPriceDailyChange,
   onPriceWeeklyChange,
+  onPriceMonthlyChange,
   onPriceHourlyChange,
   onDepositAmountChange,
   onInstantBookChange,
@@ -90,14 +94,16 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
   const payoutEstimates = useMemo(() => {
     const dailyPrice = parseFloat(priceDaily) || 0;
     const weeklyPrice = parseFloat(priceWeekly) || 0;
+    const monthlyPrice = parseFloat(priceMonthly) || 0;
     const hourlyPrice = parseFloat(priceHourly) || 0;
     
     return {
       daily: dailyPrice > 0 ? calculateRentalFees(dailyPrice) : null,
       weekly: weeklyPrice > 0 ? calculateRentalFees(weeklyPrice) : null,
+      monthly: monthlyPrice > 0 ? calculateRentalFees(monthlyPrice) : null,
       hourly: hourlyPrice > 0 ? calculateRentalFees(hourlyPrice) : null,
     };
-  }, [priceDaily, priceWeekly, priceHourly]);
+  }, [priceDaily, priceWeekly, priceMonthly, priceHourly]);
 
   const handleGetSuggestions = async () => {
     if (!title || !category) {
@@ -273,45 +279,67 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
         )}
 
         {(bookingType === 'daily' || bookingType === 'both') && (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold text-foreground">Daily Rate *</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                <Input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={priceDaily}
-                  onChange={(e) => onPriceDailyChange(e.target.value)}
-                  placeholder="0"
-                  className="pl-7 pr-12 h-12 text-lg font-semibold bg-background"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/day</span>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-foreground">Daily Rate *</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={priceDaily}
+                    onChange={(e) => onPriceDailyChange(e.target.value)}
+                    placeholder="0"
+                    className="pl-7 pr-12 h-12 text-lg font-semibold bg-background"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/day</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-foreground">Weekly Rate</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={priceWeekly}
+                    onChange={(e) => onPriceWeeklyChange(e.target.value)}
+                    placeholder="0"
+                    className="pl-7 pr-12 h-12 text-lg font-semibold bg-background"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/wk</span>
+                </div>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-semibold text-foreground">Weekly Rate</Label>
-              <div className="relative">
+              <Label className="text-sm font-semibold text-foreground">Monthly Rate</Label>
+              <div className="relative max-w-xs">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                 <Input
                   type="number"
                   min="0"
                   step="1"
-                  value={priceWeekly}
-                  onChange={(e) => onPriceWeeklyChange(e.target.value)}
+                  value={priceMonthly}
+                  onChange={(e) => onPriceMonthlyChange(e.target.value)}
                   placeholder="0"
-                  className="pl-7 pr-12 h-12 text-lg font-semibold bg-background"
+                  className="pl-7 pr-14 h-12 text-lg font-semibold bg-background"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/wk</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/mo</span>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Offer a discount for long-term rentals (30+ days).
+              </p>
             </div>
           </div>
         )}
 
         {/* Payout Estimate */}
-        {(payoutEstimates.daily || payoutEstimates.weekly || payoutEstimates.hourly) && (
+        {(payoutEstimates.daily || payoutEstimates.weekly || payoutEstimates.monthly || payoutEstimates.hourly) && (
           <div className="rounded-xl border border-border bg-muted/30 p-4">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
@@ -336,6 +364,12 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Weekly:</span>
                   <span className="font-semibold text-primary">{formatCurrency(payoutEstimates.weekly.hostReceives)}</span>
+                </div>
+              )}
+              {payoutEstimates.monthly && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Monthly:</span>
+                  <span className="font-semibold text-primary">{formatCurrency(payoutEstimates.monthly.hostReceives)}</span>
                 </div>
               )}
             </div>

@@ -30,6 +30,7 @@ const initialFormData: ListingFormData = {
   location_notes: '',
   price_daily: '',
   price_weekly: '',
+  price_monthly: '',
   price_sale: '',
   available_from: '',
   available_to: '',
