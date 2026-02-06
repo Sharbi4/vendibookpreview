@@ -165,6 +165,15 @@ export const ListingWizard: React.FC = () => {
 
     setIsAutoSaving(true);
     try {
+      // Build full address from structured fields
+      const fullAddress = [
+        formData.street_address,
+        formData.apt_suite,
+        formData.city,
+        formData.state,
+        formData.zip_code
+      ].filter(Boolean).join(', ') || formData.address || null;
+
       const draftData = {
         host_id: user.id,
         mode: formData.mode,
@@ -173,7 +182,7 @@ export const ListingWizard: React.FC = () => {
         title: formData.title || 'Untitled Draft',
         description: formData.description || '',
         fulfillment_type: formData.fulfillment_type || 'on_site',
-        address: formData.address || null,
+        address: fullAddress,
         price_daily: formData.price_daily && formData.price_daily.trim() ? parseFloat(formData.price_daily.replace(/[^0-9.]/g, '')) || null : null,
         price_weekly: formData.price_weekly && formData.price_weekly.trim() ? parseFloat(formData.price_weekly.replace(/[^0-9.]/g, '')) || null : null,
         price_sale: formData.price_sale && formData.price_sale.trim() ? parseFloat(formData.price_sale.replace(/[^0-9.]/g, '')) || null : null,
@@ -277,6 +286,15 @@ export const ListingWizard: React.FC = () => {
 
     setIsSaving(true);
     try {
+      // Build full address from structured fields
+      const fullAddress = [
+        formData.street_address,
+        formData.apt_suite,
+        formData.city,
+        formData.state,
+        formData.zip_code
+      ].filter(Boolean).join(', ') || formData.address || null;
+
       const draftData = {
         host_id: user.id,
         mode: formData.mode,
@@ -285,7 +303,7 @@ export const ListingWizard: React.FC = () => {
         title: formData.title || 'Untitled Draft',
         description: formData.description || '',
         fulfillment_type: formData.fulfillment_type || 'on_site',
-        address: formData.address || null,
+        address: fullAddress,
         price_daily: formData.price_daily && formData.price_daily.trim() ? parseFloat(formData.price_daily.replace(/[^0-9.]/g, '')) || null : null,
         price_weekly: formData.price_weekly && formData.price_weekly.trim() ? parseFloat(formData.price_weekly.replace(/[^0-9.]/g, '')) || null : null,
         price_sale: formData.price_sale && formData.price_sale.trim() ? parseFloat(formData.price_sale.replace(/[^0-9.]/g, '')) || null : null,
@@ -503,7 +521,9 @@ export const ListingWizard: React.FC = () => {
       const missingFields: string[] = [];
       if (!formData.title || formData.title.trim().length < 5) missingFields.push('title (min 5 characters)');
       if (!formData.description || formData.description.trim().length === 0) missingFields.push('description');
-      if (!formData.address && !formData.pickup_location_text) missingFields.push('location');
+      // Check structured address or legacy address
+      const hasStructuredAddress = formData.street_address?.trim() && formData.city?.trim() && formData.state && formData.zip_code?.trim();
+      if (!hasStructuredAddress && !formData.address && !formData.pickup_location_text) missingFields.push('location');
       if (formData.mode === 'sale' && (!formData.price_sale || parseFloat(formData.price_sale) <= 0)) missingFields.push('sale price');
       if (formData.mode === 'rent' && (!formData.price_daily || parseFloat(formData.price_daily) <= 0)) missingFields.push('daily rate');
       if (formData.mode === 'sale' && !formData.accept_cash_payment && !formData.accept_card_payment) missingFields.push('payment method');
@@ -523,10 +543,19 @@ export const ListingWizard: React.FC = () => {
     setIsSaving(true);
 
     try {
+      // Build full address from structured fields
+      const fullAddress = [
+        formData.street_address,
+        formData.apt_suite,
+        formData.city,
+        formData.state,
+        formData.zip_code
+      ].filter(Boolean).join(', ') || formData.address || formData.pickup_location_text || null;
+      
       // Geocode address to get coordinates
       let latitude: number | null = null;
       let longitude: number | null = null;
-      const addressToGeocode = formData.address || formData.pickup_location_text;
+      const addressToGeocode = fullAddress || formData.pickup_location_text;
       
       if (addressToGeocode) {
         try {
@@ -560,7 +589,7 @@ export const ListingWizard: React.FC = () => {
         amenities: formData.amenities || [],
         fulfillment_type: formData.fulfillment_type || 'on_site',
         pickup_location_text: formData.pickup_location_text || null,
-        address: formData.address || null,
+        address: fullAddress,
         delivery_fee: formData.delivery_fee ? parseFloat(formData.delivery_fee) : null,
         delivery_radius_miles: formData.delivery_radius_miles ? parseInt(formData.delivery_radius_miles) : null,
         pickup_instructions: formData.pickup_instructions || null,
