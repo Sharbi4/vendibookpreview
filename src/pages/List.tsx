@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Loader2, 
-  PenLine, 
   Shield, 
   DollarSign, 
   Clock, 
@@ -12,15 +11,22 @@ import {
   ChevronRight,
   FileEdit,
   ImageIcon,
-  Trash2
+  Trash2,
+  LayoutGrid,
+  QrCode,
+  CalendarRange,
+  FileCheck,
+  Wallet,
+  CheckCircle2,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { QuickStartWizard } from '@/components/listing-wizard/QuickStartWizard';
 import { trackEvent } from '@/lib/analytics';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import vendibookIcon from '@/assets/vendibook-icon.png';
 import { useHostListings } from '@/hooks/useHostListings';
 import {
   AlertDialog,
@@ -36,12 +42,38 @@ import {
 
 type ListingMode = 'choose' | 'scratch';
 
-const benefits = [
-  { icon: DollarSign, text: 'Earn $500-2,000/week', subtext: 'Average host earnings' },
-  { icon: Shield, text: 'Secure payments', subtext: 'Stripe-powered escrow' },
-  { icon: Clock, text: 'List in 5 minutes', subtext: 'AI-assisted creation' },
+const featureCards = [
+  {
+    icon: LayoutGrid,
+    title: 'Multi-Slot Management',
+    description: 'Define up to 100 workstations, prep spots, or parking spaces with named slots.',
+  },
+  {
+    icon: QrCode,
+    title: 'QR Check-In Signage',
+    description: 'Generate branded QR codes for each slot. Renters scan to check in instantly.',
+  },
+  {
+    icon: CalendarRange,
+    title: 'Smart Availability',
+    description: 'Daily, weekly, or monthly bookings with automatic conflict prevention.',
+  },
+  {
+    icon: FileCheck,
+    title: 'Document Compliance',
+    description: 'Collect health permits, insurance, and licenses before booking starts.',
+  },
+  {
+    icon: Wallet,
+    title: 'Secure Payouts',
+    description: 'Stripe-powered payments with deposits and automatic host payouts.',
+  },
+  {
+    icon: Shield,
+    title: 'Verified Renters',
+    description: 'ID verification and business info collection protects your space.',
+  },
 ];
-
 
 const ListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -59,13 +91,10 @@ const ListPage: React.FC = () => {
     });
   }, []);
 
-  // Scroll to top when mode changes (user starts import or scratch wizard)
+  // Scroll to top when mode changes
   useEffect(() => {
-    if (mode !== 'choose') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [mode]);
-
 
   if (isLoading) {
     return (
@@ -83,111 +112,18 @@ const ListPage: React.FC = () => {
     }
   };
 
-  const renderContent = () => {
-    if (mode === 'scratch') {
-      // Double-check auth before rendering wizard
-      if (!user) {
-        navigate('/auth?redirect=/list');
-        return null;
-      }
-      return <QuickStartWizard />;
+  const handleStartListing = () => {
+    trackEvent({
+      category: 'Supply',
+      action: 'listing_mode_selected',
+      label: 'scratch',
+    });
+    // Require auth before creating a listing
+    if (!user) {
+      navigate('/auth?redirect=/list');
+      return;
     }
-
-    // Enhanced choose mode
-    return (
-      <div className="space-y-8">
-        {/* Hero section */}
-        <motion.div 
-          className="text-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/20 border border-border">
-            <img src={vendibookIcon} alt="Vendibook" className="w-14 h-14 object-contain" />
-          </div>
-          <h2 className="text-3xl font-bold mb-3">List your asset</h2>
-          <p className="text-muted-foreground text-lg max-w-md mx-auto">
-            Join thousands of hosts earning on Vendibook
-          </p>
-        </motion.div>
-
-
-        {/* Listing options */}
-        <motion.div 
-          className="space-y-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          {/* Create a Free Listing option */}
-          <div
-            className="overflow-hidden rounded-2xl border-0 shadow-xl bg-card cursor-pointer transition-all hover:shadow-2xl group"
-            onClick={() => {
-              trackEvent({
-                category: 'Supply',
-                action: 'listing_mode_selected',
-                label: 'scratch',
-              });
-              // Require auth before creating a listing
-              if (!user) {
-                navigate('/auth?redirect=/list');
-                return;
-              }
-              setMode('scratch');
-            }}
-          >
-            {/* Header */}
-            <div className="bg-muted/30 border-b border-border px-6 py-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-lg">
-                  <PenLine className="w-6 h-6 text-primary-foreground" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-bold text-lg">Create a Free Listing</p>
-                  <p className="text-sm text-muted-foreground">
-                    1 step closer to publishing your first live listing
-                  </p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
-              </div>
-            </div>
-            {/* Content */}
-            <div className="px-6 py-4">
-              <p className="text-sm text-muted-foreground">
-                Our guided wizard helps you create a professional listing
-              </p>
-            </div>
-          </div>
-        </motion.div>
-
-
-        {/* Trust indicators */}
-        <motion.div 
-          className="overflow-hidden rounded-2xl border-0 shadow-md bg-card"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-        >
-          <div className="px-5 py-4">
-            <div className="flex items-center justify-center gap-6 text-xs">
-              <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border">
-                <Shield className="w-3.5 h-3.5 text-primary" />
-                <span className="font-medium">Verified hosts</span>
-              </span>
-              <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border">
-                <Star className="w-3.5 h-3.5 text-primary" />
-                <span className="font-medium">5-star reviews</span>
-              </span>
-              <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border">
-                <TrendingUp className="w-3.5 h-3.5 text-primary" />
-                <span className="font-medium">Growing marketplace</span>
-              </span>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    );
+    setMode('scratch');
   };
 
   // Compact drafts sidebar component
@@ -204,11 +140,12 @@ const ListPage: React.FC = () => {
         <div className="sticky top-24 space-y-2">
           <div className="flex items-center gap-2 px-1 mb-2">
             <FileEdit className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Drafts</span>
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Your Drafts</span>
             <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
               {drafts.length}
             </Badge>
           </div>
+          
           <div className="space-y-1">
             {drafts.slice(0, 5).map((draft) => (
               <div
@@ -229,10 +166,10 @@ const ListPage: React.FC = () => {
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">
-                    {draft.title || 'Untitled'}
+                    {draft.title || 'Untitled Listing'}
                   </p>
                   <p className="text-[10px] text-muted-foreground truncate">
-                    {draft.category?.replace('_', ' ') || 'No category'}
+                    {draft.category?.replace('_', ' ') || 'Draft'}
                   </p>
                 </div>
                 <AlertDialog>
@@ -267,6 +204,7 @@ const ListPage: React.FC = () => {
               </div>
             ))}
           </div>
+          
           {drafts.length > 5 && (
             <Button
               variant="dark-shine"
@@ -282,9 +220,157 @@ const ListPage: React.FC = () => {
     );
   };
 
+  const renderContent = () => {
+    if (mode === 'scratch') {
+      if (!user) {
+        navigate('/auth?redirect=/list');
+        return null;
+      }
+      return <QuickStartWizard />;
+    }
+
+    // Host Benefits / Landing Page
+    return (
+      <div className="space-y-12">
+        {/* Hero Section */}
+        <motion.div 
+          className="text-center space-y-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Badge variant="secondary" className="px-3 py-1">
+            <Sparkles className="w-3 h-3 mr-1.5" />
+            The #1 Marketplace for Food Spaces
+          </Badge>
+          
+          <h1 className="text-3xl sm:text-4xl font-bold text-foreground leading-tight">
+            Turn your empty slots into{' '}
+            <span className="text-primary">
+              recurring revenue
+            </span>
+          </h1>
+          
+          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+            From shared kitchens to food truck parks, Vendibook provides the 
+            compliance, payments, and booking tools you need to run on autopilot.
+          </p>
+
+          <div className="flex flex-col items-center gap-3 pt-2">
+            <Button
+              variant="dark-shine"
+              size="lg"
+              className="h-12 px-8 text-base"
+              onClick={handleStartListing}
+            >
+              Start My Free Listing
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+            
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <Clock className="w-3 h-3" />
+              No credit card required
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Feature Grid - The "What You Get" Section */}
+        <motion.div 
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
+          {featureCards.map((feature, index) => (
+            <FeatureCard
+              key={feature.title}
+              icon={feature.icon}
+              title={feature.title}
+              description={feature.description}
+            />
+          ))}
+        </motion.div>
+
+        {/* Pricing / Trust Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+        >
+          <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/5 to-background">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+                <div className="flex-1 space-y-4">
+                  <h3 className="text-xl font-bold text-foreground">
+                    Simple, success-based pricing
+                  </h3>
+                  <p className="text-muted-foreground">
+                    It costs $0 to list your facility. We only earn a small platform fee when we successfully bring you a paid, verified booking.
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+                        <CheckCircle2 className="w-3 h-3 text-primary" />
+                      </div>
+                      <span className="text-foreground">Free to create profile & list</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+                        <CheckCircle2 className="w-3 h-3 text-primary" />
+                      </div>
+                      <span className="text-foreground">Pay only when you earn</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Trust Badges */}
+                <div className="shrink-0">
+                  <div className="flex flex-wrap lg:flex-col gap-3">
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background border border-border">
+                      <Shield className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">Verified Hosts</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background border border-border">
+                      <Star className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">Host Protection</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background border border-border">
+                      <TrendingUp className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">Growing Demand</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Final CTA */}
+        <motion.div 
+          className="text-center space-y-4 pb-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+        >
+          <h3 className="text-xl font-semibold text-foreground">
+            Ready to professionalize your bookings?
+          </h3>
+          <Button
+            variant="dark-shine"
+            size="lg"
+            className="h-12 px-8"
+            onClick={handleStartListing}
+          >
+            Create Listing Now
+          </Button>
+        </motion.div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Enhanced Header */}
+      {/* Header */}
       <div className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container max-w-5xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -293,21 +379,19 @@ const ListPage: React.FC = () => {
               className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Back</span>
+              {mode !== 'choose' && <span className="text-sm">Back to options</span>}
             </button>
-            <div className="flex items-center gap-2">
-              <h1 className="font-semibold">List your asset</h1>
-            </div>
-            <div className="w-16" />
+            <h1 className="font-semibold">Vendibook Hosts</h1>
+            <div className="w-16" /> {/* Spacer */}
           </div>
         </div>
       </div>
 
-      {/* Content with sidebar layout */}
+      {/* Main Content Area */}
       <div className="container max-w-5xl mx-auto px-4 py-8 sm:py-12">
         <div className="flex gap-8">
           <DraftsSidebar />
-          <div className="flex-1 max-w-2xl mx-auto">
+          <div className="flex-1 max-w-3xl mx-auto">
             {renderContent()}
           </div>
         </div>
@@ -315,5 +399,20 @@ const ListPage: React.FC = () => {
     </div>
   );
 };
+
+// Helper Component for Features
+const FeatureCard = ({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description: string }) => (
+  <Card className="group hover:border-primary/40 transition-colors">
+    <CardContent className="p-5">
+      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+        <Icon className="w-5 h-5 text-primary" />
+      </div>
+      <h4 className="font-semibold text-foreground mb-1">{title}</h4>
+      <p className="text-sm text-muted-foreground">
+        {description}
+      </p>
+    </CardContent>
+  </Card>
+);
 
 export default ListPage;
