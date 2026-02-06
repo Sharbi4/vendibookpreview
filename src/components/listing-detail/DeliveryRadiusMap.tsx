@@ -3,6 +3,8 @@ import { GoogleMap, useJsApiLoader, Marker, Circle, InfoWindow } from '@react-go
 import { MapPin, Truck, Loader2, CheckCircle2, XCircle, MousePointer, Locate } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
+import { GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_LOADER_ID } from '@/lib/googleMapsLoader';
+
 
 interface DeliveryRadiusMapProps {
   latitude: number;
@@ -47,12 +49,6 @@ function calculateZoomLevel(miles: number): number {
   return 6;
 }
 
-const GOOGLE_MAP_LIBRARIES: (
-  | 'places'
-  | 'geometry'
-  | 'drawing'
-  | 'visualization'
-)[] = ['places'];
 
 type DeliveryRadiusMapLoadedProps = DeliveryRadiusMapProps & { apiKey: string };
 
@@ -75,9 +71,10 @@ const DeliveryRadiusMapLoaded = ({
   // - Only instantiate loader after we have a real apiKey
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: apiKey,
-    id: 'google-map-script',
-    libraries: GOOGLE_MAP_LIBRARIES,
+    id: GOOGLE_MAPS_LOADER_ID,
+    libraries: GOOGLE_MAPS_LIBRARIES,
   });
+
 
   const center = { lat: latitude, lng: longitude };
 

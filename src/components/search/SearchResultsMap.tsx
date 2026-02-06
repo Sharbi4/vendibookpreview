@@ -1,5 +1,6 @@
 import { useEffect, useState, forwardRef, useCallback, memo } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, Circle, InfoWindow, OverlayView } from '@react-google-maps/api';
+import { GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_LOADER_ID } from '@/lib/googleMapsLoader';
 import { Listing } from '@/types/listing';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -25,7 +26,7 @@ const mapContainerStyle = {
 
 const defaultCenter = { lat: 39.8283, lng: -98.5795 }; // Center of US
 
-const libraries: ("places" | "geometry" | "drawing" | "visualization")[] = ['places'];
+
 
 // Format price for display
 const formatPrice = (listing: ListingWithCoords) => {
@@ -109,9 +110,10 @@ const SearchResultsMapLoaded = forwardRef<
     // instantiated with different options (prevents the "Loader must not be called again" error).
     const { isLoaded, loadError } = useJsApiLoader({
       googleMapsApiKey: mapToken,
-      id: 'google-map-script',
-      libraries,
+      id: GOOGLE_MAPS_LOADER_ID,
+      libraries: GOOGLE_MAPS_LIBRARIES,
     });
+
 
     // Calculate center based on listings or user location
     const getCenter = useCallback(() => {

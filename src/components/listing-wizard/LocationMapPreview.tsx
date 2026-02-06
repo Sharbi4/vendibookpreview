@@ -3,8 +3,8 @@ import { GoogleMap, useJsApiLoader, Marker, Circle } from '@react-google-maps/ap
 import { MapPin, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
 import { cn } from '@/lib/utils';
+import { GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_LOADER_ID } from '@/lib/googleMapsLoader';
 
-const GOOGLE_MAP_LIBRARIES: ("places")[] = ["places"];
 
 interface LocationMapPreviewProps {
   city: string;
@@ -55,9 +55,10 @@ const LocationMapPreviewInner = memo(({
 
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: apiKey,
-    id: 'google-map-script',
-    libraries: GOOGLE_MAP_LIBRARIES,
+    id: GOOGLE_MAPS_LOADER_ID,
+    libraries: GOOGLE_MAPS_LIBRARIES,
   });
+
 
   // Geocode the address
   const geocodeAddress = useCallback(async () => {
