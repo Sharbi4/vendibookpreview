@@ -96,8 +96,9 @@ const BookingCheckout = () => {
 
   const isMobileAsset = listing?.category === 'food_truck' || listing?.category === 'food_trailer';
   const isStaticLocation = listing?.category === 'ghost_kitchen' || listing?.category === 'vendor_lot' || listing?.category === 'vendor_space';
-  const isVendorSpace = listing?.category === 'vendor_lot' || listing?.category === 'vendor_space';
-  const hasMultipleSlots = isVendorSpace && ((listing as any)?.total_slots ?? 1) > 1;
+  // Categories that support multiple slots/spaces
+  const supportsMultipleSlots = ['vendor_lot', 'vendor_space', 'ghost_kitchen', 'food_truck', 'food_trailer'].includes(listing?.category || '');
+  const hasMultipleSlots = supportsMultipleSlots && ((listing as any)?.total_slots ?? 1) > 1;
 
   // Set initial fulfillment based on listing
   useEffect(() => {
@@ -422,8 +423,8 @@ const BookingCheckout = () => {
           </Button>
           
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-foreground mb-2">Select your vendor space</h1>
-            <p className="text-muted-foreground">Choose which space you'd like to book, then select your dates</p>
+            <h1 className="text-2xl font-bold text-foreground mb-2">Select your space</h1>
+            <p className="text-muted-foreground">Choose which space or station you'd like to book, then select your dates</p>
           </div>
           
           {/* Listing preview */}
