@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, ChefHat, Truck, Calendar as CalendarIcon, ChevronDown, Store } from 'lucide-react';
+import { Search, ChefHat, Truck, Calendar as CalendarIcon, ChevronDown, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import heroBg from '@/assets/hero-food-truck.jpg';
 import type { DateRange } from 'react-day-picker';
+import { LocationSearchInput } from '@/components/search/LocationSearchInput';
 
 // --- Sub-Components ---
 
@@ -32,6 +33,7 @@ const SearchTab = ({ active, label, icon: Icon, onClick }: { active: boolean; la
 const HeroRentalSearch = () => {
   const navigate = useNavigate();
   const [location, setLocation] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState<{ name: string; coordinates: [number, number] } | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [activeTab, setActiveTab] = useState<'rent' | 'buy'>('rent');
   const [assetType, setAssetType] = useState('all');
@@ -40,11 +42,19 @@ const HeroRentalSearch = () => {
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (location) params.set('q', location);
+    if (selectedLocation) {
+      params.set('lat', selectedLocation.coordinates[1].toString());
+      params.set('lng', selectedLocation.coordinates[0].toString());
+    }
     if (dateRange?.from) params.set('start', format(dateRange.from, 'yyyy-MM-dd'));
     if (dateRange?.to) params.set('end', format(dateRange.to, 'yyyy-MM-dd'));
     if (assetType !== 'all') params.set('category', assetType);
     params.set('mode', activeTab === 'rent' ? 'rent' : 'sale');
     navigate(`/search?${params.toString()}`);
+  };
+
+  const handleLocationSelect = (loc: { name: string; coordinates: [number, number] } | null) => {
+    setSelectedLocation(loc);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -110,22 +120,19 @@ const HeroRentalSearch = () => {
 
           {/* Search Bar - The "Island" */}
           <div className="bg-white rounded-2xl md:rounded-full shadow-2xl p-3 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-0">
-            {/* Location Input */}
-            <div className="flex-1 px-4 py-3 md:py-2 md:border-r border-border">
-              <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold text-left mb-0.5">
+            {/* Location Input with Geolocation */}
+            <div className="flex-1 px-2 py-1 md:py-0 md:border-r border-border">
+              <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold text-left mb-0.5 px-2 pt-2">
                 Location
               </label>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="City, Zip, or 'Current Location'"
-                  className="w-full bg-transparent border-none p-0 text-foreground placeholder:text-muted-foreground/60 focus:ring-0 text-base font-medium outline-none truncate"
-                />
-              </div>
+              <LocationSearchInput
+                value={location}
+                onChange={setLocation}
+                onLocationSelect={handleLocationSelect}
+                selectedCoordinates={selectedLocation?.coordinates || null}
+                placeholder="City, Zip, or use current location"
+                className="[&_input]:border-0 [&_input]:shadow-none [&_input]:bg-transparent [&_input]:py-1.5 [&_input]:text-base [&_input]:font-medium [&>div]:space-y-0"
+              />
             </div>
 
             {/* Asset Type Selector */}
