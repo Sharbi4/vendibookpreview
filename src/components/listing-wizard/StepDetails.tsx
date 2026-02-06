@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X, Sparkles, Loader2, Check, RotateCcw, Package, Scale, Ruler } from 'lucide-react';
+import { Plus, X, Sparkles, Loader2, Check, RotateCcw, Ruler, Grid3X3 } from 'lucide-react';
 import { ListingFormData, AMENITIES_BY_CATEGORY, ListingCategory, FREIGHT_CATEGORY_LABELS, FreightCategory } from '@/types/listing';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -116,6 +116,9 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
     ? AMENITIES_BY_CATEGORY[formData.category as ListingCategory] 
     : [];
 
+  // Check if category supports multiple slots (shared kitchens, vendor spaces)
+  const supportsMultipleSlots = ['ghost_kitchen', 'vendor_space', 'vendor_lot'].includes(formData.category || '');
+
   return (
     <div className="space-y-6">
       {/* Title */}
@@ -212,7 +215,41 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
         </div>
       </div>
 
-      {/* What's Included - Category-specific amenities */}
+      {/* Capacity / Slots Section - For shared kitchens and vendor spaces */}
+      {supportsMultipleSlots && formData.mode === 'rent' && (
+        <div className="space-y-3">
+          <Label className="text-base font-medium flex items-center gap-2">
+            <Grid3X3 className="h-4 w-4" />
+            Capacity & Slots
+          </Label>
+          <div className="bg-muted/30 border border-border rounded-xl p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex-1">
+                <Label htmlFor="total_slots" className="text-sm font-medium">Total Available Workstations/Spots</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  How many separate bookings can occur at the same time? (e.g., 3 prep stations)
+                </p>
+              </div>
+              <div className="w-full sm:w-24">
+                <Input
+                  id="total_slots"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={formData.total_slots || 1}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (!isNaN(val) && val >= 1 && val <= 100) {
+                      updateField('total_slots', val);
+                    }
+                  }}
+                  className="bg-background text-center text-lg font-semibold"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {categoryAmenities.length > 0 && (
         <div className="space-y-4">
           <div>
