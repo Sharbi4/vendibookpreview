@@ -106,7 +106,7 @@ const Account = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const headerInputRef = useRef<HTMLInputElement>(null);
   const publicSectionRef = useRef<HTMLDivElement>(null);
-  const { isConnected: stripeConnected, isLoading: stripeLoading, connectStripe, isConnecting } = useStripeConnect();
+  const { isConnected: stripeConnected, hasAccountStarted, isPayoutsEnabled, isLoading: stripeLoading, connectStripe, isConnecting } = useStripeConnect();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -1303,21 +1303,47 @@ const Account = () => {
                       <CreditCard className="h-3 w-3 mr-1" />
                       Connected
                     </Badge>
+                  ) : hasAccountStarted ? (
+                    <Badge variant="secondary">Setup started</Badge>
                   ) : (
                     <Badge variant="secondary">Not Connected</Badge>
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground mb-3">
                   {stripeConnected 
-                    ? 'You can receive payments for bookings and sales. A "Payouts Enabled" badge appears on your profile.'
-                    : 'Connect Stripe to receive payments for bookings and sales.'}
+                    ? isPayoutsEnabled
+                      ? 'You can receive payments for bookings and sales. A "Payouts Enabled" badge appears on your profile.'
+                      : 'Stripe is connected, but payouts aren’t enabled yet. You can publish, but deposits may be delayed until Stripe finishes verification.'
+                    : hasAccountStarted
+                      ? 'Your Stripe account setup is started. Finish onboarding to enable card payments and payouts.'
+                      : 'Connect Stripe to receive payments for bookings and sales.'}
                 </p>
-                {!stripeConnected && (
+
+                {stripeConnected && !isPayoutsEnabled && (
+                  <div className="flex items-start gap-2 mb-3 text-sm">
+                    <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <span className="text-muted-foreground">
+                      Action needed: finish verification in Stripe to enable payouts.
+                    </span>
+                  </div>
+                )}
+
+                {stripeConnected ? (
+                  !isPayoutsEnabled && (
+                    <Button size="sm" onClick={() => connectStripe('/account')} disabled={isConnecting}>
+                      {isConnecting ? (
+                        <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Opening…</>
+                      ) : (
+                        <><CreditCard className="h-3.5 w-3.5 mr-1.5" />Finish setup</>
+                      )}
+                    </Button>
+                  )
+                ) : (
                   <Button size="sm" onClick={() => connectStripe('/account')} disabled={isConnecting}>
                     {isConnecting ? (
-                      <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Connecting...</>
+                      <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Opening…</>
                     ) : (
-                      <><CreditCard className="h-3.5 w-3.5 mr-1.5" />Connect Stripe</>
+                      <><CreditCard className="h-3.5 w-3.5 mr-1.5" />{hasAccountStarted ? 'Finish setup' : 'Connect Stripe'}</>
                     )}
                   </Button>
                 )}

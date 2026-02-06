@@ -1,4 +1,4 @@
-import { CheckCircle2, ArrowRight, Loader2 } from 'lucide-react';
+import { CheckCircle2, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,7 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
   const { 
     isConnected, 
     hasAccountStarted, 
+    isPayoutsEnabled,
     isLoading, 
     isConnecting, 
     connectStripe 
@@ -28,14 +29,30 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
   }
 
   if (isConnected) {
+    // Fully good state
+    if (isPayoutsEnabled) {
+      return (
+        <div className={cn(
+          "flex items-center gap-2 px-3 py-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg",
+          className
+        )}>
+          <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+          <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+            Stripe connected — ready to publish
+          </span>
+        </div>
+      );
+    }
+
+    // Connected + warning (details submitted but payouts not yet enabled)
     return (
       <div className={cn(
-        "flex items-center gap-2 px-3 py-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg",
+        "flex items-center gap-2 px-3 py-2 bg-muted/30 border border-border rounded-lg",
         className
       )}>
-        <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-        <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
-          Stripe connected — ready to publish
+        <AlertCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        <span className="text-sm font-medium text-foreground">
+          Stripe connected — payouts still pending
         </span>
       </div>
     );
