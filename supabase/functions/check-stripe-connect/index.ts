@@ -71,12 +71,13 @@ serve(async (req) => {
       isComplete
     });
 
-    // Update profile if onboarding status changed
-    if (isComplete && !profile.stripe_onboarding_complete) {
+    // Sync profile if onboarding status changed (both directions)
+    if (isComplete !== profile.stripe_onboarding_complete) {
       await supabaseClient
         .from('profiles')
-        .update({ stripe_onboarding_complete: true })
+        .update({ stripe_onboarding_complete: isComplete })
         .eq('id', user.id);
+      logStep("Profile synced", { stripe_onboarding_complete: isComplete });
     }
 
     return new Response(JSON.stringify({ 
