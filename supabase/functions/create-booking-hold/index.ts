@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 // Commission rates
@@ -58,8 +58,10 @@ serve(async (req) => {
       listing_id, 
       amount, 
       delivery_fee = 0,
-      deposit_amount = 0,
     } = body;
+    
+    // Handle null deposit_amount explicitly (null can be passed from frontend)
+    const deposit_amount = body.deposit_amount ?? 0;
     
     logStep("Request received", { booking_id, listing_id, amount, delivery_fee, deposit_amount });
 
