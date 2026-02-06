@@ -364,10 +364,8 @@ const BookingForm = ({
         return;
       }
 
-      // Non-Instant Book: Send notification and show confirmation
-      supabase.functions.invoke('send-booking-notification', {
-        body: { booking_id: bookingResult.id, event_type: 'submitted' },
-      }).catch(console.error);
+      // NOTE: Do NOT send booking notification here - notifications are sent
+      // ONLY after payment is confirmed via the stripe-webhook function
 
       // Track conversion for booking request
       trackFormSubmitConversion({ form_type: 'booking_request', listing_id: listingId });
