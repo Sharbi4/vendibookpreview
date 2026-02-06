@@ -97,9 +97,9 @@ const HeroRentalSearch = () => {
           </div>
 
           {/* Search Bar - The "Island" */}
-          <div className="bg-white rounded-full shadow-2xl p-2 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-0">
+          <div className="bg-white rounded-2xl md:rounded-full shadow-2xl p-3 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-0">
             {/* Location Input */}
-            <div className="flex-1 px-4 py-3 md:py-2 md:border-r border-border">
+            <div className="flex-1 px-3 py-2 md:py-2 md:border-r border-border">
               <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold text-left mb-0.5">
                 Location
               </label>
@@ -111,13 +111,13 @@ const HeroRentalSearch = () => {
                   onChange={(e) => setLocation(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="City, Zip, or 'Current Location'"
-                  className="w-full bg-transparent border-none p-0 text-foreground placeholder:text-muted-foreground/60 focus:ring-0 text-base font-medium outline-none truncate"
+                  className="w-full bg-transparent border-none p-0 text-foreground placeholder:text-muted-foreground/60 focus:ring-0 text-sm md:text-base font-medium outline-none truncate"
                 />
               </div>
             </div>
 
             {/* Asset Type Selector */}
-            <div className="flex-1 px-4 py-3 md:py-2 md:border-r border-border">
+            <div className="flex-1 px-3 py-2 md:py-2 md:border-r border-border border-t md:border-t-0">
               <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold text-left mb-0.5">
                 Type
               </label>
@@ -130,7 +130,7 @@ const HeroRentalSearch = () => {
                 <select
                   value={assetType}
                   onChange={(e) => setAssetType(e.target.value)}
-                  className="w-full bg-transparent border-none p-0 text-foreground focus:ring-0 text-base font-medium outline-none cursor-pointer appearance-none truncate pr-4"
+                  className="w-full bg-transparent border-none p-0 text-foreground focus:ring-0 text-sm md:text-base font-medium outline-none cursor-pointer appearance-none truncate pr-4"
                 >
                   <option value="all">Everything</option>
                   <option value="food_truck">Food Trucks</option>
@@ -146,11 +146,11 @@ const HeroRentalSearch = () => {
             <AnimatePresence>
               {activeTab === 'rent' && (
                 <motion.div
-                  initial={{ opacity: 0, width: 0 }}
-                  animate={{ opacity: 1, width: 'auto' }}
-                  exit={{ opacity: 0, width: 0 }}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="flex-1 px-4 py-3 md:py-2 md:border-r border-border overflow-hidden"
+                  className="flex-1 px-3 py-2 md:py-2 md:border-r border-border border-t md:border-t-0 overflow-hidden"
                 >
                   <Popover open={isDateOpen} onOpenChange={setIsDateOpen}>
                     <PopoverTrigger asChild>
@@ -160,7 +160,7 @@ const HeroRentalSearch = () => {
                         </span>
                         <div className="flex items-center gap-2">
                           <CalendarIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <span className={cn("text-base font-medium", date ? "text-foreground" : "text-muted-foreground/60")}>
+                          <span className={cn("text-sm md:text-base font-medium", date ? "text-foreground" : "text-muted-foreground/60")}>
                             {date ? format(date, "MMM d") : "Add date"}
                           </span>
                         </div>
@@ -185,15 +185,14 @@ const HeroRentalSearch = () => {
             </AnimatePresence>
 
             {/* Search Button */}
-            <div className="p-1">
+            <div className="p-1 pt-2 md:pt-1">
               <Button
                 onClick={handleSearch}
                 size="lg"
-                className="rounded-full h-12 w-full md:h-14 md:w-auto md:px-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
+                className="rounded-xl md:rounded-full h-12 w-full md:h-14 md:w-auto md:px-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
               >
-                <Search className="h-5 w-5 md:mr-2" />
-                <span className="md:hidden">Search</span>
-                <span className="hidden md:inline">Find Spaces</span>
+                <Search className="h-5 w-5 mr-2" />
+                <span>Search</span>
               </Button>
             </div>
           </div>
