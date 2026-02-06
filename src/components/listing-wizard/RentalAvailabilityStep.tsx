@@ -384,6 +384,9 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
                         ))}
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground">
+                      The shortest rental period you'll accept. Longer minimums can reduce turnover.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -415,6 +418,9 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
                     className="pl-7"
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Price per hour before any fees. Consider your daily rate when setting this.
+                </p>
               </div>
 
               {/* Minimum Hours */}
@@ -432,6 +438,9 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
                     ))}
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">
+                  The shortest booking allowed. Helps cover setup time and ensures worthwhile rentals.
+                </p>
               </div>
 
               {/* Weekly Schedule */}
@@ -464,6 +473,9 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
                           <SelectItem value="60">1 hour</SelectItem>
                         </SelectContent>
                       </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Time blocked between bookings for cleaning or prep.
+                      </p>
                     </div>
                     
                     <div className="space-y-2">
@@ -479,6 +491,9 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
                           <SelectItem value="24">24 hours</SelectItem>
                         </SelectContent>
                       </Select>
+                      <p className="text-xs text-muted-foreground">
+                        How far in advance renters must book.
+                      </p>
                     </div>
                   </div>
 
@@ -500,6 +515,9 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
                         ))}
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Cap how long a single booking can last.
+                    </p>
                   </div>
                 </CollapsibleContent>
               </Collapsible>
