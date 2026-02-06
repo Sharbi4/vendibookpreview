@@ -17,6 +17,7 @@ import {
   Info,
   Loader2,
   Star,
+  Building2,
 } from 'lucide-react';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Button } from '@/components/ui/button';
@@ -38,7 +39,7 @@ import { calculateRentalFees } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
-import { BookingInfoModal, type BookingUserInfo, SlotSelector } from '@/components/booking';
+import { BookingInfoModal, type BookingUserInfo, SlotSelector, BusinessInfoStep, type BusinessInfoData } from '@/components/booking';
 import { BookingDocumentUpload, type StagedDocument } from '@/components/booking/BookingDocumentUpload';
 import DateSelectionModal from '@/components/listing-detail/DateSelectionModal';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
@@ -90,12 +91,17 @@ const BookingCheckout = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [stagedDocuments, setStagedDocuments] = useState<StagedDocument[]>([]);
   
+  // Business info state for food-related categories
+  const [businessInfo, setBusinessInfo] = useState<BusinessInfoData | null>(null);
+  
   // Slot selection state for vendor spaces
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [selectedSlotName, setSelectedSlotName] = useState<string | null>(null);
 
   const isMobileAsset = listing?.category === 'food_truck' || listing?.category === 'food_trailer';
   const isStaticLocation = listing?.category === 'ghost_kitchen' || listing?.category === 'vendor_lot' || listing?.category === 'vendor_space';
+  // Categories that require business info (food-related)
+  const requiresBusinessInfo = ['food_truck', 'food_trailer', 'ghost_kitchen'].includes(listing?.category || '');
   // Categories that support multiple slots/spaces
   const supportsMultipleSlots = ['vendor_lot', 'vendor_space', 'ghost_kitchen', 'food_truck', 'food_trailer'].includes(listing?.category || '');
   const hasMultipleSlots = supportsMultipleSlots && ((listing as any)?.total_slots ?? 1) > 1;
@@ -137,33 +143,73 @@ const BookingCheckout = () => {
   const fees = calculateRentalFees(basePrice, currentDeliveryFee);
   const depositAmount = (listing as any)?.deposit_amount || null;
 
-  // Step definitions
+  // Step definitions - dynamic based on listing requirements
+  // Step order: Login -> Business Info (if food) -> Documents (if required) -> Fulfillment -> Review
+  const getStepNumber = (baseStep: number) => {
+    let offset = 0;
+    if (baseStep > 1 && requiresBusinessInfo) offset++; // Add 1 for business info step
+    if (baseStep > 2 && hasRequiredDocs) offset++; // Add 1 for documents step
+    return baseStep + offset;
+  };
+
+  const STEP_LOGIN = 1;
+  const STEP_BUSINESS_INFO = requiresBusinessInfo ? 2 : -1; // -1 means skip
+  const STEP_DOCUMENTS = hasRequiredDocs ? (requiresBusinessInfo ? 3 : 2) : -1;
+  const STEP_FULFILLMENT = 1 + (requiresBusinessInfo ? 1 : 0) + (hasRequiredDocs ? 1 : 0) + 1;
+  const STEP_REVIEW = STEP_FULFILLMENT + 1;
+
   const steps = [
-    { id: 1, label: 'Log in or sign up', icon: CreditCard },
-    ...(hasRequiredDocs ? [{ id: 2, label: 'Required documents', icon: FileCheck }] : []),
-    { id: hasRequiredDocs ? 3 : 2, label: 'Fulfillment & details', icon: Truck },
-    { id: hasRequiredDocs ? 4 : 3, label: 'Review your request', icon: CheckCircle2 },
+    { id: STEP_LOGIN, label: 'Log in or sign up', icon: CreditCard },
+    ...(requiresBusinessInfo ? [{ id: STEP_BUSINESS_INFO, label: 'Business information', icon: Building2 }] : []),
+    ...(hasRequiredDocs ? [{ id: STEP_DOCUMENTS, label: 'Required documents', icon: FileCheck }] : []),
+    { id: STEP_FULFILLMENT, label: 'Fulfillment & details', icon: Truck },
+    { id: STEP_REVIEW, label: 'Review your request', icon: CheckCircle2 },
   ];
 
   // Check step completion
   const isStep1Complete = !!user;
+  // Business info is complete when all required fields are filled
+  const isBusinessInfoComplete = !requiresBusinessInfo || (
+    businessInfo?.licenseType &&
+    (businessInfo.licenseType !== 'other' || businessInfo.licenseTypeOther) &&
+    businessInfo.employeeCount &&
+    businessInfo.intendedUse?.trim() &&
+    businessInfo.cuisineType?.trim()
+  );
+  const isStepBusinessInfoComplete = isBusinessInfoComplete && completedSteps.includes(STEP_BUSINESS_INFO);
   // Documents step is complete when all required docs are staged
   const allDocsStaged = !hasRequiredDocs || (requiredDocs?.every(req =>
     stagedDocuments.some(doc => doc.documentType === req.document_type)
   ) ?? false);
-  const isStep2Complete = !hasRequiredDocs || (completedSteps.includes(2) && allDocsStaged);
+  const isStepDocsComplete = !hasRequiredDocs || (completedSteps.includes(STEP_DOCUMENTS) && allDocsStaged);
   const isFulfillmentComplete = userInfo?.agreedToTerms && 
     (fulfillmentSelected !== 'delivery' || deliveryAddress.trim());
   const isStepFulfillmentComplete = isFulfillmentComplete;
+
+  // Determine which step can be accessed
+  const canAccessStep = (stepId: number): boolean => {
+    if (stepId === STEP_LOGIN) return true;
+    if (stepId === STEP_BUSINESS_INFO) return isStep1Complete;
+    if (stepId === STEP_DOCUMENTS) return isStep1Complete && (!requiresBusinessInfo || isStepBusinessInfoComplete);
+    if (stepId === STEP_FULFILLMENT) return isStep1Complete && (!requiresBusinessInfo || isStepBusinessInfoComplete) && (!hasRequiredDocs || isStepDocsComplete);
+    if (stepId === STEP_REVIEW) return Boolean(isStepFulfillmentComplete);
+    return false;
+  };
 
   // Mark step 1 as complete when user logs in
   useEffect(() => {
     if (user && !completedSteps.includes(1)) {
       setCompletedSteps(prev => [...prev, 1]);
       // Auto-advance to next step
-      setActiveStep(hasRequiredDocs ? 2 : 2);
+      if (requiresBusinessInfo) {
+        setActiveStep(STEP_BUSINESS_INFO);
+      } else if (hasRequiredDocs) {
+        setActiveStep(STEP_DOCUMENTS);
+      } else {
+        setActiveStep(STEP_FULFILLMENT);
+      }
     }
-  }, [user, hasRequiredDocs, completedSteps]);
+  }, [user, requiresBusinessInfo, hasRequiredDocs, completedSteps]);
 
   const handleDatesSelected = (start: Date, end: Date) => {
     setStartDate(start);
@@ -245,6 +291,8 @@ const BookingCheckout = () => {
         // Slot selection for vendor spaces
         slot_number: hasMultipleSlots && selectedSlot ? selectedSlot : null,
         slot_name: hasMultipleSlots && selectedSlotName ? selectedSlotName : null,
+        // Business info for food-related categories (cast to Json for Supabase)
+        business_info: requiresBusinessInfo && businessInfo ? (businessInfo as unknown as Record<string, unknown>) : null,
         ...(fulfillmentSelected === 'delivery' && {
           delivery_address: deliveryAddress.trim(),
           delivery_fee_snapshot: listing.delivery_fee || null,
@@ -253,7 +301,7 @@ const BookingCheckout = () => {
 
       const { data: bookingResult, error: bookingError } = await supabase
         .from('booking_requests')
-        .insert(bookingData)
+        .insert(bookingData as any)
         .select('id')
         .single();
 
@@ -580,7 +628,7 @@ const BookingCheckout = () => {
             {/* Step 1: Login */}
             <div className="border border-border rounded-2xl overflow-hidden bg-card">
               <button
-                onClick={() => setActiveStep(activeStep === 1 ? null : 1)}
+                onClick={() => setActiveStep(activeStep === STEP_LOGIN ? null : STEP_LOGIN)}
                 className="w-full p-5 flex items-center justify-between text-left"
               >
                 <div className="flex items-center gap-4">
@@ -599,12 +647,12 @@ const BookingCheckout = () => {
                 {isStep1Complete && (
                   <ChevronDown className={cn(
                     "h-5 w-5 text-muted-foreground transition-transform",
-                    activeStep === 1 && "rotate-180"
+                    activeStep === STEP_LOGIN && "rotate-180"
                   )} />
                 )}
               </button>
               <AnimatePresence>
-                {activeStep === 1 && isStep1Complete && (
+                {activeStep === STEP_LOGIN && isStep1Complete && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
@@ -621,30 +669,77 @@ const BookingCheckout = () => {
               </AnimatePresence>
             </div>
 
-            {/* Step 2: Documents (if required) */}
-            {hasRequiredDocs && (
+            {/* Step 2: Business Info (for food-related categories) */}
+            {requiresBusinessInfo && (
               <div className="border border-border rounded-2xl overflow-hidden bg-card">
                 <button
-                  onClick={() => isStep1Complete && setActiveStep(activeStep === 2 ? null : 2)}
-                  disabled={!isStep1Complete}
+                  onClick={() => canAccessStep(STEP_BUSINESS_INFO) && setActiveStep(activeStep === STEP_BUSINESS_INFO ? null : STEP_BUSINESS_INFO)}
+                  disabled={!canAccessStep(STEP_BUSINESS_INFO)}
                   className={cn(
                     "w-full p-5 flex items-center justify-between text-left",
-                    !isStep1Complete && "opacity-50 cursor-not-allowed"
+                    !canAccessStep(STEP_BUSINESS_INFO) && "opacity-50 cursor-not-allowed"
                   )}
                 >
                   <div className="flex items-center gap-4">
-                    <span className="text-lg font-semibold">2. Required documents</span>
-                    {isStep2Complete && (
+                    <span className="text-lg font-semibold">{STEP_BUSINESS_INFO}. Business information</span>
+                    {isStepBusinessInfoComplete && (
                       <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                     )}
                   </div>
                   <ChevronDown className={cn(
                     "h-5 w-5 text-muted-foreground transition-transform",
-                    activeStep === 2 && "rotate-180"
+                    activeStep === STEP_BUSINESS_INFO && "rotate-180"
                   )} />
                 </button>
                 <AnimatePresence>
-                  {activeStep === 2 && (
+                  {activeStep === STEP_BUSINESS_INFO && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="border-t border-border"
+                    >
+                      <div className="p-5">
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Help the host understand your business and how you'll use the kitchen.
+                        </p>
+                        <BusinessInfoStep
+                          businessInfo={businessInfo}
+                          onBusinessInfoChange={setBusinessInfo}
+                          onComplete={() => handleCompleteStep(STEP_BUSINESS_INFO)}
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+
+            {/* Step: Documents (if required) */}
+            {hasRequiredDocs && (
+              <div className="border border-border rounded-2xl overflow-hidden bg-card">
+                <button
+                  onClick={() => canAccessStep(STEP_DOCUMENTS) && setActiveStep(activeStep === STEP_DOCUMENTS ? null : STEP_DOCUMENTS)}
+                  disabled={!canAccessStep(STEP_DOCUMENTS)}
+                  className={cn(
+                    "w-full p-5 flex items-center justify-between text-left",
+                    !canAccessStep(STEP_DOCUMENTS) && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="text-lg font-semibold">{STEP_DOCUMENTS}. Required documents</span>
+                    {isStepDocsComplete && (
+                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                    )}
+                  </div>
+                  <ChevronDown className={cn(
+                    "h-5 w-5 text-muted-foreground transition-transform",
+                    activeStep === STEP_DOCUMENTS && "rotate-180"
+                  )} />
+                </button>
+                <AnimatePresence>
+                  {activeStep === STEP_DOCUMENTS && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
@@ -656,7 +751,7 @@ const BookingCheckout = () => {
                           requiredDocs={requiredDocs || []}
                           stagedDocuments={stagedDocuments}
                           onDocumentsChange={setStagedDocuments}
-                          onComplete={() => handleCompleteStep(2)}
+                          onComplete={() => handleCompleteStep(STEP_DOCUMENTS)}
                           disabled={isSubmitting}
                         />
                       </div>
@@ -666,29 +761,29 @@ const BookingCheckout = () => {
               </div>
             )}
 
-            {/* Step 3: Fulfillment & Details */}
+            {/* Step: Fulfillment & Details */}
             <div className="border border-border rounded-2xl overflow-hidden bg-card">
               <button
-                onClick={() => (hasRequiredDocs ? isStep2Complete : isStep1Complete) && setActiveStep(activeStep === (hasRequiredDocs ? 3 : 2) ? null : (hasRequiredDocs ? 3 : 2))}
-                disabled={hasRequiredDocs ? !isStep2Complete : !isStep1Complete}
+                onClick={() => canAccessStep(STEP_FULFILLMENT) && setActiveStep(activeStep === STEP_FULFILLMENT ? null : STEP_FULFILLMENT)}
+                disabled={!canAccessStep(STEP_FULFILLMENT)}
                 className={cn(
                   "w-full p-5 flex items-center justify-between text-left",
-                  (hasRequiredDocs ? !isStep2Complete : !isStep1Complete) && "opacity-50 cursor-not-allowed"
+                  !canAccessStep(STEP_FULFILLMENT) && "opacity-50 cursor-not-allowed"
                 )}
               >
                 <div className="flex items-center gap-4">
-                  <span className="text-lg font-semibold">{hasRequiredDocs ? '3' : '2'}. Fulfillment & details</span>
+                  <span className="text-lg font-semibold">{STEP_FULFILLMENT}. Fulfillment & details</span>
                   {isStepFulfillmentComplete && (
                     <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                   )}
                 </div>
                 <ChevronDown className={cn(
                   "h-5 w-5 text-muted-foreground transition-transform",
-                  activeStep === (hasRequiredDocs ? 3 : 2) && "rotate-180"
+                  activeStep === STEP_FULFILLMENT && "rotate-180"
                 )} />
               </button>
               <AnimatePresence>
-                {activeStep === (hasRequiredDocs ? 3 : 2) && (
+                {activeStep === STEP_FULFILLMENT && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
@@ -814,7 +909,7 @@ const BookingCheckout = () => {
                       </div>
 
                       <Button 
-                        onClick={() => handleCompleteStep(hasRequiredDocs ? 3 : 2)}
+                        onClick={() => handleCompleteStep(STEP_FULFILLMENT)}
                         disabled={!isStepFulfillmentComplete}
                         className="w-full"
                       >
@@ -826,24 +921,24 @@ const BookingCheckout = () => {
               </AnimatePresence>
             </div>
 
-            {/* Step 4: Review */}
+            {/* Step: Review */}
             <div className="border border-border rounded-2xl overflow-hidden bg-card">
               <button
-                onClick={() => isStepFulfillmentComplete && setActiveStep(activeStep === (hasRequiredDocs ? 4 : 3) ? null : (hasRequiredDocs ? 4 : 3))}
-                disabled={!isStepFulfillmentComplete}
+                onClick={() => canAccessStep(STEP_REVIEW) && setActiveStep(activeStep === STEP_REVIEW ? null : STEP_REVIEW)}
+                disabled={!canAccessStep(STEP_REVIEW)}
                 className={cn(
                   "w-full p-5 flex items-center justify-between text-left",
-                  !isStepFulfillmentComplete && "opacity-50 cursor-not-allowed"
+                  !canAccessStep(STEP_REVIEW) && "opacity-50 cursor-not-allowed"
                 )}
               >
-                <span className="text-lg font-semibold">{hasRequiredDocs ? '4' : '3'}. Review your request</span>
+                <span className="text-lg font-semibold">{STEP_REVIEW}. Review your request</span>
                 <ChevronDown className={cn(
                   "h-5 w-5 text-muted-foreground transition-transform",
-                  activeStep === (hasRequiredDocs ? 4 : 3) && "rotate-180"
+                  activeStep === STEP_REVIEW && "rotate-180"
                 )} />
               </button>
               <AnimatePresence>
-                {activeStep === (hasRequiredDocs ? 4 : 3) && (
+                {activeStep === STEP_REVIEW && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
