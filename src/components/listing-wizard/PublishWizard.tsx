@@ -2368,6 +2368,9 @@ export const PublishWizard: React.FC = () => {
                               className="pl-8 text-lg"
                             />
                           </div>
+                          <p className="text-xs text-muted-foreground">
+                            Offer a discount for week-long rentals. Typically 10-20% off the daily rate × 7.
+                          </p>
                         </div>
                       </div>
 
@@ -2434,7 +2437,7 @@ export const PublishWizard: React.FC = () => {
                                   />
                                 </div>
                                 <p className="text-sm text-muted-foreground mt-1">
-                                  Allow renters to book immediately without waiting for approval.
+                                  Renters can book and pay immediately—no approval wait. Great for maximizing bookings, but you lose the chance to vet before confirming.
                                 </p>
                               </div>
                             </div>
@@ -2532,7 +2535,7 @@ export const PublishWizard: React.FC = () => {
                         <InfoTooltip content="How many vendors can book this location at the same time? This enables capacity-based availability." />
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Set how many vendor spaces are available. Multiple vendors can book the same dates if you have more than 1 space.
+                        If you have multiple units (e.g., 5 parking spots or 3 kitchen stations), renters can book the same dates until capacity is full.
                       </p>
                       
                       <div className="flex items-center gap-3">

@@ -385,7 +385,7 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                      The shortest rental period you'll accept. Longer minimums can reduce turnover.
+                      Minimum number of days a renter must book. For example, if set to 3, renters cannot book for just 1 or 2 days.
                     </p>
                   </div>
                 </div>
@@ -419,7 +419,7 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Price per hour before any fees. Consider your daily rate when setting this.
+                  What you charge per hour. Tip: Set this to about 10-15% of your daily rate for competitive pricing.
                 </p>
               </div>
 
@@ -439,7 +439,7 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  The shortest booking allowed. Helps cover setup time and ensures worthwhile rentals.
+                  Shortest hourly booking allowed. A 2-hour minimum ensures bookings are worth your time and covers setup/cleanup.
                 </p>
               </div>
 
@@ -474,7 +474,7 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground">
-                        Time blocked between bookings for cleaning or prep.
+                        Blocked time between back-to-back bookings. Use this for cleaning, restocking, or turnover prep.
                       </p>
                     </div>
                     
@@ -492,7 +492,7 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground">
-                        How far in advance renters must book.
+                        How far in advance bookings must be made. Prevents last-minute requests you can't prepare for.
                       </p>
                     </div>
                   </div>
@@ -516,7 +516,7 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                      Cap how long a single booking can last.
+                      Limit how long a single hourly booking can be. Useful if you want to ensure turnover for multiple renters per day.
                     </p>
                   </div>
                 </CollapsibleContent>
@@ -555,7 +555,7 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
             <div className="flex-1">
               <Label className="text-base font-medium">Limit availability window</Label>
               <p className="text-sm text-muted-foreground mt-0.5">
-                Set specific dates when your listing is available for booking
+                Restrict when renters can book. Useful for seasonal rentals or if your space is only available certain months.
               </p>
             </div>
             <Switch
