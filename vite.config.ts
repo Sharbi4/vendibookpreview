@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => ({
         name: "Vendibook - Food Truck & Mobile Vendor Marketplace",
         short_name: "Vendibook",
         description:
-          "Rent or buy food trucks, trailers, ghost kitchens, and vendor lots. Verified listings, secure payments, and 24/7 support.",
+          "Rent or buy food trucks, trailers, shared kitchens, and vendor lots. Verified listings, secure payments, and 24/7 support.",
         theme_color: "#FF5124",
         background_color: "#ffffff",
         display: "standalone",

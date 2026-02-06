@@ -283,7 +283,7 @@ const PermitPath = () => {
                           <SelectItem value="food_truck">Food Truck</SelectItem>
                           <SelectItem value="food_trailer">Food Trailer</SelectItem>
                           <SelectItem value="food_cart">Food Cart</SelectItem>
-                          <SelectItem value="ghost_kitchen">Ghost Kitchen</SelectItem>
+                          <SelectItem value="ghost_kitchen">Shared Kitchen</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

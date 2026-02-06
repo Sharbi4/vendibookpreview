@@ -61,7 +61,7 @@ const RentMyCommercialKitchen = () => {
     },
     {
       icon: Building2,
-      title: 'Ghost Kitchen Brands',
+      title: 'Shared Kitchen Brands',
       description: 'Delivery-only concepts (UberEats/DoorDash) needing production lines.',
     },
     {
@@ -240,7 +240,7 @@ const RentMyCommercialKitchen = () => {
               </h1>
 
               <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto">
-                Stop letting overhead eat your profits. Connect with vetted food entrepreneurs looking for hourly prep space, ghost kitchen rentals, and commissary access.
+                Stop letting overhead eat your profits. Connect with vetted food entrepreneurs looking for hourly prep space, shared kitchen rentals, and commissary access.
               </p>
 
               <p className="text-sm sm:text-base text-foreground font-medium mb-8">

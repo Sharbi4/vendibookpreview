@@ -261,7 +261,7 @@ const MarketingStudio = () => {
                             <SelectContent>
                               <SelectItem value="food_truck">Food Truck</SelectItem>
                               <SelectItem value="food_trailer">Food Trailer</SelectItem>
-                              <SelectItem value="ghost_kitchen">Ghost Kitchen</SelectItem>
+                              <SelectItem value="ghost_kitchen">Shared Kitchen</SelectItem>
                               <SelectItem value="catering">Catering</SelectItem>
                             </SelectContent>
                           </Select>
@@ -468,7 +468,7 @@ const MarketingStudio = () => {
                             <SelectContent>
                               <SelectItem value="food_truck">Food Truck</SelectItem>
                               <SelectItem value="food_trailer">Food Trailer</SelectItem>
-                              <SelectItem value="ghost_kitchen">Ghost Kitchen</SelectItem>
+                              <SelectItem value="ghost_kitchen">Shared Kitchen</SelectItem>
                               <SelectItem value="catering">Catering Service</SelectItem>
                             </SelectContent>
                           </Select>

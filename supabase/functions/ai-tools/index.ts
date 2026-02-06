@@ -13,7 +13,7 @@ interface RequestBody {
 const getSystemPrompt = (tool: string): string => {
   switch (tool) {
     case "pricing":
-      return `You are an expert pricing consultant for the mobile food industry. Given details about a food truck, trailer, ghost kitchen, or vendor lot, suggest competitive daily and weekly rental rates or sale prices.
+      return `You are an expert pricing consultant for the mobile food industry. Given details about a food truck, trailer, shared kitchen, or vendor lot, suggest competitive daily and weekly rental rates or sale prices.
 
 Consider factors like:
 - Location/market rates
@@ -53,7 +53,7 @@ Respond in this exact JSON format:
 }`;
 
     case "business-idea":
-      return `You are a mobile food business consultant. Generate creative, viable business ideas for food trucks, trailers, and ghost kitchens.
+      return `You are a mobile food business consultant. Generate creative, viable business ideas for food trucks, trailers, and shared kitchens.
 
 Consider:
 - Current food trends

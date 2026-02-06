@@ -17,7 +17,7 @@ const Blog = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
         title="Blog | Vendibook - Food Truck & Mobile Vendor Insights"
-        description="Industry insights, tips, and guides for food truck entrepreneurs, ghost kitchen operators, and mobile food vendors."
+        description="Industry insights, tips, and guides for food truck entrepreneurs, shared kitchen operators, and mobile food vendors."
         canonical="/blog"
       />
       <JsonLd schema={generateBlogListSchema()} />
@@ -32,7 +32,7 @@ const Blog = () => {
                 Vendibook Blog
               </h1>
               <p className="text-lg text-muted-foreground">
-                Industry insights, tips, and guides for food truck entrepreneurs, ghost kitchen operators, and mobile food vendors.
+                Industry insights, tips, and guides for food truck entrepreneurs, shared kitchen operators, and mobile food vendors.
               </p>
             </div>
           </div>
@@ -148,7 +148,7 @@ const Blog = () => {
               Ready to Start Your Mobile Food Business?
             </h2>
             <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-              Browse food trucks, trailers, ghost kitchens, and Vendor Spaces on Vendibook.
+              Browse food trucks, trailers, shared kitchens, and Vendor Spaces on Vendibook.
             </p>
             <div className="flex gap-3 justify-center flex-wrap">
               <Button size="lg" asChild>

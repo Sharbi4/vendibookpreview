@@ -57,7 +57,7 @@ export const generateLocalBusinessSchema = (city: string, state: string) => ({
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',
   name: `Vendibook - ${city}`,
-  description: `Rent or buy food trucks, food trailers, ghost kitchens, and Vendor Spaces in ${city}, ${state}.`,
+  description: `Rent or buy food trucks, food trailers, shared kitchens, and Vendor Spaces in ${city}, ${state}.`,
   url: `https://vendibook.com/${city.toLowerCase().replace(' ', '-')}/browse`,
   areaServed: {
     '@type': 'City',
@@ -84,7 +84,7 @@ export const generateServiceSchema = () => ({
     url: 'https://vendibook.com',
   },
   serviceType: 'Marketplace',
-  description: 'Rent or buy food trucks, food trailers, ghost kitchens, and Vendor Spaces across the United States.',
+  description: 'Rent or buy food trucks, food trailers, shared kitchens, and Vendor Spaces across the United States.',
   areaServed: {
     '@type': 'Country',
     name: 'United States',
@@ -105,7 +105,7 @@ export const generateServiceSchema = () => ({
       },
       {
         '@type': 'OfferCatalog',
-        name: 'Ghost Kitchens',
+        name: 'Shared Kitchens',
         description: 'Commercial kitchen space for delivery-only concepts',
       },
       {
@@ -158,7 +158,7 @@ export const generateBlogListSchema = () => ({
   '@context': 'https://schema.org',
   '@type': 'Blog',
   name: 'Vendibook Blog',
-  description: 'Industry insights, tips, and guides for food truck entrepreneurs, ghost kitchen operators, and mobile food vendors.',
+  description: 'Industry insights, tips, and guides for food truck entrepreneurs, shared kitchen operators, and mobile food vendors.',
   url: 'https://vendibook.com/blog',
   publisher: {
     '@type': 'Organization',
@@ -180,7 +180,7 @@ export const generateCityServiceSchema = (
   const categoryLabels: Record<string, string> = {
     food_truck: 'Food Trucks',
     food_trailer: 'Food Trailers',
-    ghost_kitchen: 'Ghost Kitchens',
+    ghost_kitchen: 'Shared Kitchens',
     vendor_lot: 'Vendor Spaces',
   };
 
@@ -228,7 +228,7 @@ export const generateProductSchema = (listing: {
   const categoryLabels: Record<string, string> = {
     food_truck: 'Food Truck',
     food_trailer: 'Food Trailer',
-    ghost_kitchen: 'Ghost Kitchen',
+    ghost_kitchen: 'Shared Kitchen',
     vendor_lot: 'Vendor Space',
   };
 
@@ -332,7 +332,7 @@ export const generateListingBreadcrumbSchema = (listing: {
   const categoryLabels: Record<string, string> = {
     food_truck: 'Food Trucks',
     food_trailer: 'Food Trailers',
-    ghost_kitchen: 'Ghost Kitchens',
+    ghost_kitchen: 'Shared Kitchens',
     vendor_lot: 'Vendor Spaces',
   };
 
@@ -384,7 +384,7 @@ export const generateItemListSchema = (
   const categoryLabels: Record<string, string> = {
     food_truck: 'Food Trucks',
     food_trailer: 'Food Trailers',
-    ghost_kitchen: 'Ghost Kitchens',
+    ghost_kitchen: 'Shared Kitchens',
     vendor_lot: 'Vendor Spaces',
   };
 
@@ -450,7 +450,7 @@ export const generateSearchBreadcrumbSchema = (searchParams?: {
   const categoryLabels: Record<string, string> = {
     food_truck: 'Food Trucks',
     food_trailer: 'Food Trailers',
-    ghost_kitchen: 'Ghost Kitchens',
+    ghost_kitchen: 'Shared Kitchens',
     vendor_lot: 'Vendor Spaces',
   };
 

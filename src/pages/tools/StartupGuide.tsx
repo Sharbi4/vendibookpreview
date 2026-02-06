@@ -832,7 +832,7 @@ const StartupGuide = () => {
     <>
       <SEO
         title="Food Truck Startup Guide 2026: Complete Checklist, Costs & Permits | Vendibook"
-        description="Launch your food truck business with our comprehensive 2026 startup guide. Covers $15K-$175K startup costs, permits, equipment, kitchen layouts, menu engineering, and hidden risks. 60+ checklist items for food trucks, trailers, and ghost kitchens."
+        description="Launch your food truck business with our comprehensive 2026 startup guide. Covers $15K-$175K startup costs, permits, equipment, kitchen layouts, menu engineering, and hidden risks. 60+ checklist items for food trucks, trailers, and shared kitchens."
       />
       {/* Article Schema for Google Search */}
       <JsonLd
@@ -1077,7 +1077,7 @@ const StartupGuide = () => {
                   </Link>
                 </Button>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Browse ghost kitchens, commissaries, and commercial kitchen spaces in your area
+                  Browse shared kitchens, commissaries, and commercial kitchen spaces in your area
                 </p>
               </div>
 

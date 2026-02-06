@@ -617,7 +617,7 @@ export interface ListingFormData {
 export const CATEGORY_LABELS: Record<ListingCategory, string> = {
   food_truck: 'Food Truck',
   food_trailer: 'Food Trailer',
-  ghost_kitchen: 'Ghost Kitchen',
+  ghost_kitchen: 'Shared Kitchen',
   vendor_space: 'Vendor Space',
   vendor_lot: 'Vendor Space', // Legacy alias
 };

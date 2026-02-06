@@ -141,7 +141,7 @@ const HeroWalkthrough = () => {
           {[
             { name: 'Food Trucks', icon: <Truck className="h-5 w-5 sm:h-6 sm:w-6" /> },
             { name: 'Food Trailers', icon: <Truck className="h-5 w-5 sm:h-6 sm:w-6" /> },
-            { name: 'Ghost Kitchens', icon: <Building2 className="h-5 w-5 sm:h-6 sm:w-6" /> },
+            { name: 'Shared Kitchens', icon: <Building2 className="h-5 w-5 sm:h-6 sm:w-6" /> },
             { name: 'Vendor Spaces', icon: <Building2 className="h-5 w-5 sm:h-6 sm:w-6" /> },
           ].map((item, i) => (
             <motion.div

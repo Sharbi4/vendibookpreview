@@ -27,7 +27,7 @@ export const helpArticles: HelpArticle[] = [
       {
         id: 'overview',
         title: 'Overview',
-        content: `Vendibook connects food entrepreneurs with mobile kitchen assets—food trucks, trailers, ghost kitchens, and Vendor Spaces. Our rental process is designed to be straightforward, secure, and transparent for both renters and hosts.
+        content: `Vendibook connects food entrepreneurs with mobile kitchen assets—food trucks, trailers, shared kitchens, and Vendor Spaces. Our rental process is designed to be straightforward, secure, and transparent for both renters and hosts.
 
 Whether you're testing a new concept, covering for equipment repairs, or scaling up for an event, Vendibook gives you access to vetted equipment without long-term commitments.`
       },
@@ -36,7 +36,7 @@ Whether you're testing a new concept, covering for equipment repairs, or scaling
         title: 'Finding the Right Listing',
         content: `**Search and Filter**
 Use the search bar to find listings by location, category, or keywords. Filter results by:
-- Asset type (food truck, trailer, ghost kitchen, Vendor Space)
+- Asset type (food truck, trailer, shared kitchen, Vendor Space)
 - Price range
 - Availability dates
 - Amenities and equipment
@@ -616,19 +616,19 @@ A single breakdown during a busy event can cost thousands in lost revenue, emerg
     relatedArticles: ['preventive-maintenance', 'food-safety-temps']
   },
 
-  // GHOST KITCHENS
+  // SHARED KITCHENS
   {
     slug: 'ghost-kitchen-launch',
-    title: 'Starting a Ghost Kitchen: The Practical Launch Checklist',
-    description: 'A step-by-step ghost kitchen launch guide—facility selection, equipment setup, food safety basics, and operating systems to go live fast and safely.',
-    category: 'Ghost Kitchens and Commercial Kitchens',
-    categorySlug: 'ghost-kitchens',
+    title: 'Starting a Shared Kitchen: The Practical Launch Checklist',
+    description: 'A step-by-step shared kitchen launch guide—facility selection, equipment setup, food safety basics, and operating systems to go live fast and safely.',
+    category: 'Shared Kitchens and Commercial Kitchens',
+    categorySlug: 'shared-kitchens',
     featured: true,
     sections: [
       {
-        id: 'what-is-ghost-kitchen',
-        title: 'What is a Ghost Kitchen?',
-        content: `A ghost kitchen (also called a virtual kitchen, dark kitchen, or cloud kitchen) is a professional food preparation facility set up for delivery-only meals. There's no dine-in space—all orders come through delivery apps or direct online ordering.
+        id: 'what-is-shared-kitchen',
+        title: 'What is a Shared Kitchen?',
+        content: `A shared kitchen (also called a virtual kitchen, dark kitchen, or cloud kitchen) is a professional food preparation facility set up for delivery-only meals. There's no dine-in space—all orders come through delivery apps or direct online ordering.
 
 **Advantages**
 - Lower startup costs than traditional restaurants
@@ -654,7 +654,7 @@ A single breakdown during a busy event can cost thousands in lost revenue, emerg
 - Utilities availability
 
 **Facility Types**
-1. **Shared Ghost Kitchen Facility**: Turnkey, shared spaces with equipment included
+1. **Shared Kitchen Facility**: Turnkey, shared spaces with equipment included
 2. **Commissary Kitchen Rental**: Rent time in an existing commercial kitchen
 3. **Standalone Space**: Lease and build out your own facility
 4. **Converting Existing Space**: Restaurant conversions or industrial kitchen retrofits

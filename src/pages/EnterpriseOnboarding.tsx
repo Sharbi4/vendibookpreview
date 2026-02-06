@@ -84,7 +84,7 @@ const initialFormData: FormData = {
 
 const kitchenTypeOptions = [
   { id: 'commercial', label: 'Commercial Kitchen' },
-  { id: 'ghost_kitchen', label: 'Ghost Kitchen / Cloud Kitchen' },
+  { id: 'ghost_kitchen', label: 'Shared Kitchen / Cloud Kitchen' },
   { id: 'commissary', label: 'Commissary Kitchen' },
   { id: 'shared', label: 'Shared Kitchen Space' },
   { id: 'production', label: 'Production Facility' },

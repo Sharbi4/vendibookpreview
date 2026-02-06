@@ -35,7 +35,7 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
   
   const pageDescription = categoryLabel
     ? `Browse ${categoryLabel.toLowerCase()}s ${modeLabel.toLowerCase()} in ${city.name}, ${city.state}. Find the perfect ${categoryLabel.toLowerCase()} for your business.`
-    : `Rent or buy food trucks, food trailers, ghost kitchens, and Vendor Spaces in ${city.name}, ${city.state}. ${city.tagline}.`;
+    : `Rent or buy food trucks, food trailers, shared kitchens, and Vendor Spaces in ${city.name}, ${city.state}. ${city.tagline}.`;
 
   const canonicalPath = category 
     ? `/${city.slug}/${category.replace('_', '-')}${mode ? `/${mode}` : ''}`
@@ -70,7 +70,7 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
     },
     { 
       key: 'ghost_kitchen', 
-      label: 'Ghost Kitchens', 
+      label: 'Shared Kitchens', 
       icon: Building2, 
       description: 'Commercial kitchen space',
       count: Math.floor(city.stats.activeListings * 0.15),
@@ -251,7 +251,7 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
               <p>
                 {city.name}, {city.state} has become a thriving hub for mobile food entrepreneurs. 
                 With its vibrant food scene and business-friendly environment, {city.name} offers 
-                excellent opportunities for food truck operators, trailer owners, and ghost kitchen concepts.
+                excellent opportunities for food truck operators, trailer owners, and shared kitchen concepts.
               </p>
               <p>
                 Vendibook connects you with verified {categoryLabel?.toLowerCase() || 'mobile food asset'} owners 

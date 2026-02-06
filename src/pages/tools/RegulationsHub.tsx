@@ -521,7 +521,7 @@ const RegulationsHub = () => {
           "@context": "https://schema.org",
           "@type": "Article",
           "headline": "Food Business Regulations Hub 2026: State Permits, ANSI Certifications & Compliance Guide",
-          "description": "Comprehensive regulatory guide for food trucks, cottage food, ghost kitchens, and mobile food operations in the United States. State-by-state permits, ANSI certifications, and compliance requirements.",
+          "description": "Comprehensive regulatory guide for food trucks, cottage food, shared kitchens, and mobile food operations in the United States. State-by-state permits, ANSI certifications, and compliance requirements.",
           "image": "https://vendibook.com/images/food-truck-marketplace-analytics.jpg",
           "author": {
             "@type": "Organization",
@@ -548,7 +548,7 @@ const RegulationsHub = () => {
             "Cottage Food Laws",
             "MEHKO Requirements",
             "Commissary Resources",
-            "Ghost Kitchen Compliance"
+            "Shared Kitchen Compliance"
           ]
         }}
       />
@@ -558,7 +558,7 @@ const RegulationsHub = () => {
           "@context": "https://schema.org",
           "@type": "WebPage",
           "name": "Food Business Regulations Hub",
-          "description": "Comprehensive regulatory guide for food trucks, cottage food, ghost kitchens, and mobile food operations in the United States.",
+          "description": "Comprehensive regulatory guide for food trucks, cottage food, shared kitchens, and mobile food operations in the United States.",
           "url": "https://vendibook.com/tools/regulations-hub",
           "inLanguage": "en-US",
           "isPartOf": {
@@ -614,8 +614,8 @@ const RegulationsHub = () => {
             },
             {
               "@type": "Question",
-              "name": "Do ghost kitchens need special permits?",
-              "acceptedAnswer": { "@type": "Answer", "text": "Ghost kitchens require commercial kitchen permits, health department inspections, business licenses, and food handler certifications. They're exempt from some mobile food requirements but need proper ventilation, fire suppression, and delivery compliance. Costs range from $2,000-$10,000 for initial setup." }
+              "name": "Do shared kitchens need special permits?",
+              "acceptedAnswer": { "@type": "Answer", "text": "Shared kitchens require commercial kitchen permits, health department inspections, business licenses, and food handler certifications. They're exempt from some mobile food requirements but need proper ventilation, fire suppression, and delivery compliance. Costs range from $2,000-$10,000 for initial setup." }
             },
             {
               "@type": "Question",
@@ -649,7 +649,7 @@ const RegulationsHub = () => {
             { "@type": "ListItem", "position": 3, "name": "Cottage Food Laws", "description": "Home-based food business regulations, revenue limits, and permitted food types by state" },
             { "@type": "ListItem", "position": 4, "name": "MEHKO Requirements", "description": "Microenterprise Home Kitchen Operation permits and compliance for home-based food businesses" },
             { "@type": "ListItem", "position": 5, "name": "Commissary Resources", "description": "Commercial kitchen requirements, costs, and finding approved commissary partners" },
-            { "@type": "ListItem", "position": 6, "name": "Ghost Kitchen Compliance", "description": "Delivery-only kitchen regulations, permits, and operational requirements" }
+            { "@type": "ListItem", "position": 6, "name": "Shared Kitchen Compliance", "description": "Delivery-only kitchen regulations, permits, and operational requirements" }
           ]
         }}
       />
@@ -705,7 +705,7 @@ const RegulationsHub = () => {
                 Regulations Hub
               </h1>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-                Navigate the complex regulatory landscape of the food industry. Certifications, permits, state laws, and compliance protocols for food trucks, trailers, ghost kitchens, and cottage food operations.
+                Navigate the complex regulatory landscape of the food industry. Certifications, permits, state laws, and compliance protocols for food trucks, trailers, shared kitchens, and cottage food operations.
               </p>
 
               {/* Darkshine CTA */}
@@ -718,7 +718,7 @@ const RegulationsHub = () => {
                   </Link>
                 </Button>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Browse ghost kitchens, commissaries, and commercial kitchen spaces in your area
+                  Browse shared kitchens, commissaries, and commercial kitchen spaces in your area
                 </p>
               </div>
 
@@ -779,7 +779,7 @@ const RegulationsHub = () => {
                 </TabsTrigger>
                 <TabsTrigger value="ghost" className="gap-2 py-3">
                   <Store className="h-4 w-4" />
-                  <span className="hidden sm:inline">Ghost Kitchens</span>
+                  <span className="hidden sm:inline">Shared Kitchens</span>
                 </TabsTrigger>
                 <TabsTrigger value="commissary" className="gap-2 py-3">
                   <Building2 className="h-4 w-4" />
@@ -1085,7 +1085,7 @@ const RegulationsHub = () => {
               {/* Ghost Kitchen Tab */}
               <TabsContent value="ghost" className="space-y-6">
                 <div>
-                  <h2 className="text-2xl font-bold mb-2">Ghost Kitchen & Shared Kitchen Regulations</h2>
+                  <h2 className="text-2xl font-bold mb-2">Shared Kitchen & Commercial Kitchen Regulations</h2>
                   <p className="text-muted-foreground mb-6">
                     {GHOST_KITCHEN_INFO.definition}
                   </p>

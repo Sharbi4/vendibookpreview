@@ -31,7 +31,7 @@ const Browse = () => {
     <div className="min-h-screen flex flex-col">
       <SEO 
         title="Browse Food Trucks, Trailers & Kitchens | Vendibook"
-        description="Find verified food trucks, trailers, ghost kitchens, and Vendor Spaces. Book or buy with confidence—requirements upfront, secure workflows, and 24/7 support."
+        description="Find verified food trucks, trailers, shared kitchens, and Vendor Spaces. Book or buy with confidence—requirements upfront, secure workflows, and 24/7 support."
         type="website"
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ 
@@ -103,7 +103,7 @@ const Browse = () => {
               />
               <CategoryTile
                 icon={<Building2 className="h-8 w-8" />}
-                title="Ghost Kitchens"
+                title="Shared Kitchens"
                 description="Commercial kitchen space"
                 href="/search?category=ghost_kitchen"
               />

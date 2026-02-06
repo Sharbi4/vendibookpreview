@@ -20,7 +20,7 @@ const reviews = [{
 }, {
   id: 3,
   name: "David Williams",
-  role: "Ghost Kitchen Host",
+  role: "Shared Kitchen Host",
   avatar: "",
   rating: 5,
   text: "As a host, I love how VendiBook handles everything. Document verification and secure payments mean I can focus on helping entrepreneurs succeed.",

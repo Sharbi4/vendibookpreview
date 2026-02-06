@@ -109,7 +109,7 @@ serve(async (req) => {
   <channel>
     <title>Vendibook - Food Trucks &amp; Mobile Vendor Marketplace</title>
     <link>${siteUrl}</link>
-    <description>Buy food trucks, food trailers, ghost kitchens, and vendor lots on Vendibook.</description>
+    <description>Buy food trucks, food trailers, shared kitchens, and vendor lots on Vendibook.</description>
     <lastBuildDate>${currentDate}</lastBuildDate>${xmlItems}
   </channel>
 </rss>`;

@@ -15,7 +15,7 @@ const knowledgeBase = `
 # Vendibook FAQ Knowledge Base
 
 ## How Rentals Work
-- Browse listings by location, category (food truck, trailer, ghost kitchen, vendor lot)
+- Browse listings by location, category (food truck, trailer, shared kitchen, vendor lot)
 - Request to book with your dates and a message to the host
 - Host reviews and approves your request
 - Pay securely through Vendibook (funds held until rental begins)
@@ -137,7 +137,7 @@ const handler = async (req: Request): Promise<Response> => {
     const messages = [
       {
         role: "system",
-        content: `You are VendiBot, a helpful FAQ assistant for Vendibook - a marketplace for renting and buying food trucks, trailers, ghost kitchens, and vendor lots.
+        content: `You are VendiBot, a helpful FAQ assistant for Vendibook - a marketplace for renting and buying food trucks, trailers, shared kitchens, and vendor lots.
 
 Use this knowledge base to answer questions accurately:
 ${knowledgeBase}

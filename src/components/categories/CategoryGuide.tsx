@@ -59,7 +59,7 @@ export const CATEGORY_DEFINITIONS: CategoryDefinition[] = [
   },
   {
     key: 'ghost_kitchen',
-    label: 'Ghost Kitchen',
+    label: 'Shared Kitchen',
     icon: ChefHat,
     definition: 'A licensed commercial kitchen for prep and delivery-only brands, without a storefront.',
     bestFor: ['Delivery-only concepts', 'Catering prep', 'Commissary needs'],

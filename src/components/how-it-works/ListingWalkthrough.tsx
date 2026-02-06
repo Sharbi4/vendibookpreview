@@ -37,7 +37,7 @@ const ListingWalkthrough = () => {
         <div className="space-y-3">
           <div className="text-sm font-medium text-muted-foreground mb-2">What are you listing?</div>
           <div className="grid grid-cols-2 gap-2">
-            {['Food Truck', 'Food Trailer', 'Ghost Kitchen', 'Vendor Space'].map((type, i) => (
+            {['Food Truck', 'Food Trailer', 'Shared Kitchen', 'Vendor Space'].map((type, i) => (
               <motion.div
                 key={type}
                 initial={{ opacity: 0, scale: 0.9 }}
