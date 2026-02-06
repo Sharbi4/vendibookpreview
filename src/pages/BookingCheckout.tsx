@@ -329,19 +329,21 @@ const BookingCheckout = () => {
       if (checkoutError) throw checkoutError;
       if (!checkoutData?.url) throw new Error('Failed to create checkout session');
 
+      // Fire tracking calls asynchronously to not block the redirect
       const formType = listing.instant_book ? 'instant_book' : 'booking_request_hold';
-      trackFormSubmitConversion({ form_type: formType, listing_id: listingId });
+      setTimeout(() => {
+        trackFormSubmitConversion({ form_type: formType, listing_id: listingId });
+        trackRequestSubmitted(listingId || '', listing.instant_book || false);
+      }, 0);
       
-      // Notify host about new request (for non-instant book)
+      // Notify host about new request (for non-instant book) - already async
       if (!listing.instant_book) {
         supabase.functions.invoke('send-booking-notification', {
           body: { booking_id: bookingResult.id, event_type: 'submitted' },
         }).catch(console.error);
       }
       
-      trackRequestSubmitted(listingId || '', listing.instant_book || false);
-      
-      // Redirect to Stripe checkout
+      // Redirect to Stripe checkout IMMEDIATELY (don't wait for tracking)
       if (checkoutWindow) {
         // Use pre-opened window to bypass popup blockers in iframe
         checkoutWindow.location.href = checkoutData.url;
