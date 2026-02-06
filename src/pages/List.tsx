@@ -106,7 +106,8 @@ const ListPage: React.FC = () => {
 
   const handleBack = () => {
     if (mode === 'choose') {
-      navigate(-1);
+      // Navigate to home or dashboard instead of browser history
+      navigate(user ? '/dashboard' : '/');
     } else {
       setMode('choose');
     }
