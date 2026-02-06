@@ -3,8 +3,8 @@ import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { MapPin, Loader2, AlertCircle } from 'lucide-react';
 import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
 import { cn } from '@/lib/utils';
+import { GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_LOADER_ID } from '@/lib/googleMapsLoader';
 
-const GOOGLE_MAP_LIBRARIES: ("places")[] = ["places"];
 
 interface ListingLocationMapProps {
   address?: string | null;
@@ -34,9 +34,10 @@ const ListingLocationMapInner = memo(({
 
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: apiKey,
-    id: 'google-map-script',
-    libraries: GOOGLE_MAP_LIBRARIES,
+    id: GOOGLE_MAPS_LOADER_ID,
+    libraries: GOOGLE_MAPS_LIBRARIES,
   });
+
 
   // Build location string from available data
   const locationString = React.useMemo(() => {
