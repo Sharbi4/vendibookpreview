@@ -14,7 +14,10 @@ import {
   CheckCircle2,
   Clock,
   Zap,
-  Lock
+  Lock,
+  QrCode,
+  Smartphone,
+  ClipboardCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -103,9 +106,14 @@ const ValueGrid = () => {
       desc: "Monetize the graveyard shift (12 AM - 6 AM) or slow Mondays. You set the schedule; we fill the slots."
     },
     {
-      icon: Shield,
+      icon: ClipboardCheck,
       title: "Know Who's Cooking",
-      desc: "Review each renter's business info, equipment needs, and intended use in our app before approving any booking request."
+      desc: "Review each renter's business info, equipment needs, and intended use in our app before approving any booking."
+    },
+    {
+      icon: Shield,
+      title: "Protect Your Facility",
+      desc: "We collect liability insurance, ServSafe certs, and business licenses. Get the documentation you need upfront."
     },
     {
       icon: DollarSign,
@@ -116,6 +124,11 @@ const ValueGrid = () => {
       icon: Users,
       title: "Your Own Storefront",
       desc: "Get a shareable profile page with reviews, photos, and availability. Send the link to renters or let them discover you."
+    },
+    {
+      icon: QrCode,
+      title: "Free QR Signage",
+      desc: "We send you professional signage with a QR code linking to your listing. Capture walk-in leads effortlessly."
     }
   ];
 
@@ -136,7 +149,7 @@ const ValueGrid = () => {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {values.map((item, i) => (
             <motion.div
               key={item.title}
@@ -156,6 +169,145 @@ const ValueGrid = () => {
               </Card>
             </motion.div>
           ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const QRSignageSection = () => {
+  const shouldReduceMotion = useReducedMotion();
+  
+  return (
+    <section className="py-20 md:py-28 bg-background overflow-hidden">
+      <div className="container">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center max-w-6xl mx-auto">
+          {/* Left: Phone Mockup with QR Animation */}
+          <motion.div
+            className="relative flex justify-center order-2 lg:order-1"
+            initial={shouldReduceMotion ? {} : { opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <div className="relative">
+              {/* Phone Frame */}
+              <div className="relative w-64 h-[500px] bg-foreground rounded-[3rem] p-3 shadow-2xl">
+                <div className="absolute top-6 left-1/2 -translate-x-1/2 w-20 h-6 bg-foreground rounded-full z-10" />
+                <div className="w-full h-full bg-background rounded-[2.25rem] overflow-hidden flex flex-col items-center justify-center p-6">
+                  {/* QR Code with Scan Animation */}
+                  <motion.div
+                    className="relative"
+                    initial={shouldReduceMotion ? {} : { scale: 0.9 }}
+                    whileInView={{ scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <div className="w-40 h-40 bg-card border-2 border-border rounded-2xl p-4 relative overflow-hidden">
+                      {/* QR Pattern */}
+                      <div className="grid grid-cols-5 gap-1 w-full h-full">
+                        {Array.from({ length: 25 }).map((_, i) => (
+                          <motion.div
+                            key={i}
+                            className={`rounded-sm ${[0, 1, 2, 4, 5, 6, 9, 10, 14, 15, 18, 19, 20, 22, 23, 24].includes(i) ? 'bg-foreground' : 'bg-transparent'}`}
+                            initial={shouldReduceMotion ? {} : { opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: i * 0.02 }}
+                          />
+                        ))}
+                      </div>
+                      {/* Scan Line Animation */}
+                      <motion.div
+                        className="absolute left-0 right-0 h-0.5 bg-primary"
+                        initial={{ top: 0 }}
+                        animate={{ top: ['0%', '100%', '0%'] }}
+                        transition={{ 
+                          duration: 2, 
+                          repeat: Infinity, 
+                          ease: "easeInOut",
+                          repeatDelay: 1
+                        }}
+                      />
+                    </div>
+                    {/* Corner Brackets */}
+                    <div className="absolute -top-2 -left-2 w-6 h-6 border-t-4 border-l-4 border-primary rounded-tl-lg" />
+                    <div className="absolute -top-2 -right-2 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-lg" />
+                    <div className="absolute -bottom-2 -left-2 w-6 h-6 border-b-4 border-l-4 border-primary rounded-bl-lg" />
+                    <div className="absolute -bottom-2 -right-2 w-6 h-6 border-b-4 border-r-4 border-primary rounded-br-lg" />
+                  </motion.div>
+                  
+                  <p className="mt-6 text-sm font-medium text-foreground text-center">Scan to Book</p>
+                  <p className="text-xs text-muted-foreground text-center mt-1">Your Kitchen Name</p>
+                </div>
+              </div>
+              
+              {/* Floating Badge */}
+              <motion.div
+                className="absolute -right-4 top-20 bg-card border-2 border-border rounded-xl p-3 shadow-lg"
+                initial={shouldReduceMotion ? {} : { opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-foreground">New Lead!</p>
+                    <p className="text-[10px] text-muted-foreground">Just now</p>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+          
+          {/* Right: Copy */}
+          <motion.div
+            className="order-1 lg:order-2"
+            initial={shouldReduceMotion ? {} : { opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <Badge variant="outline" className="mb-4 px-3 py-1.5 text-xs font-medium border-primary/30 bg-primary/5 text-primary">
+              <QrCode className="h-3.5 w-3.5 mr-1.5 inline" />
+              Free Signage
+            </Badge>
+
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight">
+              Turn foot traffic
+              <br />
+              <span className="text-muted-foreground">into booked shifts.</span>
+            </h2>
+
+            <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+              We mail you professional signage with a QR code that links directly to your listing. 
+              Hang it in your window or by the door—renters scan, browse your availability, and book instantly.
+            </p>
+
+            <ul className="space-y-4">
+              {[
+                "Free printed signage shipped to you",
+                "QR links to your live booking calendar",
+                "Capture leads even when you're closed",
+                "Track scans in your dashboard"
+              ].map((item, i) => (
+                <motion.li
+                  key={item}
+                  className="flex items-center gap-3 text-foreground"
+                  initial={shouldReduceMotion ? {} : { opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                >
+                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                  </div>
+                  {item}
+                </motion.li>
+              ))}
+            </ul>
+          </motion.div>
         </div>
       </div>
     </section>
@@ -433,6 +585,7 @@ const RentMyCommercialKitchen = () => {
       <main className="flex-1">
         <KitchenHero />
         <ValueGrid />
+        <QRSignageSection />
         <ComplianceFeature />
         <RevenuePreview />
         <KitchenFAQ />
