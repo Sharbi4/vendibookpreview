@@ -104,13 +104,18 @@ const ValueGrid = () => {
     },
     {
       icon: Shield,
-      title: "Compliance Engine",
-      desc: "We verify Liability Insurance, ServSafe, and Business Licenses before a renter can even send a request."
+      title: "Know Who's Cooking",
+      desc: "Review each renter's business info, equipment needs, and intended use in our app before approving any booking request."
     },
     {
       icon: DollarSign,
       title: "Guaranteed Payouts",
       desc: "Renters pay upfront. Funds are held in escrow and released to you automatically. No chasing invoices."
+    },
+    {
+      icon: Users,
+      title: "Your Own Storefront",
+      desc: "Get a shareable profile page with reviews, photos, and availability. Send the link to renters or let them discover you."
     }
   ];
 
@@ -131,7 +136,7 @@ const ValueGrid = () => {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {values.map((item, i) => (
             <motion.div
               key={item.title}
