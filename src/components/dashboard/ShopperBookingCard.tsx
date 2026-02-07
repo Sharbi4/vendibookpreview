@@ -584,17 +584,18 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
             )}
 
             {/* Receipt button - shows for confirmed & paid bookings */}
-            {isPaid && (isApproved || isCompleted) && (
+            {/* Receipt button - shows for confirmed & paid bookings OR refunded bookings */}
+            {(isPaid && (isApproved || isCompleted)) || booking.payment_status === 'refunded' || (booking as any).deposit_status === 'refunded' ? (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowReceipt(true)}
-                className="bg-card/80 backdrop-blur-sm"
+                className={`bg-card/80 backdrop-blur-sm ${booking.payment_status === 'refunded' || (booking as any).deposit_status === 'refunded' ? 'border-purple-300 text-purple-700' : ''}`}
               >
                 <Receipt className="h-4 w-4 mr-1 shrink-0" />
-                <span className="truncate">Receipt</span>
+                <span className="truncate">{booking.payment_status === 'refunded' || (booking as any).deposit_status === 'refunded' ? 'Receipts' : 'Receipt'}</span>
               </Button>
-            )}
+            ) : null}
 
             {/* Document resubmission button - only shows when admin rejected docs */}
             {hasRejectedDocs && (isPending || isApproved) && (
@@ -681,11 +682,16 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
           is_hourly_booking: (booking as any).is_hourly_booking,
           duration_hours: (booking as any).duration_hours,
           deposit_amount: (booking as any).deposit_amount,
+          deposit_status: (booking as any).deposit_status,
+          deposit_refunded_at: (booking as any).deposit_refunded_at,
+          deposit_refund_notes: (booking as any).deposit_refund_notes,
+          deposit_charge_id: (booking as any).deposit_charge_id,
           delivery_fee_snapshot: booking.delivery_fee_snapshot,
           fulfillment_selected: (booking as any).fulfillment_selected,
           delivery_address: (booking as any).delivery_address,
           address_snapshot: (booking as any).address_snapshot,
           payment_intent_id: (booking as any).payment_intent_id,
+          payment_status: booking.payment_status,
           listing: listing ? {
             id: listing.id,
             title: listing.title,

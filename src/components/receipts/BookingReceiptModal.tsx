@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
-import { Download, FileText, Printer, X, Loader2 } from 'lucide-react';
+import { Download, FileText, Printer, Loader2, RefreshCcw, ArrowDownCircle } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import {
   Dialog,
@@ -18,6 +18,14 @@ import vendibookLogo from '@/assets/vendibook-logo.png';
 // Platform fee percentage
 const PLATFORM_FEE_PERCENT = 12.9;
 
+interface RefundInfo {
+  refund_amount: number;
+  refund_date: string;
+  refund_reason?: string;
+  refund_id?: string;
+  refund_type: 'full' | 'partial' | 'deposit';
+}
+
 interface BookingReceiptModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -34,11 +42,16 @@ interface BookingReceiptModalProps {
     is_hourly_booking?: boolean | null;
     duration_hours?: number | null;
     deposit_amount?: number | null;
+    deposit_status?: string | null;
+    deposit_refunded_at?: string | null;
+    deposit_refund_notes?: string | null;
+    deposit_charge_id?: string | null;
     delivery_fee_snapshot?: number | null;
     fulfillment_selected?: string | null;
     delivery_address?: string | null;
     address_snapshot?: string | null;
     payment_intent_id?: string | null;
+    payment_status?: string | null;
     listing?: {
       id: string;
       title: string;
@@ -61,8 +74,18 @@ export function BookingReceiptModal({
   renterEmail,
 }: BookingReceiptModalProps) {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isGeneratingRefundPdf, setIsGeneratingRefundPdf] = useState(false);
   const [hostProfile, setHostProfile] = useState<{ display_name?: string; business_name?: string; full_name?: string } | null>(null);
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'receipt' | 'refund'>('receipt');
+
+  // Determine if there's a refund
+  const hasRefund = booking.payment_status === 'refunded' || 
+    booking.deposit_status === 'refunded' || 
+    booking.deposit_refunded_at !== null;
+  
+  const isFullRefund = booking.payment_status === 'refunded';
+  const isDepositRefund = booking.deposit_status === 'refunded' || booking.deposit_refunded_at !== null;
 
   // Load logo as base64 for PDF
   useEffect(() => {
@@ -124,8 +147,15 @@ export function BookingReceiptModal({
   const rentalAmount = subtotal - deliveryFee;
 
   const receiptNumber = `VB-${booking.id.slice(0, 8).toUpperCase()}`;
+  const refundReceiptNumber = `VB-REF-${booking.id.slice(0, 6).toUpperCase()}`;
   const paidDate = booking.paid_at ? format(parseISO(booking.paid_at), 'MMM d, yyyy h:mm a') : 'Pending';
   const bookingDate = format(parseISO(booking.created_at), 'MMM d, yyyy');
+  const refundDate = booking.deposit_refunded_at 
+    ? format(parseISO(booking.deposit_refunded_at), 'MMM d, yyyy h:mm a') 
+    : null;
+  
+  // Calculate refund amount
+  const refundAmount = isFullRefund ? basePrice : (isDepositRefund ? depositAmount : 0);
   
   const formatDate = (dateStr: string) => format(parseISO(dateStr), 'EEE, MMM d, yyyy');
   const formatTime = (timeStr: string) => {
@@ -335,6 +365,214 @@ export function BookingReceiptModal({
     }
   };
 
+  // Generate Refund Receipt PDF
+  const generateRefundPDF = async () => {
+    setIsGeneratingRefundPdf(true);
+    
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 20;
+      let yPos = 20;
+
+      // Add logo
+      if (logoDataUrl) {
+        doc.addImage(logoDataUrl, 'PNG', margin, yPos, 40, 12);
+      }
+      
+      // Refund Receipt title
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(139, 92, 246); // Purple color for refund
+      doc.text('Refund Receipt', pageWidth - margin, yPos + 8, { align: 'right' });
+      
+      yPos += 25;
+      
+      // Receipt number and date
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Refund Receipt #: ${refundReceiptNumber}`, margin, yPos);
+      doc.text(`Refund Date: ${refundDate || 'Processing'}`, pageWidth - margin, yPos, { align: 'right' });
+      
+      yPos += 8;
+      doc.text(`Original Receipt #: ${receiptNumber}`, margin, yPos);
+      
+      yPos += 15;
+      
+      // Divider
+      doc.setDrawColor(139, 92, 246);
+      doc.setLineWidth(0.5);
+      doc.line(margin, yPos, pageWidth - margin, yPos);
+      doc.setLineWidth(0.2);
+      
+      yPos += 15;
+      
+      // Refund Status Banner
+      doc.setFillColor(243, 232, 255); // Light purple
+      doc.roundedRect(margin, yPos, pageWidth - margin * 2, 20, 3, 3, 'F');
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(139, 92, 246);
+      const refundTypeText = isFullRefund ? 'FULL REFUND PROCESSED' : 'DEPOSIT REFUND PROCESSED';
+      doc.text(refundTypeText, pageWidth / 2, yPos + 12, { align: 'center' });
+      
+      yPos += 30;
+      
+      // Refund Details Header
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 0, 0);
+      doc.text('Refund Details', margin, yPos);
+      
+      yPos += 12;
+      
+      // Refund details grid
+      const refundDetails = [
+        ['Refund Type', isFullRefund ? 'Full Refund' : 'Security Deposit Refund'],
+        ['Refund Status', 'Completed'],
+        ['Refund Date', refundDate || 'Processing'],
+        ['Original Payment Date', paidDate],
+        ['', ''],
+        ['Refund Method', 'Original Payment Method'],
+        ['Processing Time', '5-10 business days'],
+      ];
+
+      if (booking.deposit_refund_notes) {
+        refundDetails.push(['', '']);
+        refundDetails.push(['Notes', booking.deposit_refund_notes]);
+      }
+
+      if (booking.deposit_charge_id) {
+        refundDetails.push(['', '']);
+        refundDetails.push(['Refund Reference', booking.deposit_charge_id]);
+      }
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(60, 60, 60);
+      
+      for (const [label, value] of refundDetails) {
+        if (label === '' && value === '') {
+          yPos += 4;
+          continue;
+        }
+        doc.setFont('helvetica', 'bold');
+        doc.text(label + ':', margin, yPos);
+        doc.setFont('helvetica', 'normal');
+        
+        const maxWidth = pageWidth - margin * 2 - 55;
+        const lines = doc.splitTextToSize(value, maxWidth);
+        doc.text(lines, margin + 55, yPos);
+        yPos += 6 * lines.length;
+      }
+      
+      yPos += 15;
+      
+      // Divider
+      doc.setDrawColor(220, 220, 220);
+      doc.line(margin, yPos, pageWidth - margin, yPos);
+      
+      yPos += 15;
+      
+      // Amount Breakdown Header
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 0, 0);
+      doc.text('Amount Breakdown', margin, yPos);
+      
+      yPos += 12;
+      
+      // Amount items
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      
+      if (isFullRefund) {
+        const amounts = [
+          ['Original Rental Fee', `$${rentalAmount.toFixed(2)}`],
+          ['Platform Service Fee', `$${platformFee.toFixed(2)}`],
+        ];
+        if (deliveryFee > 0) {
+          amounts.push(['Delivery Fee', `$${deliveryFee.toFixed(2)}`]);
+        }
+        if (depositAmount > 0) {
+          amounts.push(['Security Deposit', `$${depositAmount.toFixed(2)}`]);
+        }
+        
+        for (const [label, amount] of amounts) {
+          doc.setTextColor(60, 60, 60);
+          doc.text(label, margin, yPos);
+          doc.text(amount, pageWidth - margin, yPos, { align: 'right' });
+          yPos += 7;
+        }
+        
+        yPos += 3;
+        doc.setDrawColor(180, 180, 180);
+        doc.line(margin, yPos, pageWidth - margin, yPos);
+        yPos += 8;
+        
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(60, 60, 60);
+        doc.text('Original Total Paid', margin, yPos);
+        doc.text(`$${basePrice.toFixed(2)}`, pageWidth - margin, yPos, { align: 'right' });
+        
+      } else {
+        // Deposit refund only
+        doc.setTextColor(60, 60, 60);
+        doc.text('Security Deposit (Refundable)', margin, yPos);
+        doc.text(`$${depositAmount.toFixed(2)}`, pageWidth - margin, yPos, { align: 'right' });
+        yPos += 7;
+      }
+      
+      yPos += 15;
+      
+      // Refund total box
+      doc.setFillColor(243, 232, 255);
+      doc.roundedRect(margin, yPos, pageWidth - margin * 2, 25, 3, 3, 'F');
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(139, 92, 246);
+      doc.text('Total Refunded', margin + 10, yPos + 16);
+      doc.text(`$${refundAmount.toFixed(2)}`, pageWidth - margin - 10, yPos + 16, { align: 'right' });
+      
+      yPos += 40;
+      
+      // Original Booking Reference
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 0, 0);
+      doc.text('Original Booking Reference', margin, yPos);
+      
+      yPos += 8;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(80, 80, 80);
+      doc.text(`Listing: ${booking.listing?.title || 'Rental'}`, margin, yPos);
+      yPos += 5;
+      doc.text(`Rental Period: ${formatDate(booking.start_date)} - ${formatDate(booking.end_date)}`, margin, yPos);
+      yPos += 5;
+      doc.text(`Booking ID: ${booking.id}`, margin, yPos);
+      
+      // Footer
+      yPos = doc.internal.pageSize.getHeight() - 35;
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(130, 130, 130);
+      doc.text('This refund receipt was generated by Vendibook.', pageWidth / 2, yPos, { align: 'center' });
+      doc.text('Refunds typically take 5-10 business days to appear in your account.', pageWidth / 2, yPos + 5, { align: 'center' });
+      doc.text('For questions or support, contact support@vendibook.com', pageWidth / 2, yPos + 10, { align: 'center' });
+      doc.text('www.vendibook.com', pageWidth / 2, yPos + 15, { align: 'center' });
+      
+      // Save
+      doc.save(`vendibook-refund-receipt-${refundReceiptNumber}.pdf`);
+    } catch (error) {
+      console.error('Error generating refund PDF:', error);
+    } finally {
+      setIsGeneratingRefundPdf(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] p-0">
@@ -342,15 +580,41 @@ export function BookingReceiptModal({
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2 text-lg">
               <FileText className="h-5 w-5 text-primary" />
-              Rental Receipt
+              {hasRefund ? 'Receipts' : 'Rental Receipt'}
             </DialogTitle>
             <Badge variant="outline" className="font-mono text-xs">
-              {receiptNumber}
+              {activeTab === 'refund' ? refundReceiptNumber : receiptNumber}
             </Badge>
           </div>
+          
+          {/* Tab switcher if refund exists */}
+          {hasRefund && (
+            <div className="flex gap-2 mt-3">
+              <Button
+                variant={activeTab === 'receipt' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveTab('receipt')}
+                className="flex-1"
+              >
+                <FileText className="h-4 w-4 mr-1.5" />
+                Payment Receipt
+              </Button>
+              <Button
+                variant={activeTab === 'refund' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveTab('refund')}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white border-purple-600"
+              >
+                <RefreshCcw className="h-4 w-4 mr-1.5" />
+                Refund Receipt
+              </Button>
+            </div>
+          )}
         </DialogHeader>
 
         <ScrollArea className="max-h-[60vh]">
+          {/* Payment Receipt Tab */}
+          {activeTab === 'receipt' && (
           <div className="px-6 py-4 space-y-6">
             {/* Logo and Header */}
             <div className="flex items-center justify-between">
@@ -471,6 +735,133 @@ export function BookingReceiptModal({
               <p>For questions, contact support@vendibook.com</p>
             </div>
           </div>
+          )}
+
+          {/* Refund Receipt Tab */}
+          {activeTab === 'refund' && hasRefund && (
+          <div className="px-6 py-4 space-y-6">
+            {/* Logo and Header */}
+            <div className="flex items-center justify-between">
+              <img src={vendibookLogo} alt="Vendibook" className="h-8" />
+              <div className="text-right text-sm text-muted-foreground">
+                <p className="text-purple-600 font-medium">Refunded</p>
+                <p className="text-xs">{refundDate || 'Processing'}</p>
+              </div>
+            </div>
+
+            {/* Refund Status Banner */}
+            <div className="bg-purple-100 border border-purple-200 rounded-lg p-4 text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <RefreshCcw className="h-5 w-5 text-purple-600" />
+                <span className="font-semibold text-purple-800">
+                  {isFullRefund ? 'Full Refund Processed' : 'Deposit Refund Processed'}
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-purple-700">${refundAmount.toFixed(2)}</p>
+            </div>
+
+            <Separator />
+
+            {/* Refund Details */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-foreground">Refund Details</h3>
+              
+              <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Refund Type</p>
+                    <p className="font-medium">{isFullRefund ? 'Full Refund' : 'Security Deposit'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Status</p>
+                    <Badge className="bg-purple-100 text-purple-700 border-purple-200">Completed</Badge>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Refund Date</p>
+                    <p className="font-medium">{refundDate || 'Processing'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Processing Time</p>
+                    <p className="font-medium">5-10 business days</p>
+                  </div>
+                </div>
+
+                {booking.deposit_refund_notes && (
+                  <div className="pt-2 border-t">
+                    <p className="text-muted-foreground text-sm">Notes</p>
+                    <p className="text-sm">{booking.deposit_refund_notes}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Amount Breakdown */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-muted-foreground">Amount Breakdown</h4>
+                <div className="bg-muted/30 rounded-lg p-3 space-y-2 text-sm">
+                  {isFullRefund ? (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Original Rental Fee</span>
+                        <span>${rentalAmount.toFixed(2)}</span>
+                      </div>
+                      {deliveryFee > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Delivery Fee</span>
+                          <span>${deliveryFee.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Platform Service Fee</span>
+                        <span>${platformFee.toFixed(2)}</span>
+                      </div>
+                      {depositAmount > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Security Deposit</span>
+                          <span>${depositAmount.toFixed(2)}</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Security Deposit</span>
+                      <span>${depositAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  
+                  <Separator className="my-2" />
+                  
+                  <div className="flex justify-between font-semibold text-base">
+                    <span>Total Refunded</span>
+                    <span className="text-purple-600">${refundAmount.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Original Booking Reference */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-muted-foreground">Original Booking</h4>
+                <div className="bg-muted/30 rounded-lg p-3 text-sm space-y-1">
+                  <p><span className="text-muted-foreground">Listing:</span> {booking.listing?.title || 'Rental'}</p>
+                  <p><span className="text-muted-foreground">Dates:</span> {formatDate(booking.start_date)} — {formatDate(booking.end_date)}</p>
+                  <p><span className="text-muted-foreground">Original Payment:</span> ${basePrice.toFixed(2)}</p>
+                  <p className="font-mono text-xs text-muted-foreground">Booking ID: {booking.id}</p>
+                </div>
+              </div>
+
+              {booking.deposit_charge_id && (
+                <p className="text-xs text-muted-foreground">
+                  Refund Reference: {booking.deposit_charge_id}
+                </p>
+              )}
+            </div>
+
+            {/* Footer note */}
+            <div className="bg-purple-50 border border-purple-100 rounded-lg p-3 text-center text-xs text-purple-700">
+              <p className="font-medium">Refunds typically take 5-10 business days to appear in your account.</p>
+              <p className="text-purple-600 mt-1">For questions, contact support@vendibook.com</p>
+            </div>
+          </div>
+          )}
         </ScrollArea>
 
         {/* Actions */}
@@ -484,17 +875,17 @@ export function BookingReceiptModal({
             Print
           </Button>
           <Button
-            variant="default"
-            className="flex-1"
-            onClick={generatePDF}
-            disabled={isGeneratingPdf}
+            variant={activeTab === 'refund' ? 'secondary' : 'default'}
+            className={`flex-1 ${activeTab === 'refund' ? 'bg-purple-600 hover:bg-purple-700 text-white' : ''}`}
+            onClick={activeTab === 'refund' ? generateRefundPDF : generatePDF}
+            disabled={activeTab === 'refund' ? isGeneratingRefundPdf : isGeneratingPdf}
           >
-            {isGeneratingPdf ? (
+            {(activeTab === 'refund' ? isGeneratingRefundPdf : isGeneratingPdf) ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <Download className="h-4 w-4 mr-2" />
             )}
-            Download PDF
+            Download {activeTab === 'refund' ? 'Refund' : ''} PDF
           </Button>
         </div>
       </DialogContent>
