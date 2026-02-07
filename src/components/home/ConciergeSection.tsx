@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { MessageCircle, UserRound, Send, Sparkles, Clock, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import TicketFormDialog from './TicketFormDialog';
 
 const ConciergeSection = () => {
+  const [isTicketDialogOpen, setIsTicketDialogOpen] = useState(false);
   const openZendeskChat = () => {
     if (window.zE) {
       try {
@@ -164,7 +167,7 @@ const ConciergeSection = () => {
                     </Button>
                     
                     <button
-                      onClick={openZendeskTicket}
+                      onClick={() => setIsTicketDialogOpen(true)}
                       className="flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm font-medium group"
                     >
                       <Send className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -176,6 +179,11 @@ const ConciergeSection = () => {
             </div>
           </div>
         </motion.div>
+
+        <TicketFormDialog 
+          open={isTicketDialogOpen} 
+          onOpenChange={setIsTicketDialogOpen} 
+        />
       </div>
     </section>
   );
