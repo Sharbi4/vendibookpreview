@@ -102,24 +102,175 @@ const StatusPill = ({ status }: { status: string }) => {
   );
 };
 
-const DocumentCompliancePill = ({ compliance }: { 
-  compliance: { 
-    allApproved: boolean; 
-    hasRequirements: boolean; 
-    missingCount: number; 
-    pendingCount: number; 
-    rejectedCount: number;
-    documentStatuses: Array<{ status: string }>;
-  } 
+import { DOCUMENT_TYPE_LABELS } from '@/types/documents';
+import type { DocumentType } from '@/types/documents';
+
+interface DocumentStatusInfo {
+  documentType: DocumentType;
+  status: 'missing' | 'pending' | 'approved' | 'rejected';
+  uploaded?: {
+    rejection_reason: string | null;
+    uploaded_at: string;
+  } | null;
+}
+
+interface DocumentComplianceData {
+  allApproved: boolean;
+  hasRequirements: boolean;
+  missingCount: number;
+  pendingCount: number;
+  rejectedCount: number;
+  documentStatuses: DocumentStatusInfo[];
+}
+
+const DocumentStatusDialog = ({ 
+  open, 
+  onOpenChange, 
+  compliance 
+}: { 
+  open: boolean; 
+  onOpenChange: (open: boolean) => void;
+  compliance: DocumentComplianceData;
+}) => {
+  const approvedDocs = compliance.documentStatuses.filter(d => d.status === 'approved');
+  const pendingDocs = compliance.documentStatuses.filter(d => d.status === 'pending');
+  const rejectedDocs = compliance.documentStatuses.filter(d => d.status === 'rejected');
+  const missingDocs = compliance.documentStatuses.filter(d => d.status === 'missing');
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Document Status
+          </DialogTitle>
+          <DialogDescription>
+            Overview of all required documents for this booking
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          {/* Approved Documents */}
+          {approvedDocs.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                <FileCheck className="h-4 w-4" />
+                Approved ({approvedDocs.length})
+              </div>
+              <div className="space-y-1 pl-6">
+                {approvedDocs.map((doc) => (
+                  <div key={doc.documentType} className="text-sm text-muted-foreground flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    {DOCUMENT_TYPE_LABELS[doc.documentType]}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Pending Documents */}
+          {pendingDocs.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <FileClock className="h-4 w-4" />
+                Pending Admin Review ({pendingDocs.length})
+              </div>
+              <div className="space-y-1 pl-6">
+                {pendingDocs.map((doc) => (
+                  <div key={doc.documentType} className="text-sm text-muted-foreground flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-foreground" />
+                    {DOCUMENT_TYPE_LABELS[doc.documentType]}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Rejected Documents */}
+          {rejectedDocs.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-destructive">
+                <FileWarning className="h-4 w-4" />
+                Rejected ({rejectedDocs.length})
+              </div>
+              <div className="space-y-2 pl-6">
+                {rejectedDocs.map((doc) => (
+                  <div key={doc.documentType} className="space-y-1">
+                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                      {DOCUMENT_TYPE_LABELS[doc.documentType]}
+                    </div>
+                    {doc.uploaded?.rejection_reason && (
+                      <p className="text-xs text-destructive/80 pl-3.5 italic">
+                        Reason: {doc.uploaded.rejection_reason}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Missing Documents */}
+          {missingDocs.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <FileText className="h-4 w-4" />
+                Not Uploaded ({missingDocs.length})
+              </div>
+              <div className="space-y-1 pl-6">
+                {missingDocs.map((doc) => (
+                  <div key={doc.documentType} className="text-sm text-muted-foreground flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
+                    {DOCUMENT_TYPE_LABELS[doc.documentType]}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Summary */}
+          <div className="border-t pt-3 mt-3">
+            <p className="text-xs text-muted-foreground">
+              Documents are reviewed by Vendibook admin, typically within 30 minutes.
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const DocumentCompliancePill = ({ 
+  compliance,
+  onClick
+}: { 
+  compliance: DocumentComplianceData;
+  onClick?: () => void;
 }) => {
   if (!compliance.hasRequirements) return null;
 
   const approvedCount = compliance.documentStatuses.filter(d => d.status === 'approved').length;
+  const isClickable = !!onClick;
+  const baseClasses = "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all";
+  const clickableClasses = isClickable ? "cursor-pointer hover:scale-105 hover:shadow-md" : "";
 
   // All documents approved - show "Documents Approved" badge
   if (compliance.allApproved && approvedCount > 0) {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+      <span 
+        className={`${baseClasses} ${clickableClasses} bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300`}
+        onClick={onClick}
+        role={isClickable ? "button" : undefined}
+        tabIndex={isClickable ? 0 : undefined}
+      >
         <FileCheck className="h-3 w-3" />
         Documents Approved
       </span>
@@ -129,7 +280,12 @@ const DocumentCompliancePill = ({ compliance }: {
   // Has rejected documents
   if (compliance.rejectedCount > 0) {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-destructive/10 text-destructive">
+      <span 
+        className={`${baseClasses} ${clickableClasses} bg-destructive/10 text-destructive`}
+        onClick={onClick}
+        role={isClickable ? "button" : undefined}
+        tabIndex={isClickable ? 0 : undefined}
+      >
         <FileWarning className="h-3 w-3" />
         {compliance.rejectedCount} Rejected
       </span>
@@ -139,7 +295,12 @@ const DocumentCompliancePill = ({ compliance }: {
   // Has pending documents awaiting admin review - "darkshine" style badge
   if (compliance.pendingCount > 0) {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-foreground text-background shadow-lg">
+      <span 
+        className={`${baseClasses} ${clickableClasses} bg-foreground text-background shadow-lg`}
+        onClick={onClick}
+        role={isClickable ? "button" : undefined}
+        tabIndex={isClickable ? 0 : undefined}
+      >
         <FileClock className="h-3 w-3" />
         Documents Pending
       </span>
@@ -149,7 +310,12 @@ const DocumentCompliancePill = ({ compliance }: {
   // Missing documents (not uploaded yet)
   if (compliance.missingCount > 0) {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+      <span 
+        className={`${baseClasses} ${clickableClasses} bg-muted text-muted-foreground`}
+        onClick={onClick}
+        role={isClickable ? "button" : undefined}
+        tabIndex={isClickable ? 0 : undefined}
+      >
         <FileText className="h-3 w-3" />
         {compliance.missingCount} Missing
       </span>
@@ -165,6 +331,7 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showDepositDialog, setShowDepositDialog] = useState(false);
   const [showBusinessInfo, setShowBusinessInfo] = useState(false);
+  const [showDocumentStatusDialog, setShowDocumentStatusDialog] = useState(false);
   const [responseAction, setResponseAction] = useState<'approve' | 'decline'>('approve');
   const [responseMessage, setResponseMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -331,7 +498,10 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
                   </span>
                 )}
                 <StatusPill status={booking.status} />
-                <DocumentCompliancePill compliance={compliance} />
+                <DocumentCompliancePill 
+                  compliance={compliance} 
+                  onClick={compliance.hasRequirements ? () => setShowDocumentStatusDialog(true) : undefined}
+                />
               </div>
             </div>
 
@@ -879,6 +1049,13 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Document Status Dialog */}
+      <DocumentStatusDialog
+        open={showDocumentStatusDialog}
+        onOpenChange={setShowDocumentStatusDialog}
+        compliance={compliance}
+      />
     </>
   );
 };
