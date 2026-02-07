@@ -130,11 +130,11 @@ const buyerSteps = [
 
 const sellerPathOptions = [
   {
-    icon: DollarSign,
-    title: "Sell a Food Truck or Trailer",
-    description: "List your vehicle for sale with secure payments and optional buyer financing.",
-    link: "/sell-my-food-truck",
-    features: ["Buyer financing with Affirm/Afterpay", "Optional nationwide freight", "Secure escrow payments"],
+    icon: MapPin,
+    title: "List a Vendor Space",
+    description: "Turn your parking lot or space into passive income for food vendors.",
+    link: "/vendor-spaces",
+    features: ["Hourly or daily bookings", "Define amenities & rules", "Zero hassle setup"],
   },
   {
     icon: CalendarDays,
@@ -144,11 +144,11 @@ const sellerPathOptions = [
     features: ["Identity-verified renters", "Automated document collection", "Flexible scheduling"],
   },
   {
-    icon: MapPin,
-    title: "List a Vendor Space",
-    description: "Turn your parking lot or space into passive income for food vendors.",
-    link: "/vendor-spaces",
-    features: ["Hourly or daily bookings", "Define amenities & rules", "Zero hassle setup"],
+    icon: DollarSign,
+    title: "Sell a Food Truck or Trailer",
+    description: "List your vehicle for sale with secure payments and optional buyer financing.",
+    link: "/sell-my-food-truck",
+    features: ["Buyer financing with Affirm/Afterpay", "Optional nationwide freight", "Secure escrow payments"],
   },
 ];
 
