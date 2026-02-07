@@ -7,6 +7,8 @@ import RentalBenefits from '@/components/home/RentalBenefits';
 import AnnouncementBanner from '@/components/home/AnnouncementBanner';
 import VerificationBanner from '@/components/home/VerificationBanner';
 import PaymentsBanner from '@/components/home/PaymentsBanner';
+import ConciergeSection from '@/components/home/ConciergeSection';
+import FloatingConciergeButton from '@/components/FloatingConciergeButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -87,11 +89,14 @@ const Index = () => {
 
           {/* 4. BNPL Banner */}
           <PaymentsBanner />
+
+          {/* 5. Concierge Service - Manual Matching */}
+          <ConciergeSection />
           
-          {/* 5. Become a Host CTA (Dark themed) */}
+          {/* 6. Become a Host CTA (Dark themed) */}
           <BecomeHostSection />
           
-          {/* 6. Final CTA */}
+          {/* 7. Final CTA */}
           <FinalCTA />
         </Suspense>
       </main>
@@ -99,6 +104,7 @@ const Index = () => {
       <Footer />
       
       <NewsletterPopup />
+      <FloatingConciergeButton />
     </div>
   );
 };
