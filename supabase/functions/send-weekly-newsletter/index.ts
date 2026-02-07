@@ -36,16 +36,16 @@ interface Listing {
 }
 
 const generateHtmlEmail = (unsubscribeUrl: string, blogTitle: string, blogUrl: string, blogAuthor: string): string => {
-  // This Week's New Listings
+  // This Week's New Listings - Real listings with actual links
   const newListings: Listing[] = [
     {
       emoji: "🍽️",
-      title: "Kitchen Rental & Co-Packing Service",
+      title: "Commissary Kitchen For Rent",
       category: "Ghost Kitchen",
       type: "For Rent",
-      price: "$100 / day",
-      description: "A flexible kitchen option ideal for meal prep, catering, and small-batch production. Designed for operators who want to test demand or scale without long-term commitments.",
-      url: "https://vendibook.com/search?category=shared-kitchen",
+      price: "$150 / day",
+      description: "A compliant commissary kitchen in Charlotte, NC designed for food trucks and prep-only operations that need flexible, pay-for-what-you-use access.",
+      url: "https://vendibook.com/listing/24594068-25df-4bbe-b142-7bad96aacf39",
     },
     {
       emoji: "🍳",
@@ -53,26 +53,26 @@ const generateHtmlEmail = (unsubscribeUrl: string, blogTitle: string, blogUrl: s
       category: "Ghost Kitchen",
       type: "For Rent",
       price: "$160 / day",
-      description: "A fully equipped commercial kitchen suitable for established brands, caterers, and growing ghost kitchen concepts.",
-      url: "https://vendibook.com/search?category=shared-kitchen",
+      description: "A fully equipped commercial kitchen in Dallas, Oregon suitable for established brands, caterers, and growing ghost kitchen concepts.",
+      url: "https://vendibook.com/listing/ede54357-a79d-4325-bb1f-153c75fd89dc",
     },
     {
       emoji: "🚚",
-      title: "Food Trailer",
+      title: "Custom-Built 6' x 12' Pop-Up Lemonade Concession Trailer",
       category: "Food Trailer",
       type: "For Sale",
-      price: "$25,000",
-      description: "A turnkey food trailer opportunity for operators ready to own their mobile setup and expand into festivals, events, or permanent vendor locations.",
-      url: "https://vendibook.com/search?category=food-trailer&mode=sale",
+      price: "$5,900",
+      description: "A turnkey concession trailer in Charlotte, NC ready for operators looking to own their mobile setup and expand into festivals, events, or permanent vendor locations.",
+      url: "https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f",
     },
     {
-      emoji: "🧼",
-      title: "Commissary Kitchen for Rent",
-      category: "Ghost Kitchen",
+      emoji: "📍",
+      title: "Deep Ellum Brewery Lot - 6 Premium Spots",
+      category: "Vendor Space",
       type: "For Rent",
-      price: "$150 / day",
-      description: "A compliant commissary kitchen designed for food trucks and prep-only operations that need flexible, pay-for-what-you-use access.",
-      url: "https://vendibook.com/search?category=shared-kitchen",
+      price: "$175 / day",
+      description: "Premium vendor spots in Dallas's iconic Deep Ellum district. High foot traffic, brewery crowds, and weekend events make this a prime location.",
+      url: "https://vendibook.com/listing/6356eca8-4204-4856-9556-63a4a005df50",
     },
   ];
 
@@ -123,7 +123,7 @@ const generateHtmlEmail = (unsubscribeUrl: string, blogTitle: string, blogUrl: s
   
   <!-- Preview text (preheader) -->
   <div style="display: none; max-height: 0px; overflow: hidden;">
-    New kitchen and trailer listings—plus a must-read article on why testing before committing saves food entrepreneurs hundreds of thousands.
+    New ways to book space more flexibly—peak hours, shared slots, and fresh listings to help you launch smarter.
     &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
   </div>
   
@@ -150,10 +150,10 @@ const generateHtmlEmail = (unsubscribeUrl: string, blogTitle: string, blogUrl: s
                 Hi there,
               </p>
               <p style="margin: 0; font-size: 15px; color: ${COLORS.gray}; line-height: 1.6;">
-                This week on Vendibook, we're highlighting new kitchen and trailer listings—plus a <strong>must-read article</strong> on why testing before committing can save food entrepreneurs hundreds of thousands of dollars.
+                This week on Vendibook, we've rolled out new ways to book space more flexibly—plus added fresh listings and new resources to help you launch smarter.
               </p>
               <p style="margin: 16px 0 0; font-size: 15px; color: ${COLORS.gray}; line-height: 1.6;">
-                If you're launching, expanding, or rethinking your setup, start here 👇
+                If you're building or scaling a food business, here's what's new 👇
               </p>
             </td>
           </tr>
@@ -161,6 +161,39 @@ const generateHtmlEmail = (unsubscribeUrl: string, blogTitle: string, blogUrl: s
           <!-- Divider -->
           <tr>
             <td style="padding: 0 40px;">
+              <div style="border-top: 1px solid ${COLORS.border};"></div>
+            </td>
+          </tr>
+          
+          <!-- NEW THIS WEEK - Peak Hours Feature -->
+          <tr>
+            <td style="padding: 24px 40px 16px;">
+              <h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 700; color: ${COLORS.charcoal};">
+                🚀 New This Week
+              </h2>
+              <h3 style="margin: 0 0 12px; font-size: 17px; font-weight: 600; color: ${COLORS.charcoal};">
+                Peak Hours & Shared Space Slots
+              </h3>
+              <p style="margin: 0 0 12px; font-size: 14px; color: ${COLORS.gray}; line-height: 1.6;">
+                You can now find listings that offer:
+              </p>
+              <ul style="margin: 0 0 16px; padding: 0 0 0 20px; font-size: 14px; color: ${COLORS.gray}; line-height: 1.8;">
+                <li>Peak-hour access (morning, evening, or weekend blocks)</li>
+                <li>Defined time slots within shared kitchens or vendor spaces</li>
+                <li>Flexible access without committing to full-time rent</li>
+              </ul>
+              <p style="margin: 0 0 16px; font-size: 14px; color: ${COLORS.gray}; line-height: 1.6;">
+                Perfect for testing demand, prep-only operations, pop-ups, and seasonal concepts.
+              </p>
+              <a href="https://vendibook.com/search?category=shared-kitchen" style="display: inline-block; background: ${COLORS.primary}; color: ${COLORS.white}; text-decoration: none; padding: 10px 24px; border-radius: 6px; font-weight: 600; font-size: 14px;">
+                Explore Flexible Spaces →
+              </a>
+            </td>
+          </tr>
+          
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 8px 40px;">
               <div style="border-top: 1px solid ${COLORS.border};"></div>
             </td>
           </tr>
