@@ -159,12 +159,8 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
     const status = getDayStatus(date);
     if (status !== 'available') return false;
     
-    // For hourly mode, check if the date has hourly slots
-    if (bookingMode === 'hourly') {
-      const info = getDayAvailabilityInfo(date);
-      return info.hasHourlySlots;
-    }
-    
+    // For hourly mode, we still allow selecting dates - the time slots will show after
+    // The user can see which slots are available after clicking
     return true;
   };
 
