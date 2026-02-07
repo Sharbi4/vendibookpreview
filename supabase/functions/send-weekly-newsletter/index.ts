@@ -25,20 +25,84 @@ interface WeeklyNewsletterRequest {
   blog_1_url?: string;
 }
 
-const generateHtmlEmail = (unsubscribeUrl: string, blogTitle: string, blogUrl: string): string => {
-  // Top Picks - Real production listings
-  const topPicks = [
+interface Listing {
+  emoji: string;
+  title: string;
+  category: string;
+  type: string;
+  price: string;
+  description: string;
+  url: string;
+}
+
+const generateHtmlEmail = (unsubscribeUrl: string, blogTitle: string, blogUrl: string, blogAuthor: string): string => {
+  // This Week's New Listings
+  const newListings: Listing[] = [
     {
-      title: "TURNKEY Mobile Tap Trailer",
-      price: "$28,500",
-      url: "https://vendibook.com/listing/29db594a-1746-4d42-954a-16673d9ff875",
+      emoji: "🍽️",
+      title: "Kitchen Rental & Co-Packing Service",
+      category: "Ghost Kitchen",
+      type: "For Rent",
+      price: "$100 / day",
+      description: "A flexible kitchen option ideal for meal prep, catering, and small-batch production. Designed for operators who want to test demand or scale without long-term commitments.",
+      url: "https://vendibook.com/search?category=shared-kitchen",
     },
     {
-      title: "🔥 TURNKEY SHIPPING CONTAINER KITCHEN🔥",
-      price: "$18,000 • Atlanta, Georgia",
-      url: "https://vendibook.com/listing/f4d5e5ae-31eb-4ba0-9d2b-13df7279d020",
+      emoji: "🍳",
+      title: "Commercial Kitchen Rental",
+      category: "Ghost Kitchen",
+      type: "For Rent",
+      price: "$160 / day",
+      description: "A fully equipped commercial kitchen suitable for established brands, caterers, and growing ghost kitchen concepts.",
+      url: "https://vendibook.com/search?category=shared-kitchen",
+    },
+    {
+      emoji: "🚚",
+      title: "Food Trailer",
+      category: "Food Trailer",
+      type: "For Sale",
+      price: "$25,000",
+      description: "A turnkey food trailer opportunity for operators ready to own their mobile setup and expand into festivals, events, or permanent vendor locations.",
+      url: "https://vendibook.com/search?category=food-trailer&mode=sale",
+    },
+    {
+      emoji: "🧼",
+      title: "Commissary Kitchen for Rent",
+      category: "Ghost Kitchen",
+      type: "For Rent",
+      price: "$150 / day",
+      description: "A compliant commissary kitchen designed for food trucks and prep-only operations that need flexible, pay-for-what-you-use access.",
+      url: "https://vendibook.com/search?category=shared-kitchen",
     },
   ];
+
+  const listingsHtml = newListings.map(listing => `
+    <tr>
+      <td style="padding-bottom: 16px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: ${COLORS.lightGray}; border-radius: 12px; border-left: 4px solid ${COLORS.primary};">
+          <tr>
+            <td style="padding: 16px 20px;">
+              <h3 style="margin: 0 0 6px; font-size: 16px; font-weight: 600; color: ${COLORS.charcoal};">
+                ${listing.emoji} ${listing.title}
+              </h3>
+              <p style="margin: 0 0 8px; font-size: 13px; color: ${COLORS.gray};">
+                <strong>Category:</strong> ${listing.category} &nbsp;|&nbsp; <strong>Type:</strong> ${listing.type}
+              </p>
+              <p style="margin: 0 0 8px; font-size: 14px; font-weight: 600; color: ${COLORS.primary};">
+                Starting at: ${listing.price}
+              </p>
+              <p style="margin: 0 0 12px; font-size: 13px; color: ${COLORS.gray}; line-height: 1.5;">
+                ${listing.description}
+              </p>
+              <a href="${listing.url}" style="display: inline-block; background: ${COLORS.primary}; color: ${COLORS.white}; text-decoration: none; padding: 8px 20px; border-radius: 6px; font-weight: 600; font-size: 13px;">
+                View Listing →
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  `).join('');
 
   return `
 <!DOCTYPE html>
@@ -59,7 +123,7 @@ const generateHtmlEmail = (unsubscribeUrl: string, blogTitle: string, blogUrl: s
   
   <!-- Preview text (preheader) -->
   <div style="display: none; max-height: 0px; overflow: hidden;">
-    Fresh listings, proven tools, and smart moves to grow your food business this week.
+    New kitchen and trailer listings—plus a must-read article on why testing before committing saves food entrepreneurs hundreds of thousands.
     &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
   </div>
   
@@ -82,11 +146,14 @@ const generateHtmlEmail = (unsubscribeUrl: string, blogTitle: string, blogUrl: s
           <!-- Greeting -->
           <tr>
             <td style="padding: 0 40px 24px;">
-              <h1 style="margin: 0 0 8px; font-size: 24px; font-weight: 700; color: ${COLORS.charcoal}; line-height: 1.3;">
-                This Week on Vendibook
-              </h1>
+              <p style="margin: 0 0 16px; font-size: 16px; color: ${COLORS.charcoal}; line-height: 1.6;">
+                Hi there,
+              </p>
               <p style="margin: 0; font-size: 15px; color: ${COLORS.gray}; line-height: 1.6;">
-                Your weekly roundup of new listings, tools, and insights for the mobile food industry.
+                This week on Vendibook, we're highlighting new kitchen and trailer listings—plus a <strong>must-read article</strong> on why testing before committing can save food entrepreneurs hundreds of thousands of dollars.
+              </p>
+              <p style="margin: 16px 0 0; font-size: 15px; color: ${COLORS.gray}; line-height: 1.6;">
+                If you're launching, expanding, or rethinking your setup, start here 👇
               </p>
             </td>
           </tr>
@@ -98,58 +165,45 @@ const generateHtmlEmail = (unsubscribeUrl: string, blogTitle: string, blogUrl: s
             </td>
           </tr>
           
-          <!-- TOP PICKS THIS WEEK -->
+          <!-- NEW LISTINGS THIS WEEK -->
           <tr>
-            <td style="padding: 24px 40px 16px;">
-              <h2 style="margin: 0 0 16px; font-size: 18px; font-weight: 700; color: ${COLORS.charcoal};">
-                🔥 Top Picks This Week
+            <td style="padding: 24px 40px 8px;">
+              <h2 style="margin: 0 0 20px; font-size: 20px; font-weight: 700; color: ${COLORS.charcoal};">
+                🆕 New Listings This Week
               </h2>
               <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
-                ${topPicks.map(pick => `
-                <tr>
-                  <td style="padding-bottom: 10px;">
-                    <a href="${pick.url}" style="text-decoration: none; display: block; padding: 14px 16px; background-color: ${COLORS.lightGray}; border-radius: 8px; border-left: 4px solid ${COLORS.primary};">
-                      <strong style="color: ${COLORS.charcoal}; font-size: 14px;">${pick.title}</strong>
-                      <span style="color: ${COLORS.gray}; font-size: 13px; display: block; margin-top: 2px;">${pick.price}</span>
-                      <span style="color: ${COLORS.primary}; font-size: 13px; display: block; margin-top: 4px;">View listing →</span>
-                    </a>
-                  </td>
-                </tr>
-                `).join('')}
+                ${listingsHtml}
               </table>
-              <p style="margin: 12px 0 0; font-size: 13px; color: ${COLORS.gray};">
-                Our AI surfaces the newest listings and helpful resources each week—so you never miss an opportunity.
-              </p>
             </td>
           </tr>
           
           <!-- Divider -->
           <tr>
-            <td style="padding: 8px 40px;">
+            <td style="padding: 16px 40px;">
               <div style="border-top: 1px solid ${COLORS.border};"></div>
             </td>
           </tr>
           
-          <!-- VENDIBOOK TOOLS -->
+          <!-- BLOG CALLOUT - Featured -->
           <tr>
-            <td style="padding: 24px 40px 16px;">
-              <h2 style="margin: 0 0 16px; font-size: 18px; font-weight: 700; color: ${COLORS.charcoal};">
-                🛠️ Vendibook Tools You Can Use Today
+            <td style="padding: 24px 40px;">
+              <h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 700; color: ${COLORS.charcoal};">
+                📖 This Week on the Vendibook Blog
               </h2>
-              <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background: linear-gradient(135deg, rgba(255,109,31,0.1) 0%, rgba(255,109,31,0.05) 100%); border-radius: 12px; border: 1px solid rgba(255,109,31,0.2);">
                 <tr>
-                  <td style="padding-bottom: 12px;">
-                    <a href="https://vendibook.com/tools/permit-path" style="text-decoration: none; display: block; padding: 14px 16px; background-color: ${COLORS.lightGray}; border-radius: 8px;">
-                      <strong style="color: ${COLORS.charcoal}; font-size: 14px;">Permit Path</strong>
-                      <span style="color: ${COLORS.gray}; font-size: 13px; display: block; margin-top: 4px;">Get a personalized checklist of permits and licenses you need based on your city and business type.</span>
-                    </a>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <a href="https://vendibook.com/tools/builder-kit" style="text-decoration: none; display: block; padding: 14px 16px; background-color: ${COLORS.lightGray}; border-radius: 8px;">
-                      <strong style="color: ${COLORS.charcoal}; font-size: 14px;">Builder Kit</strong>
-                      <span style="color: ${COLORS.gray}; font-size: 13px; display: block; margin-top: 4px;">Plan your buildout with equipment recommendations, cost estimates, and vendor contacts—all in one place.</span>
+                  <td style="padding: 20px;">
+                    <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: ${COLORS.charcoal}; line-height: 1.3;">
+                      ${blogTitle}
+                    </h3>
+                    <p style="margin: 0 0 12px; font-size: 13px; color: ${COLORS.gray};">
+                      By ${blogAuthor}
+                    </p>
+                    <p style="margin: 0 0 16px; font-size: 14px; color: ${COLORS.gray}; line-height: 1.6;">
+                      Opening a restaurant without testing is one of the most expensive mistakes food entrepreneurs make. This article breaks down the real costs, the hidden risks, and how smart operators validate their concept before signing long-term leases or investing heavily in buildouts.
+                    </p>
+                    <a href="${blogUrl}" style="display: inline-block; background: ${COLORS.primary}; color: ${COLORS.white}; text-decoration: none; padding: 10px 24px; border-radius: 6px; font-weight: 600; font-size: 14px;">
+                      Read the Blog Post →
                     </a>
                   </td>
                 </tr>
@@ -164,84 +218,61 @@ const generateHtmlEmail = (unsubscribeUrl: string, blogTitle: string, blogUrl: s
             </td>
           </tr>
           
-          <!-- QUICK MOVES TO EARN MORE -->
+          <!-- WHY VENDIBOOK -->
           <tr>
             <td style="padding: 24px 40px 16px;">
               <h2 style="margin: 0 0 12px; font-size: 18px; font-weight: 700; color: ${COLORS.charcoal};">
-                💡 Quick Moves to Earn More
+                Why Vendibook
               </h2>
               <ul style="margin: 0; padding: 0 0 0 20px; font-size: 14px; color: ${COLORS.gray}; line-height: 1.8;">
-                <li style="margin-bottom: 6px;"><strong style="color: ${COLORS.charcoal};">Rent while selling</strong> – Generate income while your asset finds a buyer. No conflict, just cash flow.</li>
-                <li style="margin-bottom: 6px;"><strong style="color: ${COLORS.charcoal};">Offer weekly + monthly pricing</strong> – Longer rentals mean fewer turnovers and steadier income.</li>
-                <li><strong style="color: ${COLORS.charcoal};">Require documentation</strong> – Serious renters won't blink at providing insurance and permits.</li>
+                <li style="margin-bottom: 6px;">Rent kitchens and food trucks by the day, week, or month</li>
+                <li style="margin-bottom: 6px;">Test concepts before making long-term commitments</li>
+                <li style="margin-bottom: 6px;">Verified listings and secure bookings</li>
+                <li>Built for real food businesses—not classifieds</li>
               </ul>
             </td>
           </tr>
           
-          <!-- Divider -->
+          <!-- CTA SECTION -->
           <tr>
-            <td style="padding: 8px 40px;">
-              <div style="border-top: 1px solid ${COLORS.border};"></div>
-            </td>
-          </tr>
-          
-          <!-- COMMUNITY WINS -->
-          <tr>
-            <td style="padding: 24px 40px 16px;">
-              <h2 style="margin: 0 0 12px; font-size: 18px; font-weight: 700; color: ${COLORS.charcoal};">
-                🏆 Community Wins
+            <td style="padding: 24px 40px 32px;">
+              <h2 style="margin: 0 0 16px; font-size: 18px; font-weight: 700; color: ${COLORS.charcoal}; text-align: center;">
+                Ready to move forward?
               </h2>
-              <ul style="margin: 0; padding: 0 0 0 20px; font-size: 14px; color: ${COLORS.gray}; line-height: 1.8;">
-                <li style="margin-bottom: 6px;">A host in Texas closed their first rental within 48 hours of listing.</li>
-                <li style="margin-bottom: 6px;">Shared kitchen owner now earning recurring monthly income from unused morning hours.</li>
-                <li>First-time buyer financed a $22k trailer with Affirm—launched their taco business the same week.</li>
-              </ul>
-            </td>
-          </tr>
-          
-          <!-- Divider -->
-          <tr>
-            <td style="padding: 8px 40px;">
-              <div style="border-top: 1px solid ${COLORS.border};"></div>
-            </td>
-          </tr>
-          
-          <!-- BLOG CALLOUT -->
-          <tr>
-            <td style="padding: 24px 40px 16px;">
-              <p style="margin: 0; font-size: 14px; color: ${COLORS.gray}; line-height: 1.6;">
-                📖 <strong style="color: ${COLORS.charcoal};">New this week on the blog:</strong> 
-                <a href="${blogUrl}" style="color: ${COLORS.primary}; text-decoration: underline;">${blogTitle}</a>
-              </p>
-            </td>
-          </tr>
-          
-          <!-- CTA BUTTONS -->
-          <tr>
-            <td style="padding: 16px 40px 32px;">
               <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
                 <tr>
                   <td align="center" style="padding-bottom: 12px;">
-                    <a href="https://vendibook.com/search" style="display: inline-block; background: linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%); color: ${COLORS.white}; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; min-width: 200px; text-align: center;">
-                      Browse Listings
+                    <a href="https://vendibook.com/search" style="display: inline-block; background: linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%); color: ${COLORS.white}; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; min-width: 220px; text-align: center;">
+                      Browse All Listings
                     </a>
                   </td>
                 </tr>
                 <tr>
                   <td align="center" style="padding-bottom: 12px;">
-                    <a href="https://vendibook.com/list" style="display: inline-block; background: linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%); color: ${COLORS.white}; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; min-width: 200px; text-align: center;">
-                      Create a Listing
+                    <a href="https://vendibook.com/list" style="display: inline-block; background: linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%); color: ${COLORS.white}; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; min-width: 220px; text-align: center;">
+                      List Your Kitchen or Space
                     </a>
                   </td>
                 </tr>
                 <tr>
                   <td align="center">
-                    <a href="https://vendibook.com/tools" style="display: inline-block; background: linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%); color: ${COLORS.white}; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; min-width: 200px; text-align: center;">
-                      Use Tools
+                    <a href="https://vendibook.com/help" style="display: inline-block; background: linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%); color: ${COLORS.white}; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; min-width: 220px; text-align: center;">
+                      Get Matched to the Right Fit
                     </a>
                   </td>
                 </tr>
               </table>
+            </td>
+          </tr>
+          
+          <!-- Sign-off -->
+          <tr>
+            <td style="padding: 0 40px 24px;">
+              <p style="margin: 0; font-size: 14px; color: ${COLORS.gray}; line-height: 1.6;">
+                See you next week,<br/>
+                <strong style="color: ${COLORS.charcoal};">The Vendibook Team</strong><br/>
+                <a href="https://vendibook.com" style="color: ${COLORS.primary}; text-decoration: none;">Vendibook.com</a>
+              </p>
             </td>
           </tr>
           
@@ -294,15 +325,16 @@ const handler = async (req: Request): Promise<Response> => {
     const data = await req.json() as WeeklyNewsletterRequest;
     const { testEmail, sendToAll } = data;
 
-    const blogTitle = data.blog_1_title || "Sell vs Rent: Why the New Food Business Is Fluid";
-    const blogUrl = data.blog_1_url || "https://vendibook.com/blog/sell-vs-rent-food-trailer-truck-ghost-kitchen";
+    const blogTitle = data.blog_1_title || "The $250,000 Gamble: Why Testing Your Restaurant Concept Is Non-Negotiable";
+    const blogUrl = data.blog_1_url || "https://vendibook.com/blog/restaurant-proof-of-concept-shared-kitchens";
+    const blogAuthor = "Brock De Santis | Commissary Specialist & Industry Consultant";
 
-    const subjectLine = "This Week on Vendibook: Fresh Listings, Tools & Insights 🚀";
+    const subjectLine = "The $250k Gamble: Why Smart Chefs Test Concepts in Shared Kitchens First 🍳";
 
     // If testEmail is provided, just send to that one address
     if (testEmail && !sendToAll) {
       const unsubscribeUrl = `https://vendibook.com/unsubscribe?email=${encodeURIComponent(testEmail)}`;
-      const emailHtml = generateHtmlEmail(unsubscribeUrl, blogTitle, blogUrl);
+      const emailHtml = generateHtmlEmail(unsubscribeUrl, blogTitle, blogUrl, blogAuthor);
 
       const emailResponse = await resend.emails.send({
         from: "Vendibook <hello@updates.vendibook.com>",
@@ -384,7 +416,8 @@ const handler = async (req: Request): Promise<Response> => {
           html: generateHtmlEmail(
             `https://vendibook.com/unsubscribe?email=${encodeURIComponent(email)}`,
             blogTitle,
-            blogUrl
+            blogUrl,
+            blogAuthor
           ),
         }));
 
