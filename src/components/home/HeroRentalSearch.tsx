@@ -110,11 +110,11 @@ const HeroRentalSearch = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-          className="grid md:grid-cols-2 gap-4 md:gap-6"
+          className="grid md:grid-cols-5 gap-4 md:gap-6"
         >
-          {/* Path 1: Browse - Clear Glass */}
-          <div 
-            className="rounded-3xl p-5 md:p-6 shadow-2xl border border-white/20"
+          {/* Path 1: Browse - Clear Glass - Takes 3 columns */}
+          <div
+            className="md:col-span-3 rounded-3xl p-6 md:p-8 shadow-2xl border border-white/20"
             style={{
               background: 'rgba(255, 255, 255, 0.1)',
               backdropFilter: 'blur(20px) saturate(180%)',
@@ -264,9 +264,9 @@ const HeroRentalSearch = () => {
             </div>
           </div>
 
-          {/* Path 2: Let Us Match You - Clear Glass with Orange Accents */}
+          {/* Path 2: Let Us Match You - Clear Glass with Orange Accents - Takes 2 columns */}
           <div 
-            className="rounded-3xl p-5 md:p-6 shadow-2xl border border-white/20 flex flex-col"
+            className="md:col-span-2 rounded-3xl p-5 md:p-6 shadow-2xl border border-white/20 flex flex-col"
             style={{
               background: 'rgba(255, 255, 255, 0.1)',
               backdropFilter: 'blur(20px) saturate(180%)',
