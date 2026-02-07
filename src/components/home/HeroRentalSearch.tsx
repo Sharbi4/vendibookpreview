@@ -315,7 +315,7 @@ const HeroRentalSearch = () => {
               className="w-full rounded-xl h-12 bg-orange-500 hover:bg-orange-400 text-white font-semibold shadow-lg shadow-orange-500/25 mt-4"
             >
               <Handshake className="h-5 w-5 mr-2" />
-              Get a Manual Match
+              Match Me
             </Button>
           </div>
         </motion.div>
