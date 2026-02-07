@@ -8,6 +8,8 @@ import ShopperDashboard from '@/components/dashboard/ShopperDashboard';
 import DashboardOnboarding from '@/components/onboarding/DashboardOnboarding';
 import { Loader2 } from 'lucide-react';
 
+const DASHBOARD_MODE_KEY = 'vendibook_dashboard_mode';
+
 const Dashboard = () => {
   const { user, isLoading, hasRole } = useAuth();
   const navigate = useNavigate();
@@ -16,11 +18,24 @@ const Dashboard = () => {
 
   usePageTracking();
 
-  // URL-based mode detection - default to shopper
-  const currentMode = searchParams.get('view') === 'host' ? 'host' : 'shopper';
+  // URL-based mode detection with localStorage persistence
+  const urlView = searchParams.get('view');
+  const savedMode = localStorage.getItem(DASHBOARD_MODE_KEY) as 'host' | 'shopper' | null;
+  
+  // Priority: URL param > saved preference > default (shopper)
+  const currentMode = urlView === 'host' ? 'host' : urlView === 'shopper' ? 'shopper' : (savedMode || 'shopper');
   const isHost = hasRole('host');
 
+  // Restore saved mode on initial load if no URL param specified
+  useEffect(() => {
+    if (!urlView && savedMode) {
+      setSearchParams({ view: savedMode }, { replace: true });
+    }
+  }, [urlView, savedMode, setSearchParams]);
+
   const handleModeChange = (newMode: 'host' | 'shopper') => {
+    // Save to localStorage for persistence across sessions
+    localStorage.setItem(DASHBOARD_MODE_KEY, newMode);
     setSearchParams({ view: newMode });
   };
 
