@@ -558,6 +558,10 @@ const BookingCheckout = () => {
             availableTo={listing.available_to}
             priceDaily={listing.price_daily}
             priceWeekly={listing.price_weekly}
+            priceMonthly={listing.price_monthly}
+            priceHourly={listing.price_hourly}
+            hourlyEnabled={listing.hourly_enabled || false}
+            dailyEnabled={listing.daily_enabled !== false}
             onDatesSelected={handleDatesSelected}
           />
         </main>
@@ -585,6 +589,10 @@ const BookingCheckout = () => {
             availableTo={listing.available_to}
             priceDaily={listing.price_daily}
             priceWeekly={listing.price_weekly}
+            priceMonthly={listing.price_monthly}
+            priceHourly={listing.price_hourly}
+            hourlyEnabled={listing.hourly_enabled || false}
+            dailyEnabled={listing.daily_enabled !== false}
             onDatesSelected={handleDatesSelected}
           />
         </div>
@@ -1143,6 +1151,10 @@ const BookingCheckout = () => {
         availableTo={listing.available_to}
         priceDaily={listing.price_daily}
         priceWeekly={listing.price_weekly}
+        priceMonthly={listing.price_monthly}
+        priceHourly={listing.price_hourly}
+        hourlyEnabled={listing.hourly_enabled || false}
+        dailyEnabled={listing.daily_enabled !== false}
         onDatesSelected={handleDatesSelected}
       />
 
