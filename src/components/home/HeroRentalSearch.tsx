@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChefHat, Truck, Calendar as CalendarIcon, ChevronDown, Store } from 'lucide-react';
+import { Search, ChefHat, Truck, Calendar as CalendarIcon, ChevronDown, Store, Handshake, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -62,6 +62,16 @@ const HeroRentalSearch = () => {
     if (e.key === 'Enter') handleSearch();
   };
 
+  const openZendeskChat = () => {
+    if (window.zE) {
+      try {
+        window.zE('messenger', 'open');
+      } catch (error) {
+        console.debug('Zendesk messenger open:', error);
+      }
+    }
+  };
+
   // Format date range for display
   const formatDateRange = () => {
     if (!dateRange?.from) return "Add dates";
@@ -80,7 +90,7 @@ const HeroRentalSearch = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
       </div>
 
-      <div className="relative z-10 container max-w-4xl mx-auto px-4 text-center">
+      <div className="relative z-10 container max-w-5xl mx-auto px-4 text-center">
         {/* Headline Section */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -95,125 +105,204 @@ const HeroRentalSearch = () => {
           </p>
         </motion.div>
 
-        {/* Search Interface */}
+        {/* Two-Path Layout */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
+          className="grid md:grid-cols-2 gap-4 md:gap-6"
         >
-          {/* Mode Toggles */}
-          <div className="flex justify-center mb-4">
-            <div className="inline-flex items-center gap-2 p-1.5 bg-white/10 backdrop-blur-sm rounded-full">
-              <SearchTab
-                active={activeTab === 'rent'}
-                label="Rent"
-                icon={Store}
-                onClick={() => setActiveTab('rent')}
-              />
-              <SearchTab
-                active={activeTab === 'buy'}
-                label="Buy"
-                icon={Truck}
-                onClick={() => setActiveTab('buy')}
-              />
-            </div>
-          </div>
-
-          {/* Search Bar - The "Island" */}
-          <div className="bg-white rounded-2xl md:rounded-full shadow-2xl p-3 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-0">
-            {/* Location Input with Geolocation */}
-            <div className="flex-1 px-2 py-1 md:py-0 md:border-r border-border">
-              <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold text-left mb-0.5 px-2 pt-2">
-                Location
-              </label>
-              <LocationSearchInput
-                value={location}
-                onChange={setLocation}
-                onLocationSelect={handleLocationSelect}
-                selectedCoordinates={selectedLocation?.coordinates || null}
-                placeholder="City, Zip, or use current location"
-                className="[&_input]:border-0 [&_input]:shadow-none [&_input]:bg-transparent [&_input]:py-1.5 [&_input]:text-base [&_input]:font-medium [&>div]:space-y-0"
-              />
-            </div>
-
-            {/* Asset Type Selector */}
-            <div className="flex-1 px-4 py-3 md:py-2 md:border-r border-border">
-              <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold text-left mb-0.5">
-                Type
-              </label>
-              <div className="flex items-center gap-2 relative">
-                {assetType === 'ghost_kitchen' ? (
-                  <ChefHat className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                ) : (
-                  <Truck className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                )}
-                <select
-                  value={assetType}
-                  onChange={(e) => setAssetType(e.target.value)}
-                  className="w-full bg-transparent border-none p-0 text-foreground focus:ring-0 text-base font-medium outline-none cursor-pointer appearance-none truncate pr-4"
-                >
-                  <option value="all">Everything</option>
-                  <option value="food_truck">Food Trucks</option>
-                  <option value="food_trailer">Trailers</option>
-                  <option value="ghost_kitchen">Commercial Kitchens</option>
-                  <option value="vendor_space">Vendor Spaces</option>
-                </select>
-                <ChevronDown className="h-4 w-4 text-muted-foreground absolute right-0 pointer-events-none" />
+          {/* Path 1: Browse Yourself */}
+          <div className="bg-white/95 backdrop-blur-md rounded-3xl p-5 md:p-6 shadow-2xl">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Search className="h-5 w-5 text-primary" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-foreground text-lg">Browse Yourself</h3>
+                <p className="text-xs text-muted-foreground">Search our verified marketplace</p>
               </div>
             </div>
 
-            {/* Date Range Input (Only for Rentals) */}
-            <AnimatePresence>
-              {activeTab === 'rent' && (
-                <motion.div
-                  initial={{ opacity: 0, width: 0 }}
-                  animate={{ opacity: 1, width: 'auto' }}
-                  exit={{ opacity: 0, width: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex-1 px-4 py-3 md:py-2 md:border-r border-border overflow-hidden"
+            {/* Mode Toggles */}
+            <div className="flex justify-start mb-4">
+              <div className="inline-flex items-center gap-1 p-1 bg-muted rounded-full">
+                <button
+                  onClick={() => setActiveTab('rent')}
+                  className={cn(
+                    "flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
+                    activeTab === 'rent'
+                      ? "bg-white text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
                 >
-                  <Popover open={isDateOpen} onOpenChange={setIsDateOpen}>
-                    <PopoverTrigger asChild>
-                      <button className="w-full text-left">
-                        <span className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-0.5">
-                          Dates
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <CalendarIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <span className={cn("text-base font-medium truncate", dateRange?.from ? "text-foreground" : "text-muted-foreground/60")}>
-                            {formatDateRange()}
-                          </span>
-                        </div>
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="center">
-                      <Calendar
-                        mode="range"
-                        selected={dateRange}
-                        onSelect={setDateRange}
-                        disabled={(date) => date < new Date()}
-                        numberOfMonths={2}
-                        initialFocus
-                        className="pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <Store className="h-4 w-4" />
+                  Rent
+                </button>
+                <button
+                  onClick={() => setActiveTab('buy')}
+                  className={cn(
+                    "flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
+                    activeTab === 'buy'
+                      ? "bg-white text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Truck className="h-4 w-4" />
+                  Buy
+                </button>
+              </div>
+            </div>
 
-            {/* Search Button */}
-            <div className="p-1">
+            {/* Search Fields */}
+            <div className="space-y-3">
+              {/* Location Input */}
+              <div className="bg-muted/50 rounded-xl px-3 py-2">
+                <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold text-left mb-0.5">
+                  Location
+                </label>
+                <LocationSearchInput
+                  value={location}
+                  onChange={setLocation}
+                  onLocationSelect={handleLocationSelect}
+                  selectedCoordinates={selectedLocation?.coordinates || null}
+                  placeholder="City, Zip, or current location"
+                  className="[&_input]:border-0 [&_input]:shadow-none [&_input]:bg-transparent [&_input]:py-1 [&_input]:text-sm [&_input]:font-medium [&>div]:space-y-0"
+                />
+              </div>
+
+              {/* Asset Type & Dates Row */}
+              <div className="grid grid-cols-2 gap-2">
+                {/* Asset Type */}
+                <div className="bg-muted/50 rounded-xl px-3 py-2">
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold text-left mb-0.5">
+                    Type
+                  </label>
+                  <div className="flex items-center gap-2 relative">
+                    <select
+                      value={assetType}
+                      onChange={(e) => setAssetType(e.target.value)}
+                      className="w-full bg-transparent border-none p-0 text-foreground focus:ring-0 text-sm font-medium outline-none cursor-pointer appearance-none truncate pr-4"
+                    >
+                      <option value="all">Everything</option>
+                      <option value="food_truck">Food Trucks</option>
+                      <option value="food_trailer">Trailers</option>
+                      <option value="ghost_kitchen">Kitchens</option>
+                      <option value="vendor_space">Vendor Spaces</option>
+                    </select>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground absolute right-0 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Dates (Rent only) */}
+                <AnimatePresence mode="wait">
+                  {activeTab === 'rent' ? (
+                    <motion.div
+                      key="dates"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="bg-muted/50 rounded-xl px-3 py-2"
+                    >
+                      <Popover open={isDateOpen} onOpenChange={setIsDateOpen}>
+                        <PopoverTrigger asChild>
+                          <button className="w-full text-left">
+                            <span className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-0.5">
+                              Dates
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <CalendarIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <span className={cn("text-sm font-medium truncate", dateRange?.from ? "text-foreground" : "text-muted-foreground/60")}>
+                                {formatDateRange()}
+                              </span>
+                            </div>
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="center">
+                          <Calendar
+                            mode="range"
+                            selected={dateRange}
+                            onSelect={setDateRange}
+                            disabled={(date) => date < new Date()}
+                            numberOfMonths={2}
+                            initialFocus
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="placeholder"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="bg-muted/30 rounded-xl px-3 py-2 flex items-center justify-center"
+                    >
+                      <span className="text-xs text-muted-foreground">No dates needed</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Search Button */}
               <Button
                 onClick={handleSearch}
                 size="lg"
-                className="rounded-full h-12 w-full md:h-14 md:w-auto md:px-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
+                className="w-full rounded-xl h-12 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
               >
-                <Search className="h-5 w-5 md:mr-2" />
-                <span className="md:hidden">Search</span>
-                <span className="hidden md:inline">Find Spaces</span>
+                <Search className="h-5 w-5 mr-2" />
+                Search the Marketplace
               </Button>
             </div>
+          </div>
+
+          {/* Path 2: Let Us Match You */}
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 backdrop-blur-md rounded-3xl p-5 md:p-6 shadow-2xl border border-white/10 flex flex-col">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                <Handshake className="h-5 w-5 text-amber-400" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-white text-lg">Let Us Match You</h3>
+                <p className="text-xs text-white/60">Done-for-you concierge service</p>
+              </div>
+            </div>
+
+            <div className="flex-1 flex flex-col justify-center text-left space-y-4">
+              <div>
+                <h4 className="text-xl md:text-2xl font-semibold text-white mb-2">
+                  Don't have time to search?
+                </h4>
+                <p className="text-white/70 text-sm md:text-base leading-relaxed">
+                  Our experts will manually find the best deal for your specific needs. Tell us what you're looking for, and we'll do the legwork.
+                </p>
+              </div>
+
+              <ul className="space-y-2 text-sm text-white/80">
+                <li className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                  <span>Personalized asset recommendations</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                  <span>Price negotiation on your behalf</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                  <span>No sign-up required</span>
+                </li>
+              </ul>
+            </div>
+
+            <Button
+              onClick={openZendeskChat}
+              size="lg"
+              className="w-full rounded-xl h-12 bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold shadow-lg mt-4"
+            >
+              <Handshake className="h-5 w-5 mr-2" />
+              Get a Manual Match
+            </Button>
           </div>
         </motion.div>
       </div>
