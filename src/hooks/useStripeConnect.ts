@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface StripeConnectStatus {
   connected: boolean;
@@ -10,6 +12,8 @@ interface StripeConnectStatus {
 
 export const useStripeConnect = () => {
   const { user, session } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { toast } = useToast();
   const [status, setStatus] = useState<StripeConnectStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -31,13 +35,52 @@ export const useStripeConnect = () => {
 
       if (error) throw error;
       setStatus(data);
+      return data;
     } catch (error) {
       console.error('Error checking Stripe Connect status:', error);
       setStatus({ connected: false, onboarding_complete: false });
+      return null;
     } finally {
       setIsLoading(false);
     }
   }, [session?.access_token]);
+
+  // Handle return from Stripe onboarding
+  useEffect(() => {
+    const stripeParam = searchParams.get('stripe');
+    
+    if (stripeParam === 'complete' || stripeParam === 'refresh') {
+      // Remove the query param to clean up the URL
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('stripe');
+      setSearchParams(newParams, { replace: true });
+      
+      // Refresh status after returning from Stripe
+      const refreshAfterReturn = async () => {
+        setIsLoading(true);
+        // Small delay to allow Stripe to propagate the status
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const result = await checkStatus();
+        
+        if (stripeParam === 'complete') {
+          if (result?.onboarding_complete) {
+            toast({
+              title: 'Stripe Connected! 🎉',
+              description: 'Your payout account is now set up and ready to receive payments.',
+            });
+          } else if (result?.connected) {
+            toast({
+              title: 'Almost there!',
+              description: 'Please complete your Stripe onboarding to start receiving payments.',
+              variant: 'default',
+            });
+          }
+        }
+      };
+      
+      refreshAfterReturn();
+    }
+  }, [searchParams, setSearchParams, checkStatus, toast]);
 
   useEffect(() => {
     checkStatus();
