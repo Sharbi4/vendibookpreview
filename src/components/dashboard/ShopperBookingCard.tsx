@@ -580,17 +580,17 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
               </span>
             )}
 
-            {/* Document upload toggle button */}
-            {hasDocumentRequirements && (isPending || isApproved) && (
+            {/* Document resubmission button - only shows when admin rejected docs */}
+            {hasRejectedDocs && (isPending || isApproved) && (
               <Collapsible open={showDocuments} onOpenChange={setShowDocuments}>
                 <CollapsibleTrigger asChild>
                   <Button
-                    variant={needsDocuments || hasRejectedDocs ? 'default' : 'outline'}
+                    variant="default"
                     size="sm"
-                    className={needsDocuments || hasRejectedDocs ? 'bg-amber-500 hover:bg-amber-600' : ''}
+                    className="bg-amber-500 hover:bg-amber-600"
                   >
                     <FileText className="h-4 w-4 mr-1 shrink-0" />
-                    <span className="truncate">{needsDocuments ? 'Upload Docs' : hasRejectedDocs ? 'Fix Docs' : 'View Docs'}</span>
+                    <span className="truncate">Fix Docs</span>
                     {showDocuments ? <ChevronUp className="h-4 w-4 ml-1 shrink-0" /> : <ChevronDown className="h-4 w-4 ml-1 shrink-0" />}
                   </Button>
                 </CollapsibleTrigger>
@@ -598,8 +598,8 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
             )}
           </div>
 
-          {/* Document Upload Section (Collapsible) */}
-          {hasDocumentRequirements && listingId && (isPending || isApproved) && (
+          {/* Document Upload Section (Collapsible) - only for rejected docs resubmission */}
+          {hasRejectedDocs && listingId && (isPending || isApproved) && (
             <Collapsible open={showDocuments} onOpenChange={setShowDocuments}>
               <CollapsibleContent>
                 <div className="mt-4 pt-4 border-t border-border">
