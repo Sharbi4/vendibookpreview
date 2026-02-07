@@ -25,6 +25,8 @@ interface BookingDetails {
   delivery_fee_snapshot?: number;
   address_snapshot?: string;
   fulfillment_selected?: string;
+  is_instant_book?: boolean;
+  status?: string;
   listing: {
     title: string;
     cover_image_url: string | null;
@@ -207,6 +209,8 @@ const PaymentSuccess = () => {
               delivery_fee_snapshot,
               address_snapshot,
               fulfillment_selected,
+              is_instant_book,
+              status,
               listing:listings(title, cover_image_url)
             `)
             .eq('checkout_session_id', sessionId)
@@ -552,11 +556,21 @@ const PaymentSuccess = () => {
               ) : (
                 // Regular Booking Success or Hold
                 <div className={`transition-all duration-700 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                  {/* Order Number Banner */}
+                  {booking && (
+                    <div className="bg-muted/50 border border-border rounded-lg px-4 py-2 mb-4 inline-block">
+                      <p className="text-xs text-muted-foreground">Order Number</p>
+                      <p className="font-mono font-bold text-lg text-foreground">VB-{booking.id.slice(0, 8).toUpperCase()}</p>
+                    </div>
+                  )}
+
                   <div className="relative w-24 h-24 mx-auto mb-6">
-                    <div className={`absolute inset-0 ${isHold ? 'bg-amber-200' : 'bg-emerald-200'} rounded-full animate-pulse`} />
-                    <div className={`absolute inset-2 ${isHold ? 'bg-amber-100' : 'bg-emerald-100'} rounded-full`} />
+                    <div className={`absolute inset-0 ${booking?.is_instant_book ? 'bg-emerald-200' : isHold ? 'bg-amber-200' : 'bg-emerald-200'} rounded-full animate-pulse`} />
+                    <div className={`absolute inset-2 ${booking?.is_instant_book ? 'bg-emerald-100' : isHold ? 'bg-amber-100' : 'bg-emerald-100'} rounded-full`} />
                     <div className="absolute inset-0 flex items-center justify-center">
-                      {isHold ? (
+                      {booking?.is_instant_book ? (
+                        <CheckCircle2 className="h-12 w-12 text-emerald-600" />
+                      ) : isHold ? (
                         <Clock className="h-12 w-12 text-amber-600" />
                       ) : (
                         <CheckCircle2 className="h-12 w-12 text-emerald-600" />
@@ -567,19 +581,41 @@ const PaymentSuccess = () => {
                   
                   <h1 className="text-2xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
                     <PartyPopper className="h-6 w-6 text-primary" />
-                    {isHold ? 'Request Submitted!' : 'Payment Successful!'}
+                    {booking?.is_instant_book ? 'Booking Confirmed!' : isHold ? 'Request Submitted!' : 'Payment Successful!'}
                     <PartyPopper className="h-6 w-6 text-primary transform scale-x-[-1]" />
                   </h1>
+
+                  {/* Status Badge */}
+                  <div className="flex justify-center mb-4">
+                    {booking?.is_instant_book ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-emerald-100 text-emerald-700 border border-emerald-200">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Confirmed - Instant Book
+                      </span>
+                    ) : isHold ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-amber-100 text-amber-700 border border-amber-200">
+                        <Clock className="h-4 w-4" />
+                        Pending Host Approval
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-emerald-100 text-emerald-700 border border-emerald-200">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Confirmed
+                      </span>
+                    )}
+                  </div>
                   
                   <p className="text-muted-foreground mb-6">
-                    {isHold 
-                      ? 'Your payment has been authorized. The host will review your request.'
-                      : 'Your booking has been confirmed and payment processed.'
+                    {booking?.is_instant_book 
+                      ? 'Your booking is confirmed! Check your email for details.'
+                      : isHold 
+                        ? 'Your payment has been authorized. The host will review your request.'
+                        : 'Your booking has been confirmed and payment processed.'
                     }
                   </p>
 
-                  {/* Host Review Notice for Holds */}
-                  {isHold && (
+                  {/* Host Review Notice for Holds (not for instant book) */}
+                  {isHold && !booking?.is_instant_book && (
                     <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 rounded-xl p-4 mb-6 text-left border border-amber-200 dark:border-amber-800">
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
@@ -606,8 +642,8 @@ const PaymentSuccess = () => {
                     </div>
                   )}
 
-                  {/* Refund Policy Notice for Holds */}
-                  {isHold && (
+                  {/* Refund Policy Notice for Holds (not for instant book) */}
+                  {isHold && !booking?.is_instant_book && (
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/20 rounded-xl p-4 mb-6 text-left border border-blue-200 dark:border-blue-800">
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
@@ -621,6 +657,34 @@ const PaymentSuccess = () => {
                           <p className="text-xs text-muted-foreground mt-1">
                             If the host doesn't respond within <span className="font-medium text-blue-600 dark:text-blue-400">7 days</span>, your payment authorization will be automatically released and funds returned to your account within <span className="font-medium text-blue-600 dark:text-blue-400">7-10 business days</span>.
                           </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Instant Book Confirmation Notice */}
+                  {booking?.is_instant_book && (
+                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20 rounded-xl p-4 mb-6 text-left border border-emerald-200 dark:border-emerald-800">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center flex-shrink-0">
+                          <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-foreground text-sm">Your booking is confirmed!</h4>
+                          <ul className="text-xs text-muted-foreground mt-2 space-y-2">
+                            <li className="flex items-start gap-2">
+                              <span className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center flex-shrink-0 text-xs font-bold text-emerald-600">✓</span>
+                              <span>Payment has been processed successfully</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center flex-shrink-0 text-xs font-bold text-emerald-600">✓</span>
+                              <span>A confirmation email has been sent to you</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center flex-shrink-0 text-xs font-bold text-emerald-600">✓</span>
+                              <span>You can message the host from your dashboard</span>
+                            </li>
+                          </ul>
                         </div>
                       </div>
                     </div>
@@ -653,16 +717,27 @@ const PaymentSuccess = () => {
                               })}
                             </span>
                           </div>
-                          {/* Show address for non-hold bookings (pickup/static location) */}
-                          {!isHold && booking.address_snapshot && (booking.fulfillment_selected === 'pickup' || booking.fulfillment_selected === 'on_site') && (
+                          {/* Show address for confirmed bookings (pickup/static location) */}
+                          {(booking.is_instant_book || !isHold) && booking.address_snapshot && (booking.fulfillment_selected === 'pickup' || booking.fulfillment_selected === 'on_site') && (
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
                               <MapPin className="h-4 w-4 text-primary" />
                               <span className="line-clamp-1">{booking.address_snapshot}</span>
                             </div>
                           )}
-                          <p className="font-bold text-lg text-primary mt-2">
-                            ${booking.total_price.toFixed(2)} {isHold ? 'authorized' : 'paid'}
-                          </p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <p className="font-bold text-lg text-primary">
+                              ${booking.total_price.toFixed(2)}
+                            </p>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              booking.is_instant_book 
+                                ? 'bg-emerald-100 text-emerald-700' 
+                                : isHold 
+                                  ? 'bg-amber-100 text-amber-700' 
+                                  : 'bg-emerald-100 text-emerald-700'
+                            }`}>
+                              {booking.is_instant_book ? 'Paid' : isHold ? 'Authorized' : 'Paid'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
