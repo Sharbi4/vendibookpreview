@@ -16,6 +16,7 @@ import {
   Package,
   ChevronDown,
   Sun,
+  CalendarRange,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -45,11 +46,13 @@ interface BookingWidgetProps {
   // Rental props
   priceDaily?: number | null;
   priceWeekly?: number | null;
+  priceMonthly?: number | null;
   priceHourly?: number | null;
   availableFrom?: string | null;
   availableTo?: string | null;
   instantBook?: boolean;
   hourlyEnabled?: boolean;
+  dailyEnabled?: boolean;
   // Sale props
   priceSale?: number | null;
   fulfillmentType?: FulfillmentType;
@@ -66,11 +69,13 @@ export const BookingWidget = ({
   isRental,
   priceDaily,
   priceWeekly,
+  priceMonthly,
   priceHourly,
   availableFrom,
   availableTo,
   instantBook = false,
   hourlyEnabled = false,
+  dailyEnabled = true,
   priceSale,
   fulfillmentType = 'pickup',
   deliveryFee,
@@ -366,12 +371,27 @@ export const BookingWidget = ({
                   <span className="text-muted-foreground text-lg">/day</span>
                 </div>
                 
-                {priceWeekly && (
-                  <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5 text-primary" />
-                    ${priceWeekly.toLocaleString()}/week for 7+ days
-                  </p>
-                )}
+                {/* Show all available pricing tiers */}
+                <div className="mt-1 space-y-0.5">
+                  {priceHourly && hourlyEnabled && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5 text-primary" />
+                      ${priceHourly.toLocaleString()}/hr for hourly bookings
+                    </p>
+                  )}
+                  {priceWeekly && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      ${priceWeekly.toLocaleString()}/week for 7+ days
+                    </p>
+                  )}
+                  {priceMonthly && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <CalendarRange className="h-3.5 w-3.5 text-primary" />
+                      ${priceMonthly.toLocaleString()}/month for 30+ days
+                    </p>
+                  )}
+                </div>
               </>
             )}
 

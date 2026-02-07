@@ -483,11 +483,13 @@ const ListingDetail = () => {
                   isRental={isRental}
                   priceDaily={listing.price_daily}
                   priceWeekly={listing.price_weekly}
+                  priceMonthly={listing.price_monthly}
                   priceHourly={(listing as any).price_hourly}
                   availableFrom={listing.available_from}
                   availableTo={listing.available_to}
                   instantBook={listing.instant_book || false}
                   hourlyEnabled={(listing as any).hourly_enabled || false}
+                  dailyEnabled={(listing as any).daily_enabled !== false}
                   priceSale={listing.price_sale}
                   fulfillmentType={listing.fulfillment_type}
                   deliveryFee={listing.delivery_fee}
@@ -512,6 +514,10 @@ const ListingDetail = () => {
         category={listing.category}
         fulfillmentType={listing.fulfillment_type}
         priceWeekly={listing.price_weekly}
+        priceMonthly={listing.price_monthly}
+        priceHourly={(listing as any).price_hourly}
+        hourlyEnabled={(listing as any).hourly_enabled || false}
+        dailyEnabled={(listing as any).daily_enabled !== false}
         availableFrom={listing.available_from}
         availableTo={listing.available_to}
         pickupLocation={listing.pickup_location_text}
