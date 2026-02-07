@@ -447,11 +447,11 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
           )}
 
           {/* Actions */}
-          <div className="flex items-center gap-2 pt-3 border-t border-border">
+          <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-border">
             <Button variant="outline" size="sm" asChild className="bg-card/80 backdrop-blur-sm">
               <Link to={`/listing/${listing?.id}`}>
-                <ExternalLink className="h-4 w-4 mr-1" />
-                View Listing
+                <ExternalLink className="h-4 w-4 mr-1 shrink-0" />
+                <span className="truncate">View Listing</span>
               </Link>
             </Button>
 
@@ -462,8 +462,8 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
                 onClick={() => setShowMessageDialog(true)}
                 className="bg-card/80 backdrop-blur-sm"
               >
-                <MessageCircle className="h-4 w-4 mr-1" />
-                Message Host
+                <MessageCircle className="h-4 w-4 mr-1 shrink-0" />
+                <span className="truncate">Message Host</span>
               </Button>
             )}
             
@@ -490,9 +490,9 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
                     disabled={isCancelling}
                   >
                     {isCancelling ? (
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin shrink-0" />
                     ) : null}
-                    {isPaid ? 'Cancel & Refund' : 'Cancel Request'}
+                    <span className="truncate">{isPaid ? 'Cancel & Refund' : 'Cancel Request'}</span>
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
@@ -534,15 +534,17 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
                 size="sm"
                 onClick={() => setShowPriceBreakdown(true)}
                 disabled={isProcessingPayment}
+                className="min-w-0"
               >
                 {isProcessingPayment ? (
-                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin shrink-0" />
                 ) : paymentStatus === 'failed' ? (
-                  <AlertCircle className="h-4 w-4 mr-1" />
+                  <AlertCircle className="h-4 w-4 mr-1 shrink-0" />
                 ) : (
-                  <CreditCard className="h-4 w-4 mr-1" />
+                  <CreditCard className="h-4 w-4 mr-1 shrink-0" />
                 )}
-                {paymentStatus === 'failed' ? 'Retry Payment' : 'Pay Now'} · ${booking.total_price}
+                <span className="truncate">{paymentStatus === 'failed' ? 'Retry Payment' : 'Pay Now'}</span>
+                <span className="shrink-0 ml-1">· ${booking.total_price}</span>
               </Button>
             )}
 
@@ -566,8 +568,8 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
                 size="sm"
                 onClick={() => setShowReviewForm(true)}
               >
-                <Star className="h-4 w-4 mr-1" />
-                Leave Review
+                <Star className="h-4 w-4 mr-1 shrink-0" />
+                <span className="truncate">Leave Review</span>
               </Button>
             )}
 
@@ -587,9 +589,9 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
                     size="sm"
                     className={needsDocuments || hasRejectedDocs ? 'bg-amber-500 hover:bg-amber-600' : ''}
                   >
-                    <FileText className="h-4 w-4 mr-1" />
-                    {needsDocuments ? 'Upload Documents' : hasRejectedDocs ? 'Fix Documents' : 'View Documents'}
-                    {showDocuments ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
+                    <FileText className="h-4 w-4 mr-1 shrink-0" />
+                    <span className="truncate">{needsDocuments ? 'Upload Docs' : hasRejectedDocs ? 'Fix Docs' : 'View Docs'}</span>
+                    {showDocuments ? <ChevronUp className="h-4 w-4 ml-1 shrink-0" /> : <ChevronDown className="h-4 w-4 ml-1 shrink-0" />}
                   </Button>
                 </CollapsibleTrigger>
               </Collapsible>
