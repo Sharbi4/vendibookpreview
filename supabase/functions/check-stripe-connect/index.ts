@@ -62,7 +62,9 @@ serve(async (req) => {
     
     // Check account status
     const account = await stripe.accounts.retrieve(profile.stripe_account_id);
-    const isComplete = account.details_submitted && account.payouts_enabled;
+    // Treat onboarding as complete once details are submitted. `payouts_enabled` can temporarily toggle
+    // (e.g., reviews/verification), and we don't want to force "reconnect" for already-linked accounts.
+    const isComplete = Boolean(account.details_submitted);
     
     logStep("Account status checked", { 
       accountId: profile.stripe_account_id,

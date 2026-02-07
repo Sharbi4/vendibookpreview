@@ -98,7 +98,8 @@ export const useStripeConnect = () => {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: { returnPath: returnPath || window.location.pathname },
+        // Preserve wizard state (query params) so Stripe returns users to the exact step.
+        body: { returnPath: returnPath || `${window.location.pathname}${window.location.search}` },
       });
 
       if (error) throw error;
