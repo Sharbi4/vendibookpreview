@@ -109,10 +109,11 @@ serve(async (req) => {
     }
 
     // Create account link for onboarding
+    const joinChar = returnPath.includes('?') ? '&' : '?';
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: `${origin}${returnPath}?stripe=refresh`,
-      return_url: `${origin}${returnPath}?stripe=complete`,
+      refresh_url: `${origin}${returnPath}${joinChar}stripe=refresh`,
+      return_url: `${origin}${returnPath}${joinChar}stripe=complete`,
       type: "account_onboarding",
     });
 
