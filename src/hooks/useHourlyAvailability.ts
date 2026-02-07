@@ -12,13 +12,16 @@ interface TimeWindow {
   end: string;   // HH:mm format
   startHour: number;
   endHour: number;
+  availableSlots?: number; // How many slots available in this window
 }
 
 interface BookingSlot {
   date: string;
+  endDate: string;
   startTime: string | null;
   endTime: string | null;
   isHourly: boolean;
+  slotNumber: number | null;
 }
 
 interface BlockedTimeSlot {
@@ -39,6 +42,7 @@ interface ListingHourlySettings {
   operatingHoursEnd: string | null;   // HH:mm
   priceDaily: number | null;
   priceWeekly: number | null;
+  totalSlots: number; // Total capacity slots for this listing
 }
 
 interface DayAvailabilityInfo {
@@ -48,6 +52,8 @@ interface DayAvailabilityInfo {
   isUnavailable: boolean;
   availableWindows: TimeWindow[];
   windowsSummary: string;
+  availableSlots: number; // How many slots are still available
+  totalSlots: number;
 }
 
 export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailabilityOptions) => {
@@ -63,6 +69,7 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
     operatingHoursEnd: null,
     priceDaily: null,
     priceWeekly: null,
+    totalSlots: 1,
   });
   const [existingBookings, setExistingBookings] = useState<BookingSlot[]>([]);
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
@@ -76,7 +83,7 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
       
       setIsLoading(true);
       try {
-        // Fetch listing settings
+        // Fetch listing settings including total_slots for capacity management
         const { data: listingData } = await supabase
           .from('listings')
           .select(`
@@ -90,7 +97,8 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
             operating_hours_start,
             operating_hours_end,
             price_daily,
-            price_weekly
+            price_weekly,
+            total_slots
           `)
           .eq('id', listingId)
           .single();
@@ -108,13 +116,14 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
             operatingHoursEnd: (listingData as any).operating_hours_end,
             priceDaily: listingData.price_daily,
             priceWeekly: listingData.price_weekly,
+            totalSlots: listingData.total_slots || 1,
           });
         }
 
-        // Fetch existing confirmed bookings
+        // Fetch existing confirmed bookings including slot information
         const { data: bookings } = await supabase
           .from('booking_requests')
-          .select('start_date, end_date, start_time, end_time, is_hourly_booking')
+          .select('start_date, end_date, start_time, end_time, is_hourly_booking, slot_number')
           .eq('listing_id', listingId)
           .in('status', ['approved', 'completed', 'pending'])
           .in('payment_status', ['paid', 'pending']);
@@ -122,9 +131,11 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
         if (bookings) {
           setExistingBookings(bookings.map(b => ({
             date: b.start_date,
+            endDate: b.end_date,
             startTime: (b as any).start_time,
             endTime: (b as any).end_time,
             isHourly: (b as any).is_hourly_booking || false,
+            slotNumber: b.slot_number,
           })));
         }
 
@@ -161,56 +172,105 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
     fetchData();
   }, [listingId]);
 
-  // Check if a specific date has any daily booking (blocks all hourly)
-  const hasDailyBookingOnDate = (date: Date): boolean => {
+  // Count how many slots are booked for a specific date (daily bookings)
+  const countDailyBookingsOnDate = (date: Date): number => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return existingBookings.some(b => 
-      !b.isHourly && b.date <= dateStr && b.date >= dateStr
-    );
+    // Count bookings that span this date (start_date <= date <= end_date)
+    return existingBookings.filter(b => 
+      !b.isHourly && b.date <= dateStr && b.endDate >= dateStr
+    ).length;
   };
 
-  // Check if a date has any hourly booking (blocks daily for that date)
+  // Check if a specific date has ALL slots booked with daily bookings
+  const hasDailyBookingOnDate = (date: Date): boolean => {
+    return countDailyBookingsOnDate(date) >= settings.totalSlots;
+  };
+
+  // Count how many slots have hourly bookings on a date
+  const countHourlyBookingsOnDate = (date: Date): number => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    // Get unique slot numbers that have hourly bookings on this date
+    const bookedSlots = new Set(
+      existingBookings
+        .filter(b => b.isHourly && b.date === dateStr)
+        .map(b => b.slotNumber ?? 0) // null slot_number treated as slot 0
+    );
+    return bookedSlots.size;
+  };
+
+  // Check if a date has ANY hourly booking (for blocking daily on single-slot)
   const hasHourlyBookingOnDate = (date: Date): boolean => {
     const dateStr = format(date, 'yyyy-MM-dd');
     return existingBookings.some(b => b.isHourly && b.date === dateStr);
   };
 
-  // Get available time windows for a specific date
+  // Get available slots count for a specific date
+  const getAvailableSlotsForDate = (date: Date): number => {
+    const dailyBooked = countDailyBookingsOnDate(date);
+    return Math.max(0, settings.totalSlots - dailyBooked);
+  };
+
+  // Count hourly bookings for a specific hour on a date
+  const countHourlyBookingsForHour = (date: Date, hour: number): number => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return existingBookings.filter(b => {
+      if (!b.isHourly || b.date !== dateStr || !b.startTime || !b.endTime) return false;
+      const startHour = parseInt(b.startTime.split(':')[0]);
+      const endHour = parseInt(b.endTime.split(':')[0]);
+      return hour >= startHour && hour < endHour;
+    }).length;
+  };
+
+  // Get available time windows for a specific date with slot-aware logic
   const getAvailableWindowsForDate = (date: Date): TimeWindow[] => {
     if (!settings.hourlyEnabled) return [];
     
     const dateStr = format(date, 'yyyy-MM-dd');
     
-    // If date is blocked or has daily booking, no hourly slots available
-    if (blockedDates.includes(dateStr) || hasDailyBookingOnDate(date)) {
+    // If date is fully blocked, no hourly slots available
+    if (blockedDates.includes(dateStr)) {
       return [];
+    }
+
+    // Check how many slots are available (not booked with daily bookings)
+    const availableSlots = getAvailableSlotsForDate(date);
+    if (availableSlots <= 0) {
+      return []; // All slots have daily bookings
     }
 
     // Default operating hours: 6 AM to 10 PM
     const opStart = settings.operatingHoursStart ? parseInt(settings.operatingHoursStart.split(':')[0]) : 6;
     const opEnd = settings.operatingHoursEnd ? parseInt(settings.operatingHoursEnd.split(':')[0]) : 22;
 
-    // Build array of all hours in operating range
-    const allHours: boolean[] = new Array(24).fill(false);
+    // Build array tracking available slots per hour
+    const availableSlotsPerHour: number[] = new Array(24).fill(0);
     for (let h = opStart; h < opEnd; h++) {
-      allHours[h] = true;
-    }
-
-    // Block hours that are already booked
-    const hourlyBookingsToday = existingBookings.filter(b => b.isHourly && b.date === dateStr);
-    hourlyBookingsToday.forEach(booking => {
-      if (booking.startTime && booking.endTime) {
-        const startHour = parseInt(booking.startTime.split(':')[0]);
-        const endHour = parseInt(booking.endTime.split(':')[0]);
-        // Add buffer time
-        const bufferHours = Math.ceil(settings.bufferTimeMins / 60);
-        const actualStart = Math.max(0, startHour - bufferHours);
-        const actualEnd = Math.min(24, endHour + bufferHours);
-        for (let h = actualStart; h < actualEnd; h++) {
-          allHours[h] = false;
+      // Start with available slots (not daily-booked)
+      let slotsForHour = availableSlots;
+      
+      // Subtract hourly bookings that cover this hour
+      const hourlyBookingsForThisHour = countHourlyBookingsForHour(date, h);
+      slotsForHour -= hourlyBookingsForThisHour;
+      
+      // Apply buffer time from adjacent hourly bookings
+      const hourlyBookingsToday = existingBookings.filter(b => b.isHourly && b.date === dateStr);
+      hourlyBookingsToday.forEach(booking => {
+        if (booking.startTime && booking.endTime) {
+          const startHour = parseInt(booking.startTime.split(':')[0]);
+          const endHour = parseInt(booking.endTime.split(':')[0]);
+          const bufferHours = Math.ceil(settings.bufferTimeMins / 60);
+          // Check if this hour falls in the buffer zone
+          if (h >= startHour - bufferHours && h < startHour) {
+            slotsForHour = Math.max(0, slotsForHour - 1);
+          }
+          if (h >= endHour && h < endHour + bufferHours) {
+            slotsForHour = Math.max(0, slotsForHour - 1);
+          }
         }
-      }
-    });
+      });
+      
+      availableSlotsPerHour[h] = Math.max(0, slotsForHour);
+    }
 
     // Block hours from blocked time slots
     const blockedTimesToday = blockedTimeSlots.filter(t => t.date === dateStr);
@@ -218,28 +278,34 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
       const startHour = parseInt(slot.startTime.split(':')[0]);
       const endHour = parseInt(slot.endTime.split(':')[0]);
       for (let h = startHour; h < endHour; h++) {
-        allHours[h] = false;
+        availableSlotsPerHour[h] = 0;
       }
     });
 
-    // Check minimum notice
+    // Check minimum notice for today
     const now = new Date();
     if (format(date, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd')) {
       const currentHour = now.getHours();
       const minStartHour = currentHour + settings.minNoticeHours;
       for (let h = 0; h <= minStartHour; h++) {
-        allHours[h] = false;
+        availableSlotsPerHour[h] = 0;
       }
     }
 
-    // Convert to windows
+    // Convert to windows - an hour is available if there's at least 1 slot
     const windows: TimeWindow[] = [];
     let windowStart: number | null = null;
+    let minSlotsInWindow = settings.totalSlots;
 
     for (let h = 0; h <= 24; h++) {
-      if (h < 24 && allHours[h] && windowStart === null) {
+      const hasAvailability = h < 24 && availableSlotsPerHour[h] > 0;
+      
+      if (hasAvailability && windowStart === null) {
         windowStart = h;
-      } else if ((h === 24 || !allHours[h]) && windowStart !== null) {
+        minSlotsInWindow = availableSlotsPerHour[h];
+      } else if (hasAvailability && windowStart !== null) {
+        minSlotsInWindow = Math.min(minSlotsInWindow, availableSlotsPerHour[h]);
+      } else if (!hasAvailability && windowStart !== null) {
         // Only include windows that meet minimum hours
         const duration = h - windowStart;
         if (duration >= settings.minHours) {
@@ -248,18 +314,21 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
             end: `${h.toString().padStart(2, '0')}:00`,
             startHour: windowStart,
             endHour: h,
+            availableSlots: minSlotsInWindow,
           });
         }
         windowStart = null;
+        minSlotsInWindow = settings.totalSlots;
       }
     }
 
     return windows;
   };
 
-  // Get day availability info for calendar display
+  // Get day availability info for calendar display with slot awareness
   const getDayAvailabilityInfo = (date: Date): DayAvailabilityInfo => {
     const dateStr = format(date, 'yyyy-MM-dd');
+    const availableSlots = getAvailableSlotsForDate(date);
     
     // Check if fully blocked
     if (blockedDates.includes(dateStr)) {
@@ -270,19 +339,35 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
         isUnavailable: true,
         availableWindows: [],
         windowsSummary: '',
+        availableSlots: 0,
+        totalSlots: settings.totalSlots,
       };
     }
 
-    const hasDaily = hasDailyBookingOnDate(date);
+    const allDailyBooked = availableSlots <= 0;
     const hasHourly = hasHourlyBookingOnDate(date);
     const windows = getAvailableWindowsForDate(date);
 
     // Full day is available if:
     // 1. Daily booking is enabled
-    // 2. No existing hourly bookings on this date (strict mode)
+    // 2. At least one slot is not hourly-booked on this date
     // 3. No blocked time slots on this date
+    // 4. At least one slot is available (not daily-booked)
     const hasBlockedTimes = blockedTimeSlots.some(t => t.date === dateStr);
-    const fullDayAvailable = settings.dailyEnabled && !hasHourly && !hasDaily && !hasBlockedTimes;
+    
+    // For single-slot listings, any hourly booking blocks full-day
+    // For multi-slot listings, full-day is available if there are available slots without hourly bookings
+    let fullDayAvailable = false;
+    if (settings.dailyEnabled && !allDailyBooked && !hasBlockedTimes) {
+      if (settings.totalSlots === 1) {
+        // Single slot: any hourly booking blocks full day
+        fullDayAvailable = !hasHourly;
+      } else {
+        // Multi-slot: check if any slot is completely free (no hourly bookings)
+        const hourlyBookedSlots = countHourlyBookingsOnDate(date);
+        fullDayAvailable = hourlyBookedSlots < availableSlots;
+      }
+    }
 
     // Create summary for calendar cell
     let summary = '';
@@ -296,15 +381,21 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
       if (windows.length > 2) {
         summary += ` +${windows.length - 2}`;
       }
+      // Add slot availability info for multi-slot listings
+      if (settings.totalSlots > 1 && availableSlots < settings.totalSlots) {
+        summary += ` (${availableSlots}/${settings.totalSlots})`;
+      }
     }
 
     return {
       hasHourlySlots: settings.hourlyEnabled && windows.length > 0,
       hasFullDay: fullDayAvailable,
-      isLimited: settings.hourlyEnabled && windows.length > 0 && !fullDayAvailable,
+      isLimited: (settings.hourlyEnabled && windows.length > 0 && !fullDayAvailable) || (availableSlots < settings.totalSlots && availableSlots > 0),
       isUnavailable: !fullDayAvailable && windows.length === 0,
       availableWindows: windows,
       windowsSummary: summary,
+      availableSlots,
+      totalSlots: settings.totalSlots,
     };
   };
 
@@ -344,5 +435,7 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
     hasHourlyBookingOnDate,
     calculateHourlyPrice,
     calculateDailyPrice,
+    getAvailableSlotsForDate,
+    countDailyBookingsOnDate,
   };
 };
