@@ -21,7 +21,8 @@ import {
   Zap,
   Shield,
   Undo2,
-  AlertTriangle
+  AlertTriangle,
+  Receipt
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import InstantBookTimeline from './InstantBookTimeline';
@@ -47,6 +48,7 @@ import {
 import { MessageDialog } from '@/components/messaging/MessageDialog';
 import ReviewForm from '@/components/reviews/ReviewForm';
 import { DocumentUploadSection } from '@/components/documents/DocumentUploadSection';
+import { BookingReceiptModal } from '@/components/receipts/BookingReceiptModal';
 import { PriceBreakdownModal, CheckoutOverlay } from '@/components/checkout';
 import { useBookingReview } from '@/hooks/useReviews';
 import { useDocumentComplianceStatus } from '@/hooks/useRequiredDocuments';
@@ -142,6 +144,7 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
   const [showPriceBreakdown, setShowPriceBreakdown] = useState(false);
   const [showCheckoutOverlay, setShowCheckoutOverlay] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
   const { data: existingReview } = useBookingReview(booking.id);
   
   const listing = booking.listing;
@@ -574,10 +577,23 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
             )}
 
             {existingReview && (
-              <span className="text-xs text-primary flex items-center gap-1 ml-auto">
+              <span className="text-xs text-primary flex items-center gap-1">
                 <Star className="h-3 w-3 fill-primary" />
                 Reviewed
               </span>
+            )}
+
+            {/* Receipt button - shows for confirmed & paid bookings */}
+            {isPaid && (isApproved || isCompleted) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowReceipt(true)}
+                className="bg-card/80 backdrop-blur-sm"
+              >
+                <Receipt className="h-4 w-4 mr-1 shrink-0" />
+                <span className="truncate">Receipt</span>
+              </Button>
             )}
 
             {/* Document resubmission button - only shows when admin rejected docs */}
@@ -647,6 +663,38 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
 
       {/* Checkout Overlay */}
       <CheckoutOverlay isVisible={showCheckoutOverlay} />
+
+      {/* Receipt Modal */}
+      <BookingReceiptModal
+        open={showReceipt}
+        onOpenChange={setShowReceipt}
+        booking={{
+          id: booking.id,
+          start_date: booking.start_date,
+          end_date: booking.end_date,
+          start_time: (booking as any).start_time,
+          end_time: (booking as any).end_time,
+          total_price: booking.total_price,
+          created_at: booking.created_at,
+          paid_at: (booking as any).paid_at,
+          status: booking.status,
+          is_hourly_booking: (booking as any).is_hourly_booking,
+          duration_hours: (booking as any).duration_hours,
+          deposit_amount: (booking as any).deposit_amount,
+          delivery_fee_snapshot: booking.delivery_fee_snapshot,
+          fulfillment_selected: (booking as any).fulfillment_selected,
+          delivery_address: (booking as any).delivery_address,
+          address_snapshot: (booking as any).address_snapshot,
+          payment_intent_id: (booking as any).payment_intent_id,
+          listing: listing ? {
+            id: listing.id,
+            title: listing.title,
+            address: listing.address,
+            pickup_location_text: listing.pickup_location_text,
+            category: listing.category,
+          } : null,
+        }}
+      />
     </div>
   );
 };
