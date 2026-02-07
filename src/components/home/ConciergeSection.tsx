@@ -1,4 +1,4 @@
-import { MessageCircle, HeadphonesIcon, Send, Sparkles, Clock, CheckCircle2 } from 'lucide-react';
+import { MessageCircle, UserRound, Send, Sparkles, Clock, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
@@ -82,7 +82,7 @@ const ConciergeSection = () => {
                         WebkitBackdropFilter: 'blur(12px)',
                       }}
                     >
-                      <HeadphonesIcon className="w-14 h-14 md:w-16 md:h-16 text-amber-400 drop-shadow-lg" />
+                      <UserRound className="w-14 h-14 md:w-16 md:h-16 text-amber-400 drop-shadow-lg" />
                       
                       {/* Online indicator */}
                       <span className="absolute bottom-2 right-2 w-5 h-5 rounded-full bg-green-400 border-2 border-white/30 shadow-lg shadow-green-400/50">
