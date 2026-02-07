@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Star, Calendar } from 'lucide-react';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
@@ -86,24 +85,21 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   const remainingAmenitiesCount = (listing.amenities?.length || 0) - displayAmenities.length;
 
   return (
-    <motion.div
-      whileHover={{ y: -4 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-    >
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 ease-out flex flex-col overflow-hidden h-full group">
       <Link 
         to={`/listing/${listing.id}`} 
-        className={cn("group cursor-pointer block", className)}
+        className={cn("cursor-pointer block flex-1 flex flex-col", className)}
         onClick={() => trackListingCardClick(listing.id, listing.category, 'listing_card')}
       >
-        {/* Image Container */}
+        {/* Image Container - Turo Look */}
         <div className={cn(
-          "relative overflow-hidden rounded-xl bg-muted shadow-sm group-hover:shadow-lg transition-shadow duration-300",
+          "relative w-full bg-gray-50 overflow-hidden",
           compact ? "aspect-[4/3]" : "aspect-[4/3]"
         )}>
           <img
             src={listing.cover_image_url || listing.image_urls[0] || '/placeholder.svg'}
             alt={listing.title}
-            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"
           />
         
         {/* Mode Badge */}
@@ -255,13 +251,13 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
             </div>
           </div>
         )}
-      </div>
+        </div>
 
-      {/* Content */}
-      <div className={cn("space-y-1", compact ? "mt-2" : "mt-3")}>
+      {/* Content - Apple/OpenAI Cleanliness */}
+      <div className={cn("p-4 space-y-2 flex-1 flex flex-col", compact && "p-3 space-y-1")}>
         {/* Location & Category */}
-        <div className="flex items-center justify-between">
-          <span className={cn("text-muted-foreground flex items-center gap-1", compact ? "text-xs" : "text-sm")}>
+        <div className="flex items-center justify-between gap-2">
+          <span className={cn("text-gray-500 font-medium flex items-center gap-1", compact ? "text-xs" : "text-sm")}>
             <MapPin className={cn(compact ? "h-2.5 w-2.5" : "h-3 w-3")} />
             <span className="line-clamp-1">{location}</span>
             {distanceMiles !== undefined && (
@@ -272,7 +268,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           </span>
           {!compact && (
             <CategoryTooltip category={listing.category} side="top">
-              <span className="text-xs px-2 py-1 bg-secondary rounded-full text-muted-foreground cursor-help">
+              <span className="bg-gray-100 text-gray-900 text-xs font-bold px-3 py-1 rounded-full cursor-help">
                 {CATEGORY_LABELS[listing.category]}
               </span>
             </CategoryTooltip>
@@ -281,37 +277,37 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
 
         {/* Delivery Radius Badge */}
         {!compact && (listing.fulfillment_type === 'delivery' || listing.fulfillment_type === 'both') && listing.delivery_radius_miles && (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1 text-xs text-gray-500">
             <Truck className="h-3 w-3" />
             <span>Delivers within {listing.delivery_radius_miles} mi</span>
             {listing.delivery_fee && (
-              <span className="text-foreground font-medium">· ${listing.delivery_fee} fee</span>
+              <span className="text-gray-900 font-medium">· ${listing.delivery_fee} fee</span>
             )}
           </div>
         )}
 
-        {/* Title & Rating */}
+        {/* Title & Rating - Tracking Tight Typography */}
         <div className="flex items-center justify-between gap-2">
           <h3 className={cn(
-            "font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors",
-            compact ? "text-sm" : ""
+            "text-lg font-semibold tracking-tight text-gray-900 line-clamp-1 group-hover:text-primary transition-colors",
+            compact && "text-sm"
           )}>
             {listing.title}
           </h3>
           {!compact && <RatingBadge listingId={listing.id} />}
         </div>
 
-        {/* Price */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <p className={cn("text-foreground", compact ? "text-sm" : "")}>
-            <span className="font-bold">{price}</span>
-            {!compact && listing.mode === 'rent' && listing.price_weekly && (
-              <span className="text-sm text-muted-foreground ml-2">
-                · ${listing.price_weekly}/week
-              </span>
-            )}
-          </p>
-          {/* BNPL badges for eligible listings - show on all cards including compact */}
+        {/* Price - Premium Pill Badge Style */}
+        <div className="flex items-center gap-2 flex-wrap mt-auto pt-1">
+          <span className="bg-gray-100 text-gray-900 text-sm font-bold px-3 py-1 rounded-full">
+            {price}
+          </span>
+          {!compact && listing.mode === 'rent' && listing.price_weekly && (
+            <span className="text-sm text-gray-500 font-medium">
+              ${listing.price_weekly}/week
+            </span>
+          )}
+          {/* BNPL badges for eligible listings */}
           {listing.mode === 'sale' && listing.price_sale && (
             <>
               <AfterpayBadge price={listing.price_sale} showEstimate={false} showTooltip={!compact} />
@@ -339,7 +335,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           availableTo={(listing as any).available_to}
         />
       )}
-    </motion.div>
+    </div>
   );
 };
 
