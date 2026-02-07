@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Calendar, ShoppingCart, Zap, Tag, Edit, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { RequestDatesModal } from './RequestDatesModal';
+import DateSelectionModal from './DateSelectionModal';
 import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
@@ -20,6 +20,10 @@ interface StickyMobileCTAProps {
   category?: ListingCategory;
   fulfillmentType?: FulfillmentType;
   priceWeekly?: number | null;
+  priceMonthly?: number | null;
+  priceHourly?: number | null;
+  hourlyEnabled?: boolean;
+  dailyEnabled?: boolean;
   availableFrom?: string | null;
   availableTo?: string | null;
   pickupLocation?: string | null;
@@ -38,6 +42,10 @@ export const StickyMobileCTA = ({
   status,
   instantBook = false,
   priceWeekly,
+  priceMonthly,
+  priceHourly,
+  hourlyEnabled = false,
+  dailyEnabled = true,
   availableFrom,
   availableTo,
   listingTitle = 'Listing',
@@ -178,12 +186,18 @@ export const StickyMobileCTA = ({
       </div>
 
       {/* Date Selection Modal for Rentals */}
-      <RequestDatesModal
+      <DateSelectionModal
         open={showDateModal}
         onOpenChange={setShowDateModal}
         listingId={listingId}
         availableFrom={availableFrom}
         availableTo={availableTo}
+        priceDaily={priceDaily}
+        priceWeekly={priceWeekly}
+        priceMonthly={priceMonthly}
+        priceHourly={priceHourly}
+        hourlyEnabled={hourlyEnabled}
+        dailyEnabled={dailyEnabled}
         instantBook={instantBook}
         navigateToBooking={true}
       />
