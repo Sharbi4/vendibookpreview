@@ -109,11 +109,8 @@
 
     <!-- Start of vendibook1 Zendesk Widget script -->
     <style>
-      /* Hide the default black Zendesk messenger launcher, keep only the orange widget */
-      iframe[data-product="messenger"][title="Button to launch messaging window"],
-      div[data-testid="launcher"],
-      .ze-snippet-iframe,
-      iframe[title="Messaging window"] + div {
+      /* Hide the default Zendesk messenger launcher button only */
+      iframe[data-product="messenger"][title="Button to launch messaging window"] {
         display: none !important;
       }
     </style>
