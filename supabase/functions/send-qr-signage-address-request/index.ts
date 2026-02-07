@@ -42,6 +42,7 @@ serve(async (req) => {
 
     const { error: emailError, data } = await resend.emails.send({
       from: "VendiBook <hello@updates.vendibook.com>",
+      replyTo: "support@vendibook.com",
       to: [to],
       subject: `🎉 Free QR Signage for "${listingTitle}" — Where should we send it?`,
       html: `
@@ -101,9 +102,8 @@ serve(async (req) => {
                 </div>
               </div>
               
-              <!-- CTA Button -->
               <div style="text-align: center; margin: 32px 0;">
-                <a href="mailto:hello@vendibook.com?subject=QR%20Signage%20Address%20for%20${encodeURIComponent(listingTitle)}&body=Hi%20VendiBook%20Team%2C%0A%0APlease%20send%20my%20QR%20signage%20to%3A%0A%0AName%3A%20${encodeURIComponent(firstName)}%0AStreet%20Address%3A%20%0ACity%2C%20State%20ZIP%3A%20%0A%0AThanks!" 
+                <a href="mailto:support@vendibook.com?subject=QR%20Signage%20Address%20for%20${encodeURIComponent(listingTitle)}&body=Hi%20VendiBook%20Team%2C%0A%0APlease%20send%20my%20QR%20signage%20to%3A%0A%0AName%3A%20${encodeURIComponent(firstName)}%0AStreet%20Address%3A%20%0ACity%2C%20State%20ZIP%3A%20%0A%0AThanks!" 
                    style="display: inline-block; background: linear-gradient(135deg, #FF6D1F 0%, #FF8A50 100%); color: white; padding: 16px 32px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 14px rgba(255, 109, 31, 0.4);">
                   Reply with My Address →
                 </a>
