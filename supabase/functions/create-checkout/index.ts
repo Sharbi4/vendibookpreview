@@ -98,10 +98,10 @@ serve(async (req) => {
       throw new Error("Missing required fields: listing_id, mode, or amount");
     }
 
-    // Fetch listing to get host's Stripe account
+    // Fetch listing to get host's Stripe account and details for checkout display
     const { data: listing, error: listingError } = await supabaseClient
       .from('listings')
-      .select('host_id, title')
+      .select('host_id, title, cover_image_url, address, pickup_location_text')
       .eq('id', listing_id)
       .single();
 
@@ -110,10 +110,10 @@ serve(async (req) => {
     }
     logStep("Listing found", { host_id: listing.host_id, title: listing.title });
 
-    // Fetch host's Stripe account
+    // Fetch host's Stripe account and display name
     const { data: hostProfile, error: hostError } = await supabaseClient
       .from('profiles')
-      .select('stripe_account_id, stripe_onboarding_complete')
+      .select('stripe_account_id, stripe_onboarding_complete, display_name, business_name, full_name')
       .eq('id', listing.host_id)
       .single();
 
@@ -125,6 +125,32 @@ serve(async (req) => {
       throw new Error("Host's Stripe account is not fully onboarded");
     }
     logStep("Host Stripe account verified", { stripe_account_id: hostProfile.stripe_account_id });
+    
+    // Get host display name for checkout
+    const hostDisplayName = hostProfile.business_name || hostProfile.display_name || hostProfile.full_name || 'Host';
+    
+    // Fetch booking details if booking_id provided (for rentals)
+    let bookingDetails: { start_date: string; end_date: string; start_time?: string; end_time?: string } | null = null;
+    if (booking_id) {
+      const { data: booking } = await supabaseClient
+        .from('booking_requests')
+        .select('start_date, end_date, start_time, end_time')
+        .eq('id', booking_id)
+        .single();
+      
+      if (booking) {
+        bookingDetails = booking;
+        logStep("Booking details fetched", { 
+          start_date: booking.start_date, 
+          end_date: booking.end_date,
+          start_time: booking.start_time,
+          end_time: booking.end_time 
+        });
+      }
+    }
+    
+    // Build location string for display
+    const locationDisplay = listing.address || listing.pickup_location_text || '';
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const origin = req.headers.get("origin") || "https://vendibook.com";
@@ -231,14 +257,42 @@ serve(async (req) => {
       const rentalSubtotal = amount + delivery_fee;
       const renterFee = rentalSubtotal * (RENTAL_RENTER_FEE_PERCENT / 100);
       
+      // Build detailed description with rental info
+      let rentalDescription = `Rental from ${hostDisplayName}`;
+      if (bookingDetails) {
+        // Format dates
+        const startDate = new Date(bookingDetails.start_date).toLocaleDateString('en-US', { 
+          weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' 
+        });
+        const endDate = new Date(bookingDetails.end_date).toLocaleDateString('en-US', { 
+          weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' 
+        });
+        rentalDescription += ` • ${startDate} - ${endDate}`;
+        
+        // Add times if hourly booking
+        if (bookingDetails.start_time && bookingDetails.end_time) {
+          rentalDescription += ` • ${bookingDetails.start_time} - ${bookingDetails.end_time}`;
+        }
+      }
+      if (locationDisplay) {
+        rentalDescription += ` • ${locationDisplay}`;
+      }
+      if (delivery_fee > 0) {
+        rentalDescription += ` (includes $${delivery_fee.toFixed(2)} delivery)`;
+      }
+      
       // Build line items - separate base rental and platform fee
+      // Include cover image if available
+      const productImages = listing.cover_image_url ? [listing.cover_image_url] : undefined;
+      
       const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
         {
           price_data: {
             currency: 'usd',
             product_data: {
               name: listing.title,
-              description: `Rental booking${delivery_fee > 0 ? ` (includes $${delivery_fee.toFixed(2)} delivery)` : ''}`,
+              description: rentalDescription,
+              images: productImages,
             },
             unit_amount: Math.round(rentalSubtotal * 100),
             tax_behavior: 'exclusive',
@@ -322,16 +376,26 @@ serve(async (req) => {
       const freightAmount = isVendibookFreight ? freight_cost : 0;
       const buyerFreightCost = isBuyerPaidFreight ? freightAmount : 0;
       
-      let productDescription = 'Purchase (Escrow - funds released after confirmation)';
+      // Build detailed description with seller info
+      let productDescription = `Sold by ${hostDisplayName}`;
+      if (locationDisplay) {
+        productDescription += ` • ${locationDisplay}`;
+      }
+      productDescription += ' • Escrow protected';
+      
+      // Add shipping/delivery details
       if (isVendibookFreight) {
         if (isBuyerPaidFreight && buyerFreightCost > 0) {
-          productDescription = `Purchase (Escrow) - Vendibook Freight: $${buyerFreightCost.toFixed(2)}`;
+          productDescription += ` • Vendibook Freight: $${buyerFreightCost.toFixed(2)}`;
         } else if (isSellerPaidFreight) {
-          productDescription = 'Purchase (Escrow) - Free Shipping (Vendibook Freight)';
+          productDescription += ' • Free Shipping (Vendibook Freight)';
         }
       } else if (saleDeliveryFee > 0) {
-        productDescription = `Purchase (Escrow) - includes $${saleDeliveryFee} delivery`;
+        productDescription += ` • includes $${saleDeliveryFee} delivery`;
       }
+      
+      // Include cover image if available
+      const saleProductImages = listing.cover_image_url ? [listing.cover_image_url] : undefined;
       
       sessionParams = {
         // For sales: offer multiple payment options including ACH for large purchases
@@ -354,6 +418,7 @@ serve(async (req) => {
               product_data: {
                 name: listing.title,
                 description: productDescription,
+                images: saleProductImages,
               },
               unit_amount: customerTotal,
               // Mark as taxable - Stripe will calculate based on customer location
