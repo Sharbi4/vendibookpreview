@@ -67,22 +67,23 @@ export const ListingCardPreview: React.FC<ListingCardPreviewProps> = ({ listing,
 
   return (
     <div className="w-full max-w-sm mx-auto">
-      <div className="text-xs text-muted-foreground text-center mb-3 font-medium uppercase tracking-wider">
+      <div className="text-xs text-gray-500 text-center mb-3 font-medium uppercase tracking-wider">
         Card Preview (Search Results)
       </div>
       
-      <div className="group cursor-pointer card-hover block bg-card rounded-xl border border-border overflow-hidden shadow-sm">
-        {/* Image Container */}
-        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+      {/* Premium Apple/Turo Card Container */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 ease-out flex flex-col overflow-hidden h-full group">
+        {/* Image Container - Turo Look */}
+        <div className="relative aspect-[4/3] w-full bg-gray-50 overflow-hidden">
           {coverImage ? (
             <img
               src={coverImage}
               alt={listing.title || 'Listing preview'}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-muted">
-              <span className="text-muted-foreground text-sm">No image uploaded</span>
+            <div className="w-full h-full flex items-center justify-center bg-gray-50">
+              <span className="text-gray-500 text-sm">No image uploaded</span>
             </div>
           )}
           
@@ -155,16 +156,16 @@ export const ListingCardPreview: React.FC<ListingCardPreviewProps> = ({ listing,
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-3 space-y-1">
+        {/* Content - Apple/OpenAI Typography */}
+        <div className="p-4 space-y-2 flex-1 flex flex-col">
           {/* Location & Category */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground flex items-center gap-1 truncate">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm text-gray-500 font-medium flex items-center gap-1 truncate">
               <MapPin className="h-3 w-3 shrink-0" />
               <span className="truncate">{location}</span>
             </span>
             {listing.category && (
-              <span className="text-xs px-2 py-1 bg-secondary rounded-full text-muted-foreground shrink-0">
+              <span className="bg-gray-100 text-gray-900 text-xs font-bold px-3 py-1 rounded-full shrink-0">
                 {CATEGORY_LABELS[listing.category]}
               </span>
             )}
@@ -172,36 +173,38 @@ export const ListingCardPreview: React.FC<ListingCardPreviewProps> = ({ listing,
 
           {/* Delivery Radius Badge */}
           {(listing.fulfillmentType === 'delivery' || listing.fulfillmentType === 'both') && listing.deliveryRadiusMiles && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1 text-xs text-gray-500">
               <Truck className="h-3 w-3" />
               <span>Delivers within {listing.deliveryRadiusMiles} mi</span>
               {listing.deliveryFee && parseFloat(listing.deliveryFee) > 0 && (
-                <span className="text-foreground font-medium">· ${listing.deliveryFee} fee</span>
+                <span className="text-gray-900 font-medium">· ${listing.deliveryFee} fee</span>
               )}
             </div>
           )}
 
-          {/* Title */}
+          {/* Title - Tracking Tight */}
           <div className="flex items-center justify-between gap-2">
-            <h3 className="font-semibold text-foreground line-clamp-1">
+            <h3 className="text-lg font-semibold tracking-tight text-gray-900 line-clamp-1">
               {listing.title || 'Untitled Listing'}
             </h3>
             {/* Placeholder rating */}
-            <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+            <div className="flex items-center gap-1 text-xs text-gray-500 shrink-0">
               <span className="text-amber-500">★</span>
               <span>New</span>
             </div>
           </div>
 
-          {/* Price */}
-          <p className="text-foreground">
-            <span className="font-bold">{price}</span>
+          {/* Price - Pill Badge Style */}
+          <div className="flex items-center gap-2 flex-wrap mt-auto pt-1">
+            <span className="bg-gray-100 text-gray-900 text-sm font-bold px-3 py-1 rounded-full">
+              {price}
+            </span>
             {listing.mode === 'rent' && listing.priceWeekly && (
-              <span className="text-sm text-muted-foreground ml-2">
-                · ${listing.priceWeekly}/week
+              <span className="text-sm text-gray-500 font-medium">
+                ${listing.priceWeekly}/week
               </span>
             )}
-          </p>
+          </div>
         </div>
       </div>
     </div>
