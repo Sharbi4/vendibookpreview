@@ -32,10 +32,13 @@ export const useHostBookings = () => {
     setIsLoading(true);
     try {
       // First get booking requests where user is host
+      // Only show bookings where payment has been captured (paid)
+      // This ensures hosts don't see requests until the authorization hold is successful
       const { data: bookingData, error: bookingError } = await supabase
         .from('booking_requests')
         .select('*')
         .eq('host_id', user.id)
+        .eq('payment_status', 'paid')
         .order('created_at', { ascending: false });
 
       if (bookingError) throw bookingError;
