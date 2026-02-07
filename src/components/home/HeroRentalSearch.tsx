@@ -257,15 +257,22 @@ const HeroRentalSearch = () => {
             </div>
           </div>
 
-          {/* Path 2: Let Us Match You */}
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 backdrop-blur-md rounded-3xl p-5 md:p-6 shadow-2xl border border-white/10 flex flex-col">
+          {/* Path 2: Let Us Match You - Clear Glass with Orange Accents */}
+          <div 
+            className="rounded-3xl p-5 md:p-6 shadow-2xl border border-white/20 flex flex-col"
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            }}
+          >
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-                <Handshake className="h-5 w-5 text-amber-400" />
+              <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                <Handshake className="h-5 w-5 text-orange-400" />
               </div>
               <div className="text-left">
                 <h3 className="font-semibold text-white text-lg">Let Us Match You</h3>
-                <p className="text-xs text-white/60">Done-for-you concierge service</p>
+                <p className="text-xs text-white/70">Done-for-you concierge service</p>
               </div>
             </div>
 
@@ -274,22 +281,22 @@ const HeroRentalSearch = () => {
                 <h4 className="text-xl md:text-2xl font-semibold text-white mb-2">
                   Don't have time to search?
                 </h4>
-                <p className="text-white/70 text-sm md:text-base leading-relaxed">
+                <p className="text-white/80 text-sm md:text-base leading-relaxed">
                   Our experts will manually find the best deal for your specific needs. Tell us what you're looking for, and we'll do the legwork.
                 </p>
               </div>
 
-              <ul className="space-y-2 text-sm text-white/80">
+              <ul className="space-y-2 text-sm text-white/90">
                 <li className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                  <Sparkles className="h-4 w-4 text-orange-400 flex-shrink-0" />
                   <span>Personalized asset recommendations</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                  <Sparkles className="h-4 w-4 text-orange-400 flex-shrink-0" />
                   <span>Price negotiation on your behalf</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                  <Sparkles className="h-4 w-4 text-orange-400 flex-shrink-0" />
                   <span>No sign-up required</span>
                 </li>
               </ul>
@@ -298,7 +305,7 @@ const HeroRentalSearch = () => {
             <Button
               onClick={openZendeskChat}
               size="lg"
-              className="w-full rounded-xl h-12 bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold shadow-lg mt-4"
+              className="w-full rounded-xl h-12 bg-orange-500 hover:bg-orange-400 text-white font-semibold shadow-lg shadow-orange-500/25 mt-4"
             >
               <Handshake className="h-5 w-5 mr-2" />
               Get a Manual Match
