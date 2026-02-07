@@ -281,74 +281,148 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
         </main>
       </div>
 
-      {/* Mobile Bottom Nav - Airbnb Style */}
+      {/* Mobile Bottom Nav - Airbnb Style - Changes based on mode */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 pb-safe">
         <div className="flex items-center justify-around h-16">
-          <Link 
-            to="/search" 
-            className={cn(
-              "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
-              location.pathname === '/search' ? "text-rose-500" : "text-muted-foreground"
-            )}
-          >
-            {location.pathname === '/search' && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
-            )}
-            <Search className="h-6 w-6" />
-            <span className="text-[10px] font-medium">Explore</span>
-          </Link>
-          <Link 
-            to="/favorites" 
-            className={cn(
-              "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
-              location.pathname === '/favorites' ? "text-rose-500" : "text-muted-foreground"
-            )}
-          >
-            {location.pathname === '/favorites' && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
-            )}
-            <Heart className="h-6 w-6" />
-            <span className="text-[10px] font-medium">Favorites</span>
-          </Link>
-          <Link 
-            to="/dashboard" 
-            className={cn(
-              "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
-              location.pathname === '/dashboard' ? "text-rose-500" : "text-muted-foreground"
-            )}
-          >
-            {location.pathname === '/dashboard' && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
-            )}
-            <CalendarDays className="h-6 w-6" />
-            <span className="text-[10px] font-medium">Bookings</span>
-          </Link>
-          <Link 
-            to="/messages" 
-            className={cn(
-              "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
-              location.pathname === '/messages' ? "text-rose-500" : "text-muted-foreground"
-            )}
-          >
-            {location.pathname === '/messages' && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
-            )}
-            <MessageSquare className="h-6 w-6" />
-            <span className="text-[10px] font-medium">Inbox</span>
-          </Link>
-          <Link 
-            to="/account" 
-            className={cn(
-              "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
-              location.pathname === '/account' ? "text-rose-500" : "text-muted-foreground"
-            )}
-          >
-            {location.pathname === '/account' && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
-            )}
-            <User className="h-6 w-6" />
-            <span className="text-[10px] font-medium">Profile</span>
-          </Link>
+          {mode === 'host' ? (
+            <>
+              {/* Host Mode Navigation */}
+              <Link 
+                to="/dashboard?view=host" 
+                className={cn(
+                  "flex flex-col items-center gap-1 px-3 py-2 transition-colors relative",
+                  location.pathname === '/dashboard' && location.search.includes('view=host') ? "text-rose-500" : "text-muted-foreground"
+                )}
+              >
+                {location.pathname === '/dashboard' && location.search.includes('view=host') && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
+                )}
+                <LayoutGrid className="h-6 w-6" />
+                <span className="text-[10px] font-medium">Overview</span>
+              </Link>
+              <Link 
+                to="/host/listings" 
+                className={cn(
+                  "flex flex-col items-center gap-1 px-3 py-2 transition-colors relative",
+                  location.pathname === '/host/listings' ? "text-rose-500" : "text-muted-foreground"
+                )}
+              >
+                {location.pathname === '/host/listings' && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
+                )}
+                <Truck className="h-6 w-6" />
+                <span className="text-[10px] font-medium">Listings</span>
+              </Link>
+              <Link 
+                to="/host/bookings" 
+                className={cn(
+                  "flex flex-col items-center gap-1 px-3 py-2 transition-colors relative",
+                  location.pathname === '/host/bookings' ? "text-rose-500" : "text-muted-foreground"
+                )}
+              >
+                {location.pathname === '/host/bookings' && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
+                )}
+                <CalendarDays className="h-6 w-6" />
+                <span className="text-[10px] font-medium">Manager</span>
+              </Link>
+              <Link 
+                to="/messages" 
+                className={cn(
+                  "flex flex-col items-center gap-1 px-3 py-2 transition-colors relative",
+                  location.pathname === '/messages' ? "text-rose-500" : "text-muted-foreground"
+                )}
+              >
+                {location.pathname === '/messages' && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
+                )}
+                <MessageSquare className="h-6 w-6" />
+                <span className="text-[10px] font-medium">Inbox</span>
+              </Link>
+              <Link 
+                to="/account" 
+                className={cn(
+                  "flex flex-col items-center gap-1 px-3 py-2 transition-colors relative",
+                  location.pathname === '/account' ? "text-rose-500" : "text-muted-foreground"
+                )}
+              >
+                {location.pathname === '/account' && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
+                )}
+                <User className="h-6 w-6" />
+                <span className="text-[10px] font-medium">Profile</span>
+              </Link>
+            </>
+          ) : (
+            <>
+              {/* Shopper Mode Navigation */}
+              <Link 
+                to="/search" 
+                className={cn(
+                  "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
+                  location.pathname === '/search' ? "text-rose-500" : "text-muted-foreground"
+                )}
+              >
+                {location.pathname === '/search' && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
+                )}
+                <Search className="h-6 w-6" />
+                <span className="text-[10px] font-medium">Explore</span>
+              </Link>
+              <Link 
+                to="/favorites" 
+                className={cn(
+                  "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
+                  location.pathname === '/favorites' ? "text-rose-500" : "text-muted-foreground"
+                )}
+              >
+                {location.pathname === '/favorites' && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
+                )}
+                <Heart className="h-6 w-6" />
+                <span className="text-[10px] font-medium">Favorites</span>
+              </Link>
+              <Link 
+                to="/dashboard" 
+                className={cn(
+                  "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
+                  location.pathname === '/dashboard' && !location.search.includes('view=host') ? "text-rose-500" : "text-muted-foreground"
+                )}
+              >
+                {location.pathname === '/dashboard' && !location.search.includes('view=host') && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
+                )}
+                <CalendarDays className="h-6 w-6" />
+                <span className="text-[10px] font-medium">Bookings</span>
+              </Link>
+              <Link 
+                to="/messages" 
+                className={cn(
+                  "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
+                  location.pathname === '/messages' ? "text-rose-500" : "text-muted-foreground"
+                )}
+              >
+                {location.pathname === '/messages' && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
+                )}
+                <MessageSquare className="h-6 w-6" />
+                <span className="text-[10px] font-medium">Inbox</span>
+              </Link>
+              <Link 
+                to="/account" 
+                className={cn(
+                  "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
+                  location.pathname === '/account' ? "text-rose-500" : "text-muted-foreground"
+                )}
+              >
+                {location.pathname === '/account' && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-500 rounded-full" />
+                )}
+                <User className="h-6 w-6" />
+                <span className="text-[10px] font-medium">Profile</span>
+              </Link>
+            </>
+          )}
         </div>
       </nav>
     </div>
