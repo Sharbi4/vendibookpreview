@@ -11,6 +11,10 @@ interface AvailabilitySectionProps {
   availableTo?: string | null;
   priceDaily: number | null;
   priceWeekly?: number | null;
+  priceMonthly?: number | null;
+  priceHourly?: number | null;
+  hourlyEnabled?: boolean;
+  dailyEnabled?: boolean;
   instantBook?: boolean;
   onDatesSelected?: (startDate: Date, endDate: Date) => void;
   className?: string;
@@ -22,6 +26,10 @@ export const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({
   availableTo,
   priceDaily,
   priceWeekly,
+  priceMonthly,
+  priceHourly,
+  hourlyEnabled = false,
+  dailyEnabled = true,
   instantBook = false,
   onDatesSelected,
   className,
@@ -80,6 +88,10 @@ export const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({
         availableTo={availableTo}
         priceDaily={priceDaily}
         priceWeekly={priceWeekly}
+        priceMonthly={priceMonthly}
+        priceHourly={priceHourly}
+        hourlyEnabled={hourlyEnabled}
+        dailyEnabled={dailyEnabled}
         instantBook={instantBook}
         onDatesSelected={onDatesSelected}
         navigateToBooking={true}
