@@ -112,28 +112,35 @@ const HeroRentalSearch = () => {
           transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
           className="grid md:grid-cols-2 gap-4 md:gap-6"
         >
-          {/* Path 1: Browse Yourself */}
-          <div className="bg-white/95 backdrop-blur-md rounded-3xl p-5 md:p-6 shadow-2xl">
+          {/* Path 1: Browse - Clear Glass */}
+          <div 
+            className="rounded-3xl p-5 md:p-6 shadow-2xl border border-white/20"
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            }}
+          >
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Search className="h-5 w-5 text-primary" />
+              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                <Search className="h-5 w-5 text-white" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-foreground text-lg">Browse Yourself</h3>
-                <p className="text-xs text-muted-foreground">Search our verified marketplace</p>
+                <h3 className="font-semibold text-white text-lg">Browse</h3>
+                <p className="text-xs text-white/70">Search our verified marketplace</p>
               </div>
             </div>
 
             {/* Mode Toggles */}
             <div className="flex justify-start mb-4">
-              <div className="inline-flex items-center gap-1 p-1 bg-muted rounded-full">
+              <div className="inline-flex items-center gap-1 p-1 bg-white/10 rounded-full border border-white/10">
                 <button
                   onClick={() => setActiveTab('rent')}
                   className={cn(
                     "flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
                     activeTab === 'rent'
                       ? "bg-white text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-white/70 hover:text-white"
                   )}
                 >
                   <Store className="h-4 w-4" />
@@ -145,7 +152,7 @@ const HeroRentalSearch = () => {
                     "flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
                     activeTab === 'buy'
                       ? "bg-white text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-white/70 hover:text-white"
                   )}
                 >
                   <Truck className="h-4 w-4" />
@@ -157,8 +164,8 @@ const HeroRentalSearch = () => {
             {/* Search Fields */}
             <div className="space-y-3">
               {/* Location Input */}
-              <div className="bg-muted/50 rounded-xl px-3 py-2">
-                <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold text-left mb-0.5">
+              <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
+                <label className="block text-[10px] uppercase tracking-wider text-white/60 font-semibold text-left mb-0.5">
                   Location
                 </label>
                 <LocationSearchInput
@@ -167,30 +174,30 @@ const HeroRentalSearch = () => {
                   onLocationSelect={handleLocationSelect}
                   selectedCoordinates={selectedLocation?.coordinates || null}
                   placeholder="City, Zip, or current location"
-                  className="[&_input]:border-0 [&_input]:shadow-none [&_input]:bg-transparent [&_input]:py-1 [&_input]:text-sm [&_input]:font-medium [&>div]:space-y-0"
+                  className="[&_input]:border-0 [&_input]:shadow-none [&_input]:bg-transparent [&_input]:py-1 [&_input]:text-sm [&_input]:font-medium [&_input]:text-white [&_input]:placeholder:text-white/50 [&>div]:space-y-0"
                 />
               </div>
 
               {/* Asset Type & Dates Row */}
               <div className="grid grid-cols-2 gap-2">
                 {/* Asset Type */}
-                <div className="bg-muted/50 rounded-xl px-3 py-2">
-                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold text-left mb-0.5">
+                <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
+                  <label className="block text-[10px] uppercase tracking-wider text-white/60 font-semibold text-left mb-0.5">
                     Type
                   </label>
                   <div className="flex items-center gap-2 relative">
                     <select
                       value={assetType}
                       onChange={(e) => setAssetType(e.target.value)}
-                      className="w-full bg-transparent border-none p-0 text-foreground focus:ring-0 text-sm font-medium outline-none cursor-pointer appearance-none truncate pr-4"
+                      className="w-full bg-transparent border-none p-0 text-white focus:ring-0 text-sm font-medium outline-none cursor-pointer appearance-none truncate pr-4"
                     >
-                      <option value="all">Everything</option>
-                      <option value="food_truck">Food Trucks</option>
-                      <option value="food_trailer">Trailers</option>
-                      <option value="ghost_kitchen">Kitchens</option>
-                      <option value="vendor_space">Vendor Spaces</option>
+                      <option value="all" className="text-foreground">Everything</option>
+                      <option value="food_truck" className="text-foreground">Food Trucks</option>
+                      <option value="food_trailer" className="text-foreground">Trailers</option>
+                      <option value="ghost_kitchen" className="text-foreground">Kitchens</option>
+                      <option value="vendor_space" className="text-foreground">Vendor Spaces</option>
                     </select>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground absolute right-0 pointer-events-none" />
+                    <ChevronDown className="h-4 w-4 text-white/60 absolute right-0 pointer-events-none" />
                   </div>
                 </div>
 
@@ -202,17 +209,17 @@ const HeroRentalSearch = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="bg-muted/50 rounded-xl px-3 py-2"
+                      className="bg-white/10 rounded-xl px-3 py-2 border border-white/10"
                     >
                       <Popover open={isDateOpen} onOpenChange={setIsDateOpen}>
                         <PopoverTrigger asChild>
                           <button className="w-full text-left">
-                            <span className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-0.5">
+                            <span className="block text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-0.5">
                               Dates
                             </span>
                             <div className="flex items-center gap-1.5">
-                              <CalendarIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                              <span className={cn("text-sm font-medium truncate", dateRange?.from ? "text-foreground" : "text-muted-foreground/60")}>
+                              <CalendarIcon className="h-4 w-4 text-white/60 flex-shrink-0" />
+                              <span className={cn("text-sm font-medium truncate", dateRange?.from ? "text-white" : "text-white/50")}>
                                 {formatDateRange()}
                               </span>
                             </div>
@@ -237,19 +244,19 @@ const HeroRentalSearch = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="bg-muted/30 rounded-xl px-3 py-2 flex items-center justify-center"
+                      className="bg-white/5 rounded-xl px-3 py-2 border border-white/10 flex items-center justify-center"
                     >
-                      <span className="text-xs text-muted-foreground">No dates needed</span>
+                      <span className="text-xs text-white/50">No dates needed</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
 
-              {/* Search Button */}
+              {/* Search Button - Orange to match */}
               <Button
                 onClick={handleSearch}
                 size="lg"
-                className="w-full rounded-xl h-12 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
+                className="w-full rounded-xl h-12 bg-orange-500 hover:bg-orange-400 text-white font-semibold shadow-lg shadow-orange-500/25"
               >
                 <Search className="h-5 w-5 mr-2" />
                 Search the Marketplace
