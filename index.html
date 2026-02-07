@@ -124,6 +124,28 @@
       }
     </style>
     <script>
+      // Programmatically hide Zendesk launcher on load
+      window.addEventListener('load', function() {
+        function hideZendeskLauncher() {
+          if (window.zE) {
+            try {
+              window.zE('messenger', 'hide');
+            } catch (e) {}
+          }
+          // Also hide via DOM
+          document.querySelectorAll('iframe[data-product="messenger"]').forEach(function(el) {
+            if (el.title && el.title.includes('Button')) {
+              el.style.display = 'none';
+            }
+          });
+        }
+        hideZendeskLauncher();
+        // Re-run after a delay in case Zendesk loads late
+        setTimeout(hideZendeskLauncher, 1000);
+        setTimeout(hideZendeskLauncher, 3000);
+      });
+    </script>
+    <script>
       window.zESettings = {
         webWidget: {
           color: {
