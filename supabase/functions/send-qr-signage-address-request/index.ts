@@ -76,6 +76,9 @@ serve(async (req) => {
                 <p style="margin: 0; color: #374151; font-size: 15px;">
                   As part of your listing, we'll send you a <strong>professional "Book This Kitchen" sign</strong> with a unique QR code. When vendors scan it, they're taken directly to your listing to book instantly!
                 </p>
+                <p style="margin: 12px 0 0 0; color: #6B7280; font-size: 14px;">
+                  📦 <strong>Delivery:</strong> Your signage will arrive in 7-10 business days after you submit your address.
+                </p>
               </div>
               
               <!-- Benefits -->
