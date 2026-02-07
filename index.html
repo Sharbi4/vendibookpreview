@@ -109,9 +109,18 @@
 
     <!-- Start of vendibook1 Zendesk Widget script -->
     <style>
-      /* Hide the default Zendesk messenger launcher button only */
-      iframe[data-product="messenger"][title="Button to launch messaging window"] {
+      /* Hide all default Zendesk launcher buttons and widgets */
+      iframe[data-product="messenger"][title="Button to launch messaging window"],
+      iframe[data-product="messenger"][title="Messaging window"],
+      #launcher,
+      .zEWidget-launcher,
+      [data-testid="launcher"],
+      iframe[title="Zendesk Chat widget button"],
+      iframe[title="Button to launch messaging window"] {
         display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
       }
     </style>
     <script>
