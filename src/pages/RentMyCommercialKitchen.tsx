@@ -145,7 +145,7 @@ const ValueGrid = () => {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
             >
-              <Card className="h-full border-0 shadow-lg bg-card hover:shadow-xl transition-shadow">
+              <Card className="h-full border-2 border-border shadow-lg bg-card hover:shadow-xl hover:border-primary/30 transition-all">
                 <CardContent className="p-8">
                   <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mb-6">
                     <item.icon className="h-7 w-7 text-primary-foreground" />
