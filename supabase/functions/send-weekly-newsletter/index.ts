@@ -362,7 +362,7 @@ const handler = async (req: Request): Promise<Response> => {
     const blogUrl = data.blog_1_url || "https://vendibook.com/blog/restaurant-proof-of-concept-shared-kitchens";
     const blogAuthor = "Brock De Santis | Commissary Specialist & Industry Consultant";
 
-    const subjectLine = "The $250k Gamble: Why Smart Chefs Test Concepts in Shared Kitchens First 🍳";
+    const subjectLine = "What's New on Vendibook: New Features, Listings & Resources";
 
     // If testEmail is provided, just send to that one address
     if (testEmail && !sendToAll) {
