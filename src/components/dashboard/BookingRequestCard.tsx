@@ -116,12 +116,12 @@ const DocumentCompliancePill = ({ compliance }: {
 
   const approvedCount = compliance.documentStatuses.filter(d => d.status === 'approved').length;
 
-  // All documents approved
+  // All documents approved - show "Documents Approved" badge
   if (compliance.allApproved && approvedCount > 0) {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
         <FileCheck className="h-3 w-3" />
-        Docs Complete
+        Documents Approved
       </span>
     );
   }
@@ -136,12 +136,12 @@ const DocumentCompliancePill = ({ compliance }: {
     );
   }
 
-  // Has pending documents awaiting review
+  // Has pending documents awaiting admin review - "darkshine" style badge
   if (compliance.pendingCount > 0) {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-foreground text-background shadow-lg">
         <FileClock className="h-3 w-3" />
-        {compliance.pendingCount} Pending Review
+        Documents Pending
       </span>
     );
   }
