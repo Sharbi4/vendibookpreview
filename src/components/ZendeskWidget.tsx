@@ -9,7 +9,7 @@ declare global {
 }
 
 // Only show Zendesk widget on these routes
-const ALLOWED_ROUTES = ['/contact', '/help', '/faq'];
+const ALLOWED_ROUTES = ['/', '/contact', '/help', '/faq'];
 
 const ZendeskWidget = () => {
   const { user, profile } = useAuth();
