@@ -1,646 +1,454 @@
-import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import ListingCard from '@/components/listing/ListingCard';
-import SearchResultsMap from '@/components/search/SearchResultsMap';
-import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
-import { Skeleton } from '@/components/ui/skeleton';
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { 
+  MapPin, 
+  DollarSign, 
+  Shield, 
+  CheckCircle2, 
+  ArrowRight, 
+  QrCode, 
+  LayoutGrid, 
+  CalendarClock,
+  Store,
+  FileCheck,
+  Smartphone,
+  Star,
+  Share2
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Card, CardContent } from '@/components/ui/card';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
-import {
-  MapPin,
-  Filter,
-  Clock,
-  DollarSign,
-  LayoutGrid,
-  List,
-  X,
-  Truck,
-  Calendar,
-  Map,
-  Users,
-  Shield,
-  Zap,
-  CheckCircle,
-  ArrowRight,
-} from 'lucide-react';
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { WhiteGlovePopup } from '@/components/kitchen/WhiteGlovePopup';
 
-type RentalDuration = 'all' | 'hourly' | 'daily' | 'weekly' | 'monthly';
-type SortOption = 'newest' | 'price-low' | 'price-high' | 'rating';
-type ViewMode = 'grid' | 'list' | 'map' | 'split';
+// --- Animated QR Phone Component ---
+const QRPhoneAnimation = () => (
+  <div className="relative w-full max-w-xs mx-auto">
+    {/* Phone Frame */}
+    <div className="relative bg-foreground rounded-[2.5rem] p-3 shadow-2xl">
+      <div className="bg-background rounded-[2rem] overflow-hidden aspect-[9/16] relative">
+        {/* Screen Content - QR Code */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-primary/5 to-background">
+          {/* QR Code Container */}
+          <div className="relative bg-card border-2 border-border rounded-2xl p-6 shadow-lg">
+            {/* Simplified QR Pattern */}
+            <div className="w-32 h-32 grid grid-cols-5 gap-1">
+              {[...Array(25)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`rounded-sm ${
+                    [0, 1, 2, 4, 5, 6, 10, 12, 14, 18, 19, 20, 22, 23, 24].includes(i)
+                      ? 'bg-foreground'
+                      : 'bg-muted/30'
+                  }`}
+                />
+              ))}
+            </div>
+            
+            {/* Animated Scan Line */}
+            <motion.div
+              className="absolute left-4 right-4 h-1 bg-gradient-to-r from-transparent via-primary to-transparent rounded-full"
+              animate={{ top: ['15%', '85%', '15%'] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </div>
+          
+          <p className="mt-4 text-sm font-medium text-foreground">Scan to Book This Spot</p>
+          <p className="text-xs text-muted-foreground">vendibook.com/your-lot</p>
+        </div>
 
-const RENTAL_DURATIONS = [
-  { value: 'all', label: 'All Durations', icon: Clock },
-  { value: 'hourly', label: 'Hourly', icon: Clock },
-  { value: 'daily', label: 'Daily', icon: Calendar },
-  { value: 'weekly', label: 'Weekly', icon: Calendar },
-  { value: 'monthly', label: 'Monthly', icon: Calendar },
-];
+        {/* Notification Badge */}
+        <motion.div
+          className="absolute top-4 right-4 bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 1, type: 'spring', stiffness: 200 }}
+        >
+          <DollarSign className="h-3 w-3" />
+          New Lead!
+        </motion.div>
 
-const BENEFITS = [
-  {
-    icon: Shield,
-    title: "Verified Space Owners",
-    description: "Every space owner is verified for your safety and peace of mind."
-  },
-  {
-    icon: Zap,
-    title: "Instant Booking",
-    description: "Book your spot instantly with real-time availability."
-  },
-  {
-    icon: Users,
-    title: "High-Traffic Locations",
-    description: "Access prime spots in busy areas to maximize your sales."
-  },
-  {
-    icon: DollarSign,
-    title: "Flexible Pricing",
-    description: "Hourly, daily, weekly, or monthly options to fit your budget."
-  }
-];
+        {/* Notch */}
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-5 bg-foreground rounded-full" />
+      </div>
+    </div>
+  </div>
+);
 
-const VendorLots = () => {
+// --- Hero Section ---
+const HeroSection = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [viewMode, setViewMode] = useState<ViewMode>('split');
-  const [rentalDuration, setRentalDuration] = useState<RentalDuration>(
-    (searchParams.get('duration') as RentalDuration) || 'all'
-  );
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
-  const [sortBy, setSortBy] = useState<SortOption>('newest');
-  const [locationFilter, setLocationFilter] = useState('');
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [selectedListing, setSelectedListing] = useState<string | null>(null);
-
-  // Get Google Maps API key
-  const { apiKey: mapToken, isLoading: mapLoading, error: mapError } = useGoogleMapsToken();
-
-  // Fetch vendor space listings
-  const { data: listings = [], isLoading } = useQuery({
-    queryKey: ['vendor-space-listings'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .eq('status', 'published')
-        .eq('category', 'vendor_space')
-        .order('published_at', { ascending: false });
-
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Get unique host IDs
-  const hostIds = [...new Set(listings.map((l) => l.host_id).filter(Boolean))] as string[];
-
-  // Fetch host verification status
-  const { data: hostProfiles = [] } = useQuery({
-    queryKey: ['vendor-space-hosts', hostIds],
-    queryFn: async () => {
-      if (hostIds.length === 0) return [];
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, identity_verified')
-        .in('id', hostIds);
-      if (error) throw error;
-      return data;
-    },
-    enabled: hostIds.length > 0,
-  });
-
-  // Fetch reviews for ratings
-  const { data: reviews = [] } = useQuery({
-    queryKey: ['vendor-space-reviews', listings.map(l => l.id)],
-    queryFn: async () => {
-      if (listings.length === 0) return [];
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('listing_id, rating')
-        .in('listing_id', listings.map(l => l.id));
-      if (error) throw error;
-      return data;
-    },
-    enabled: listings.length > 0,
-  });
-
-  // Create verification map
-  const hostVerificationMap: Record<string, boolean> = {};
-  hostProfiles.forEach((profile) => {
-    hostVerificationMap[profile.id] = profile.identity_verified ?? false;
-  });
-
-  // Create rating map
-  const ratingMap = useMemo(() => {
-    const map: Record<string, { avg: number; count: number }> = {};
-    reviews.forEach((review) => {
-      if (!map[review.listing_id]) {
-        map[review.listing_id] = { avg: 0, count: 0 };
-      }
-      const current = map[review.listing_id];
-      current.avg = (current.avg * current.count + review.rating) / (current.count + 1);
-      current.count += 1;
-    });
-    return map;
-  }, [reviews]);
-
-  // Filter and sort listings
-  const filteredListings = useMemo(() => {
-    let result = [...listings];
-
-    // Filter by rental duration
-    if (rentalDuration !== 'all') {
-      result = result.filter((listing) => {
-        if (rentalDuration === 'hourly') {
-          return listing.price_daily && listing.price_daily <= 100;
-        }
-        if (rentalDuration === 'daily') {
-          return listing.price_daily != null;
-        }
-        if (rentalDuration === 'weekly') {
-          return listing.price_weekly != null;
-        }
-        if (rentalDuration === 'monthly') {
-          return listing.price_weekly != null;
-        }
-        return true;
-      });
-    }
-
-    // Filter by price range
-    result = result.filter((listing) => {
-      const price = listing.price_daily || listing.price_weekly || 0;
-      return price >= priceRange[0] && price <= priceRange[1];
-    });
-
-    // Filter by location
-    if (locationFilter.trim()) {
-      const search = locationFilter.toLowerCase();
-      result = result.filter((listing) =>
-        listing.address?.toLowerCase().includes(search) ||
-        listing.title?.toLowerCase().includes(search)
-      );
-    }
-
-    // Sort
-    if (sortBy === 'newest') {
-      result.sort((a, b) => 
-        new Date(b.published_at || b.created_at).getTime() - 
-        new Date(a.published_at || a.created_at).getTime()
-      );
-    } else if (sortBy === 'price-low') {
-      result.sort((a, b) => (a.price_daily || 0) - (b.price_daily || 0));
-    } else if (sortBy === 'price-high') {
-      result.sort((a, b) => (b.price_daily || 0) - (a.price_daily || 0));
-    } else if (sortBy === 'rating') {
-      result.sort((a, b) => {
-        const ratingA = ratingMap[a.id]?.avg || 0;
-        const ratingB = ratingMap[b.id]?.avg || 0;
-        return ratingB - ratingA;
-      });
-    }
-
-    return result;
-  }, [listings, rentalDuration, priceRange, locationFilter, sortBy, ratingMap]);
-
-  const activeFiltersCount = [
-    rentalDuration !== 'all',
-    priceRange[0] > 0 || priceRange[1] < 1000,
-    locationFilter.trim() !== '',
-  ].filter(Boolean).length;
-
-  const clearFilters = () => {
-    setRentalDuration('all');
-    setPriceRange([0, 1000]);
-    setLocationFilter('');
-  };
-
-  const handleListingClick = (listing: any) => {
-    setSelectedListing(listing.id);
-    navigate(`/listing/${listing.id}`);
-  };
-
-  const FilterContent = () => (
-    <div className="space-y-6">
-      {/* Rental Duration */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium">Rental Duration</Label>
-        <div className="grid grid-cols-2 gap-2">
-          {RENTAL_DURATIONS.map((duration) => (
-            <Button
-              key={duration.value}
-              variant={rentalDuration === duration.value ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setRentalDuration(duration.value as RentalDuration)}
-              className="justify-start"
-            >
-              <duration.icon className="h-4 w-4 mr-2" />
-              {duration.label}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Price Range */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium">Price Range (per day)</Label>
-          <span className="text-sm text-muted-foreground">
-            ${priceRange[0]} - ${priceRange[1]}+
-          </span>
-        </div>
-        <Slider
-          value={priceRange}
-          onValueChange={(value) => setPriceRange(value as [number, number])}
-          min={0}
-          max={1000}
-          step={25}
-          className="mt-2"
-        />
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>$0</span>
-          <span>$500</span>
-          <span>$1000+</span>
-        </div>
-      </div>
-
-      {/* Location Filter */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium">Location</Label>
-        <div className="relative">
-          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by city or address..."
-            value={locationFilter}
-            onChange={(e) => setLocationFilter(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-      </div>
-
-      {/* Clear Filters */}
-      {activeFiltersCount > 0 && (
-        <Button variant="ghost" onClick={clearFilters} className="w-full">
-          <X className="h-4 w-4 mr-2" />
-          Clear All Filters
-        </Button>
-      )}
-    </div>
-  );
-
-  const ListingsGrid = ({ className = "" }: { className?: string }) => (
-    <div className={className}>
-      {isLoading ? (
-        <div className={`grid gap-6 ${viewMode === 'list' || viewMode === 'split' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'}`}>
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="space-y-3">
-              <Skeleton className="h-48 w-full rounded-xl" />
-              <Skeleton className="h-5 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </div>
-          ))}
-        </div>
-      ) : filteredListings.length > 0 ? (
-        <div className={`grid gap-4 ${viewMode === 'list' || viewMode === 'split' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'}`}>
-          {filteredListings.map((listing) => (
-            <div 
-              key={listing.id}
-              className={selectedListing === listing.id ? 'ring-2 ring-primary rounded-xl' : ''}
-            >
-              <ListingCard
-                listing={listing}
-                hostVerified={hostVerificationMap[listing.host_id] ?? false}
-              />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-16 bg-secondary/30 rounded-2xl">
-          <div className="text-5xl mb-4">🏞️</div>
-          <h3 className="text-xl font-semibold text-foreground mb-2">
-            No Vendor Spaces Found
-          </h3>
-          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            No Vendor Spaces match your current filters. Try adjusting your criteria or check back later for new listings.
+  
+  return (
+    <section className="relative py-20 md:py-28 overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+      
+      <div className="container relative z-10">
+        <div className="max-w-3xl mx-auto text-center">
+          <Badge className="mb-6 bg-primary/10 text-primary border-primary/20 px-4 py-1.5">
+            <MapPin className="h-3.5 w-3.5 mr-1.5" />
+            For Property Owners
+          </Badge>
+          
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
+            Monetize your{' '}
+            <span className="text-primary">empty pavement.</span>
+          </h1>
+          
+          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            The easiest way to rent parking spots to food trucks and pop-up vendors. 
+            Capture drive-by leads, automate payments, and verify insurance in one platform.
           </p>
-          <Button onClick={clearFilters} variant="outline">
-            Clear All Filters
-          </Button>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              variant="gradient-premium"
+              size="lg"
+              onClick={() => navigate('/list')}
+              className="text-base px-8"
+            >
+              List Your Lot Free
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+              className="text-base"
+            >
+              How It Works
+            </Button>
+          </div>
         </div>
-      )}
-    </div>
+      </div>
+    </section>
   );
+};
 
+// --- Value Props with Strong Borders ---
+const ValuePropsSection = () => {
+  const values = [
+    {
+      icon: QrCode,
+      title: "Free QR Signage",
+      desc: "We send you professional signage. Trucks scan to book and pay instantly—no phone calls needed."
+    },
+    {
+      icon: LayoutGrid,
+      title: "Multi-Slot Management",
+      desc: "Have 5 spots? Create 5 slots. Multiple vendors book simultaneously without conflicts."
+    },
+    {
+      icon: Shield,
+      title: "Liability Protection",
+      desc: "We collect COI documents and verify insurance before any booking is confirmed."
+    },
+    {
+      icon: Store,
+      title: "Your Own Storefront",
+      desc: "Get a shareable profile page with reviews, photos, and availability to attract more vendors."
+    },
+    {
+      icon: CalendarClock,
+      title: "Flexible Terms",
+      desc: "Set hourly, daily, weekly, or monthly rates. You control pricing and availability."
+    },
+    {
+      icon: DollarSign,
+      title: "Passive Income",
+      desc: "Hosts earn an average of $1,500/month per spot. Get paid automatically via direct deposit."
+    }
+  ];
+
+  return (
+    <section id="how-it-works" className="py-20 bg-muted/30">
+      <div className="container">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            Everything you need to rent your lot
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            We handle the technology, payments, and paperwork so you can focus on earning.
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {values.map((value, index) => (
+            <Card 
+              key={index} 
+              className="border-2 border-border bg-card hover:border-primary/40 hover:shadow-lg transition-all duration-300"
+            >
+              <CardContent className="p-6">
+                <div className="p-3 bg-primary/10 rounded-xl w-fit mb-4">
+                  <value.icon className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg text-foreground mb-2">{value.title}</h3>
+                <p className="text-muted-foreground">{value.desc}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// --- QR Signage Feature Section ---
+const QRSignageSection = () => (
+  <section className="py-20 bg-background overflow-hidden">
+    <div className="container">
+      <div className="grid lg:grid-cols-2 gap-12 items-center">
+        {/* Text Content */}
+        <div className="order-2 lg:order-1">
+          <Badge className="mb-4 bg-accent/20 text-accent-foreground border-0">
+            <Smartphone className="h-3.5 w-3.5 mr-1.5" />
+            Automated Sales
+          </Badge>
+          
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+            Turn drive-by traffic into{' '}
+            <span className="text-primary">instant revenue.</span>
+          </h2>
+          
+          <p className="text-lg text-muted-foreground mb-8">
+            Food trucks are always scouting for spots. Give them a way to book immediately when they see your lot.
+          </p>
+          
+          <div className="space-y-4">
+            <div className="flex gap-4 p-4 bg-card border-2 border-border rounded-xl">
+              <div className="p-2 bg-primary/10 rounded-lg h-fit">
+                <QrCode className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-foreground mb-1">Physical Signage</h4>
+                <p className="text-sm text-muted-foreground">
+                  We mail you a weatherproof sign. Trucks scan the code to book and pay instantly.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4 p-4 bg-card border-2 border-border rounded-xl">
+              <div className="p-2 bg-primary/10 rounded-lg h-fit">
+                <Share2 className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-foreground mb-1">Shareable Link</h4>
+                <p className="text-sm text-muted-foreground">
+                  Get a dedicated URL (vendibook.com/your-lot) to share on social media or local groups.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4 p-4 bg-card border-2 border-border rounded-xl">
+              <div className="p-2 bg-primary/10 rounded-lg h-fit">
+                <Star className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-foreground mb-1">Reviews & Ratings</h4>
+                <p className="text-sm text-muted-foreground">
+                  Build credibility with verified reviews. Top-rated lots get more bookings.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Phone Animation */}
+        <div className="order-1 lg:order-2">
+          <QRPhoneAnimation />
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+// --- Compliance Section ---
+const ComplianceSection = () => (
+  <section className="py-20 bg-muted/30">
+    <div className="container">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <Badge className="mb-4 bg-emerald-500/10 text-emerald-600 border-0">
+            <Shield className="h-3.5 w-3.5 mr-1.5" />
+            Automated Vetting
+          </Badge>
+          
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            No insurance? <span className="text-primary">No booking.</span>
+          </h2>
+          
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Renting your property carries risk. We mitigate it by enforcing strict document requirements.
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card className="border-2 border-border bg-card">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 text-primary font-medium mb-4">
+                <FileCheck className="h-5 w-5" />
+                We Collect & Verify:
+              </div>
+              <ul className="space-y-3">
+                {[
+                  "General Liability Insurance (COI)",
+                  "Health Department Permits",
+                  "Business License",
+                  "Food Manager Certification"
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-3 text-foreground">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 text-primary font-medium mb-4">
+                <Shield className="h-5 w-5" />
+                Asset Protection
+              </div>
+              <p className="text-muted-foreground mb-4">
+                You can require specific coverage limits (e.g. $1M/$2M) in your listing settings. 
+                Vendors must upload proof matching your criteria.
+              </p>
+              <div className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg">
+                <div className="p-2 bg-emerald-500/10 rounded-full">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">Status: Compliant</p>
+                  <p className="text-xs text-muted-foreground">COI Verified • Exp 12/25</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+// --- FAQ Section ---
+const FaqSection = () => (
+  <section className="py-20 bg-background">
+    <div className="container max-w-3xl">
+      <h2 className="text-3xl font-bold text-foreground text-center mb-12">
+        Common Questions
+      </h2>
+      
+      <Accordion type="single" collapsible className="space-y-4">
+        {[
+          {
+            q: "Can I choose who parks on my lot?",
+            a: "Yes. You have full control. You can require approval for every booking request, reviewing the vendor's profile, photos, and menu before saying yes."
+          },
+          {
+            q: "What if they stay longer than booked?",
+            a: "Vendors are charged for the specific time block they book. If they overstay, you can report it, and our terms allow for additional charges. Most professional vendors are very respectful of time slots."
+          },
+          {
+            q: "Do I need to provide electricity?",
+            a: "No. You can list your space as 'Dry Hire' (no utilities). However, spots with power (shore power) and water access typically command higher rental rates."
+          },
+          {
+            q: "How does the QR code work?",
+            a: "We generate a unique code for your listing. You print it or we send you a sign. Vendors scan it with their phone camera, which takes them directly to your checkout page to book instantly."
+          }
+        ].map((faq, i) => (
+          <AccordionItem 
+            key={i} 
+            value={`item-${i}`} 
+            className="border-2 border-border rounded-xl px-6 data-[state=open]:border-primary/30"
+          >
+            <AccordionTrigger className="hover:no-underline text-left font-semibold">
+              {faq.q}
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground">
+              {faq.a}
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </div>
+  </section>
+);
+
+// --- Final CTA ---
+const FinalCta = () => {
+  const navigate = useNavigate();
+  
+  return (
+    <section className="py-20 bg-gradient-to-br from-primary/10 via-background to-accent/10">
+      <div className="container">
+        <div className="max-w-2xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            Got space? <span className="text-primary">Get paid.</span>
+          </h2>
+          
+          <p className="text-lg text-muted-foreground mb-8">
+            List your parking lot, event space, or street corner today. 
+            It's free to list and takes less than 10 minutes.
+          </p>
+          
+          <Button
+            variant="gradient-premium"
+            size="lg"
+            onClick={() => navigate('/list')}
+            className="text-base px-8"
+          >
+            List Your Space
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
+          
+          <p className="text-sm text-muted-foreground mt-6">
+            Join hundreds of property owners monetizing their lots on VendiBook.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// --- Main Page Component ---
+const VendorLots = () => {
   return (
     <>
       <SEO
-        title="Vendor Spaces for Rent | Find Parking for Food Trucks & Mobile Businesses"
-        description="Discover prime parking lots and vendor spots available hourly, daily, or monthly for your food truck, food trailer, or mobile business. Secure your perfect location today with VendiBook."
+        title="List Your Vendor Space | Earn Money Renting to Food Trucks"
+        description="Turn your empty parking lot into passive income. List your space on VendiBook and let food trucks book and pay instantly. Free QR signage, automated insurance verification, and more."
       />
+      
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-
+        
         <main className="flex-1">
-          {/* Hero Section */}
-          <section className="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-12 md:py-16">
-            <div className="container">
-              <div className="grid lg:grid-cols-2 gap-8 items-center">
-                <div>
-                  <Badge className="mb-4 bg-primary/20 text-primary border-primary/30">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    Vendor Spaces
-                  </Badge>
-                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-                    Find Your Perfect Spot
-                  </h1>
-                  <p className="text-lg text-muted-foreground mb-6">
-                    Parking lots & prime spots available hourly, daily, or monthly for your food business. 
-                    Connect with property owners and secure high-traffic locations.
-                  </p>
-                  <div className="flex flex-wrap gap-4 mb-8">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4 text-primary" />
-                      Flexible Duration
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Truck className="h-4 w-4 text-primary" />
-                      Perfect for Food Trucks
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <DollarSign className="h-4 w-4 text-primary" />
-                      Competitive Rates
-                    </div>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button 
-                      variant="gradient-premium" 
-                      size="lg"
-                      onClick={() => document.getElementById('listings-section')?.scrollIntoView({ behavior: 'smooth' })}
-                    >
-                      Browse Available Spaces
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="lg"
-                      onClick={() => navigate('/list')}
-                    >
-                      List Your Space
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Benefits Cards */}
-                <div className="grid grid-cols-2 gap-4">
-                  {BENEFITS.map((benefit, index) => (
-                    <Card key={index} className="bg-card/50 backdrop-blur border-border/50">
-                      <CardContent className="p-4">
-                        <div className="p-2 bg-primary/10 rounded-lg w-fit mb-3">
-                          <benefit.icon className="h-5 w-5 text-primary" />
-                        </div>
-                        <h3 className="font-semibold text-foreground text-sm mb-1">{benefit.title}</h3>
-                        <p className="text-xs text-muted-foreground">{benefit.description}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Listings Section */}
-          <section id="listings-section" className="py-8">
-            <div className="container">
-              {/* Toolbar */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-                <div className="flex items-center gap-2">
-                  <p className="text-muted-foreground">
-                    <span className="font-semibold text-foreground">{filteredListings.length}</span>{' '}
-                    Vendor Space{filteredListings.length !== 1 ? 's' : ''} available
-                  </p>
-                  {activeFiltersCount > 0 && (
-                    <Badge variant="secondary" className="ml-2">
-                      {activeFiltersCount} filter{activeFiltersCount !== 1 ? 's' : ''} active
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  {/* Mobile Filter Button */}
-                  <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                    <SheetTrigger asChild>
-                      <Button variant="outline" className="lg:hidden">
-                        <Filter className="h-4 w-4 mr-2" />
-                        Filters
-                        {activeFiltersCount > 0 && (
-                          <Badge variant="secondary" className="ml-2 h-5 w-5 p-0 flex items-center justify-center">
-                            {activeFiltersCount}
-                          </Badge>
-                        )}
-                      </Button>
-                    </SheetTrigger>
-                    <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-                      <SheetHeader>
-                        <SheetTitle>Filters</SheetTitle>
-                        <SheetDescription>
-                          Narrow down Vendor Spaces by your preferences
-                        </SheetDescription>
-                      </SheetHeader>
-                      <div className="mt-6">
-                        <FilterContent />
-                      </div>
-                    </SheetContent>
-                  </Sheet>
-
-                  {/* Sort */}
-                  <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Sort by" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="newest">Newest First</SelectItem>
-                      <SelectItem value="price-low">Price: Low to High</SelectItem>
-                      <SelectItem value="price-high">Price: High to Low</SelectItem>
-                      <SelectItem value="rating">Top Rated</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  {/* View Toggle */}
-                  <div className="hidden sm:flex items-center border border-border rounded-lg overflow-hidden">
-                    <Button
-                      variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setViewMode('grid')}
-                      className="rounded-none"
-                      title="Grid View"
-                    >
-                      <LayoutGrid className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant={viewMode === 'list' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setViewMode('list')}
-                      className="rounded-none"
-                      title="List View"
-                    >
-                      <List className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant={viewMode === 'split' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setViewMode('split')}
-                      className="rounded-none"
-                      title="Split View"
-                    >
-                      <Map className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Main Content */}
-              <div className="flex gap-8">
-                {/* Desktop Sidebar Filters */}
-                <aside className="hidden lg:block w-64 flex-shrink-0">
-                  <div className="sticky top-24 bg-card border border-border rounded-xl p-5">
-                    <h3 className="font-semibold mb-4 flex items-center gap-2">
-                      <Filter className="h-4 w-4" />
-                      Filters
-                    </h3>
-                    <FilterContent />
-                  </div>
-                </aside>
-
-                {/* Content Area */}
-                <div className="flex-1">
-                  {viewMode === 'split' ? (
-                    <div className="grid lg:grid-cols-2 gap-6">
-                      {/* Listings Column */}
-                      <div className="max-h-[800px] overflow-y-auto pr-2 space-y-4">
-                        <ListingsGrid />
-                      </div>
-                      
-                      {/* Map Column */}
-                      <div className="h-[800px] sticky top-24 rounded-xl overflow-hidden border border-border">
-                        <SearchResultsMap
-                          listings={filteredListings}
-                          mapToken={mapToken}
-                          isLoading={mapLoading}
-                          error={mapError}
-                          onListingClick={handleListingClick}
-                        />
-                      </div>
-                    </div>
-                  ) : viewMode === 'map' ? (
-                    <div className="h-[600px] rounded-xl overflow-hidden border border-border">
-                      <SearchResultsMap
-                        listings={filteredListings}
-                        mapToken={mapToken}
-                        isLoading={mapLoading}
-                        error={mapError}
-                        onListingClick={handleListingClick}
-                      />
-                    </div>
-                  ) : (
-                    <ListingsGrid />
-                  )}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* How It Works Section */}
-          <section className="py-16 bg-muted/30">
-            <div className="container">
-              <div className="text-center mb-12">
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-                  How Vendor Spaces Work
-                </h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Finding and booking a Vendor Space is simple. Here's how to get started.
-                </p>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-8">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-primary">1</span>
-                  </div>
-                  <h3 className="font-semibold text-foreground mb-2">Browse & Filter</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Search for lots by location, price, and availability. Use the map to find spots in your desired area.
-                  </p>
-                </div>
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-primary">2</span>
-                  </div>
-                  <h3 className="font-semibold text-foreground mb-2">Book Your Spot</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Select your dates, review the lot details, and complete your booking with secure payment.
-                  </p>
-                </div>
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-primary">3</span>
-                  </div>
-                  <h3 className="font-semibold text-foreground mb-2">Start Selling</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Show up on your booked dates and start serving customers in your new high-traffic location.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* CTA Section */}
-          <section className="py-12 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10">
-            <div className="container">
-              <div className="text-center max-w-2xl mx-auto">
-                <h2 className="text-2xl md:text-3xl font-bold mb-4">Own a Space?</h2>
-                <p className="text-muted-foreground mb-6">
-                  Turn your parking lot or unused space into a revenue stream. 
-                  List it on VendiBook and connect with food vendors looking for prime locations.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button variant="gradient-premium" size="lg" onClick={() => navigate('/list')}>
-                    List Your Space
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                  <Button variant="outline" size="lg" onClick={() => navigate('/how-it-works')}>
-                    Learn More
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </section>
+          <HeroSection />
+          <ValuePropsSection />
+          <QRSignageSection />
+          <ComplianceSection />
+          <FaqSection />
+          <FinalCta />
         </main>
-
+        
         <Footer />
+        
+        {/* White Glove Popup for lot owners */}
+        <WhiteGlovePopup delayMs={20000} />
       </div>
     </>
   );
