@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Star, Calendar } from 'lucide-react';
+import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Star, Calendar, Clock } from 'lucide-react';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,98 @@ import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 import { trackListingCardClick } from '@/lib/analytics';
 import { AvailabilityCalendarModal } from '@/components/listing/AvailabilityCalendarModal';
+
+// Types for hourly schedule
+interface TimeRange {
+  start: string;
+  end: string;
+}
+
+interface WeeklySchedule {
+  mon?: TimeRange[];
+  tue?: TimeRange[];
+  wed?: TimeRange[];
+  thu?: TimeRange[];
+  fri?: TimeRange[];
+  sat?: TimeRange[];
+  sun?: TimeRange[];
+}
+
+type DayKey = keyof WeeklySchedule;
+
+const DAY_ABBREV: Record<DayKey, string> = {
+  mon: 'Mon',
+  tue: 'Tue',
+  wed: 'Wed',
+  thu: 'Thu',
+  fri: 'Fri',
+  sat: 'Sat',
+  sun: 'Sun',
+};
+
+const DAY_ORDER: DayKey[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+// Format time from 24h to 12h format
+const formatTime12h = (time: string): string => {
+  const hour = parseInt(time.split(':')[0]);
+  if (hour === 0 || hour === 24) return '12AM';
+  if (hour === 12) return '12PM';
+  return hour > 12 ? `${hour - 12}PM` : `${hour}AM`;
+};
+
+// Get a summary of the hourly schedule for display
+const getScheduleSummary = (schedule: WeeklySchedule | null | undefined): { daysText: string; hoursText: string } | null => {
+  if (!schedule || typeof schedule !== 'object') return null;
+  
+  const activeDays: DayKey[] = [];
+  let commonStart: string | null = null;
+  let commonEnd: string | null = null;
+  let hasHours = false;
+  
+  for (const day of DAY_ORDER) {
+    const ranges = schedule[day];
+    if (ranges && Array.isArray(ranges) && ranges.length > 0) {
+      activeDays.push(day);
+      hasHours = true;
+      // Get the earliest start and latest end for a simple summary
+      const firstRange = ranges[0];
+      if (firstRange?.start && firstRange?.end) {
+        if (!commonStart || firstRange.start < commonStart) commonStart = firstRange.start;
+        if (!commonEnd || firstRange.end > commonEnd) commonEnd = firstRange.end;
+      }
+    }
+  }
+  
+  if (!hasHours || activeDays.length === 0) return null;
+  
+  // Format days - check for consecutive runs
+  let daysText = '';
+  if (activeDays.length === 7) {
+    daysText = 'Every day';
+  } else if (activeDays.length === 5 && 
+    activeDays.includes('mon') && activeDays.includes('tue') && 
+    activeDays.includes('wed') && activeDays.includes('thu') && 
+    activeDays.includes('fri') && !activeDays.includes('sat') && !activeDays.includes('sun')) {
+    daysText = 'Weekdays';
+  } else if (activeDays.length === 2 && 
+    activeDays.includes('sat') && activeDays.includes('sun') && 
+    !activeDays.includes('mon')) {
+    daysText = 'Weekends';
+  } else if (activeDays.length <= 3) {
+    daysText = activeDays.map(d => DAY_ABBREV[d]).join(', ');
+  } else {
+    // Show first and last with count
+    daysText = `${activeDays.length} days`;
+  }
+  
+  // Format hours
+  let hoursText = '';
+  if (commonStart && commonEnd) {
+    hoursText = `${formatTime12h(commonStart)}–${formatTime12h(commonEnd)}`;
+  }
+  
+  return { daysText, hoursText };
+};
 
 interface ListingCardProps {
   listing: Listing;
@@ -81,6 +173,12 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
     listing.price_hourly > 0 && 
     listing.price_daily && 
     listing.price_daily > 0;
+
+  // Get hourly schedule summary for display
+  const hourlySchedule = (listing as any).hourly_schedule as WeeklySchedule | null;
+  const scheduleSummary = showHourlyRate || (listing.mode === 'rent' && listing.price_hourly && listing.price_hourly > 0)
+    ? getScheduleSummary(hourlySchedule)
+    : null;
 
   const modeLabel = listing.mode === 'rent' ? 'For Rent' : 'For Sale';
   const modeColor = listing.mode === 'rent' ? 'bg-primary' : 'bg-emerald-500';
@@ -336,6 +434,23 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
             </>
           )}
         </div>
+        
+        {/* Hourly Schedule Summary - shows available days/hours for hourly rentals */}
+        {scheduleSummary && (
+          <div className={cn(
+            "flex items-center gap-1.5 text-muted-foreground",
+            compact ? "text-[10px]" : "text-xs"
+          )}>
+            <Clock className={cn("shrink-0", compact ? "h-3 w-3" : "h-3.5 w-3.5")} />
+            <span>{scheduleSummary.daysText}</span>
+            {scheduleSummary.hoursText && (
+              <>
+                <span className="text-muted-foreground/50">•</span>
+                <span>{scheduleSummary.hoursText}</span>
+              </>
+            )}
+          </div>
+        )}
       </div>
       </Link>
       

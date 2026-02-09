@@ -1,9 +1,97 @@
 import React from 'react';
-import { Heart, MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck } from 'lucide-react';
+import { Heart, MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { CATEGORY_LABELS, ListingCategory, FulfillmentType } from '@/types/listing';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
+// Types for hourly schedule
+interface TimeRange {
+  start: string;
+  end: string;
+}
+
+interface WeeklySchedule {
+  mon?: TimeRange[];
+  tue?: TimeRange[];
+  wed?: TimeRange[];
+  thu?: TimeRange[];
+  fri?: TimeRange[];
+  sat?: TimeRange[];
+  sun?: TimeRange[];
+}
+
+type DayKey = keyof WeeklySchedule;
+
+const DAY_ABBREV: Record<DayKey, string> = {
+  mon: 'Mon',
+  tue: 'Tue',
+  wed: 'Wed',
+  thu: 'Thu',
+  fri: 'Fri',
+  sat: 'Sat',
+  sun: 'Sun',
+};
+
+const DAY_ORDER: DayKey[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+// Format time from 24h to 12h format
+const formatTime12h = (time: string): string => {
+  const hour = parseInt(time.split(':')[0]);
+  if (hour === 0 || hour === 24) return '12AM';
+  if (hour === 12) return '12PM';
+  return hour > 12 ? `${hour - 12}PM` : `${hour}AM`;
+};
+
+// Get a summary of the hourly schedule for display
+const getScheduleSummary = (schedule: WeeklySchedule | null | undefined): { daysText: string; hoursText: string } | null => {
+  if (!schedule || typeof schedule !== 'object') return null;
+  
+  const activeDays: DayKey[] = [];
+  let commonStart: string | null = null;
+  let commonEnd: string | null = null;
+  let hasHours = false;
+  
+  for (const day of DAY_ORDER) {
+    const ranges = schedule[day];
+    if (ranges && Array.isArray(ranges) && ranges.length > 0) {
+      activeDays.push(day);
+      hasHours = true;
+      const firstRange = ranges[0];
+      if (firstRange?.start && firstRange?.end) {
+        if (!commonStart || firstRange.start < commonStart) commonStart = firstRange.start;
+        if (!commonEnd || firstRange.end > commonEnd) commonEnd = firstRange.end;
+      }
+    }
+  }
+  
+  if (!hasHours || activeDays.length === 0) return null;
+  
+  let daysText = '';
+  if (activeDays.length === 7) {
+    daysText = 'Every day';
+  } else if (activeDays.length === 5 && 
+    activeDays.includes('mon') && activeDays.includes('tue') && 
+    activeDays.includes('wed') && activeDays.includes('thu') && 
+    activeDays.includes('fri') && !activeDays.includes('sat') && !activeDays.includes('sun')) {
+    daysText = 'Weekdays';
+  } else if (activeDays.length === 2 && 
+    activeDays.includes('sat') && activeDays.includes('sun') && 
+    !activeDays.includes('mon')) {
+    daysText = 'Weekends';
+  } else if (activeDays.length <= 3) {
+    daysText = activeDays.map(d => DAY_ABBREV[d]).join(', ');
+  } else {
+    daysText = `${activeDays.length} days`;
+  }
+  
+  let hoursText = '';
+  if (commonStart && commonEnd) {
+    hoursText = `${formatTime12h(commonStart)}–${formatTime12h(commonEnd)}`;
+  }
+  
+  return { daysText, hoursText };
+};
 
 interface ListingCardPreviewProps {
   listing: {
@@ -22,6 +110,7 @@ interface ListingCardPreviewProps {
     fulfillmentType: FulfillmentType | null;
     deliveryFee: string;
     deliveryRadiusMiles: string;
+    hourlySchedule?: WeeklySchedule | null;
   };
   hostVerified?: boolean;
 }
@@ -63,6 +152,11 @@ export const ListingCardPreview: React.FC<ListingCardPreviewProps> = ({ listing,
     parseFloat(listing.priceHourly) > 0 && 
     listing.priceDaily && 
     parseFloat(listing.priceDaily) > 0;
+
+  // Get schedule summary for hourly rentals
+  const scheduleSummary = (showHourlyRate || (listing.mode === 'rent' && listing.priceHourly && parseFloat(listing.priceHourly) > 0))
+    ? getScheduleSummary(listing.hourlySchedule)
+    : null;
 
   const modeLabel = listing.mode === 'rent' ? 'For Rent' : listing.mode === 'sale' ? 'For Sale' : 'Mode TBD';
   const modeColor = listing.mode === 'rent' ? 'bg-primary' : listing.mode === 'sale' ? 'bg-emerald-500' : 'bg-muted';
@@ -223,6 +317,20 @@ export const ListingCardPreview: React.FC<ListingCardPreviewProps> = ({ listing,
               </span>
             )}
           </div>
+          
+          {/* Hourly Schedule Summary */}
+          {scheduleSummary && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="h-3.5 w-3.5 shrink-0" />
+              <span>{scheduleSummary.daysText}</span>
+              {scheduleSummary.hoursText && (
+                <>
+                  <span className="text-muted-foreground/50">•</span>
+                  <span>{scheduleSummary.hoursText}</span>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
