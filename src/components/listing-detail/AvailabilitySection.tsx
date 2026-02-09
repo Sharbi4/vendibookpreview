@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import DateSelectionModal from './DateSelectionModal';
+import VendorSpaceBookingModal from './VendorSpaceBookingModal';
 import type { ListingCategory } from '@/types/listing';
 
 interface AvailabilitySectionProps {
@@ -20,6 +21,8 @@ interface AvailabilitySectionProps {
   onDatesSelected?: (startDate: Date, endDate: Date) => void;
   className?: string;
   category?: ListingCategory;
+  totalSlots?: number;
+  slotNames?: string[] | null;
 }
 
 export const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({
@@ -36,8 +39,12 @@ export const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({
   onDatesSelected,
   className,
   category,
+  totalSlots = 1,
+  slotNames,
 }) => {
   const [showDateModal, setShowDateModal] = useState(false);
+  const [showVendorModal, setShowVendorModal] = useState(false);
+  
   const isVendorSpace = category === 'vendor_space' || category === 'vendor_lot';
 
   return (
@@ -55,17 +62,19 @@ export const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({
         </div>
 
         <p className="text-sm text-muted-foreground mb-4">
-          Select your rental dates to see pricing and start the booking process.
+          {isVendorSpace 
+            ? 'View availability and select your space to start booking.'
+            : 'Select your rental dates to see pricing and start the booking process.'}
         </p>
 
         <Button
           variant="dark-shine"
           className="w-full gap-2"
           size="lg"
-          onClick={() => setShowDateModal(true)}
+          onClick={() => isVendorSpace ? setShowVendorModal(true) : setShowDateModal(true)}
         >
           <Calendar className="h-4 w-4" />
-          Select Dates
+          {isVendorSpace ? 'View Availability' : 'Select Dates'}
           <ArrowRight className="h-4 w-4 ml-auto" />
         </Button>
 
@@ -84,23 +93,42 @@ export const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({
         )}
       </div>
 
-      <DateSelectionModal
-        open={showDateModal}
-        onOpenChange={setShowDateModal}
-        listingId={listingId}
-        availableFrom={availableFrom}
-        availableTo={availableTo}
-        priceDaily={priceDaily}
-        priceWeekly={priceWeekly}
-        priceMonthly={priceMonthly}
-        priceHourly={priceHourly}
-        hourlyEnabled={hourlyEnabled}
-        dailyEnabled={dailyEnabled}
-        instantBook={instantBook}
-        onDatesSelected={onDatesSelected}
-        navigateToBooking={true}
-        isVendorSpace={isVendorSpace}
-      />
+      {/* Vendor Space Modal */}
+      {isVendorSpace && (
+        <VendorSpaceBookingModal
+          open={showVendorModal}
+          onOpenChange={setShowVendorModal}
+          listingId={listingId}
+          availableFrom={availableFrom}
+          availableTo={availableTo}
+          priceDaily={priceDaily}
+          priceWeekly={priceWeekly}
+          priceMonthly={priceMonthly}
+          instantBook={instantBook}
+          totalSlots={totalSlots}
+          slotNames={slotNames}
+        />
+      )}
+
+      {/* Regular Date Selection Modal */}
+      {!isVendorSpace && (
+        <DateSelectionModal
+          open={showDateModal}
+          onOpenChange={setShowDateModal}
+          listingId={listingId}
+          availableFrom={availableFrom}
+          availableTo={availableTo}
+          priceDaily={priceDaily}
+          priceWeekly={priceWeekly}
+          priceMonthly={priceMonthly}
+          priceHourly={priceHourly}
+          hourlyEnabled={hourlyEnabled}
+          dailyEnabled={dailyEnabled}
+          instantBook={instantBook}
+          onDatesSelected={onDatesSelected}
+          navigateToBooking={true}
+        />
+      )}
     </>
   );
 };
