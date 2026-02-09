@@ -6,7 +6,8 @@ const uniqSorted = (values: string[]) => Array.from(new Set(values)).sort();
  * Parses hourly selections passed via URL params.
  *
  * Supported formats:
- * - hourlyData=date1:07:00,08:00|date2:09:00
+ * - hourlyData=date1:07:00,08:00|date2:09:00,10:00
+ *   (split on first `:` only — rest is the comma-separated slots)
  * - timeSlots=07:00,08:00 (single-day; requires startDate)
  */
 export const parseHourlySelections = (params: {
@@ -20,8 +21,13 @@ export const parseHourlySelections = (params: {
     const out: HourlySelectionsByDate = {};
 
     for (const part of hourlyData.split('|')) {
-      const [dateKeyRaw, slotsRaw = ''] = part.split(':');
-      const dateKey = (dateKeyRaw || '').trim();
+      // Split on first `:` only (date is before, slots are after)
+      const colonIdx = part.indexOf(':');
+      if (colonIdx === -1) continue;
+
+      const dateKey = part.slice(0, colonIdx).trim();
+      const slotsRaw = part.slice(colonIdx + 1);
+
       if (!dateKey) continue;
 
       const slots = slotsRaw
