@@ -264,6 +264,16 @@ export const PublishWizard: React.FC = () => {
       } else {
         updateData.price_daily = safeParsePrice(priceDaily);
         updateData.price_weekly = safeParsePrice(priceWeekly);
+        updateData.price_hourly = priceHourly || null;
+        updateData.hourly_enabled = hourlyEnabled;
+        updateData.daily_enabled = dailyEnabled;
+        updateData.min_hours = minHours;
+        updateData.max_hours = maxHours;
+        updateData.buffer_time_mins = bufferTimeMins;
+        updateData.min_notice_hours = minNoticeHours;
+        updateData.hourly_schedule = hourlySchedule;
+        updateData.hourly_special_pricing = hourlySpecialPricing;
+        updateData.rental_min_days = rentalMinDays;
         updateData.instant_book = instantBook;
         updateData.deposit_amount = safeParsePrice(depositAmount);
         updateData.featured_enabled = featuredEnabled;
@@ -557,6 +567,16 @@ export const PublishWizard: React.FC = () => {
       } else {
         updateData.price_daily = safeParsePrice(priceDaily) || listing.price_daily || null;
         updateData.price_weekly = safeParsePrice(priceWeekly) || listing.price_weekly || null;
+        updateData.price_hourly = priceHourly || (listing as any).price_hourly || null;
+        updateData.hourly_enabled = hourlyEnabled;
+        updateData.daily_enabled = dailyEnabled;
+        updateData.min_hours = minHours;
+        updateData.max_hours = maxHours;
+        updateData.buffer_time_mins = bufferTimeMins;
+        updateData.min_notice_hours = minNoticeHours;
+        updateData.hourly_schedule = hourlySchedule;
+        updateData.hourly_special_pricing = hourlySpecialPricing;
+        updateData.rental_min_days = rentalMinDays;
         updateData.instant_book = instantBook;
         updateData.deposit_amount = safeParsePrice(depositAmount) || listing.deposit_amount || null;
         updateData.featured_enabled = featuredEnabled;
@@ -1344,6 +1364,16 @@ export const PublishWizard: React.FC = () => {
         : {
             price_daily: safeParsePrice(priceDaily),
             price_weekly: safeParsePrice(priceWeekly),
+            price_hourly: priceHourly || null,
+            hourly_enabled: hourlyEnabled,
+            daily_enabled: dailyEnabled,
+            min_hours: minHours,
+            max_hours: maxHours,
+            buffer_time_mins: bufferTimeMins,
+            min_notice_hours: minNoticeHours,
+            hourly_schedule: hourlySchedule,
+            hourly_special_pricing: hourlySpecialPricing,
+            rental_min_days: rentalMinDays,
             instant_book: instantBook,
             deposit_amount: safeParsePrice(depositAmount),
             featured_enabled: featuredEnabled,
