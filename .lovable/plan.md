@@ -1,156 +1,136 @@
 
-# Plan: Update Search & Availability Logic for Hourly Bookings
+# Plan: Sync Hourly Schedule Data Across Listing Creation, Detail, and Booking Flow
 
 ## Overview
-The current search and availability logic doesn't properly account for the new multi-day hourly booking system. This plan updates both the server-side search function and client-side availability hooks to correctly handle:
-- Multi-day hourly bookings (stored in `hourly_slots` column)
-- Blocked time slots (from `listing_blocked_times` table)
-- Multi-slot capacity (listings with multiple vendor spaces)
+The current implementation has a disconnect between the hourly schedule configured during listing creation and the actual time slots shown in booking modals. When a host sets specific operating hours (e.g., Mon-Fri 8 AM - 6 PM), these hours should be reflected in:
+1. The listing detail page (WeeklyHoursDisplay - already working)
+2. The booking widget time slot generation
+3. The vendor space booking modal
+4. Mobile and desktop views consistently
 
----
+## Current Issues Identified
 
-## Current Issues
-
-### 1. Search Function (`search-listings`)
-- Currently marks a listing as unavailable if ANY booking overlaps with the search date range
-- Doesn't check multi-slot capacity (a 5-slot venue shouldn't be "unavailable" if only 1 slot is booked)
-- Doesn't distinguish between hourly and daily bookings
-- Doesn't consider that hourly bookings only block specific hours, not the full day
-
-### 2. `useBlockedDates` Hook
-- Only fetches daily booking date ranges
-- Doesn't query `hourly_slots` column for multi-day hourly bookings
-- Doesn't fetch blocked time slots from `listing_blocked_times` table
-- Treats all bookings as full-day blockers
-
-### 3. `useListingAvailability` Hook
-- Doesn't integrate with hourly booking data for slot availability calculations
-
----
+| Component | Issue |
+|-----------|-------|
+| `useHourlyAvailability` hook | Fetches `operating_hours_start/end` but NOT `hourly_schedule`. Uses hardcoded 6 AM - 10 PM fallback |
+| `RentalBookingWidget` | Receives `hourlyEnabled` prop but doesn't get the schedule. Relies on hook which lacks schedule data |
+| `VendorSpaceBookingModal` | Same issue - uses `useHourlyAvailability` which doesn't have schedule data |
+| `ListingDetail` | Passes `hourlyEnabled` and `dailyEnabled` but not the schedule |
+| `StickyMobileCTA` | Same props missing - no schedule passed for mobile view |
 
 ## Implementation Plan
 
-### Step 1: Update `search-listings` Edge Function
-**File:** `supabase/functions/search-listings/index.ts`
+### Step 1: Update `useHourlyAvailability` Hook to Fetch and Use `hourly_schedule`
+**File:** `src/hooks/useHourlyAvailability.ts`
 
 Changes:
-- Fetch `total_slots` for each listing to support capacity-based availability
-- When checking booking overlap, count slots used vs total slots
-- For hourly-only listings, don't mark as unavailable just because of hourly bookings (they may have other hours free)
-- Add optional `is_hourly_search` parameter for future hourly search functionality
+1. Add `hourly_schedule` to the select query
+2. Store the schedule in settings state
+3. Modify `getAvailableWindowsForDate` to use the per-day schedule instead of hardcoded defaults
 
 ```text
-Current Logic:
-  booking overlaps date range → listing unavailable
+Current query:
+.select('price_hourly, hourly_enabled, daily_enabled, min_hours, max_hours, buffer_time_mins, min_notice_hours, operating_hours_start, operating_hours_end, ...')
 
-New Logic:
-  1. Fetch total_slots for all listings
-  2. For each listing with overlapping bookings:
-     - Count slots occupied by bookings
-     - If occupied_slots >= total_slots → mark unavailable
-     - Otherwise → still available (partial capacity)
-  3. For hourly-enabled listings:
-     - If ONLY hourly bookings exist → listing remains available (can book other hours)
+Updated query:
+.select('price_hourly, hourly_enabled, daily_enabled, min_hours, max_hours, buffer_time_mins, min_notice_hours, hourly_schedule, ...')
+
+New logic in getAvailableWindowsForDate:
+1. Determine day of week for the date
+2. Look up that day's windows in hourly_schedule
+3. Use those windows instead of hardcoded 6-22
 ```
 
-### Step 2: Update `useBlockedDates` Hook
-**File:** `src/hooks/useBlockedDates.ts`
+### Step 2: Update Settings Interface
+**File:** `src/hooks/useHourlyAvailability.ts`
 
-Changes:
-- Fetch `hourly_slots` column for hourly bookings
-- Fetch blocked time slots from `listing_blocked_times` table
-- Add new methods:
-  - `isHourBlocked(date, hour)` - checks if specific hour is blocked
-  - `getBlockedHoursForDate(date)` - returns list of blocked hours
-- Keep existing `isDateUnavailable` but make it smarter (a date with partial hourly bookings isn't fully unavailable)
+Add `hourlySchedule` to the settings interface:
+```text
+interface ListingHourlySettings {
+  // ... existing fields
+  hourlySchedule: WeeklySchedule | null;
+}
+```
 
-### Step 3: Update `useListingAvailability` Hook
-**File:** `src/hooks/useListingAvailability.ts`
+### Step 3: Update Time Window Generation Logic
+**File:** `src/hooks/useHourlyAvailability.ts`
 
-Changes:
-- Fetch `hourly_slots` for existing bookings
-- Update `getSlotsBookedForDate` to also count slots with hourly bookings
-- Add method to check hourly availability per slot
+Modify `getAvailableWindowsForDate` to:
+1. Get the day of week from the date (mon, tue, wed, etc.)
+2. Look up that day's time ranges from `hourlySchedule`
+3. Use those ranges as operating hours instead of defaults
+4. If schedule is empty for that day, return no windows (closed)
 
-### Step 4: Update Availability Calendar Display
-**File:** `src/components/listing-detail/AvailabilityCalendarDisplay.tsx`
+### Step 4: Expose Schedule via Hook for Display Consistency
+**File:** `src/hooks/useHourlyAvailability.ts`
 
-Changes:
-- Show partial availability indicators for dates with some hours booked
-- Add visual distinction for hourly vs daily availability
-- Use `useHourlyAvailability` hook for hourly-enabled listings
+Return the `hourlySchedule` from the hook so components can display it if needed:
+```text
+return {
+  settings,
+  hourlySchedule: settings.hourlySchedule,
+  // ... existing returns
+}
+```
+
+### Step 5: Update Mobile CTA to Pass Schedule (Optional Enhancement)
+**File:** `src/pages/ListingDetail.tsx`
+
+The schedule is already fetched via `useListing`. Ensure it's accessible for mobile booking modals by passing it through or having the modal fetch it via `useHourlyAvailability`.
 
 ---
 
 ## Technical Details
 
-### Search Function Changes
-
+### Updated `useHourlyAvailability` Query
 ```text
-// Fetch slots capacity with listings
-.select('*, total_slots')
-
-// Enhanced availability check
-const occupiedSlotsByListing = new Map<string, number>();
-
-bookings.forEach(b => {
-  const current = occupiedSlotsByListing.get(b.listing_id) || 0;
-  // For hourly bookings, check if they actually overlap by date AND have slots on those dates
-  if (b.is_hourly_booking && b.hourly_slots) {
-    // Only count if hourly_slots have dates in the search range
-    const hasOverlap = b.hourly_slots.some(s => 
-      s.date >= start_date && s.date <= end_date && s.slots.length > 0
-    );
-    if (hasOverlap) {
-      occupiedSlotsByListing.set(b.listing_id, current + 1);
-    }
-  } else {
-    // Daily booking
-    occupiedSlotsByListing.set(b.listing_id, current + 1);
-  }
-});
-
-// Mark unavailable only if fully booked
-listings.forEach(listing => {
-  const occupied = occupiedSlotsByListing.get(listing.id) || 0;
-  if (occupied >= listing.total_slots) {
-    unavailableListingIds.add(listing.id);
-  }
-});
+const { data: listingData } = await supabase
+  .from('listings')
+  .select(`
+    price_hourly,
+    hourly_enabled,
+    daily_enabled,
+    min_hours,
+    max_hours,
+    buffer_time_mins,
+    min_notice_hours,
+    hourly_schedule,
+    price_daily,
+    price_weekly,
+    total_slots
+  `)
+  .eq('id', listingId)
+  .single();
 ```
 
-### useBlockedDates Changes
-
+### Updated `getAvailableWindowsForDate` Logic
 ```text
-// Updated query for booking data
-.select('start_date, end_date, status, payment_status, is_hourly_booking, hourly_slots, slot_number')
-
-// New: Fetch blocked time slots
-const { data: blockedTimes } = await supabase
-  .from('listing_blocked_times')
-  .select('blocked_date, start_time, end_time')
-  .eq('listing_id', listingId);
-
-// New method for hourly checking
-const isHourBlocked = (date: Date, hour: string): boolean => {
+const getAvailableWindowsForDate = (date: Date): TimeWindow[] => {
+  if (!settings.hourlyEnabled) return [];
+  
   const dateStr = format(date, 'yyyy-MM-dd');
   
-  // Check blocked time slots
-  const hasBlockedTime = blockedTimeSlots.some(t => 
-    t.blocked_date === dateStr && 
-    hour >= t.start_time && hour < t.end_time
-  );
-  if (hasBlockedTime) return true;
+  // Determine day of week
+  const dayOfWeek = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][date.getDay()];
   
-  // Check hourly bookings
-  return bookings.some(b => {
-    if (!b.is_hourly_booking) return false;
-    if (b.hourly_slots) {
-      const daySlots = b.hourly_slots.find(s => s.date === dateStr);
-      return daySlots?.slots.includes(hour) ?? false;
-    }
-    return false;
+  // Get schedule for this day
+  const daySchedule = settings.hourlySchedule?.[dayOfWeek] || [];
+  
+  // If no hours configured for this day, it's closed
+  if (!daySchedule || daySchedule.length === 0) {
+    return [];
+  }
+  
+  // Process each time window from the schedule
+  const windows: TimeWindow[] = [];
+  daySchedule.forEach(range => {
+    const opStart = parseInt(range.start.split(':')[0]);
+    const opEnd = parseInt(range.end.split(':')[0]);
+    
+    // ... existing slot availability logic using opStart/opEnd
   });
+  
+  return windows;
 };
 ```
 
@@ -160,25 +140,39 @@ const isHourBlocked = (date: Date, hour: string): boolean => {
 
 | File | Change |
 |------|--------|
-| `supabase/functions/search-listings/index.ts` | Add capacity-aware availability, handle hourly bookings |
-| `src/hooks/useBlockedDates.ts` | Fetch hourly_slots, blocked_times; add hourly checking methods |
-| `src/hooks/useListingAvailability.ts` | Add hourly-aware slot availability calculation |
-| `src/components/listing-detail/AvailabilityCalendarDisplay.tsx` | Add partial availability indicators |
+| `src/hooks/useHourlyAvailability.ts` | Add `hourly_schedule` to query, update settings interface, modify `getAvailableWindowsForDate` to use per-day schedule |
 
 ---
 
 ## Expected Behavior After Implementation
 
-### Search Results
-- A venue with 10 slots shows as available even if 3 are booked
-- A listing with only hourly bookings shows as available (can book other hours)
-- A listing fully booked for all slots shows as unavailable
+### Listing Creation
+1. Host selects "Hourly" or "Both" booking type
+2. Host configures operating hours per day (e.g., Mon-Fri 9 AM - 5 PM)
+3. Schedule is saved to `hourly_schedule` column
 
-### Availability Calendar
-- Days with partial hourly bookings show a "Limited" indicator
-- Days fully booked (all slots, all hours) show as "Booked"
-- Days with blocked time slots reflect the partial availability
+### Listing Detail Page
+1. WeeklyHoursDisplay shows "Mon – Fri: 9 AM – 5 PM" (already working)
+2. RentalBookingWidget shows time slots ONLY for 9 AM - 5 PM on Mon-Fri
+3. Saturdays and Sundays show as unavailable for hourly booking
 
-### Booking Widget
-- Shows accurate slot availability accounting for hourly bookings
-- Time grid shows which hours are already taken
+### Booking Flow
+1. User clicks on a Monday → time grid shows 9 AM - 5 PM slots only
+2. User clicks on a Saturday → no hourly slots available (or date disabled for hourly mode)
+3. Vendor space modal reflects same schedule
+
+### Mobile View
+1. StickyMobileCTA opens booking modal
+2. Modal uses same `useHourlyAvailability` hook → same schedule applies
+3. Consistent experience across desktop and mobile
+
+---
+
+## Validation Scenarios
+
+| Scenario | Before | After |
+|----------|--------|-------|
+| Mon-Fri 9-5 schedule, user selects Monday | Shows 6 AM - 10 PM slots | Shows 9 AM - 5 PM slots only |
+| Schedule with Saturday closed, user selects Saturday | Shows 6 AM - 10 PM slots | Shows "Closed" or no slots |
+| Multiple windows (9-12, 2-6), user views slots | Shows continuous 6-22 | Shows 9-12 and 2-6 windows |
+| Empty schedule (new listing) | Shows 6-22 | Shows 6-22 (backwards compatible fallback) |
