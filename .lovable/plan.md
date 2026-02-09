@@ -1,294 +1,321 @@
 
-# Plan: Hold Payouts Until 24 Hours After Booking Ends (Hourly-Aware) + Manual Release
+# Plan: Prevent Overbooking + Enhanced Host Calendar View
 
 ## Overview
-This plan ensures that host payouts and security deposit refunds are held for 24 hours after the booking **actually ends** - including the final booked hour for hourly bookings. This provides a dispute window for damage claims and deposit holds. Additionally, admins can manually trigger an early release for special requests.
+This plan addresses two key requirements:
+1. **Prevent overbooking** across daily, hourly, weekly, and monthly booking types (with and without multi-slot capacity)
+2. **Enhanced Host Calendar** that shows booked days/hours with shopper names, times, and booking details
 
 ---
 
 ## Current State Analysis
 
-### How It Works Now
-The `complete-ended-bookings` edge function (cron job) uses:
-```text
-.lt('end_date', releaseThresholdStr) // 24+ hours since end_date
-```
+### What's Already Working
+- **Frontend validation** in `useHourlyAvailability` and `useBlockedDates` hooks correctly calculates available slots and prevents selection of unavailable dates/times
+- **Slot-based availability** in `useListingAvailability` tracks slots booked per date
+- **Hourly conflict detection** counts hourly bookings per hour and applies buffer times
+- **VendorSpaceBookingModal** correctly checks slot availability across date ranges
 
-**Problem**: For hourly bookings:
-- `end_date` is the calendar date of the last booking day
-- But a booking ending at **6 PM** on Jan 15 should hold until **6 PM on Jan 16**
-- Currently, it releases at midnight Jan 16 (based on date only)
+### Gaps Identified
 
-### Database Fields Available
-| Field | Purpose |
-|-------|---------|
-| `end_date` | Last day of booking (date only) |
-| `end_time` | End time for single-day hourly bookings (e.g., "18:00") |
-| `hourly_slots` | JSONB array for multi-day hourly bookings: `[{date: "2026-01-15", slots: ["14:00", "15:00", "16:00", "17:00"]}]` |
-| `is_hourly_booking` | Boolean flag |
+| Area | Issue |
+|------|-------|
+| **Server-side validation** | No backend conflict check when booking is created - only frontend prevents conflicts |
+| **Race conditions** | Two users could submit for same dates simultaneously |
+| **Host calendar** | Shows minimal booking info (dates + price only), no shopper names/times |
+| **Hourly bookings in calendar** | Calendar doesn't show which hours are booked or who booked them |
 
 ---
 
 ## Implementation Plan
 
-### Step 1: Add `booking_end_timestamp` Column
+### Part 1: Server-Side Overbooking Prevention
+
+#### Step 1: Create Database Function for Conflict Check
 **Database Migration**
 
-Add a computed/stored timestamp column that represents the actual end datetime:
-- For daily bookings: `end_date` at 23:59:59
-- For hourly bookings: `end_date` + last booked hour + 1 hour
+Create a PostgreSQL function that validates booking availability before insert:
 
 ```sql
-ALTER TABLE booking_requests 
-ADD COLUMN booking_end_timestamp TIMESTAMPTZ;
-
--- Backfill existing bookings
-UPDATE booking_requests SET booking_end_timestamp = 
-  CASE 
-    WHEN is_hourly_booking = true AND end_time IS NOT NULL THEN
-      (end_date::text || ' ' || end_time::text)::timestamptz
-    WHEN is_hourly_booking = true AND hourly_slots IS NOT NULL THEN
-      -- Extract last date and last hour from hourly_slots JSONB
-      -- Requires plpgsql function
-      calculate_booking_end_timestamp(end_date, hourly_slots)
-    ELSE
-      end_date::timestamptz + INTERVAL '23 hours 59 minutes 59 seconds'
-  END;
-```
-
-### Step 2: Create Helper Function for Hourly Slots
-**Database Migration**
-
-Create a function to parse `hourly_slots` JSONB and find the latest end time:
-
-```sql
-CREATE OR REPLACE FUNCTION calculate_booking_end_timestamp(
+CREATE OR REPLACE FUNCTION check_booking_availability(
+  p_listing_id UUID,
+  p_start_date DATE,
   p_end_date DATE,
-  p_hourly_slots JSONB
-) RETURNS TIMESTAMPTZ AS $$
+  p_is_hourly_booking BOOLEAN DEFAULT FALSE,
+  p_hourly_slots JSONB DEFAULT NULL,
+  p_slot_number INTEGER DEFAULT NULL
+) RETURNS JSONB AS $$
 DECLARE
-  last_date TEXT;
-  last_hour TEXT;
-  slot_entry JSONB;
-  hour_value TEXT;
+  v_listing RECORD;
+  v_total_slots INTEGER;
+  v_conflict_found BOOLEAN := FALSE;
+  v_conflict_message TEXT;
+  v_current_date DATE;
+  v_slots_booked INTEGER;
+  v_day_slots JSONB;
+  v_hour_conflicts JSONB := '[]'::JSONB;
 BEGIN
-  -- Default to end of day
-  IF p_hourly_slots IS NULL OR jsonb_array_length(p_hourly_slots) = 0 THEN
-    RETURN p_end_date::timestamptz + INTERVAL '23 hours 59 minutes 59 seconds';
+  -- Fetch listing capacity
+  SELECT total_slots, hourly_enabled, daily_enabled
+  INTO v_listing
+  FROM listings WHERE id = p_listing_id;
+  
+  v_total_slots := COALESCE(v_listing.total_slots, 1);
+  
+  -- For specific slot bookings, check that slot only
+  IF p_slot_number IS NOT NULL THEN
+    -- Check for overlapping bookings on the same slot
+    IF EXISTS (
+      SELECT 1 FROM booking_requests
+      WHERE listing_id = p_listing_id
+        AND slot_number = p_slot_number
+        AND status IN ('pending', 'approved')
+        AND payment_status IN ('pending', 'paid')
+        AND NOT (end_date < p_start_date OR start_date > p_end_date)
+    ) THEN
+      RETURN jsonb_build_object(
+        'available', FALSE,
+        'error', format('Slot %s is already booked for these dates', p_slot_number)
+      );
+    END IF;
   END IF;
   
-  -- Find the last date in the array
-  SELECT MAX(entry->>'date') INTO last_date
-  FROM jsonb_array_elements(p_hourly_slots) AS entry;
-  
-  -- Find the last hour on that date
-  SELECT MAX(hour_val) INTO last_hour
-  FROM jsonb_array_elements(p_hourly_slots) AS entry
-  CROSS JOIN LATERAL jsonb_array_elements_text(entry->'slots') AS hour_val
-  WHERE entry->>'date' = last_date;
-  
-  IF last_hour IS NULL THEN
-    RETURN p_end_date::timestamptz + INTERVAL '23 hours 59 minutes 59 seconds';
+  -- For daily bookings without specific slot, check total capacity
+  IF NOT p_is_hourly_booking THEN
+    v_current_date := p_start_date;
+    WHILE v_current_date <= p_end_date LOOP
+      SELECT COUNT(*) INTO v_slots_booked
+      FROM booking_requests
+      WHERE listing_id = p_listing_id
+        AND status IN ('pending', 'approved')
+        AND payment_status IN ('pending', 'paid')
+        AND NOT is_hourly_booking
+        AND start_date <= v_current_date
+        AND end_date >= v_current_date;
+      
+      IF v_slots_booked >= v_total_slots THEN
+        RETURN jsonb_build_object(
+          'available', FALSE,
+          'error', format('No slots available for %s', v_current_date)
+        );
+      END IF;
+      v_current_date := v_current_date + 1;
+    END LOOP;
   END IF;
   
-  -- Return end of the last booked hour (add 1 hour to start time)
-  RETURN (last_date || ' ' || last_hour)::timestamptz + INTERVAL '1 hour';
+  -- For hourly bookings, check each hour in hourly_slots
+  IF p_is_hourly_booking AND p_hourly_slots IS NOT NULL THEN
+    -- Check each day's hours for conflicts
+    FOR v_day_slots IN SELECT * FROM jsonb_array_elements(p_hourly_slots)
+    LOOP
+      -- Implementation: check each hour for capacity
+      -- (detailed hour-by-hour conflict check)
+    END LOOP;
+  END IF;
+  
+  RETURN jsonb_build_object('available', TRUE);
 END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+$$ LANGUAGE plpgsql STABLE;
 ```
 
-### Step 3: Update Booking Creation to Set `booking_end_timestamp`
-**Files:** `create-booking-hold/index.ts`, `stripe-webhook/index.ts`
-
-When a booking is created/confirmed, calculate and store `booking_end_timestamp`:
-
-```typescript
-// For hourly bookings with hourly_slots
-function calculateBookingEndTimestamp(
-  endDate: string, 
-  endTime: string | null, 
-  hourlySlots: HourlySlotData[] | null,
-  isHourlyBooking: boolean
-): string {
-  if (!isHourlyBooking) {
-    // Daily booking: end of day
-    return `${endDate}T23:59:59Z`;
-  }
-  
-  if (hourlySlots && hourlySlots.length > 0) {
-    // Multi-day hourly: find last date and last hour
-    const sortedSlots = [...hourlySlots].sort((a, b) => 
-      a.date > b.date ? -1 : 1
-    );
-    const lastDay = sortedSlots[0];
-    const lastHour = lastDay.slots.sort().pop(); // Get latest hour
-    const hourNum = parseInt(lastHour.split(':')[0]) + 1; // Add 1 hour for end
-    return `${lastDay.date}T${String(hourNum).padStart(2, '0')}:00:00Z`;
-  }
-  
-  if (endTime) {
-    // Single-day hourly with end_time
-    return `${endDate}T${endTime}:00Z`;
-  }
-  
-  return `${endDate}T23:59:59Z`;
-}
-```
-
-### Step 4: Update `complete-ended-bookings` Edge Function
-**File:** `supabase/functions/complete-ended-bookings/index.ts`
-
-Change from date-based to timestamp-based checks:
-
-**Step 1 - Mark as completed:**
-```typescript
-// Current: .lt('end_date', todayStr)
-// New: .lt('booking_end_timestamp', now.toISOString())
-```
-
-**Step 2 - Payout eligibility:**
-```typescript
-// Current: .lt('end_date', releaseThresholdStr)
-// New: .lt('booking_end_timestamp', twentyFourHoursAgo.toISOString())
-```
-
-**Step 3 - Deposit refund eligibility:**
-```typescript
-// Same change - use booking_end_timestamp instead of end_date
-```
-
-### Step 5: Add `payout_hold_until` Column for Manual Override
+#### Step 2: Add Database Trigger for Booking Validation
 **Database Migration**
 
-Add a column that admins can set to extend or shorten the hold period:
+Create a trigger that runs before insert on `booking_requests`:
 
 ```sql
-ALTER TABLE booking_requests 
-ADD COLUMN payout_hold_until TIMESTAMPTZ,
-ADD COLUMN payout_hold_reason TEXT,
-ADD COLUMN payout_hold_set_by UUID REFERENCES profiles(id);
+CREATE OR REPLACE FUNCTION validate_booking_availability()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_result JSONB;
+BEGIN
+  v_result := check_booking_availability(
+    NEW.listing_id,
+    NEW.start_date,
+    NEW.end_date,
+    COALESCE(NEW.is_hourly_booking, FALSE),
+    NEW.hourly_slots,
+    NEW.slot_number
+  );
+  
+  IF NOT (v_result->>'available')::BOOLEAN THEN
+    RAISE EXCEPTION 'Booking conflict: %', v_result->>'error';
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER check_booking_conflicts
+BEFORE INSERT ON booking_requests
+FOR EACH ROW
+EXECUTE FUNCTION validate_booking_availability();
 ```
 
-### Step 6: Create `admin-release-payout` Edge Function
-**New File:** `supabase/functions/admin-release-payout/index.ts`
+#### Step 3: Add Unique Constraint for Slot-Based Bookings
+**Database Migration**
 
-Admin-only function to manually release payouts early:
+Create a partial unique index to prevent double-booking the same slot:
 
-```typescript
-// Request body: { booking_id, release_type: 'payout' | 'deposit' | 'both', reason }
-// Validates admin status
-// If release_type includes 'payout':
-//   - Immediately triggers payout transfer
-//   - Sets payout_processed = true, payout_processed_at = now
-// If release_type includes 'deposit':
-//   - Immediately processes deposit refund
-// Logs the action with reason
+```sql
+-- Prevent same slot being booked twice for overlapping dates
+CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_slot_booking
+ON booking_requests (listing_id, slot_number, start_date, end_date)
+WHERE status IN ('pending', 'approved') 
+  AND payment_status IN ('pending', 'paid')
+  AND slot_number IS NOT NULL;
 ```
-
-### Step 7: Update Complete-Ended-Bookings to Respect Manual Holds
-**File:** `supabase/functions/complete-ended-bookings/index.ts`
-
-Add check for `payout_hold_until`:
-
-```typescript
-// Skip if manual hold is set and not yet expired
-if (booking.payout_hold_until && new Date(booking.payout_hold_until) > now) {
-  logStep("Booking has manual hold - skipping", { 
-    bookingId: booking.id, 
-    holdUntil: booking.payout_hold_until 
-  });
-  continue;
-}
-```
-
-### Step 8: Create `admin-set-hold` Edge Function
-**New File:** `supabase/functions/admin-set-hold/index.ts`
-
-Admin function to extend holds (e.g., pending damage investigation):
-
-```typescript
-// Request body: { booking_id, hold_until, reason }
-// Sets payout_hold_until, payout_hold_reason, payout_hold_set_by
-// Sends notification to host explaining the hold
-```
-
-### Step 9: Add Admin UI for Manual Release
-**File:** `src/pages/AdminDashboard.tsx` and/or new component
-
-Add controls in the admin dashboard:
-- View bookings with pending payouts
-- "Release Early" button for special requests
-- "Extend Hold" button for damage investigations
-- Show hold status and reason
 
 ---
 
-## Technical Flow Diagram
+### Part 2: Enhanced Host Calendar View
+
+#### Step 4: Update `useListingAvailability` to Fetch Shopper Details
+**File:** `src/hooks/useListingAvailability.ts`
+
+Expand the booking query to include shopper information:
 
 ```text
-BOOKING ENDS (hourly or daily)
-         |
-         v
-booking_end_timestamp calculated
-         |
-         v
-24 hours pass (or admin early release)
-         |
-         v
-complete-ended-bookings cron runs
-         |
-    ┌────┴────┐
-    |         |
-Has dispute?  Has manual hold?
-    |         |
-    v         v
-   Skip      Skip
-    |
-    v
-No issues → Process payout & deposit refund
+Current:
+.select('*')
+
+Updated:
+.select(`
+  *,
+  shopper:profiles!booking_requests_shopper_id_fkey(
+    id,
+    full_name,
+    email,
+    avatar_url
+  )
+`)
+```
+
+#### Step 5: Create Enhanced Host Calendar Component
+**New File:** `src/components/dashboard/HostAvailabilityCalendar.tsx`
+
+Create an enhanced calendar specifically for hosts that:
+- Shows booked dates with shopper initials/avatars
+- Displays hourly bookings with time slots
+- Allows clicking on a date to see booking details
+- Shows pending vs. confirmed bookings distinctly
+
+Features:
+- **Date cells** show booking indicators with shopper initials
+- **Hover tooltips** show booking summary (name, dates, times, price)
+- **Click to expand** shows full booking card details
+- **Hourly timeline view** for hourly bookings (shows which hours are booked)
+- **Multi-slot view** shows which slots are booked on each date
+
+#### Step 6: Update AvailabilityCalendar Sidebar with Enhanced Booking Info
+**File:** `src/components/dashboard/AvailabilityCalendar.tsx`
+
+Enhance the sidebar to show:
+- Shopper name and avatar
+- Booking dates and times (for hourly)
+- Total price
+- Booking status with phase indicator
+- Quick action buttons (message, view details)
+
+```text
+Current sidebar:
+{format(new Date(booking.start_date), 'MMM d')} - {format(new Date(booking.end_date), 'MMM d')}
+${booking.total_price} total
+
+Enhanced sidebar:
+<Avatar with shopper initials>
+{shopper.full_name}
+Jan 15 - Jan 17 (3 days)
+OR
+Jan 15 • 9am - 5pm (8 hours)
+$450 total
+<Badge: Confirmed / Pending>
+<Button: Message>
+```
+
+#### Step 7: Add Hourly Slot Visualization to Calendar
+**File:** `src/components/dashboard/AvailabilityCalendar.tsx`
+
+For listings with hourly bookings enabled:
+- Show a mini timeline under each date cell
+- Indicate which hours are booked vs. available
+- Show booking owner for each hour block
+
+---
+
+### Part 3: Updated Types and Interfaces
+
+#### Step 8: Update Booking Interface
+**File:** `src/hooks/useListingAvailability.ts`
+
+```typescript
+interface BookingWithDetails extends Tables<'booking_requests'> {
+  shopper?: {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+  };
+  // hourly_slots is already in the table
+}
 ```
 
 ---
 
-## Files to Modify/Create
+## Files to Create/Modify
 
 | File | Change |
 |------|--------|
-| Database | Add `booking_end_timestamp`, `payout_hold_until`, `payout_hold_reason`, `payout_hold_set_by` columns |
-| Database | Create `calculate_booking_end_timestamp()` function |
-| `stripe-webhook/index.ts` | Set `booking_end_timestamp` on booking confirmation |
-| `create-booking-hold/index.ts` | Set `booking_end_timestamp` on booking creation |
-| `complete-ended-bookings/index.ts` | Use `booking_end_timestamp` instead of `end_date`, respect manual holds |
-| `admin-release-payout/index.ts` | **New** - Manual early release function |
-| `admin-set-hold/index.ts` | **New** - Extend hold function |
-| `src/pages/AdminDashboard.tsx` | Add payout management UI section |
+| Database | Create `check_booking_availability()` function |
+| Database | Create `validate_booking_availability()` trigger |
+| Database | Add unique index for slot bookings |
+| `src/hooks/useListingAvailability.ts` | Expand query to include shopper details |
+| `src/components/dashboard/AvailabilityCalendar.tsx` | Enhanced sidebar with shopper info, hourly timeline, quick actions |
+| `src/components/dashboard/HostAvailabilityCalendar.tsx` | **New** - Full-featured host calendar component |
 
 ---
 
 ## Expected Behavior After Implementation
 
-### Standard Flow
-| Booking Type | End Condition | Payout Release |
-|--------------|---------------|----------------|
-| Daily (Jan 15-17) | Jan 17 midnight | Jan 18 midnight + 24h = Jan 19 00:00 |
-| Hourly (Jan 15, 9am-5pm) | Jan 15 5pm | Jan 16 5pm |
-| Multi-day hourly (Jan 15-16, various hours) | Last hour on Jan 16 (e.g., 6pm) | Jan 17 6pm |
+### Overbooking Prevention
+| Scenario | Before | After |
+|----------|--------|-------|
+| Two users book same dates simultaneously | Race condition - both may succeed | Server rejects second booking |
+| User selects slot already booked (race) | May create duplicate | Database trigger prevents |
+| Hourly overlap on same date | Only frontend check | Server validates hour conflicts |
 
-### Manual Override Scenarios
-| Scenario | Action | Result |
-|----------|--------|--------|
-| Host requests early release | Admin clicks "Release Early" | Immediate payout |
-| Damage reported | Admin sets hold for 7 days | Payout delayed until hold expires or dispute resolved |
-| Special VIP host | Admin releases same day | Immediate payout |
+### Host Calendar View
+| Feature | Before | After |
+|---------|--------|-------|
+| Shopper info | Not shown | Name, avatar, email visible |
+| Hourly bookings | Shows dates only | Shows specific hours booked |
+| Quick actions | None | Message, View Details buttons |
+| Booking details | Click opens modal | Hover shows preview, click for details |
+| Multi-slot view | Basic indicators | Shows which slots are booked |
+
+---
+
+## Visual Mockup: Enhanced Calendar Cell
+
+```text
+┌─────────────────────┐
+│  15                 │ ← Date number
+│  ┌─────────────────┐│
+│  │ JD 9a-5p       ◉││ ← John Doe, 9am-5pm, confirmed
+│  │ AS 2p-6p       ○││ ← Amy Smith, 2pm-6pm, pending  
+│  └─────────────────┘│
+│  2/5 slots left     │ ← Capacity indicator
+└─────────────────────┘
+```
 
 ---
 
 ## Validation Checklist
 
-- Hourly bookings hold for 24h after last booked hour (not midnight)
-- Multi-day hourly correctly uses the latest slot across all days
-- Daily bookings work as before (24h after end of last day)
-- Disputes block automatic release (existing behavior preserved)
-- Admin can manually release early
-- Admin can extend holds for investigations
-- Deposit refunds follow same logic as payouts
+- Server rejects booking if dates/times conflict with existing bookings
+- Server respects slot capacity (e.g., 5 slots = max 5 concurrent bookings)
+- Hourly bookings correctly block overlapping hours
+- Host calendar shows shopper names on booked dates
+- Host can see hourly breakdown for hourly bookings
+- Quick message action works from calendar
+- Mobile view displays booking info appropriately
