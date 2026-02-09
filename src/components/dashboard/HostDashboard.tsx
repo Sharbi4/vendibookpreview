@@ -111,7 +111,7 @@ const HostDashboard = () => {
               Reporting
             </Link>
             <Link 
-              to="/dashboard?tab=inventory"
+              to="/dashboard?view=host&tab=inventory"
               className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
             >
               <Grid3X3 className="h-4 w-4" />
