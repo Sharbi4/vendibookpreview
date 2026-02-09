@@ -104,14 +104,15 @@ Deno.serve(async (req) => {
     }
 
     // Apply price filters
+    // Note: For rentals, we check both price_daily and price_hourly since listings can have either or both
     if (min_price !== undefined && min_price > 0) {
       if (mode === 'sale') {
         queryBuilder = queryBuilder.gte('price_sale', min_price);
       } else if (mode === 'rent') {
-        queryBuilder = queryBuilder.gte('price_daily', min_price);
+        // For rentals, include listings that have daily OR hourly pricing meeting the minimum
+        // We'll do precise filtering in post-processing since we need to consider both pricing options
       } else {
-        // For 'all' mode, we can't easily filter by price without knowing the mode
-        // We'll filter this in post-processing
+        // For 'all' mode, we'll filter in post-processing
       }
     }
 
@@ -119,7 +120,7 @@ Deno.serve(async (req) => {
       if (mode === 'sale') {
         queryBuilder = queryBuilder.lte('price_sale', max_price);
       } else if (mode === 'rent') {
-        queryBuilder = queryBuilder.lte('price_daily', max_price);
+        // For rentals, we'll filter in post-processing to consider both daily and hourly pricing
       }
     }
 
@@ -273,12 +274,15 @@ Deno.serve(async (req) => {
       filteredListings = filteredListings.filter(l => l.can_deliver);
     }
 
-    // Apply price filter for 'all' mode (when mode is not specified)
-    if (!mode && (min_price !== undefined || max_price !== undefined)) {
+    // Apply price filter for 'all' mode or rent mode with hourly consideration
+    if (min_price !== undefined || max_price !== undefined) {
       filteredListings = filteredListings.filter(l => {
-        const price = l.mode === 'rent' ? (l.price_daily || 0) : (l.price_sale || 0);
-        const meetsMin = min_price === undefined || price >= min_price;
-        const meetsMax = max_price === undefined || price <= max_price;
+        // For rentals, use the primary price (daily if available, otherwise hourly)
+        const price = l.mode === 'rent' 
+          ? (l.price_daily || l.price_hourly || 0) 
+          : (l.price_sale || 0);
+        const meetsMin = min_price === undefined || min_price <= 0 || price >= min_price;
+        const meetsMax = max_price === undefined || max_price >= Infinity || price <= max_price;
         return meetsMin && meetsMax;
       });
     }
@@ -293,14 +297,16 @@ Deno.serve(async (req) => {
       });
     } else if (sort_by === 'price_low') {
       filteredListings.sort((a, b) => {
-        const priceA = a.mode === 'rent' ? (a.price_daily || 0) : (a.price_sale || 0);
-        const priceB = b.mode === 'rent' ? (b.price_daily || 0) : (b.price_sale || 0);
+        // For rentals, use daily price if available, otherwise hourly
+        const priceA = a.mode === 'rent' ? (a.price_daily || a.price_hourly || 0) : (a.price_sale || 0);
+        const priceB = b.mode === 'rent' ? (b.price_daily || b.price_hourly || 0) : (b.price_sale || 0);
         return priceA - priceB;
       });
     } else if (sort_by === 'price_high') {
       filteredListings.sort((a, b) => {
-        const priceA = a.mode === 'rent' ? (a.price_daily || 0) : (a.price_sale || 0);
-        const priceB = b.mode === 'rent' ? (b.price_daily || 0) : (b.price_sale || 0);
+        // For rentals, use daily price if available, otherwise hourly
+        const priceA = a.mode === 'rent' ? (a.price_daily || a.price_hourly || 0) : (a.price_sale || 0);
+        const priceB = b.mode === 'rent' ? (b.price_daily || b.price_hourly || 0) : (b.price_sale || 0);
         return priceB - priceA;
       });
     } else if (sort_by === 'relevance' && query && query.trim()) {
