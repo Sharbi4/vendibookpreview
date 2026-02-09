@@ -167,12 +167,13 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(); // For hourly mode
   
   // ─────────────────────────────────────────────────────────────────────────────
-  // STATE: Hourly Time Slots
+  // STATE: Hourly Time Slots (Multi-day support)
+  // Map of date string (yyyy-MM-dd) → array of selected time slots (HH:mm)
   // ─────────────────────────────────────────────────────────────────────────────
-  const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([]);
+  const [hourlySelections, setHourlySelections] = useState<Record<string, string[]>>({});
+  const [activeHourlyDate, setActiveHourlyDate] = useState<Date | undefined>(); // Currently viewing time slots for this date
   
   // ─────────────────────────────────────────────────────────────────────────────
   // STATE: Slot Selection (Multi-slot listings)
@@ -184,7 +185,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // STATE: UI
   // ─────────────────────────────────────────────────────────────────────────────
   const [isHovered, setIsHovered] = useState(false);
-  const [showTimeSlots, setShowTimeSlots] = useState(false);
+
 
   // ─────────────────────────────────────────────────────────────────────────────
   // EFFECTS
@@ -263,6 +264,30 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // DERIVED: Total selected hours across all days (for multi-day hourly)
+  // ─────────────────────────────────────────────────────────────────────────────
+  const totalSelectedHours = useMemo(() => {
+    return Object.values(hourlySelections).reduce((sum, slots) => sum + slots.length, 0);
+  }, [hourlySelections]);
+
+  const selectedDatesCount = useMemo(() => {
+    return Object.keys(hourlySelections).filter(dateKey => hourlySelections[dateKey].length > 0).length;
+  }, [hourlySelections]);
+
+  // Get sorted list of dates with selections
+  const sortedSelectedDates = useMemo(() => {
+    return Object.keys(hourlySelections)
+      .filter(dateKey => hourlySelections[dateKey].length > 0)
+      .sort();
+  }, [hourlySelections]);
+
+  // Check if a date has hourly selections
+  const hasHourlySelection = (date: Date): boolean => {
+    const dateKey = format(date, 'yyyy-MM-dd');
+    return (hourlySelections[dateKey]?.length || 0) > 0;
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // DATE CLICK HANDLING
   // ─────────────────────────────────────────────────────────────────────────────
   const handleDateClick = (date: Date) => {
@@ -270,10 +295,8 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
     if (status === 'past' || status === 'outside' || status === 'full') return;
 
     if (mode === 'hourly') {
-      // Single date selection for hourly mode
-      setSelectedDate(date);
-      setShowTimeSlots(true);
-      setSelectedTimeSlots([]); // Reset time slots when changing date
+      // Multi-day hourly: set active date to show time slots (preserve existing selections)
+      setActiveHourlyDate(date);
     } else {
       // Date range selection for daily mode
       if (!startDate || (startDate && endDate)) {
@@ -296,7 +319,8 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
 
   const isInSelectedRange = (date: Date): boolean => {
     if (mode === 'hourly') {
-      return selectedDate ? isSameDay(date, selectedDate) : false;
+      // In hourly mode, highlight dates that have time selections
+      return hasHourlySelection(date);
     }
     if (!startDate) return false;
     if (!endDate) return isSameDay(date, startDate);
@@ -304,13 +328,17 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
            (isSameDay(date, endDate) || isBefore(date, endDate));
   };
 
+  const isActiveHourlyDate = (date: Date): boolean => {
+    return activeHourlyDate ? isSameDay(date, activeHourlyDate) : false;
+  };
+
   // ─────────────────────────────────────────────────────────────────────────────
   // HOURLY TIME SLOT HELPERS
   // ─────────────────────────────────────────────────────────────────────────────
   const availableTimeSlots = useMemo(() => {
-    if (!selectedDate || mode !== 'hourly') return [];
+    if (!activeHourlyDate || mode !== 'hourly') return [];
     
-    const windows = getAvailableWindowsForDate(selectedDate);
+    const windows = getAvailableWindowsForDate(activeHourlyDate);
     const slots: { value: string; label: string; endLabel: string }[] = [];
     
     windows.forEach(window => {
@@ -324,14 +352,36 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
     });
     
     return slots;
-  }, [selectedDate, mode, getAvailableWindowsForDate]);
+  }, [activeHourlyDate, mode, getAvailableWindowsForDate]);
+
+  // Get currently selected time slots for the active date
+  const activeSelectedTimeSlots = useMemo(() => {
+    if (!activeHourlyDate) return [];
+    const dateKey = format(activeHourlyDate, 'yyyy-MM-dd');
+    return hourlySelections[dateKey] || [];
+  }, [activeHourlyDate, hourlySelections]);
 
   const toggleTimeSlot = (slot: string) => {
-    setSelectedTimeSlots(prev => {
-      if (prev.includes(slot)) {
-        return prev.filter(s => s !== slot);
+    if (!activeHourlyDate) return;
+    const dateKey = format(activeHourlyDate, 'yyyy-MM-dd');
+    
+    setHourlySelections(prev => {
+      const currentSlots = prev[dateKey] || [];
+      let newSlots: string[];
+      
+      if (currentSlots.includes(slot)) {
+        newSlots = currentSlots.filter(s => s !== slot);
+      } else {
+        newSlots = [...currentSlots, slot].sort();
       }
-      return [...prev, slot].sort();
+      
+      // If no slots remain for this date, remove the date entry
+      if (newSlots.length === 0) {
+        const { [dateKey]: _, ...rest } = prev;
+        return rest;
+      }
+      
+      return { ...prev, [dateKey]: newSlots };
     });
   };
 
@@ -350,17 +400,19 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // ─────────────────────────────────────────────────────────────────────────────
   const pricingInfo = useMemo(() => {
     if (mode === 'hourly') {
-      if (!selectedDate || selectedTimeSlots.length === 0 || !priceHourly) return null;
+      if (totalSelectedHours === 0 || !priceHourly) return null;
       
-      const hours = selectedTimeSlots.length;
+      const hours = totalSelectedHours;
       const basePrice = hours * priceHourly * selectedSlotCount;
       const fees = calculateRentalFees(basePrice);
+      
+      const daysLabel = selectedDatesCount > 1 ? ` across ${selectedDatesCount} days` : '';
       
       return {
         type: 'hourly' as const,
         duration: hours,
-        durationLabel: `${hours} hour${hours > 1 ? 's' : ''}`,
-        breakdown: priceHourly && `$${priceHourly}/hr × ${hours} hrs${selectedSlotCount > 1 ? ` × ${selectedSlotCount} slots` : ''}`,
+        durationLabel: `${hours} hour${hours > 1 ? 's' : ''}${daysLabel}`,
+        breakdown: `$${priceHourly}/hr × ${hours} hrs${selectedSlotCount > 1 ? ` × ${selectedSlotCount} slots` : ''}`,
         basePrice,
         serviceFee: fees.renterFee,
         total: fees.customerTotal,
@@ -386,18 +438,18 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         total: fees.customerTotal,
       };
     }
-  }, [mode, selectedDate, selectedTimeSlots, startDate, endDate, priceHourly, priceDaily, priceWeekly, priceMonthly, selectedSlotCount]);
+  }, [mode, totalSelectedHours, selectedDatesCount, startDate, endDate, priceHourly, priceDaily, priceWeekly, priceMonthly, selectedSlotCount]);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // CAN CONTINUE CHECK
   // ─────────────────────────────────────────────────────────────────────────────
   const canContinue = useMemo(() => {
     if (mode === 'hourly') {
-      return selectedDate && selectedTimeSlots.length > 0;
+      return totalSelectedHours > 0;
     }
     // Daily mode: need at least a start date
     return startDate !== undefined;
-  }, [mode, selectedDate, selectedTimeSlots, startDate]);
+  }, [mode, totalSelectedHours, startDate]);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // CONTINUE TO BOOKING HANDLER
@@ -406,21 +458,20 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
     trackCTAClick('continue_booking', 'rental_booking_widget');
     
     if (mode === 'hourly') {
-      if (!selectedDate || selectedTimeSlots.length === 0) return;
+      if (totalSelectedHours === 0) return;
       
-      const dateStr = format(selectedDate, 'yyyy-MM-dd');
-      const sortedSlots = [...selectedTimeSlots].sort();
-      const startTime = sortedSlots[0];
-      const lastSlotHour = parseInt(sortedSlots[sortedSlots.length - 1].split(':')[0]);
-      const endTimeStr = `${(lastSlotHour + 1).toString().padStart(2, '0')}:00`;
+      // For multi-day hourly, encode all selections
+      // Format: hourlyData=date1:slot1,slot2|date2:slot3,slot4
+      const hourlyDataParts = sortedSelectedDates.map(dateKey => {
+        const slots = hourlySelections[dateKey].sort().join(',');
+        return `${dateKey}:${slots}`;
+      });
       
       const params = new URLSearchParams({
-        start: dateStr,
-        end: dateStr,
-        startTime,
-        endTime: endTimeStr,
-        hours: selectedTimeSlots.length.toString(),
-        timeSlots: sortedSlots.join(','),
+        start: sortedSelectedDates[0],
+        end: sortedSelectedDates[sortedSelectedDates.length - 1],
+        hours: totalSelectedHours.toString(),
+        hourlyData: hourlyDataParts.join('|'),
       });
       
       // Add slot info for multi-slot
@@ -461,9 +512,8 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   const handleReset = () => {
     setStartDate(undefined);
     setEndDate(undefined);
-    setSelectedDate(undefined);
-    setSelectedTimeSlots([]);
-    setShowTimeSlots(false);
+    setActiveHourlyDate(undefined);
+    setHourlySelections({});
     setSelectedSlotCount(1);
     if (totalSlots > 1) {
       setSelectedSlotNumber(null);
@@ -700,6 +750,10 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               const isEnd = endDate && isSameDay(date, endDate);
               const { available } = getAvailability(date);
               const isDisabled = status === 'past' || status === 'outside' || status === 'full';
+              const isActiveHourly = isActiveHourlyDate(date);
+              const hasHourly = mode === 'hourly' && hasHourlySelection(date);
+              const dateKey = format(date, 'yyyy-MM-dd');
+              const hoursOnDate = hourlySelections[dateKey]?.length || 0;
 
               return (
                 <TooltipProvider key={date.toISOString()}>
@@ -712,17 +766,26 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                           "aspect-square p-0.5 rounded-md text-xs font-medium transition-all relative",
                           "flex flex-col items-center justify-center",
                           isDisabled && "opacity-30 cursor-not-allowed",
-                          !isDisabled && !isSelected && "hover:bg-muted",
+                          !isDisabled && !isSelected && !isActiveHourly && "hover:bg-muted",
                           isSelected && "bg-primary text-primary-foreground",
+                          isActiveHourly && !isSelected && "ring-2 ring-primary bg-primary/10",
                           isStart && "rounded-l-md",
                           isEnd && "rounded-r-md",
-                          status === 'partial' && !isSelected && "bg-amber-50 dark:bg-amber-950/30",
-                          isToday(date) && !isSelected && "ring-1 ring-primary/50",
+                          status === 'partial' && !isSelected && !isActiveHourly && "bg-amber-50 dark:bg-amber-950/30",
+                          isToday(date) && !isSelected && !isActiveHourly && "ring-1 ring-primary/50",
                         )}
                       >
                         <span>{format(date, 'd')}</span>
-                        {/* Slot availability indicator for multi-slot */}
-                        {totalSlots > 1 && status !== 'past' && status !== 'outside' && (
+                        {/* Slot availability indicator for multi-slot OR hourly selection indicator */}
+                        {mode === 'hourly' && hasHourly && (
+                          <span className={cn(
+                            "text-[8px] leading-none font-bold",
+                            isSelected ? "text-primary-foreground" : "text-primary"
+                          )}>
+                            {hoursOnDate}h
+                          </span>
+                        )}
+                        {mode !== 'hourly' && totalSlots > 1 && status !== 'past' && status !== 'outside' && (
                           <span className={cn(
                             "text-[8px] leading-none",
                             isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
@@ -733,7 +796,9 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="text-xs">
-                      {status === 'available' && `${available} spot${available > 1 ? 's' : ''} available`}
+                      {mode === 'hourly' && hasHourly && `${hoursOnDate} hour${hoursOnDate > 1 ? 's' : ''} selected`}
+                      {mode === 'hourly' && !hasHourly && status === 'available' && 'Tap to select hours'}
+                      {mode !== 'hourly' && status === 'available' && `${available} spot${available > 1 ? 's' : ''} available`}
                       {status === 'partial' && `${available} of ${totalSlots} spots available`}
                       {status === 'full' && 'Fully booked'}
                       {status === 'past' && 'Past date'}
@@ -757,10 +822,18 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
             </div>
           )}
           
-          {mode === 'hourly' && selectedDate && (
+          {mode === 'hourly' && totalSelectedHours > 0 && (
             <div className="mt-3 pt-3 border-t border-border text-sm text-center">
               <span className="text-muted-foreground">
-                {format(selectedDate, 'EEEE, MMMM d')}
+                {selectedDatesCount} day{selectedDatesCount > 1 ? 's' : ''} • {totalSelectedHours} hour{totalSelectedHours > 1 ? 's' : ''} total
+              </span>
+            </div>
+          )}
+          
+          {mode === 'hourly' && activeHourlyDate && (
+            <div className="mt-2 text-sm text-center">
+              <span className="font-medium text-primary">
+                {format(activeHourlyDate, 'EEEE, MMMM d')}
               </span>
             </div>
           )}
@@ -770,7 +843,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {/* STEP 2B: TIME SLOT GRID (Hourly mode only) */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
         <AnimatePresence mode="wait">
-          {mode === 'hourly' && selectedDate && (
+          {mode === 'hourly' && activeHourlyDate && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
@@ -779,9 +852,9 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
             >
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-medium text-foreground">Select time slots</h4>
-                {selectedTimeSlots.length > 0 && (
+                {activeSelectedTimeSlots.length > 0 && (
                   <Badge variant="secondary" className="text-xs">
-                    {selectedTimeSlots.length} selected
+                    {activeSelectedTimeSlots.length} on this day
                   </Badge>
                 )}
               </div>
@@ -789,7 +862,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               {availableTimeSlots.length > 0 ? (
                 <div className="grid grid-cols-4 gap-1.5">
                   {availableTimeSlots.map(slot => {
-                    const isSelected = selectedTimeSlots.includes(slot.value);
+                    const isSelected = activeSelectedTimeSlots.includes(slot.value);
                     return (
                       <button
                         key={slot.value}
@@ -809,15 +882,13 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               ) : (
                 <div className="p-4 bg-muted/30 rounded-xl text-center">
                   <Clock className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">No time slots available</p>
+                  <p className="text-sm text-muted-foreground">No time slots available for this date</p>
                 </div>
               )}
               
-              {selectedTimeSlots.length > 0 && (
-                <p className="text-xs text-center text-muted-foreground">
-                  {format(selectedDate, 'MMM d')} • {availableTimeSlots.find(s => s.value === selectedTimeSlots[0])?.label} – {availableTimeSlots.find(s => s.value === selectedTimeSlots[selectedTimeSlots.length - 1])?.endLabel}
-                </p>
-              )}
+              <p className="text-xs text-center text-muted-foreground">
+                Tap another date on the calendar to add more hours
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -825,7 +896,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {/* STEP 3: SLOT COUNTER (Multi-slot listings only) */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
-        {totalSlots > 1 && (startDate || selectedDate) && (
+        {totalSlots > 1 && (startDate || totalSelectedHours > 0) && (
           <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
             <div>
               <span className="text-sm font-medium text-foreground">Spots needed</span>
