@@ -1,13 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { 
   FileText, Upload, CheckCircle2, Clock, AlertCircle, Shield, 
-  ArrowRight, Info, X, Loader2, Eye 
+  ArrowRight, Info, X, Loader2, Eye, ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { useListingRequiredDocuments } from '@/hooks/useRequiredDocuments';
+import { useDocumentsOnFile } from '@/hooks/useDocumentsOnFile';
 import { DOCUMENT_TYPE_LABELS } from '@/types/documents';
 import type { DocumentType, ListingRequiredDocument } from '@/types/documents';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,6 +37,9 @@ const BookingStepDocumentUpload = ({
 }: BookingStepDocumentUploadProps) => {
   const { toast } = useToast();
   const { data: requiredDocs, isLoading } = useListingRequiredDocuments(listingId);
+  const requiredDocTypes = requiredDocs?.map(d => d.document_type as string);
+  const { data: docsOnFileData, isLoading: loadingOnFile } = useDocumentsOnFile(requiredDocTypes);
+  const docsOnFile = docsOnFileData?.docsOnFile ?? false;
   const [uploadingType, setUploadingType] = useState<DocumentType | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentDocType, setCurrentDocType] = useState<DocumentType | null>(null);
@@ -110,10 +114,57 @@ const BookingStepDocumentUpload = ({
     onFilesChange(uploadedFiles.filter(f => f.documentType !== docType));
   };
 
-  if (isLoading) {
+  if (isLoading || loadingOnFile) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Documents on file - bypass upload
+  if (docsOnFile && hasRequirements) {
+    return (
+      <div className="space-y-6">
+        <div className="p-6 bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800/50">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+              <ShieldCheck className="h-6 w-6 text-emerald-600" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-emerald-700 dark:text-emerald-300">Documents On File</h4>
+              <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                Your documents were previously approved and are still valid.
+              </p>
+            </div>
+          </div>
+          <div className="space-y-2 mt-3">
+            {requiredDocs?.map((req) => (
+              <div key={req.id} className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                <span>{DOCUMENT_TYPE_LABELS[req.document_type]}</span>
+                <Badge variant="outline" className="text-[10px] bg-emerald-100 text-emerald-700 border-emerald-200 ml-auto">
+                  On file
+                </Badge>
+              </div>
+            ))}
+          </div>
+          {docsOnFileData?.expiresAt && (
+            <p className="text-xs text-emerald-500 dark:text-emerald-400 mt-3">
+              Valid until {new Date(docsOnFileData.expiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            </p>
+          )}
+        </div>
+
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={onBack} className="flex-1 h-12">
+            Back
+          </Button>
+          <Button variant="dark-shine" onClick={onContinue} className="flex-1 h-12">
+            Continue to Review
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+        </div>
       </div>
     );
   }

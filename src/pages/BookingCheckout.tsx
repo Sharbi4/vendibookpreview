@@ -41,6 +41,7 @@ import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 import { BookingInfoModal, type BookingUserInfo, SlotSelector, BusinessInfoStep, type BusinessInfoData } from '@/components/booking';
 import { BookingDocumentUpload, type StagedDocument } from '@/components/booking/BookingDocumentUpload';
+import { useDocumentsOnFile } from '@/hooks/useDocumentsOnFile';
 import HourlySelectionSummary from '@/components/booking/HourlySelectionSummary';
 import { parseHourlySelections, getSelectedDaysCount, getTotalSelectedHours } from '@/lib/hourlySelections';
 import DateSelectionModal from '@/components/listing-detail/DateSelectionModal';
@@ -60,6 +61,9 @@ const BookingCheckout = () => {
   const { listing, host, isLoading, error } = useListing(listingId);
   const { data: ratingData } = useListingAverageRating(listingId);
   const { data: requiredDocs } = useListingRequiredDocuments(listingId || '');
+  const requiredDocTypes = requiredDocs?.map(d => d.document_type as string);
+  const { data: docsOnFileData } = useDocumentsOnFile(requiredDocTypes);
+  const docsOnFile = docsOnFileData?.docsOnFile ?? false;
   const hasRequiredDocs = requiredDocs && requiredDocs.length > 0;
 
   // Parse dates from URL params
@@ -200,8 +204,8 @@ const BookingCheckout = () => {
     businessInfo.cuisineType?.trim()
   );
   const isStepBusinessInfoComplete = isBusinessInfoComplete && completedSteps.includes(STEP_BUSINESS_INFO);
-  // Documents step is complete when all required docs are staged
-  const allDocsStaged = !hasRequiredDocs || (requiredDocs?.every(req =>
+  // Documents step is complete when all required docs are staged OR docs are on file
+  const allDocsStaged = !hasRequiredDocs || docsOnFile || (requiredDocs?.every(req =>
     stagedDocuments.some(doc => doc.documentType === req.document_type)
   ) ?? false);
   const isStepDocsComplete = !hasRequiredDocs || (completedSteps.includes(STEP_DOCUMENTS) && allDocsStaged);
@@ -797,6 +801,8 @@ const BookingCheckout = () => {
                           onDocumentsChange={setStagedDocuments}
                           onComplete={() => handleCompleteStep(STEP_DOCUMENTS)}
                           disabled={isSubmitting}
+                          docsOnFile={docsOnFile}
+                          onFileExpiresAt={docsOnFileData?.expiresAt}
                         />
                       </div>
                     </motion.div>
