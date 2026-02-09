@@ -1,5 +1,5 @@
 import { motion, Variants } from 'framer-motion';
-import { ReactNode } from 'react';
+import { ReactNode, forwardRef } from 'react';
 
 interface PageTransitionProps {
   children: ReactNode;
@@ -28,17 +28,22 @@ const pageVariants: Variants = {
   },
 };
 
-const PageTransition = ({ children }: PageTransitionProps) => {
-  return (
-    <motion.div
-      initial="initial"
-      animate="enter"
-      exit="exit"
-      variants={pageVariants}
-    >
-      {children}
-    </motion.div>
-  );
-};
+const PageTransition = forwardRef<HTMLDivElement, PageTransitionProps>(
+  ({ children }, ref) => {
+    return (
+      <motion.div
+        ref={ref}
+        initial="initial"
+        animate="enter"
+        exit="exit"
+        variants={pageVariants}
+      >
+        {children}
+      </motion.div>
+    );
+  }
+);
+
+PageTransition.displayName = 'PageTransition';
 
 export default PageTransition;
