@@ -215,6 +215,7 @@ export const PublishWizard: React.FC = () => {
   const [hourlySchedule, setHourlySchedule] = useState<Record<string, any> | null>(null);
   const [rentalMinDays, setRentalMinDays] = useState(1);
   const [hourlySpecialPricing, setHourlySpecialPricing] = useState<Record<string, any> | null>(null);
+  const [availabilityStepValid, setAvailabilityStepValid] = useState(true);
 
   // Required documents step state (for rentals)
   const [requiredDocuments, setRequiredDocuments] = useState<RequiredDocumentSetting[]>([]);
@@ -1123,6 +1124,17 @@ export const PublishWizard: React.FC = () => {
           location_notes: locationNotes || null,
         };
       } else if (step === 'availability') {
+        // Validate hourly schedule if hourly is enabled
+        if (hourlyEnabled && !availabilityStepValid) {
+          toast({
+            title: 'Weekly schedule required',
+            description: 'Please add operating hours for at least one day when hourly bookings are enabled.',
+            variant: 'destructive',
+          });
+          setIsSaving(false);
+          return;
+        }
+
         updateData = {
           available_from: availableFrom || null,
           available_to: availableTo || null,
@@ -2624,6 +2636,7 @@ export const PublishWizard: React.FC = () => {
                     onSpecialPricingChange={(pricing) => {
                       setHourlySpecialPricing(pricing ?? null);
                     }}
+                    onValidationChange={setAvailabilityStepValid}
                   />
 
                   <div className="flex gap-3 pt-4">

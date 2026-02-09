@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Lock, CalendarCheck, Clock, Calendar, Info, Trash2, Unlock, Plus, Settings2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Lock, CalendarCheck, Clock, Calendar, Info, Trash2, Unlock, Plus, Settings2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, isBefore, startOfDay, addDays } from 'date-fns';
 import { useListingAvailability } from '@/hooks/useListingAvailability';
@@ -20,6 +21,11 @@ import { HourlyScheduleGrid, WeeklySchedule, EMPTY_SCHEDULE } from './HourlySche
 import { HourlySpecialPricing, HourlySpecialPricingData } from './HourlySpecialPricing';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+
+// Helper to check if schedule has any hours configured
+export const hasAnyScheduledHours = (schedule: WeeklySchedule): boolean => {
+  return Object.values(schedule).some(day => day && day.length > 0);
+};
 
 type BookingType = 'daily' | 'hourly' | 'both';
 
@@ -35,6 +41,7 @@ interface RentalAvailabilityStepProps {
   onPriceHourlyChange: (price: number | null) => void;
   onSettingsChange: (settings: HourlySettings) => void;
   onSpecialPricingChange?: (pricing: HourlySpecialPricingData | null) => void;
+  onValidationChange?: (isValid: boolean) => void;
 }
 
 export interface HourlySettings {
@@ -61,6 +68,7 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
   onPriceHourlyChange,
   onSettingsChange,
   onSpecialPricingChange,
+  onValidationChange,
 }) => {
   const { toast } = useToast();
   
@@ -191,6 +199,15 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
   useEffect(() => {
     onSpecialPricingChange?.(specialPricing);
   }, [specialPricing, onSpecialPricingChange]);
+
+  // Validate hourly schedule when hourly is enabled
+  const hourlyBookingEnabled = bookingType === 'hourly' || bookingType === 'both';
+  const scheduleIsValid = !hourlyBookingEnabled || hasAnyScheduledHours(hourlySchedule);
+
+  // Propagate validation state
+  useEffect(() => {
+    onValidationChange?.(scheduleIsValid);
+  }, [scheduleIsValid, onValidationChange]);
 
 
   // Calendar helpers
@@ -450,7 +467,15 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
                 onChange={setHourlySchedule}
               />
 
-              {/* Advanced Settings */}
+              {/* Warning if hourly is enabled but no schedule set */}
+              {!hasAnyScheduledHours(hourlySchedule) && (
+                <Alert variant="destructive" className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  <AlertDescription className="text-amber-700 dark:text-amber-400">
+                    Please add operating hours for at least one day. Renters need to know when your listing is available for hourly bookings.
+                  </AlertDescription>
+                </Alert>
+              )}
               <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
                 <CollapsibleTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-2 w-full justify-start text-muted-foreground">
