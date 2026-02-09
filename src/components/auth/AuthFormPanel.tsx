@@ -274,7 +274,15 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
             errorDesc = 'Too many attempts. Please wait a few minutes before trying again.';
           } else if (error.message.includes('not confirmed') || error.message.includes('verify')) {
             errorType = 'email_not_verified';
-            errorDesc = 'Please verify your email before signing in. Check your inbox.';
+            errorDesc = 'Please verify your email before signing in.';
+            // Auto-switch to verify mode so user can resend
+            setMode('verify');
+            toast({
+              title: 'Email not verified',
+              description: 'We switched you to the verification screen so you can resend your code.',
+            });
+            trackLoginError('email', errorType);
+            return;
           }
           
           trackLoginError('email', errorType);
