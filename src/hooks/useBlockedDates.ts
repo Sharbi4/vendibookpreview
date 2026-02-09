@@ -66,13 +66,15 @@ const useBlockedDatesInternal = (listingId: string) => {
           setBlockedDateObjects(blockedData.map(d => parseISO(d.blocked_date)));
         }
 
-        // Fetch approved bookings that are paid (confirmed)
+        // Fetch bookings that block availability:
+        // - Pending bookings (awaiting approval/payment) should block to prevent double-booking
+        // - Approved bookings that are paid (confirmed)
+        // - Completed bookings
         const { data: bookingData } = await supabase
           .from('booking_requests')
           .select('start_date, end_date, status, payment_status')
           .eq('listing_id', listingId)
-          .in('status', ['approved', 'completed'])
-          .eq('payment_status', 'paid');
+          .in('status', ['pending', 'approved', 'completed']);
 
         if (bookingData) {
           const dates: Date[] = [];
