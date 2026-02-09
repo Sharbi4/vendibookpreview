@@ -56,9 +56,10 @@ export const VendorSlotAvailability = ({
       if (b.slot_number !== slotNumber) return false;
       
       // For hourly bookings, check if any hours are booked today
-      if (b.is_hourly_booking && b.hourly_slots && b.hourly_slots.length > 0) {
-        const todaySlots = b.hourly_slots.find(s => s.date === today);
-        return todaySlots && todaySlots.slots.length > 0;
+      // hourly_slots is JSONB - ensure it's an array before accessing .length
+      if (b.is_hourly_booking && Array.isArray(b.hourly_slots) && b.hourly_slots.length > 0) {
+        const todaySlots = b.hourly_slots.find(s => s?.date === today);
+        return todaySlots && Array.isArray(todaySlots.slots) && todaySlots.slots.length > 0;
       }
       
       // For daily bookings, check date range
