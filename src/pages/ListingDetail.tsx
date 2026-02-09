@@ -32,6 +32,7 @@ import ListingLocationMap from '@/components/listing-detail/ListingLocationMap';
 import { TechSpecsGrid } from '@/components/listing-detail/TechSpecsGrid';
 import { InlineAvailabilityCalendar } from '@/components/listing-detail/InlineAvailabilityCalendar';
 import { VendorSlotAvailability } from '@/components/listing-detail/VendorSlotAvailability';
+import { WeeklyHoursDisplay } from '@/components/listing-detail/WeeklyHoursDisplay';
 import { RentalBookingWidget } from '@/components/listing-detail/RentalBookingWidget';
 import { BookingWidget } from '@/components/listing-detail/BookingWidget';
 import OwnerBanner from '@/components/listing-detail/OwnerBanner';
@@ -398,6 +399,14 @@ const ListingDetail = () => {
                     availableFrom={listing.available_from}
                     availableTo={listing.available_to}
                   />
+                  <div className="border-t border-border" />
+                </>
+              )}
+
+              {/* Weekly Operating Hours - Show for hourly listings */}
+              {isRental && (listing as any).hourly_enabled && (listing as any).hourly_schedule && (
+                <>
+                  <WeeklyHoursDisplay schedule={(listing as any).hourly_schedule} />
                   <div className="border-t border-border" />
                 </>
               )}
