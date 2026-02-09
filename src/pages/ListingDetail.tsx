@@ -375,6 +375,7 @@ const ListingDetail = () => {
                 priceHourly={listing.price_hourly}
                 priceDaily={listing.price_daily}
                 priceWeekly={listing.price_weekly}
+                priceMonthly={listing.price_monthly}
                 priceSale={listing.price_sale}
                 deliveryFee={listing.delivery_fee}
                 fulfillmentType={listing.fulfillment_type}

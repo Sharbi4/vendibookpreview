@@ -71,6 +71,7 @@ interface ListingData {
   image_urls: string[] | null;
   price_daily: number | null;
   price_weekly: number | null;
+  price_monthly: number | null;
   price_sale: number | null;
   available_from: string | null;
   available_to: string | null;
@@ -151,6 +152,7 @@ export const PublishWizard: React.FC = () => {
   const [description, setDescription] = useState('');
   const [priceDaily, setPriceDaily] = useState('');
   const [priceWeekly, setPriceWeekly] = useState('');
+  const [priceMonthly, setPriceMonthly] = useState('');
   const [priceSale, setPriceSale] = useState('');
   const [instantBook, setInstantBook] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
@@ -264,6 +266,7 @@ export const PublishWizard: React.FC = () => {
       } else {
         updateData.price_daily = safeParsePrice(priceDaily);
         updateData.price_weekly = safeParsePrice(priceWeekly);
+        updateData.price_monthly = safeParsePrice(priceMonthly);
         updateData.price_hourly = priceHourly || null;
         updateData.hourly_enabled = hourlyEnabled;
         updateData.daily_enabled = dailyEnabled;
@@ -369,6 +372,7 @@ export const PublishWizard: React.FC = () => {
       setDescription(data.description || '');
       setPriceDaily(data.price_daily?.toString() || '');
       setPriceWeekly(data.price_weekly?.toString() || '');
+      setPriceMonthly(data.price_monthly?.toString() || '');
       setPriceSale(data.price_sale?.toString() || '');
       setInstantBook(data.instant_book || false);
       setDepositAmount(data.deposit_amount?.toString() || '');
@@ -567,6 +571,7 @@ export const PublishWizard: React.FC = () => {
       } else {
         updateData.price_daily = safeParsePrice(priceDaily) || listing.price_daily || null;
         updateData.price_weekly = safeParsePrice(priceWeekly) || listing.price_weekly || null;
+        updateData.price_monthly = safeParsePrice(priceMonthly) || listing.price_monthly || null;
         updateData.price_hourly = priceHourly || (listing as any).price_hourly || null;
         updateData.hourly_enabled = hourlyEnabled;
         updateData.daily_enabled = dailyEnabled;
@@ -1109,6 +1114,7 @@ export const PublishWizard: React.FC = () => {
           updateData = {
             price_daily: safeParsePrice(priceDaily),
             price_weekly: safeParsePrice(priceWeekly),
+            price_monthly: safeParsePrice(priceMonthly),
             instant_book: instantBook,
             deposit_amount: safeParsePrice(depositAmount),
             featured_enabled: featuredEnabled,
@@ -1364,6 +1370,7 @@ export const PublishWizard: React.FC = () => {
         : {
             price_daily: safeParsePrice(priceDaily),
             price_weekly: safeParsePrice(priceWeekly),
+            price_monthly: safeParsePrice(priceMonthly),
             price_hourly: priceHourly || null,
             hourly_enabled: hourlyEnabled,
             daily_enabled: dailyEnabled,
