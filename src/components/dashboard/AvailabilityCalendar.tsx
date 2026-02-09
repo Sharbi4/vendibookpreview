@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { Calendar, X, Lock, CalendarCheck, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, X, Lock, CalendarCheck, Clock, ChevronLeft, ChevronRight, MessageCircle, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, isBefore, startOfDay } from 'date-fns';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, isBefore, startOfDay, parseISO } from 'date-fns';
 import { useListingAvailability } from '@/hooks/useListingAvailability';
+import { Link } from 'react-router-dom';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Listing = Tables<'listings'>;
@@ -32,7 +34,12 @@ const AvailabilityCalendar = ({ listing, onClose }: AvailabilityCalendarProps) =
     isDateBlocked,
     isDateBooked,
     isDatePending,
-  } = useListingAvailability(listing.id);
+    totalSlots,
+    getRemainingSlots,
+  } = useListingAvailability(listing.id, { 
+    total_slots: listing.total_slots || 1, 
+    category: listing.category 
+  });
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -89,6 +96,20 @@ const AvailabilityCalendar = ({ listing, onClose }: AvailabilityCalendarProps) =
     booked: 'bg-emerald-100 text-emerald-700 cursor-not-allowed',
     pending: 'bg-amber-100 text-amber-700 cursor-not-allowed',
     past: 'bg-muted/30 text-muted-foreground/50 cursor-not-allowed',
+  };
+
+  // Get bookings for a specific date (for calendar cell display)
+  const getBookingsForDate = (date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return bookings.filter(booking => {
+      if (booking.is_hourly_booking && booking.hourly_slots) {
+        // For hourly bookings, check if this date is in hourly_slots
+        const slots = booking.hourly_slots as any[];
+        return slots.some(slot => slot.date === dateStr);
+      }
+      // For daily bookings, check date range
+      return dateStr >= booking.start_date && dateStr <= booking.end_date;
+    });
   };
 
   // Get upcoming bookings for the sidebar
@@ -149,6 +170,8 @@ const AvailabilityCalendar = ({ listing, onClose }: AvailabilityCalendarProps) =
               {daysInMonth.map(date => {
                 const status = getDayStatus(date);
                 const isSelected = selectedDate && isSameDay(date, selectedDate);
+                const dateBookings = getBookingsForDate(date);
+                const remaining = getRemainingSlots(date);
                 
                 return (
                   <button
@@ -156,21 +179,53 @@ const AvailabilityCalendar = ({ listing, onClose }: AvailabilityCalendarProps) =
                     onClick={() => handleDateClick(date)}
                     disabled={status === 'past' || status === 'booked'}
                     className={cn(
-                      'aspect-square rounded-lg flex flex-col items-center justify-center text-sm transition-all relative',
+                      'aspect-square rounded-lg flex flex-col items-center justify-center text-sm transition-all relative group',
                       statusColors[status],
                       isToday(date) && 'ring-2 ring-primary ring-offset-2',
                       isSelected && 'ring-2 ring-primary',
                     )}
                   >
                     <span className="font-medium">{format(date, 'd')}</span>
-                    {status === 'blocked' && (
+                    
+                    {/* Booking indicators */}
+                    {dateBookings.length > 0 && status !== 'past' && (
+                      <div className="absolute bottom-0.5 left-0 right-0 flex justify-center gap-0.5">
+                        {dateBookings.slice(0, 3).map((booking, idx) => {
+                          const shopper = (booking as any).shopper;
+                          const initial = (shopper?.display_name || shopper?.full_name || 'G')[0].toUpperCase();
+                          const isApproved = booking.status === 'approved';
+                          return (
+                            <div
+                              key={idx}
+                              className={cn(
+                                'w-3 h-3 rounded-full flex items-center justify-center text-[6px] font-bold',
+                                isApproved 
+                                  ? 'bg-emerald-500 text-white' 
+                                  : 'bg-amber-500 text-white'
+                              )}
+                              title={`${shopper?.display_name || shopper?.full_name || 'Guest'} - ${isApproved ? 'Confirmed' : 'Pending'}`}
+                            >
+                              {initial}
+                            </div>
+                          );
+                        })}
+                        {dateBookings.length > 3 && (
+                          <div className="w-3 h-3 rounded-full bg-muted flex items-center justify-center text-[6px] font-bold text-muted-foreground">
+                            +{dateBookings.length - 3}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Remaining slots for multi-slot listings */}
+                    {totalSlots > 1 && remaining > 0 && remaining < totalSlots && status === 'available' && (
+                      <span className="absolute top-0.5 right-0.5 text-[8px] text-muted-foreground">
+                        {remaining}
+                      </span>
+                    )}
+                    
+                    {status === 'blocked' && dateBookings.length === 0 && (
                       <Lock className="h-3 w-3 absolute bottom-1" />
-                    )}
-                    {status === 'booked' && (
-                      <CalendarCheck className="h-3 w-3 absolute bottom-1" />
-                    )}
-                    {status === 'pending' && (
-                      <Clock className="h-3 w-3 absolute bottom-1" />
                     )}
                   </button>
                 );
@@ -203,59 +258,149 @@ const AvailabilityCalendar = ({ listing, onClose }: AvailabilityCalendarProps) =
           </div>
 
           {/* Sidebar - Bookings */}
-          <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-border p-6 bg-muted/30">
+          <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-border p-6 bg-muted/30 overflow-y-auto max-h-[60vh] lg:max-h-none">
+            {/* Capacity indicator */}
+            {totalSlots > 1 && (
+              <div className="mb-4 p-3 bg-card rounded-lg border border-border">
+                <p className="text-sm font-medium text-foreground">Total Capacity</p>
+                <p className="text-xs text-muted-foreground">{totalSlots} slots available</p>
+              </div>
+            )}
+
             {/* Upcoming Bookings */}
             <div className="mb-6">
               <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
                 <CalendarCheck className="h-4 w-4 text-emerald-600" />
-                Upcoming Bookings
+                Upcoming Bookings ({upcomingBookings.length})
               </h4>
               {upcomingBookings.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No upcoming bookings</p>
               ) : (
-                <div className="space-y-2">
-                  {upcomingBookings.map(booking => (
-                    <div key={booking.id} className="p-3 bg-card rounded-lg border border-border">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-foreground">
-                          {format(new Date(booking.start_date), 'MMM d')} - {format(new Date(booking.end_date), 'MMM d')}
-                        </span>
-                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-xs">
-                          Confirmed
-                        </Badge>
+                <div className="space-y-3">
+                  {upcomingBookings.map(booking => {
+                    const shopper = (booking as any).shopper;
+                    const shopperName = shopper?.display_name || shopper?.full_name || 'Guest';
+                    const shopperInitials = shopperName
+                      .split(' ')
+                      .map((n: string) => n[0])
+                      .join('')
+                      .toUpperCase()
+                      .slice(0, 2);
+                    
+                    return (
+                      <div key={booking.id} className="p-3 bg-card rounded-lg border border-border">
+                        {/* Shopper info */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={shopper?.avatar_url || undefined} alt={shopperName} />
+                            <AvatarFallback className="text-xs bg-muted">
+                              {shopperInitials || <User className="h-3 w-3" />}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-medium text-foreground truncate">{shopperName}</span>
+                        </div>
+                        
+                        {/* Date and time */}
+                        <div className="mb-2">
+                          <p className="text-sm text-foreground">
+                            {format(new Date(booking.start_date), 'MMM d')} - {format(new Date(booking.end_date), 'MMM d')}
+                          </p>
+                          {booking.is_hourly_booking && booking.hourly_slots && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {(booking.hourly_slots as any[]).reduce((sum: number, day: any) => sum + day.slots.length, 0)} hours
+                            </p>
+                          )}
+                          {booking.slot_name && (
+                            <p className="text-xs text-muted-foreground">{booking.slot_name}</p>
+                          )}
+                        </div>
+
+                        {/* Price and status */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-foreground">${booking.total_price}</span>
+                          <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs">
+                            Confirmed
+                          </Badge>
+                        </div>
+
+                        {/* Quick action */}
+                        <Link 
+                          to={`/dashboard?booking=${booking.id}`}
+                          className="mt-2 pt-2 border-t border-border flex items-center gap-1 text-xs text-primary hover:underline"
+                        >
+                          <MessageCircle className="h-3 w-3" />
+                          View Details
+                        </Link>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        ${booking.total_price} total
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
 
             {/* Pending Requests */}
             {pendingBookings.length > 0 && (
-              <div>
+              <div className="mb-6">
                 <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
                   <Clock className="h-4 w-4 text-amber-600" />
-                  Pending Requests
+                  Pending Requests ({pendingBookings.length})
                 </h4>
-                <div className="space-y-2">
-                  {pendingBookings.map(booking => (
-                    <div key={booking.id} className="p-3 bg-card rounded-lg border border-amber-200">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-foreground">
-                          {format(new Date(booking.start_date), 'MMM d')} - {format(new Date(booking.end_date), 'MMM d')}
-                        </span>
-                        <Badge variant="secondary" className="bg-amber-100 text-amber-700 text-xs">
-                          Pending
-                        </Badge>
+                <div className="space-y-3">
+                  {pendingBookings.map(booking => {
+                    const shopper = (booking as any).shopper;
+                    const shopperName = shopper?.display_name || shopper?.full_name || 'Guest';
+                    const shopperInitials = shopperName
+                      .split(' ')
+                      .map((n: string) => n[0])
+                      .join('')
+                      .toUpperCase()
+                      .slice(0, 2);
+                    
+                    return (
+                      <div key={booking.id} className="p-3 bg-card rounded-lg border border-amber-200 dark:border-amber-800">
+                        {/* Shopper info */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={shopper?.avatar_url || undefined} alt={shopperName} />
+                            <AvatarFallback className="text-xs bg-muted">
+                              {shopperInitials || <User className="h-3 w-3" />}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-medium text-foreground truncate">{shopperName}</span>
+                        </div>
+                        
+                        {/* Date and time */}
+                        <div className="mb-2">
+                          <p className="text-sm text-foreground">
+                            {format(new Date(booking.start_date), 'MMM d')} - {format(new Date(booking.end_date), 'MMM d')}
+                          </p>
+                          {booking.is_hourly_booking && booking.hourly_slots && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {(booking.hourly_slots as any[]).reduce((sum: number, day: any) => sum + day.slots.length, 0)} hours
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Price and status */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-foreground">${booking.total_price}</span>
+                          <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-xs">
+                            Pending
+                          </Badge>
+                        </div>
+
+                        {/* Quick action */}
+                        <Link 
+                          to={`/dashboard?booking=${booking.id}`}
+                          className="mt-2 pt-2 border-t border-border flex items-center gap-1 text-xs text-primary hover:underline"
+                        >
+                          Review Request →
+                        </Link>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        ${booking.total_price} total
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
