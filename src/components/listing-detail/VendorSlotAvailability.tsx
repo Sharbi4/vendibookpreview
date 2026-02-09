@@ -16,6 +16,8 @@ interface BookedSlot {
   slot_name: string | null;
   start_date: string;
   end_date: string;
+  is_hourly_booking: boolean | null;
+  hourly_slots: { date: string; slots: string[] }[] | null;
 }
 
 export const VendorSlotAvailability = ({
@@ -32,9 +34,10 @@ export const VendorSlotAvailability = ({
 
       const { data, error } = await supabase
         .from('booking_requests')
-        .select('slot_number, slot_name, start_date, end_date')
+        .select('slot_number, slot_name, start_date, end_date, is_hourly_booking, hourly_slots')
         .eq('listing_id', listingId)
         .in('status', ['pending', 'approved'])
+        .in('payment_status', ['paid', 'pending'])
         .lte('start_date', nextMonth)
         .gte('end_date', today);
 
@@ -46,14 +49,21 @@ export const VendorSlotAvailability = ({
   });
 
   // Check if a slot is available today
+  // Supports both daily bookings and hourly bookings (with hourly_slots format)
   const isSlotAvailableToday = (slotNumber: number): boolean => {
     const today = format(new Date(), 'yyyy-MM-dd');
-    return !bookedSlots.some(
-      (b) =>
-        b.slot_number === slotNumber &&
-        b.start_date <= today &&
-        b.end_date >= today
-    );
+    return !bookedSlots.some((b) => {
+      if (b.slot_number !== slotNumber) return false;
+      
+      // For hourly bookings, check if any hours are booked today
+      if (b.is_hourly_booking && b.hourly_slots && b.hourly_slots.length > 0) {
+        const todaySlots = b.hourly_slots.find(s => s.date === today);
+        return todaySlots && todaySlots.slots.length > 0;
+      }
+      
+      // For daily bookings, check date range
+      return b.start_date <= today && b.end_date >= today;
+    });
   };
 
   // Generate slot data

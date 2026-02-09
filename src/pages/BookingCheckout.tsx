@@ -300,6 +300,14 @@ const BookingCheckout = () => {
     setIsSubmitting(true);
 
     try {
+      // Convert hourlySelections map to array format for storage
+      const hourlySlots = isHourlyBooking && Object.keys(hourlySelections).length > 0
+        ? Object.entries(hourlySelections).map(([date, slots]) => ({
+            date,
+            slots: slots.sort(),
+          }))
+        : null;
+
       const bookingData = {
         listing_id: listingId,
         host_id: listing.host_id,
@@ -316,6 +324,8 @@ const BookingCheckout = () => {
         start_time: isHourlyBooking ? (startTime ?? null) : null,
         end_time: isHourlyBooking ? (endTime ?? null) : null,
         duration_hours: isHourlyBooking ? durationHours : null,
+        // Multi-day hourly slots stored as JSON
+        hourly_slots: hourlySlots,
         // Slot selection for vendor spaces
         slot_number: hasMultipleSlots && selectedSlot ? selectedSlot : null,
         slot_name: hasMultipleSlots && selectedSlotName ? selectedSlotName : null,

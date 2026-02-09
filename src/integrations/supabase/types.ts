@@ -309,6 +309,7 @@ export type Database = {
           host_id: string
           host_nudge_sent_at: string | null
           host_response: string | null
+          hourly_slots: Json | null
           id: string
           is_hourly_booking: boolean | null
           is_instant_book: boolean | null
@@ -364,6 +365,7 @@ export type Database = {
           host_id: string
           host_nudge_sent_at?: string | null
           host_response?: string | null
+          hourly_slots?: Json | null
           id?: string
           is_hourly_booking?: boolean | null
           is_instant_book?: boolean | null
@@ -419,6 +421,7 @@ export type Database = {
           host_id?: string
           host_nudge_sent_at?: string | null
           host_response?: string | null
+          hourly_slots?: Json | null
           id?: string
           is_hourly_booking?: boolean | null
           is_instant_book?: boolean | null

@@ -17,6 +17,11 @@ import { generateReceiptPdf } from '@/lib/generateReceiptPdf';
 import { trackGA4Purchase } from '@/lib/ga4Conversions';
 import { trackCheckoutConversion } from '@/lib/gtagConversions';
 
+interface HourlySlotData {
+  date: string;
+  slots: string[];
+}
+
 interface BookingDetails {
   id: string;
   start_date: string;
@@ -27,6 +32,11 @@ interface BookingDetails {
   fulfillment_selected?: string;
   is_instant_book?: boolean;
   status?: string;
+  is_hourly_booking?: boolean;
+  hourly_slots?: HourlySlotData[] | null;
+  duration_hours?: number | null;
+  start_time?: string | null;
+  end_time?: string | null;
   listing: {
     title: string;
     cover_image_url: string | null;
@@ -211,6 +221,11 @@ const PaymentSuccess = () => {
               fulfillment_selected,
               is_instant_book,
               status,
+              is_hourly_booking,
+              hourly_slots,
+              duration_hours,
+              start_time,
+              end_time,
               listing:listings(title, cover_image_url)
             `)
             .eq('checkout_session_id', sessionId)
@@ -704,19 +719,56 @@ const PaymentSuccess = () => {
                           <h3 className="font-semibold text-foreground line-clamp-1">
                             {booking.listing?.title || 'Your Booking'}
                           </h3>
-                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
-                            <Calendar className="h-4 w-4 text-primary" />
-                            <span>
-                              {new Date(booking.start_date).toLocaleDateString('en-US', { 
-                                month: 'short', 
-                                day: 'numeric' 
-                              })} - {new Date(booking.end_date).toLocaleDateString('en-US', { 
-                                month: 'short', 
-                                day: 'numeric',
-                                year: 'numeric'
-                              })}
-                            </span>
-                          </div>
+                          {/* Show hourly booking details if applicable */}
+                          {booking.is_hourly_booking && booking.hourly_slots && booking.hourly_slots.length > 0 ? (
+                            <div className="mt-2 space-y-1">
+                              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <Clock className="h-4 w-4 text-primary" />
+                                <span className="font-medium">
+                                  {booking.duration_hours} hour{booking.duration_hours !== 1 ? 's' : ''} across {booking.hourly_slots.length} day{booking.hourly_slots.length !== 1 ? 's' : ''}
+                                </span>
+                              </div>
+                              <div className="pl-5.5 space-y-1">
+                                {booking.hourly_slots.slice(0, 3).map((day, idx) => (
+                                  <div key={idx} className="text-xs text-muted-foreground">
+                                    <span className="font-medium">
+                                      {new Date(day.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}:
+                                    </span>{' '}
+                                    {day.slots.map(s => {
+                                      const hour = parseInt(s.split(':')[0]);
+                                      return hour > 12 ? `${hour - 12}pm` : hour === 12 ? '12pm' : `${hour}am`;
+                                    }).join(', ')}
+                                  </div>
+                                ))}
+                                {booking.hourly_slots.length > 3 && (
+                                  <div className="text-xs text-muted-foreground">
+                                    +{booking.hourly_slots.length - 3} more days
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : booking.is_hourly_booking && booking.start_time && booking.end_time ? (
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
+                              <Clock className="h-4 w-4 text-primary" />
+                              <span>
+                                {new Date(booking.start_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • {booking.start_time} – {booking.end_time}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
+                              <Calendar className="h-4 w-4 text-primary" />
+                              <span>
+                                {new Date(booking.start_date).toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric' 
+                                })} - {new Date(booking.end_date).toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric',
+                                  year: 'numeric'
+                                })}
+                              </span>
+                            </div>
+                          )}
                           {/* Show address for confirmed bookings (pickup/static location) */}
                           {(booking.is_instant_book || !isHold) && booking.address_snapshot && (booking.fulfillment_selected === 'pickup' || booking.fulfillment_selected === 'on_site') && (
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">

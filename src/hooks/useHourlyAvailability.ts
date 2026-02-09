@@ -15,6 +15,11 @@ interface TimeWindow {
   availableSlots?: number; // How many slots available in this window
 }
 
+interface HourlySlotData {
+  date: string;
+  slots: string[];
+}
+
 interface BookingSlot {
   date: string;
   endDate: string;
@@ -22,6 +27,7 @@ interface BookingSlot {
   endTime: string | null;
   isHourly: boolean;
   slotNumber: number | null;
+  hourlySlots: HourlySlotData[] | null; // Multi-day hourly selections
 }
 
 interface BlockedTimeSlot {
@@ -123,10 +129,10 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
           });
         }
 
-        // Fetch existing confirmed bookings including slot information
+        // Fetch existing confirmed bookings including slot information and hourly_slots
         const { data: bookings } = await supabase
           .from('booking_requests')
-          .select('start_date, end_date, start_time, end_time, is_hourly_booking, slot_number')
+          .select('start_date, end_date, start_time, end_time, is_hourly_booking, slot_number, hourly_slots')
           .eq('listing_id', listingId)
           .in('status', ['approved', 'completed', 'pending'])
           .in('payment_status', ['paid', 'pending']);
@@ -139,6 +145,7 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
             endTime: (b as any).end_time,
             isHourly: (b as any).is_hourly_booking || false,
             slotNumber: b.slot_number,
+            hourlySlots: (b as any).hourly_slots as HourlySlotData[] | null,
           })));
         }
 
@@ -190,21 +197,39 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
   };
 
   // Count how many slots have hourly bookings on a date
+  // Supports both legacy (start_date match) and new (hourly_slots) formats
   const countHourlyBookingsOnDate = (date: Date): number => {
     const dateStr = format(date, 'yyyy-MM-dd');
     // Get unique slot numbers that have hourly bookings on this date
     const bookedSlots = new Set(
       existingBookings
-        .filter(b => b.isHourly && b.date === dateStr)
+        .filter(b => {
+          if (!b.isHourly) return false;
+          // Check hourly_slots for multi-day bookings
+          if (b.hourlySlots && b.hourlySlots.length > 0) {
+            return b.hourlySlots.some(s => s.date === dateStr && s.slots.length > 0);
+          }
+          // Legacy: check start_date
+          return b.date === dateStr;
+        })
         .map(b => b.slotNumber ?? 0) // null slot_number treated as slot 0
     );
     return bookedSlots.size;
   };
 
   // Check if a date has ANY hourly booking (for blocking daily on single-slot)
+  // Supports both legacy and new hourly_slots formats
   const hasHourlyBookingOnDate = (date: Date): boolean => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return existingBookings.some(b => b.isHourly && b.date === dateStr);
+    return existingBookings.some(b => {
+      if (!b.isHourly) return false;
+      // Check hourly_slots for multi-day bookings
+      if (b.hourlySlots && b.hourlySlots.length > 0) {
+        return b.hourlySlots.some(s => s.date === dateStr && s.slots.length > 0);
+      }
+      // Legacy: check start_date
+      return b.date === dateStr;
+    });
   };
 
   // Get available slots count for a specific date
@@ -214,10 +239,25 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
   };
 
   // Count hourly bookings for a specific hour on a date
+  // Supports both legacy (start_time/end_time) and new (hourly_slots) formats
   const countHourlyBookingsForHour = (date: Date, hour: number): number => {
     const dateStr = format(date, 'yyyy-MM-dd');
+    const hourStr = `${hour.toString().padStart(2, '0')}:00`;
+    
     return existingBookings.filter(b => {
-      if (!b.isHourly || b.date !== dateStr || !b.startTime || !b.endTime) return false;
+      if (!b.isHourly) return false;
+      
+      // Check new multi-day hourly_slots format first
+      if (b.hourlySlots && b.hourlySlots.length > 0) {
+        const daySlots = b.hourlySlots.find(s => s.date === dateStr);
+        if (daySlots && daySlots.slots.includes(hourStr)) {
+          return true;
+        }
+        return false;
+      }
+      
+      // Fallback to legacy start_time/end_time format
+      if (b.date !== dateStr || !b.startTime || !b.endTime) return false;
       const startHour = parseInt(b.startTime.split(':')[0]);
       const endHour = parseInt(b.endTime.split(':')[0]);
       return hour >= startHour && hour < endHour;
@@ -256,21 +296,49 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
       slotsForHour -= hourlyBookingsForThisHour;
       
       // Apply buffer time from adjacent hourly bookings
-      const hourlyBookingsToday = existingBookings.filter(b => b.isHourly && b.date === dateStr);
-      hourlyBookingsToday.forEach(booking => {
-        if (booking.startTime && booking.endTime) {
-          const startHour = parseInt(booking.startTime.split(':')[0]);
-          const endHour = parseInt(booking.endTime.split(':')[0]);
-          const bufferHours = Math.ceil(settings.bufferTimeMins / 60);
-          // Check if this hour falls in the buffer zone
-          if (h >= startHour - bufferHours && h < startHour) {
-            slotsForHour = Math.max(0, slotsForHour - 1);
-          }
-          if (h >= endHour && h < endHour + bufferHours) {
-            slotsForHour = Math.max(0, slotsForHour - 1);
-          }
+      // Get all hourly bookings that affect this date (both legacy and hourly_slots)
+      const hourlyBookingsToday = existingBookings.filter(b => {
+        if (!b.isHourly) return false;
+        if (b.hourlySlots && b.hourlySlots.length > 0) {
+          return b.hourlySlots.some(s => s.date === dateStr && s.slots.length > 0);
         }
+        return b.date === dateStr;
       });
+      
+      const bufferHours = Math.ceil(settings.bufferTimeMins / 60);
+      if (bufferHours > 0) {
+        hourlyBookingsToday.forEach(booking => {
+          // For hourly_slots format, calculate buffer based on booked hours
+          if (booking.hourlySlots && booking.hourlySlots.length > 0) {
+            const daySlots = booking.hourlySlots.find(s => s.date === dateStr);
+            if (daySlots && daySlots.slots.length > 0) {
+              const bookedHours = daySlots.slots.map(s => parseInt(s.split(':')[0])).sort((a, b) => a - b);
+              const firstHour = bookedHours[0];
+              const lastHour = bookedHours[bookedHours.length - 1] + 1; // +1 because end of last hour
+              
+              // Check buffer before first booked hour
+              if (h >= firstHour - bufferHours && h < firstHour) {
+                slotsForHour = Math.max(0, slotsForHour - 1);
+              }
+              // Check buffer after last booked hour
+              if (h >= lastHour && h < lastHour + bufferHours) {
+                slotsForHour = Math.max(0, slotsForHour - 1);
+              }
+            }
+          } else if (booking.startTime && booking.endTime) {
+            // Legacy format
+            const startHour = parseInt(booking.startTime.split(':')[0]);
+            const endHour = parseInt(booking.endTime.split(':')[0]);
+            // Check if this hour falls in the buffer zone
+            if (h >= startHour - bufferHours && h < startHour) {
+              slotsForHour = Math.max(0, slotsForHour - 1);
+            }
+            if (h >= endHour && h < endHour + bufferHours) {
+              slotsForHour = Math.max(0, slotsForHour - 1);
+            }
+          }
+        });
+      }
       
       availableSlotsPerHour[h] = Math.max(0, slotsForHour);
     }
