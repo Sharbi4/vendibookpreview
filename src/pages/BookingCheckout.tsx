@@ -120,7 +120,8 @@ const BookingCheckout = () => {
   }, [listing, isStaticLocation]);
 
   // Calculate pricing - supports both hourly and daily
-  const rentalDays = startDate && endDate ? differenceInDays(endDate, startDate) : 0;
+  // Inclusive day counting: same start/end = 1 day
+  const rentalDays = startDate && endDate ? differenceInDays(endDate, startDate) + 1 : 0;
   
   const calculateBasePrice = () => {
     // For hourly bookings, use hourly rate
@@ -560,7 +561,7 @@ const BookingCheckout = () => {
             priceWeekly={listing.price_weekly}
             priceMonthly={listing.price_monthly}
             priceHourly={listing.price_hourly}
-            hourlyEnabled={listing.hourly_enabled || false}
+            hourlyEnabled={(listing.hourly_enabled || false) || (typeof listing.price_hourly === 'number' && listing.price_hourly > 0)}
             dailyEnabled={listing.daily_enabled !== false}
             onDatesSelected={handleDatesSelected}
           />
@@ -591,7 +592,7 @@ const BookingCheckout = () => {
             priceWeekly={listing.price_weekly}
             priceMonthly={listing.price_monthly}
             priceHourly={listing.price_hourly}
-            hourlyEnabled={listing.hourly_enabled || false}
+            hourlyEnabled={(listing.hourly_enabled || false) || (typeof listing.price_hourly === 'number' && listing.price_hourly > 0)}
             dailyEnabled={listing.daily_enabled !== false}
             onDatesSelected={handleDatesSelected}
           />
@@ -1153,7 +1154,7 @@ const BookingCheckout = () => {
         priceWeekly={listing.price_weekly}
         priceMonthly={listing.price_monthly}
         priceHourly={listing.price_hourly}
-        hourlyEnabled={listing.hourly_enabled || false}
+        hourlyEnabled={(listing.hourly_enabled || false) || (typeof listing.price_hourly === 'number' && listing.price_hourly > 0)}
         dailyEnabled={listing.daily_enabled !== false}
         onDatesSelected={handleDatesSelected}
       />

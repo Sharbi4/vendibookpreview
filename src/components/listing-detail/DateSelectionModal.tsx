@@ -109,6 +109,7 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
   priceMonthly,
   priceHourly,
   hourlyEnabled = false,
+  dailyEnabled = true,
   instantBook = false,
   onDatesSelected,
   navigateToBooking = true,
@@ -250,7 +251,8 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
     }
     
     if (!startDate || !endDate || !priceDaily) return null;
-    const days = differenceInDays(endDate, startDate);
+    // Inclusive day counting: same start/end = 1 day
+    const days = differenceInDays(endDate, startDate) + 1;
     if (days <= 0) return null;
 
     const { total, breakdown } = calculateTieredPrice(days, priceDaily, priceWeekly, priceMonthly);
@@ -303,7 +305,8 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
     if (isHourlyMode) {
       return selectedDate && selectedStartTime && selectedDuration > 0;
     }
-    return startDate && endDate && differenceInDays(endDate, startDate) > 0;
+    // Inclusive day counting: same start/end = valid 1-day booking
+    return startDate && endDate && (differenceInDays(endDate, startDate) + 1) > 0;
   }, [isHourlyMode, selectedDate, selectedStartTime, selectedDuration, startDate, endDate]);
 
   const handleContinue = () => {
@@ -374,36 +377,41 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
 
         <div className="p-4 space-y-4">
           {/* Mode Toggle - only if hourly is enabled */}
-          {hourlyEnabled && priceHourly && (
-            <div className="flex gap-2 p-1 bg-muted rounded-lg">
-              <button
-                type="button"
-                onClick={() => handleModeToggle(false)}
-                className={cn(
-                  "flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2",
-                  !isHourlyMode 
-                    ? "bg-background text-foreground shadow-sm" 
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Calendar className="h-4 w-4" />
-                By Date
-              </button>
-              <button
-                type="button"
-                onClick={() => handleModeToggle(true)}
-                className={cn(
-                  "flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2",
-                  isHourlyMode 
-                    ? "bg-background text-foreground shadow-sm" 
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Clock className="h-4 w-4" />
-                By Hour
-              </button>
-            </div>
-          )}
+          {(() => {
+            const effectiveHourlyEnabled = Boolean(hourlyEnabled) || (typeof priceHourly === 'number' && priceHourly > 0);
+            return (
+              effectiveHourlyEnabled && priceHourly ? (
+                <div className="flex gap-2 p-1 bg-muted rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => handleModeToggle(false)}
+                    className={cn(
+                      "flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2",
+                      !isHourlyMode
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Calendar className="h-4 w-4" />
+                    By Date
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleModeToggle(true)}
+                    className={cn(
+                      "flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2",
+                      isHourlyMode
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Clock className="h-4 w-4" />
+                    By Hour
+                  </button>
+                </div>
+              ) : null
+            );
+          })()}
 
           {/* Calendar Navigation */}
           <div className="flex items-center justify-between">

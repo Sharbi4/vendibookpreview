@@ -192,10 +192,6 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
     onSpecialPricingChange?.(specialPricing);
   }, [specialPricing, onSpecialPricingChange]);
 
-  useEffect(() => {
-    const rate = parseFloat(hourlyRate);
-    onPriceHourlyChange(isNaN(rate) ? null : rate);
-  }, [hourlyRate, onPriceHourlyChange]);
 
   // Calendar helpers
   const monthStart = startOfMonth(currentMonth);
@@ -413,7 +409,12 @@ export const RentalAvailabilityStep: React.FC<RentalAvailabilityStepProps> = ({
                     min="1"
                     step="1"
                     value={hourlyRate}
-                    onChange={(e) => setHourlyRate(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setHourlyRate(value);
+                      const rate = parseFloat(value);
+                      onPriceHourlyChange(Number.isFinite(rate) && rate > 0 ? rate : null);
+                    }}
                     placeholder="45"
                     className="pl-7"
                   />
