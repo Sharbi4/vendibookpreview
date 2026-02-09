@@ -127,8 +127,8 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   priceHourly,
   availableFrom,
   availableTo,
-  hourlyEnabled = false,
-  dailyEnabled = true,
+  hourlyEnabled: hourlyEnabledProp = false,
+  dailyEnabled: dailyEnabledProp = true,
   instantBook = false,
   totalSlots = 1,
   slotNames,
@@ -143,6 +143,18 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
     getAvailableWindowsForDate,
     getAvailableSlotsForDate,
   } = useHourlyAvailability({ listingId });
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // DERIVED: Hourly/Daily availability based on BOTH props AND pricing
+  // If priceHourly is set, treat listing as hourly-capable regardless of flag
+  // If priceDaily is set, treat listing as daily-capable regardless of flag
+  // ─────────────────────────────────────────────────────────────────────────────
+  const hasHourlyPricing = !!priceHourly && priceHourly > 0;
+  const hasDailyPricing = !!priceDaily && priceDaily > 0;
+  
+  // Effective enabled states: explicit flag OR has pricing
+  const hourlyEnabled = hourlyEnabledProp || hasHourlyPricing;
+  const dailyEnabled = dailyEnabledProp || hasDailyPricing;
 
   // ─────────────────────────────────────────────────────────────────────────────
   // STATE: Duration Mode
