@@ -473,6 +473,120 @@ export type Database = {
           },
         ]
       }
+      contest_entries: {
+        Row: {
+          created_at: string
+          facebook_post_url: string
+          id: string
+          listing_id: string
+          notes: string | null
+          promotion_id: string
+          status: string
+          submitted_at: string
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          facebook_post_url: string
+          id?: string
+          listing_id: string
+          notes?: string | null
+          promotion_id: string
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          facebook_post_url?: string
+          id?: string
+          listing_id?: string
+          notes?: string | null
+          promotion_id?: string
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contest_entries_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contest_entries_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contest_winners: {
+        Row: {
+          created_at: string
+          entry_id: string
+          id: string
+          payout_completed_at: string | null
+          payout_initiated_at: string | null
+          payout_status: string
+          promotion_id: string
+          selected_at: string
+          stripe_transfer_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entry_id: string
+          id?: string
+          payout_completed_at?: string | null
+          payout_initiated_at?: string | null
+          payout_status?: string
+          promotion_id: string
+          selected_at?: string
+          stripe_transfer_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entry_id?: string
+          id?: string
+          payout_completed_at?: string | null
+          payout_initiated_at?: string | null
+          payout_status?: string
+          promotion_id?: string
+          selected_at?: string
+          stripe_transfer_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contest_winners_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "contest_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contest_winners_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_messages: {
         Row: {
           attachment_name: string | null
@@ -826,6 +940,84 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_rewards: {
+        Row: {
+          active_days_count: number
+          admin_override: boolean | null
+          created_at: string
+          disqualified_at: string | null
+          disqualified_reason: string | null
+          eligible_at: string | null
+          id: string
+          last_checked_at: string | null
+          listing_id: string
+          payout_completed_at: string | null
+          payout_initiated_at: string | null
+          payout_status: string
+          promotion_id: string
+          published_at: string
+          stripe_account_id: string | null
+          stripe_transfer_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_days_count?: number
+          admin_override?: boolean | null
+          created_at?: string
+          disqualified_at?: string | null
+          disqualified_reason?: string | null
+          eligible_at?: string | null
+          id?: string
+          last_checked_at?: string | null
+          listing_id: string
+          payout_completed_at?: string | null
+          payout_initiated_at?: string | null
+          payout_status?: string
+          promotion_id: string
+          published_at: string
+          stripe_account_id?: string | null
+          stripe_transfer_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_days_count?: number
+          admin_override?: boolean | null
+          created_at?: string
+          disqualified_at?: string | null
+          disqualified_reason?: string | null
+          eligible_at?: string | null
+          id?: string
+          last_checked_at?: string | null
+          listing_id?: string
+          payout_completed_at?: string | null
+          payout_initiated_at?: string | null
+          payout_status?: string
+          promotion_id?: string
+          published_at?: string
+          stripe_account_id?: string | null
+          stripe_transfer_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_rewards_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_rewards_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
             referencedColumns: ["id"]
           },
         ]
@@ -1455,6 +1647,45 @@ export type Database = {
           is_active?: boolean
           max_uses?: number | null
           min_purchase_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      promotions: {
+        Row: {
+          active: boolean
+          created_at: string
+          draw_at_et: string | null
+          end_at_et: string
+          entry_deadline_et: string | null
+          id: string
+          name: string
+          rules_json: Json | null
+          start_at_et: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          draw_at_et?: string | null
+          end_at_et: string
+          entry_deadline_et?: string | null
+          id?: string
+          name: string
+          rules_json?: Json | null
+          start_at_et: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          draw_at_et?: string | null
+          end_at_et?: string
+          entry_deadline_et?: string | null
+          id?: string
+          name?: string
+          rules_json?: Json | null
+          start_at_et?: string
           updated_at?: string
         }
         Relationships: []

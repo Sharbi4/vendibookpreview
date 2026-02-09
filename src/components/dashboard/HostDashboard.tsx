@@ -12,6 +12,7 @@ import { EnhancedAnalytics } from './EnhancedAnalytics';
 import { RevenueAnalyticsCard } from './RevenueAnalyticsCard';
 import { HostOffersSection } from './HostOffersSection';
 import HostOnboardingWizard from './HostOnboardingWizard';
+import PromoStatusWidget from '@/components/promo/PromoStatusWidget';
 import ActionRequiredBanner from './ActionRequiredBanner';
 import { OperationsTable } from './OperationsTable';
 import { useHostListings } from '@/hooks/useHostListings';
@@ -245,6 +246,8 @@ const HostDashboard = () => {
               <HostOffersSection />
             </div>
             <div className="space-y-6">
+              {/* Promo Status */}
+              <PromoStatusWidget />
               {/* Quick Analytics */}
               <CompactInsights />
             </div>
