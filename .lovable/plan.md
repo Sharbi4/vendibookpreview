@@ -1,114 +1,184 @@
 
-# Plan: Require Weekly Schedule for Hourly Listings + Display on Listing Detail
+# Plan: Update Search & Availability Logic for Hourly Bookings
 
 ## Overview
-When hosts enable hourly or "both" (daily + hourly) booking modes, they must set their available hours via the weekly schedule grid. This schedule will also be shown to renters on the listing detail page so they know when the space/asset is available for hourly bookings.
-
-## What This Changes
-
-### For Hosts (Creating/Editing Listings)
-- When selecting "Hourly" or "Both" booking type, a validation will ensure at least one day has operating hours configured
-- A clear warning message will appear if the schedule is empty
-- Cannot proceed/publish until schedule is set
-
-### For Renters (Viewing Listings)
-- Listings with hourly availability will show a "Weekly Hours" section displaying when the space is open for hourly bookings (e.g., "Mon-Fri: 8am-6pm, Sat: 9am-3pm")
+The current search and availability logic doesn't properly account for the new multi-day hourly booking system. This plan updates both the server-side search function and client-side availability hooks to correctly handle:
+- Multi-day hourly bookings (stored in `hourly_slots` column)
+- Blocked time slots (from `listing_blocked_times` table)
+- Multi-slot capacity (listings with multiple vendor spaces)
 
 ---
 
-## Technical Implementation
+## Current Issues
 
-### Step 1: Add Validation to RentalAvailabilityStep
-**File:** `src/components/listing-wizard/RentalAvailabilityStep.tsx`
+### 1. Search Function (`search-listings`)
+- Currently marks a listing as unavailable if ANY booking overlaps with the search date range
+- Doesn't check multi-slot capacity (a 5-slot venue shouldn't be "unavailable" if only 1 slot is booked)
+- Doesn't distinguish between hourly and daily bookings
+- Doesn't consider that hourly bookings only block specific hours, not the full day
 
-- Add a helper function to check if schedule has at least one day with hours:
-```text
-const hasAnyScheduledHours = (schedule) => 
-  Object.values(schedule).some(day => day.length > 0)
-```
-- Show a warning banner when hourly is enabled but schedule is empty
-- Expose a validation state that the parent PublishWizard can use
+### 2. `useBlockedDates` Hook
+- Only fetches daily booking date ranges
+- Doesn't query `hourly_slots` column for multi-day hourly bookings
+- Doesn't fetch blocked time slots from `listing_blocked_times` table
+- Treats all bookings as full-day blockers
 
-### Step 2: Update PublishWizard Validation
-**File:** `src/components/listing-wizard/PublishWizard.tsx`
-
-- Add validation check before allowing progression from the availability step
-- If hourly is enabled and no schedule is set, show toast notification and prevent advancement
-- Update the RentalAvailabilityStep callback to include schedule validation status
-
-### Step 3: Fetch hourly_schedule in useHourlyAvailability Hook
-**File:** `src/hooks/useHourlyAvailability.ts`
-
-- Add `hourly_schedule` to the select query
-- Parse and store the schedule in settings state
-- Expose the schedule for use by UI components
-
-### Step 4: Create WeeklyHoursDisplay Component
-**New File:** `src/components/listing-detail/WeeklyHoursDisplay.tsx`
-
-A compact component that:
-- Takes the weekly schedule JSON as a prop
-- Groups consecutive days with identical hours (e.g., "Mon-Fri: 8am-6pm")
-- Shows "Closed" for days with no hours
-- Uses a clean, scannable format with clock icons
-
-Example output:
-```text
-Operating Hours
-Mon - Fri    8:00 AM – 6:00 PM
-Sat          9:00 AM – 3:00 PM
-Sun          Closed
-```
-
-### Step 5: Display Hours on Listing Detail Page
-**File:** `src/pages/ListingDetail.tsx`
-
-- Fetch `hourly_schedule` as part of listing data
-- Add the WeeklyHoursDisplay component in the left column details section
-- Only show if listing has hourly_enabled = true and schedule exists
+### 3. `useListingAvailability` Hook
+- Doesn't integrate with hourly booking data for slot availability calculations
 
 ---
 
-## Validation Flow
+## Implementation Plan
+
+### Step 1: Update `search-listings` Edge Function
+**File:** `supabase/functions/search-listings/index.ts`
+
+Changes:
+- Fetch `total_slots` for each listing to support capacity-based availability
+- When checking booking overlap, count slots used vs total slots
+- For hourly-only listings, don't mark as unavailable just because of hourly bookings (they may have other hours free)
+- Add optional `is_hourly_search` parameter for future hourly search functionality
 
 ```text
-Host selects "Hourly" or "Both"
-         ↓
-Schedule Grid appears
-         ↓
-     User attempts to proceed
-         ↓
-┌─────────────────────────────────┐
-│ Is at least 1 day configured?   │
-└─────────────────────────────────┘
-    ↓ No                    ↓ Yes
-Show warning          Allow proceed
-"Please add hours"    Save schedule
+Current Logic:
+  booking overlaps date range → listing unavailable
+
+New Logic:
+  1. Fetch total_slots for all listings
+  2. For each listing with overlapping bookings:
+     - Count slots occupied by bookings
+     - If occupied_slots >= total_slots → mark unavailable
+     - Otherwise → still available (partial capacity)
+  3. For hourly-enabled listings:
+     - If ONLY hourly bookings exist → listing remains available (can book other hours)
+```
+
+### Step 2: Update `useBlockedDates` Hook
+**File:** `src/hooks/useBlockedDates.ts`
+
+Changes:
+- Fetch `hourly_slots` column for hourly bookings
+- Fetch blocked time slots from `listing_blocked_times` table
+- Add new methods:
+  - `isHourBlocked(date, hour)` - checks if specific hour is blocked
+  - `getBlockedHoursForDate(date)` - returns list of blocked hours
+- Keep existing `isDateUnavailable` but make it smarter (a date with partial hourly bookings isn't fully unavailable)
+
+### Step 3: Update `useListingAvailability` Hook
+**File:** `src/hooks/useListingAvailability.ts`
+
+Changes:
+- Fetch `hourly_slots` for existing bookings
+- Update `getSlotsBookedForDate` to also count slots with hourly bookings
+- Add method to check hourly availability per slot
+
+### Step 4: Update Availability Calendar Display
+**File:** `src/components/listing-detail/AvailabilityCalendarDisplay.tsx`
+
+Changes:
+- Show partial availability indicators for dates with some hours booked
+- Add visual distinction for hourly vs daily availability
+- Use `useHourlyAvailability` hook for hourly-enabled listings
+
+---
+
+## Technical Details
+
+### Search Function Changes
+
+```text
+// Fetch slots capacity with listings
+.select('*, total_slots')
+
+// Enhanced availability check
+const occupiedSlotsByListing = new Map<string, number>();
+
+bookings.forEach(b => {
+  const current = occupiedSlotsByListing.get(b.listing_id) || 0;
+  // For hourly bookings, check if they actually overlap by date AND have slots on those dates
+  if (b.is_hourly_booking && b.hourly_slots) {
+    // Only count if hourly_slots have dates in the search range
+    const hasOverlap = b.hourly_slots.some(s => 
+      s.date >= start_date && s.date <= end_date && s.slots.length > 0
+    );
+    if (hasOverlap) {
+      occupiedSlotsByListing.set(b.listing_id, current + 1);
+    }
+  } else {
+    // Daily booking
+    occupiedSlotsByListing.set(b.listing_id, current + 1);
+  }
+});
+
+// Mark unavailable only if fully booked
+listings.forEach(listing => {
+  const occupied = occupiedSlotsByListing.get(listing.id) || 0;
+  if (occupied >= listing.total_slots) {
+    unavailableListingIds.add(listing.id);
+  }
+});
+```
+
+### useBlockedDates Changes
+
+```text
+// Updated query for booking data
+.select('start_date, end_date, status, payment_status, is_hourly_booking, hourly_slots, slot_number')
+
+// New: Fetch blocked time slots
+const { data: blockedTimes } = await supabase
+  .from('listing_blocked_times')
+  .select('blocked_date, start_time, end_time')
+  .eq('listing_id', listingId);
+
+// New method for hourly checking
+const isHourBlocked = (date: Date, hour: string): boolean => {
+  const dateStr = format(date, 'yyyy-MM-dd');
+  
+  // Check blocked time slots
+  const hasBlockedTime = blockedTimeSlots.some(t => 
+    t.blocked_date === dateStr && 
+    hour >= t.start_time && hour < t.end_time
+  );
+  if (hasBlockedTime) return true;
+  
+  // Check hourly bookings
+  return bookings.some(b => {
+    if (!b.is_hourly_booking) return false;
+    if (b.hourly_slots) {
+      const daySlots = b.hourly_slots.find(s => s.date === dateStr);
+      return daySlots?.slots.includes(hour) ?? false;
+    }
+    return false;
+  });
+};
 ```
 
 ---
 
-## Files to Create/Modify
+## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/components/listing-wizard/RentalAvailabilityStep.tsx` | Add schedule validation logic and warning UI |
-| `src/components/listing-wizard/PublishWizard.tsx` | Add validation gate before step progression |
-| `src/hooks/useHourlyAvailability.ts` | Fetch and expose hourly_schedule |
-| `src/components/listing-detail/WeeklyHoursDisplay.tsx` | **New** - Display formatted weekly hours |
-| `src/pages/ListingDetail.tsx` | Add WeeklyHoursDisplay component for hourly listings |
+| `supabase/functions/search-listings/index.ts` | Add capacity-aware availability, handle hourly bookings |
+| `src/hooks/useBlockedDates.ts` | Fetch hourly_slots, blocked_times; add hourly checking methods |
+| `src/hooks/useListingAvailability.ts` | Add hourly-aware slot availability calculation |
+| `src/components/listing-detail/AvailabilityCalendarDisplay.tsx` | Add partial availability indicators |
 
 ---
 
-## User Experience
+## Expected Behavior After Implementation
 
-### Host Experience
-1. Creates rental listing, reaches availability step
-2. Selects "Hourly" or "Both" booking type
-3. **Must** configure at least one day's hours in the weekly grid
-4. Clear feedback if schedule is empty when trying to continue
+### Search Results
+- A venue with 10 slots shows as available even if 3 are booked
+- A listing with only hourly bookings shows as available (can book other hours)
+- A listing fully booked for all slots shows as unavailable
 
-### Renter Experience
-1. Views a listing with hourly bookings enabled
-2. Sees "Operating Hours" card showing when the space is available
-3. Can reference this when selecting time slots in the booking widget
+### Availability Calendar
+- Days with partial hourly bookings show a "Limited" indicator
+- Days fully booked (all slots, all hours) show as "Booked"
+- Days with blocked time slots reflect the partial availability
+
+### Booking Widget
+- Shows accurate slot availability accounting for hourly bookings
+- Time grid shows which hours are already taken
