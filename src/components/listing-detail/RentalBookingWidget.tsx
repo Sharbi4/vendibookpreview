@@ -480,11 +480,35 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         animate={{ opacity: 1, y: 0 }}
         className="rounded-2xl border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-6"
       >
-        <div className="text-center space-y-3">
-          <h3 className="font-semibold text-foreground">This is your listing</h3>
-          <p className="text-sm text-muted-foreground">
-            Manage availability, pricing, and settings
-          </p>
+        <div className="space-y-4">
+          <div className="text-center space-y-2">
+            <h3 className="font-semibold text-foreground">This is your listing</h3>
+            <p className="text-sm text-muted-foreground">
+              Guests will see the booking widget; you can still verify your saved pricing below.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border bg-background/60 p-4">
+            <p className="text-sm font-medium text-foreground mb-2">Saved pricing</p>
+            <div className="space-y-1 text-sm text-muted-foreground">
+              {hourlyEnabled && priceHourly ? (
+                <div className="flex items-center justify-between gap-3">
+                  <span>Hourly</span>
+                  <span className="font-medium text-foreground">${priceHourly.toLocaleString()}/hr</span>
+                </div>
+              ) : null}
+              {dailyEnabled && priceDaily ? (
+                <div className="flex items-center justify-between gap-3">
+                  <span>Daily</span>
+                  <span className="font-medium text-foreground">${priceDaily.toLocaleString()}/day</span>
+                </div>
+              ) : null}
+              {!((hourlyEnabled && priceHourly) || (dailyEnabled && priceDaily)) && (
+                <p className="text-sm text-muted-foreground">No pricing is set yet.</p>
+              )}
+            </div>
+          </div>
+
           <Button variant="outline" className="w-full" asChild>
             <a href={`/edit-listing/${listingId}`}>Manage Listing</a>
           </Button>
