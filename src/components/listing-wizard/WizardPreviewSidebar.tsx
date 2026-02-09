@@ -89,6 +89,7 @@ export const WizardPreviewSidebar: React.FC<WizardPreviewSidebarProps> = ({
             mode: formData.mode,
             category: formData.category,
             images: previewImageUrls,
+            priceHourly: formData.price_hourly || '',
             priceDaily: formData.price_daily,
             priceWeekly: formData.price_weekly,
             priceSale: formData.price_sale,

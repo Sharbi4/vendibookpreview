@@ -28,6 +28,7 @@ const initialFormData: ListingFormData = {
   access_instructions: '',
   hours_of_access: '',
   location_notes: '',
+  price_hourly: '',
   price_daily: '',
   price_weekly: '',
   price_monthly: '',

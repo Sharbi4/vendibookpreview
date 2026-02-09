@@ -11,6 +11,7 @@ interface ListingCardPreviewProps {
     mode: 'rent' | 'sale' | null;
     category: ListingCategory | null;
     images: string[];
+    priceHourly: string;
     priceDaily: string;
     priceWeekly: string;
     priceSale: string;
@@ -47,9 +48,21 @@ const popularAmenityIcons: Record<string, { icon: React.ElementType; label: stri
 };
 
 export const ListingCardPreview: React.FC<ListingCardPreviewProps> = ({ listing, hostVerified }) => {
+  // Determine primary price display
   const price = listing.mode === 'rent' 
-    ? listing.priceDaily ? `$${listing.priceDaily}/day` : '$--/day'
+    ? listing.priceDaily 
+      ? `$${listing.priceDaily}/day` 
+      : listing.priceHourly 
+        ? `$${listing.priceHourly}/hr`
+        : '$--/day'
     : listing.priceSale ? `$${parseFloat(listing.priceSale).toLocaleString()}` : '$--';
+
+  // Show hourly rate separately when daily is the primary
+  const showHourlyRate = listing.mode === 'rent' && 
+    listing.priceHourly && 
+    parseFloat(listing.priceHourly) > 0 && 
+    listing.priceDaily && 
+    parseFloat(listing.priceDaily) > 0;
 
   const modeLabel = listing.mode === 'rent' ? 'For Rent' : listing.mode === 'sale' ? 'For Sale' : 'Mode TBD';
   const modeColor = listing.mode === 'rent' ? 'bg-primary' : listing.mode === 'sale' ? 'bg-emerald-500' : 'bg-muted';
@@ -199,6 +212,11 @@ export const ListingCardPreview: React.FC<ListingCardPreviewProps> = ({ listing,
             <span className="bg-gray-100 text-gray-900 text-sm font-bold px-3 py-1 rounded-full">
               {price}
             </span>
+            {showHourlyRate && (
+              <span className="text-sm text-gray-500 font-medium">
+                ${listing.priceHourly}/hr
+              </span>
+            )}
             {listing.mode === 'rent' && listing.priceWeekly && (
               <span className="text-sm text-gray-500 font-medium">
                 ${listing.priceWeekly}/week

@@ -574,6 +574,7 @@ export interface ListingFormData {
   access_instructions: string;
   hours_of_access: string;
   location_notes: string;
+  price_hourly: string;
   price_daily: string;
   price_weekly: string;
   price_monthly: string;
