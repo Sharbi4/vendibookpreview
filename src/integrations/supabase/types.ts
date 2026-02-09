@@ -1928,6 +1928,18 @@ export type Database = {
         Args: { p_end_date: string; p_hourly_slots: Json }
         Returns: string
       }
+      check_booking_availability: {
+        Args: {
+          p_end_date: string
+          p_exclude_booking_id?: string
+          p_hourly_slots?: Json
+          p_is_hourly_booking?: boolean
+          p_listing_id: string
+          p_slot_number?: number
+          p_start_date: string
+        }
+        Returns: Json
+      }
       get_all_asset_requests: {
         Args: never
         Returns: {

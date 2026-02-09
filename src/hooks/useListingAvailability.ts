@@ -14,8 +14,17 @@ interface BlockedDate {
   reason: string | null;
 }
 
-interface BookingWithDates extends BookingRequest {
+interface ShopperProfile {
+  id: string;
+  full_name: string | null;
+  display_name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+}
+
+interface BookingWithDetails extends BookingRequest {
   listing_title?: string;
+  shopper?: ShopperProfile | null;
 }
 
 interface ListingCapacity {
@@ -31,7 +40,7 @@ export const useListingAvailability = (listingId: string, listingCapacity?: List
   const { toast } = useToast();
   
   const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
-  const [bookings, setBookings] = useState<BookingWithDates[]>([]);
+  const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -56,7 +65,32 @@ export const useListingAvailability = (listingId: string, listingCapacity?: List
         .in('status', ['approved', 'pending']);
 
       if (bookingError) throw bookingError;
-      setBookings(bookingData || []);
+      
+      // Fetch shopper profiles for these bookings
+      const shopperIds = [...new Set((bookingData || []).map(b => b.shopper_id))];
+      let shopperProfiles: Record<string, ShopperProfile> = {};
+      
+      if (shopperIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name, display_name, email, avatar_url')
+          .in('id', shopperIds);
+        
+        if (profilesData) {
+          shopperProfiles = profilesData.reduce((acc, profile) => {
+            acc[profile.id] = profile;
+            return acc;
+          }, {} as Record<string, ShopperProfile>);
+        }
+      }
+      
+      // Combine bookings with shopper details
+      const bookingsWithShoppers: BookingWithDetails[] = (bookingData || []).map(booking => ({
+        ...booking,
+        shopper: shopperProfiles[booking.shopper_id] || null
+      }));
+      
+      setBookings(bookingsWithShoppers);
     } catch (error) {
       console.error('Error fetching availability:', error);
     } finally {
