@@ -158,12 +158,16 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
         }
 
         // Fetch existing confirmed bookings including slot information and hourly_slots
+        // Only include bookings that are:
+        // 1. Approved/completed AND paid (confirmed bookings)
+        // 2. Pending status AND paid (instant book paid, awaiting host confirmation)
+        // This ensures unpaid requests don't block availability
         const { data: bookings } = await supabase
           .from('booking_requests')
-          .select('start_date, end_date, start_time, end_time, is_hourly_booking, slot_number, hourly_slots')
+          .select('start_date, end_date, start_time, end_time, is_hourly_booking, slot_number, hourly_slots, status, payment_status, is_instant_book')
           .eq('listing_id', listingId)
-          .in('status', ['approved', 'completed', 'pending'])
-          .in('payment_status', ['paid', 'pending']);
+          .eq('payment_status', 'paid')
+          .in('status', ['approved', 'completed', 'pending']);
 
         if (bookings) {
           setExistingBookings(bookings.map(b => ({

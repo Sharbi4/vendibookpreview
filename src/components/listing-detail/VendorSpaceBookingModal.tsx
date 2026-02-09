@@ -69,6 +69,8 @@ interface BookedSlot {
   slot_name: string | null;
   start_date: string;
   end_date: string;
+  is_hourly_booking: boolean | null;
+  hourly_slots: { date: string; slots: string[] }[] | null;
 }
 
 // Calculate tiered pricing
@@ -143,7 +145,11 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
     getAvailableWindowsForDate,
   } = useHourlyAvailability({ listingId });
 
-  // Fetch slot bookings
+  // Fetch slot bookings - only include paid bookings to block availability
+  // This ensures:
+  // 1. Approved/completed + paid bookings block slots
+  // 2. Pending + paid (instant book) bookings block slots
+  // 3. Unpaid requests do NOT block availability
   const { data: bookedSlots = [] } = useQuery({
     queryKey: ['vendor-slot-bookings', listingId],
     queryFn: async () => {
@@ -152,9 +158,10 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
 
       const { data, error } = await supabase
         .from('booking_requests')
-        .select('slot_number, slot_name, start_date, end_date')
+        .select('slot_number, slot_name, start_date, end_date, is_hourly_booking, hourly_slots')
         .eq('listing_id', listingId)
-        .in('status', ['pending', 'approved'])
+        .eq('payment_status', 'paid')
+        .in('status', ['pending', 'approved', 'completed'])
         .lte('start_date', oneYearFromNow)
         .gte('end_date', today);
 
