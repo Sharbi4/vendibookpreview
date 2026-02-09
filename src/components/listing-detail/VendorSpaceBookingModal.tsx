@@ -326,8 +326,10 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
       };
     }
     
-    if (!startDate || !endDate || !priceDaily) return null;
-    const days = differenceInDays(endDate, startDate);
+    if (!startDate || !priceDaily) return null;
+    // For single day selection without endDate, treat as 1 day
+    // For date range, calculate inclusive days (end - start + 1 for same-day = 1)
+    const days = endDate ? differenceInDays(endDate, startDate) + 1 : 1;
     if (days <= 0) return null;
 
     const { total, breakdown } = calculateTieredPrice(days, priceDaily, priceWeekly, priceMonthly);
@@ -347,7 +349,9 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
     if (isHourlyMode) {
       return selectedSlot && selectedDate && selectedStartTime && selectedDuration > 0;
     }
-    return selectedSlot && startDate && endDate && differenceInDays(endDate, startDate) > 0;
+    // Allow single day (no endDate) or date range (endDate >= startDate)
+    const hasValidDates = startDate && (endDate ? differenceInDays(endDate, startDate) >= 0 : true);
+    return selectedSlot && hasValidDates;
   }, [isHourlyMode, selectedSlot, selectedDate, selectedStartTime, selectedDuration, startDate, endDate]);
 
   const handleBookNow = () => setStep('slots');
@@ -369,10 +373,11 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
       
       navigate(`/book/${listingId}?start=${dateStr}&end=${dateStr}&startTime=${selectedStartTime}&endTime=${endTimeStr}&hours=${selectedDuration}&slot=${selectedSlot}&slotName=${encodeURIComponent(slotName)}`);
     } else {
-      if (!startDate || !endDate || !selectedSlot) return;
+      if (!startDate || !selectedSlot) return;
       
       const startStr = format(startDate, 'yyyy-MM-dd');
-      const endStr = format(endDate, 'yyyy-MM-dd');
+      // If no end date selected, use start date (single day booking)
+      const endStr = endDate ? format(endDate, 'yyyy-MM-dd') : startStr;
       const slotName = slotNames?.[selectedSlot - 1] || `Spot ${selectedSlot}`;
       
       navigate(`/book/${listingId}?start=${startStr}&end=${endStr}&slot=${selectedSlot}&slotName=${encodeURIComponent(slotName)}`);
