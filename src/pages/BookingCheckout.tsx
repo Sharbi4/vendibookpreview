@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -41,11 +41,13 @@ import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 import { BookingInfoModal, type BookingUserInfo, SlotSelector, BusinessInfoStep, type BusinessInfoData } from '@/components/booking';
 import { BookingDocumentUpload, type StagedDocument } from '@/components/booking/BookingDocumentUpload';
+import HourlySelectionSummary from '@/components/booking/HourlySelectionSummary';
+import { parseHourlySelections, getSelectedDaysCount, getTotalSelectedHours } from '@/lib/hourlySelections';
 import DateSelectionModal from '@/components/listing-detail/DateSelectionModal';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { DocumentType } from '@/types/documents';
-import { AffirmBadge, isAffirmEligible } from '@/components/ui/AffirmBadge';
-import { AfterpayBadge, isAfterpayEligible } from '@/components/ui/AfterpayBadge';
+import { AffirmBadge } from '@/components/ui/AffirmBadge';
+import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
@@ -65,11 +67,31 @@ const BookingCheckout = () => {
   const endDateParam = searchParams.get('end');
   
   // Parse hourly booking params
+  const hourlyDataParam = searchParams.get('hourlyData');
+  const timeSlotsParam = searchParams.get('timeSlots');
+
   const startTimeParam = searchParams.get('startTime');
   const endTimeParam = searchParams.get('endTime');
   const hoursParam = searchParams.get('hours');
-  const isHourlyBooking = Boolean(startTimeParam && endTimeParam && hoursParam);
-  const durationHours = hoursParam ? parseInt(hoursParam) : 0;
+
+  const hourlySelections = useMemo(
+    () =>
+      parseHourlySelections({
+        startDate: startDateParam,
+        hourlyData: hourlyDataParam,
+        timeSlots: timeSlotsParam,
+      }),
+    [startDateParam, hourlyDataParam, timeSlotsParam]
+  );
+
+  const hoursParamValue = hoursParam ? Number(hoursParam) : 0;
+  const hoursFromSelections = useMemo(() => getTotalSelectedHours(hourlySelections), [hourlySelections]);
+  const durationHours = hoursParamValue > 0 ? hoursParamValue : hoursFromSelections;
+  const selectedHourlyDays = useMemo(() => getSelectedDaysCount(hourlySelections), [hourlySelections]);
+
+  const isHourlyBooking =
+    durationHours > 0 &&
+    (Boolean(hourlyDataParam || timeSlotsParam) || Boolean(startTimeParam && endTimeParam));
 
   // State
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -215,8 +237,13 @@ const BookingCheckout = () => {
   const handleDatesSelected = (start: Date, end: Date) => {
     setStartDate(start);
     setEndDate(end);
+    // Switching dates inside checkout should reset any hourly-only URL params
+    setStartTime(undefined);
+    setEndTime(undefined);
+
     // Update URL
     const params = new URLSearchParams(searchParams);
+    ['startTime', 'endTime', 'hours', 'hourlyData', 'timeSlots'].forEach((key) => params.delete(key));
     params.set('start', format(start, 'yyyy-MM-dd'));
     params.set('end', format(end, 'yyyy-MM-dd'));
     navigate(`/book/${listingId}?${params.toString()}`, { replace: true });
@@ -286,8 +313,8 @@ const BookingCheckout = () => {
         deposit_amount: depositAmount,
         // Hourly booking fields
         is_hourly_booking: isHourlyBooking,
-        start_time: isHourlyBooking ? startTime : null,
-        end_time: isHourlyBooking ? endTime : null,
+        start_time: isHourlyBooking ? (startTime ?? null) : null,
+        end_time: isHourlyBooking ? (endTime ?? null) : null,
         duration_hours: isHourlyBooking ? durationHours : null,
         // Slot selection for vendor spaces
         slot_number: hasMultipleSlots && selectedSlot ? selectedSlot : null,
@@ -644,7 +671,9 @@ const BookingCheckout = () => {
                 </div>
                 {!isStep1Complete && (
                   <Button variant="dark-shine" size="sm" asChild onClick={(e) => e.stopPropagation()}>
-                    <Link to={`/auth?redirect=/book/${listingId}?start=${format(startDate, 'yyyy-MM-dd')}&end=${format(endDate, 'yyyy-MM-dd')}`}>
+                    <Link
+                      to={`/auth?redirect=${encodeURIComponent(`/book/${listingId}?${searchParams.toString()}`)}`}
+                    >
                       Continue
                     </Link>
                   </Button>
@@ -965,10 +994,35 @@ const BookingCheckout = () => {
                             {format(startDate, 'MMM d')} – {format(endDate, 'MMM d, yyyy')}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Duration</span>
-                          <span className="font-medium">{rentalDays} day{rentalDays > 1 ? 's' : ''}</span>
-                        </div>
+                        {isHourlyBooking ? (
+                          <>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">Hours</span>
+                              <span className="font-medium">
+                                {durationHours} hour{durationHours === 1 ? '' : 's'}
+                                {selectedHourlyDays > 0
+                                  ? ` across ${selectedHourlyDays} day${selectedHourlyDays === 1 ? '' : 's'}`
+                                  : ''}
+                              </span>
+                            </div>
+
+                            {startTime && endTime ? (
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">Time</span>
+                                <span className="font-medium">
+                                  {startTime} – {endTime}
+                                </span>
+                              </div>
+                            ) : null}
+
+                            <HourlySelectionSummary selections={hourlySelections} />
+                          </>
+                        ) : (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Duration</span>
+                            <span className="font-medium">{rentalDays} day{rentalDays > 1 ? 's' : ''}</span>
+                          </div>
+                        )}
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground">Fulfillment</span>
                           <span className="font-medium capitalize">{fulfillmentSelected.replace('_', ' ')}</span>
@@ -1093,7 +1147,15 @@ const BookingCheckout = () => {
                 
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">
-                    {rentalDays} day{rentalDays > 1 ? 's' : ''} × ${listing.price_daily?.toLocaleString()}
+                    {isHourlyBooking ? (
+                      <>
+                        {durationHours} hr × ${listing.price_hourly?.toLocaleString()}
+                      </>
+                    ) : (
+                      <>
+                        {rentalDays} day{rentalDays > 1 ? 's' : ''} × ${listing.price_daily?.toLocaleString()}
+                      </>
+                    )}
                   </span>
                   <span>${basePrice.toLocaleString()}</span>
                 </div>
@@ -1129,7 +1191,7 @@ const BookingCheckout = () => {
                 </div>
 
                 {/* Financing badges for rentals */}
-                {listing.price_daily && (
+                {!isHourlyBooking && listing.price_daily && (
                   <div className="flex items-center gap-2 pt-3 flex-wrap">
                     <AfterpayBadge price={listing.price_daily * 7} showEstimate={false} />
                     <AffirmBadge price={listing.price_daily * 30} showEstimate={false} />
