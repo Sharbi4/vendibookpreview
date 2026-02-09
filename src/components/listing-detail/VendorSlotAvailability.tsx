@@ -26,7 +26,8 @@ export const VendorSlotAvailability = ({
   slotNames,
 }: VendorSlotAvailabilityProps) => {
   // Fetch current and upcoming bookings to show availability
-  // Only include PAID bookings to block slots - unpaid requests should not block availability
+  // Include PENDING bookings to block slots - prevents double-booking while awaiting approval/payment
+  // Slots only become available again if booking is denied or cancelled
   const { data: bookedSlots = [], isLoading } = useQuery({
     queryKey: ['vendor-slot-availability', listingId],
     queryFn: async () => {
@@ -37,7 +38,6 @@ export const VendorSlotAvailability = ({
         .from('booking_requests')
         .select('slot_number, slot_name, start_date, end_date, is_hourly_booking, hourly_slots')
         .eq('listing_id', listingId)
-        .eq('payment_status', 'paid')
         .in('status', ['pending', 'approved', 'completed'])
         .lte('start_date', nextMonth)
         .gte('end_date', today);
