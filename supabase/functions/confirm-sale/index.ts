@@ -131,6 +131,8 @@ serve(async (req) => {
     }
 
     // If both parties confirmed, initiate payout
+    // NOTE: Payouts are held until BOTH buyer AND seller confirm, OR 25 days after payment
+    // (auto-release is handled by auto-release-sale-payouts cron job)
     if (newStatus === 'completed') {
       logStep("Both parties confirmed - initiating payout");
       
