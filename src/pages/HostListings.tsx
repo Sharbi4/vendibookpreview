@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Truck, Loader2, Grid3X3, List, LayoutGrid, ArrowLeft } from 'lucide-react';
+import { Plus, Truck, Loader2, Grid3X3, List, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import HostListingCard from '@/components/dashboard/HostListingCard';
