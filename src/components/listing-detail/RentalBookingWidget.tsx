@@ -1,0 +1,910 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  format, 
+  differenceInDays, 
+  addDays, 
+  isBefore, 
+  startOfDay, 
+  parseISO, 
+  isSameDay,
+  addYears,
+  isAfter,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  addMonths,
+  subMonths,
+  isToday,
+} from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Calendar, 
+  Zap, 
+  ArrowRight, 
+  Shield, 
+  Clock, 
+  Sparkles, 
+  Sun,
+  CalendarRange,
+  Minus,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Users,
+  MapPin,
+  CheckCircle,
+  Info,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
+import { calculateRentalFees, formatCurrency } from '@/lib/commissions';
+import { useBlockedDates } from '@/hooks/useBlockedDates';
+import { useHourlyAvailability } from '@/hooks/useHourlyAvailability';
+import { trackCTAClick } from '@/lib/analytics';
+import type { ListingCategory, FulfillmentType } from '@/types/listing';
+
+interface RentalBookingWidgetProps {
+  listingId: string;
+  listingTitle: string;
+  hostId: string;
+  isOwner: boolean;
+  category: ListingCategory;
+  // Pricing
+  priceDaily?: number | null;
+  priceWeekly?: number | null;
+  priceMonthly?: number | null;
+  priceHourly?: number | null;
+  // Availability settings
+  availableFrom?: string | null;
+  availableTo?: string | null;
+  hourlyEnabled?: boolean;
+  dailyEnabled?: boolean;
+  instantBook?: boolean;
+  // Multi-slot support
+  totalSlots?: number;
+  slotNames?: string[] | null;
+  // Fulfillment
+  fulfillmentType?: FulfillmentType;
+  deliveryFee?: number | null;
+}
+
+// Calculate tiered pricing (7 days = weekly, 30 days = monthly)
+const calculateTieredPrice = (
+  days: number,
+  priceDaily: number | null,
+  priceWeekly?: number | null,
+  priceMonthly?: number | null
+): { total: number; breakdown: string } => {
+  if (!priceDaily || days <= 0) return { total: 0, breakdown: '' };
+
+  let remaining = days;
+  let total = 0;
+  const parts: string[] = [];
+
+  // Apply monthly rate for 30+ day chunks
+  if (priceMonthly && remaining >= 30) {
+    const months = Math.floor(remaining / 30);
+    total += months * priceMonthly;
+    parts.push(`${months} month${months > 1 ? 's' : ''} @ $${priceMonthly.toLocaleString()}`);
+    remaining = remaining % 30;
+  }
+
+  // Apply weekly rate for 7+ day chunks
+  if (priceWeekly && remaining >= 7) {
+    const weeks = Math.floor(remaining / 7);
+    total += weeks * priceWeekly;
+    parts.push(`${weeks} week${weeks > 1 ? 's' : ''} @ $${priceWeekly.toLocaleString()}`);
+    remaining = remaining % 7;
+  }
+
+  // Apply daily rate for remaining days
+  if (remaining > 0) {
+    total += remaining * priceDaily;
+    parts.push(`${remaining} day${remaining > 1 ? 's' : ''} @ $${priceDaily.toLocaleString()}`);
+  }
+
+  return { total, breakdown: parts.join(' + ') };
+};
+
+export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
+  listingId,
+  listingTitle,
+  hostId,
+  isOwner,
+  category,
+  priceDaily,
+  priceWeekly,
+  priceMonthly,
+  priceHourly,
+  availableFrom,
+  availableTo,
+  hourlyEnabled = false,
+  dailyEnabled = true,
+  instantBook = false,
+  totalSlots = 1,
+  slotNames,
+  fulfillmentType = 'pickup',
+  deliveryFee,
+}) => {
+  const navigate = useNavigate();
+  const { blockedDates, isDateUnavailable } = useBlockedDates({ listingId });
+  const { 
+    settings: hourlySettings, 
+    getDayAvailabilityInfo,
+    getAvailableWindowsForDate,
+    getAvailableSlotsForDate,
+  } = useHourlyAvailability({ listingId });
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // STATE: Duration Mode
+  // ─────────────────────────────────────────────────────────────────────────────
+  const [mode, setMode] = useState<'hourly' | 'daily'>('daily');
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // STATE: Date Selection
+  // ─────────────────────────────────────────────────────────────────────────────
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(); // For hourly mode
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // STATE: Hourly Time Slots
+  // ─────────────────────────────────────────────────────────────────────────────
+  const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([]);
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // STATE: Slot Selection (Multi-slot listings)
+  // ─────────────────────────────────────────────────────────────────────────────
+  const [selectedSlotCount, setSelectedSlotCount] = useState(1);
+  const [selectedSlotNumber, setSelectedSlotNumber] = useState<number | null>(null);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // STATE: UI
+  // ─────────────────────────────────────────────────────────────────────────────
+  const [isHovered, setIsHovered] = useState(false);
+  const [showTimeSlots, setShowTimeSlots] = useState(false);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // EFFECTS
+  // ─────────────────────────────────────────────────────────────────────────────
+  
+  // Set default mode based on what's enabled
+  useEffect(() => {
+    if (hourlyEnabled && !dailyEnabled) {
+      setMode('hourly');
+    } else {
+      setMode('daily');
+    }
+  }, [hourlyEnabled, dailyEnabled]);
+
+  // Auto-select slot 1 for single-slot listings
+  useEffect(() => {
+    if (totalSlots === 1 && selectedSlotNumber === null) {
+      setSelectedSlotNumber(1);
+    }
+  }, [totalSlots, selectedSlotNumber]);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // CALENDAR HELPERS
+  // ─────────────────────────────────────────────────────────────────────────────
+  const today = startOfDay(new Date());
+  const maxDate = addYears(today, 1);
+  const minMonth = startOfMonth(today);
+  const maxMonth = startOfMonth(maxDate);
+
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
+  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const firstDayOfWeek = monthStart.getDay();
+  const paddingDays = Array(firstDayOfWeek).fill(null);
+
+  const canGoPrev = isAfter(monthStart, minMonth);
+  const canGoNext = isBefore(monthStart, maxMonth);
+
+  const handlePrevMonth = () => canGoPrev && setCurrentMonth(subMonths(currentMonth, 1));
+  const handleNextMonth = () => canGoNext && setCurrentMonth(addMonths(currentMonth, 1));
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // DATE VALIDATION
+  // ─────────────────────────────────────────────────────────────────────────────
+  const isDateDisabled = (date: Date): boolean => {
+    if (isBefore(date, today)) return true;
+    if (isAfter(date, maxDate)) return true;
+    
+    if (availableFrom) {
+      const from = parseISO(availableFrom);
+      if (isBefore(date, startOfDay(from))) return true;
+    }
+    if (availableTo) {
+      const to = parseISO(availableTo);
+      if (isBefore(startOfDay(to), date)) return true;
+    }
+    
+    return isDateUnavailable(date);
+  };
+
+  const getDayStatus = (date: Date): 'available' | 'partial' | 'full' | 'past' | 'outside' => {
+    if (isBefore(date, today)) return 'past';
+    if (isAfter(date, maxDate)) return 'outside';
+    
+    if (isDateDisabled(date)) return 'full';
+
+    const info = getDayAvailabilityInfo(date);
+    if (info.isUnavailable) return 'full';
+    if (info.isLimited) return 'partial';
+    return 'available';
+  };
+
+  const getAvailability = (date: Date) => {
+    const available = getAvailableSlotsForDate(date);
+    return { available, total: totalSlots };
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // DATE CLICK HANDLING
+  // ─────────────────────────────────────────────────────────────────────────────
+  const handleDateClick = (date: Date) => {
+    const status = getDayStatus(date);
+    if (status === 'past' || status === 'outside' || status === 'full') return;
+
+    if (mode === 'hourly') {
+      // Single date selection for hourly mode
+      setSelectedDate(date);
+      setShowTimeSlots(true);
+      setSelectedTimeSlots([]); // Reset time slots when changing date
+    } else {
+      // Date range selection for daily mode
+      if (!startDate || (startDate && endDate)) {
+        // Start fresh selection
+        setStartDate(date);
+        setEndDate(undefined);
+      } else if (isBefore(date, startDate)) {
+        // Clicked before start - reset
+        setStartDate(date);
+        setEndDate(undefined);
+      } else if (isSameDay(date, startDate)) {
+        // Same day clicked - single day booking
+        setEndDate(date);
+      } else {
+        // Clicked after start - set end
+        setEndDate(date);
+      }
+    }
+  };
+
+  const isInSelectedRange = (date: Date): boolean => {
+    if (mode === 'hourly') {
+      return selectedDate ? isSameDay(date, selectedDate) : false;
+    }
+    if (!startDate) return false;
+    if (!endDate) return isSameDay(date, startDate);
+    return (isSameDay(date, startDate) || isAfter(date, startDate)) && 
+           (isSameDay(date, endDate) || isBefore(date, endDate));
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // HOURLY TIME SLOT HELPERS
+  // ─────────────────────────────────────────────────────────────────────────────
+  const availableTimeSlots = useMemo(() => {
+    if (!selectedDate || mode !== 'hourly') return [];
+    
+    const windows = getAvailableWindowsForDate(selectedDate);
+    const slots: { value: string; label: string; endLabel: string }[] = [];
+    
+    windows.forEach(window => {
+      for (let h = window.startHour; h < window.endHour; h++) {
+        const timeStr = `${h.toString().padStart(2, '0')}:00`;
+        const endH = h + 1;
+        const label = h === 0 ? '12:00 AM' : h < 12 ? `${h}:00 AM` : h === 12 ? '12:00 PM' : `${h - 12}:00 PM`;
+        const endLabel = endH === 0 ? '12:00 AM' : endH < 12 ? `${endH}:00 AM` : endH === 12 ? '12:00 PM' : `${endH - 12}:00 PM`;
+        slots.push({ value: timeStr, label, endLabel });
+      }
+    });
+    
+    return slots;
+  }, [selectedDate, mode, getAvailableWindowsForDate]);
+
+  const toggleTimeSlot = (slot: string) => {
+    setSelectedTimeSlots(prev => {
+      if (prev.includes(slot)) {
+        return prev.filter(s => s !== slot);
+      }
+      return [...prev, slot].sort();
+    });
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SLOT COUNTER HELPERS
+  // ─────────────────────────────────────────────────────────────────────────────
+  const handleSlotCountChange = (delta: number) => {
+    const newCount = selectedSlotCount + delta;
+    if (newCount >= 1 && newCount <= totalSlots) {
+      setSelectedSlotCount(newCount);
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // PRICING CALCULATION
+  // ─────────────────────────────────────────────────────────────────────────────
+  const pricingInfo = useMemo(() => {
+    if (mode === 'hourly') {
+      if (!selectedDate || selectedTimeSlots.length === 0 || !priceHourly) return null;
+      
+      const hours = selectedTimeSlots.length;
+      const basePrice = hours * priceHourly * selectedSlotCount;
+      const fees = calculateRentalFees(basePrice);
+      
+      return {
+        type: 'hourly' as const,
+        duration: hours,
+        durationLabel: `${hours} hour${hours > 1 ? 's' : ''}`,
+        breakdown: priceHourly && `$${priceHourly}/hr × ${hours} hrs${selectedSlotCount > 1 ? ` × ${selectedSlotCount} slots` : ''}`,
+        basePrice,
+        serviceFee: fees.renterFee,
+        total: fees.customerTotal,
+      };
+    } else {
+      if (!startDate || !priceDaily) return null;
+      
+      // Inclusive day counting: same start/end = 1 day
+      const days = endDate ? differenceInDays(endDate, startDate) + 1 : 1;
+      if (days <= 0) return null;
+      
+      const { total: baseBeforeSlots, breakdown } = calculateTieredPrice(days, priceDaily, priceWeekly, priceMonthly);
+      const basePrice = baseBeforeSlots * selectedSlotCount;
+      const fees = calculateRentalFees(basePrice);
+      
+      return {
+        type: 'daily' as const,
+        duration: days,
+        durationLabel: `${days} day${days > 1 ? 's' : ''}`,
+        breakdown: selectedSlotCount > 1 ? `${breakdown} × ${selectedSlotCount} slots` : breakdown,
+        basePrice,
+        serviceFee: fees.renterFee,
+        total: fees.customerTotal,
+      };
+    }
+  }, [mode, selectedDate, selectedTimeSlots, startDate, endDate, priceHourly, priceDaily, priceWeekly, priceMonthly, selectedSlotCount]);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // CAN CONTINUE CHECK
+  // ─────────────────────────────────────────────────────────────────────────────
+  const canContinue = useMemo(() => {
+    if (mode === 'hourly') {
+      return selectedDate && selectedTimeSlots.length > 0;
+    }
+    // Daily mode: need at least a start date
+    return startDate !== undefined;
+  }, [mode, selectedDate, selectedTimeSlots, startDate]);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // CONTINUE TO BOOKING HANDLER
+  // ─────────────────────────────────────────────────────────────────────────────
+  const handleContinue = () => {
+    trackCTAClick('continue_booking', 'rental_booking_widget');
+    
+    if (mode === 'hourly') {
+      if (!selectedDate || selectedTimeSlots.length === 0) return;
+      
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      const sortedSlots = [...selectedTimeSlots].sort();
+      const startTime = sortedSlots[0];
+      const lastSlotHour = parseInt(sortedSlots[sortedSlots.length - 1].split(':')[0]);
+      const endTimeStr = `${(lastSlotHour + 1).toString().padStart(2, '0')}:00`;
+      
+      const params = new URLSearchParams({
+        start: dateStr,
+        end: dateStr,
+        startTime,
+        endTime: endTimeStr,
+        hours: selectedTimeSlots.length.toString(),
+        timeSlots: sortedSlots.join(','),
+      });
+      
+      // Add slot info for multi-slot
+      if (totalSlots > 1 && selectedSlotNumber) {
+        const slotName = slotNames?.[selectedSlotNumber - 1] || `Spot ${selectedSlotNumber}`;
+        params.set('slot', selectedSlotNumber.toString());
+        params.set('slotName', slotName);
+        params.set('slotCount', selectedSlotCount.toString());
+      }
+      
+      navigate(`/book/${listingId}?${params.toString()}`);
+    } else {
+      if (!startDate) return;
+      
+      const startStr = format(startDate, 'yyyy-MM-dd');
+      const endStr = endDate ? format(endDate, 'yyyy-MM-dd') : startStr;
+      
+      const params = new URLSearchParams({
+        start: startStr,
+        end: endStr,
+      });
+      
+      // Add slot info for multi-slot
+      if (totalSlots > 1 && selectedSlotNumber) {
+        const slotName = slotNames?.[selectedSlotNumber - 1] || `Spot ${selectedSlotNumber}`;
+        params.set('slot', selectedSlotNumber.toString());
+        params.set('slotName', slotName);
+        params.set('slotCount', selectedSlotCount.toString());
+      }
+      
+      navigate(`/book/${listingId}?${params.toString()}`);
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // RESET HANDLER
+  // ─────────────────────────────────────────────────────────────────────────────
+  const handleReset = () => {
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setSelectedDate(undefined);
+    setSelectedTimeSlots([]);
+    setShowTimeSlots(false);
+    setSelectedSlotCount(1);
+    if (totalSlots > 1) {
+      setSelectedSlotNumber(null);
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // OWNER VIEW
+  // ─────────────────────────────────────────────────────────────────────────────
+  if (isOwner) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-6"
+      >
+        <div className="text-center space-y-3">
+          <h3 className="font-semibold text-foreground">This is your listing</h3>
+          <p className="text-sm text-muted-foreground">
+            Manage availability, pricing, and settings
+          </p>
+          <Button variant="outline" className="w-full" asChild>
+            <a href={`/edit-listing/${listingId}`}>Manage Listing</a>
+          </Button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // RENDER
+  // ─────────────────────────────────────────────────────────────────────────────
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      className="rounded-2xl border border-border shadow-xl bg-card overflow-hidden relative"
+    >
+      {/* Glow effect */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-0 pointer-events-none"
+        animate={{ opacity: isHovered ? 1 : 0 }}
+        transition={{ duration: 0.3 }}
+      />
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* HEADER - PRICE DISPLAY */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      <div className="p-5 bg-gradient-to-br from-muted/50 to-muted/30 border-b border-border relative">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            {mode === 'hourly' && priceHourly ? (
+              <>
+                <div className="flex items-baseline gap-2">
+                  <motion.span 
+                    className="text-3xl font-bold text-foreground"
+                    initial={{ scale: 1 }}
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    ${priceHourly?.toLocaleString() || '—'}
+                  </motion.span>
+                  <span className="text-muted-foreground text-lg">/hour</span>
+                </div>
+                {priceDaily && (
+                  <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+                    <Sun className="h-3.5 w-3.5 text-primary" />
+                    Full day from ${priceDaily.toLocaleString()}
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="flex items-baseline gap-2">
+                  <motion.span 
+                    className="text-3xl font-bold text-foreground"
+                    initial={{ scale: 1 }}
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    ${priceDaily?.toLocaleString() || '—'}
+                  </motion.span>
+                  <span className="text-muted-foreground text-lg">/day</span>
+                </div>
+                
+                {/* Tiered pricing indicators */}
+                <div className="mt-1 space-y-0.5">
+                  {priceHourly && hourlyEnabled && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5 text-primary" />
+                      ${priceHourly.toLocaleString()}/hr for hourly
+                    </p>
+                  )}
+                  {priceWeekly && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      ${priceWeekly.toLocaleString()}/week for 7+ days
+                    </p>
+                  )}
+                  {priceMonthly && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <CalendarRange className="h-3.5 w-3.5 text-primary" />
+                      ${priceMonthly.toLocaleString()}/month for 30+ days
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Badges */}
+          <div className="flex flex-col gap-2 items-end">
+            {instantBook && (
+              <Badge className="bg-emerald-500 text-white border-0 shadow-md">
+                <Zap className="h-3 w-3 mr-1" />
+                Instant
+              </Badge>
+            )}
+            {totalSlots > 1 && (
+              <Badge variant="secondary" className="text-xs">
+                <MapPin className="h-3 w-3 mr-1" />
+                {totalSlots} Spots
+              </Badge>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* BODY - BOOKING FLOW */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      <div className="p-5 space-y-4 relative z-10">
+        
+        {/* ─────────────────────────────────────────────────────────────────────── */}
+        {/* STEP 1: MODE TOGGLE (Only if both modes enabled) */}
+        {/* ─────────────────────────────────────────────────────────────────────── */}
+        {hourlyEnabled && dailyEnabled && (
+          <div className="flex rounded-lg bg-muted/50 p-1">
+            <button
+              onClick={() => { setMode('hourly'); handleReset(); }}
+              className={cn(
+                "flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 flex items-center justify-center gap-1.5",
+                mode === 'hourly' 
+                  ? "bg-background text-foreground shadow-sm" 
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Clock className="h-4 w-4" />
+              Hourly
+            </button>
+            <button
+              onClick={() => { setMode('daily'); handleReset(); }}
+              className={cn(
+                "flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 flex items-center justify-center gap-1.5",
+                mode === 'daily' 
+                  ? "bg-background text-foreground shadow-sm" 
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Sun className="h-4 w-4" />
+              Daily / Weekly
+            </button>
+          </div>
+        )}
+
+        {/* ─────────────────────────────────────────────────────────────────────── */}
+        {/* STEP 2: CALENDAR */}
+        {/* ─────────────────────────────────────────────────────────────────────── */}
+        <div className="bg-muted/30 rounded-xl p-3">
+          {/* Calendar Header */}
+          <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={handlePrevMonth}
+              disabled={!canGoPrev}
+              className="p-1.5 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="font-medium text-sm">
+              {format(currentMonth, 'MMMM yyyy')}
+            </span>
+            <button
+              onClick={handleNextMonth}
+              disabled={!canGoNext}
+              className="p-1.5 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Weekday Headers */}
+          <div className="grid grid-cols-7 gap-0.5 mb-1">
+            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+              <div key={day} className="text-center text-[10px] font-medium text-muted-foreground py-1">
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* Calendar Grid */}
+          <div className="grid grid-cols-7 gap-0.5">
+            {paddingDays.map((_, i) => (
+              <div key={`pad-${i}`} />
+            ))}
+            {daysInMonth.map(date => {
+              const status = getDayStatus(date);
+              const isSelected = isInSelectedRange(date);
+              const isStart = startDate && isSameDay(date, startDate);
+              const isEnd = endDate && isSameDay(date, endDate);
+              const { available } = getAvailability(date);
+              const isDisabled = status === 'past' || status === 'outside' || status === 'full';
+
+              return (
+                <TooltipProvider key={date.toISOString()}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => handleDateClick(date)}
+                        disabled={isDisabled}
+                        className={cn(
+                          "aspect-square p-0.5 rounded-md text-xs font-medium transition-all relative",
+                          "flex flex-col items-center justify-center",
+                          isDisabled && "opacity-30 cursor-not-allowed",
+                          !isDisabled && !isSelected && "hover:bg-muted",
+                          isSelected && "bg-primary text-primary-foreground",
+                          isStart && "rounded-l-md",
+                          isEnd && "rounded-r-md",
+                          status === 'partial' && !isSelected && "bg-amber-50 dark:bg-amber-950/30",
+                          isToday(date) && !isSelected && "ring-1 ring-primary/50",
+                        )}
+                      >
+                        <span>{format(date, 'd')}</span>
+                        {/* Slot availability indicator for multi-slot */}
+                        {totalSlots > 1 && status !== 'past' && status !== 'outside' && (
+                          <span className={cn(
+                            "text-[8px] leading-none",
+                            isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+                          )}>
+                            {available}/{totalSlots}
+                          </span>
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      {status === 'available' && `${available} spot${available > 1 ? 's' : ''} available`}
+                      {status === 'partial' && `${available} of ${totalSlots} spots available`}
+                      {status === 'full' && 'Fully booked'}
+                      {status === 'past' && 'Past date'}
+                      {status === 'outside' && 'Outside availability'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              );
+            })}
+          </div>
+
+          {/* Date Selection Summary */}
+          {mode === 'daily' && startDate && (
+            <div className="mt-3 pt-3 border-t border-border text-sm text-center">
+              <span className="text-muted-foreground">
+                {endDate 
+                  ? `${format(startDate, 'MMM d')} → ${format(endDate, 'MMM d')} (${pricingInfo?.durationLabel})`
+                  : `${format(startDate, 'MMM d')} (tap end date or continue for 1 day)`
+                }
+              </span>
+            </div>
+          )}
+          
+          {mode === 'hourly' && selectedDate && (
+            <div className="mt-3 pt-3 border-t border-border text-sm text-center">
+              <span className="text-muted-foreground">
+                {format(selectedDate, 'EEEE, MMMM d')}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* ─────────────────────────────────────────────────────────────────────── */}
+        {/* STEP 2B: TIME SLOT GRID (Hourly mode only) */}
+        {/* ─────────────────────────────────────────────────────────────────────── */}
+        <AnimatePresence mode="wait">
+          {mode === 'hourly' && selectedDate && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium text-foreground">Select time slots</h4>
+                {selectedTimeSlots.length > 0 && (
+                  <Badge variant="secondary" className="text-xs">
+                    {selectedTimeSlots.length} selected
+                  </Badge>
+                )}
+              </div>
+              
+              {availableTimeSlots.length > 0 ? (
+                <div className="grid grid-cols-4 gap-1.5">
+                  {availableTimeSlots.map(slot => {
+                    const isSelected = selectedTimeSlots.includes(slot.value);
+                    return (
+                      <button
+                        key={slot.value}
+                        onClick={() => toggleTimeSlot(slot.value)}
+                        className={cn(
+                          "py-2 px-1 rounded-md text-xs font-medium transition-all",
+                          isSelected 
+                            ? "bg-primary text-primary-foreground shadow-sm" 
+                            : "bg-muted/50 text-foreground hover:bg-muted"
+                        )}
+                      >
+                        {slot.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="p-4 bg-muted/30 rounded-xl text-center">
+                  <Clock className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No time slots available</p>
+                </div>
+              )}
+              
+              {selectedTimeSlots.length > 0 && (
+                <p className="text-xs text-center text-muted-foreground">
+                  {format(selectedDate, 'MMM d')} • {availableTimeSlots.find(s => s.value === selectedTimeSlots[0])?.label} – {availableTimeSlots.find(s => s.value === selectedTimeSlots[selectedTimeSlots.length - 1])?.endLabel}
+                </p>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ─────────────────────────────────────────────────────────────────────── */}
+        {/* STEP 3: SLOT COUNTER (Multi-slot listings only) */}
+        {/* ─────────────────────────────────────────────────────────────────────── */}
+        {totalSlots > 1 && (startDate || selectedDate) && (
+          <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+            <div>
+              <span className="text-sm font-medium text-foreground">Spots needed</span>
+              <p className="text-xs text-muted-foreground">
+                {totalSlots - selectedSlotCount} remaining
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => handleSlotCountChange(-1)}
+                disabled={selectedSlotCount <= 1}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="text-lg font-semibold w-6 text-center">{selectedSlotCount}</span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => handleSlotCountChange(1)}
+                disabled={selectedSlotCount >= totalSlots}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* ─────────────────────────────────────────────────────────────────────── */}
+        {/* PRICE BREAKDOWN */}
+        {/* ─────────────────────────────────────────────────────────────────────── */}
+        <AnimatePresence mode="wait">
+          {pricingInfo && (
+            <motion.div 
+              key="breakdown"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-2"
+            >
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>{pricingInfo.breakdown}</span>
+                <span>${pricingInfo.basePrice.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>Service fee</span>
+                <span>${pricingInfo.serviceFee.toLocaleString()}</span>
+              </div>
+              <Separator className="bg-primary/20" />
+              <div className="flex items-center justify-between pt-1">
+                <span className="font-semibold text-foreground">Est. total</span>
+                <motion.span 
+                  className="text-xl font-bold text-foreground"
+                  initial={{ scale: 1 }}
+                  whileHover={{ scale: 1.05 }}
+                >
+                  ${pricingInfo.total.toLocaleString()}
+                </motion.span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ─────────────────────────────────────────────────────────────────────── */}
+        {/* CTA BUTTON */}
+        {/* ─────────────────────────────────────────────────────────────────────── */}
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button
+            variant="dark-shine"
+            className="w-full h-14 text-base font-semibold shadow-lg"
+            size="lg"
+            onClick={handleContinue}
+            disabled={!canContinue}
+          >
+            {instantBook ? (
+              <>
+                <Zap className="h-5 w-5 mr-2" />
+                Book Now
+              </>
+            ) : (
+              'Request to Book'
+            )}
+            {pricingInfo && (
+              <span className="ml-2 opacity-80">
+                · {pricingInfo.durationLabel}
+              </span>
+            )}
+            <ArrowRight className="h-5 w-5 ml-2" />
+          </Button>
+        </motion.div>
+
+        {!instantBook && (
+          <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5">
+            <Shield className="h-3.5 w-3.5" />
+            You won't be charged until your request is approved
+          </p>
+        )}
+
+        {/* Trust indicators */}
+        <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2">
+          <span className="flex items-center gap-1.5">
+            <Shield className="h-3.5 w-3.5" />
+            Secure booking
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5" />
+            Free cancellation
+          </span>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+export default RentalBookingWidget;

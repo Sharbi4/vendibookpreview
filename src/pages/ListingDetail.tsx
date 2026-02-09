@@ -32,6 +32,7 @@ import ListingLocationMap from '@/components/listing-detail/ListingLocationMap';
 import { TechSpecsGrid } from '@/components/listing-detail/TechSpecsGrid';
 import { InlineAvailabilityCalendar } from '@/components/listing-detail/InlineAvailabilityCalendar';
 import { VendorSlotAvailability } from '@/components/listing-detail/VendorSlotAvailability';
+import { RentalBookingWidget } from '@/components/listing-detail/RentalBookingWidget';
 import { BookingWidget } from '@/components/listing-detail/BookingWidget';
 import OwnerBanner from '@/components/listing-detail/OwnerBanner';
 import { useListing } from '@/hooks/useListing';
@@ -475,27 +476,41 @@ const ListingDetail = () => {
             {/* Right Column - Booking/Inquiry Widget (Desktop) - Sticky */}
             <div id="booking-widget" className="hidden lg:block">
               <div className="sticky top-24 space-y-6">
-                <BookingWidget
-                  listingId={listing.id}
-                  listingTitle={listing.title}
-                  hostId={listing.host_id}
-                  isOwner={isOwner || false}
-                  isRental={isRental}
-                  priceDaily={listing.price_daily}
-                  priceWeekly={listing.price_weekly}
-                  priceMonthly={listing.price_monthly}
-                  priceHourly={(listing as any).price_hourly}
-                  availableFrom={listing.available_from}
-                  availableTo={listing.available_to}
-                  instantBook={listing.instant_book || false}
-                  hourlyEnabled={(listing as any).hourly_enabled || false}
-                  dailyEnabled={(listing as any).daily_enabled !== false}
-                  priceSale={listing.price_sale}
-                  fulfillmentType={listing.fulfillment_type}
-                  deliveryFee={listing.delivery_fee}
-                  vendibookFreightEnabled={listing.vendibook_freight_enabled || false}
-                  freightPayer={(listing.freight_payer === 'seller' ? 'seller' : 'buyer') as 'buyer' | 'seller'}
-                />
+                {isRental ? (
+                  <RentalBookingWidget
+                    listingId={listing.id}
+                    listingTitle={listing.title}
+                    hostId={listing.host_id}
+                    isOwner={isOwner || false}
+                    category={listing.category}
+                    priceDaily={listing.price_daily}
+                    priceWeekly={listing.price_weekly}
+                    priceMonthly={listing.price_monthly}
+                    priceHourly={(listing as any).price_hourly}
+                    availableFrom={listing.available_from}
+                    availableTo={listing.available_to}
+                    instantBook={listing.instant_book || false}
+                    hourlyEnabled={(listing as any).hourly_enabled || false}
+                    dailyEnabled={(listing as any).daily_enabled !== false}
+                    totalSlots={listing.total_slots || 1}
+                    slotNames={listing.slot_names}
+                    fulfillmentType={listing.fulfillment_type}
+                    deliveryFee={listing.delivery_fee}
+                  />
+                ) : (
+                  <BookingWidget
+                    listingId={listing.id}
+                    listingTitle={listing.title}
+                    hostId={listing.host_id}
+                    isOwner={isOwner || false}
+                    isRental={false}
+                    priceSale={listing.price_sale}
+                    fulfillmentType={listing.fulfillment_type}
+                    deliveryFee={listing.delivery_fee}
+                    vendibookFreightEnabled={listing.vendibook_freight_enabled || false}
+                    freightPayer={(listing.freight_payer === 'seller' ? 'seller' : 'buyer') as 'buyer' | 'seller'}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -524,6 +539,8 @@ const ListingDetail = () => {
         deliveryFee={listing.delivery_fee}
         deliveryRadiusMiles={listing.delivery_radius_miles}
         listingTitle={listing.title}
+        totalSlots={listing.total_slots || 1}
+        slotNames={listing.slot_names}
       />
 
       <Footer />
