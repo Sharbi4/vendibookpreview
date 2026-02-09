@@ -39,7 +39,7 @@ serve(async (req) => {
     const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const releaseThresholdStr = twentyFourHoursAgo.toISOString().split('T')[0];
 
-    logStep("Date thresholds", { today: todayStr, releaseThreshold: releaseThresholdStr });
+    logStep("Date thresholds", { today: todayStr, releaseThreshold: releaseThresholdStr, nowISO: now.toISOString(), twentyFourHoursAgoISO: twentyFourHoursAgo.toISOString() });
 
     const results = {
       markedCompleted: 0,
@@ -49,16 +49,18 @@ serve(async (req) => {
     };
 
     // ========================================
-    // STEP 1: Mark bookings as completed when end_date has passed
+    // STEP 1: Mark bookings as completed when booking_end_timestamp has passed
+    // For hourly bookings, this is the end of the last booked hour
+    // For daily bookings, this is end of the last day (23:59:59)
     // ========================================
     logStep("Step 1: Marking ended bookings as completed");
 
     const { data: endedBookings, error: fetchEndedError } = await supabaseClient
       .from('booking_requests')
-      .select('id, listing_id, shopper_id, host_id, end_date')
+      .select('id, listing_id, shopper_id, host_id, end_date, booking_end_timestamp')
       .eq('status', 'approved')
       .eq('payment_status', 'paid')
-      .lt('end_date', todayStr);
+      .lt('booking_end_timestamp', now.toISOString());
 
     if (fetchEndedError) {
       throw new Error(`Failed to fetch ended bookings: ${fetchEndedError.message}`);
@@ -102,7 +104,7 @@ serve(async (req) => {
     }
 
     // ========================================
-    // STEP 2: Process payouts 24 hours after booking ends (if no dispute)
+    // STEP 2: Process payouts 24 hours after booking_end_timestamp (if no dispute or manual hold)
     // ========================================
     logStep("Step 2: Processing payouts for bookings ended 24+ hours ago");
 
@@ -114,20 +116,33 @@ serve(async (req) => {
         shopper_id,
         host_id,
         end_date,
+        booking_end_timestamp,
         total_price,
         payment_intent_id,
-        payout_processed
+        payout_processed,
+        payout_hold_until,
+        payout_hold_reason
       `)
       .eq('status', 'completed')
       .eq('payment_status', 'paid')
       .is('payout_processed', null) // Only bookings that haven't had payout processed
-      .lt('end_date', releaseThresholdStr); // 24+ hours since end
+      .lt('booking_end_timestamp', twentyFourHoursAgo.toISOString()); // 24+ hours since actual end
 
     if (payoutFetchError) {
       logStep("Error fetching payout eligible bookings", { error: payoutFetchError.message });
     } else if (payoutEligibleBookings && payoutEligibleBookings.length > 0) {
       for (const booking of payoutEligibleBookings) {
         try {
+          // Check if manual hold is set and not yet expired
+          if (booking.payout_hold_until && new Date(booking.payout_hold_until) > now) {
+            logStep("Booking has manual hold - skipping payout", { 
+              bookingId: booking.id, 
+              holdUntil: booking.payout_hold_until,
+              reason: booking.payout_hold_reason 
+            });
+            continue;
+          }
+
           // Check if there's an active dispute on the booking itself
           const { data: bookingWithDispute } = await supabaseClient
             .from('booking_requests')
@@ -216,7 +231,7 @@ serve(async (req) => {
     }
 
     // ========================================
-    // STEP 3: Auto-refund deposits 24 hours after booking ends (if no dispute)
+    // STEP 3: Auto-refund deposits 24 hours after booking_end_timestamp (if no dispute or manual hold)
     // ========================================
     logStep("Step 3: Auto-refunding deposits for bookings ended 24+ hours ago");
 
@@ -228,20 +243,33 @@ serve(async (req) => {
         shopper_id,
         host_id,
         end_date,
+        booking_end_timestamp,
         deposit_amount,
         deposit_status,
-        deposit_charge_id
+        deposit_charge_id,
+        payout_hold_until,
+        payout_hold_reason
       `)
       .eq('status', 'completed')
       .eq('deposit_status', 'charged') // Only charged deposits
       .gt('deposit_amount', 0) // Has a deposit
-      .lt('end_date', releaseThresholdStr); // 24+ hours since end
+      .lt('booking_end_timestamp', twentyFourHoursAgo.toISOString()); // 24+ hours since actual end
 
     if (depositFetchError) {
       logStep("Error fetching deposit eligible bookings", { error: depositFetchError.message });
     } else if (depositEligibleBookings && depositEligibleBookings.length > 0) {
       for (const booking of depositEligibleBookings) {
         try {
+          // Check if manual hold is set and not yet expired
+          if (booking.payout_hold_until && new Date(booking.payout_hold_until) > now) {
+            logStep("Booking has manual hold - skipping deposit refund", { 
+              bookingId: booking.id, 
+              holdUntil: booking.payout_hold_until,
+              reason: booking.payout_hold_reason 
+            });
+            continue;
+          }
+
           // Check if there's an active dispute on the booking itself
           const { data: bookingWithDispute } = await supabaseClient
             .from('booking_requests')
