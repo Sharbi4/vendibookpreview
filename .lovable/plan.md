@@ -1,331 +1,200 @@
 
-# Airbnb-Style Dashboard Redesign Plan
 
-## Summary
+# Unified Rental Booking Flow: "Duration-First" Architecture
 
-Redesign the dashboard pages (Account.tsx, Transactions.tsx, HostDashboard.tsx, ShopperDashboard.tsx) and related components to match Airbnb's clean, minimalist design language as shown in the reference screenshots. Special focus on Payments/Stripe integration sections with branded styling.
+## Overview
 
----
+This plan implements a new **"Turo/Parking" mentality** booking system that replaces the current "Hotel" approach. The key shift is from "pick dates first" to "how long do you need the space?"—allowing users to select their duration type first (Hourly vs. Daily/Weekly/Monthly), then choose dates, and finally select their specific slot.
 
-## Design Analysis from Reference Screenshots
-
-### Key Airbnb Design Patterns Observed:
-
-1. **Account Settings Layout**
-   - Two-column layout with sticky left sidebar navigation
-   - Section titles use 24px semibold, no icons in header
-   - Field rows: Label → Value/Status → "Edit"/"Add" action link aligned right
-   - Clean separators between field groups
-   - FAQ/info boxes at bottom with pink/red icon accents
-
-2. **Payments Section Pattern**
-   - Sub-tabs within section (Payments, Payouts, Service fee)
-   - Black filled buttons for primary actions ("Manage payments", "Add payment method")
-   - Section groupings with clear headers
-   - Gift card and coupon sections
-
-3. **Privacy/Toggle Settings**
-   - Toggle switches aligned right
-   - Description text below toggle title
-   - Section groupings (Read receipts, Listings, Reviews)
-
-4. **Professional Hosting Tools**
-   - Enable toggle with description and "Learn more" link
-   - Input field with Save/Copy buttons inline
-   - Tip text and policy links
+The system will apply **consistently across all rental categories**: Vendor Spaces, Shared Kitchens, Food Trucks, and Food Trailers.
 
 ---
 
-## Files to Modify
+## Architecture Summary
 
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `src/pages/Account.tsx` | Major | Redesign to Airbnb field row pattern with Edit/Add links |
-| `src/pages/Transactions.tsx` | Medium | Rename to "Payments & payouts", add Airbnb-style sub-tabs |
-| `src/components/dashboard/StripeStatusCard.tsx` | Medium | Redesign with Airbnb payments section styling |
-| `src/components/dashboard/NextStepCard.tsx` | Minor | Cleaner Airbnb styling |
-| `src/components/dashboard/HostDashboard.tsx` | Minor | Polish stat cards and section headers |
-| `src/components/dashboard/ShopperDashboard.tsx` | Minor | Polish tabs and zero-state styling |
-| `src/components/account/AirbnbFieldRow.tsx` | Create | Reusable field row component |
-| `src/components/account/AirbnbInfoCard.tsx` | Create | FAQ/info card with icon accent |
-
----
-
-## Implementation Details
-
-### 1. New Component: AirbnbFieldRow.tsx
-
-A reusable field row component matching Airbnb's pattern:
-
-```
-┌─────────────────────────────────────────────────────┐
-│ Legal name                                     Edit │
-│ Shawnna Harbin                                      │
-├─────────────────────────────────────────────────────┤
-│ Email address                                  Edit │
-│ s***n@vendibook.com                                │
-├─────────────────────────────────────────────────────┤
-│ Phone numbers                                  Add  │
-│ Add a number so confirmed guests can get in touch. │
-│ You can add other numbers and choose how...         │
-└─────────────────────────────────────────────────────┘
+```text
++------------------+     +------------------+     +------------------+
+|  1. Duration     | --> |  2. Date/Time    | --> |  3. Slot         |
+|     Toggle       |     |     Selection    |     |     Selection    |
++------------------+     +------------------+     +------------------+
+| Hourly | Daily   |     | Calendar View    |     | Named spots or   |
+|                  |     | + Time Slots     |     | numbered (1-100) |
++------------------+     +------------------+     +------------------+
 ```
 
-**Props:**
-- `label: string` - Field label (bold)
-- `value: string | null` - Current value or "Not provided"
-- `description?: string` - Optional helper text
-- `action: 'Edit' | 'Add' | 'Start' | 'Create'` - Action link text
-- `onAction: () => void` - Click handler
-- `locked?: boolean` - Show lock indicator instead of action
-- `showDivider?: boolean` - Show bottom border
+---
+
+## What's Changing
+
+| Current Behavior | New Behavior |
+|-----------------|--------------|
+| VendorSpaceBookingModal: Calendar → Slots → Dates | Unified widget: Mode Toggle → Date → Slot |
+| BookingWidget: Daily/Hourly tabs separate from vendor flow | Merged into single smart widget |
+| Multiple modals for different categories | Single `RentalBookingWidget` handles all |
+| Slots selected before dates | Dates selected first, slots available shown per-date |
 
 ---
 
-### 2. New Component: AirbnbInfoCard.tsx
+## Technical Approach
 
-FAQ/Info cards with pink/red icon accents (like Airbnb's "Why isn't my info shown here?"):
+### 1. Create New Unified `RentalBookingWidget` Component
 
+**File:** `src/components/listing-detail/RentalBookingWidget.tsx`
+
+This component replaces both `BookingWidget` (for rentals) and `VendorSpaceBookingModal` with a single, category-aware widget.
+
+**Key Features:**
+- **Mode Toggle (Hourly/Daily):** Only shown if both modes are enabled for the listing
+- **Smart Date Selection:**
+  - Hourly mode: Single date picker → Time slot grid
+  - Daily mode: Date range picker with availability indicators
+- **Slot Counter:** For multi-slot listings, shows `Slots Needed: [- 1 +]` with availability feedback
+- **Dynamic Pricing:** Automatically applies tiered pricing (7 days = weekly, 30 days = monthly)
+- **Slot Names Support:** Displays custom slot names (e.g., "Patio A", "Corner Spot") from `slot_names` array
+
+**Props Interface:**
 ```typescript
-interface AirbnbInfoCardProps {
-  icon: LucideIcon;
-  iconColor?: 'pink' | 'red' | 'orange';
-  title: string;
-  description: string;
+interface RentalBookingWidgetProps {
+  listing: {
+    id: string;
+    category: ListingCategory;
+    total_slots: number;
+    slot_names: string[] | null;
+    price_hourly: number | null;
+    price_daily: number | null;
+    price_weekly: number | null;
+    price_monthly: number | null;
+    hourly_enabled: boolean;
+    daily_enabled: boolean;
+    instant_book: boolean;
+    operating_hours_start: string | null;
+    operating_hours_end: string | null;
+  };
+  isOwner: boolean;
+  onBook: (bookingData: BookingPayload) => void;
 }
 ```
 
-**Visual:**
-- Light gray background card
-- Colored icon in circle (pink/red accent)
-- Bold title + muted description
+---
+
+### 2. Booking Flow Steps
+
+**Step 1: Duration Mode Selection**
+- Segmented control: `Hourly` | `Daily/Weekly`
+- Only shows toggle if `hourly_enabled && daily_enabled`
+- Defaults to hourly if only hourly is enabled
+
+**Step 2: Date/Time Selection**
+
+For **Hourly Mode:**
+- Single date picker with availability indicators
+- Grid of available time slots for selected date (based on `operating_hours_start/end`)
+- Multi-select enabled: users can tap multiple 1-hour slots
+- Shows slot availability per hour (e.g., "3/5 spots available")
+
+For **Daily Mode:**
+- Date range picker (start → end)
+- Calendar shows slot availability per day
+- Inclusive day counting (same start/end = 1 day)
+
+**Step 3: Slot Selection (Multi-Slot Listings Only)**
+- If `total_slots > 1`: Show slot counter with named slots dropdown
+- Allow selecting multiple slots (e.g., "I have 2 trucks")
+- Real-time availability check against `booking_requests` table
 
 ---
 
-### 3. Redesign Account.tsx
+### 3. Pricing Logic Implementation
 
-**Current State:** Form inputs directly editable in cards
-
-**New State:** Airbnb's read-only display with "Edit" modal pattern
-
-**Section Structure:**
-
-```text
-Personal information
-├─ Legal name          → "Shawnna Harbin"        [Edit]
-├─ Preferred first name → "Not provided"         [Add]
-├─ Email address       → "s***n@vendibook.com"   [Edit]
-├─ Phone numbers       → "Not provided"          [Add]
-│  └─ (helper text: Add a number so guests can...)
-├─ Identity verification → "Not started"         [Start]
-├─ Residential address → "Not provided"          [Add]
-└─ Mailing address     → "Not provided"          [Add]
-
-[Info Cards]
-├─ Why isn't my info shown here?
-├─ Which details can be edited?
-└─ What info is shared with others?
-```
-
-**Login & security:**
-```text
-Login
-├─ Password            → "Created" / "Not created"  [Update/Create]
-
-Social accounts
-├─ Google              → "Connected" / "Not connected" [Connect/Disconnect]
-
-Account
-├─ Deactivate your account → "This action cannot be undone" [Deactivate]
-```
-
-**Payments:**
-```text
-[Sub-tabs: Payments | Payouts | Service fee]
-
-Your payments
-├─ Keep track of all your payments and refunds.
-└─ [Manage payments] button (black filled)
-
-Payment methods
-├─ Add a payment method using our secure payment system...
-└─ [Add payment method] button (black filled)
-
-Payout methods (for hosts)
-├─ Stripe status: Connected / Not connected
-└─ [Manage with Stripe] / [Connect Stripe] button
-
-Gift credit
-└─ [Add gift card] button
-
-Coupons
-└─ "Your coupons" (empty state or list)
-```
-
----
-
-### 4. Redesign Transactions.tsx → Payments Page
-
-**Changes:**
-- Rename page title to "Payments"
-- Add sub-tabs matching Airbnb: "Payments" | "Payouts" | "Service fee"
-- Payments tab: Your purchases + payment methods
-- Payouts tab: Your sales + payout account (Stripe)
-- Service fee tab: Fee breakdown and explanation
-
-**Stripe Integration Visual:**
-```text
-┌─────────────────────────────────────────────────────┐
-│ Payouts                                             │
-│                                                     │
-│ Your payouts                                        │
-│ When you receive a payment, we'll transfer funds   │
-│ to your payout account.                             │
-│                                                     │
-│ ┌─────────────────────────────────────────────────┐│
-│ │ ● Stripe connected                              ││
-│ │   Payments enabled. Funds deposited to *4242.   ││
-│ │                              [View in Stripe →] ││
-│ └─────────────────────────────────────────────────┘│
-│                                                     │
-│ Payout schedule                                     │
-│ Your next payout will be processed on Feb 5, 2025  │
-│                                   [Change schedule] │
-└─────────────────────────────────────────────────────┘
-```
-
----
-
-### 5. Enhance StripeStatusCard.tsx
-
-**Current:** Simple success badge
-
-**New:** Full Airbnb-style section with connection status and action
+The tiered pricing already exists in `calculateTieredPrice()` and will be reused:
 
 ```typescript
-// When NOT connected:
-<div className="border rounded-xl p-4">
-  <h4 className="font-medium">Set up payouts</h4>
-  <p className="text-muted-foreground text-sm">
-    Add a payout method so we can send you money.
-  </p>
-  <Button variant="default" className="mt-4 bg-foreground text-background">
-    Set up payouts
-  </Button>
-</div>
+// Pricing hierarchy (highest tier wins for duration)
+if (days >= 30 && priceMonthly) {
+  // Apply monthly rate for 30-day chunks
+}
+if (remaining >= 7 && priceWeekly) {
+  // Apply weekly rate for 7-day chunks
+}
+// Remaining days at daily rate
+```
 
-// When connected:
-<div className="border rounded-xl p-4">
-  <div className="flex items-center gap-3">
-    <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-      <Check className="h-5 w-5 text-primary-foreground" />
-    </div>
-    <div>
-      <p className="font-medium">Stripe connected</p>
-      <p className="text-sm text-muted-foreground">Payments enabled</p>
-    </div>
-  </div>
-  <Button variant="outline" className="mt-4">
-    View in Stripe
-    <ExternalLink className="ml-2 h-4 w-4" />
-  </Button>
-</div>
+For hourly bookings:
+```typescript
+total = selectedHours * priceHourly * numberOfSlots;
 ```
 
 ---
 
-### 6. Dashboard Polish
+### 4. Component Integration Points
 
-**HostDashboard.tsx:**
-- Simplify header to match Airbnb's minimal style
-- Remove heavy shadows on stat cards
-- Use border-only cards with subtle hover states
-- Section headers: Simple text, no card wrapper
+**ListingDetail.tsx Changes:**
+- Replace `BookingWidget` with `RentalBookingWidget` for rental listings
+- Pass full listing object with slot/pricing data
+- Remove conditional VendorSpaceBookingModal opening
 
-**ShopperDashboard.tsx:**
-- Simplify tabs to match Airbnb's underline-only active state
-- Remove heavy badge styling on tab counts
-- Clean zero-state illustrations
+**StickyMobileCTA.tsx Changes:**
+- Open `RentalBookingWidget` in modal mode for mobile
+- Reuse same component logic for consistency
 
----
-
-## Visual Style Guide (Airbnb Alignment)
-
-### Typography
-- Section titles: 22px, semibold (text-foreground)
-- Field labels: 16px, medium (text-foreground)
-- Field values: 14px, regular (text-muted-foreground)
-- Action links: 14px, medium, underline (text-foreground)
-
-### Colors
-- Primary accent: Keep current orange/primary for brand consistency
-- Stripe accent: Purple (#635bff) for Stripe-related elements
-- Info card icons: Pink/rose for privacy notices
-
-### Spacing
-- Section padding: 24px vertical between sections
-- Field row padding: 16px vertical
-- Sidebar item height: 48px
-
-### Buttons
-- Primary actions: Black filled button (bg-foreground text-background)
-- Secondary: Outline with border
-- Action links: Underlined text, no button wrapper
-
-### Borders & Cards
-- Cards: 1px border, 12px border-radius
-- Minimal shadows (only for elevated elements)
-- Separators: 1px border-border
+**AvailabilitySection.tsx Changes:**
+- Remove separate `VendorSpaceBookingModal` import
+- Use unified modal approach
 
 ---
 
-## Technical Implementation Notes
+### 5. Database Considerations
 
-### Edit Modal Pattern
+**No schema changes required.** The existing structure supports this:
 
-Instead of inline form inputs, implement modal-based editing:
-
-1. Click "Edit" on field row
-2. Opens dialog/drawer with form inputs
-3. Save updates the field and closes modal
-4. Field row displays updated value
-
-This matches Airbnb's pattern and simplifies the main page layout.
-
-### State Management
-
-- Each section maintains its own edit state
-- Use existing form validation schemas
-- Preserve current save logic, just change UI trigger
-
-### Mobile Responsiveness
-
-- Left sidebar becomes top horizontal tabs on mobile
-- Field rows stack vertically
-- Action links become full-width buttons
+- `listings.total_slots`: Capacity (1-100)
+- `listings.slot_names`: Array of custom names
+- `listings.price_hourly/daily/weekly/monthly`: All pricing tiers
+- `listings.hourly_enabled/daily_enabled`: Mode toggles
+- `listings.operating_hours_start/end`: Business hours
+- `booking_requests.slot_number/slot_name`: Per-booking slot tracking
 
 ---
 
-## Implementation Order
+### 6. Files to Create/Modify
 
-1. Create `AirbnbFieldRow.tsx` component
-2. Create `AirbnbInfoCard.tsx` component
-3. Refactor `Account.tsx` to use new components
-4. Enhance `StripeStatusCard.tsx` with Airbnb payments styling
-5. Redesign `Transactions.tsx` with sub-tabs
-6. Polish `HostDashboard.tsx` and `ShopperDashboard.tsx`
+| Action | File | Description |
+|--------|------|-------------|
+| **Create** | `src/components/listing-detail/RentalBookingWidget.tsx` | New unified booking widget |
+| **Modify** | `src/pages/ListingDetail.tsx` | Replace BookingWidget with new component |
+| **Modify** | `src/components/listing-detail/StickyMobileCTA.tsx` | Use RentalBookingWidget for mobile |
+| **Modify** | `src/components/listing-detail/AvailabilitySection.tsx` | Simplify to use unified approach |
+| **Delete** (optional) | `src/components/listing-detail/VendorSpaceBookingModal.tsx` | After confirming new widget works |
 
 ---
 
-## Expected User Experience
+## User Experience Flow
 
-### Before:
-- Forms with visible input fields everywhere
-- Heavy card styling with shadows
-- Cluttered visual hierarchy
+**For a Vendor Space with Hourly + Daily + 5 Slots:**
 
-### After:
-- Clean read-only display with clear "Edit" actions
-- Minimal, breathable whitespace
-- Clear visual hierarchy with Airbnb's proven patterns
-- Stripe/payments section feels native and trustworthy
+1. User lands on listing → sees widget with `Hourly | Daily` toggle
+2. Selects "Hourly" → Calendar appears with slot availability badges
+3. Picks date (e.g., "Sat, Feb 15") → Time slot grid appears (9AM-10PM)
+4. Taps multiple slots (11AM, 12PM, 1PM) = 3 hours selected
+5. If multi-slot: adjusts "Slots Needed" from 1 → 2
+6. Sees live price: `$25/hr × 3 hrs × 2 slots = $150 + $19.35 fee = $169.35`
+7. Taps "Reserve 3 Hours" → navigates to `/book/:id` with params
+
+**For a Food Truck Rental (Single Slot, Daily Only):**
+
+1. User sees simplified widget (no toggle, no slot counter)
+2. Picks start/end dates → Tiered pricing auto-calculates
+3. Example: 12 days = 1 week @ $500 + 5 days @ $100 = $1,000
+4. Taps "Reserve 12 Days" → checkout flow
+
+---
+
+## Edge Cases Handled
+
+- **Single slot listings:** Hide slot counter, simplify UI
+- **Hourly-only listings:** Default to hourly mode, hide toggle
+- **Daily-only listings:** Default to daily mode, hide toggle
+- **Operating hours respect:** Time slots generated within host's hours
+- **Buffer time:** Applies between hourly bookings per existing logic
+- **Same-day booking:** Respects `min_notice_hours` setting
+
