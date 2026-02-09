@@ -203,6 +203,18 @@ export const PublishWizard: React.FC = () => {
   // Availability step state
   const [availableFrom, setAvailableFrom] = useState<string | null>(null);
   const [availableTo, setAvailableTo] = useState<string | null>(null);
+  
+  // Hourly/Daily booking settings (for RentalAvailabilityStep)
+  const [priceHourly, setPriceHourly] = useState<number | null>(null);
+  const [hourlyEnabled, setHourlyEnabled] = useState(false);
+  const [dailyEnabled, setDailyEnabled] = useState(true);
+  const [minHours, setMinHours] = useState(1);
+  const [maxHours, setMaxHours] = useState(24);
+  const [bufferTimeMins, setBufferTimeMins] = useState(0);
+  const [minNoticeHours, setMinNoticeHours] = useState(0);
+  const [hourlySchedule, setHourlySchedule] = useState<Record<string, any> | null>(null);
+  const [rentalMinDays, setRentalMinDays] = useState(1);
+  const [hourlySpecialPricing, setHourlySpecialPricing] = useState<Record<string, any> | null>(null);
 
   // Required documents step state (for rentals)
   const [requiredDocuments, setRequiredDocuments] = useState<RequiredDocumentSetting[]>([]);
@@ -384,6 +396,18 @@ export const PublishWizard: React.FC = () => {
       // Availability fields
       setAvailableFrom(data.available_from || null);
       setAvailableTo(data.available_to || null);
+      
+      // Hourly/Daily booking settings
+      setPriceHourly((data as any).price_hourly ?? null);
+      setHourlyEnabled((data as any).hourly_enabled ?? false);
+      setDailyEnabled((data as any).daily_enabled !== false);
+      setMinHours((data as any).min_hours ?? 1);
+      setMaxHours((data as any).max_hours ?? 24);
+      setBufferTimeMins((data as any).buffer_time_mins ?? 0);
+      setMinNoticeHours((data as any).min_notice_hours ?? 0);
+      setHourlySchedule((data as any).hourly_schedule ?? null);
+      setRentalMinDays((data as any).rental_min_days ?? 1);
+      setHourlySpecialPricing((data as any).hourly_special_pricing ?? null);
 
       // Load required documents for rental listings
       if (data.mode === 'rent') {
@@ -1103,6 +1127,17 @@ export const PublishWizard: React.FC = () => {
           available_from: availableFrom || null,
           available_to: availableTo || null,
           total_slots: ['vendor_space', 'ghost_kitchen', 'food_truck', 'food_trailer'].includes(listing.category) ? totalSlots : 1,
+          // Hourly/Daily booking settings
+          price_hourly: priceHourly,
+          hourly_enabled: hourlyEnabled,
+          daily_enabled: dailyEnabled,
+          min_hours: minHours,
+          max_hours: maxHours,
+          buffer_time_mins: bufferTimeMins,
+          min_notice_hours: minNoticeHours,
+          hourly_schedule: hourlySchedule,
+          rental_min_days: rentalMinDays,
+          hourly_special_pricing: hourlySpecialPricing,
         };
       } else if (step === 'documents') {
         // Save required documents to the database
@@ -2570,14 +2605,24 @@ export const PublishWizard: React.FC = () => {
                     availableFrom={availableFrom}
                     availableTo={availableTo}
                     priceDaily={listing.price_daily}
-                    priceHourly={(listing as any).price_hourly}
+                    priceHourly={priceHourly ?? (listing as any).price_hourly}
                     onAvailableFromChange={setAvailableFrom}
                     onAvailableToChange={setAvailableTo}
                     onPriceHourlyChange={(price) => {
-                      // Will be saved in saveStep
+                      setPriceHourly(price);
                     }}
                     onSettingsChange={(settings) => {
-                      // Will be saved in saveStep
+                      setHourlyEnabled(settings.hourlyEnabled);
+                      setDailyEnabled(settings.dailyEnabled);
+                      setMinHours(settings.minHours);
+                      setMaxHours(settings.maxHours);
+                      setBufferTimeMins(settings.bufferTimeMins);
+                      setMinNoticeHours(settings.minNoticeHours);
+                      setHourlySchedule(settings.hourlySchedule ?? null);
+                      setRentalMinDays(settings.rentalMinDays);
+                    }}
+                    onSpecialPricingChange={(pricing) => {
+                      setHourlySpecialPricing(pricing ?? null);
                     }}
                   />
 
