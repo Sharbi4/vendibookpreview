@@ -52,7 +52,7 @@ const formSchema = z.object({
   }),
   signageText: z.string()
     .min(1, 'Please enter signage text')
-    .max(15, 'Maximum 15 characters allowed')
+    .max(20, 'Maximum 20 characters allowed')
     .regex(/^[a-zA-Z0-9\s]+$/, 'Only letters, numbers, and spaces allowed'),
 });
 
@@ -373,7 +373,7 @@ This request was submitted via the VendiBook signage request form.
                               <div className="relative">
                                 <Input
                                   {...field}
-                                  maxLength={15}
+                                  maxLength={20}
                                   placeholder="Rent Kitchen"
                                   className="text-center text-lg font-bold uppercase tracking-wide"
                                   onChange={(e) => {
@@ -383,7 +383,7 @@ This request was submitted via the VendiBook signage request form.
                                   }}
                                 />
                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                                  {field.value?.length || 0}/15
+                                  {field.value?.length || 0}/20
                                 </span>
                               </div>
                             </FormControl>
