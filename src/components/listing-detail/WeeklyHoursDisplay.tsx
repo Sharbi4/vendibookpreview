@@ -43,9 +43,14 @@ const formatTime = (time: string): string => {
   return hour > 12 ? `${hour - 12} PM` : `${hour} AM`;
 };
 
-const formatRanges = (ranges: TimeRange[]): string => {
-  if (ranges.length === 0) return 'Closed';
+const formatRanges = (ranges: TimeRange[] | undefined | null): string => {
+  if (!ranges || ranges.length === 0) return 'Closed';
   return ranges.map(r => `${formatTime(r.start)} – ${formatTime(r.end)}`).join(', ');
+};
+
+// Safely get ranges for a day, returning empty array if undefined
+const getDayRanges = (schedule: WeeklySchedule, day: DayKey): TimeRange[] => {
+  return Array.isArray(schedule[day]) ? schedule[day] : [];
 };
 
 const rangesAreEqual = (a: TimeRange[], b: TimeRange[]): boolean => {
@@ -62,8 +67,8 @@ const groupConsecutiveDays = (schedule: WeeklySchedule): GroupedDay[] => {
   const groups: GroupedDay[] = [];
   let currentGroup: GroupedDay | null = null;
 
-  DAY_ORDER.forEach((day, index) => {
-    const ranges = schedule[day];
+  DAY_ORDER.forEach((day) => {
+    const ranges = getDayRanges(schedule, day);
     
     if (currentGroup && rangesAreEqual(currentGroup.ranges, ranges)) {
       currentGroup.days.push(day);
@@ -106,10 +111,14 @@ export const WeeklyHoursDisplay: React.FC<WeeklyHoursDisplayProps> = ({
   schedule,
   className,
 }) => {
-  if (!schedule) return null;
+  if (!schedule || typeof schedule !== 'object') return null;
 
-  // Check if schedule has any hours set
-  const hasAnyHours = DAY_ORDER.some(day => schedule[day].length > 0);
+  // Check if schedule has any hours set (safely)
+  const hasAnyHours = DAY_ORDER.some(day => {
+    const ranges = getDayRanges(schedule, day);
+    return ranges.length > 0;
+  });
+  if (!hasAnyHours) return null;
   if (!hasAnyHours) return null;
 
   const groups = groupConsecutiveDays(schedule);
@@ -144,9 +153,12 @@ export const WeeklyHoursDisplay: React.FC<WeeklyHoursDisplayProps> = ({
 };
 
 // Helper function to check if schedule has any hours configured
-export const hasAnyScheduledHours = (schedule: WeeklySchedule | null): boolean => {
-  if (!schedule) return false;
-  return DAY_ORDER.some(day => schedule[day] && schedule[day].length > 0);
+export const hasAnyScheduledHours = (schedule: WeeklySchedule | null | undefined): boolean => {
+  if (!schedule || typeof schedule !== 'object') return false;
+  return DAY_ORDER.some(day => {
+    const ranges = Array.isArray(schedule[day]) ? schedule[day] : [];
+    return ranges.length > 0;
+  });
 };
 
 export default WeeklyHoursDisplay;
