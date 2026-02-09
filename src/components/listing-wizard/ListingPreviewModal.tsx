@@ -23,6 +23,7 @@ interface ListingPreviewModalProps {
     category: ListingCategory;
     mode: 'rent' | 'sale';
     images: string[];
+    priceHourly?: string;
     priceDaily: string;
     priceWeekly: string;
     priceSale: string;
@@ -119,6 +120,7 @@ export const ListingPreviewModal: React.FC<ListingPreviewModalProps> = ({
                   mode: listing.mode,
                   category: listing.category,
                   images: listing.images,
+                  priceHourly: listing.priceHourly || '',
                   priceDaily: listing.priceDaily,
                   priceWeekly: listing.priceWeekly,
                   priceSale: listing.priceSale,

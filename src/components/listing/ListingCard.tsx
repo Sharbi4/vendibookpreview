@@ -61,6 +61,9 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
       if (listing.price_daily && listing.price_daily > 0) {
         return `$${listing.price_daily.toLocaleString()}/day`;
       }
+      if (listing.price_hourly && listing.price_hourly > 0) {
+        return `$${listing.price_hourly.toLocaleString()}/hr`;
+      }
       return 'Price TBD';
     }
     // Sale mode
@@ -71,6 +74,13 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   };
   
   const price = formatListingPrice();
+  
+  // Check if we should show hourly rate separately (when daily is the primary price)
+  const showHourlyRate = listing.mode === 'rent' && 
+    listing.price_hourly && 
+    listing.price_hourly > 0 && 
+    listing.price_daily && 
+    listing.price_daily > 0;
 
   const modeLabel = listing.mode === 'rent' ? 'For Rent' : 'For Sale';
   const modeColor = listing.mode === 'rent' ? 'bg-primary' : 'bg-emerald-500';
@@ -302,6 +312,11 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           <span className="bg-gray-100 text-gray-900 text-sm font-bold px-3 py-1 rounded-full">
             {price}
           </span>
+          {!compact && showHourlyRate && (
+            <span className="text-sm text-gray-500 font-medium">
+              ${listing.price_hourly}/hr
+            </span>
+          )}
           {!compact && listing.mode === 'rent' && listing.price_weekly && (
             <span className="text-sm text-gray-500 font-medium">
               ${listing.price_weekly}/week
