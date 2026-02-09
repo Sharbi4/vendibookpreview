@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Truck, Store, Building2, MapPin, Tag, ShoppingBag, Users } from 'lucide-react';
 import { ListingFormData, ListingMode, ListingCategory, CATEGORY_LABELS, SUBCATEGORIES_BY_CATEGORY } from '@/types/listing';
 import { cn } from '@/lib/utils';
@@ -23,18 +23,43 @@ const categoryOptions: { value: ListingCategory; label: string; icon: React.Reac
   { value: 'vendor_space', label: 'Vendor Space', icon: <MapPin className="w-6 h-6" />, description: 'Prime location for food vendors' },
 ];
 
+// Categories that only support rental (no sale option)
+const RENTAL_ONLY_CATEGORIES: ListingCategory[] = ['vendor_space', 'vendor_lot', 'ghost_kitchen'];
+
 export const StepListingType: React.FC<StepListingTypeProps> = ({
   formData,
   updateField,
   updateCategory,
 }) => {
+  const isRentalOnlyCategory = formData.category && RENTAL_ONLY_CATEGORIES.includes(formData.category);
+
+  // Auto-set mode to 'rent' when a rental-only category is selected
+  useEffect(() => {
+    if (isRentalOnlyCategory && formData.mode !== 'rent') {
+      updateField('mode', 'rent');
+    }
+  }, [formData.category, formData.mode, isRentalOnlyCategory, updateField]);
+
+  // Filter mode options based on category
+  const availableModeOptions = isRentalOnlyCategory 
+    ? modeOptions.filter(opt => opt.value === 'rent')
+    : modeOptions;
+
   return (
     <div className="space-y-8">
       {/* Mode Selection */}
       <div className="space-y-4">
         <Label className="text-lg font-semibold">What do you want to do?</Label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {modeOptions.map((option) => (
+        {isRentalOnlyCategory && (
+          <p className="text-sm text-muted-foreground -mt-2">
+            {CATEGORY_LABELS[formData.category!]} listings are available for rent only.
+          </p>
+        )}
+        <div className={cn(
+          "grid gap-4",
+          availableModeOptions.length === 1 ? "grid-cols-1 max-w-md" : "grid-cols-1 sm:grid-cols-2"
+        )}>
+          {availableModeOptions.map((option) => (
             <button
               key={option.value}
               type="button"
