@@ -1,200 +1,114 @@
 
-
-# Unified Rental Booking Flow: "Duration-First" Architecture
+# Plan: Require Weekly Schedule for Hourly Listings + Display on Listing Detail
 
 ## Overview
+When hosts enable hourly or "both" (daily + hourly) booking modes, they must set their available hours via the weekly schedule grid. This schedule will also be shown to renters on the listing detail page so they know when the space/asset is available for hourly bookings.
 
-This plan implements a new **"Turo/Parking" mentality** booking system that replaces the current "Hotel" approach. The key shift is from "pick dates first" to "how long do you need the space?"—allowing users to select their duration type first (Hourly vs. Daily/Weekly/Monthly), then choose dates, and finally select their specific slot.
+## What This Changes
 
-The system will apply **consistently across all rental categories**: Vendor Spaces, Shared Kitchens, Food Trucks, and Food Trailers.
+### For Hosts (Creating/Editing Listings)
+- When selecting "Hourly" or "Both" booking type, a validation will ensure at least one day has operating hours configured
+- A clear warning message will appear if the schedule is empty
+- Cannot proceed/publish until schedule is set
+
+### For Renters (Viewing Listings)
+- Listings with hourly availability will show a "Weekly Hours" section displaying when the space is open for hourly bookings (e.g., "Mon-Fri: 8am-6pm, Sat: 9am-3pm")
 
 ---
 
-## Architecture Summary
+## Technical Implementation
+
+### Step 1: Add Validation to RentalAvailabilityStep
+**File:** `src/components/listing-wizard/RentalAvailabilityStep.tsx`
+
+- Add a helper function to check if schedule has at least one day with hours:
+```text
+const hasAnyScheduledHours = (schedule) => 
+  Object.values(schedule).some(day => day.length > 0)
+```
+- Show a warning banner when hourly is enabled but schedule is empty
+- Expose a validation state that the parent PublishWizard can use
+
+### Step 2: Update PublishWizard Validation
+**File:** `src/components/listing-wizard/PublishWizard.tsx`
+
+- Add validation check before allowing progression from the availability step
+- If hourly is enabled and no schedule is set, show toast notification and prevent advancement
+- Update the RentalAvailabilityStep callback to include schedule validation status
+
+### Step 3: Fetch hourly_schedule in useHourlyAvailability Hook
+**File:** `src/hooks/useHourlyAvailability.ts`
+
+- Add `hourly_schedule` to the select query
+- Parse and store the schedule in settings state
+- Expose the schedule for use by UI components
+
+### Step 4: Create WeeklyHoursDisplay Component
+**New File:** `src/components/listing-detail/WeeklyHoursDisplay.tsx`
+
+A compact component that:
+- Takes the weekly schedule JSON as a prop
+- Groups consecutive days with identical hours (e.g., "Mon-Fri: 8am-6pm")
+- Shows "Closed" for days with no hours
+- Uses a clean, scannable format with clock icons
+
+Example output:
+```text
+Operating Hours
+Mon - Fri    8:00 AM – 6:00 PM
+Sat          9:00 AM – 3:00 PM
+Sun          Closed
+```
+
+### Step 5: Display Hours on Listing Detail Page
+**File:** `src/pages/ListingDetail.tsx`
+
+- Fetch `hourly_schedule` as part of listing data
+- Add the WeeklyHoursDisplay component in the left column details section
+- Only show if listing has hourly_enabled = true and schedule exists
+
+---
+
+## Validation Flow
 
 ```text
-+------------------+     +------------------+     +------------------+
-|  1. Duration     | --> |  2. Date/Time    | --> |  3. Slot         |
-|     Toggle       |     |     Selection    |     |     Selection    |
-+------------------+     +------------------+     +------------------+
-| Hourly | Daily   |     | Calendar View    |     | Named spots or   |
-|                  |     | + Time Slots     |     | numbered (1-100) |
-+------------------+     +------------------+     +------------------+
+Host selects "Hourly" or "Both"
+         ↓
+Schedule Grid appears
+         ↓
+     User attempts to proceed
+         ↓
+┌─────────────────────────────────┐
+│ Is at least 1 day configured?   │
+└─────────────────────────────────┘
+    ↓ No                    ↓ Yes
+Show warning          Allow proceed
+"Please add hours"    Save schedule
 ```
 
 ---
 
-## What's Changing
+## Files to Create/Modify
 
-| Current Behavior | New Behavior |
-|-----------------|--------------|
-| VendorSpaceBookingModal: Calendar → Slots → Dates | Unified widget: Mode Toggle → Date → Slot |
-| BookingWidget: Daily/Hourly tabs separate from vendor flow | Merged into single smart widget |
-| Multiple modals for different categories | Single `RentalBookingWidget` handles all |
-| Slots selected before dates | Dates selected first, slots available shown per-date |
-
----
-
-## Technical Approach
-
-### 1. Create New Unified `RentalBookingWidget` Component
-
-**File:** `src/components/listing-detail/RentalBookingWidget.tsx`
-
-This component replaces both `BookingWidget` (for rentals) and `VendorSpaceBookingModal` with a single, category-aware widget.
-
-**Key Features:**
-- **Mode Toggle (Hourly/Daily):** Only shown if both modes are enabled for the listing
-- **Smart Date Selection:**
-  - Hourly mode: Single date picker → Time slot grid
-  - Daily mode: Date range picker with availability indicators
-- **Slot Counter:** For multi-slot listings, shows `Slots Needed: [- 1 +]` with availability feedback
-- **Dynamic Pricing:** Automatically applies tiered pricing (7 days = weekly, 30 days = monthly)
-- **Slot Names Support:** Displays custom slot names (e.g., "Patio A", "Corner Spot") from `slot_names` array
-
-**Props Interface:**
-```typescript
-interface RentalBookingWidgetProps {
-  listing: {
-    id: string;
-    category: ListingCategory;
-    total_slots: number;
-    slot_names: string[] | null;
-    price_hourly: number | null;
-    price_daily: number | null;
-    price_weekly: number | null;
-    price_monthly: number | null;
-    hourly_enabled: boolean;
-    daily_enabled: boolean;
-    instant_book: boolean;
-    operating_hours_start: string | null;
-    operating_hours_end: string | null;
-  };
-  isOwner: boolean;
-  onBook: (bookingData: BookingPayload) => void;
-}
-```
+| File | Change |
+|------|--------|
+| `src/components/listing-wizard/RentalAvailabilityStep.tsx` | Add schedule validation logic and warning UI |
+| `src/components/listing-wizard/PublishWizard.tsx` | Add validation gate before step progression |
+| `src/hooks/useHourlyAvailability.ts` | Fetch and expose hourly_schedule |
+| `src/components/listing-detail/WeeklyHoursDisplay.tsx` | **New** - Display formatted weekly hours |
+| `src/pages/ListingDetail.tsx` | Add WeeklyHoursDisplay component for hourly listings |
 
 ---
 
-### 2. Booking Flow Steps
+## User Experience
 
-**Step 1: Duration Mode Selection**
-- Segmented control: `Hourly` | `Daily/Weekly`
-- Only shows toggle if `hourly_enabled && daily_enabled`
-- Defaults to hourly if only hourly is enabled
+### Host Experience
+1. Creates rental listing, reaches availability step
+2. Selects "Hourly" or "Both" booking type
+3. **Must** configure at least one day's hours in the weekly grid
+4. Clear feedback if schedule is empty when trying to continue
 
-**Step 2: Date/Time Selection**
-
-For **Hourly Mode:**
-- Single date picker with availability indicators
-- Grid of available time slots for selected date (based on `operating_hours_start/end`)
-- Multi-select enabled: users can tap multiple 1-hour slots
-- Shows slot availability per hour (e.g., "3/5 spots available")
-
-For **Daily Mode:**
-- Date range picker (start → end)
-- Calendar shows slot availability per day
-- Inclusive day counting (same start/end = 1 day)
-
-**Step 3: Slot Selection (Multi-Slot Listings Only)**
-- If `total_slots > 1`: Show slot counter with named slots dropdown
-- Allow selecting multiple slots (e.g., "I have 2 trucks")
-- Real-time availability check against `booking_requests` table
-
----
-
-### 3. Pricing Logic Implementation
-
-The tiered pricing already exists in `calculateTieredPrice()` and will be reused:
-
-```typescript
-// Pricing hierarchy (highest tier wins for duration)
-if (days >= 30 && priceMonthly) {
-  // Apply monthly rate for 30-day chunks
-}
-if (remaining >= 7 && priceWeekly) {
-  // Apply weekly rate for 7-day chunks
-}
-// Remaining days at daily rate
-```
-
-For hourly bookings:
-```typescript
-total = selectedHours * priceHourly * numberOfSlots;
-```
-
----
-
-### 4. Component Integration Points
-
-**ListingDetail.tsx Changes:**
-- Replace `BookingWidget` with `RentalBookingWidget` for rental listings
-- Pass full listing object with slot/pricing data
-- Remove conditional VendorSpaceBookingModal opening
-
-**StickyMobileCTA.tsx Changes:**
-- Open `RentalBookingWidget` in modal mode for mobile
-- Reuse same component logic for consistency
-
-**AvailabilitySection.tsx Changes:**
-- Remove separate `VendorSpaceBookingModal` import
-- Use unified modal approach
-
----
-
-### 5. Database Considerations
-
-**No schema changes required.** The existing structure supports this:
-
-- `listings.total_slots`: Capacity (1-100)
-- `listings.slot_names`: Array of custom names
-- `listings.price_hourly/daily/weekly/monthly`: All pricing tiers
-- `listings.hourly_enabled/daily_enabled`: Mode toggles
-- `listings.operating_hours_start/end`: Business hours
-- `booking_requests.slot_number/slot_name`: Per-booking slot tracking
-
----
-
-### 6. Files to Create/Modify
-
-| Action | File | Description |
-|--------|------|-------------|
-| **Create** | `src/components/listing-detail/RentalBookingWidget.tsx` | New unified booking widget |
-| **Modify** | `src/pages/ListingDetail.tsx` | Replace BookingWidget with new component |
-| **Modify** | `src/components/listing-detail/StickyMobileCTA.tsx` | Use RentalBookingWidget for mobile |
-| **Modify** | `src/components/listing-detail/AvailabilitySection.tsx` | Simplify to use unified approach |
-| **Delete** (optional) | `src/components/listing-detail/VendorSpaceBookingModal.tsx` | After confirming new widget works |
-
----
-
-## User Experience Flow
-
-**For a Vendor Space with Hourly + Daily + 5 Slots:**
-
-1. User lands on listing → sees widget with `Hourly | Daily` toggle
-2. Selects "Hourly" → Calendar appears with slot availability badges
-3. Picks date (e.g., "Sat, Feb 15") → Time slot grid appears (9AM-10PM)
-4. Taps multiple slots (11AM, 12PM, 1PM) = 3 hours selected
-5. If multi-slot: adjusts "Slots Needed" from 1 → 2
-6. Sees live price: `$25/hr × 3 hrs × 2 slots = $150 + $19.35 fee = $169.35`
-7. Taps "Reserve 3 Hours" → navigates to `/book/:id` with params
-
-**For a Food Truck Rental (Single Slot, Daily Only):**
-
-1. User sees simplified widget (no toggle, no slot counter)
-2. Picks start/end dates → Tiered pricing auto-calculates
-3. Example: 12 days = 1 week @ $500 + 5 days @ $100 = $1,000
-4. Taps "Reserve 12 Days" → checkout flow
-
----
-
-## Edge Cases Handled
-
-- **Single slot listings:** Hide slot counter, simplify UI
-- **Hourly-only listings:** Default to hourly mode, hide toggle
-- **Daily-only listings:** Default to daily mode, hide toggle
-- **Operating hours respect:** Time slots generated within host's hours
-- **Buffer time:** Applies between hourly bookings per existing logic
-- **Same-day booking:** Respects `min_notice_hours` setting
-
+### Renter Experience
+1. Views a listing with hourly bookings enabled
+2. Sees "Operating Hours" card showing when the space is available
+3. Can reference this when selecting time slots in the booking widget
