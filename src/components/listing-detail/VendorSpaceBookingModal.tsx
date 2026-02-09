@@ -10,10 +10,12 @@ import {
   CheckCircle,
   XCircle,
   ArrowLeft,
+  Clock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { 
   format, 
@@ -33,6 +35,7 @@ import {
   addDays,
 } from 'date-fns';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
+import { useHourlyAvailability } from '@/hooks/useHourlyAvailability';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateRentalFees } from '@/lib/commissions';
@@ -52,6 +55,8 @@ interface VendorSpaceBookingModalProps {
   priceDaily: number | null;
   priceWeekly?: number | null;
   priceMonthly?: number | null;
+  priceHourly?: number | null;
+  hourlyEnabled?: boolean;
   instantBook?: boolean;
   totalSlots?: number;
   slotNames?: string[] | null;
@@ -110,6 +115,8 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
   priceDaily,
   priceWeekly,
   priceMonthly,
+  priceHourly,
+  hourlyEnabled = false,
   instantBook = false,
   totalSlots = 1,
   slotNames,
@@ -120,8 +127,18 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
+  
+  // Hourly mode state
+  const [isHourlyMode, setIsHourlyMode] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [selectedStartTime, setSelectedStartTime] = useState<string>('');
+  const [selectedDuration, setSelectedDuration] = useState<number>(1);
 
   const { blockedDates, bookedDates, bufferDates, isLoading } = useBlockedDates({ listingId });
+  const { 
+    settings: hourlySettings, 
+    getAvailableWindowsForDate,
+  } = useHourlyAvailability({ listingId });
 
   // Fetch slot bookings
   const { data: bookedSlots = [] } = useQuery({
@@ -234,25 +251,81 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
     const status = getDayStatus(date);
     if (status === 'past' || status === 'outside' || status === 'full') return;
 
-    if (!startDate || (startDate && endDate)) {
-      setStartDate(date);
-      setEndDate(undefined);
-    } else if (isBefore(date, startDate)) {
-      setStartDate(date);
-      setEndDate(undefined);
+    if (isHourlyMode) {
+      setSelectedDate(date);
+      setSelectedStartTime('');
+      setSelectedDuration(hourlySettings.minHours || 1);
     } else {
-      setEndDate(date);
+      if (!startDate || (startDate && endDate)) {
+        setStartDate(date);
+        setEndDate(undefined);
+      } else if (isBefore(date, startDate)) {
+        setStartDate(date);
+        setEndDate(undefined);
+      } else {
+        setEndDate(date);
+      }
     }
   };
 
   const isInSelectedRange = (date: Date): boolean => {
+    if (isHourlyMode) {
+      return selectedDate ? isSameDay(date, selectedDate) : false;
+    }
     if (!startDate) return false;
     if (!endDate) return isSameDay(date, startDate);
     return (isSameDay(date, startDate) || isAfter(date, startDate)) && 
            (isSameDay(date, endDate) || isBefore(date, endDate));
   };
 
+  // Hourly mode helpers
+  const availableWindows = useMemo(() => {
+    if (!selectedDate || !isHourlyMode) return [];
+    return getAvailableWindowsForDate(selectedDate);
+  }, [selectedDate, isHourlyMode, getAvailableWindowsForDate]);
+
+  const startTimeOptions = useMemo(() => {
+    const options: { value: string; label: string }[] = [];
+    availableWindows.forEach(window => {
+      for (let h = window.startHour; h < window.endHour - (hourlySettings.minHours || 1) + 1; h++) {
+        const timeStr = `${h.toString().padStart(2, '0')}:00`;
+        const label = h === 0 ? '12:00 AM' : h < 12 ? `${h}:00 AM` : h === 12 ? '12:00 PM' : `${h - 12}:00 PM`;
+        options.push({ value: timeStr, label });
+      }
+    });
+    return options;
+  }, [availableWindows, hourlySettings.minHours]);
+
+  const maxDuration = useMemo(() => {
+    if (!selectedStartTime || availableWindows.length === 0) return hourlySettings.maxHours || 24;
+    const startHour = parseInt(selectedStartTime.split(':')[0]);
+    const window = availableWindows.find(w => startHour >= w.startHour && startHour < w.endHour);
+    if (!window) return hourlySettings.minHours || 1;
+    return Math.min(window.endHour - startHour, hourlySettings.maxHours || 24);
+  }, [selectedStartTime, availableWindows, hourlySettings.maxHours, hourlySettings.minHours]);
+
+  const calculatedEndTime = useMemo(() => {
+    if (!selectedStartTime) return '';
+    const startHour = parseInt(selectedStartTime.split(':')[0]);
+    const endHour = startHour + selectedDuration;
+    return endHour === 0 ? '12:00 AM' : endHour < 12 ? `${endHour}:00 AM` : endHour === 12 ? '12:00 PM' : `${endHour - 12}:00 PM`;
+  }, [selectedStartTime, selectedDuration]);
+
   const rentalInfo = useMemo(() => {
+    if (isHourlyMode) {
+      if (!selectedDate || !selectedStartTime || !priceHourly) return null;
+      const basePrice = selectedDuration * priceHourly;
+      const fees = calculateRentalFees(basePrice);
+      return {
+        days: 0,
+        label: `${selectedDuration} hour${selectedDuration > 1 ? 's' : ''}`,
+        basePrice,
+        breakdown: `${selectedDuration} × $${priceHourly}`,
+        totalWithFees: fees.customerTotal,
+        serviceFee: fees.renterFee,
+      };
+    }
+    
     if (!startDate || !endDate || !priceDaily) return null;
     const days = differenceInDays(endDate, startDate);
     if (days <= 0) return null;
@@ -268,7 +341,14 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
       totalWithFees: fees.customerTotal,
       serviceFee: fees.renterFee,
     };
-  }, [startDate, endDate, priceDaily, priceWeekly, priceMonthly]);
+  }, [isHourlyMode, startDate, endDate, selectedDate, selectedStartTime, selectedDuration, priceHourly, priceDaily, priceWeekly, priceMonthly]);
+
+  const canContinue = useMemo(() => {
+    if (isHourlyMode) {
+      return selectedSlot && selectedDate && selectedStartTime && selectedDuration > 0;
+    }
+    return selectedSlot && startDate && endDate && differenceInDays(endDate, startDate) > 0;
+  }, [isHourlyMode, selectedSlot, selectedDate, selectedStartTime, selectedDuration, startDate, endDate]);
 
   const handleBookNow = () => setStep('slots');
 
@@ -278,13 +358,25 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
   };
 
   const handleContinue = () => {
-    if (!startDate || !endDate || !selectedSlot) return;
-    
-    const startStr = format(startDate, 'yyyy-MM-dd');
-    const endStr = format(endDate, 'yyyy-MM-dd');
-    const slotName = slotNames?.[selectedSlot - 1] || `Spot ${selectedSlot}`;
-    
-    navigate(`/book/${listingId}?start=${startStr}&end=${endStr}&slot=${selectedSlot}&slotName=${encodeURIComponent(slotName)}`);
+    if (isHourlyMode) {
+      if (!selectedDate || !selectedStartTime || !selectedSlot) return;
+      
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      const startHour = parseInt(selectedStartTime.split(':')[0]);
+      const endHour = startHour + selectedDuration;
+      const endTimeStr = `${endHour.toString().padStart(2, '0')}:00`;
+      const slotName = slotNames?.[selectedSlot - 1] || `Spot ${selectedSlot}`;
+      
+      navigate(`/book/${listingId}?start=${dateStr}&end=${dateStr}&startTime=${selectedStartTime}&endTime=${endTimeStr}&hours=${selectedDuration}&slot=${selectedSlot}&slotName=${encodeURIComponent(slotName)}`);
+    } else {
+      if (!startDate || !endDate || !selectedSlot) return;
+      
+      const startStr = format(startDate, 'yyyy-MM-dd');
+      const endStr = format(endDate, 'yyyy-MM-dd');
+      const slotName = slotNames?.[selectedSlot - 1] || `Spot ${selectedSlot}`;
+      
+      navigate(`/book/${listingId}?start=${startStr}&end=${endStr}&slot=${selectedSlot}&slotName=${encodeURIComponent(slotName)}`);
+    }
     onOpenChange(false);
   };
 
@@ -293,6 +385,8 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
       setStep('slots');
       setStartDate(undefined);
       setEndDate(undefined);
+      setSelectedDate(undefined);
+      setSelectedStartTime('');
     } else if (step === 'slots') {
       setStep('calendar');
       setSelectedSlot(null);
@@ -304,7 +398,19 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
     setSelectedSlot(null);
     setStartDate(undefined);
     setEndDate(undefined);
+    setSelectedDate(undefined);
+    setSelectedStartTime('');
+    setSelectedDuration(hourlySettings.minHours || 1);
     setCurrentMonth(new Date());
+    setIsHourlyMode(false);
+  };
+
+  const handleModeToggle = (hourly: boolean) => {
+    setIsHourlyMode(hourly);
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setSelectedDate(undefined);
+    setSelectedStartTime('');
   };
 
   if (isLoading) {
@@ -542,6 +648,38 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
                 <Badge variant="secondary" className="ml-auto text-xs">Selected</Badge>
               </div>
 
+              {/* Mode Toggle - only if hourly is enabled */}
+              {hourlyEnabled && priceHourly && (
+                <div className="flex gap-2 p-1 bg-muted rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => handleModeToggle(false)}
+                    className={cn(
+                      "flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2",
+                      !isHourlyMode 
+                        ? "bg-background text-foreground shadow-sm" 
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Calendar className="h-4 w-4" />
+                    By Date
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleModeToggle(true)}
+                    className={cn(
+                      "flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2",
+                      isHourlyMode 
+                        ? "bg-background text-foreground shadow-sm" 
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Clock className="h-4 w-4" />
+                    By Hour
+                  </button>
+                </div>
+              )}
+
               {/* Month Navigation */}
               <div className="flex items-center justify-between">
                 <Button variant="ghost" size="icon" onClick={handlePrevMonth} disabled={!canGoPrev}>
@@ -577,6 +715,7 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
                     const isSelected = isInSelectedRange(date);
                     const isStart = startDate && isSameDay(date, startDate);
                     const isEnd = endDate && isSameDay(date, endDate);
+                    const isHourlySelected = isHourlyMode && selectedDate && isSameDay(date, selectedDate);
 
                     // Check if this specific slot is available for this date
                     const isSlotAvailable = selectedSlot 
@@ -599,7 +738,7 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
                                 : 'bg-muted text-muted-foreground cursor-not-allowed',
                               isToday(date) && 'ring-2 ring-primary ring-offset-1',
                               isSelected && isSlotAvailable && 'bg-primary/20 border-primary',
-                              (isStart || isEnd) && isSlotAvailable && 'bg-primary text-primary-foreground border-primary',
+                              (isStart || isEnd || isHourlySelected) && isSlotAvailable && 'bg-primary text-primary-foreground border-primary',
                             )}
                           >
                             <span className="font-medium">{format(date, 'd')}</span>
@@ -617,15 +756,83 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
                 </div>
               </TooltipProvider>
 
+              {/* Hourly Time Selection */}
+              {isHourlyMode && selectedDate && (
+                <div className="space-y-3 p-3 bg-muted/30 rounded-xl border border-border">
+                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <Clock className="h-4 w-4 text-primary" />
+                    Select Time for {format(selectedDate, 'MMM d')}
+                  </div>
+
+                  {availableWindows.length > 0 ? (
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-semibold text-muted-foreground uppercase">Start</label>
+                          <Select value={selectedStartTime} onValueChange={setSelectedStartTime}>
+                            <SelectTrigger className="h-10">
+                              <SelectValue placeholder="Select time" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {startTimeOptions.map(opt => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-semibold text-muted-foreground uppercase">Hours</label>
+                          <Select 
+                            value={selectedDuration.toString()} 
+                            onValueChange={(v) => setSelectedDuration(parseInt(v))}
+                            disabled={!selectedStartTime}
+                          >
+                            <SelectTrigger className="h-10">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: maxDuration - (hourlySettings.minHours || 1) + 1 }, (_, i) => (hourlySettings.minHours || 1) + i).map(h => (
+                                <SelectItem key={h} value={h.toString()}>
+                                  {h} hour{h !== 1 ? 's' : ''}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {selectedStartTime && (
+                        <div className="text-xs text-center text-muted-foreground">
+                          {startTimeOptions.find(o => o.value === selectedStartTime)?.label} – {calculatedEndTime}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-4">
+                      <Clock className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">No time slots available</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Pricing Summary */}
               {rentalInfo && (
                 <div className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-sm font-medium text-foreground">{rentalInfo.label}</span>
-                      {startDate && endDate && (
+                      {!isHourlyMode && startDate && endDate && (
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {format(startDate, 'MMM d')} – {format(endDate, 'MMM d, yyyy')}
+                        </p>
+                      )}
+                      {isHourlyMode && selectedDate && selectedStartTime && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {format(selectedDate, 'MMM d, yyyy')} • {startTimeOptions.find(o => o.value === selectedStartTime)?.label} – {calculatedEndTime}
                         </p>
                       )}
                     </div>
@@ -660,7 +867,7 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
                 className="w-full h-12 text-base"
                 size="lg"
                 onClick={handleContinue}
-                disabled={!startDate || !endDate}
+                disabled={!canContinue}
               >
                 {instantBook ? 'Book Now' : 'Request to Book'}
                 <ArrowRight className="h-4 w-4 ml-2" />
