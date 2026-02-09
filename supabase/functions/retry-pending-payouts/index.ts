@@ -12,6 +12,11 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[RETRY-PENDING-PAYOUTS] ${step}${detailsStr}`);
 };
 
+// PAYOUT RULES:
+// 1. SALES: Payout when BOTH buyer AND seller confirm, OR auto-release after 25 days
+// 2. RENTALS: Payout 24 hours after booking end date
+// This function retries any pending payouts that failed due to insufficient balance
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });

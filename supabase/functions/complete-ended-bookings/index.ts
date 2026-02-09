@@ -104,9 +104,11 @@ serve(async (req) => {
     }
 
     // ========================================
-    // STEP 2: Process payouts 24 hours after booking_end_timestamp (if no dispute or manual hold)
+    // STEP 2: Process RENTAL payouts 24 hours after booking_end_timestamp (if no dispute or manual hold)
+    // NOTE: For SALES, payouts are handled by confirm-sale (both parties confirm) or 
+    // auto-release-sale-payouts (25 days after payment if not both confirmed)
     // ========================================
-    logStep("Step 2: Processing payouts for bookings ended 24+ hours ago");
+    logStep("Step 2: Processing RENTAL payouts for bookings ended 24+ hours ago");
 
     const { data: payoutEligibleBookings, error: payoutFetchError } = await supabaseClient
       .from('booking_requests')
