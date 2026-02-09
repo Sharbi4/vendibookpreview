@@ -36,6 +36,18 @@ interface BlockedTimeSlot {
   endTime: string;
 }
 
+// Weekly schedule types - matches listing wizard format
+interface TimeRange {
+  start: string; // HH:mm format
+  end: string;   // HH:mm format
+}
+
+type DayOfWeek = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
+
+type WeeklySchedule = {
+  [key in DayOfWeek]?: TimeRange[];
+};
+
 interface ListingHourlySettings {
   priceHourly: number | null;
   hourlyEnabled: boolean;
@@ -44,11 +56,12 @@ interface ListingHourlySettings {
   maxHours: number;
   bufferTimeMins: number;
   minNoticeHours: number;
-  operatingHoursStart: string | null; // HH:mm
-  operatingHoursEnd: string | null;   // HH:mm
+  operatingHoursStart: string | null; // HH:mm - legacy fallback
+  operatingHoursEnd: string | null;   // HH:mm - legacy fallback
   priceDaily: number | null;
   priceWeekly: number | null;
   totalSlots: number; // Total capacity slots for this listing
+  hourlySchedule: WeeklySchedule | null; // Per-day operating hours from wizard
 }
 
 interface DayAvailabilityInfo {
@@ -76,6 +89,7 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
     priceDaily: null,
     priceWeekly: null,
     totalSlots: 1,
+    hourlySchedule: null,
   });
   const [existingBookings, setExistingBookings] = useState<BookingSlot[]>([]);
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
@@ -89,7 +103,7 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
       
       setIsLoading(true);
       try {
-        // Fetch listing settings including total_slots for capacity management
+        // Fetch listing settings including total_slots and hourly_schedule for capacity management
         const { data: listingData } = await supabase
           .from('listings')
           .select(`
@@ -104,7 +118,8 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
             operating_hours_end,
             price_daily,
             price_weekly,
-            total_slots
+            total_slots,
+            hourly_schedule
           `)
           .eq('id', listingId)
           .single();
@@ -112,6 +127,18 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
         if (listingData) {
           const priceHourly = Number((listingData as any).price_hourly ?? 0) || null;
           const hourlyEnabled = Boolean((listingData as any).hourly_enabled) || (priceHourly !== null && priceHourly > 0);
+
+          // Parse hourly_schedule from JSONB
+          let hourlySchedule: WeeklySchedule | null = null;
+          if ((listingData as any).hourly_schedule) {
+            try {
+              hourlySchedule = typeof (listingData as any).hourly_schedule === 'string'
+                ? JSON.parse((listingData as any).hourly_schedule)
+                : (listingData as any).hourly_schedule;
+            } catch (e) {
+              console.warn('Failed to parse hourly_schedule:', e);
+            }
+          }
 
           setSettings({
             priceHourly,
@@ -126,6 +153,7 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
             priceDaily: listingData.price_daily,
             priceWeekly: listingData.price_weekly,
             totalSlots: listingData.total_slots || 1,
+            hourlySchedule,
           });
         }
 
@@ -264,6 +292,30 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
     }).length;
   };
 
+  // Get the day of week key for schedule lookup
+  const getDayOfWeekKey = (date: Date): DayOfWeek => {
+    const days: DayOfWeek[] = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    return days[date.getDay()];
+  };
+
+  // Get operating hours for a specific date from schedule or fallback
+  const getOperatingHoursForDate = (date: Date): TimeRange[] => {
+    const dayKey = getDayOfWeekKey(date);
+    
+    // Check hourly_schedule first (from wizard)
+    if (settings.hourlySchedule && settings.hourlySchedule[dayKey]) {
+      const dayRanges = settings.hourlySchedule[dayKey];
+      if (dayRanges && dayRanges.length > 0) {
+        return dayRanges;
+      }
+    }
+    
+    // Fallback to legacy operating_hours_start/end or defaults
+    const opStart = settings.operatingHoursStart || '06:00';
+    const opEnd = settings.operatingHoursEnd || '22:00';
+    return [{ start: opStart, end: opEnd }];
+  };
+
   // Get available time windows for a specific date with slot-aware logic
   const getAvailableWindowsForDate = (date: Date): TimeWindow[] => {
     if (!settings.hourlyEnabled) return [];
@@ -281,67 +333,78 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
       return []; // All slots have daily bookings
     }
 
-    // Default operating hours: 6 AM to 10 PM
-    const opStart = settings.operatingHoursStart ? parseInt(settings.operatingHoursStart.split(':')[0]) : 6;
-    const opEnd = settings.operatingHoursEnd ? parseInt(settings.operatingHoursEnd.split(':')[0]) : 22;
+    // Get operating hours for this specific day from schedule
+    const operatingRanges = getOperatingHoursForDate(date);
+    
+    // If no operating hours for this day (closed), return empty
+    if (!operatingRanges || operatingRanges.length === 0) {
+      return [];
+    }
 
     // Build array tracking available slots per hour
     const availableSlotsPerHour: number[] = new Array(24).fill(0);
-    for (let h = opStart; h < opEnd; h++) {
-      // Start with available slots (not daily-booked)
-      let slotsForHour = availableSlots;
+    
+    // Process each operating range for this day
+    operatingRanges.forEach(range => {
+      const opStart = parseInt(range.start.split(':')[0]);
+      const opEnd = parseInt(range.end.split(':')[0]);
       
-      // Subtract hourly bookings that cover this hour
-      const hourlyBookingsForThisHour = countHourlyBookingsForHour(date, h);
-      slotsForHour -= hourlyBookingsForThisHour;
+      for (let h = opStart; h < opEnd; h++) {
+        // Start with available slots (not daily-booked)
+        let slotsForHour = availableSlots;
       
-      // Apply buffer time from adjacent hourly bookings
-      // Get all hourly bookings that affect this date (both legacy and hourly_slots)
-      const hourlyBookingsToday = existingBookings.filter(b => {
-        if (!b.isHourly) return false;
-        if (b.hourlySlots && b.hourlySlots.length > 0) {
-          return b.hourlySlots.some(s => s.date === dateStr && s.slots.length > 0);
-        }
-        return b.date === dateStr;
-      });
+        // Subtract hourly bookings that cover this hour
+        const hourlyBookingsForThisHour = countHourlyBookingsForHour(date, h);
+        slotsForHour -= hourlyBookingsForThisHour;
       
-      const bufferHours = Math.ceil(settings.bufferTimeMins / 60);
-      if (bufferHours > 0) {
-        hourlyBookingsToday.forEach(booking => {
-          // For hourly_slots format, calculate buffer based on booked hours
-          if (booking.hourlySlots && booking.hourlySlots.length > 0) {
-            const daySlots = booking.hourlySlots.find(s => s.date === dateStr);
-            if (daySlots && daySlots.slots.length > 0) {
-              const bookedHours = daySlots.slots.map(s => parseInt(s.split(':')[0])).sort((a, b) => a - b);
-              const firstHour = bookedHours[0];
-              const lastHour = bookedHours[bookedHours.length - 1] + 1; // +1 because end of last hour
-              
-              // Check buffer before first booked hour
-              if (h >= firstHour - bufferHours && h < firstHour) {
-                slotsForHour = Math.max(0, slotsForHour - 1);
-              }
-              // Check buffer after last booked hour
-              if (h >= lastHour && h < lastHour + bufferHours) {
-                slotsForHour = Math.max(0, slotsForHour - 1);
-              }
-            }
-          } else if (booking.startTime && booking.endTime) {
-            // Legacy format
-            const startHour = parseInt(booking.startTime.split(':')[0]);
-            const endHour = parseInt(booking.endTime.split(':')[0]);
-            // Check if this hour falls in the buffer zone
-            if (h >= startHour - bufferHours && h < startHour) {
-              slotsForHour = Math.max(0, slotsForHour - 1);
-            }
-            if (h >= endHour && h < endHour + bufferHours) {
-              slotsForHour = Math.max(0, slotsForHour - 1);
-            }
+        // Apply buffer time from adjacent hourly bookings
+        // Get all hourly bookings that affect this date (both legacy and hourly_slots)
+        const hourlyBookingsToday = existingBookings.filter(b => {
+          if (!b.isHourly) return false;
+          if (b.hourlySlots && b.hourlySlots.length > 0) {
+            return b.hourlySlots.some(s => s.date === dateStr && s.slots.length > 0);
           }
+          return b.date === dateStr;
         });
-      }
       
-      availableSlotsPerHour[h] = Math.max(0, slotsForHour);
-    }
+        const bufferHours = Math.ceil(settings.bufferTimeMins / 60);
+        if (bufferHours > 0) {
+          hourlyBookingsToday.forEach(booking => {
+            // For hourly_slots format, calculate buffer based on booked hours
+            if (booking.hourlySlots && booking.hourlySlots.length > 0) {
+              const daySlots = booking.hourlySlots.find(s => s.date === dateStr);
+              if (daySlots && daySlots.slots.length > 0) {
+                const bookedHours = daySlots.slots.map(s => parseInt(s.split(':')[0])).sort((a, b) => a - b);
+                const firstHour = bookedHours[0];
+                const lastHour = bookedHours[bookedHours.length - 1] + 1; // +1 because end of last hour
+              
+                // Check buffer before first booked hour
+                if (h >= firstHour - bufferHours && h < firstHour) {
+                  slotsForHour = Math.max(0, slotsForHour - 1);
+                }
+                // Check buffer after last booked hour
+                if (h >= lastHour && h < lastHour + bufferHours) {
+                  slotsForHour = Math.max(0, slotsForHour - 1);
+                }
+              }
+            } else if (booking.startTime && booking.endTime) {
+              // Legacy format
+              const startHour = parseInt(booking.startTime.split(':')[0]);
+              const endHour = parseInt(booking.endTime.split(':')[0]);
+              // Check if this hour falls in the buffer zone
+              if (h >= startHour - bufferHours && h < startHour) {
+                slotsForHour = Math.max(0, slotsForHour - 1);
+              }
+              if (h >= endHour && h < endHour + bufferHours) {
+                slotsForHour = Math.max(0, slotsForHour - 1);
+              }
+            }
+          });
+        }
+      
+        availableSlotsPerHour[h] = Math.max(0, slotsForHour);
+      }
+    });
 
     // Block hours from blocked time slots
     const blockedTimesToday = blockedTimeSlots.filter(t => t.date === dateStr);
