@@ -176,3 +176,9 @@ verify_jwt = false
 
 [functions.send-qr-signage-address-request]
 verify_jwt = false
+
+[functions.check-promo-eligibility]
+verify_jwt = false
+
+[functions.process-promo-payout]
+verify_jwt = false
