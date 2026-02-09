@@ -645,11 +645,18 @@ const EnhancedPublicProfileHeader = ({
             )}
 
             {isOwnProfile && (
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button variant="dark-shine" className="rounded-xl shadow-lg" asChild>
-                  <Link to="/account">Edit Profile</Link>
-                </Button>
-              </motion.div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button variant="outline" className="rounded-xl" asChild>
+                    <Link to="/dashboard?view=host">← Back to Dashboard</Link>
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button variant="dark-shine" className="rounded-xl shadow-lg" asChild>
+                    <Link to="/account">Edit Profile</Link>
+                  </Button>
+                </motion.div>
+              </div>
             )}
           </motion.div>
         </div>
