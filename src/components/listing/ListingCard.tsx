@@ -14,6 +14,7 @@ import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 import { trackListingCardClick } from '@/lib/analytics';
 import { AvailabilityCalendarModal } from '@/components/listing/AvailabilityCalendarModal';
+import { normalizeScheduleKeys } from '@/lib/scheduleUtils';
 
 // Types for hourly schedule
 interface TimeRange {
@@ -174,8 +175,9 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
     listing.price_daily && 
     listing.price_daily > 0;
 
-  // Get hourly schedule summary for display
-  const hourlySchedule = (listing as any).hourly_schedule as WeeklySchedule | null;
+  // Get hourly schedule summary for display (normalize keys for resilience)
+  const rawSchedule = (listing as any).hourly_schedule as WeeklySchedule | null;
+  const hourlySchedule = normalizeScheduleKeys(rawSchedule) as WeeklySchedule | null;
   const scheduleSummary = showHourlyRate || (listing.mode === 'rent' && listing.price_hourly && listing.price_hourly > 0)
     ? getScheduleSummary(hourlySchedule)
     : null;

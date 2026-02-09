@@ -1,6 +1,7 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { normalizeScheduleKeys } from '@/lib/scheduleUtils';
 
 interface TimeRange {
   start: string;
@@ -111,17 +112,21 @@ export const WeeklyHoursDisplay: React.FC<WeeklyHoursDisplayProps> = ({
   schedule,
   className,
 }) => {
-  if (!schedule || typeof schedule !== 'object') return null;
+  const raw = schedule;
+  if (!raw || typeof raw !== 'object') return null;
+
+  // Normalize keys (handles both "monday" and "mon" formats)
+  const normalized = normalizeScheduleKeys(raw) as WeeklySchedule | null;
+  if (!normalized) return null;
 
   // Check if schedule has any hours set (safely)
   const hasAnyHours = DAY_ORDER.some(day => {
-    const ranges = getDayRanges(schedule, day);
+    const ranges = getDayRanges(normalized, day);
     return ranges.length > 0;
   });
   if (!hasAnyHours) return null;
-  if (!hasAnyHours) return null;
 
-  const groups = groupConsecutiveDays(schedule);
+  const groups = groupConsecutiveDays(normalized);
 
   return (
     <div className={cn("space-y-4", className)}>

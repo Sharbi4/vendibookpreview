@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO, isBefore, startOfDay, addHours, isAfter, setHours, setMinutes, differenceInHours } from 'date-fns';
+import { normalizeScheduleKeys } from '@/lib/scheduleUtils';
 
 interface HourlyAvailabilityOptions {
   listingId: string;
@@ -128,13 +129,14 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
           const priceHourly = Number((listingData as any).price_hourly ?? 0) || null;
           const hourlyEnabled = Boolean((listingData as any).hourly_enabled) || (priceHourly !== null && priceHourly > 0);
 
-          // Parse hourly_schedule from JSONB
+          // Parse hourly_schedule from JSONB and normalize keys
           let hourlySchedule: WeeklySchedule | null = null;
           if ((listingData as any).hourly_schedule) {
             try {
-              hourlySchedule = typeof (listingData as any).hourly_schedule === 'string'
+              const raw = typeof (listingData as any).hourly_schedule === 'string'
                 ? JSON.parse((listingData as any).hourly_schedule)
                 : (listingData as any).hourly_schedule;
+              hourlySchedule = normalizeScheduleKeys(raw) as WeeklySchedule | null;
             } catch (e) {
               console.warn('Failed to parse hourly_schedule:', e);
             }
