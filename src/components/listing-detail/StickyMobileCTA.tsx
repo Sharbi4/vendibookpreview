@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Calendar, ShoppingCart, Zap, Tag, Edit, AlertTriangle } from 'lucide-react';
+import { Calendar, ShoppingCart, Zap, Tag, Edit, AlertTriangle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
-import DateSelectionModal from './DateSelectionModal';
 import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
+import { RentalBookingWidget } from './RentalBookingWidget';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 
 interface StickyMobileCTAProps {
@@ -31,6 +32,9 @@ interface StickyMobileCTAProps {
   deliveryRadiusMiles?: number | null;
   listingTitle?: string;
   depositAmount?: number | null;
+  // Multi-slot support
+  totalSlots?: number;
+  slotNames?: string[] | null;
 }
 
 export const StickyMobileCTA = ({
@@ -42,6 +46,7 @@ export const StickyMobileCTA = ({
   status,
   instantBook = false,
   category,
+  fulfillmentType = 'pickup',
   priceWeekly,
   priceMonthly,
   priceHourly,
@@ -49,14 +54,15 @@ export const StickyMobileCTA = ({
   dailyEnabled = true,
   availableFrom,
   availableTo,
+  deliveryFee,
   listingTitle = 'Listing',
+  totalSlots = 1,
+  slotNames,
 }: StickyMobileCTAProps) => {
-  // Check if this is a vendor space listing (supports multi-mode booking flow)
-  const isVendorSpace = category === 'vendor_space' || category === 'vendor_lot';
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [isVisible, setIsVisible] = useState(true); // Always visible on mobile/tablet
-  const [showDateModal, setShowDateModal] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [showBookingModal, setShowBookingModal] = useState(false);
   
   // Sale listing states
   const [showOfferModal, setShowOfferModal] = useState(false);
@@ -66,13 +72,12 @@ export const StickyMobileCTA = ({
   // Check if user is the owner of this listing
   const isOwner = user?.id === hostId;
 
-  // Always show sticky CTA on mobile/tablet (no scroll requirement)
+  // Always show sticky CTA on mobile/tablet
   useEffect(() => {
-    // Keep visible always for better conversion on mobile
     setIsVisible(true);
   }, []);
 
-  // Show owner banner instead of CTA buttons (always visible for owners after scroll)
+  // Show owner banner instead of CTA buttons
   if (isOwner && isVisible) {
     return (
       <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-amber-50 border-t border-amber-200 shadow-lg safe-area-pb">
@@ -116,8 +121,8 @@ export const StickyMobileCTA = ({
   };
 
   const handleRentalCTA = () => {
-    // Show date selection first, auth happens when navigating to checkout
-    setShowDateModal(true);
+    // Open unified booking modal
+    setShowBookingModal(true);
   };
 
   const handleAuthSuccess = () => {
@@ -127,7 +132,7 @@ export const StickyMobileCTA = ({
     } else if (pendingAction === 'offer') {
       setShowOfferModal(true);
     } else if (pendingAction === 'book') {
-      setShowDateModal(true);
+      setShowBookingModal(true);
     }
     setPendingAction(null);
   };
@@ -188,23 +193,45 @@ export const StickyMobileCTA = ({
         </div>
       </div>
 
-      {/* Date Selection Modal for Rentals */}
-      <DateSelectionModal
-        open={showDateModal}
-        onOpenChange={setShowDateModal}
-        listingId={listingId}
-        availableFrom={availableFrom}
-        availableTo={availableTo}
-        priceDaily={priceDaily}
-        priceWeekly={priceWeekly}
-        priceMonthly={priceMonthly}
-        priceHourly={priceHourly}
-        hourlyEnabled={hourlyEnabled}
-        dailyEnabled={dailyEnabled}
-        instantBook={instantBook}
-        navigateToBooking={true}
-        isVendorSpace={isVendorSpace}
-      />
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* RENTAL BOOKING MODAL - Unified Duration-First Flow */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      <Dialog open={showBookingModal} onOpenChange={setShowBookingModal}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto p-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Book {listingTitle}</DialogTitle>
+          </DialogHeader>
+          
+          {/* Close button */}
+          <button
+            onClick={() => setShowBookingModal(false)}
+            className="absolute right-4 top-4 z-50 rounded-full p-1.5 bg-background/80 backdrop-blur-sm hover:bg-muted transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          
+          <RentalBookingWidget
+            listingId={listingId}
+            listingTitle={listingTitle}
+            hostId={hostId}
+            isOwner={false}
+            category={category || 'food_truck'}
+            priceDaily={priceDaily}
+            priceWeekly={priceWeekly}
+            priceMonthly={priceMonthly}
+            priceHourly={priceHourly}
+            availableFrom={availableFrom}
+            availableTo={availableTo}
+            instantBook={instantBook}
+            hourlyEnabled={hourlyEnabled}
+            dailyEnabled={dailyEnabled}
+            totalSlots={totalSlots}
+            slotNames={slotNames}
+            fulfillmentType={fulfillmentType}
+            deliveryFee={deliveryFee}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Auth Gate for Actions */}
       <AuthGateOfferModal
