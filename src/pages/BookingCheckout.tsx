@@ -1124,21 +1124,36 @@ const BookingCheckout = () => {
                   </div>
                 </div>
 
-                {/* Dates */}
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <span className="text-sm font-medium">Dates</span>
+                {/* Dates / Hours summary */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">
+                      {isHourlyBooking ? 'Scheduled Hours' : 'Dates'}
+                    </span>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowDateModal(true)}
+                    >
+                      Change
+                    </Button>
+                  </div>
+
+                  {isHourlyBooking ? (
+                    <>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {durationHours} hour{durationHours === 1 ? '' : 's'}
+                        {selectedHourlyDays > 0
+                          ? ` across ${selectedHourlyDays} day${selectedHourlyDays === 1 ? '' : 's'}`
+                          : ''}
+                      </p>
+                      <HourlySelectionSummary selections={hourlySelections} variant="compact" />
+                    </>
+                  ) : (
                     <p className="text-sm text-muted-foreground">
                       {format(startDate, 'MMM d')} – {format(endDate, 'MMM d, yyyy')}
                     </p>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setShowDateModal(true)}
-                  >
-                    Change
-                  </Button>
+                  )}
                 </div>
               </div>
 
