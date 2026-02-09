@@ -173,3 +173,6 @@ verify_jwt = false
 
 [functions.search-listings]
 verify_jwt = false
+
+[functions.send-qr-signage-address-request]
+verify_jwt = false

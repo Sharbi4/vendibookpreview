@@ -786,6 +786,28 @@ export const ListingWizard: React.FC = () => {
           else console.log('Listing live email sent successfully');
         });
 
+        // Send QR signage request email for eligible categories (fire and forget)
+        const signageEligibleCategories = ['commercial_kitchen', 'food_truck', 'food_trailer', 'vendor_space'];
+        if (signageEligibleCategories.includes(formData.category || '')) {
+          const firstName = user.user_metadata?.first_name || 
+            user.user_metadata?.full_name?.split(' ')[0] || 
+            user.email?.split('@')[0] || 
+            'there';
+          
+          supabase.functions.invoke('send-qr-signage-address-request', {
+            body: {
+              to: user.email,
+              firstName,
+              listingTitle: formData.title,
+              listingId: listing.id,
+              category: formData.category,
+            },
+          }).then(({ error }) => {
+            if (error) console.error('Failed to send QR signage email:', error);
+            else console.log('QR signage request email sent successfully');
+          });
+        }
+
         // Set published listing for success modal
         setPublishedListing({
           id: listing.id,
