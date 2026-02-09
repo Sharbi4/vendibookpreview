@@ -95,7 +95,7 @@ const HostDashboard = () => {
           </div>
           
           {/* Action Buttons - Even Row Layout with Dark Shine */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <Link 
               to="/host/bookings"
               className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
@@ -109,6 +109,13 @@ const HostDashboard = () => {
             >
               <BarChart3 className="h-4 w-4" />
               Reporting
+            </Link>
+            <Link 
+              to="/dashboard?tab=listings"
+              className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
+            >
+              <Grid3X3 className="h-4 w-4" />
+              Listings
             </Link>
             <Link 
               to={`/profile/${user?.id}`}
