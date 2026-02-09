@@ -279,6 +279,7 @@ export type Database = {
         Row: {
           access_instructions_snapshot: string | null
           address_snapshot: string | null
+          booking_end_timestamp: string | null
           business_info: Json | null
           checkout_session_id: string | null
           created_at: string
@@ -318,6 +319,9 @@ export type Database = {
           paid_at: string | null
           payment_intent_id: string | null
           payment_status: string | null
+          payout_hold_reason: string | null
+          payout_hold_set_by: string | null
+          payout_hold_until: string | null
           payout_processed: boolean | null
           payout_processed_at: string | null
           payout_transfer_id: string | null
@@ -335,6 +339,7 @@ export type Database = {
         Insert: {
           access_instructions_snapshot?: string | null
           address_snapshot?: string | null
+          booking_end_timestamp?: string | null
           business_info?: Json | null
           checkout_session_id?: string | null
           created_at?: string
@@ -374,6 +379,9 @@ export type Database = {
           paid_at?: string | null
           payment_intent_id?: string | null
           payment_status?: string | null
+          payout_hold_reason?: string | null
+          payout_hold_set_by?: string | null
+          payout_hold_until?: string | null
           payout_processed?: boolean | null
           payout_processed_at?: string | null
           payout_transfer_id?: string | null
@@ -391,6 +399,7 @@ export type Database = {
         Update: {
           access_instructions_snapshot?: string | null
           address_snapshot?: string | null
+          booking_end_timestamp?: string | null
           business_info?: Json | null
           checkout_session_id?: string | null
           created_at?: string
@@ -430,6 +439,9 @@ export type Database = {
           paid_at?: string | null
           payment_intent_id?: string | null
           payment_status?: string | null
+          payout_hold_reason?: string | null
+          payout_hold_set_by?: string | null
+          payout_hold_until?: string | null
           payout_processed?: boolean | null
           payout_processed_at?: string | null
           payout_transfer_id?: string | null
@@ -450,6 +462,13 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_requests_payout_hold_set_by_fkey"
+            columns: ["payout_hold_set_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1905,6 +1924,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_booking_end_timestamp: {
+        Args: { p_end_date: string; p_hourly_slots: Json }
+        Returns: string
+      }
       get_all_asset_requests: {
         Args: never
         Returns: {
