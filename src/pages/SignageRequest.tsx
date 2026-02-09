@@ -50,6 +50,10 @@ const formSchema = z.object({
   signageType: z.enum(['6x6_cards', '24x24_sign'], {
     required_error: 'Please select a signage type',
   }),
+  signageText: z.string()
+    .min(1, 'Please enter signage text')
+    .max(15, 'Maximum 15 characters allowed')
+    .regex(/^[a-zA-Z0-9\s]+$/, 'Only letters, numbers, and spaces allowed'),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -64,6 +68,20 @@ const SignageRequest = () => {
 
   const listingId = searchParams.get('listing');
 
+  // Get default signage text based on listing category
+  const getDefaultSignageText = () => {
+    if (!listingInfo?.category) return 'Rent This';
+    
+    const categoryMap: Record<string, string> = {
+      commercial_kitchen: 'Rent Kitchen',
+      food_truck: 'Rent Truck',
+      food_trailer: 'Rent Trailer',
+      vendor_space: 'Book Space',
+    };
+    
+    return categoryMap[listingInfo.category] || 'Rent This';
+  };
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -75,8 +93,16 @@ const SignageRequest = () => {
       state: '',
       zipCode: '',
       signageType: undefined,
+      signageText: '',
     },
   });
+
+  // Update signage text default when listing info loads
+  useEffect(() => {
+    if (listingInfo && !form.getValues('signageText')) {
+      form.setValue('signageText', getDefaultSignageText());
+    }
+  }, [listingInfo]);
 
   // Fetch listing info if listing ID is provided
   useEffect(() => {
@@ -96,20 +122,6 @@ const SignageRequest = () => {
 
     fetchListing();
   }, [listingId]);
-
-  // Get signage text based on listing category
-  const getSignageText = () => {
-    if (!listingInfo?.category) return 'Rent This Space';
-    
-    const categoryMap: Record<string, string> = {
-      commercial_kitchen: 'Rent This Kitchen',
-      food_truck: 'Rent This Food Truck',
-      food_trailer: 'Rent This Trailer',
-      vendor_space: 'Book This Space',
-    };
-    
-    return categoryMap[listingInfo.category] || 'Rent This Space';
-  };
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
@@ -143,11 +155,13 @@ ${data.city}, ${data.state} ${data.zipCode}
 **Signage Selection**
 ${signageLabel}
 
+**Custom Signage Text**
+"${data.signageText.toUpperCase()}"
+
 **Listing Information**
 - Listing ID: ${listingId || 'Not specified'}
 - Listing Title: ${listingInfo?.title || 'Not specified'}
 - Category: ${listingInfo?.category || 'Not specified'}
-- Signage Text: "${getSignageText()}"
 
 ---
 This request was submitted via the VendiBook signage request form.
@@ -345,14 +359,57 @@ This request was submitted via the VendiBook signage request form.
                       )}
                     />
 
-                    {/* Signage preview text */}
-                    {form.watch('signageType') && (
-                      <div className="mt-6 p-4 bg-muted/50 rounded-lg text-center">
-                        <p className="text-sm text-muted-foreground mb-1">Your signage will say:</p>
-                        <p className="text-lg font-bold text-primary">"{getSignageText()}"</p>
-                        <p className="text-xs text-muted-foreground mt-1">+ Your unique QR code</p>
-                      </div>
-                    )}
+                    {/* Custom Signage Text Input */}
+                    <div className="mt-6 space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="signageText"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-base font-semibold">
+                              Customize Your Signage Text *
+                            </FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Input
+                                  {...field}
+                                  maxLength={15}
+                                  placeholder="Rent Kitchen"
+                                  className="text-center text-lg font-bold uppercase tracking-wide"
+                                  onChange={(e) => {
+                                    // Convert to uppercase and allow only letters, numbers, spaces
+                                    const value = e.target.value.toUpperCase().replace(/[^A-Z0-9\s]/g, '');
+                                    field.onChange(value);
+                                  }}
+                                />
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                  {field.value?.length || 0}/15
+                                </span>
+                              </div>
+                            </FormControl>
+                            <p className="text-xs text-muted-foreground">
+                              Examples: "RENT KITCHEN", "BOOK SPACE", "RENT TRAILER"
+                            </p>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Live Preview */}
+                      {form.watch('signageText') && (
+                        <div className="p-6 bg-primary rounded-xl text-center">
+                          <p className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase">
+                            {form.watch('signageText') || 'YOUR TEXT'}
+                          </p>
+                          <div className="mt-4 mx-auto w-24 h-24 bg-white rounded-lg flex items-center justify-center">
+                            <QrCode className="w-16 h-16 text-foreground" />
+                          </div>
+                          <p className="mt-3 text-xs text-white/70">
+                            Preview of your signage
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
 
