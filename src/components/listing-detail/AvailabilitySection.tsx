@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import DateSelectionModal from './DateSelectionModal';
+import type { ListingCategory } from '@/types/listing';
 
 interface AvailabilitySectionProps {
   listingId: string;
@@ -18,6 +19,7 @@ interface AvailabilitySectionProps {
   instantBook?: boolean;
   onDatesSelected?: (startDate: Date, endDate: Date) => void;
   className?: string;
+  category?: ListingCategory;
 }
 
 export const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({
@@ -33,8 +35,10 @@ export const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({
   instantBook = false,
   onDatesSelected,
   className,
+  category,
 }) => {
   const [showDateModal, setShowDateModal] = useState(false);
+  const isVendorSpace = category === 'vendor_space' || category === 'vendor_lot';
 
   return (
     <>
@@ -95,6 +99,7 @@ export const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({
         instantBook={instantBook}
         onDatesSelected={onDatesSelected}
         navigateToBooking={true}
+        isVendorSpace={isVendorSpace}
       />
     </>
   );

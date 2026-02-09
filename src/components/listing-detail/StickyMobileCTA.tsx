@@ -41,6 +41,7 @@ export const StickyMobileCTA = ({
   priceSale,
   status,
   instantBook = false,
+  category,
   priceWeekly,
   priceMonthly,
   priceHourly,
@@ -50,6 +51,8 @@ export const StickyMobileCTA = ({
   availableTo,
   listingTitle = 'Listing',
 }: StickyMobileCTAProps) => {
+  // Check if this is a vendor space listing (supports multi-mode booking flow)
+  const isVendorSpace = category === 'vendor_space' || category === 'vendor_lot';
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(true); // Always visible on mobile/tablet
@@ -200,6 +203,7 @@ export const StickyMobileCTA = ({
         dailyEnabled={dailyEnabled}
         instantBook={instantBook}
         navigateToBooking={true}
+        isVendorSpace={isVendorSpace}
       />
 
       {/* Auth Gate for Actions */}
