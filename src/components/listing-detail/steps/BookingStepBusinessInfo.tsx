@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 
 export interface BusinessInfoData {
+  businessName: string;
   licenseType: string;
   licenseTypeOther?: string;
   businessDescription: string;
@@ -19,6 +20,7 @@ export interface BusinessInfoData {
 }
 
 export const emptyBusinessInfo: BusinessInfoData = {
+  businessName: '',
   licenseType: '',
   licenseTypeOther: '',
   businessDescription: '',
@@ -48,6 +50,7 @@ const BookingStepBusinessInfo = ({
   };
 
   const isValid =
+    data.businessName.trim() &&
     data.licenseType &&
     data.businessDescription &&
     data.hasWorkersComp &&
@@ -72,6 +75,16 @@ const BookingStepBusinessInfo = ({
           <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Section 1: Business Information
           </h3>
+          
+          <div className="space-y-2">
+            <Label htmlFor="business-name">Business Name *</Label>
+            <Input
+              id="business-name"
+              placeholder="Your business or company name"
+              value={data.businessName}
+              onChange={(e) => handleChange('businessName', e.target.value)}
+            />
+          </div>
           
           <div className="space-y-3">
             <Label>1. Business license type</Label>
