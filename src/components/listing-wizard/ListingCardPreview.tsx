@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { CATEGORY_LABELS, ListingCategory, FulfillmentType } from '@/types/listing';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { normalizeScheduleKeys } from '@/lib/scheduleUtils';
 
 // Types for hourly schedule
 interface TimeRange {
@@ -153,9 +154,10 @@ export const ListingCardPreview: React.FC<ListingCardPreviewProps> = ({ listing,
     listing.priceDaily && 
     parseFloat(listing.priceDaily) > 0;
 
-  // Get schedule summary for hourly rentals
+  // Get schedule summary for hourly rentals (normalize keys for resilience)
+  const normalizedSchedule = normalizeScheduleKeys(listing.hourlySchedule) as WeeklySchedule | null;
   const scheduleSummary = (showHourlyRate || (listing.mode === 'rent' && listing.priceHourly && parseFloat(listing.priceHourly) > 0))
-    ? getScheduleSummary(listing.hourlySchedule)
+    ? getScheduleSummary(normalizedSchedule)
     : null;
 
   const modeLabel = listing.mode === 'rent' ? 'For Rent' : listing.mode === 'sale' ? 'For Sale' : 'Mode TBD';
