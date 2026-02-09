@@ -11,7 +11,19 @@ interface AddressRequestEmail {
   firstName: string;
   listingTitle: string;
   listingId?: string;
+  category?: string;
 }
+
+// Get signage text based on listing category
+const getSignageText = (category?: string): string => {
+  const categoryMap: Record<string, string> = {
+    commercial_kitchen: 'Rent This Kitchen',
+    food_truck: 'Rent This Food Truck',
+    food_trailer: 'Rent This Trailer',
+    vendor_space: 'Book This Space',
+  };
+  return categoryMap[category || ''] || 'Rent This Space';
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -27,8 +39,9 @@ serve(async (req) => {
     const { 
       to,
       firstName = "there",
-      listingTitle = "Your Kitchen",
-      listingId = ""
+      listingTitle = "Your Listing",
+      listingId = "",
+      category = ""
     }: AddressRequestEmail = await req.json();
 
     if (!to) {
@@ -38,13 +51,14 @@ serve(async (req) => {
       );
     }
 
-    const formUrl = `https://vendibook.com/qr-signage-form${listingId ? `?listing=${listingId}` : ''}`;
+    const signageText = getSignageText(category);
+    const formUrl = `https://vendibook.com/signage-request${listingId ? `?listing=${listingId}` : ''}`;
 
     const { error: emailError, data } = await resend.emails.send({
       from: "VendiBook <hello@updates.vendibook.com>",
       replyTo: "support@vendibook.com",
       to: [to],
-      subject: `🎉 Free QR Signage for "${listingTitle}" — Where should we send it?`,
+      subject: `🎁 Claim Your FREE QR Signage for "${listingTitle}"`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -67,58 +81,79 @@ serve(async (req) => {
               <h2 style="color: #1a1a1a; font-size: 24px; margin-bottom: 16px; font-weight: 600;">Hey ${firstName}! 👋</h2>
               
               <p style="font-size: 16px; color: #374151;">
-                Congratulations on listing <strong>"${listingTitle}"</strong> on VendiBook!
+                Congratulations on publishing <strong>"${listingTitle}"</strong> on VendiBook!
               </p>
               
               <!-- Value Prop Box -->
               <div style="background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%); border-radius: 12px; padding: 24px; margin: 24px 0; border-left: 4px solid #FF6D1F;">
                 <p style="margin: 0 0 12px 0; font-weight: 600; color: #1a1a1a; font-size: 18px;">🎁 Your FREE QR Code Signage</p>
                 <p style="margin: 0; color: #374151; font-size: 15px;">
-                  As part of your listing, we'll send you a <strong>professional "Book This Kitchen" sign</strong> with a unique QR code. When vendors scan it, they're taken directly to your listing to book instantly!
-                </p>
-                <p style="margin: 12px 0 0 0; color: #6B7280; font-size: 14px;">
-                  📦 <strong>Delivery:</strong> Your signage will arrive in 7-10 business days after you submit your address.
+                  We'll send you <strong>professional signage</strong> with a unique QR code. When renters scan it, they're taken directly to your listing to book and pay instantly!
                 </p>
               </div>
               
-              <!-- Benefits -->
-              <p style="font-size: 15px; color: #374151; font-weight: 600; margin-bottom: 8px;">Here's what you'll get:</p>
-              <ul style="color: #374151; padding-left: 20px; margin-bottom: 24px;">
-                <li style="margin-bottom: 8px;">✅ Professional signage for your kitchen entrance</li>
-                <li style="margin-bottom: 8px;">✅ Instant booking link — no phone calls needed</li>
-                <li style="margin-bottom: 8px;">✅ Capture walk-in leads 24/7</li>
-                <li style="margin-bottom: 8px;">✅ Track scans and conversions in your dashboard</li>
-              </ul>
+              <!-- Signage Options -->
+              <p style="font-size: 16px; color: #1a1a1a; font-weight: 600; margin-bottom: 16px;">Choose Your FREE Signage:</p>
               
-              <!-- Address Request -->
-              <div style="background: #F3F4F6; border-radius: 12px; padding: 20px; margin: 24px 0; border: 2px dashed #D1D5DB;">
-                <p style="margin: 0 0 8px 0; font-weight: 600; color: #1a1a1a; font-size: 16px;">📬 Where should we mail your sign?</p>
-                <p style="margin: 0; color: #6B7280; font-size: 14px;">
-                  Just reply to this email with your mailing address:
-                </p>
-                <div style="background: white; border-radius: 8px; padding: 16px; margin-top: 12px; border: 1px solid #E5E7EB;">
-                  <p style="margin: 0; color: #9CA3AF; font-size: 14px; font-style: italic;">
-                    Name:<br>
-                    Street Address:<br>
-                    City, State ZIP:<br>
-                  </p>
-                </div>
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+                <tr>
+                  <td width="48%" style="vertical-align: top; padding-right: 8px;">
+                    <div style="border: 2px solid #E5E7EB; border-radius: 12px; padding: 20px; text-align: center; background: #FAFAFA;">
+                      <div style="width: 60px; height: 60px; background: #FFF7ED; border-radius: 8px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center;">
+                        <span style="font-size: 28px;">📇</span>
+                      </div>
+                      <p style="margin: 0 0 4px 0; font-weight: 600; color: #1a1a1a;">6×6 QR Cards</p>
+                      <p style="margin: 0; font-size: 13px; color: #6B7280;">Pack of 10</p>
+                      <p style="margin: 8px 0 0 0; font-size: 12px; color: #9CA3AF;">Perfect for counters & windows</p>
+                    </div>
+                  </td>
+                  <td width="4%"></td>
+                  <td width="48%" style="vertical-align: top; padding-left: 8px;">
+                    <div style="border: 2px solid #E5E7EB; border-radius: 12px; padding: 20px; text-align: center; background: #FAFAFA;">
+                      <div style="width: 60px; height: 60px; background: #FFF7ED; border-radius: 8px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center;">
+                        <span style="font-size: 28px;">🪧</span>
+                      </div>
+                      <p style="margin: 0 0 4px 0; font-weight: 600; color: #1a1a1a;">24×24 Outdoor Sign</p>
+                      <p style="margin: 0; font-size: 13px; color: #6B7280;">Double stake</p>
+                      <p style="margin: 8px 0 0 0; font-size: 12px; color: #9CA3AF;">Weather-resistant for entrances</p>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Signage Preview -->
+              <div style="background: #F3F4F6; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;">
+                <p style="margin: 0 0 4px 0; font-size: 13px; color: #6B7280;">Your signage will say:</p>
+                <p style="margin: 0; font-size: 20px; font-weight: 700; color: #FF6D1F;">"${signageText}"</p>
+                <p style="margin: 4px 0 0 0; font-size: 12px; color: #9CA3AF;">+ Your unique QR code</p>
               </div>
               
+              <!-- CTA Button -->
               <div style="text-align: center; margin: 32px 0;">
-                <a href="mailto:support@vendibook.com?subject=QR%20Signage%20Address%20for%20${encodeURIComponent(listingTitle)}&body=Hi%20VendiBook%20Team%2C%0A%0APlease%20send%20my%20QR%20signage%20to%3A%0A%0AName%3A%20${encodeURIComponent(firstName)}%0AStreet%20Address%3A%20%0ACity%2C%20State%20ZIP%3A%20%0A%0AThanks!" 
+                <a href="${formUrl}" 
                    style="display: inline-block; background: linear-gradient(135deg, #FF6D1F 0%, #FF8A50 100%); color: white; padding: 16px 32px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 14px rgba(255, 109, 31, 0.4);">
-                  Reply with My Address →
+                  Claim My Free Signage →
                 </a>
               </div>
               
-              <p style="font-size: 14px; color: #6B7280; text-align: center;">Or just hit reply to this email!</p>
+              <p style="font-size: 14px; color: #6B7280; text-align: center;">
+                📦 Free shipping • Arrives in 7-10 business days
+              </p>
               
               <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 28px 0;">
               
+              <!-- Benefits -->
+              <p style="font-size: 15px; color: #374151; font-weight: 600; margin-bottom: 8px;">Why get signage?</p>
+              <ul style="color: #374151; padding-left: 20px; margin-bottom: 24px;">
+                <li style="margin-bottom: 8px;">✅ Capture walk-in leads 24/7</li>
+                <li style="margin-bottom: 8px;">✅ Instant bookings—no phone calls needed</li>
+                <li style="margin-bottom: 8px;">✅ Professional look builds trust</li>
+                <li style="margin-bottom: 8px;">✅ Track scans in your dashboard</li>
+              </ul>
+              
               <!-- Support -->
               <p style="color: #6B7280; font-size: 14px;">
-                Questions? Just reply to this email or call us at 
+                Questions? Reply to this email or call us at 
                 <a href="tel:+18778836342" style="color: #FF6D1F; text-decoration: none; font-weight: 600;">1-877-8-VENDI-2</a>
               </p>
               
@@ -146,7 +181,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("QR signage address request email sent successfully:", data);
+    console.log("QR signage request email sent successfully:", data);
 
     return new Response(
       JSON.stringify({ success: true, messageId: data?.id }),
