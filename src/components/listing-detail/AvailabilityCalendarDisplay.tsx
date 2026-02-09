@@ -1,9 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, CalendarCheck, Lock, Clock, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, isBefore, startOfDay, parseISO } from 'date-fns';
+import { 
+  format, 
+  addMonths, 
+  subMonths, 
+  startOfMonth, 
+  endOfMonth, 
+  eachDayOfInterval, 
+  isSameDay, 
+  isToday, 
+  isBefore, 
+  isAfter,
+  startOfDay, 
+  parseISO,
+  addYears,
+} from 'date-fns';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
 import {
   Tooltip,
@@ -17,6 +31,8 @@ interface AvailabilityCalendarDisplayProps {
   availableFrom?: string | null;
   availableTo?: string | null;
   className?: string;
+  onDateSelect?: (startDate: Date, endDate?: Date) => void;
+  selectable?: boolean;
 }
 
 export const AvailabilityCalendarDisplay: React.FC<AvailabilityCalendarDisplayProps> = ({
@@ -24,9 +40,19 @@ export const AvailabilityCalendarDisplay: React.FC<AvailabilityCalendarDisplayPr
   availableFrom,
   availableTo,
   className,
+  onDateSelect,
+  selectable = false,
 }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedStart, setSelectedStart] = useState<Date | undefined>();
+  const [selectedEnd, setSelectedEnd] = useState<Date | undefined>();
   const { blockedDates, bookedDates, bufferDates, isLoading, upcomingBookings } = useBlockedDates({ listingId });
+
+  // Date limits: today to 1 year from today
+  const today = startOfDay(new Date());
+  const maxDate = addYears(today, 1);
+  const minMonth = startOfMonth(today);
+  const maxMonth = startOfMonth(maxDate);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -34,11 +60,28 @@ export const AvailabilityCalendarDisplay: React.FC<AvailabilityCalendarDisplayPr
   const firstDayOfWeek = monthStart.getDay();
   const paddingDays = Array(firstDayOfWeek).fill(null);
 
-  const handlePrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
-  const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
+  // Navigation limits
+  const canGoPrev = isAfter(monthStart, minMonth) || isSameDay(monthStart, minMonth) === false;
+  const canGoNext = isBefore(monthStart, maxMonth);
 
-  const getDayStatus = (date: Date): 'available' | 'blocked' | 'booked' | 'buffer' | 'past' | 'outside_window' => {
-    if (isBefore(date, startOfDay(new Date()))) return 'past';
+  const handlePrevMonth = () => {
+    if (canGoPrev) {
+      setCurrentMonth(subMonths(currentMonth, 1));
+    }
+  };
+  
+  const handleNextMonth = () => {
+    if (canGoNext) {
+      setCurrentMonth(addMonths(currentMonth, 1));
+    }
+  };
+
+  const getDayStatus = (date: Date): 'available' | 'blocked' | 'booked' | 'buffer' | 'past' | 'outside_window' | 'future_limit' => {
+    // Past dates
+    if (isBefore(date, today)) return 'past';
+    
+    // Beyond 1 year limit
+    if (isAfter(date, maxDate)) return 'future_limit';
     
     // Check if outside availability window
     if (availableFrom || availableTo) {
@@ -66,6 +109,39 @@ export const AvailabilityCalendarDisplay: React.FC<AvailabilityCalendarDisplayPr
     return 'available';
   };
 
+  const isDateSelectable = (date: Date): boolean => {
+    if (!selectable) return false;
+    const status = getDayStatus(date);
+    return status === 'available';
+  };
+
+  const handleDateClick = (date: Date) => {
+    if (!selectable || !isDateSelectable(date)) return;
+
+    if (!selectedStart || (selectedStart && selectedEnd)) {
+      // Start new selection
+      setSelectedStart(date);
+      setSelectedEnd(undefined);
+      onDateSelect?.(date);
+    } else if (isBefore(date, selectedStart)) {
+      // Clicked before start, reset to new start
+      setSelectedStart(date);
+      setSelectedEnd(undefined);
+      onDateSelect?.(date);
+    } else {
+      // Set end date
+      setSelectedEnd(date);
+      onDateSelect?.(selectedStart, date);
+    }
+  };
+
+  const isInSelectedRange = (date: Date): boolean => {
+    if (!selectedStart) return false;
+    if (!selectedEnd) return isSameDay(date, selectedStart);
+    return (isSameDay(date, selectedStart) || isAfter(date, selectedStart)) && 
+           (isSameDay(date, selectedEnd) || isBefore(date, selectedEnd));
+  };
+
   const statusColors: Record<string, string> = {
     available: 'bg-background text-foreground border border-border',
     blocked: 'bg-muted text-muted-foreground',
@@ -73,6 +149,7 @@ export const AvailabilityCalendarDisplay: React.FC<AvailabilityCalendarDisplayPr
     buffer: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
     past: 'bg-muted/30 text-muted-foreground/50',
     outside_window: 'bg-muted/50 text-muted-foreground/60',
+    future_limit: 'bg-muted/30 text-muted-foreground/50',
   };
 
   const statusLabels: Record<string, string> = {
@@ -82,6 +159,7 @@ export const AvailabilityCalendarDisplay: React.FC<AvailabilityCalendarDisplayPr
     buffer: 'Buffer day',
     past: 'Past date',
     outside_window: 'Outside availability window',
+    future_limit: 'Beyond 1 year limit',
   };
 
   if (isLoading) {
@@ -99,18 +177,33 @@ export const AvailabilityCalendarDisplay: React.FC<AvailabilityCalendarDisplayPr
       <div className="flex items-center gap-2">
         <CalendarCheck className="w-5 h-5 text-primary" />
         <h3 className="font-semibold text-foreground">Availability</h3>
+        <Badge variant="secondary" className="text-[10px] ml-auto">
+          Up to 1 year
+        </Badge>
       </div>
 
       <div className="bg-card rounded-xl border border-border p-4">
         {/* Month Navigation */}
         <div className="flex items-center justify-between mb-4">
-          <Button variant="ghost" size="icon" onClick={handlePrevMonth}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handlePrevMonth}
+            disabled={!canGoPrev}
+            className="disabled:opacity-30"
+          >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <h4 className="text-base font-semibold text-foreground">
             {format(currentMonth, 'MMMM yyyy')}
           </h4>
-          <Button variant="ghost" size="icon" onClick={handleNextMonth}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleNextMonth}
+            disabled={!canGoNext}
+            className="disabled:opacity-30"
+          >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -133,15 +226,24 @@ export const AvailabilityCalendarDisplay: React.FC<AvailabilityCalendarDisplayPr
 
             {daysInMonth.map(date => {
               const status = getDayStatus(date);
+              const selectionAllowed = isDateSelectable(date);
+              const isSelected = isInSelectedRange(date);
+              const isStart = selectedStart && isSameDay(date, selectedStart);
+              const isEnd = selectedEnd && isSameDay(date, selectedEnd);
 
               return (
                 <Tooltip key={date.toISOString()}>
                   <TooltipTrigger asChild>
                     <div
+                      onClick={() => handleDateClick(date)}
                       className={cn(
-                        'aspect-square rounded-lg flex flex-col items-center justify-center text-xs transition-all relative cursor-default',
+                        'aspect-square rounded-lg flex flex-col items-center justify-center text-xs transition-all relative',
                         statusColors[status],
                         isToday(date) && 'ring-2 ring-primary ring-offset-1',
+                        selectable && selectionAllowed && 'cursor-pointer hover:bg-primary/10 hover:border-primary',
+                        selectable && !selectionAllowed && 'cursor-not-allowed',
+                        isSelected && 'bg-primary/20 border-primary',
+                        (isStart || isEnd) && 'bg-primary text-primary-foreground border-primary',
                       )}
                     >
                       <span className="font-medium">{format(date, 'd')}</span>
@@ -165,6 +267,19 @@ export const AvailabilityCalendarDisplay: React.FC<AvailabilityCalendarDisplayPr
             })}
           </div>
         </TooltipProvider>
+
+        {/* Selected Range Display */}
+        {selectable && selectedStart && (
+          <div className="mt-3 pt-3 border-t border-border">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Selected:</span>
+              <span className="font-medium text-foreground">
+                {format(selectedStart, 'MMM d')}
+                {selectedEnd && ` – ${format(selectedEnd, 'MMM d, yyyy')}`}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Legend */}
         <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-border">
@@ -213,7 +328,9 @@ export const AvailabilityCalendarDisplay: React.FC<AvailabilityCalendarDisplayPr
       <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
         <Info className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
         <p className="text-[11px] text-muted-foreground">
-          Grayed out dates are unavailable for booking.
+          {selectable 
+            ? 'Tap a date to select your start date, then tap another for your end date.'
+            : 'Grayed out dates are unavailable for booking. You can browse up to 1 year ahead.'}
         </p>
       </div>
     </div>
