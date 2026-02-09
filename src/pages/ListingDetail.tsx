@@ -372,6 +372,7 @@ const ListingDetail = () => {
               {/* Pricing Section */}
               <PricingSection
                 isRental={isRental}
+                priceHourly={listing.price_hourly}
                 priceDaily={listing.price_daily}
                 priceWeekly={listing.price_weekly}
                 priceSale={listing.price_sale}
