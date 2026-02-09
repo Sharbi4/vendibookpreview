@@ -188,10 +188,23 @@ const BookingListRow = ({ booking, status }: { booking: any, status: string }) =
           <p className="text-sm text-muted-foreground line-clamp-1">
             {booking.listing?.title}
           </p>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-            <Calendar className="h-3 w-3" />
-            {new Date(booking.start_date).toLocaleDateString()} - {new Date(booking.end_date).toLocaleDateString()}
-          </div>
+          {/* Show hourly booking info if applicable */}
+          {booking.is_hourly_booking && (booking as any).hourly_slots && (booking as any).hourly_slots.length > 0 ? (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+              <Clock className="h-3 w-3" />
+              {booking.duration_hours} hr{(booking.duration_hours || 0) !== 1 ? 's' : ''} across {((booking as any).hourly_slots as any[]).length} day{((booking as any).hourly_slots as any[]).length !== 1 ? 's' : ''}
+            </div>
+          ) : booking.is_hourly_booking && booking.start_time && booking.end_time ? (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+              <Clock className="h-3 w-3" />
+              {new Date(booking.start_date).toLocaleDateString()} • {booking.start_time} – {booking.end_time}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+              <Calendar className="h-3 w-3" />
+              {new Date(booking.start_date).toLocaleDateString()} - {new Date(booking.end_date).toLocaleDateString()}
+            </div>
+          )}
         </div>
       </div>
 

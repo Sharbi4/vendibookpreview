@@ -454,20 +454,36 @@ const Rentals = () => {
                             </div>
                             <div className="flex-1">
                               <p className="font-medium text-foreground">{listing?.title || 'Booking'}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {new Date(booking.start_date).toLocaleDateString('en-US', { 
-                                  weekday: 'short', 
-                                  month: 'short', 
-                                  day: 'numeric' 
-                                })}
-                                {booking.end_date && booking.end_date !== booking.start_date && (
-                                  <> – {new Date(booking.end_date).toLocaleDateString('en-US', { 
+                              {/* Show hourly booking info if applicable */}
+                              {booking.is_hourly_booking && (booking as any).hourly_slots && (booking as any).hourly_slots.length > 0 ? (
+                                <p className="text-sm text-muted-foreground">
+                                  <Clock className="h-3 w-3 inline mr-1" />
+                                  {booking.duration_hours} hr{(booking.duration_hours || 0) !== 1 ? 's' : ''} across {((booking as any).hourly_slots as any[]).length} day{((booking as any).hourly_slots as any[]).length !== 1 ? 's' : ''}
+                                </p>
+                              ) : booking.is_hourly_booking && booking.start_time && booking.end_time ? (
+                                <p className="text-sm text-muted-foreground">
+                                  {new Date(booking.start_date).toLocaleDateString('en-US', { 
                                     weekday: 'short', 
                                     month: 'short', 
                                     day: 'numeric' 
-                                  })}</>
-                                )}
-                              </p>
+                                  })} • {booking.start_time} – {booking.end_time}
+                                </p>
+                              ) : (
+                                <p className="text-sm text-muted-foreground">
+                                  {new Date(booking.start_date).toLocaleDateString('en-US', { 
+                                    weekday: 'short', 
+                                    month: 'short', 
+                                    day: 'numeric' 
+                                  })}
+                                  {booking.end_date && booking.end_date !== booking.start_date && (
+                                    <> – {new Date(booking.end_date).toLocaleDateString('en-US', { 
+                                      weekday: 'short', 
+                                      month: 'short', 
+                                      day: 'numeric' 
+                                    })}</>
+                                  )}
+                                </p>
+                              )}
                             </div>
                             <Badge 
                               variant="secondary"
