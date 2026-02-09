@@ -48,6 +48,7 @@ import {
 } from '@/components/ui/tooltip';
 
 type BookingMode = 'hourly' | 'daily' | 'weekly' | 'monthly';
+type FlowStep = 'date' | 'mode' | 'hourly-details';
 
 interface DateSelectionModalProps {
   open: boolean;
@@ -64,6 +65,10 @@ interface DateSelectionModalProps {
   instantBook?: boolean;
   onDatesSelected?: (startDate: Date, endDate: Date, mode?: BookingMode, hours?: number, startTime?: string) => void;
   navigateToBooking?: boolean;
+  // New props for vendor space enhanced flow
+  isVendorSpace?: boolean;
+  totalSlots?: number;
+  slotNames?: string[] | null;
 }
 
 export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
@@ -81,12 +86,18 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
   instantBook = false,
   onDatesSelected,
   navigateToBooking = true,
+  isVendorSpace = false,
+  totalSlots = 1,
+  slotNames = null,
 }) => {
   const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [bookingMode, setBookingMode] = useState<BookingMode>('daily');
+  
+  // Flow step state - vendor spaces use step-by-step flow
+  const [flowStep, setFlowStep] = useState<FlowStep>('date');
   
   // Hourly mode state
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
@@ -167,11 +178,32 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
   const handleDateClick = (date: Date) => {
     if (!isDateSelectable(date)) return;
 
+    // For vendor space step-by-step flow - dates first, mode after
+    if (isVendorSpace && flowStep === 'date') {
+      // Simple range selection - start and end date
+      if (!startDate || (startDate && endDate)) {
+        setStartDate(date);
+        setEndDate(undefined);
+      } else if (isBefore(date, startDate)) {
+        setStartDate(date);
+        setEndDate(undefined);
+      } else {
+        setEndDate(date);
+        // Once we have both dates, move to mode selection for vendor space
+        setFlowStep('mode');
+      }
+      return;
+    }
+
     if (bookingMode === 'hourly') {
       // Single date selection for hourly
       setSelectedDate(date);
       setSelectedStartTime('');
       setSelectedDuration(hourlySettings.minHours || 1);
+      // For vendor space, move to hourly details step
+      if (isVendorSpace) {
+        setFlowStep('hourly-details');
+      }
     } else if (bookingMode === 'weekly') {
       // Start date selection for weekly - auto-calculate end
       setStartDate(date);
@@ -366,6 +398,7 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
     setSelectedDuration(hourlySettings.minHours || 1);
     setWeekCount(1);
     setMonthCount(1);
+    setFlowStep('date');
   };
 
   const getModeIcon = (mode: BookingMode) => {
@@ -395,346 +428,833 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
     }
   };
 
+  // Helper to calculate rental days from selected range
+  const selectedDays = useMemo(() => {
+    if (!startDate || !endDate) return 0;
+    return differenceInDays(endDate, startDate);
+  }, [startDate, endDate]);
+
+  // For vendor space flow - determine if we should show mode selection
+  const showVendorModeSelection = isVendorSpace && flowStep === 'mode' && startDate && endDate;
+  
+  // Calculate weekly/monthly pricing based on consecutive days
+  const vendorPricingInfo = useMemo(() => {
+    if (!startDate || !endDate) return null;
+    const days = differenceInDays(endDate, startDate);
+    if (days <= 0) return null;
+
+    const weeks = Math.floor(days / 7);
+    const months = Math.floor(days / 30);
+    
+    return {
+      days,
+      weeks,
+      months,
+      isWeeklyEligible: days >= 7 && priceWeekly,
+      isMonthlyEligible: days >= 30 && priceMonthly,
+      dailyTotal: priceDaily ? days * priceDaily : 0,
+      weeklyTotal: priceWeekly ? weeks * priceWeekly + ((days % 7) * (priceDaily || 0)) : 0,
+      monthlyTotal: priceMonthly ? months * priceMonthly + ((days % 30) * (priceDaily || 0)) : 0,
+    };
+  }, [startDate, endDate, priceDaily, priceWeekly, priceMonthly]);
+
+  // Handle mode selection for vendor space flow
+  const handleVendorModeSelect = (mode: BookingMode) => {
+    setBookingMode(mode);
+    if (mode === 'hourly') {
+      // For hourly, reset dates and go to hourly flow
+      setStartDate(undefined);
+      setEndDate(undefined);
+      setFlowStep('hourly-details');
+    }
+    // For daily/weekly/monthly, we already have the dates, so canContinue will be true
+  };
+
+  // Handle back navigation for vendor space flow
+  const handleVendorBack = () => {
+    if (flowStep === 'mode') {
+      setFlowStep('date');
+      setStartDate(undefined);
+      setEndDate(undefined);
+    } else if (flowStep === 'hourly-details') {
+      setFlowStep('mode');
+      setSelectedDate(undefined);
+      setSelectedStartTime('');
+    }
+  };
+
+  // Get flow step title
+  const getFlowStepTitle = () => {
+    if (isVendorSpace) {
+      switch (flowStep) {
+        case 'date': return 'Select Your Dates';
+        case 'mode': return 'Choose Rental Type';
+        case 'hourly-details': return 'Select Time Slot';
+        default: return 'Request Booking';
+      }
+    }
+    return 'Request Booking';
+  };
+
+  // Get flow step description
+  const getFlowStepDescription = () => {
+    if (isVendorSpace) {
+      switch (flowStep) {
+        case 'date': return 'Pick your start and end dates';
+        case 'mode': return `${selectedDays} day${selectedDays > 1 ? 's' : ''} selected – how would you like to book?`;
+        case 'hourly-details': return 'Choose your time slot for the day';
+        default: return 'Choose your rental type and dates';
+      }
+    }
+    return 'Choose your rental type and dates';
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md sm:max-w-lg p-0 gap-0 overflow-hidden max-h-[90vh] overflow-y-auto">
         <DialogHeader className="p-4 pb-0">
           <DialogTitle className="flex items-center gap-2 text-lg">
+            {isVendorSpace && flowStep !== 'date' && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 mr-1" 
+                onClick={handleVendorBack}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            )}
             <Calendar className="h-5 w-5 text-primary" />
-            Request Booking
+            {getFlowStepTitle()}
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            Choose your rental type and dates
+            {getFlowStepDescription()}
           </p>
         </DialogHeader>
 
         <div className="p-4 space-y-4">
-          {/* Mode Selection Tabs */}
-          {availableModes.length > 1 && (
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Rental Type
-              </label>
-              <Tabs 
-                value={bookingMode} 
-                onValueChange={(v) => {
-                  setBookingMode(v as BookingMode);
-                  handleReset();
-                }} 
-                className="w-full"
-              >
-                <TabsList className={cn(
-                  "grid w-full h-11",
-                  availableModes.length === 2 && "grid-cols-2",
-                  availableModes.length === 3 && "grid-cols-3",
-                  availableModes.length === 4 && "grid-cols-4",
-                )}>
-                  {availableModes.map((mode) => (
-                    <TabsTrigger 
-                      key={mode} 
-                      value={mode} 
-                      className="gap-1.5 text-xs sm:text-sm flex-col sm:flex-row h-full py-1.5"
+          {/* VENDOR SPACE MODE SELECTION STEP */}
+          {showVendorModeSelection && (
+            <div className="space-y-4">
+              {/* Selected dates display */}
+              <div className="p-3 bg-muted/30 rounded-xl border border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">
+                      {format(startDate, 'MMM d')} – {format(endDate, 'MMM d, yyyy')}
+                    </span>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    {selectedDays} day{selectedDays > 1 ? 's' : ''}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Rental Mode Options */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  How would you like to book?
+                </label>
+                
+                <div className="grid gap-2">
+                  {/* Daily Option */}
+                  {dailyEnabled && priceDaily && (
+                    <button
+                      type="button"
+                      onClick={() => handleVendorModeSelect('daily')}
+                      className={cn(
+                        "p-4 rounded-xl border-2 transition-all text-left flex items-center justify-between",
+                        bookingMode === 'daily' 
+                          ? "border-primary bg-primary/5" 
+                          : "border-border hover:border-primary/50"
+                      )}
                     >
-                      {getModeIcon(mode)}
-                      <span className="hidden sm:inline">{getModeLabel(mode)}</span>
-                      <span className="sm:hidden text-[10px]">{getModeLabel(mode)}</span>
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-              
-              {/* Price indicator for selected mode */}
-              <div className="flex items-center justify-center gap-1 text-sm">
-                <span className="font-bold text-foreground">
-                  ${getModePrice(bookingMode)?.toLocaleString() || '—'}
-                </span>
-                <span className="text-muted-foreground">
-                  /{bookingMode === 'hourly' ? 'hr' : bookingMode === 'daily' ? 'day' : bookingMode === 'weekly' ? 'week' : 'month'}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Week/Month Duration Selector */}
-          {(bookingMode === 'weekly' || bookingMode === 'monthly') && (
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Duration
-              </label>
-              <Select 
-                value={(bookingMode === 'weekly' ? weekCount : monthCount).toString()} 
-                onValueChange={(v) => {
-                  if (bookingMode === 'weekly') {
-                    setWeekCount(parseInt(v));
-                  } else {
-                    setMonthCount(parseInt(v));
-                  }
-                }}
-              >
-                <SelectTrigger className="h-12">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: bookingMode === 'weekly' ? 12 : 6 }, (_, i) => i + 1).map(n => (
-                    <SelectItem key={n} value={n.toString()}>
-                      {n} {bookingMode === 'weekly' ? 'week' : 'month'}{n > 1 ? 's' : ''}
-                      {' '}
-                      <span className="text-muted-foreground">
-                        (${((getModePrice(bookingMode) || 0) * n).toLocaleString()})
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Sun className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <span className="font-medium">Daily</span>
+                          <p className="text-xs text-muted-foreground">
+                            ${priceDaily}/day × {selectedDays} days
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-lg font-bold text-primary">
+                        ${(priceDaily * selectedDays).toLocaleString()}
                       </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {isLoading ? (
-            <div className="h-64 flex items-center justify-center">
-              <div className="animate-pulse text-muted-foreground">Loading availability...</div>
-            </div>
-          ) : (
-            <>
-              {/* Calendar Header */}
-              <div className="flex items-center justify-between">
-                <Button variant="ghost" size="icon" onClick={handlePrevMonth}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <h4 className="text-base font-semibold text-foreground">
-                  {format(currentMonth, 'MMMM yyyy')}
-                </h4>
-                <Button variant="ghost" size="icon" onClick={handleNextMonth}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-
-              {/* Day Headers */}
-              <div className="grid grid-cols-7 gap-1">
-                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                  <div key={`${day}-${i}`} className="text-center text-xs font-medium text-muted-foreground py-1">
-                    {day}
-                  </div>
-                ))}
-              </div>
-
-              {/* Calendar Grid */}
-              <TooltipProvider>
-                <div className="grid grid-cols-7 gap-1">
-                  {paddingDays.map((_, index) => (
-                    <div key={`padding-${index}`} className="aspect-square" />
-                  ))}
-
-                  {daysInMonth.map(date => {
-                    const status = getDayStatus(date);
-                    const isSelected = isInSelectedRange(date);
-                    const isStart = (bookingMode === 'hourly' ? selectedDate && isSameDay(date, selectedDate) : startDate && isSameDay(date, startDate));
-                    const isEnd = endDate && isSameDay(date, endDate);
-                    const canSelect = isDateSelectable(date);
-
-                    return (
-                      <Tooltip key={date.toISOString()}>
-                        <TooltipTrigger asChild>
-                          <div
-                            onClick={() => handleDateClick(date)}
-                            className={cn(
-                              'aspect-square rounded-lg flex flex-col items-center justify-center text-xs transition-all relative',
-                              canSelect ? statusColors['available'] : statusColors[status],
-                              isToday(date) && 'ring-2 ring-primary ring-offset-1',
-                              isSelected && canSelect && 'bg-primary/20 border-primary',
-                              (isStart || isEnd) && canSelect && 'bg-primary text-primary-foreground border-primary',
-                            )}
-                          >
-                            <span className="font-medium">{format(date, 'd')}</span>
-                            {status === 'blocked' && (
-                              <Lock className="h-2 w-2 absolute bottom-0.5" />
-                            )}
-                            {status === 'booked' && (
-                              <CalendarCheck className="h-2 w-2 absolute bottom-0.5" />
-                            )}
-                            {status === 'buffer' && (
-                              <Clock className="h-2 w-2 absolute bottom-0.5" />
-                            )}
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                          <p>{format(date, 'MMM d, yyyy')}</p>
-                          <p className="text-xs text-muted-foreground">{statusLabels[status]}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    );
-                  })}
-                </div>
-              </TooltipProvider>
-
-              {/* Legend */}
-              <div className="flex flex-wrap gap-3 pt-2 border-t border-border">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded bg-background border border-border" />
-                  <span className="text-xs text-muted-foreground">Available</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded bg-emerald-100 dark:bg-emerald-900/30" />
-                  <span className="text-xs text-muted-foreground">Booked</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded bg-muted" />
-                  <span className="text-xs text-muted-foreground">Unavailable</span>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Hourly Time Selection */}
-          {bookingMode === 'hourly' && selectedDate && (
-            <div className="space-y-3 p-3 bg-muted/30 rounded-xl border border-border">
-              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                <Clock className="h-4 w-4 text-primary" />
-                Select Time for {format(selectedDate, 'MMM d')}
-              </div>
-
-              {availableWindows.length > 0 ? (
-                <>
-                  {/* Available Windows Info */}
-                  <div className="text-xs text-muted-foreground">
-                    Available: {availableWindows.map(w => {
-                      const startH = w.startHour;
-                      const endH = w.endHour;
-                      return `${startH > 12 ? startH - 12 : startH || 12}${startH >= 12 ? 'PM' : 'AM'}–${endH > 12 ? endH - 12 : endH || 12}${endH >= 12 ? 'PM' : 'AM'}`;
-                    }).join(', ')}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* Start Time */}
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Start</label>
-                      <Select value={selectedStartTime} onValueChange={setSelectedStartTime}>
-                        <SelectTrigger className="h-10">
-                          <SelectValue placeholder="Select time" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {startTimeOptions.map(opt => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Duration */}
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Hours</label>
-                      <Select 
-                        value={selectedDuration.toString()} 
-                        onValueChange={(v) => setSelectedDuration(parseInt(v))}
-                        disabled={!selectedStartTime}
-                      >
-                        <SelectTrigger className="h-10">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from({ length: maxDuration - (hourlySettings.minHours || 1) + 1 }, (_, i) => (hourlySettings.minHours || 1) + i).map(h => (
-                            <SelectItem key={h} value={h.toString()}>
-                              {h} hour{h !== 1 ? 's' : ''}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {selectedStartTime && (
-                    <div className="text-xs text-center text-muted-foreground">
-                      {startTimeOptions.find(o => o.value === selectedStartTime)?.label} – {calculatedEndTime}
-                    </div>
+                    </button>
                   )}
-                </>
-              ) : (
-                <div className="text-center py-4">
-                  <Clock className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">No time slots available</p>
+
+                  {/* Weekly Option - only if 7+ days */}
+                  {vendorPricingInfo?.isWeeklyEligible && priceWeekly && (
+                    <button
+                      type="button"
+                      onClick={() => handleVendorModeSelect('weekly')}
+                      className={cn(
+                        "p-4 rounded-xl border-2 transition-all text-left flex items-center justify-between",
+                        bookingMode === 'weekly' 
+                          ? "border-primary bg-primary/5" 
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                          <CalendarDays className="h-5 w-5 text-emerald-600" />
+                        </div>
+                        <div>
+                          <span className="font-medium">Weekly Rate</span>
+                          <p className="text-xs text-muted-foreground">
+                            ${priceWeekly}/week ({vendorPricingInfo.weeks} week{vendorPricingInfo.weeks > 1 ? 's' : ''})
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-lg font-bold text-emerald-600">
+                          ${vendorPricingInfo.weeklyTotal.toLocaleString()}
+                        </span>
+                        {vendorPricingInfo.dailyTotal > vendorPricingInfo.weeklyTotal && (
+                          <p className="text-xs text-emerald-600">
+                            Save ${(vendorPricingInfo.dailyTotal - vendorPricingInfo.weeklyTotal).toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                    </button>
+                  )}
+
+                  {/* Monthly Option - only if 30+ days */}
+                  {vendorPricingInfo?.isMonthlyEligible && priceMonthly && (
+                    <button
+                      type="button"
+                      onClick={() => handleVendorModeSelect('monthly')}
+                      className={cn(
+                        "p-4 rounded-xl border-2 transition-all text-left flex items-center justify-between",
+                        bookingMode === 'monthly' 
+                          ? "border-primary bg-primary/5" 
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                          <CalendarRange className="h-5 w-5 text-amber-600" />
+                        </div>
+                        <div>
+                          <span className="font-medium">Monthly Rate</span>
+                          <p className="text-xs text-muted-foreground">
+                            ${priceMonthly}/month ({vendorPricingInfo.months} month{vendorPricingInfo.months > 1 ? 's' : ''})
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-lg font-bold text-amber-600">
+                          ${vendorPricingInfo.monthlyTotal.toLocaleString()}
+                        </span>
+                        {vendorPricingInfo.dailyTotal > vendorPricingInfo.monthlyTotal && (
+                          <p className="text-xs text-amber-600">
+                            Save ${(vendorPricingInfo.dailyTotal - vendorPricingInfo.monthlyTotal).toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                    </button>
+                  )}
+
+                  {/* Hourly Option */}
+                  {hourlyEnabled && priceHourly && (
+                    <button
+                      type="button"
+                      onClick={() => handleVendorModeSelect('hourly')}
+                      className={cn(
+                        "p-4 rounded-xl border-2 transition-all text-left flex items-center justify-between",
+                        bookingMode === 'hourly' 
+                          ? "border-primary bg-primary/5" 
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                          <Clock className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <span className="font-medium">Hourly</span>
+                          <p className="text-xs text-muted-foreground">
+                            Book by the hour
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-lg font-bold text-blue-600">
+                        ${priceHourly}/hr
+                      </span>
+                    </button>
+                  )}
                 </div>
+              </div>
+
+              {/* CTA for mode selection */}
+              {bookingMode !== 'hourly' && (
+                <Button
+                  variant="dark-shine"
+                  className="w-full h-12 text-base"
+                  size="lg"
+                  onClick={handleContinue}
+                  disabled={!canContinue}
+                >
+                  {instantBook ? (
+                    <>
+                      <Zap className="h-4 w-4 mr-2" />
+                      Book Now
+                    </>
+                  ) : (
+                    'Continue'
+                  )}
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
               )}
             </div>
           )}
 
-          {/* Selection Summary */}
-          {rentalInfo && (
-            <div className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-sm font-medium text-foreground">
-                    {rentalInfo.label} rental
-                  </span>
-                  {startDate && endDate && bookingMode !== 'hourly' && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {format(startDate, 'MMM d')} – {format(endDate, 'MMM d, yyyy')}
-                    </p>
-                  )}
-                  {bookingMode === 'hourly' && selectedDate && selectedStartTime && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {format(selectedDate, 'MMM d, yyyy')} • {startTimeOptions.find(o => o.value === selectedStartTime)?.label} – {calculatedEndTime}
-                    </p>
-                  )}
+          {/* VENDOR SPACE HOURLY DETAILS STEP */}
+          {isVendorSpace && flowStep === 'hourly-details' && (
+            <div className="space-y-4">
+              {/* Date picker for hourly */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Select a Date
+                </label>
+                {/* Mini calendar for date selection */}
+                <div className="space-y-3">
+                  {/* Calendar Header */}
+                  <div className="flex items-center justify-between">
+                    <Button variant="ghost" size="icon" onClick={handlePrevMonth}>
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <h4 className="text-base font-semibold text-foreground">
+                      {format(currentMonth, 'MMMM yyyy')}
+                    </h4>
+                    <Button variant="ghost" size="icon" onClick={handleNextMonth}>
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {/* Day Headers */}
+                  <div className="grid grid-cols-7 gap-1">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                      <div key={`${day}-${i}`} className="text-center text-xs font-medium text-muted-foreground py-1">
+                        {day}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Calendar Grid */}
+                  <TooltipProvider>
+                    <div className="grid grid-cols-7 gap-1">
+                      {paddingDays.map((_, index) => (
+                        <div key={`padding-${index}`} className="aspect-square" />
+                      ))}
+
+                      {daysInMonth.map(date => {
+                        const status = getDayStatus(date);
+                        const isSelectedHourlyDate = selectedDate && isSameDay(date, selectedDate);
+                        const canSelect = isDateSelectable(date);
+
+                        return (
+                          <Tooltip key={date.toISOString()}>
+                            <TooltipTrigger asChild>
+                              <div
+                                onClick={() => {
+                                  if (canSelect) {
+                                    setSelectedDate(date);
+                                    setSelectedStartTime('');
+                                    setSelectedDuration(hourlySettings.minHours || 1);
+                                  }
+                                }}
+                                className={cn(
+                                  'aspect-square rounded-lg flex flex-col items-center justify-center text-xs transition-all relative',
+                                  canSelect ? statusColors['available'] : statusColors[status],
+                                  isToday(date) && 'ring-2 ring-primary ring-offset-1',
+                                  isSelectedHourlyDate && canSelect && 'bg-primary text-primary-foreground border-primary',
+                                )}
+                              >
+                                <span className="font-medium">{format(date, 'd')}</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>{format(date, 'MMM d, yyyy')}</p>
+                              <p className="text-xs text-muted-foreground">{statusLabels[status]}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      })}
+                    </div>
+                  </TooltipProvider>
                 </div>
-                <div className="text-right">
-                  <span className="text-xl font-bold text-primary">
-                    ${rentalInfo.totalWithFees.toLocaleString()}
-                  </span>
-                  <p className="text-[10px] text-muted-foreground">incl. fees</p>
-                </div>
-              </div>
-              <Separator className="bg-primary/20" />
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Base price</span>
-                <span>${rentalInfo.basePrice.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Service fee</span>
-                <span>${rentalInfo.serviceFee.toLocaleString()}</span>
               </div>
 
+              {/* Time slot selection */}
+              {selectedDate && (
+                <div className="space-y-3 p-3 bg-muted/30 rounded-xl border border-border">
+                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <Clock className="h-4 w-4 text-primary" />
+                    Select Time for {format(selectedDate, 'MMM d')}
+                  </div>
+
+                  {availableWindows.length > 0 ? (
+                    <>
+                      {/* Available Windows Info */}
+                      <div className="text-xs text-muted-foreground">
+                        Available: {availableWindows.map(w => {
+                          const startH = w.startHour;
+                          const endH = w.endHour;
+                          return `${startH > 12 ? startH - 12 : startH || 12}${startH >= 12 ? 'PM' : 'AM'}–${endH > 12 ? endH - 12 : endH || 12}${endH >= 12 ? 'PM' : 'AM'}`;
+                        }).join(', ')}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Start Time */}
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Start</label>
+                          <Select value={selectedStartTime} onValueChange={setSelectedStartTime}>
+                            <SelectTrigger className="h-10">
+                              <SelectValue placeholder="Select time" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {startTimeOptions.map(opt => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Duration */}
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Hours</label>
+                          <Select 
+                            value={selectedDuration.toString()} 
+                            onValueChange={(v) => setSelectedDuration(parseInt(v))}
+                            disabled={!selectedStartTime}
+                          >
+                            <SelectTrigger className="h-10">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: maxDuration - (hourlySettings.minHours || 1) + 1 }, (_, i) => (hourlySettings.minHours || 1) + i).map(h => (
+                                <SelectItem key={h} value={h.toString()}>
+                                  {h} hour{h !== 1 ? 's' : ''}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {selectedStartTime && (
+                        <div className="text-xs text-center text-muted-foreground">
+                          {startTimeOptions.find(o => o.value === selectedStartTime)?.label} – {calculatedEndTime}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-4">
+                      <Clock className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">No time slots available on this date</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Summary and CTA */}
+              {rentalInfo && (
+                <div className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm font-medium text-foreground">
+                        {rentalInfo.label} rental
+                      </span>
+                      {selectedDate && selectedStartTime && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {format(selectedDate, 'MMM d, yyyy')} • {startTimeOptions.find(o => o.value === selectedStartTime)?.label} – {calculatedEndTime}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xl font-bold text-primary">
+                        ${rentalInfo.totalWithFees.toLocaleString()}
+                      </span>
+                      <p className="text-[10px] text-muted-foreground">incl. fees</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleReset}
-                className="w-full mt-2 h-7 text-xs text-muted-foreground"
+                variant="dark-shine"
+                className="w-full h-12 text-base"
+                size="lg"
+                onClick={handleContinue}
+                disabled={!canContinue}
               >
-                Clear selection
+                {instantBook ? (
+                  <>
+                    <Zap className="h-4 w-4 mr-2" />
+                    Book Now
+                  </>
+                ) : (
+                  'Continue'
+                )}
+                <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
           )}
 
-          {/* Info */}
-          <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
-            <Info className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
-            <p className="text-[11px] text-muted-foreground">
-              {bookingMode === 'hourly' 
-                ? 'Select a date, then choose your time slot.'
-                : bookingMode === 'weekly' || bookingMode === 'monthly'
-                ? `Choose the number of ${bookingMode === 'weekly' ? 'weeks' : 'months'}, then select your start date.`
-                : 'Tap a date to start, then tap another to set your rental period.'}
-            </p>
-          </div>
+          {/* STANDARD FLOW (non-vendor space OR vendor space date selection step) */}
+          {(!isVendorSpace || flowStep === 'date') && (
+            <>
+              {/* Mode Selection Tabs - only for non-vendor space */}
+              {!isVendorSpace && availableModes.length > 1 && (
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Rental Type
+                  </label>
+                  <Tabs 
+                    value={bookingMode} 
+                    onValueChange={(v) => {
+                      setBookingMode(v as BookingMode);
+                      handleReset();
+                    }} 
+                    className="w-full"
+                  >
+                    <TabsList className={cn(
+                      "grid w-full h-11",
+                      availableModes.length === 2 && "grid-cols-2",
+                      availableModes.length === 3 && "grid-cols-3",
+                      availableModes.length === 4 && "grid-cols-4",
+                    )}>
+                      {availableModes.map((mode) => (
+                        <TabsTrigger 
+                          key={mode} 
+                          value={mode} 
+                          className="gap-1.5 text-xs sm:text-sm flex-col sm:flex-row h-full py-1.5"
+                        >
+                          {getModeIcon(mode)}
+                          <span className="hidden sm:inline">{getModeLabel(mode)}</span>
+                          <span className="sm:hidden text-[10px]">{getModeLabel(mode)}</span>
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </Tabs>
+                  
+                  {/* Price indicator for selected mode */}
+                  <div className="flex items-center justify-center gap-1 text-sm">
+                    <span className="font-bold text-foreground">
+                      ${getModePrice(bookingMode)?.toLocaleString() || '—'}
+                    </span>
+                    <span className="text-muted-foreground">
+                      /{bookingMode === 'hourly' ? 'hr' : bookingMode === 'daily' ? 'day' : bookingMode === 'weekly' ? 'week' : 'month'}
+                    </span>
+                  </div>
+                </div>
+              )}
 
-          {/* CTA */}
-          <Button
-            variant="dark-shine"
-            className="w-full h-12 text-base"
-            size="lg"
-            onClick={handleContinue}
-            disabled={!canContinue}
-          >
-            {instantBook ? (
-              <>
-                <Zap className="h-4 w-4 mr-2" />
-                Book Now
-              </>
-            ) : (
-              'Request to Book'
-            )}
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
+              {/* Vendor space hint */}
+              {isVendorSpace && flowStep === 'date' && (
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                  <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <p className="text-sm text-foreground">
+                    Select your <strong>start date</strong>, then your <strong>end date</strong> to see pricing options.
+                  </p>
+                </div>
+              )}
+
+              {/* Week/Month Duration Selector - only for non-vendor space */}
+              {!isVendorSpace && (bookingMode === 'weekly' || bookingMode === 'monthly') && (
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Duration
+                  </label>
+                  <Select 
+                    value={(bookingMode === 'weekly' ? weekCount : monthCount).toString()} 
+                    onValueChange={(v) => {
+                      if (bookingMode === 'weekly') {
+                        setWeekCount(parseInt(v));
+                      } else {
+                        setMonthCount(parseInt(v));
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-12">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: bookingMode === 'weekly' ? 12 : 6 }, (_, i) => i + 1).map(n => (
+                        <SelectItem key={n} value={n.toString()}>
+                          {n} {bookingMode === 'weekly' ? 'week' : 'month'}{n > 1 ? 's' : ''}
+                          {' '}
+                          <span className="text-muted-foreground">
+                            (${((getModePrice(bookingMode) || 0) * n).toLocaleString()})
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {isLoading ? (
+                <div className="h-64 flex items-center justify-center">
+                  <div className="animate-pulse text-muted-foreground">Loading availability...</div>
+                </div>
+              ) : (
+                <>
+                  {/* Calendar Header */}
+                  <div className="flex items-center justify-between">
+                    <Button variant="ghost" size="icon" onClick={handlePrevMonth}>
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <h4 className="text-base font-semibold text-foreground">
+                      {format(currentMonth, 'MMMM yyyy')}
+                    </h4>
+                    <Button variant="ghost" size="icon" onClick={handleNextMonth}>
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {/* Day Headers */}
+                  <div className="grid grid-cols-7 gap-1">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                      <div key={`${day}-${i}`} className="text-center text-xs font-medium text-muted-foreground py-1">
+                        {day}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Calendar Grid */}
+                  <TooltipProvider>
+                    <div className="grid grid-cols-7 gap-1">
+                      {paddingDays.map((_, index) => (
+                        <div key={`padding-${index}`} className="aspect-square" />
+                      ))}
+
+                      {daysInMonth.map(date => {
+                        const status = getDayStatus(date);
+                        const isSelected = isInSelectedRange(date);
+                        const isStart = (bookingMode === 'hourly' && !isVendorSpace ? selectedDate && isSameDay(date, selectedDate) : startDate && isSameDay(date, startDate));
+                        const isEnd = endDate && isSameDay(date, endDate);
+                        const canSelect = isDateSelectable(date);
+
+                        return (
+                          <Tooltip key={date.toISOString()}>
+                            <TooltipTrigger asChild>
+                              <div
+                                onClick={() => handleDateClick(date)}
+                                className={cn(
+                                  'aspect-square rounded-lg flex flex-col items-center justify-center text-xs transition-all relative',
+                                  canSelect ? statusColors['available'] : statusColors[status],
+                                  isToday(date) && 'ring-2 ring-primary ring-offset-1',
+                                  isSelected && canSelect && 'bg-primary/20 border-primary',
+                                  (isStart || isEnd) && canSelect && 'bg-primary text-primary-foreground border-primary',
+                                )}
+                              >
+                                <span className="font-medium">{format(date, 'd')}</span>
+                                {status === 'blocked' && (
+                                  <Lock className="h-2 w-2 absolute bottom-0.5" />
+                                )}
+                                {status === 'booked' && (
+                                  <CalendarCheck className="h-2 w-2 absolute bottom-0.5" />
+                                )}
+                                {status === 'buffer' && (
+                                  <Clock className="h-2 w-2 absolute bottom-0.5" />
+                                )}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>{format(date, 'MMM d, yyyy')}</p>
+                              <p className="text-xs text-muted-foreground">{statusLabels[status]}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      })}
+                    </div>
+                  </TooltipProvider>
+
+                  {/* Legend */}
+                  <div className="flex flex-wrap gap-3 pt-2 border-t border-border">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 rounded bg-background border border-border" />
+                      <span className="text-xs text-muted-foreground">Available</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 rounded bg-emerald-100 dark:bg-emerald-900/30" />
+                      <span className="text-xs text-muted-foreground">Booked</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 rounded bg-muted" />
+                      <span className="text-xs text-muted-foreground">Unavailable</span>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Hourly Time Selection - only for non-vendor space */}
+              {!isVendorSpace && bookingMode === 'hourly' && selectedDate && (
+                <div className="space-y-3 p-3 bg-muted/30 rounded-xl border border-border">
+                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <Clock className="h-4 w-4 text-primary" />
+                    Select Time for {format(selectedDate, 'MMM d')}
+                  </div>
+
+                  {availableWindows.length > 0 ? (
+                    <>
+                      {/* Available Windows Info */}
+                      <div className="text-xs text-muted-foreground">
+                        Available: {availableWindows.map(w => {
+                          const startH = w.startHour;
+                          const endH = w.endHour;
+                          return `${startH > 12 ? startH - 12 : startH || 12}${startH >= 12 ? 'PM' : 'AM'}–${endH > 12 ? endH - 12 : endH || 12}${endH >= 12 ? 'PM' : 'AM'}`;
+                        }).join(', ')}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Start Time */}
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Start</label>
+                          <Select value={selectedStartTime} onValueChange={setSelectedStartTime}>
+                            <SelectTrigger className="h-10">
+                              <SelectValue placeholder="Select time" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {startTimeOptions.map(opt => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Duration */}
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Hours</label>
+                          <Select 
+                            value={selectedDuration.toString()} 
+                            onValueChange={(v) => setSelectedDuration(parseInt(v))}
+                            disabled={!selectedStartTime}
+                          >
+                            <SelectTrigger className="h-10">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: maxDuration - (hourlySettings.minHours || 1) + 1 }, (_, i) => (hourlySettings.minHours || 1) + i).map(h => (
+                                <SelectItem key={h} value={h.toString()}>
+                                  {h} hour{h !== 1 ? 's' : ''}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {selectedStartTime && (
+                        <div className="text-xs text-center text-muted-foreground">
+                          {startTimeOptions.find(o => o.value === selectedStartTime)?.label} – {calculatedEndTime}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-4">
+                      <Clock className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">No time slots available</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Selection Summary - only for non-vendor space */}
+              {!isVendorSpace && rentalInfo && (
+                <div className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm font-medium text-foreground">
+                        {rentalInfo.label} rental
+                      </span>
+                      {startDate && endDate && bookingMode !== 'hourly' && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {format(startDate, 'MMM d')} – {format(endDate, 'MMM d, yyyy')}
+                        </p>
+                      )}
+                      {bookingMode === 'hourly' && selectedDate && selectedStartTime && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {format(selectedDate, 'MMM d, yyyy')} • {startTimeOptions.find(o => o.value === selectedStartTime)?.label} – {calculatedEndTime}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xl font-bold text-primary">
+                        ${rentalInfo.totalWithFees.toLocaleString()}
+                      </span>
+                      <p className="text-[10px] text-muted-foreground">incl. fees</p>
+                    </div>
+                  </div>
+                  <Separator className="bg-primary/20" />
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Base price</span>
+                    <span>${rentalInfo.basePrice.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Service fee</span>
+                    <span>${rentalInfo.serviceFee.toLocaleString()}</span>
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleReset}
+                    className="w-full mt-2 h-7 text-xs text-muted-foreground"
+                  >
+                    Clear selection
+                  </Button>
+                </div>
+              )}
+
+              {/* Info - only for non-vendor space or date step */}
+              {(!isVendorSpace || flowStep === 'date') && (
+                <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
+                  <Info className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-muted-foreground">
+                    {isVendorSpace 
+                      ? 'Tap your start date, then your end date.'
+                      : bookingMode === 'hourly' 
+                      ? 'Select a date, then choose your time slot.'
+                      : bookingMode === 'weekly' || bookingMode === 'monthly'
+                      ? `Choose the number of ${bookingMode === 'weekly' ? 'weeks' : 'months'}, then select your start date.`
+                      : 'Tap a date to start, then tap another to set your rental period.'}
+                  </p>
+                </div>
+              )}
+
+              {/* CTA - only for non-vendor space */}
+              {!isVendorSpace && (
+                <Button
+                  variant="dark-shine"
+                  className="w-full h-12 text-base"
+                  size="lg"
+                  onClick={handleContinue}
+                  disabled={!canContinue}
+                >
+                  {instantBook ? (
+                    <>
+                      <Zap className="h-4 w-4 mr-2" />
+                      Book Now
+                    </>
+                  ) : (
+                    'Request to Book'
+                  )}
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              )}
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>
