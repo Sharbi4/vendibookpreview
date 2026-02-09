@@ -104,9 +104,12 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
           .single();
 
         if (listingData) {
+          const priceHourly = Number((listingData as any).price_hourly ?? 0) || null;
+          const hourlyEnabled = Boolean((listingData as any).hourly_enabled) || (priceHourly !== null && priceHourly > 0);
+
           setSettings({
-            priceHourly: (listingData as any).price_hourly,
-            hourlyEnabled: (listingData as any).hourly_enabled || false,
+            priceHourly,
+            hourlyEnabled,
             dailyEnabled: (listingData as any).daily_enabled !== false,
             minHours: (listingData as any).min_hours || 1,
             maxHours: (listingData as any).max_hours || 24,
