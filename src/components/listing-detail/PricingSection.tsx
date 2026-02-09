@@ -1,10 +1,11 @@
-import { DollarSign, Truck, Clock } from 'lucide-react';
+import { DollarSign, Truck, Clock, CalendarDays } from 'lucide-react';
 
 interface PricingSectionProps {
   isRental: boolean;
   priceHourly?: number | null;
   priceDaily?: number | null;
   priceWeekly?: number | null;
+  priceMonthly?: number | null;
   priceSale?: number | null;
   deliveryFee?: number | null;
   fulfillmentType?: string;
@@ -16,6 +17,7 @@ const PricingSection = ({
   priceHourly,
   priceDaily,
   priceWeekly,
+  priceMonthly,
   priceSale,
   deliveryFee,
   fulfillmentType,
@@ -56,8 +58,20 @@ const PricingSection = ({
           )}
           {priceWeekly && priceWeekly > 0 && (
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Weekly rate</span>
+              <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                <CalendarDays className="h-3.5 w-3.5" />
+                Weekly rate
+              </span>
               <span className="font-medium">${priceWeekly.toLocaleString()}/week</span>
+            </div>
+          )}
+          {priceMonthly && priceMonthly > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                <CalendarDays className="h-3.5 w-3.5" />
+                Monthly rate
+              </span>
+              <span className="font-medium">${priceMonthly.toLocaleString()}/mo</span>
             </div>
           )}
           {hasDelivery && deliveryFee && (

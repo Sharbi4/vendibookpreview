@@ -226,6 +226,8 @@ const PaymentSuccess = () => {
               duration_hours,
               start_time,
               end_time,
+              slot_name,
+              slot_number,
               listing:listings(title, cover_image_url)
             `)
             .eq('checkout_session_id', sessionId)
@@ -901,6 +903,7 @@ const PaymentSuccess = () => {
                               fulfillmentType: booking.fulfillment_selected,
                               paymentDate: new Date().toISOString(),
                               recipientName: userProfile?.full_name || 'Valued Customer',
+                              slotName: (booking as any).slot_name || undefined,
                             });
                           }
                         }}

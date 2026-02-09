@@ -17,6 +17,7 @@ interface ReceiptData {
   paymentDate?: string;
   recipientName?: string;
   recipientEmail?: string;
+  slotName?: string;
 }
 
 const formatDate = (dateStr: string) => {
@@ -126,8 +127,16 @@ export function generateReceiptPdf(data: ReceiptData): void {
   // Item name
   doc.setFontSize(12);
   doc.text(data.itemName, 28, yPos);
-  
   yPos += 8;
+
+  // Slot name if applicable
+  if (data.slotName) {
+    doc.setTextColor(...grayColor);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`📍 ${data.slotName}`, 28, yPos);
+    yPos += 7;
+  }
   
   // Date range for rentals
   if (data.isRental && data.startDate && data.endDate) {
