@@ -91,6 +91,7 @@ const HostReporting = lazy(() => import("./pages/HostReporting"));
 const HowItWorksHost = lazy(() => import("./pages/HowItWorksHost"));
 const HowItWorksSeller = lazy(() => import("./pages/HowItWorksSeller"));
 const BecomeAHost = lazy(() => import("./pages/BecomeAHost"));
+const SignageRequest = lazy(() => import("./pages/SignageRequest"));
 
 // City landing pages - direct imports since they're lightweight wrappers
 import {
@@ -212,6 +213,7 @@ const AnimatedRoutes = () => {
           <Route path="/vendor-spaces" element={<PageTransition><VendorLots /></PageTransition>} />
           <Route path="/vendor-lots" element={<PageTransition><VendorLots /></PageTransition>} />
           <Route path="/faq" element={<PageTransition><FAQ /></PageTransition>} />
+          <Route path="/signage-request" element={<PageTransition><SignageRequest /></PageTransition>} />
           <Route path="/unsubscribe" element={<PageTransition><Unsubscribe /></PageTransition>} />
           
           {/* SEO article page - separate purpose from tools hub */}
