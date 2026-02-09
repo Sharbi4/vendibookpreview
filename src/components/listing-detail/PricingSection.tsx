@@ -1,7 +1,8 @@
-import { DollarSign, Truck } from 'lucide-react';
+import { DollarSign, Truck, Clock } from 'lucide-react';
 
 interface PricingSectionProps {
   isRental: boolean;
+  priceHourly?: number | null;
   priceDaily?: number | null;
   priceWeekly?: number | null;
   priceSale?: number | null;
@@ -12,6 +13,7 @@ interface PricingSectionProps {
 
 const PricingSection = ({
   isRental,
+  priceHourly,
   priceDaily,
   priceWeekly,
   priceSale,
@@ -30,16 +32,27 @@ const PricingSection = ({
 
       {isRental ? (
         <div className="space-y-2">
+          {priceHourly && priceHourly > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5" />
+                Hourly rate
+              </span>
+              <span className="font-medium">${priceHourly.toLocaleString()}/hr</span>
+            </div>
+          )}
           {priceDaily && priceDaily > 0 ? (
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Daily rate</span>
               <span className="font-medium">${priceDaily.toLocaleString()}/day</span>
             </div>
           ) : (
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Daily rate</span>
-              <span className="font-medium text-muted-foreground">Price TBD</span>
-            </div>
+            !priceHourly && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Daily rate</span>
+                <span className="font-medium text-muted-foreground">Price TBD</span>
+              </div>
+            )
           )}
           {priceWeekly && priceWeekly > 0 && (
             <div className="flex justify-between items-center">
