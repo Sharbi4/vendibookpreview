@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,10 +9,12 @@ import CookieConsent from "@/components/CookieConsent";
 import ScrollToTop from "@/components/ScrollToTop";
 import ZendeskWidget from "@/components/ZendeskWidget";
 import PageTransition from "@/components/PageTransition";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { usePageTracking } from "@/hooks/usePageTracking";
 import { AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import GoogleOneTap from "@/components/auth/GoogleOneTap";
+import { toast } from "sonner";
 
 
 // Lazy load all pages for code splitting
@@ -280,23 +282,55 @@ const AnimatedRoutes = () => {
   );
 };
 
+// Global unhandled rejection handler
+const useGlobalErrorHandler = () => {
+  useEffect(() => {
+    const handleRejection = (event: PromiseRejectionEvent) => {
+      console.error("Unhandled rejection:", event.reason);
+      
+      // Don't show toast for chunk loading errors (handled by vite:preloadError)
+      const message = event.reason?.message || String(event.reason);
+      if (message.includes('Loading chunk') || message.includes('module script')) {
+        return;
+      }
+      
+      toast.error("An error occurred. Please try again.");
+      event.preventDefault();
+    };
+
+    window.addEventListener("unhandledrejection", handleRejection);
+    return () => window.removeEventListener("unhandledrejection", handleRejection);
+  }, []);
+};
+
+const AppContent = () => {
+  useGlobalErrorHandler();
+  
+  return (
+    <>
+      <ScrollToTop />
+      <Toaster />
+      <Sonner />
+      <CookieConsent />
+      <ZendeskWidget />
+      <GoogleOneTap />
+      <AnimatedRoutes />
+    </>
+  );
+};
+
 const App = () => (
-  <BrowserRouter>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <ScrollToTop />
-          <Toaster />
-          <Sonner />
-          <CookieConsent />
-          <ZendeskWidget />
-          <GoogleOneTap />
-          
-          <AnimatedRoutes />
-        </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </BrowserRouter>
+  <ErrorBoundary>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
+  </ErrorBoundary>
 );
 
 export default App;
