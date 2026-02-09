@@ -312,8 +312,8 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           <span className="bg-gray-100 text-gray-900 text-sm font-bold px-3 py-1 rounded-full">
             {price}
           </span>
-          {!compact && showHourlyRate && (
-            <span className="text-sm text-gray-500 font-medium">
+          {showHourlyRate && (
+            <span className={cn("text-gray-500 font-medium", compact ? "text-xs" : "text-sm")}>
               ${listing.price_hourly}/hr
             </span>
           )}
