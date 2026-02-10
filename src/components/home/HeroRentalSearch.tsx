@@ -69,6 +69,35 @@ const HeroRentalSearch = () => {
       <div className="absolute top-20 -left-32 w-96 h-96 bg-primary/8 rounded-full blur-3xl animate-float" />
       <div className="absolute bottom-20 -right-32 w-[30rem] h-[30rem] bg-vendibook-orange/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-primary/3 rounded-full blur-3xl" />
+      
+      {/* Animated orange glow that drifts across the hero */}
+      <motion.div
+        className="absolute w-[35rem] h-[35rem] rounded-full blur-[120px] opacity-[0.12]"
+        style={{ background: 'radial-gradient(circle, hsl(var(--vendibook-orange)), transparent 70%)' }}
+        animate={{
+          x: ['-20%', '60%', '20%', '-20%'],
+          y: ['-10%', '30%', '-20%', '-10%'],
+        }}
+        transition={{
+          duration: 18,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      />
+      <motion.div
+        className="absolute w-[25rem] h-[25rem] rounded-full blur-[100px] opacity-[0.08]"
+        style={{ background: 'radial-gradient(circle, hsl(var(--primary)), transparent 70%)' }}
+        animate={{
+          x: ['50%', '-30%', '40%', '50%'],
+          y: ['20%', '-15%', '35%', '20%'],
+        }}
+        transition={{
+          duration: 22,
+          repeat: Infinity,
+          ease: 'easeInOut',
+          delay: 3,
+        }}
+      />
 
       <div className="relative z-10 container max-w-4xl mx-auto px-4 py-12 md:py-16">
         {/* Logo & Headline */}
