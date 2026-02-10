@@ -70,7 +70,7 @@ const HeroRentalSearch = () => {
       <div className="absolute bottom-20 -right-32 w-[30rem] h-[30rem] bg-vendibook-orange/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-primary/3 rounded-full blur-3xl" />
 
-      <div className="relative z-10 container max-w-6xl mx-auto px-4 py-12 md:py-16">
+      <div className="relative z-10 container max-w-4xl mx-auto px-4 py-12 md:py-16">
         {/* Logo & Headline */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -143,7 +143,7 @@ const HeroRentalSearch = () => {
             {/* Search Fields */}
             <div className="space-y-3">
               {/* Location Input */}
-              <div className="bg-muted/40 rounded-xl px-3 py-2 border border-border/30">
+              <div className="bg-muted/40 rounded-xl px-3 py-2 border border-border">
                 <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold text-left mb-0.5">
                   Location
                 </label>
@@ -160,7 +160,7 @@ const HeroRentalSearch = () => {
               {/* Asset Type & Dates Row */}
               <div className="grid grid-cols-2 gap-2">
                 {/* Asset Type */}
-                <div className="bg-muted/40 rounded-xl px-3 py-2 border border-border/30">
+                <div className="bg-muted/40 rounded-xl px-3 py-2 border border-border">
                   <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold text-left mb-0.5">
                     Type
                   </label>
@@ -188,7 +188,7 @@ const HeroRentalSearch = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="bg-muted/40 rounded-xl px-3 py-2 border border-border/30"
+                      className="bg-muted/40 rounded-xl px-3 py-2 border border-border"
                     >
                       <Popover open={isDateOpen} onOpenChange={setIsDateOpen}>
                         <PopoverTrigger asChild>
@@ -223,7 +223,7 @@ const HeroRentalSearch = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="bg-muted/20 rounded-xl px-3 py-2 border border-border/20 flex items-center justify-center"
+                      className="bg-muted/20 rounded-xl px-3 py-2 border border-border flex items-center justify-center"
                     >
                       <span className="text-xs text-muted-foreground">No dates needed</span>
                     </motion.div>
