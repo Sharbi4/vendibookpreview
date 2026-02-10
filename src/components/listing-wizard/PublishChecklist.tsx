@@ -16,7 +16,38 @@ export interface ChecklistItem {
   valueTag?: string;
   timeEstimate?: string;
   benefit?: string;
+  progress?: number; // 0-1, for partial completion display
 }
+
+const ProgressCircle: React.FC<{ progress: number; size?: number }> = ({ progress, size = 20 }) => {
+  const r = (size - 4) / 2;
+  const circumference = 2 * Math.PI * r;
+  const filled = circumference * progress;
+  
+  if (progress >= 1) {
+    return (
+      <div className="w-5 h-5 rounded-full flex items-center justify-center bg-foreground text-background">
+        <Check className="w-3 h-3" />
+      </div>
+    );
+  }
+  
+  if (progress <= 0) {
+    return (
+      <div className="w-5 h-5 rounded-full flex items-center justify-center bg-muted text-muted-foreground">
+        <Circle className="w-3 h-3" />
+      </div>
+    );
+  }
+
+  return (
+    <svg width={size} height={size} className="shrink-0 -rotate-90">
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth={2} />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="hsl(var(--foreground))" strokeWidth={2}
+        strokeDasharray={circumference} strokeDashoffset={circumference - filled} strokeLinecap="round" />
+    </svg>
+  );
+};
 
 interface PublishChecklistProps {
   items: ChecklistItem[];
@@ -103,28 +134,6 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
             <Progress value={progressPercentage} className="h-1.5" />
           </div>
 
-          {/* Do This Next */}
-          {nextStep && !allRequiredComplete && (
-            <div className="mx-3 mt-1 p-3 rounded-xl bg-primary/5 border border-primary/20">
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <Sparkles className="w-3 h-3 text-primary" />
-                <span className="text-[10px] font-semibold text-primary uppercase tracking-wide">Next</span>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-medium text-foreground truncate">{nextStep.label}</p>
-                <Button 
-                  size="sm" 
-                  variant="dark-shine"
-                  className="h-7 text-xs px-3 shrink-0"
-                  onClick={(e) => { e.stopPropagation(); onItemClick?.(nextStep.id); }}
-                >
-                  Start
-                  <ChevronRight className="w-3 h-3 ml-1" />
-                </Button>
-              </div>
-            </div>
-          )}
-          
           {/* Checklist Items */}
           <div className="p-3 space-y-1">
             {items.map((item) => (
@@ -138,20 +147,7 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
                     : "hover:bg-muted/30"
                 )}
               >
-                <div
-                  className={cn(
-                    "w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors",
-                    item.completed
-                      ? "bg-foreground text-background"
-                      : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  {item.completed ? (
-                    <Check className="w-3 h-3" />
-                  ) : (
-                    <Circle className="w-3 h-3" />
-                  )}
-                </div>
+                <ProgressCircle progress={item.progress ?? (item.completed ? 1 : 0)} />
                 <span className={cn(
                   "flex-1 text-sm font-medium truncate",
                   item.completed ? "text-muted-foreground" : "text-foreground"
@@ -230,6 +226,31 @@ export const createChecklistItems = (
     return formState.locationSet || 'Set';
   };
 
+  const getPhotoProgress = () => {
+    if (!formState.photoCount) return 0;
+    return Math.min(formState.photoCount / 3, 1);
+  };
+
+  const getDescriptionProgress = () => {
+    let progress = 0;
+    if (formState.hasDescription) return 1;
+    if (formState.descriptionLength && formState.descriptionLength >= 20) progress += 0.5;
+    else if (formState.descriptionLength && formState.descriptionLength > 0) progress += formState.descriptionLength / 40;
+    // Can't check title directly, so use hasDescription as full marker
+    if (progress > 0) progress += 0.2; // partial credit for having some content
+    return Math.min(progress, 1);
+  };
+
+  const getPricingProgress = () => {
+    return formState.hasPricing ? 1 : 0;
+  };
+
+  const getLocationProgress = () => {
+    if (formState.hasLocation) return 1;
+    if (formState.locationSet) return 0.5;
+    return 0;
+  };
+
   const items: ChecklistItem[] = [
     {
       id: 'photos',
@@ -239,9 +260,7 @@ export const createChecklistItems = (
       required: true,
       current: currentStep === 'photos',
       statusHint: getPhotoStatusHint(),
-      valueTag: 'More trust',
-      timeEstimate: '~3 min',
-      benefit: 'More photos = more booking requests',
+      progress: getPhotoProgress(),
     },
     {
       id: 'headline',
@@ -251,20 +270,17 @@ export const createChecklistItems = (
       required: true,
       current: currentStep === 'headline',
       statusHint: getDetailsStatusHint(),
-      valueTag: 'Fewer questions',
-      timeEstimate: '~3 min',
-      benefit: 'Great descriptions reduce back-and-forth',
+      progress: getDescriptionProgress(),
     },
     {
       id: 'includes',
       label: "What's Included",
       icon: <Check className="w-4 h-4" />,
-      completed: true, // Optional step
+      completed: true,
       required: false,
       current: currentStep === 'includes',
       statusHint: 'Optional',
-      timeEstimate: '~2 min',
-      benefit: 'Highlight features to attract more interest',
+      progress: 1,
     },
     {
       id: 'pricing',
@@ -274,9 +290,7 @@ export const createChecklistItems = (
       required: true,
       current: currentStep === 'pricing',
       statusHint: getPricingStatusHint(),
-      valueTag: 'More requests',
-      timeEstimate: '~2 min',
-      benefit: 'Competitive pricing attracts more renters',
+      progress: getPricingProgress(),
     },
   ];
 
@@ -289,8 +303,7 @@ export const createChecklistItems = (
       required: false,
       current: currentStep === 'availability',
       statusHint: formState.hasAvailability ? 'Set' : 'Not set',
-      timeEstimate: '~1 min',
-      benefit: "Let renters know when you're available",
+      progress: formState.hasAvailability ? 1 : 0,
     });
   }
 
@@ -302,8 +315,7 @@ export const createChecklistItems = (
     required: true,
     current: currentStep === 'location',
     statusHint: getLocationStatusHint(),
-    timeEstimate: '~2 min',
-    benefit: 'Clear logistics build renter confidence',
+    progress: getLocationProgress(),
   });
 
   // Add documents step for rental listings
@@ -312,12 +324,11 @@ export const createChecklistItems = (
       id: 'documents',
       label: 'Required Documents',
       icon: <Shield className="w-4 h-4" />,
-      completed: formState.hasDocuments ?? true, // Optional step, defaults to complete
+      completed: formState.hasDocuments ?? true,
       required: false,
       current: currentStep === 'documents',
       statusHint: formState.documentsCount ? `${formState.documentsCount} required` : 'None set',
-      timeEstimate: '~2 min',
-      benefit: 'Ensure renters have proper credentials',
+      progress: (formState.hasDocuments ?? true) ? 1 : 0,
     });
   }
 
@@ -332,8 +343,7 @@ export const createChecklistItems = (
       required: true,
       current: currentStep === 'stripe',
       statusHint: formState.hasStripe ? 'Connected' : 'Not connected',
-      timeEstimate: '~5 min',
-      benefit: 'Get paid directly to your bank account',
+      progress: formState.hasStripe ? 1 : 0,
     });
   }
 
@@ -347,8 +357,7 @@ export const createChecklistItems = (
     required: true,
     current: currentStep === 'review',
     statusHint: allOtherRequiredComplete ? 'Ready' : 'Pending',
-    timeEstimate: '~1 min',
-    benefit: 'Preview your listing before publishing',
+    progress: allOtherRequiredComplete ? (currentStep === 'review' ? 1 : 0.5) : 0,
   });
 
   return items;
