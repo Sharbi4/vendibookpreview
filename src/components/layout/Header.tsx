@@ -460,7 +460,7 @@ const Header = () => {
                 
                 <DropdownMenuSeparator className="my-0" />
                 
-                {/* Group 4: Host Promo */}
+                {/* Group 4: Verification */}
                 <div className="py-2">
                   {!isVerified ? (
                     <AirbnbMenuItem 
@@ -475,13 +475,6 @@ const Header = () => {
                       <span>Verified</span>
                     </div>
                   )}
-                  <AirbnbMenuItem 
-                    icon={PlusCircle} 
-                    label="Add a Listing" 
-                    subtext="Create and publish a listing"
-                    to="/list?start=true"
-                    highlight
-                  />
                 </div>
                 
                 {isAdmin && (
