@@ -51,43 +51,44 @@ const HeroRentalSearch = () => {
   };
 
   return (
-    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden bg-[#FAFAFA]">
-      {/* Base silver shimmer gradient */}
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(145deg, #F0F0F5 0%, #E8E8F0 25%, #DDDDE8 45%, #E8E8F0 65%, #F0F0F5 100%)' }} />
+    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden bg-[#FBF8F5]">
+      {/* Warm cream-to-peach base */}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #FFFAF6 0%, #FFF5EE 30%, #FFEFE4 50%, #FFF5EE 70%, #FFFAF6 100%)' }} />
       
-      {/* Animated silver shine sweep */}
+      {/* Animated warm shine sweep */}
       <motion.div
         className="absolute inset-0"
         style={{
-          background: 'linear-gradient(105deg, transparent 0%, transparent 30%, rgba(255,255,255,0.95) 42%, rgba(220,220,240,0.7) 50%, rgba(255,255,255,0.95) 58%, transparent 70%, transparent 100%)',
+          background: 'linear-gradient(105deg, transparent 0%, transparent 30%, rgba(255,255,255,0.9) 42%, rgba(255,237,220,0.5) 50%, rgba(255,255,255,0.9) 58%, transparent 70%, transparent 100%)',
         }}
         animate={{ x: ['-100%', '100%'] }}
         transition={{
-          duration: 5,
+          duration: 6,
           repeat: Infinity,
           ease: 'easeInOut',
-          repeatDelay: 3,
+          repeatDelay: 4,
         }}
       />
       
-      {/* Subtle silver orb accents */}
+      {/* Warm peach orb */}
       <motion.div
         className="absolute w-[35rem] h-[35rem] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(180, 185, 210, 0.4), transparent 60%)', filter: 'blur(80px)' }}
+        style={{ background: 'radial-gradient(circle, rgba(255, 200, 160, 0.25), transparent 60%)', filter: 'blur(90px)' }}
         animate={{
           x: ['-10%', '50%', '10%', '-10%'],
           y: ['-5%', '20%', '-10%', '-5%'],
         }}
-        transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
       />
+      {/* Soft coral accent orb */}
       <motion.div
         className="absolute w-[25rem] h-[25rem] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(255, 81, 36, 0.12), transparent 60%)', filter: 'blur(70px)' }}
+        style={{ background: 'radial-gradient(circle, rgba(255, 120, 70, 0.1), transparent 60%)', filter: 'blur(80px)' }}
         animate={{
           x: ['40%', '-20%', '30%', '40%'],
           y: ['10%', '-5%', '25%', '10%'],
         }}
-        transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+        transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
       />
 
       <div className="relative z-10 container max-w-4xl mx-auto px-4 py-12 md:py-16">
