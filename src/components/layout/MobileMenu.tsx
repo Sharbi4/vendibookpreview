@@ -320,20 +320,13 @@ const MobileMenu = ({
                   />
                 </div>
               ) : (
-                <div className="p-4 space-y-2">
-                  <Button
-                    variant="outline"
-                    className="w-full rounded-xl h-12 text-base"
-                    onClick={() => handleNav('/auth')}
-                  >
-                    Log in
-                  </Button>
+                <div className="p-4">
                   <Button
                     variant="dark-shine"
                     className="w-full rounded-xl h-12 text-base"
-                    onClick={() => handleNav('/auth?tab=signup')}
+                    onClick={() => handleNav('/auth')}
                   >
-                    Sign up
+                    Sign Up / Login
                   </Button>
                 </div>
               )}
