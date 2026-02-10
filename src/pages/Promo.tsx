@@ -5,6 +5,7 @@ import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { usePageTracking } from '@/hooks/usePageTracking';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ const fadeUp = {
 };
 
 const Promo = () => {
+  usePageTracking();
   const { user } = useAuth();
   const { data: promo, isLoading } = usePromoStatus();
   const { connectStripe, isConnecting } = useStripeConnect();
