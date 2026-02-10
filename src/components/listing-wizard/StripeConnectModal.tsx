@@ -137,6 +137,9 @@ export const StripeConnectModal: React.FC<StripeConnectModalProps> = ({
           </div>
 
           <p className="text-xs text-center text-muted-foreground">
+            ⚠️ Stripe opens in a new tab — please disable your pop-up blocker if it doesn't open.
+          </p>
+          <p className="text-xs text-center text-muted-foreground">
             You can save drafts without connecting Stripe. Connect anytime before publishing.
           </p>
         </div>

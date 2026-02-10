@@ -43,32 +43,34 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
 
   if (variant === 'compact') {
     return (
-      <div className={cn(
-        "flex items-center justify-between gap-3 px-3 py-2 bg-[#635bff]/5 border border-[#635bff]/20 rounded-lg",
-        className
-      )}>
-        <div className="flex items-center gap-2">
-          <img src={stripeWordmark} alt="Stripe" className="h-4 w-auto" />
-          <span className="text-sm text-[#635bff] dark:text-[#a8a4ff]">
-            {hasAccountStarted ? 'Complete setup to get paid' : 'Connect to get paid from your listings'}
-          </span>
+      <div className={cn("space-y-1", className)}>
+        <div className="flex items-center justify-between gap-3 px-3 py-2 bg-[#635bff]/5 border border-[#635bff]/20 rounded-lg">
+          <div className="flex items-center gap-2">
+            <img src={stripeWordmark} alt="Stripe" className="h-4 w-auto" />
+            <span className="text-sm text-[#635bff] dark:text-[#a8a4ff]">
+              {hasAccountStarted ? 'Complete setup to get paid' : 'Connect to get paid from your listings'}
+            </span>
+          </div>
+          <Button 
+            size="sm" 
+            variant="dark-shine"
+            onClick={() => connectStripe()}
+            disabled={isConnecting}
+            className="h-7 text-xs gap-1 rounded-xl"
+          >
+            {isConnecting ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <>
+                {hasAccountStarted ? 'Complete' : 'Connect'}
+                <ArrowRight className="h-3 w-3" />
+              </>
+            )}
+          </Button>
         </div>
-        <Button 
-          size="sm" 
-          variant="dark-shine"
-          onClick={() => connectStripe()}
-          disabled={isConnecting}
-          className="h-7 text-xs gap-1 rounded-xl"
-        >
-          {isConnecting ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            <>
-              {hasAccountStarted ? 'Complete' : 'Connect'}
-              <ArrowRight className="h-3 w-3" />
-            </>
-          )}
-        </Button>
+        <p className="text-[10px] text-muted-foreground px-3">
+          ⚠️ Stripe opens in a new tab — please disable your pop-up blocker if it doesn't open.
+        </p>
       </div>
     );
   }
@@ -111,6 +113,9 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
               </>
             )}
           </Button>
+          <p className="text-xs text-muted-foreground mt-2">
+            ⚠️ Stripe opens in a new tab — please disable your pop-up blocker if it doesn't open.
+          </p>
         </div>
       </div>
     </div>
