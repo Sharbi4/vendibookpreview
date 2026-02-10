@@ -102,57 +102,57 @@ const NewsletterPopup = () => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
-      <div className="relative w-full max-w-md bg-background rounded-2xl shadow-2xl overflow-hidden animate-scale-in">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 bg-black/50 animate-fade-in">
+      <div className="relative w-full max-w-md bg-background rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden animate-scale-in">
         {/* Close button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 p-1 rounded-full hover:bg-muted transition-colors"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1 rounded-full hover:bg-muted transition-colors"
           aria-label="Close popup"
         >
-          <X className="h-5 w-5 text-muted-foreground" />
+          <X className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
         </button>
 
         {/* Content */}
-        <div className="p-8">
+        <div className="p-5 sm:p-8">
           {isSuccess ? (
-            <div className="text-center py-4">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
-                <CheckCircle className="h-8 w-8" />
+            <div className="text-center py-2 sm:py-4">
+              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-primary/10 text-primary mb-3 sm:mb-4">
+                <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">You're subscribed!</h3>
-              <p className="text-muted-foreground">
+              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-1 sm:mb-2">You're subscribed!</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Thanks for joining. We'll keep you updated on the latest listings and deals.
               </p>
             </div>
           ) : (
             <>
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 text-primary mb-4">
-                  <Mail className="h-7 w-7" />
+              <div className="text-center mb-4 sm:mb-6">
+                <div className="inline-flex items-center justify-center w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-primary/10 text-primary mb-3 sm:mb-4">
+                  <Mail className="h-5 w-5 sm:h-7 sm:w-7" />
                 </div>
-                <h3 className="text-2xl font-bold text-foreground mb-2">
+                <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-1 sm:mb-2">
                   Stay in the loop
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-sm sm:text-base text-muted-foreground">
                   Get exclusive deals, new listings, and mobile food business tips delivered to your inbox.
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                 <Input
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-12"
+                  className="h-10 sm:h-12 text-sm sm:text-base"
                   disabled={isSubmitting}
                   maxLength={255}
                 />
                 <Button
                   type="submit"
                   variant="gradient"
-                  className="w-full h-12"
+                  className="w-full h-10 sm:h-12 text-sm sm:text-base"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
@@ -166,7 +166,7 @@ const NewsletterPopup = () => {
                 </Button>
               </form>
 
-              <p className="text-xs text-muted-foreground text-center mt-4">
+              <p className="text-[10px] sm:text-xs text-muted-foreground text-center mt-3 sm:mt-4">
                 No spam, unsubscribe anytime. By subscribing you agree to our{' '}
                 <a href="/privacy" className="underline hover:text-foreground">
                   Privacy Policy
