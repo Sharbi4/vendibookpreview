@@ -406,6 +406,14 @@ const Header = () => {
           >
             {t('common.learnMore')}
           </Link>
+          {!user && (
+            <Link 
+              to="/become-a-host" 
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Become a Host
+            </Link>
+          )}
         </nav>
 
         {/* Desktop Actions */}

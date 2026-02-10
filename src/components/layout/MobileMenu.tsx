@@ -288,6 +288,18 @@ const MobileMenu = ({
 
                   <div className="py-2">
                     <AirbnbMenuItem 
+                      icon={Truck} 
+                      label="Become a Host" 
+                      subtext="Start earning with your assets"
+                      onClick={() => handleNav('/become-a-host')} 
+                      highlight
+                    />
+                  </div>
+
+                  <div className="h-px bg-border mx-4" />
+
+                  <div className="py-2">
+                    <AirbnbMenuItem 
                       icon={HelpCircle} 
                       label="Help Center" 
                       onClick={() => handleNav('/help')} 
