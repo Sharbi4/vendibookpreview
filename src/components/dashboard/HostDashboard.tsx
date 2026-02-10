@@ -26,7 +26,7 @@ import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectMod
 import { useMemo, useState } from 'react';
 
 const HostDashboard = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [searchParams] = useSearchParams();
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing, updateListingPrice } = useHostListings();
   const { stats: bookingStats } = useHostBookings();
@@ -97,7 +97,7 @@ const HostDashboard = () => {
               <LayoutGrid className="h-6 w-6 text-background" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-foreground">Overview</h2>
+              <h2 className="text-xl font-semibold text-foreground">Hello, {profile?.full_name?.split(' ')[0] || 'there'}!</h2>
               <p className="text-sm text-muted-foreground">
                 {userType === 'seller' ? 'Manage your sales pipeline.' : 'Manage fleet availability and revenue.'}
               </p>
