@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChefHat, Truck, Calendar as CalendarIcon, ChevronDown, Store, Handshake, Sparkles } from 'lucide-react';
+import { Search, Truck, Calendar as CalendarIcon, ChevronDown, Store, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -40,19 +40,6 @@ const HeroRentalSearch = () => {
     setSelectedLocation(loc);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSearch();
-  };
-
-  const openZendeskChat = () => {
-    if (window.zE) {
-      try {
-        window.zE('messenger', 'open');
-      } catch (error) {
-        console.debug('Zendesk messenger open:', error);
-      }
-    }
-  };
 
   const formatDateRange = () => {
     if (!dateRange?.from) return "Add dates";
