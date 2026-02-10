@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User, LogOut, Shield, MessageCircle, HelpCircle, ShieldCheck, Clock, TrendingUp, Mic, MicOff, ChevronDown, CheckCircle2, Heart, CalendarDays, Home, Bell, Globe, Settings, Gift, LayoutDashboard } from 'lucide-react';
+import { Menu, X, Search, User, LogOut, Shield, MessageCircle, HelpCircle, ShieldCheck, Clock, TrendingUp, Mic, MicOff, ChevronDown, CheckCircle2, Heart, CalendarDays, Home, Bell, Globe, Settings, Gift, LayoutDashboard, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -476,10 +476,10 @@ const Header = () => {
                     </div>
                   )}
                   <AirbnbMenuItem 
-                    icon={Home} 
-                    label="Become a Host" 
-                    subtext="It's easy to get started"
-                    to="/list"
+                    icon={PlusCircle} 
+                    label="Add a Listing" 
+                    subtext="Create and publish a listing"
+                    to="/list?start=true"
                     highlight
                   />
                 </div>
@@ -502,22 +502,13 @@ const Header = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <>
-              <Button 
-                variant="dark-shine" 
-                className="rounded-full"
-                onClick={() => navigate('/auth')}
-              >
-                {t('common.signIn')}
-              </Button>
-              <Button 
-                variant="dark-shine"
-                className="rounded-full"
-                onClick={() => navigate('/list')}
-              >
-                {t('common.createListing')}
-              </Button>
-            </>
+            <Button 
+              variant="dark-shine" 
+              className="rounded-full"
+              onClick={() => navigate('/auth')}
+            >
+              Sign Up / Login
+            </Button>
           )}
           {/* Language Switcher - Far Right */}
           <LanguageSwitcher />
