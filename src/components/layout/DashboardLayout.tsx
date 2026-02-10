@@ -218,6 +218,33 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
               <img src={vendibookFavicon} alt="Vendibook" className="h-7 w-7" />
             </Link>
           </div>
+          {/* Mode Toggle - Center */}
+          {isHost && (
+            <div className="flex border border-border rounded-lg overflow-hidden">
+              <button
+                onClick={() => onModeChange('shopper')}
+                className={cn(
+                  "text-xs font-medium px-4 py-1.5 transition-all",
+                  mode === 'shopper' 
+                    ? "bg-foreground text-background" 
+                    : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                Kitchen Pro
+              </button>
+              <button
+                onClick={() => onModeChange('host')}
+                className={cn(
+                  "text-xs font-medium px-4 py-1.5 transition-all",
+                  mode === 'host' 
+                    ? "bg-foreground text-background" 
+                    : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                Host / Seller
+              </button>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <NotificationCenter />
             <Button
@@ -272,16 +299,46 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col min-w-0">
           {/* Desktop Header Bar */}
-          <div className="hidden lg:flex items-center justify-end gap-3 px-6 py-3 border-b border-border bg-background">
-            <NotificationCenter />
-            <Link to="/account">
-              <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
-                <AvatarImage src={profile?.avatar_url || undefined} />
-                <AvatarFallback className="bg-muted text-foreground text-sm">
-                  {profile?.full_name?.[0] || user?.email?.[0]?.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </Link>
+          <div className="hidden lg:flex items-center justify-between gap-3 px-6 py-3 border-b border-border bg-background">
+            <div />
+            {/* Mode Toggle - Center */}
+            {isHost && (
+              <div className="flex border border-border rounded-lg overflow-hidden">
+                <button
+                  onClick={() => onModeChange('shopper')}
+                  className={cn(
+                    "text-sm font-medium px-5 py-2 transition-all",
+                    mode === 'shopper' 
+                      ? "bg-foreground text-background" 
+                      : "text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  Kitchen Pro
+                </button>
+                <button
+                  onClick={() => onModeChange('host')}
+                  className={cn(
+                    "text-sm font-medium px-5 py-2 transition-all",
+                    mode === 'host' 
+                      ? "bg-foreground text-background" 
+                      : "text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  Host / Seller
+                </button>
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              <NotificationCenter />
+              <Link to="/account">
+                <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
+                  <AvatarImage src={profile?.avatar_url || undefined} />
+                  <AvatarFallback className="bg-muted text-foreground text-sm">
+                    {profile?.full_name?.[0] || user?.email?.[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+            </div>
           </div>
           {/* Page Content */}
           <div className="flex-1 p-4 md:p-6 lg:p-8 pb-24 lg:pb-6 overflow-auto">
