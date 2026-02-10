@@ -228,12 +228,12 @@ export const QuickStartWizard: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto">
       {/* Progress indicator */}
-      <div className="flex items-center gap-2 mb-8">
+      <div className="flex items-center gap-2 mb-6 sm:mb-8">
         {[1, 2, 3].map((num) => (
           <React.Fragment key={num}>
             <div
               className={cn(
-                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors",
+                "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium transition-colors",
                 num < stepNumber
                   ? "bg-primary text-primary-foreground"
                   : num === stepNumber
@@ -241,7 +241,7 @@ export const QuickStartWizard: React.FC = () => {
                   : "bg-muted text-muted-foreground"
               )}
             >
-              {num < stepNumber ? <Check className="w-4 h-4" /> : num}
+              {num < stepNumber ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : num}
             </div>
             {num < 3 && (
               <div
@@ -258,15 +258,15 @@ export const QuickStartWizard: React.FC = () => {
       {/* Step: Category */}
       {step === 'category' && (
         <div className="space-y-6">
-          <div className="relative overflow-hidden rounded-2xl border-0 shadow-xl bg-card">
+          <div className="relative overflow-hidden rounded-2xl border-0 shadow-xl bg-card/80 backdrop-blur-sm">
             {/* Header */}
-            <div className="relative bg-muted/30 border-b border-border px-6 py-5">
-              <h1 className="text-2xl font-bold text-foreground mb-1">What are you listing?</h1>
-              <p className="text-muted-foreground">Choose one to get started.</p>
+            <div className="relative bg-muted/30 border-b border-border px-4 sm:px-6 py-4 sm:py-5">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1">What are you listing?</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">Choose one to get started.</p>
             </div>
             {/* Content */}
-            <div className="relative bg-card p-6">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="relative bg-card p-4 sm:p-6">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 {categoryOptions.map((option) => {
                   const Icon = option.icon;
                   const isSelected = data.category === option.value;
@@ -275,24 +275,24 @@ export const QuickStartWizard: React.FC = () => {
                       key={option.value}
                       onClick={() => handleCategorySelect(option.value)}
                       className={cn(
-                        "relative overflow-hidden p-5 rounded-2xl border-0 shadow-xl text-center transition-all bg-card",
+                        "relative overflow-hidden p-4 sm:p-5 rounded-2xl border-0 shadow-xl text-center transition-all bg-card/80 backdrop-blur-sm",
                         isSelected
                           ? "ring-2 ring-primary"
                           : "hover:shadow-2xl"
                       )}
                     >
                       <div className={cn(
-                        "w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center",
+                        "w-10 h-10 sm:w-12 sm:h-12 rounded-xl mx-auto mb-2 sm:mb-3 flex items-center justify-center",
                         isSelected
                           ? "bg-primary"
                           : "bg-muted"
                       )}>
                         <Icon className={cn(
-                          "w-6 h-6",
+                          "w-5 h-5 sm:w-6 sm:h-6",
                           isSelected ? "text-primary-foreground" : "text-muted-foreground"
                         )} />
                       </div>
-                      <span className="font-semibold text-foreground">{option.label}</span>
+                      <span className="font-semibold text-foreground text-sm sm:text-base">{option.label}</span>
                     </button>
                   );
                 })}
@@ -305,15 +305,15 @@ export const QuickStartWizard: React.FC = () => {
       {/* Step: Mode */}
       {step === 'mode' && (
         <div className="space-y-6">
-          <div className="relative overflow-hidden rounded-2xl border-0 shadow-xl bg-card">
+          <div className="relative overflow-hidden rounded-2xl border-0 shadow-xl bg-card/80 backdrop-blur-sm">
             {/* Header */}
-            <div className="relative bg-muted/30 border-b border-border px-6 py-5">
-              <h1 className="text-2xl font-bold text-foreground mb-1">Rent or sell?</h1>
-              <p className="text-muted-foreground">You can change this later.</p>
+            <div className="relative bg-muted/30 border-b border-border px-4 sm:px-6 py-4 sm:py-5">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Rent or sell?</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">You can change this later.</p>
             </div>
             {/* Content */}
-            <div className="relative bg-card p-6">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="relative bg-card p-4 sm:p-6">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 {modeOptions.map((option) => {
                   const Icon = option.icon;
                   const isSelected = data.mode === option.value;
@@ -322,25 +322,25 @@ export const QuickStartWizard: React.FC = () => {
                       key={option.value}
                       onClick={() => handleModeSelect(option.value)}
                       className={cn(
-                        "relative overflow-hidden p-5 rounded-2xl border-0 shadow-xl text-center transition-all bg-card",
+                        "relative overflow-hidden p-4 sm:p-5 rounded-2xl border-0 shadow-xl text-center transition-all bg-card/80 backdrop-blur-sm",
                         isSelected
                           ? "ring-2 ring-primary"
                           : "hover:shadow-2xl"
                       )}
                     >
                       <div className={cn(
-                        "w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center",
+                        "w-10 h-10 sm:w-12 sm:h-12 rounded-xl mx-auto mb-2 sm:mb-3 flex items-center justify-center",
                         isSelected
                           ? "bg-primary"
                           : "bg-muted"
                       )}>
                         <Icon className={cn(
-                          "w-6 h-6",
+                          "w-5 h-5 sm:w-6 sm:h-6",
                           isSelected ? "text-primary-foreground" : "text-muted-foreground"
                         )} />
                       </div>
-                      <span className="font-semibold text-foreground block mb-1">{option.label}</span>
-                      <span className="text-sm text-muted-foreground">{option.description}</span>
+                      <span className="font-semibold text-foreground block mb-1 text-sm sm:text-base">{option.label}</span>
+                      <span className="text-xs sm:text-sm text-muted-foreground">{option.description}</span>
                     </button>
                   );
                 })}
@@ -356,17 +356,17 @@ export const QuickStartWizard: React.FC = () => {
       {/* Step: Location */}
       {step === 'location' && (
         <div className="space-y-6">
-          <div className="relative overflow-hidden rounded-2xl border-0 shadow-xl bg-card">
+          <div className="relative overflow-hidden rounded-2xl border-0 shadow-xl bg-card/80 backdrop-blur-sm">
             {/* Header */}
-            <div className="relative bg-muted/30 border-b border-border px-6 py-5">
-              <h1 className="text-2xl font-bold text-foreground mb-1">Where is it located?</h1>
-              <p className="text-muted-foreground">City, state, or zip code.</p>
+            <div className="relative bg-muted/30 border-b border-border px-4 sm:px-6 py-4 sm:py-5">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Where is it located?</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">City, state, or zip code.</p>
             </div>
             {/* Content */}
-            <div className="relative bg-card p-6">
+            <div className="relative bg-card p-4 sm:p-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="location" className="font-medium">Location</Label>
+                  <Label htmlFor="location" className="font-medium text-sm sm:text-base">Location</Label>
                   <div className="relative">
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
                       <MapPinned className="w-4 h-4 text-muted-foreground" />
@@ -376,14 +376,14 @@ export const QuickStartWizard: React.FC = () => {
                       placeholder="e.g., Los Angeles, CA"
                       value={data.location}
                       onChange={handleLocationChange}
-                      className="pl-14 h-12 border border-border focus:border-primary"
+                      className="pl-14 h-11 sm:h-12 border border-border focus:border-primary text-sm sm:text-base"
                     />
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={handleUseMyLocation}
-                  className="text-sm text-primary hover:underline font-medium"
+                  className="text-xs sm:text-sm text-primary hover:underline font-medium"
                 >
                   Use my current location
                 </button>
@@ -391,15 +391,15 @@ export const QuickStartWizard: React.FC = () => {
             </div>
           </div>
           <div className="flex flex-col gap-3 pt-2">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={() => setStep('mode')}>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Button variant="ghost" onClick={() => setStep('mode')} size="sm" className="text-xs sm:text-sm">
                 ← Back
               </Button>
               <Button 
                 variant="dark-shine"
                 onClick={handleCreateDraft} 
                 disabled={isCreating}
-                className="flex-1"
+                className="flex-1 shadow-lg"
               >
                 {isCreating ? (
                   <>
