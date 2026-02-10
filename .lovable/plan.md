@@ -1,76 +1,40 @@
 
 
-## Fix: Hourly Rates and Operating Hours Not Displaying
+## Changes Overview
 
-### Root Cause
+Four improvements to the listing creation and signup flow:
 
-The hourly schedule was saved to the database with full day names (`monday`, `tuesday`, `wednesday`, etc.), but **all frontend components expect abbreviated keys** (`mon`, `tue`, `wed`, etc.). This means every component that reads `hourly_schedule` finds no matching keys and displays nothing.
+### 1. Remove phone number from AuthGateModal signup
 
-### Affected Areas
+**File:** `src/components/listing-wizard/AuthGateModal.tsx`
 
-1. **Listing Detail Page** - `WeeklyHoursDisplay` shows "Operating Hours" section but finds no data
-2. **Listing Card** - Schedule summary (e.g., "Every day 12AM-11PM") doesn't render  
-3. **Booking Widget** - `useHourlyAvailability` hook can't find operating hours for any day, so no time slots are generated
-4. **PricingSection** - Already works correctly (uses `price_hourly` column directly, not the schedule)
+- Remove the `phoneNumber` state variable, its Zod validation rule, and the entire phone number input field from the signup form
+- Remove `phone_number` from the Supabase `signUp` metadata and admin notification payload
+- Keep first name, last name, email, and password only
 
-### Fix Plan
+### 2. Redirect to listing creation after signup in AuthGateModal
 
-#### Step 1: Fix the Database Data
-Run a SQL update to convert the `hourly_schedule` keys from full names to abbreviated names for the affected listing:
+**File:** `src/components/listing-wizard/AuthGateModal.tsx`
 
-```text
-UPDATE listings 
-SET hourly_schedule = '{
-  "mon": [{"start":"00:00","end":"07:00","price":15},{"start":"08:00","end":"23:59","price":20}],
-  "tue": [{"start":"00:00","end":"07:00","price":15},{"start":"08:00","end":"23:59","price":20}],
-  "wed": [{"start":"00:00","end":"07:00","price":15},{"start":"08:00","end":"23:59","price":20}],
-  "thu": [{"start":"00:00","end":"07:00","price":15},{"start":"08:00","end":"23:59","price":20}],
-  "fri": [{"start":"00:00","end":"07:00","price":15},{"start":"08:00","end":"23:59","price":20}],
-  "sat": [{"start":"00:00","end":"07:00","price":15},{"start":"08:00","end":"23:59","price":20}],
-  "sun": [{"start":"00:00","end":"07:00","price":15},{"start":"08:00","end":"23:59","price":20}]
-}'
-WHERE id = 'ede54357-a79d-4325-bb1f-153c75fd89dc';
-```
+- The `onAuthSuccess` callback already handles post-auth flow (claiming draft and continuing the wizard). No routing change needed here -- the modal is used inline within the PublishWizard and the user stays on the same page after auth succeeds.
+- The `emailRedirectTo` already points to `/create-listing/{draftId}` for email confirmation flows, which is correct.
 
-#### Step 2: Add Defensive Key Normalization
+### 3. Change "Add Asset" button to "Add a Listing" and link to `/create-listing` flow
 
-To prevent this from happening again (e.g., if data is set via SQL or external tools), add a normalization utility that maps full day names to abbreviated keys. Apply this in the key consumption points:
+**File:** `src/components/dashboard/HostDashboard.tsx` (line 133)
 
-- **`WeeklyHoursDisplay.tsx`** - Add normalization when reading the schedule prop
-- **`useHourlyAvailability.ts`** - Add normalization after parsing `hourly_schedule` from DB
-- **`ListingCard.tsx`** - Add normalization in the schedule summary logic
-- **`ListingCardPreview.tsx`** - Add normalization in `getScheduleSummary`
+- Change label from `'Add Asset'` to `'Add a Listing'` (and `'Sell Item'` stays or also becomes `'Add a Listing'`)
+- Since the user is already signed in from the dashboard, change the `to` link from `/list` (the landing page) to keep `/list` but switch it so clicking it goes directly into the wizard mode. Actually, looking at the flow: `/list` shows a landing page first, then you click "Start" to see the QuickStartWizard. For signed-in users from the dashboard, we should navigate directly to `/list` but auto-trigger wizard mode. The simplest approach: add a query param like `/list?start=true` and have `ListPage` auto-enter wizard mode when that param is present.
 
-The normalizer will be a simple shared helper:
+**File:** `src/pages/List.tsx`
 
-```text
-function normalizeScheduleKeys(schedule): converts 
-  "monday" -> "mon", "tuesday" -> "tue", etc.
-  Already-abbreviated keys pass through unchanged.
-```
+- Check for `?start=true` query param on mount; if present and user is signed in, auto-set mode to `'wizard'`
 
-#### Step 3: Ensure Hourly Rate Displays on Listing Detail Pricing
-
-The `PricingSection` already handles `priceHourly` display. The listing detail page already passes `listing.price_hourly`. This should already work since `price_hourly = 20` is set in the DB. No code changes needed here.
-
-### Summary of Changes
+### Technical Summary
 
 | File | Change |
 |------|--------|
-| Database | Fix key names in `hourly_schedule` JSONB |
-| `src/lib/scheduleUtils.ts` (new) | Shared `normalizeScheduleKeys` helper |
-| `src/components/listing-detail/WeeklyHoursDisplay.tsx` | Normalize schedule before processing |
-| `src/hooks/useHourlyAvailability.ts` | Normalize schedule after DB fetch |
-| `src/components/listing/ListingCard.tsx` | Normalize schedule for summary |
-| `src/components/listing-wizard/ListingCardPreview.tsx` | Normalize schedule for preview |
-
-### Technical Details
-
-The normalization map:
-```text
-monday -> mon, tuesday -> tue, wednesday -> wed, 
-thursday -> thu, friday -> fri, saturday -> sat, sunday -> sun
-```
-
-This is a backward-compatible change -- if keys are already abbreviated, they pass through unchanged. This makes the system resilient to data entered via either format.
+| `src/components/listing-wizard/AuthGateModal.tsx` | Remove phone number field, state, validation |
+| `src/components/dashboard/HostDashboard.tsx` | Change "Add Asset" to "Add a Listing", link to `/list?start=true` |
+| `src/pages/List.tsx` | Auto-enter wizard mode when `?start=true` param is present and user is logged in |
 
