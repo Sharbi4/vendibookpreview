@@ -305,7 +305,7 @@ const ListPage: React.FC = () => {
   const handleStart = () => {
     trackEvent({ category: 'Supply', action: 'start_listing_clicked' });
     if (!user) {
-      navigate('/auth?redirect=/list');
+      navigate('/auth?redirect=/list?start=true');
       return;
     }
     setMode('wizard');
