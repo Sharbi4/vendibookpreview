@@ -86,61 +86,63 @@ const HeroRentalSearch = () => {
           </h1>
         </motion.div>
 
-        {/* Hero island with border */}
+        {/* CTA Buttons - outside the animation border */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-          className="glass-premium rounded-3xl p-6 md:p-8 shadow-2xl border border-border/40"
+          className="flex flex-col gap-3 mb-6"
         >
-          {/* CTA Buttons - above animation on mobile */}
-          <div className="flex flex-col gap-3 mb-6 order-1">
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant="dark-shine"
-                size="lg"
-                className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl"
-                onClick={() => navigate('/search')}
-              >
-                Browse Listings
-              </Button>
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              variant="dark-shine"
+              size="lg"
+              className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl"
+              onClick={() => navigate('/search')}
+            >
+              Browse Listings
+            </Button>
 
-              <Button
-                variant="dark-shine"
-                size="lg"
-                className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl"
-                onClick={() => navigate('/list')}
-              >
-                Create a Free Listing
-              </Button>
-            </div>
-
-            {!user && (
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl bg-background hover:bg-muted/60 border-border"
-                onClick={handleGoogleLogin}
-              >
-                <GoogleIcon className="mr-2 h-5 w-5" />
-                Continue with Google
-              </Button>
-            )}
+            <Button
+              variant="dark-shine"
+              size="lg"
+              className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl"
+              onClick={() => navigate('/list')}
+            >
+              Create a Free Listing
+            </Button>
           </div>
 
-          {/* Walkthrough Animation */}
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-primary" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-foreground text-lg">Why Vendibook?</h3>
-                <p className="text-xs text-muted-foreground">See how it works</p>
-              </div>
+          {!user && (
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl bg-background hover:bg-muted/60 border-border"
+              onClick={handleGoogleLogin}
+            >
+              <GoogleIcon className="mr-2 h-5 w-5" />
+              Continue with Google
+            </Button>
+          )}
+        </motion.div>
+
+        {/* Walkthrough Animation - inside bordered card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.35, ease: 'easeOut' }}
+          className="glass-premium rounded-3xl p-5 md:p-6 shadow-2xl border border-border/40"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Sparkles className="h-5 w-5 text-primary" />
             </div>
-            <AuthWalkthrough />
+            <div className="text-left">
+              <h3 className="font-semibold text-foreground text-lg">Why Vendibook?</h3>
+              <p className="text-xs text-muted-foreground">See how it works</p>
+            </div>
           </div>
+          <AuthWalkthrough />
         </motion.div>
       </div>
     </section>
