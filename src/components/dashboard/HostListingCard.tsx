@@ -339,7 +339,7 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
                 <Button 
                   variant="outline"
                   size="sm"
-                  className="h-9 rounded-xl border-emerald-600 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                  className="h-9 rounded-xl"
                   onClick={() => onPublish(listing.id)}
                 >
                   <Play className="h-4 w-4 mr-1.5" />
