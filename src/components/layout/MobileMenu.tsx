@@ -226,9 +226,10 @@ const MobileMenu = ({
                   <div className="py-2">
                     <AirbnbMenuItem 
                       icon={PlusCircle} 
-                      label="List with Vendibook" 
+                      label="Create a Listing" 
                       subtext="Rent or sell your assets"
                       onClick={() => handleNav('/list')} 
+                      highlight
                     />
                     <AirbnbMenuItem 
                       icon={Truck} 
