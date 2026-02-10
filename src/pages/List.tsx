@@ -321,11 +321,11 @@ const ListPage: React.FC = () => {
         <div className="container max-w-4xl mx-auto py-8 px-4">
           <Button
             variant="ghost"
-            onClick={() => setMode('landing')}
+            onClick={() => navigate(-1)}
             className="mb-6 pl-0 hover:pl-2 transition-all"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to overview
+            Back
           </Button>
           <QuickStartWizard />
         </div>
