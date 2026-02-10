@@ -64,7 +64,7 @@ const HeroRentalSearch = () => {
   };
 
   return (
-    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-vendibook-cream via-background to-muted/30">
+    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden" style={{ background: 'linear-gradient(135deg, #FFF8F3 0%, #FFFBF7 30%, #F9F7F4 60%, #FFF5ED 100%)' }}>
       {/* Decorative background orbs */}
       <div className="absolute top-20 -left-32 w-96 h-96 bg-primary/8 rounded-full blur-3xl animate-float" />
       <div className="absolute bottom-20 -right-32 w-[30rem] h-[30rem] bg-vendibook-orange/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
