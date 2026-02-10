@@ -14,7 +14,6 @@ const authSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters').max(72),
   firstName: z.string().trim().min(1, 'First name is required').max(50).optional(),
   lastName: z.string().trim().min(1, 'Last name is required').max(50).optional(),
-  phoneNumber: z.string().trim().min(10, 'Phone must be at least 10 digits').max(20).optional(),
 });
 
 interface AuthGateModalProps {
@@ -36,14 +35,13 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = (): boolean => {
     try {
       if (mode === 'signup') {
-        authSchema.parse({ email: email.trim(), password, firstName, lastName, phoneNumber });
+        authSchema.parse({ email: email.trim(), password, firstName, lastName });
       } else {
         authSchema.pick({ email: true, password: true }).parse({ email: email.trim(), password });
       }
@@ -84,7 +82,6 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
               full_name: fullName,
               first_name: firstName.trim(),
               last_name: lastName.trim(),
-              phone_number: phoneNumber.trim(),
             },
           },
         });
@@ -132,7 +129,6 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
                 full_name: fullName,
                 first_name: firstName.trim(),
                 last_name: lastName.trim(),
-                phone_number: phoneNumber.trim(),
                 role: 'host',
                 user_id: data.user.id,
                 source: 'listing_wizard',
@@ -253,24 +249,6 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="phoneNumber">Phone Number <span className="text-destructive">*</span></Label>
-                <Input
-                  id="phoneNumber"
-                  type="tel"
-                  placeholder="(555) 123-4567"
-                  value={phoneNumber}
-                  onChange={(e) => {
-                    setPhoneNumber(e.target.value);
-                    if (errors.phoneNumber) setErrors(prev => ({ ...prev, phoneNumber: undefined }));
-                  }}
-                  className={errors.phoneNumber ? 'border-destructive' : ''}
-                  required
-                />
-                {errors.phoneNumber && (
-                  <p className="text-sm text-destructive">{errors.phoneNumber}</p>
-                )}
-              </div>
             </>
           )}
 

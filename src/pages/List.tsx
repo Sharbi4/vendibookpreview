@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft,
@@ -281,7 +281,15 @@ const ListPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { listings } = useHostListings();
+  const [searchParams] = useSearchParams();
   const [mode, setMode] = useState<'landing' | 'wizard'>('landing');
+
+  // Auto-enter wizard mode when ?start=true and user is logged in
+  useEffect(() => {
+    if (searchParams.get('start') === 'true' && user) {
+      setMode('wizard');
+    }
+  }, [searchParams, user]);
 
   // Filter drafts for a "Resume" banner if needed
   const drafts = listings.filter(l => l.status === 'draft');

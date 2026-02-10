@@ -126,11 +126,11 @@ const HostDashboard = () => {
               Storefront
             </Link>
             <Link 
-              to="/list"
+              to="/list?start=true"
               className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
             >
               <Plus className="h-4 w-4" />
-              {userType === 'seller' ? 'Sell Item' : 'Add Asset'}
+              Add a Listing
             </Link>
             <Link 
               to="/help"
