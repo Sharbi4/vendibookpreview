@@ -53,27 +53,27 @@ const HeroRentalSearch = () => {
   return (
     <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden bg-[#FAFAFA]">
       {/* Base silver shimmer gradient */}
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(145deg, #FFFFFF 0%, #F5F5F8 25%, #EEEEF3 45%, #F8F8FC 65%, #FFFFFF 100%)' }} />
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(145deg, #F0F0F5 0%, #E8E8F0 25%, #DDDDE8 45%, #E8E8F0 65%, #F0F0F5 100%)' }} />
       
       {/* Animated silver shine sweep */}
       <motion.div
         className="absolute inset-0"
         style={{
-          background: 'linear-gradient(105deg, transparent 0%, transparent 35%, rgba(255,255,255,0.9) 45%, rgba(240,240,248,0.6) 50%, rgba(255,255,255,0.9) 55%, transparent 65%, transparent 100%)',
+          background: 'linear-gradient(105deg, transparent 0%, transparent 30%, rgba(255,255,255,0.95) 42%, rgba(220,220,240,0.7) 50%, rgba(255,255,255,0.95) 58%, transparent 70%, transparent 100%)',
         }}
         animate={{ x: ['-100%', '100%'] }}
         transition={{
-          duration: 6,
+          duration: 5,
           repeat: Infinity,
           ease: 'easeInOut',
-          repeatDelay: 4,
+          repeatDelay: 3,
         }}
       />
       
       {/* Subtle silver orb accents */}
       <motion.div
         className="absolute w-[35rem] h-[35rem] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(210, 215, 230, 0.3), transparent 60%)', filter: 'blur(90px)' }}
+        style={{ background: 'radial-gradient(circle, rgba(180, 185, 210, 0.4), transparent 60%)', filter: 'blur(80px)' }}
         animate={{
           x: ['-10%', '50%', '10%', '-10%'],
           y: ['-5%', '20%', '-10%', '-5%'],
@@ -82,7 +82,7 @@ const HeroRentalSearch = () => {
       />
       <motion.div
         className="absolute w-[25rem] h-[25rem] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(255, 81, 36, 0.05), transparent 60%)', filter: 'blur(80px)' }}
+        style={{ background: 'radial-gradient(circle, rgba(255, 81, 36, 0.12), transparent 60%)', filter: 'blur(70px)' }}
         animate={{
           x: ['40%', '-20%', '30%', '40%'],
           y: ['10%', '-5%', '25%', '10%'],
