@@ -3570,6 +3570,9 @@ export const PublishWizard: React.FC = () => {
                             Connect Stripe
                             <ExternalLink className="w-4 h-4 ml-2" />
                           </Button>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            ⚠️ Stripe opens in a new tab — please disable your pop-up blocker if it doesn't open.
+                          </p>
                         </div>
                       </div>
                     )
@@ -3723,6 +3726,11 @@ export const PublishWizard: React.FC = () => {
                               {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                               Connect Stripe (2 min)
                             </Button>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            ⚠️ Stripe opens in a new tab — please disable your pop-up blocker if it doesn't open.
+                          </p>
+                          <div className="flex flex-wrap gap-2">
                             <Button size="sm" variant="dark-shine" onClick={() => navigate('/dashboard')}>
                               <Save className="w-4 h-4 mr-1" />
                               Save Draft
