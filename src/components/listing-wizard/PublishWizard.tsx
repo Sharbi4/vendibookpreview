@@ -1859,7 +1859,7 @@ export const PublishWizard: React.FC = () => {
                       <Label htmlFor="title" className="text-lg font-semibold">Listing Headline</Label>
                       <span className={cn(
                         "text-sm font-medium px-2 py-0.5 rounded-full",
-                        title.length >= MIN_TITLE_LENGTH ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-muted text-muted-foreground"
+                        title.length >= MIN_TITLE_LENGTH ? "bg-foreground/10 text-foreground" : "bg-muted text-muted-foreground"
                       )}>
                         {title.length}/80
                       </span>
@@ -1916,18 +1916,18 @@ export const PublishWizard: React.FC = () => {
                       </p>
                       <span className={cn(
                         "text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap",
-                        description.length >= MIN_DESCRIPTION_LENGTH ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                        description.length >= MIN_DESCRIPTION_LENGTH ? "bg-foreground/10 text-foreground" : "bg-muted text-muted-foreground"
                       )}>
                         {description.length < MIN_DESCRIPTION_LENGTH ? `${MIN_DESCRIPTION_LENGTH - description.length} more chars needed` : '✓ Good length'}
                       </span>
                     </div>
 
                     {/* AI Optimize Card */}
-                    <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse pointer-events-none" />
+                    <div className="relative overflow-hidden rounded-xl p-4 border border-border bg-gradient-to-br from-primary/5 via-primary/3 to-background">
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/3 animate-pulse pointer-events-none" />
                       <div className="relative flex items-start gap-3">
-                        <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md shrink-0">
-                          <Sparkles className="w-5 h-5 text-white" />
+                        <div className="p-2.5 bg-foreground rounded-xl shadow-md shrink-0">
+                          <Sparkles className="w-5 h-5 text-background" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-foreground mb-1">AI Writing Assistant</h4>
@@ -1939,7 +1939,7 @@ export const PublishWizard: React.FC = () => {
                             size="sm"
                             onClick={optimizeDescription}
                             disabled={isOptimizing || !description || description.length < 10}
-                            className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
+                            variant="dark-shine"
                           >
                             {isOptimizing ? (
                               <>
@@ -1964,8 +1964,9 @@ export const PublishWizard: React.FC = () => {
                   </div>
 
                   <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setStep('photos')}>Back</Button>
+                    <Button variant="dark-shine" onClick={() => setStep('photos')}>Back</Button>
                     <Button 
+                      variant="dark-shine"
                       onClick={saveStep} 
                       disabled={isSaving || title.trim().length < MIN_TITLE_LENGTH || description.trim().length < MIN_DESCRIPTION_LENGTH}
                     >
@@ -2083,7 +2084,7 @@ export const PublishWizard: React.FC = () => {
                         />
                         <Button
                           type="button"
-                          variant="outline"
+                          variant="dark-shine"
                           size="icon"
                           onClick={addHighlight}
                           disabled={!newHighlight.trim()}
@@ -2101,8 +2102,8 @@ export const PublishWizard: React.FC = () => {
                   </div>
 
                   <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setStep('headline')}>Back</Button>
-                    <Button onClick={saveStep} disabled={isSaving}>
+                    <Button variant="dark-shine" onClick={() => setStep('headline')}>Back</Button>
+                    <Button variant="dark-shine" onClick={saveStep} disabled={isSaving}>
                       {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                       Continue
                       <ChevronRight className="w-4 h-4 ml-2" />
@@ -2122,11 +2123,11 @@ export const PublishWizard: React.FC = () => {
                   </div>
 
                   {/* AI Suggestions Button */}
-                  <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse pointer-events-none" />
+                  <div className="relative overflow-hidden rounded-xl p-4 border border-border bg-gradient-to-br from-primary/5 via-primary/3 to-background">
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/3 animate-pulse pointer-events-none" />
                     <div className="relative flex items-start gap-3">
-                      <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md">
-                        <Sparkles className="w-5 h-5 text-white" />
+                      <div className="p-2.5 bg-foreground rounded-xl shadow-md">
+                        <Sparkles className="w-5 h-5 text-background" />
                       </div>
                       <div className="flex-1">
                         <h4 className="font-semibold text-foreground mb-1">AI Pricing Assistant</h4>
@@ -2138,7 +2139,7 @@ export const PublishWizard: React.FC = () => {
                           size="sm"
                           onClick={handleGetSuggestions}
                           disabled={isLoadingSuggestions}
-                          className="bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white border-0 shadow-md"
+                          variant="dark-shine"
                         >
                           {isLoadingSuggestions ? (
                             <>
@@ -2339,7 +2340,7 @@ export const PublishWizard: React.FC = () => {
                                 htmlFor="accept_cash_payment"
                                 className="flex items-center gap-2 text-base font-medium cursor-pointer"
                               >
-                                <Banknote className="w-4 h-4 text-green-600" />
+                                <Banknote className="w-4 h-4 text-foreground" />
                                 Pay in Person
                               </Label>
                               <p className="text-sm text-muted-foreground mt-1">
@@ -2349,8 +2350,8 @@ export const PublishWizard: React.FC = () => {
                           </div>
 
                           {!acceptCardPayment && !acceptCashPayment && (
-                            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                              <p className="text-sm text-destructive flex items-center gap-2">
+                            <div className="p-3 bg-muted/50 border border-border rounded-lg">
+                              <p className="text-sm text-muted-foreground flex items-center gap-2">
                                 <Info className="w-4 h-4" />
                                 Please select at least one payment method.
                               </p>
@@ -2517,12 +2518,12 @@ export const PublishWizard: React.FC = () => {
 
                       {/* Instant Book Toggle */}
                       <div className="pt-4 border-t">
-                        <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-                          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 pointer-events-none" />
+                        <div className="relative overflow-hidden rounded-xl p-4 border border-border bg-gradient-to-br from-primary/5 via-primary/3 to-background">
+                          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/3 pointer-events-none" />
                           <div className="relative flex items-start justify-between gap-4">
                             <div className="flex items-start gap-3 flex-1">
-                              <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md">
-                                <Zap className="w-5 h-5 text-white" />
+                              <div className="p-2.5 bg-foreground rounded-xl shadow-md">
+                                <Zap className="w-5 h-5 text-background" />
                               </div>
                               <div className="flex-1">
                                 <div className="flex items-center gap-2">
@@ -2598,8 +2599,9 @@ export const PublishWizard: React.FC = () => {
                   )}
 
                   <div className="flex gap-3 pt-4">
-                    <Button variant="outline" onClick={() => setStep('includes')}>Back</Button>
+                    <Button variant="dark-shine" onClick={() => setStep('includes')}>Back</Button>
                     <Button 
+                      variant="dark-shine"
                       onClick={saveStep} 
                       disabled={isSaving || (listing.mode === 'sale' ? (!isValidPrice(priceSale) || (!acceptCardPayment && !acceptCashPayment)) : !isValidPrice(priceDaily))}
                     >
@@ -2688,8 +2690,8 @@ export const PublishWizard: React.FC = () => {
                   />
 
                   <div className="flex gap-3 pt-4">
-                    <Button variant="outline" onClick={() => setStep('pricing')}>Back</Button>
-                    <Button onClick={saveStep} disabled={isSaving}>
+                    <Button variant="dark-shine" onClick={() => setStep('pricing')}>Back</Button>
+                    <Button variant="dark-shine" onClick={saveStep} disabled={isSaving}>
                       {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                       Continue
                       <ChevronRight className="w-4 h-4 ml-2" />
@@ -2763,11 +2765,10 @@ export const PublishWizard: React.FC = () => {
                         )}
                         <Button
                           type="button"
-                          variant="outline"
+                          variant="dark-shine"
                           size="sm"
                           onClick={optimizeDescription}
                           disabled={isOptimizing || !description || description.length < 10}
-                          className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 hover:border-primary/40"
                         >
                           {isOptimizing ? (
                             <>
@@ -2776,7 +2777,7 @@ export const PublishWizard: React.FC = () => {
                             </>
                           ) : showOptimized ? (
                             <>
-                              <Check className="w-3 h-3 mr-1 text-green-500" />
+                              <Check className="w-3 h-3 mr-1 text-foreground" />
                               Optimized
                             </>
                           ) : (
@@ -2818,7 +2819,7 @@ export const PublishWizard: React.FC = () => {
                       </div>
                       <span className={cn(
                         "text-sm whitespace-nowrap",
-                        description.trim().length < MIN_DESCRIPTION_LENGTH ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"
+                        description.trim().length < MIN_DESCRIPTION_LENGTH ? "text-destructive" : "text-foreground"
                       )}>
                         {description.trim().length}/{MIN_DESCRIPTION_LENGTH}+ chars
                       </span>
@@ -3025,7 +3026,7 @@ export const PublishWizard: React.FC = () => {
                         />
                         <Button
                           type="button"
-                          variant="outline"
+                          variant="dark-shine"
                           size="icon"
                           onClick={addHighlight}
                           disabled={!newHighlight.trim()}
@@ -3038,8 +3039,8 @@ export const PublishWizard: React.FC = () => {
 
                   <div className="flex flex-col gap-3">
                     <div className="flex gap-3">
-                      <Button variant="outline" onClick={() => setStep('photos')}>Back</Button>
-                      <Button onClick={handleDetailsSave} disabled={isSaving || !title || !description}>
+                      <Button variant="dark-shine" onClick={() => setStep('photos')}>Back</Button>
+                      <Button variant="dark-shine" onClick={handleDetailsSave} disabled={isSaving || !title || !description}>
                         {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                         {!user && isGuestDraft ? 'Save & Continue' : 'Continue'}
                         <ChevronRight className="w-4 h-4 ml-2" />
@@ -3308,8 +3309,9 @@ export const PublishWizard: React.FC = () => {
                   )}
 
                   <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setStep(listing.mode === 'rent' ? 'availability' : 'pricing')}>Back</Button>
+                    <Button variant="dark-shine" onClick={() => setStep(listing.mode === 'rent' ? 'availability' : 'pricing')}>Back</Button>
                     <Button 
+                      variant="dark-shine"
                       onClick={saveStep} 
                       disabled={isSaving || (
                         (isStaticLocationFn(listing.category) || isStaticLocation) 
@@ -3504,8 +3506,8 @@ export const PublishWizard: React.FC = () => {
                   </div>
 
                   <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setStep('location')}>Back</Button>
-                    <Button onClick={saveStep} disabled={isSaving}>
+                    <Button variant="dark-shine" onClick={() => setStep('location')}>Back</Button>
+                    <Button variant="dark-shine" onClick={saveStep} disabled={isSaving}>
                       {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                       Continue
                       <ChevronRight className="w-4 h-4 ml-2" />
@@ -3528,7 +3530,7 @@ export const PublishWizard: React.FC = () => {
                     <div className="relative overflow-hidden rounded-xl p-4 border-2 border-muted bg-muted/30">
                       <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-muted rounded-xl flex items-center justify-center">
-                          <Banknote className="w-5 h-5 text-green-600" />
+                          <Banknote className="w-5 h-5 text-foreground" />
                         </div>
                         <div>
                           <p className="font-semibold text-foreground">Cash-only listing</p>
@@ -3543,7 +3545,7 @@ export const PublishWizard: React.FC = () => {
                       <div className="relative overflow-hidden rounded-xl p-4 border border-border bg-muted/30">
                         <div className="relative flex items-center gap-3">
                           <div className="p-1 rounded-lg flex items-center justify-center">
-                            <Check className="w-5 h-5 text-emerald-600" />
+                            <Check className="w-5 h-5 text-foreground" />
                           </div>
                           <div className="flex items-center gap-2">
                             <img src={stripeIcon} alt="Stripe" className="h-6 w-6 object-cover rounded-md" />
@@ -3561,9 +3563,9 @@ export const PublishWizard: React.FC = () => {
                             Connect to get paid from your listings when you receive bookings or sales.
                           </p>
                           <Button 
+                            variant="dark-shine"
                             onClick={handleStripeConnect} 
                             disabled={isConnecting}
-                            className="bg-[#635bff] hover:bg-[#5147e6] text-white border-0 shadow-md"
                           >
                             {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                             <img src={stripeIcon} alt="" className="h-5 w-5 object-cover rounded mr-2" />
@@ -3579,8 +3581,9 @@ export const PublishWizard: React.FC = () => {
                   )}
 
                   <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setStep(listing.mode === 'rent' ? 'documents' : 'location')}>Back</Button>
+                    <Button variant="dark-shine" onClick={() => setStep(listing.mode === 'rent' ? 'documents' : 'location')}>Back</Button>
                     <Button 
+                      variant="dark-shine"
                       onClick={() => setStep('review')} 
                       disabled={acceptCardPayment && !isOnboardingComplete}
                     >
@@ -3615,8 +3618,8 @@ export const PublishWizard: React.FC = () => {
                           <span className={cn(
                             "px-3 py-1 text-xs font-medium rounded-full backdrop-blur-sm",
                             listing.mode === 'rent'
-                              ? "bg-blue-500/90 text-white"
-                              : "bg-green-500/90 text-white"
+                              ? "bg-foreground/90 text-background"
+                              : "bg-foreground/90 text-background"
                           )}>
                             {MODE_LABELS[listing.mode]}
                           </span>
@@ -3679,7 +3682,7 @@ export const PublishWizard: React.FC = () => {
                       {/* Fulfillment Info */}
                       <div className="pt-3 border-t border-border flex flex-wrap gap-3">
                         {instantBook && listing.mode === 'rent' && (
-                          <div className="flex items-center gap-1.5 text-sm text-emerald-600">
+                          <div className="flex items-center gap-1.5 text-sm text-foreground">
                             <Zap className="w-4 h-4" />
                             <span className="font-medium">Instant Book</span>
                           </div>
@@ -3696,12 +3699,12 @@ export const PublishWizard: React.FC = () => {
 
                   {/* Missing Requirements Warning */}
                   {!canPublish && (
-                    <div className="p-4 rounded-xl border border-destructive/30 bg-destructive/10">
+                    <div className="p-4 rounded-xl border border-border bg-muted/30">
                       <div className="flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
+                        <AlertCircle className="w-5 h-5 text-foreground mt-0.5" />
                         <div>
-                          <p className="font-medium text-destructive">Cannot publish yet</p>
-                          <p className="text-sm text-destructive/80 mt-0.5">
+                          <p className="font-medium text-foreground">Cannot publish yet</p>
+                          <p className="text-sm text-muted-foreground mt-0.5">
                             Complete all required checklist items before publishing.
                           </p>
                         </div>
@@ -3722,7 +3725,7 @@ export const PublishWizard: React.FC = () => {
                             To go live and receive payments, you need to connect your Stripe account. Takes about 2 minutes.
                           </p>
                           <div className="flex flex-wrap gap-2">
-                            <Button size="sm" onClick={handleStripeConnect} disabled={isConnecting} className="bg-[#635bff] hover:bg-[#5147e6] text-white">
+                            <Button size="sm" variant="dark-shine" onClick={handleStripeConnect} disabled={isConnecting}>
                               {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                               Connect Stripe (2 min)
                             </Button>
@@ -3743,11 +3746,11 @@ export const PublishWizard: React.FC = () => {
 
                   {/* Ready to Publish Message */}
                   {canPublish && isOnboardingComplete && (
-                    <div className="relative overflow-hidden rounded-xl p-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+                    <div className="relative overflow-hidden rounded-xl p-4 border border-border bg-gradient-to-br from-primary/5 via-primary/3 to-background">
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/3 animate-pulse" />
                       <div className="relative flex items-center gap-3">
-                        <div className="p-2.5 bg-gradient-to-br from-primary to-amber-500 rounded-xl shadow-md flex items-center justify-center shrink-0">
-                          <Check className="w-5 h-5 text-white" />
+                        <div className="p-2.5 bg-foreground rounded-xl shadow-md flex items-center justify-center shrink-0">
+                          <Check className="w-5 h-5 text-background" />
                         </div>
                         <div>
                           <p className="font-semibold text-foreground">Your listing is ready!</p>
@@ -3758,7 +3761,7 @@ export const PublishWizard: React.FC = () => {
                   )}
 
                   <div className="flex flex-wrap gap-3">
-                    <Button variant="outline" onClick={() => setStep('stripe')}>Back</Button>
+                    <Button variant="dark-shine" onClick={() => setStep('stripe')}>Back</Button>
                     <Button
                       variant="dark-shine"
                       onClick={() => setShowPreviewModal(true)}
@@ -3795,8 +3798,8 @@ export const PublishWizard: React.FC = () => {
                 </p>
                 
                 {/* TOS Checkbox */}
-                <div className="relative overflow-hidden rounded-xl p-3 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+                <div className="relative overflow-hidden rounded-xl p-3 border border-border bg-gradient-to-br from-primary/5 via-primary/3 to-background">
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/3 animate-pulse" />
                   <div className="relative flex items-start gap-3">
                     <Checkbox
                       id="tos-agreement"
