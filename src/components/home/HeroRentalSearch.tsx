@@ -93,8 +93,48 @@ const HeroRentalSearch = () => {
           transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
           className="grid lg:grid-cols-5 gap-6"
         >
-          {/* Left: Walkthrough Animation */}
-          <div className="lg:col-span-3 glass-premium rounded-3xl p-5 md:p-6 shadow-2xl flex flex-col">
+          {/* CTA Buttons - first on mobile, second on desktop */}
+          <div className="lg:col-span-2 order-1 lg:order-2 glass-premium rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col justify-center">
+            <h3 className="font-semibold text-foreground text-lg mb-2">Get Started</h3>
+            <p className="text-sm text-muted-foreground mb-4 lg:mb-6">Find or list food business assets</p>
+
+            <div className="flex flex-col gap-3 lg:gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
+                <Button
+                  variant="dark-shine"
+                  size="lg"
+                  className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl"
+                  onClick={() => navigate('/search')}
+                >
+                  Browse Listings
+                </Button>
+
+                <Button
+                  variant="dark-shine"
+                  size="lg"
+                  className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl"
+                  onClick={() => navigate('/list')}
+                >
+                  Create a Free Listing
+                </Button>
+              </div>
+
+              {!user && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl bg-background hover:bg-muted/60 border-border"
+                  onClick={handleGoogleLogin}
+                >
+                  <GoogleIcon className="mr-2 h-5 w-5" />
+                  Continue with Google
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Walkthrough Animation - second on mobile, first on desktop */}
+          <div className="lg:col-span-3 order-2 lg:order-1 glass-premium rounded-3xl p-5 md:p-6 shadow-2xl flex flex-col">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                 <Sparkles className="h-5 w-5 text-primary" />
@@ -106,44 +146,6 @@ const HeroRentalSearch = () => {
             </div>
             <div className="flex-1">
               <AuthWalkthrough />
-            </div>
-          </div>
-
-          {/* Right: CTA Buttons */}
-          <div className="lg:col-span-2 glass-premium rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col justify-center">
-            <h3 className="font-semibold text-foreground text-lg mb-2">Get Started</h3>
-            <p className="text-sm text-muted-foreground mb-6">Find or list food business assets</p>
-
-            <div className="flex flex-col gap-4">
-              <Button
-                variant="dark-shine"
-                size="lg"
-                className="w-full h-14 text-lg rounded-xl"
-                onClick={() => navigate('/search')}
-              >
-                Browse Listings
-              </Button>
-
-              <Button
-                variant="dark-shine"
-                size="lg"
-                className="w-full h-14 text-lg rounded-xl"
-                onClick={() => navigate('/list')}
-              >
-                Create a Free Listing
-              </Button>
-
-              {!user && (
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="w-full h-14 text-lg rounded-xl bg-background hover:bg-muted/60 border-border"
-                  onClick={handleGoogleLogin}
-                >
-                  <GoogleIcon className="mr-2 h-5 w-5" />
-                  Continue with Google
-                </Button>
-              )}
             </div>
           </div>
         </motion.div>
