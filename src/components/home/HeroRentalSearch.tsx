@@ -64,15 +64,15 @@ const HeroRentalSearch = () => {
   };
 
   return (
-    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden" style={{ background: 'linear-gradient(135deg, #FFF0E6 0%, #FFF6EF 30%, #FEF3EC 60%, #FFEDE0 100%)' }}>
-      {/* Decorative static background orbs - warmer & more visible */}
-      <div className="absolute top-10 -left-20 w-[28rem] h-[28rem] rounded-full blur-3xl" style={{ background: 'rgba(255, 81, 36, 0.08)' }} />
-      <div className="absolute bottom-10 -right-20 w-[32rem] h-[32rem] rounded-full blur-3xl" style={{ background: 'rgba(255, 81, 36, 0.06)' }} />
+    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden" style={{ background: 'linear-gradient(135deg, #F7F7F9 0%, #F0F0F4 30%, #EAEAF0 55%, #F4F3F7 80%, #F8F7FB 100%)' }}>
+      {/* Decorative static background orbs - silver/platinum tone */}
+      <div className="absolute top-10 -left-20 w-[28rem] h-[28rem] rounded-full blur-3xl" style={{ background: 'rgba(180, 180, 200, 0.12)' }} />
+      <div className="absolute bottom-10 -right-20 w-[32rem] h-[32rem] rounded-full blur-3xl" style={{ background: 'rgba(160, 165, 185, 0.10)' }} />
       
       {/* Animated orange glow that drifts across the hero */}
       <motion.div
         className="absolute w-[30rem] h-[30rem] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(255, 81, 36, 0.18), transparent 65%)', filter: 'blur(80px)' }}
+        style={{ background: 'radial-gradient(circle, rgba(200, 200, 220, 0.25), transparent 65%)', filter: 'blur(80px)' }}
         animate={{
           x: ['-15%', '55%', '15%', '-15%'],
           y: ['-5%', '25%', '-15%', '-5%'],
@@ -85,7 +85,7 @@ const HeroRentalSearch = () => {
       />
       <motion.div
         className="absolute w-[22rem] h-[22rem] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(255, 120, 60, 0.14), transparent 65%)', filter: 'blur(70px)' }}
+        style={{ background: 'radial-gradient(circle, rgba(255, 81, 36, 0.08), transparent 65%)', filter: 'blur(70px)' }}
         animate={{
           x: ['45%', '-25%', '35%', '45%'],
           y: ['15%', '-10%', '30%', '15%'],
