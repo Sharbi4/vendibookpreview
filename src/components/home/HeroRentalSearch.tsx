@@ -117,7 +117,7 @@ const HeroRentalSearch = () => {
             className="h-56 md:h-72 w-auto mx-auto mb-6 transition-transform duration-300 hover:scale-105"
           />
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground leading-tight tracking-tight mb-4">
-            Rent it. Buy it. <span className="gradient-text-warm">Find your spot.</span>
+            The Marketplace for <span className="gradient-text-warm">Food Business</span>
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto font-light">
             From turnkey rentals and trucks for sale to premium food truck parks—launch your food business this weekend.
