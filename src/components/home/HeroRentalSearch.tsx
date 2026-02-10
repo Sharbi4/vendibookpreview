@@ -292,32 +292,6 @@ const HeroRentalSearch = () => {
           </div>
         </motion.div>
 
-        {/* Match Me CTA - Compact bar below */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-6 glass-premium rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row items-center justify-between gap-4"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Handshake className="h-5 w-5 text-primary" />
-            </div>
-            <div className="text-left">
-              <h4 className="font-semibold text-foreground">Don't have time to search?</h4>
-              <p className="text-sm text-muted-foreground">Our experts will find the best deal for your needs — no sign-up required.</p>
-            </div>
-          </div>
-          <Button
-            onClick={openZendeskChat}
-            variant="dark-shine"
-            size="lg"
-            className="rounded-xl whitespace-nowrap flex-shrink-0"
-          >
-            <Handshake className="h-5 w-5 mr-2" />
-            Match Me
-          </Button>
-        </motion.div>
       </div>
     </section>
   );
