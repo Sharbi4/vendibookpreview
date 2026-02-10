@@ -64,38 +64,37 @@ const HeroRentalSearch = () => {
   };
 
   return (
-    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden" style={{ background: 'linear-gradient(135deg, #FFF8F3 0%, #FFFBF7 30%, #F9F7F4 60%, #FFF5ED 100%)' }}>
-      {/* Decorative background orbs */}
-      <div className="absolute top-20 -left-32 w-96 h-96 bg-primary/8 rounded-full blur-3xl animate-float" />
-      <div className="absolute bottom-20 -right-32 w-[30rem] h-[30rem] bg-vendibook-orange/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-primary/3 rounded-full blur-3xl" />
+    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden" style={{ background: 'linear-gradient(135deg, #FFF0E6 0%, #FFF6EF 30%, #FEF3EC 60%, #FFEDE0 100%)' }}>
+      {/* Decorative static background orbs - warmer & more visible */}
+      <div className="absolute top-10 -left-20 w-[28rem] h-[28rem] rounded-full blur-3xl" style={{ background: 'rgba(255, 81, 36, 0.08)' }} />
+      <div className="absolute bottom-10 -right-20 w-[32rem] h-[32rem] rounded-full blur-3xl" style={{ background: 'rgba(255, 81, 36, 0.06)' }} />
       
       {/* Animated orange glow that drifts across the hero */}
       <motion.div
-        className="absolute w-[35rem] h-[35rem] rounded-full blur-[120px] opacity-[0.12]"
-        style={{ background: 'radial-gradient(circle, hsl(var(--vendibook-orange)), transparent 70%)' }}
+        className="absolute w-[30rem] h-[30rem] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(255, 81, 36, 0.18), transparent 65%)', filter: 'blur(80px)' }}
         animate={{
-          x: ['-20%', '60%', '20%', '-20%'],
-          y: ['-10%', '30%', '-20%', '-10%'],
+          x: ['-15%', '55%', '15%', '-15%'],
+          y: ['-5%', '25%', '-15%', '-5%'],
         }}
         transition={{
-          duration: 18,
+          duration: 16,
           repeat: Infinity,
           ease: 'easeInOut',
         }}
       />
       <motion.div
-        className="absolute w-[25rem] h-[25rem] rounded-full blur-[100px] opacity-[0.08]"
-        style={{ background: 'radial-gradient(circle, hsl(var(--primary)), transparent 70%)' }}
+        className="absolute w-[22rem] h-[22rem] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(255, 120, 60, 0.14), transparent 65%)', filter: 'blur(70px)' }}
         animate={{
-          x: ['50%', '-30%', '40%', '50%'],
-          y: ['20%', '-15%', '35%', '20%'],
+          x: ['45%', '-25%', '35%', '45%'],
+          y: ['15%', '-10%', '30%', '15%'],
         }}
         transition={{
-          duration: 22,
+          duration: 20,
           repeat: Infinity,
           ease: 'easeInOut',
-          delay: 3,
+          delay: 2,
         }}
       />
 
