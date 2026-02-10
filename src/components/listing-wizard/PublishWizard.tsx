@@ -840,14 +840,25 @@ export const PublishWizard: React.FC = () => {
     : [];
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setImages(prev => [...prev, ...Array.from(e.target.files!)]);
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      console.log('[PublishWizard] handleImageUpload - files selected:', newFiles.length, newFiles.map(f => f.name));
+      setImages(prev => {
+        const updated = [...prev, ...newFiles];
+        console.log('[PublishWizard] images state updated, total:', updated.length);
+        return updated;
+      });
+      // Reset input so same file can be selected again
+      e.target.value = '';
     }
   };
 
   const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setVideos(prev => [...prev, ...Array.from(e.target.files!)]);
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      console.log('[PublishWizard] handleVideoUpload - files selected:', newFiles.length);
+      setVideos(prev => [...prev, ...newFiles]);
+      e.target.value = '';
     }
   };
 
