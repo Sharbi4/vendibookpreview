@@ -86,55 +86,50 @@ const HeroRentalSearch = () => {
           </h1>
         </motion.div>
 
-        {/* Two-Path Layout: Animation Left, CTAs Right */}
+        {/* Hero island with border */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-          className="grid lg:grid-cols-5 gap-6"
+          className="glass-premium rounded-3xl p-6 md:p-8 shadow-2xl border border-border/40"
         >
-          {/* CTA Buttons - first on mobile, second on desktop */}
-          <div className="lg:col-span-2 order-1 lg:order-2 glass-premium rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col justify-center">
-            <h3 className="font-semibold text-foreground text-lg mb-2">Get Started</h3>
-            <p className="text-sm text-muted-foreground mb-4 lg:mb-6">Find or list food business assets</p>
+          {/* CTA Buttons - above animation on mobile */}
+          <div className="flex flex-col gap-3 mb-6 order-1">
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="dark-shine"
+                size="lg"
+                className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl"
+                onClick={() => navigate('/search')}
+              >
+                Browse Listings
+              </Button>
 
-            <div className="flex flex-col gap-3 lg:gap-4">
-              <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
-                <Button
-                  variant="dark-shine"
-                  size="lg"
-                  className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl"
-                  onClick={() => navigate('/search')}
-                >
-                  Browse Listings
-                </Button>
-
-                <Button
-                  variant="dark-shine"
-                  size="lg"
-                  className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl"
-                  onClick={() => navigate('/list')}
-                >
-                  Create a Free Listing
-                </Button>
-              </div>
-
-              {!user && (
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl bg-background hover:bg-muted/60 border-border"
-                  onClick={handleGoogleLogin}
-                >
-                  <GoogleIcon className="mr-2 h-5 w-5" />
-                  Continue with Google
-                </Button>
-              )}
+              <Button
+                variant="dark-shine"
+                size="lg"
+                className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl"
+                onClick={() => navigate('/list')}
+              >
+                Create a Free Listing
+              </Button>
             </div>
+
+            {!user && (
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl bg-background hover:bg-muted/60 border-border"
+                onClick={handleGoogleLogin}
+              >
+                <GoogleIcon className="mr-2 h-5 w-5" />
+                Continue with Google
+              </Button>
+            )}
           </div>
 
-          {/* Walkthrough Animation - second on mobile, first on desktop */}
-          <div className="lg:col-span-3 order-2 lg:order-1 glass-premium rounded-3xl p-5 md:p-6 shadow-2xl flex flex-col">
+          {/* Walkthrough Animation */}
+          <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                 <Sparkles className="h-5 w-5 text-primary" />
@@ -144,9 +139,7 @@ const HeroRentalSearch = () => {
                 <p className="text-xs text-muted-foreground">See how it works</p>
               </div>
             </div>
-            <div className="flex-1">
-              <AuthWalkthrough />
-            </div>
+            <AuthWalkthrough />
           </div>
         </motion.div>
       </div>
