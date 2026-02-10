@@ -64,38 +64,43 @@ const HeroRentalSearch = () => {
   };
 
   return (
-    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden" style={{ background: 'linear-gradient(135deg, #F7F7F9 0%, #F0F0F4 30%, #EAEAF0 55%, #F4F3F7 80%, #F8F7FB 100%)' }}>
-      {/* Decorative static background orbs - silver/platinum tone */}
-      <div className="absolute top-10 -left-20 w-[28rem] h-[28rem] rounded-full blur-3xl" style={{ background: 'rgba(180, 180, 200, 0.12)' }} />
-      <div className="absolute bottom-10 -right-20 w-[32rem] h-[32rem] rounded-full blur-3xl" style={{ background: 'rgba(160, 165, 185, 0.10)' }} />
+    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden bg-[#FAFAFA]">
+      {/* Base silver shimmer gradient */}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(145deg, #FFFFFF 0%, #F5F5F8 25%, #EEEEF3 45%, #F8F8FC 65%, #FFFFFF 100%)' }} />
       
-      {/* Animated orange glow that drifts across the hero */}
+      {/* Animated silver shine sweep */}
       <motion.div
-        className="absolute w-[30rem] h-[30rem] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(200, 200, 220, 0.25), transparent 65%)', filter: 'blur(80px)' }}
-        animate={{
-          x: ['-15%', '55%', '15%', '-15%'],
-          y: ['-5%', '25%', '-15%', '-5%'],
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(105deg, transparent 0%, transparent 35%, rgba(255,255,255,0.9) 45%, rgba(240,240,248,0.6) 50%, rgba(255,255,255,0.9) 55%, transparent 65%, transparent 100%)',
         }}
+        animate={{ x: ['-100%', '100%'] }}
         transition={{
-          duration: 16,
+          duration: 6,
           repeat: Infinity,
           ease: 'easeInOut',
+          repeatDelay: 4,
         }}
       />
+      
+      {/* Subtle silver orb accents */}
       <motion.div
-        className="absolute w-[22rem] h-[22rem] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(255, 81, 36, 0.08), transparent 65%)', filter: 'blur(70px)' }}
+        className="absolute w-[35rem] h-[35rem] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(210, 215, 230, 0.3), transparent 60%)', filter: 'blur(90px)' }}
         animate={{
-          x: ['45%', '-25%', '35%', '45%'],
-          y: ['15%', '-10%', '30%', '15%'],
+          x: ['-10%', '50%', '10%', '-10%'],
+          y: ['-5%', '20%', '-10%', '-5%'],
         }}
-        transition={{
-          duration: 20,
-          repeat: Infinity,
-          ease: 'easeInOut',
-          delay: 2,
+        transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="absolute w-[25rem] h-[25rem] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(255, 81, 36, 0.05), transparent 60%)', filter: 'blur(80px)' }}
+        animate={{
+          x: ['40%', '-20%', '30%', '40%'],
+          y: ['10%', '-5%', '25%', '10%'],
         }}
+        transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
       />
 
       <div className="relative z-10 container max-w-4xl mx-auto px-4 py-12 md:py-16">
