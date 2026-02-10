@@ -45,7 +45,7 @@ const DraftsSection = ({ drafts, onDelete }: DraftsSectionProps) => {
       <div 
         className="absolute inset-0 rounded-2xl"
         style={{
-          background: 'linear-gradient(270deg, hsl(var(--primary)), hsl(280 80% 60%), hsl(330 80% 60%), hsl(var(--primary)))',
+          background: 'linear-gradient(270deg, hsl(25 95% 53%), hsl(15 80% 45%), hsl(350 60% 35%), hsl(25 95% 53%))',
           backgroundSize: '300% 300%',
           animation: 'gradient-shift 4s ease infinite',
         }}
@@ -57,7 +57,7 @@ const DraftsSection = ({ drafts, onDelete }: DraftsSectionProps) => {
           <div 
             className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
             style={{
-              background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(280 80% 60%))',
+              background: 'linear-gradient(135deg, hsl(25 95% 53%), hsl(350 60% 35%))',
             }}
           >
             <FileEdit className="h-4 w-4" />

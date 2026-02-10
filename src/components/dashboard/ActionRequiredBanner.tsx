@@ -50,7 +50,7 @@ const ActionRequiredBanner = ({ pendingRequests, pendingOffers, draftListings = 
       <div 
         className="absolute inset-0 rounded-2xl"
         style={{
-          background: 'linear-gradient(270deg, hsl(var(--primary)), hsl(280 80% 60%), hsl(330 80% 60%), hsl(var(--primary)))',
+        background: 'linear-gradient(270deg, hsl(25 95% 53%), hsl(15 80% 45%), hsl(350 60% 35%), hsl(25 95% 53%))',
           backgroundSize: '300% 300%',
           animation: 'gradient-shift 4s ease infinite',
         }}
@@ -62,7 +62,7 @@ const ActionRequiredBanner = ({ pendingRequests, pendingOffers, draftListings = 
           <div 
             className="flex-shrink-0 w-12 h-12 rounded-2xl text-white shadow-lg flex items-center justify-center"
             style={{
-              background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(280 80% 60%))',
+              background: 'linear-gradient(135deg, hsl(25 95% 53%), hsl(350 60% 35%))',
             }}
           >
             <AlertCircle className="h-6 w-6" />
