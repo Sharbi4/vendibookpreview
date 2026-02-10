@@ -139,7 +139,7 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
             {items.map((item) => (
               <button
                 key={item.id}
-                onClick={() => onItemClick?.(item.id)}
+                onClick={() => { onItemClick?.(item.id); setExpanded(false); }}
                 className={cn(
                   "w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all",
                   item.current
