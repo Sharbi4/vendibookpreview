@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { AlertCircle, ArrowRight, Calendar, HandCoins, FileText } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 interface ActionRequiredBannerProps {
@@ -14,7 +13,6 @@ const ActionRequiredBanner = ({ pendingRequests, pendingOffers, draftListings = 
   
   if (totalActions === 0) return null;
 
-  // Build action items
   const actionItems: { label: string; count: number; icon: React.ElementType; tab: string }[] = [];
   
   if (pendingRequests > 0) {
@@ -44,14 +42,29 @@ const ActionRequiredBanner = ({ pendingRequests, pendingOffers, draftListings = 
     });
   }
 
-  // Primary action is the first item
   const primaryAction = actionItems[0];
 
   return (
-    <Card className="border border-amber-300 dark:border-amber-700 shadow-md bg-amber-50 dark:bg-amber-950/20">
-      <CardContent className="p-4">
+    <div className="relative rounded-2xl p-[2px] overflow-hidden shadow-lg animate-gradient-border">
+      {/* Animated gradient border */}
+      <div 
+        className="absolute inset-0 rounded-2xl"
+        style={{
+          background: 'linear-gradient(270deg, hsl(var(--primary)), hsl(280 80% 60%), hsl(330 80% 60%), hsl(var(--primary)))',
+          backgroundSize: '300% 300%',
+          animation: 'gradient-shift 4s ease infinite',
+        }}
+      />
+      
+      {/* Inner content */}
+      <div className="relative rounded-[14px] bg-background p-4">
         <div className="flex items-center gap-4">
-          <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-amber-500 text-white shadow-lg flex items-center justify-center">
+          <div 
+            className="flex-shrink-0 w-12 h-12 rounded-2xl text-white shadow-lg flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(280 80% 60%))',
+            }}
+          >
             <AlertCircle className="h-6 w-6" />
           </div>
           
@@ -75,7 +88,6 @@ const ActionRequiredBanner = ({ pendingRequests, pendingOffers, draftListings = 
               variant="dark-shine" 
               className="gap-1.5"
               onClick={() => {
-                // Scroll to the relevant tab section
                 const tabTrigger = document.querySelector(`[data-state][value="${primaryAction.tab}"]`) as HTMLElement;
                 if (tabTrigger) tabTrigger.click();
               }}
@@ -85,8 +97,16 @@ const ActionRequiredBanner = ({ pendingRequests, pendingOffers, draftListings = 
             </Button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      <style>{`
+        @keyframes gradient-shift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+      `}</style>
+    </div>
   );
 };
 

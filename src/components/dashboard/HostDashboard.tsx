@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Truck, Eye, Loader2, Calendar, BarChart3, DollarSign, HandCoins, ExternalLink, Grid3X3, List, LayoutGrid, HelpCircle, Settings, Shield } from 'lucide-react';
+import { Plus, Truck, Eye, Loader2, Calendar, BarChart3, DollarSign, HandCoins, ExternalLink, Grid3X3, List, LayoutGrid, HelpCircle, Settings, Shield, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CompactStatCard } from './CompactStatCard';
 import { CompactInsights } from './CompactInsights';
@@ -80,6 +80,15 @@ const HostDashboard = () => {
 
   return (
     <div className="space-y-6">
+      {/* Action Required Banner - Above everything */}
+      {hasActionRequired && (
+        <ActionRequiredBanner 
+          pendingRequests={bookingStats.pending}
+          pendingOffers={pendingOffers.length}
+          draftListings={draftListings.length}
+        />
+      )}
+
       {/* Dashboard Header - Dark Shine Design */}
       <div className="p-6 rounded-2xl bg-card border border-border shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -140,6 +149,13 @@ const HostDashboard = () => {
               Support
             </Link>
             <Link 
+              to="/messages"
+              className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
+            >
+              <MessageSquare className="h-4 w-4" />
+              Inbox
+            </Link>
+            <Link 
               to="/account"
               className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
             >
@@ -167,14 +183,8 @@ const HostDashboard = () => {
         </div>
       </div>
 
-      {/* Action Required Banner - Priority over other content */}
-      {hasActionRequired && (
-        <ActionRequiredBanner 
-          pendingRequests={bookingStats.pending}
-          pendingOffers={pendingOffers.length}
-          draftListings={draftListings.length}
-        />
-      )}
+
+
 
       {/* Key Metrics Row - Airbnb Minimal Style */}
       <div className={`grid grid-cols-2 gap-4 ${userType === 'hybrid' ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
