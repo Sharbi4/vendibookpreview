@@ -282,14 +282,17 @@ const ListPage: React.FC = () => {
   const { user } = useAuth();
   const { listings } = useHostListings();
   const [searchParams] = useSearchParams();
-  const [mode, setMode] = useState<'landing' | 'wizard'>('landing');
+  const [mode, setMode] = useState<'landing' | 'wizard'>(() => {
+    // If user is already logged in, skip landing and go straight to wizard
+    return user ? 'wizard' : 'landing';
+  });
 
-  // Auto-enter wizard mode when ?start=true and user is logged in
+  // Also switch to wizard when user logs in or ?start=true
   useEffect(() => {
-    if (searchParams.get('start') === 'true' && user) {
+    if (user) {
       setMode('wizard');
     }
-  }, [searchParams, user]);
+  }, [user]);
 
   // Filter drafts for a "Resume" banner if needed
   const drafts = listings.filter(l => l.status === 'draft');
