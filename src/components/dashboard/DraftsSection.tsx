@@ -54,12 +54,7 @@ const DraftsSection = ({ drafts, onDelete }: DraftsSectionProps) => {
       {/* Inner content */}
       <div className="relative rounded-[14px] bg-background p-4">
         <div className="flex items-center gap-2 mb-3">
-          <div 
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
-            style={{
-              background: 'linear-gradient(135deg, hsl(25 95% 53%), hsl(350 60% 35%))',
-            }}
-          >
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-foreground text-background">
             <FileEdit className="h-4 w-4" />
           </div>
           <h3 className="text-sm font-semibold text-foreground">Resume Your Drafts</h3>

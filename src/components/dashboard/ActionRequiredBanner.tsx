@@ -59,12 +59,7 @@ const ActionRequiredBanner = ({ pendingRequests, pendingOffers, draftListings = 
       {/* Inner content */}
       <div className="relative rounded-[14px] bg-background p-4">
         <div className="flex items-center gap-4">
-          <div 
-            className="flex-shrink-0 w-12 h-12 rounded-2xl text-white shadow-lg flex items-center justify-center"
-            style={{
-              background: 'linear-gradient(135deg, hsl(25 95% 53%), hsl(350 60% 35%))',
-            }}
-          >
+          <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-foreground text-background shadow-lg flex items-center justify-center">
             <AlertCircle className="h-6 w-6" />
           </div>
           

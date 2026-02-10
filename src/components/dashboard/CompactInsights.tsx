@@ -45,17 +45,8 @@ export const CompactInsights = () => {
     }
   };
 
-  const getIconColor = (type: AIInsight['type']) => {
-    switch (type) {
-      case 'success':
-        return 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30';
-      case 'warning':
-        return 'text-amber-600 bg-amber-50 dark:bg-amber-900/30';
-      case 'tip':
-        return 'text-blue-600 bg-blue-50 dark:bg-blue-900/30';
-      case 'opportunity':
-        return 'text-purple-600 bg-purple-50 dark:bg-purple-900/30';
-    }
+  const getIconColor = (_type: AIInsight['type']) => {
+    return 'text-background bg-foreground';
   };
 
   // Map insight to tight copy
