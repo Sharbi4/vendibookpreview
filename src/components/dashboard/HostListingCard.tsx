@@ -291,33 +291,53 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
 
               {/* Marketing Upsells - Amber/Blue accent */}
               {isPublished && !isFeatured && (
-                <Button 
-                  variant="secondary" 
-                  size="sm"
-                  onClick={handleFeaturedClick}
-                  className="h-9 rounded-xl bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50"
-                >
-                  <Star className="h-4 w-4 mr-1.5" />
-                  Boost
-                </Button>
+                <div className="relative rounded-xl p-[1.5px] overflow-hidden">
+                  <div 
+                    className="absolute inset-0"
+                    style={{
+                      background: 'linear-gradient(270deg, hsl(25 95% 53%), hsl(15 80% 45%), hsl(350 60% 35%), hsl(25 95% 53%))',
+                      backgroundSize: '300% 300%',
+                      animation: 'gradient-shift 4s ease infinite',
+                    }}
+                  />
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={handleFeaturedClick}
+                    className="relative h-9 rounded-[10px] bg-background hover:bg-muted/50 text-foreground"
+                  >
+                    <Star className="h-4 w-4 mr-1.5" />
+                    Boost
+                  </Button>
+                </div>
               )}
               {isPublished && isSale && !hasNotary && (
-                <Button 
-                  variant="secondary" 
-                  size="sm"
-                  onClick={handleNotaryCheckout}
-                  disabled={isLoadingNotary}
-                  className="h-9 rounded-xl bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
-                >
-                  {isLoadingNotary ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Shield className="h-4 w-4 mr-1.5" />
-                      Notary
-                    </>
-                  )}
-                </Button>
+                <div className="relative rounded-xl p-[1.5px] overflow-hidden">
+                  <div 
+                    className="absolute inset-0"
+                    style={{
+                      background: 'linear-gradient(270deg, hsl(25 95% 53%), hsl(15 80% 45%), hsl(350 60% 35%), hsl(25 95% 53%))',
+                      backgroundSize: '300% 300%',
+                      animation: 'gradient-shift 4s ease infinite',
+                    }}
+                  />
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={handleNotaryCheckout}
+                    disabled={isLoadingNotary}
+                    className="relative h-9 rounded-[10px] bg-background hover:bg-muted/50 text-foreground"
+                  >
+                    {isLoadingNotary ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Shield className="h-4 w-4 mr-1.5" />
+                        Notary
+                      </>
+                    )}
+                  </Button>
+                </div>
               )}
 
               {/* Spacer */}
@@ -336,14 +356,25 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
                 </Button>
               )}
               {(listing.status === 'draft' || listing.status === 'paused') && onPublish && (
-                <Button 
-                  size="sm"
-                  className="h-9 rounded-xl"
-                  onClick={() => onPublish(listing.id)}
-                >
-                  <Play className="h-4 w-4 mr-1.5" />
-                  Publish
-                </Button>
+                <div className="relative rounded-xl p-[1.5px] overflow-hidden">
+                  <div 
+                    className="absolute inset-0"
+                    style={{
+                      background: 'linear-gradient(270deg, hsl(25 95% 53%), hsl(15 80% 45%), hsl(350 60% 35%), hsl(25 95% 53%))',
+                      backgroundSize: '300% 300%',
+                      animation: 'gradient-shift 4s ease infinite',
+                    }}
+                  />
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    className="relative h-9 rounded-[10px] bg-background hover:bg-muted/50 text-foreground"
+                    onClick={() => onPublish(listing.id)}
+                  >
+                    <Play className="h-4 w-4 mr-1.5" />
+                    Publish
+                  </Button>
+                </div>
               )}
               {onDelete && (
                 <Button 
