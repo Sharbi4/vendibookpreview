@@ -655,12 +655,14 @@ export const PublishWizard: React.FC = () => {
   const rentalPayoutEstimates = useMemo(() => {
     const dailyPrice = parseFloat(priceDaily) || 0;
     const weeklyPrice = parseFloat(priceWeekly) || 0;
+    const monthlyPrice = parseFloat(priceMonthly) || 0;
     
     return {
       daily: dailyPrice > 0 ? calculateRentalFees(dailyPrice) : null,
       weekly: weeklyPrice > 0 ? calculateRentalFees(weeklyPrice) : null,
+      monthly: monthlyPrice > 0 ? calculateRentalFees(monthlyPrice) : null,
     };
-  }, [priceDaily, priceWeekly]);
+  }, [priceDaily, priceWeekly, priceMonthly]);
 
   const estimatedFreightCost = 500; // Placeholder
   
@@ -2468,10 +2470,27 @@ export const PublishWizard: React.FC = () => {
                             Offer a discount for week-long rentals. Typically 10-20% off the daily rate × 7.
                           </p>
                         </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="priceMonthly" className="text-base font-medium">Monthly Rate (optional)</Label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                            <Input
+                              id="priceMonthly"
+                              type="number"
+                              placeholder="0"
+                              value={priceMonthly}
+                              onChange={(e) => setPriceMonthly(e.target.value)}
+                              className="pl-8 text-lg"
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Best value for long-term renters. Typically 30-40% off the daily rate × 30.
+                          </p>
+                        </div>
                       </div>
 
                       {/* Payout Estimate for Rentals */}
-                      {(rentalPayoutEstimates.daily || rentalPayoutEstimates.weekly) && (
+                      {(rentalPayoutEstimates.daily || rentalPayoutEstimates.weekly || rentalPayoutEstimates.monthly) && (
                         <div className="bg-card rounded-xl p-4 border border-border">
                           <div className="flex items-start gap-3">
                             <div className="p-2.5 bg-muted rounded-xl">
@@ -2502,6 +2521,19 @@ export const PublishWizard: React.FC = () => {
                                       </span>
                                       <span className="text-xs text-muted-foreground ml-2">
                                         ({formatCurrency(rentalPayoutEstimates.weekly.hostFee)} fee)
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                                {rentalPayoutEstimates.monthly && (
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground">Monthly rental:</span>
+                                    <div className="text-right">
+                                      <span className="font-semibold text-primary">
+                                        {formatCurrency(rentalPayoutEstimates.monthly.hostReceives)}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground ml-2">
+                                        ({formatCurrency(rentalPayoutEstimates.monthly.hostFee)} fee)
                                       </span>
                                     </div>
                                   </div>
