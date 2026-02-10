@@ -232,12 +232,6 @@ const MobileMenu = ({
                       highlight
                     />
                     <AirbnbMenuItem 
-                      icon={Truck} 
-                      label="Become a Host" 
-                      subtext="Learn how hosting works"
-                      onClick={() => handleNav('/how-it-works-host')} 
-                    />
-                    <AirbnbMenuItem 
                       icon={Store} 
                       label="View My Storefront" 
                       onClick={() => handleNav(`/u/${user?.id}`)} 
