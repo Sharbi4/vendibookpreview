@@ -320,14 +320,23 @@ const MobileMenu = ({
                   />
                 </div>
               ) : (
-                <div className="p-4">
-                  <Button
-                    variant="dark-shine"
-                    className="w-full rounded-xl h-12 text-base"
-                    onClick={() => handleNav('/auth')}
-                  >
-                    Sign Up / Login
-                  </Button>
+                <div className="py-2">
+                  <AirbnbMenuItem 
+                    icon={PlusCircle} 
+                    label="Add a Listing" 
+                    subtext="Create and publish a listing"
+                    onClick={() => handleNav('/list?start=true')}
+                    highlight
+                  />
+                  <div className="px-4 py-2">
+                    <Button
+                      variant="dark-shine"
+                      className="w-full rounded-xl h-12 text-base"
+                      onClick={() => handleNav('/auth')}
+                    >
+                      Sign Up / Login
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
