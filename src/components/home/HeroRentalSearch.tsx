@@ -81,7 +81,7 @@ const HeroRentalSearch = () => {
           <img
             src={vendibookLogo}
             alt="Vendibook"
-            className="h-20 md:h-24 w-auto mx-auto mb-6 transition-transform duration-300 hover:scale-105"
+            className="h-40 md:h-48 w-auto mx-auto mb-6 transition-transform duration-300 hover:scale-105"
           />
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground leading-tight tracking-tight mb-4">
             Rent it. Buy it. <span className="gradient-text-warm">Find your spot.</span>
