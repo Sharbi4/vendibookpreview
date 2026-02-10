@@ -363,17 +363,7 @@ export const HostOffersSection = () => {
   const allEmpty = pendingOffers.length === 0 && counteredOffers.length === 0 && respondedOffers.length === 0;
 
   if (allEmpty) {
-    return (
-      <div className="py-8 text-center">
-        <div className="w-12 h-12 rounded-xl bg-muted mx-auto mb-3 flex items-center justify-center">
-          <Tag className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <p className="text-sm font-medium text-foreground mb-1">No offers yet</p>
-        <p className="text-xs text-muted-foreground">
-          Offers from buyers will appear here.
-        </p>
-      </div>
-    );
+    return null;
   }
 
   const activeOffers = [...pendingOffers, ...counteredOffers];
