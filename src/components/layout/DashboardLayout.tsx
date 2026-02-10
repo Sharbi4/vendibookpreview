@@ -260,24 +260,8 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
         </div>
       </header>
 
-      {/* Floating Dashboard Sidebar Toggle - positioned below header */}
-      <div className="lg:hidden fixed top-16 left-3 z-40">
-        <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-          <SheetTrigger asChild>
-            <Button 
-              variant="default" 
-              size="sm" 
-              className="h-9 px-3 shadow-lg bg-primary text-primary-foreground hover:bg-primary/90 rounded-full"
-            >
-              <LayoutGrid className="h-4 w-4 mr-1.5" />
-              <span className="text-xs font-medium">{mode === 'host' ? 'Host' : 'My'} Menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-72 p-0">
-            <SidebarContent onLinkClick={() => setIsMobileOpen(false)} />
-          </SheetContent>
-        </Sheet>
-      </div>
+
+
 
       <MobileMenu
         isOpen={isAccountMenuOpen}
