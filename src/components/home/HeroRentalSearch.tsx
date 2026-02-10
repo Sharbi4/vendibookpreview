@@ -7,28 +7,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import heroBg from '@/assets/hero-food-truck.jpg';
 import type { DateRange } from 'react-day-picker';
 import { LocationSearchInput } from '@/components/search/LocationSearchInput';
-
-// --- Sub-Components ---
-
-const SearchTab = ({ active, label, icon: Icon, onClick }: { active: boolean; label: string; icon: any; onClick: () => void }) => (
-  <button
-    onClick={onClick}
-    className={cn(
-      "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200",
-      active
-        ? "bg-white text-foreground shadow-md"
-        : "bg-white/10 text-white/80 hover:bg-white/20"
-    )}
-  >
-    <Icon className="h-4 w-4" />
-    {label}
-  </button>
-);
-
-// --- Main Component ---
+import { AuthWalkthrough } from '@/components/auth/AuthWalkthrough';
+import vendibookLogo from '@/assets/vendibook-logo.png';
 
 const HeroRentalSearch = () => {
   const navigate = useNavigate();
@@ -45,7 +27,7 @@ const HeroRentalSearch = () => {
     if (selectedLocation) {
       params.set('lat', selectedLocation.coordinates[1].toString());
       params.set('lng', selectedLocation.coordinates[0].toString());
-      params.set('radius', '100'); // Default 100 mile radius
+      params.set('radius', '100');
     }
     if (dateRange?.from) params.set('start', format(dateRange.from, 'yyyy-MM-dd'));
     if (dateRange?.to) params.set('end', format(dateRange.to, 'yyyy-MM-dd'));
@@ -72,7 +54,6 @@ const HeroRentalSearch = () => {
     }
   };
 
-  // Format date range for display
   const formatDateRange = () => {
     if (!dateRange?.from) return "Add dates";
     if (!dateRange.to) return format(dateRange.from, "MMM d");
@@ -83,25 +64,30 @@ const HeroRentalSearch = () => {
   };
 
   return (
-    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden mx-0 my-0 md:m-4 rounded-none md:rounded-[40px] lg:rounded-[60px] z-0">
-      {/* Background Image with refined gradient */}
-      <div className="absolute inset-0 z-0">
-        <img src={heroBg} alt="Food truck at sunset" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
-      </div>
+    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-vendibook-cream via-background to-muted/30">
+      {/* Decorative background orbs */}
+      <div className="absolute top-20 -left-32 w-96 h-96 bg-primary/8 rounded-full blur-3xl animate-float" />
+      <div className="absolute bottom-20 -right-32 w-[30rem] h-[30rem] bg-vendibook-orange/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-primary/3 rounded-full blur-3xl" />
 
-      <div className="relative z-10 container max-w-5xl mx-auto px-4 text-center">
-        {/* Headline Section */}
+      <div className="relative z-10 container max-w-6xl mx-auto px-4 py-12 md:py-16">
+        {/* Logo & Headline */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="text-center mb-10 md:mb-14"
         >
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 leading-tight tracking-tight">
-            Rent it. Buy it. Find your spot.
+          <img
+            src={vendibookLogo}
+            alt="Vendibook"
+            className="h-20 md:h-24 w-auto mx-auto mb-6 transition-transform duration-300 hover:scale-105"
+          />
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground leading-tight tracking-tight mb-4">
+            Rent it. Buy it. <span className="gradient-text-warm">Find your spot.</span>
           </h1>
-          <p className="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto mb-10 font-light">
-            From turnkey rentals and trucks for sale to premium food truck parks—launch your food business this weekend with verified assets and spaces.
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto font-light">
+            From turnkey rentals and trucks for sale to premium food truck parks—launch your food business this weekend.
           </p>
         </motion.div>
 
@@ -110,37 +96,30 @@ const HeroRentalSearch = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-          className="grid md:grid-cols-5 gap-4 md:gap-6"
+          className="grid lg:grid-cols-5 gap-6"
         >
-          {/* Path 1: Browse - Clear Glass - Takes 3 columns */}
-          <div
-            className="md:col-span-3 rounded-3xl p-6 md:p-8 shadow-2xl border border-white/20"
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(20px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            }}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                <Search className="h-5 w-5 text-white" />
+          {/* Left: Search Card - Glassmorphism */}
+          <div className="lg:col-span-3 glass-premium rounded-3xl p-6 md:p-8 shadow-2xl">
+            <div className="flex items-center gap-2 mb-5">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Search className="h-5 w-5 text-primary" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-white text-lg">Browse</h3>
-                <p className="text-xs text-white/70">Search our verified marketplace</p>
+                <h3 className="font-semibold text-foreground text-lg">Browse</h3>
+                <p className="text-xs text-muted-foreground">Search our verified marketplace</p>
               </div>
             </div>
 
             {/* Mode Toggles */}
             <div className="flex justify-start mb-4">
-              <div className="inline-flex items-center gap-1 p-1 bg-white/10 rounded-full border border-white/10">
+              <div className="inline-flex items-center gap-1 p-1 bg-muted/60 rounded-full border border-border/30">
                 <button
                   onClick={() => setActiveTab('rent')}
                   className={cn(
                     "flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
                     activeTab === 'rent'
-                      ? "bg-white text-foreground shadow-sm"
-                      : "text-white/70 hover:text-white"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   <Store className="h-4 w-4" />
@@ -151,8 +130,8 @@ const HeroRentalSearch = () => {
                   className={cn(
                     "flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
                     activeTab === 'buy'
-                      ? "bg-white text-foreground shadow-sm"
-                      : "text-white/70 hover:text-white"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   <Truck className="h-4 w-4" />
@@ -164,8 +143,8 @@ const HeroRentalSearch = () => {
             {/* Search Fields */}
             <div className="space-y-3">
               {/* Location Input */}
-              <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
-                <label className="block text-[10px] uppercase tracking-wider text-white/60 font-semibold text-left mb-0.5">
+              <div className="bg-muted/40 rounded-xl px-3 py-2 border border-border/30">
+                <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold text-left mb-0.5">
                   Location
                 </label>
                 <LocationSearchInput
@@ -174,30 +153,30 @@ const HeroRentalSearch = () => {
                   onLocationSelect={handleLocationSelect}
                   selectedCoordinates={selectedLocation?.coordinates || null}
                   placeholder="City, Zip, or current location"
-                  className="[&_input]:border-0 [&_input]:shadow-none [&_input]:bg-transparent [&_input]:py-1 [&_input]:text-sm [&_input]:font-medium [&_input]:text-white [&_input]:placeholder:text-white/50 [&>div]:space-y-0"
+                  className="[&_input]:border-0 [&_input]:shadow-none [&_input]:bg-transparent [&_input]:py-1 [&_input]:text-sm [&_input]:font-medium [&_input]:text-foreground [&_input]:placeholder:text-muted-foreground/60 [&>div]:space-y-0"
                 />
               </div>
 
               {/* Asset Type & Dates Row */}
               <div className="grid grid-cols-2 gap-2">
                 {/* Asset Type */}
-                <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
-                  <label className="block text-[10px] uppercase tracking-wider text-white/60 font-semibold text-left mb-0.5">
+                <div className="bg-muted/40 rounded-xl px-3 py-2 border border-border/30">
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold text-left mb-0.5">
                     Type
                   </label>
                   <div className="flex items-center gap-2 relative">
                     <select
                       value={assetType}
                       onChange={(e) => setAssetType(e.target.value)}
-                      className="w-full bg-transparent border-none p-0 text-white focus:ring-0 text-sm font-medium outline-none cursor-pointer appearance-none truncate pr-4"
+                      className="w-full bg-transparent border-none p-0 text-foreground focus:ring-0 text-sm font-medium outline-none cursor-pointer appearance-none truncate pr-4"
                     >
-                      <option value="all" className="text-foreground">Everything</option>
-                      <option value="food_truck" className="text-foreground">Food Trucks</option>
-                      <option value="food_trailer" className="text-foreground">Trailers</option>
-                      <option value="ghost_kitchen" className="text-foreground">Kitchens</option>
-                      <option value="vendor_space" className="text-foreground">Vendor Spaces</option>
+                      <option value="all">Everything</option>
+                      <option value="food_truck">Food Trucks</option>
+                      <option value="food_trailer">Trailers</option>
+                      <option value="ghost_kitchen">Kitchens</option>
+                      <option value="vendor_space">Vendor Spaces</option>
                     </select>
-                    <ChevronDown className="h-4 w-4 text-white/60 absolute right-0 pointer-events-none" />
+                    <ChevronDown className="h-4 w-4 text-muted-foreground absolute right-0 pointer-events-none" />
                   </div>
                 </div>
 
@@ -209,17 +188,17 @@ const HeroRentalSearch = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="bg-white/10 rounded-xl px-3 py-2 border border-white/10"
+                      className="bg-muted/40 rounded-xl px-3 py-2 border border-border/30"
                     >
                       <Popover open={isDateOpen} onOpenChange={setIsDateOpen}>
                         <PopoverTrigger asChild>
                           <button className="w-full text-left">
-                            <span className="block text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-0.5">
+                            <span className="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-0.5">
                               Dates
                             </span>
                             <div className="flex items-center gap-1.5">
-                              <CalendarIcon className="h-4 w-4 text-white/60 flex-shrink-0" />
-                              <span className={cn("text-sm font-medium truncate", dateRange?.from ? "text-white" : "text-white/50")}>
+                              <CalendarIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <span className={cn("text-sm font-medium truncate", dateRange?.from ? "text-foreground" : "text-muted-foreground/60")}>
                                 {formatDateRange()}
                               </span>
                             </div>
@@ -244,19 +223,20 @@ const HeroRentalSearch = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="bg-white/5 rounded-xl px-3 py-2 border border-white/10 flex items-center justify-center"
+                      className="bg-muted/20 rounded-xl px-3 py-2 border border-border/20 flex items-center justify-center"
                     >
-                      <span className="text-xs text-white/50">No dates needed</span>
+                      <span className="text-xs text-muted-foreground">No dates needed</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
 
-              {/* Search Button - Orange to match */}
+              {/* Search Button */}
               <Button
                 onClick={handleSearch}
+                variant="dark-shine"
                 size="lg"
-                className="w-full rounded-xl h-12 bg-orange-500 hover:bg-orange-400 text-white font-semibold shadow-lg shadow-orange-500/25"
+                className="w-full rounded-xl h-12"
               >
                 <Search className="h-5 w-5 mr-2" />
                 Search the Marketplace
@@ -264,65 +244,51 @@ const HeroRentalSearch = () => {
             </div>
           </div>
 
-          {/* Path 2: Let Us Match You - Clear Glass with Orange Accents - Takes 2 columns */}
-          <div 
-            className="md:col-span-2 rounded-3xl p-5 md:p-6 shadow-2xl border border-white/20 flex flex-col"
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(20px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            }}
-          >
+          {/* Right: Walkthrough Animation */}
+          <div className="lg:col-span-2 glass-premium rounded-3xl p-5 md:p-6 shadow-2xl flex flex-col">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-                <Handshake className="h-5 w-5 text-orange-400" />
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Sparkles className="h-5 w-5 text-primary" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-white text-lg">Let Us Match You</h3>
-                <p className="text-xs text-white/70">Done-for-you concierge service</p>
+                <h3 className="font-semibold text-foreground text-lg">Why Vendibook?</h3>
+                <p className="text-xs text-muted-foreground">See how it works</p>
               </div>
             </div>
 
-            <div className="flex-1 flex flex-col justify-center text-left space-y-4">
-              <div>
-                <h4 className="text-xl md:text-2xl font-semibold text-white mb-2">
-                  Don't have time to search?
-                </h4>
-                <p className="text-white/80 text-sm md:text-base leading-relaxed">
-                  Our experts will manually find the best deal for your specific needs. Tell us what you're looking for, and we'll do the legwork.
-                </p>
-              </div>
-
-              <ul className="space-y-2 text-sm text-white/90">
-                <li className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-orange-400 flex-shrink-0" />
-                  <span>Personalized asset recommendations</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-orange-400 flex-shrink-0" />
-                  <span>Price negotiation on your behalf</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-orange-400 flex-shrink-0" />
-                  <span>No sign-up required</span>
-                </li>
-              </ul>
+            <div className="flex-1">
+              <AuthWalkthrough />
             </div>
-
-            <Button
-              onClick={openZendeskChat}
-              size="lg"
-              className="w-full rounded-xl h-12 bg-orange-500 hover:bg-orange-400 text-white font-semibold shadow-lg shadow-orange-500/25 mt-4"
-            >
-              <Handshake className="h-5 w-5 mr-2" />
-              Match Me
-            </Button>
           </div>
         </motion.div>
-      </div>
 
-      {/* Bottom Gradient Fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent z-10" />
+        {/* Match Me CTA - Compact bar below */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mt-6 glass-premium rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row items-center justify-between gap-4"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Handshake className="h-5 w-5 text-primary" />
+            </div>
+            <div className="text-left">
+              <h4 className="font-semibold text-foreground">Don't have time to search?</h4>
+              <p className="text-sm text-muted-foreground">Our experts will find the best deal for your needs — no sign-up required.</p>
+            </div>
+          </div>
+          <Button
+            onClick={openZendeskChat}
+            variant="dark-shine"
+            size="lg"
+            className="rounded-xl whitespace-nowrap flex-shrink-0"
+          >
+            <Handshake className="h-5 w-5 mr-2" />
+            Match Me
+          </Button>
+        </motion.div>
+      </div>
     </section>
   );
 };
