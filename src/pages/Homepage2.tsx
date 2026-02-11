@@ -595,7 +595,7 @@ const Homepage2 = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="rounded-2xl p-5 bg-white/60 backdrop-blur-2xl border border-white/50 shadow-lg shadow-black/5"
+              className="rounded-2xl p-5 bg-white/60 backdrop-blur-2xl border-2 border-border shadow-lg shadow-black/5"
             >
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(14,100%,57%)] to-[hsl(40,100%,49%)] flex items-center justify-center mb-3 shadow-lg shadow-[hsl(14,100%,57%)]/25">
                 <UserPlus className="w-5 h-5 text-white" />
@@ -612,7 +612,7 @@ const Homepage2 = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
-              className="rounded-2xl p-5 bg-white/60 backdrop-blur-2xl border border-white/50 shadow-lg shadow-black/5"
+              className="rounded-2xl p-5 bg-white/60 backdrop-blur-2xl border-2 border-border shadow-lg shadow-black/5"
             >
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(40,100%,49%)] to-[hsl(14,100%,57%)] flex items-center justify-center mb-3 shadow-lg shadow-[hsl(40,100%,49%)]/25">
                 <Plus className="w-5 h-5 text-white" />
@@ -631,7 +631,7 @@ const Homepage2 = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="rounded-2xl bg-white/60 backdrop-blur-2xl border border-white/50 overflow-hidden shadow-lg shadow-black/5"
+              className="rounded-2xl bg-white/60 backdrop-blur-2xl border-2 border-border overflow-hidden shadow-lg shadow-black/5"
             >
               <button
                 onClick={() => setLearnMoreOpen(!learnMoreOpen)}
@@ -641,11 +641,11 @@ const Homepage2 = () => {
                   <Info className="w-4 h-4 text-[hsl(14,100%,57%)]" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-bold text-sm text-gray-900">How It Works</h4>
-                  <p className="text-xs text-gray-500">Learn about Vendibook</p>
+                  <h4 className="font-bold text-sm text-foreground">How It Works</h4>
+                  <p className="text-xs text-muted-foreground">Learn about Vendibook</p>
                 </div>
                 <motion.div animate={{ rotate: learnMoreOpen ? 90 : 0 }} transition={{ duration: 0.2 }}>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 </motion.div>
               </button>
 
@@ -696,7 +696,7 @@ const Homepage2 = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 }}
-              className="rounded-2xl p-5 bg-white/60 backdrop-blur-2xl border border-white/50 shadow-lg shadow-black/5"
+              className="rounded-2xl p-5 bg-white/60 backdrop-blur-2xl border-2 border-border shadow-lg shadow-black/5"
             >
               <div className="grid grid-cols-2 gap-3">
                 {[
