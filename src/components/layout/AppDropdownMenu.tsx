@@ -123,7 +123,7 @@ const AppDropdownMenu = ({ variant = 'dark', className = '' }: AppDropdownMenuPr
                         <Link to="/homepage2" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
                           <Search className="w-4 h-4 text-white/50" /> Browse All
                         </Link>
-                        <Link to="/contact" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
+                        <Link to="/help" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
                           <HelpCircle className="w-4 h-4 text-white/50" /> Help Center
                         </Link>
                         <Link to="/how-it-works" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
@@ -150,7 +150,7 @@ const AppDropdownMenu = ({ variant = 'dark', className = '' }: AppDropdownMenuPr
                         <Link to="/homepage2" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
                           <Search className="w-4 h-4 text-white/50" /> Browse All
                         </Link>
-                        <Link to="/contact" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all">
+                        <Link to="/help" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all">
                           <HelpCircle className="w-4 h-4 text-white/50" /> Help Center
                         </Link>
                       </>
