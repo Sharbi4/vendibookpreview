@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import HeroRentalSearch from '@/components/home/HeroRentalSearch';
-import RentalBenefits from '@/components/home/RentalBenefits';
+
 import AnnouncementBanner from '@/components/home/AnnouncementBanner';
 import VerificationBanner from '@/components/home/VerificationBanner';
 import PaymentsBanner from '@/components/home/PaymentsBanner';
@@ -80,8 +80,6 @@ const Index = () => {
         {/* 1. Hero - Immersive Rental-First Search */}
         <HeroRentalSearch />
         
-        {/* 2. Rental Benefits - Why Rent? */}
-        <RentalBenefits />
 
         <Suspense fallback={<SectionSkeleton />}>
           {/* 3. Listings - Rentals First, Then Sales */}
