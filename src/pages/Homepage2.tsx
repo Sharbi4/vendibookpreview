@@ -120,11 +120,13 @@ const Homepage2 = () => {
     }
   }, [query, mode, category, coordinates, sortBy, filters]);
 
+  // Auto-fetch on initial load
   useEffect(() => { fetchListings(1); }, []);
 
+  // Re-fetch when mode, category, sortBy, or filters change
   useEffect(() => {
     if (hasSearched) { setPage(1); fetchListings(1); }
-  }, [sortBy]);
+  }, [mode, category, sortBy, filters]);
 
   const handleSearch = () => { setPage(1); fetchListings(1); };
 
@@ -137,7 +139,6 @@ const Homepage2 = () => {
   const handleCategoryChip = (cat: string) => {
     setCategory(cat);
     setPage(1);
-    setTimeout(() => fetchListings(1), 0);
   };
 
   const clearFilters = () => {
@@ -286,7 +287,7 @@ const Homepage2 = () => {
                 {(['', 'rent', 'sale'] as const).map((m) => (
                   <button
                     key={m}
-                    onClick={() => { setMode(m); setTimeout(handleSearch, 0); }}
+                    onClick={() => setMode(m)}
                     className={`px-2 sm:px-3 text-[10px] sm:text-xs font-semibold transition-all ${
                       mode === m
                         ? 'bg-white text-gray-900'
