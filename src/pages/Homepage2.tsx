@@ -78,6 +78,15 @@ const Homepage2 = () => {
   const { apiKey, isLoading: mapLoading, error: mapError } = useGoogleMapsToken();
 
   const resultsRef = useRef<HTMLDivElement>(null);
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  const handleCategoryScroll = () => {
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    setScrollProgress(maxScroll > 0 ? el.scrollLeft / maxScroll : 0);
+  };
 
   const fetchListings = useCallback(async (pageNum: number = 1) => {
     setIsLoading(true);
@@ -299,9 +308,13 @@ const Homepage2 = () => {
                 ))}
               </div>
 
-              {/* Category chips — simple scrollable with underline indicator */}
-              <div className="flex-1 min-w-0">
-                <div className="flex gap-1 overflow-x-auto no-scrollbar scroll-smooth">
+              {/* Category chips — scrollable with scroll-position indicator */}
+              <div className="flex-1 min-w-0 relative">
+                <div
+                  ref={categoryScrollRef}
+                  onScroll={handleCategoryScroll}
+                  className="flex gap-1 overflow-x-auto no-scrollbar scroll-smooth"
+                >
                   {CATEGORIES.map((cat) => (
                     <button
                       key={cat.value}
@@ -314,7 +327,6 @@ const Homepage2 = () => {
                     >
                       <cat.icon className="w-3 h-3" />
                       {cat.label}
-                      {/* Active underline tab */}
                       {category === cat.value && (
                         <motion.div
                           layoutId="category-tab"
@@ -324,12 +336,20 @@ const Homepage2 = () => {
                       )}
                     </button>
                   ))}
-                  {/* Filter Panel */}
                   <FilterPanel
                     filters={filters}
                     onChange={setFilters}
                     onApply={applyFilters}
                     onClear={() => { clearFilterPanel(); setTimeout(() => fetchListings(1), 0); }}
+                  />
+                </div>
+                {/* Scroll position indicator — moves opposite to scroll direction */}
+                <div className="h-[2px] bg-white/10 rounded-full mt-0.5">
+                  <motion.div
+                    className="h-full bg-white/40 rounded-full"
+                    style={{ width: '30%' }}
+                    animate={{ x: `${(1 - scrollProgress) * 233}%` }}
+                    transition={{ type: 'tween', duration: 0.15 }}
                   />
                 </div>
               </div>
