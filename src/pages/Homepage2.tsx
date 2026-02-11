@@ -288,8 +288,8 @@ const Homepage2 = () => {
                 />
                 {/* Desktop glass blob */}
                 <motion.div
-                  className="absolute -inset-x-3 -inset-y-2 pointer-events-none hidden sm:block overflow-hidden"
-                  animate={{ borderRadius: ['58% 42% 52% 48% / 46% 54% 46% 54%', '48% 52% 44% 56% / 54% 46% 52% 48%', '44% 56% 50% 50% / 48% 52% 54% 46%', '52% 48% 56% 44% / 52% 48% 46% 54%', '58% 42% 52% 48% / 46% 54% 46% 54%'], scale: [1, 1.02, 0.98, 1.01, 1] }}
+                  className="absolute inset-x-0 -inset-y-0.5 pointer-events-none hidden sm:block overflow-hidden"
+                  animate={{ borderRadius: ['22% 28% 24% 26% / 30% 26% 28% 24%', '26% 24% 28% 22% / 24% 28% 26% 30%', '24% 26% 22% 28% / 28% 24% 30% 26%', '22% 28% 24% 26% / 30% 26% 28% 24%'], scale: [1, 1.01, 0.99, 1] }}
                   transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
                   style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.38) 0%, rgba(160,200,255,0.22) 20%, rgba(255,170,210,0.17) 40%, rgba(180,255,220,0.15) 60%, rgba(255,210,160,0.2) 80%, rgba(220,190,255,0.18) 100%)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', boxShadow: 'inset 0 3px 8px rgba(255,255,255,0.45), inset 0 -3px 8px rgba(0,0,0,0.07), 0 6px 24px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)' }}
                 />
