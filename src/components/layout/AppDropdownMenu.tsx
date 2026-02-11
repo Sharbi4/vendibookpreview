@@ -58,11 +58,11 @@ const AppDropdownMenu = ({ variant = 'dark', className = '' }: AppDropdownMenuPr
             >
               <div className="py-1.5">
                 {/* Logo */}
-                <div className="flex justify-center px-4 pt-3 pb-4 border-b border-white/10">
+                <div className="flex justify-center px-3 pt-1.5 pb-2 border-b border-white/10">
                   <img 
                     src={vendibookLogo} 
                     alt="Vendibook" 
-                    className="h-20 w-auto brightness-0 invert opacity-80"
+                    className="h-14 w-auto brightness-0 invert opacity-80"
                   />
                 </div>
                 {user ? (
