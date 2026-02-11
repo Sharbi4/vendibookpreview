@@ -244,22 +244,22 @@ const Homepage2 = () => {
         {/* Very subtle warm orbs */}
         <motion.div
           animate={{ x: [0, 60, -40, 0], y: [0, -50, 30, 0], scale: [1, 1.2, 0.9, 1] }}
-          transition={{ repeat: Infinity, duration: 18, ease: 'easeInOut' }}
+          transition={{ repeat: Infinity, duration: 30, ease: 'easeInOut' }}
           className="absolute -top-40 -left-40 w-[700px] h-[700px] rounded-full bg-[hsl(14,100%,57%)]/[0.04] blur-[150px]"
         />
         <motion.div
           animate={{ x: [0, -50, 60, 0], y: [0, 40, -40, 0], scale: [1, 0.85, 1.2, 1] }}
-          transition={{ repeat: Infinity, duration: 22, ease: 'easeInOut' }}
+          transition={{ repeat: Infinity, duration: 36, ease: 'easeInOut' }}
           className="absolute top-1/4 -right-32 w-[800px] h-[800px] rounded-full bg-[hsl(40,100%,49%)]/[0.03] blur-[170px]"
         />
         <motion.div
           animate={{ x: [0, 30, -40, 0], y: [0, -30, 50, 0] }}
-          transition={{ repeat: Infinity, duration: 16, ease: 'easeInOut' }}
+          transition={{ repeat: Infinity, duration: 28, ease: 'easeInOut' }}
           className="absolute bottom-0 left-1/3 w-[600px] h-[600px] rounded-full bg-[hsl(14,80%,50%)]/[0.03] blur-[130px]"
         />
         <motion.div
           animate={{ x: [0, -25, 35, 0], y: [0, 35, -25, 0], scale: [1, 1.1, 0.9, 1] }}
-          transition={{ repeat: Infinity, duration: 20, ease: 'easeInOut', delay: 2 }}
+          transition={{ repeat: Infinity, duration: 34, ease: 'easeInOut', delay: 4 }}
           className="absolute top-2/3 right-1/4 w-[500px] h-[500px] rounded-full bg-[hsl(25,95%,55%)]/[0.02] blur-[140px]"
         />
       </div>
@@ -761,11 +761,14 @@ const Homepage2 = () => {
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .hp2-shimmer {
-          animation: hp2shimmer 4s ease-in-out infinite;
+          animation: hp2shimmer 10s ease-in-out infinite;
         }
         @keyframes hp2shimmer {
-          0%, 100% { transform: translateX(-100%); }
-          50% { transform: translateX(100%); }
+          0% { transform: translateX(-100%); opacity: 0; }
+          15% { opacity: 1; }
+          50% { transform: translateX(100%); opacity: 1; }
+          65% { opacity: 0; }
+          100% { transform: translateX(-100%); opacity: 0; }
         }
         /* Premium smooth scrolling */
         html { scroll-behavior: smooth; }
