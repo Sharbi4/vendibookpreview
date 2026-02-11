@@ -185,3 +185,12 @@ verify_jwt = false
 
 [functions.elevenlabs-scribe-token]
 verify_jwt = false
+
+[functions.elevenlabs-conversation-token]
+verify_jwt = false
+
+[functions.save-voice-lead]
+verify_jwt = false
+
+[functions.extract-voice-intent]
+verify_jwt = false
