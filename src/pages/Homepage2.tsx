@@ -6,6 +6,8 @@ import {
   Building2, ShoppingBag, Zap, Menu,
 } from 'lucide-react';
 import { LayoutDashboard, MessageSquare, HelpCircle, LogOut } from 'lucide-react';
+import { FilterPanel, FilterValues } from '@/components/search/FilterPanel';
+import { EmptyStateEmailCapture } from '@/components/search/EmptyStateEmailCapture';
 import Footer from '@/components/layout/Footer';
 import ListingCard from '@/components/listing/ListingCard';
 import { LocationSearchInput } from '@/components/search/LocationSearchInput';
@@ -52,6 +54,14 @@ const Homepage2 = () => {
   const [mode, setMode] = useState<'rent' | 'sale' | ''>('');
   const [sortBy, setSortBy] = useState<'newest' | 'price_low' | 'price_high' | 'distance'>('newest');
   const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<FilterValues>({
+    minPrice: '',
+    maxPrice: '',
+    instantBookOnly: false,
+    featuredOnly: false,
+    deliveryCapable: false,
+    amenities: [],
+  });
 
   const [listings, setListings] = useState<Listing[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -83,6 +93,14 @@ const Homepage2 = () => {
         body.longitude = coordinates[0];
         body.radius_miles = 100;
       }
+      // Apply filters
+      if (filters.minPrice) body.min_price = Number(filters.minPrice);
+      if (filters.maxPrice) body.max_price = Number(filters.maxPrice);
+      if (filters.instantBookOnly) body.instant_book_only = true;
+      if (filters.featuredOnly) body.featured_only = true;
+      if (filters.deliveryCapable) body.delivery_capable = true;
+      if (filters.amenities.length > 0) body.amenities = filters.amenities;
+
       const { data, error } = await supabase.functions.invoke('search-listings', { body });
       if (error) throw error;
       const result = data as SearchResponse;
@@ -97,7 +115,7 @@ const Homepage2 = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [query, mode, category, coordinates, sortBy]);
+  }, [query, mode, category, coordinates, sortBy, filters]);
 
   useEffect(() => { fetchListings(1); }, []);
 
@@ -122,6 +140,16 @@ const Homepage2 = () => {
   const clearFilters = () => {
     setQuery(''); setLocationText(''); setCoordinates(null);
     setCategory(''); setMode(''); setSortBy('newest'); setPage(1);
+    setFilters({ minPrice: '', maxPrice: '', instantBookOnly: false, featuredOnly: false, deliveryCapable: false, amenities: [] });
+    fetchListings(1);
+  };
+
+  const clearFilterPanel = () => {
+    setFilters({ minPrice: '', maxPrice: '', instantBookOnly: false, featuredOnly: false, deliveryCapable: false, amenities: [] });
+  };
+
+  const applyFilters = () => {
+    setPage(1);
     fetchListings(1);
   };
 
@@ -332,6 +360,13 @@ const Homepage2 = () => {
                     {cat.label}
                   </motion.button>
                 ))}
+                {/* Filter Panel */}
+                <FilterPanel
+                  filters={filters}
+                  onChange={setFilters}
+                  onApply={applyFilters}
+                  onClear={() => { clearFilterPanel(); setTimeout(() => fetchListings(1), 0); }}
+                />
               </div>
 
               {/* Mode pills */}
@@ -449,55 +484,12 @@ const Homepage2 = () => {
                     )}
                   </>
                 ) : (
-                  /* ── Empty State ── */
-                  <div className="relative flex flex-col items-center justify-center py-28 px-6 rounded-3xl bg-white/50 backdrop-blur-2xl border border-white/60 shadow-xl">
-                    <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-3xl">
-                      <motion.div
-                        animate={{ scale: [1, 1.4, 1], opacity: [0.2, 0.4, 0.2] }}
-                        transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut' }}
-                        className="absolute top-1/4 left-1/4 w-56 h-56 rounded-full bg-[hsl(14,100%,57%)]/25 blur-[90px]"
-                      />
-                      <motion.div
-                        animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.3, 0.15] }}
-                        transition={{ repeat: Infinity, duration: 7, ease: 'easeInOut', delay: 1 }}
-                        className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full bg-[hsl(40,100%,49%)]/20 blur-[90px]"
-                      />
-                    </div>
-
-                    <motion.div
-                      animate={{ y: [0, -14, 0] }}
-                      transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-                      className="relative mb-4"
-                    >
-                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[hsl(14,100%,57%)]/40 to-[hsl(40,100%,49%)]/40 blur-xl scale-150" />
-                      <div className="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-[hsl(14,100%,57%)] to-[hsl(40,100%,49%)] flex items-center justify-center shadow-2xl shadow-[hsl(14,100%,57%)]/30">
-                        <Truck className="w-12 h-12 text-white" />
-                      </div>
-                    </motion.div>
-
-                    <motion.div
-                      animate={{ y: [0, -10, 0] }}
-                      transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut', delay: 1.2 }}
-                      className="absolute top-16 right-16"
-                    >
-                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[hsl(40,100%,49%)] to-[hsl(14,100%,57%)] flex items-center justify-center shadow-xl shadow-[hsl(40,100%,49%)]/25">
-                        <Utensils className="w-7 h-7 text-white" />
-                      </div>
-                    </motion.div>
-
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">No listings found here yet</h3>
-                    <p className="text-gray-600 text-center max-w-sm mb-8 text-sm">
-                      Try expanding your search area, adjusting filters, or browse everything we have.
-                    </p>
-                    <div className="flex gap-3">
-                      <Button variant="outline" onClick={clearFilters} className="rounded-xl bg-white/70 backdrop-blur border-gray-200 hover:bg-white text-gray-900">
-                        <X className="w-4 h-4 mr-1" /> Clear Filters
-                      </Button>
-                      <Button asChild className="rounded-xl bg-gray-900 text-white hover:bg-gray-800 shadow-xl shadow-black/20 border border-gray-700">
-                        <Link to="/browse">Browse All</Link>
-                      </Button>
-                    </div>
-                  </div>
+                  <EmptyStateEmailCapture
+                    locationText={locationText}
+                    category={category}
+                    mode={mode}
+                    onClearFilters={clearFilters}
+                  />
                 )}
               </div>
 
