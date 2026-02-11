@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { ShieldCheck, Clock, Star, ChevronRight, Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import MessageHostButton from '@/components/messaging/MessageHostButton';
+import MessageHostForm from '@/components/messaging/MessageHostForm';
 import { useHostResponseTime } from '@/hooks/useHostResponseTime';
 import { useListingAverageRating } from '@/hooks/useReviews';
 import { VerifiedBadgeImage } from '@/components/verification/VerificationBadge';
@@ -16,6 +16,7 @@ interface HostCardProps {
   isVerified?: boolean;
   memberSince?: string;
   lastActiveAt?: string | null;
+  listingTitle?: string;
 }
 
 const HostCard = ({ 
@@ -26,6 +27,7 @@ const HostCard = ({
   isVerified = false,
   memberSince,
   lastActiveAt,
+  listingTitle,
 }: HostCardProps) => {
   const initials = hostName 
     ? hostName.replace(/\.$/, '').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -120,19 +122,17 @@ const HostCard = ({
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <MessageHostButton 
+      {/* Message Form & Profile Link */}
+      <div className="space-y-3">
+        <MessageHostForm 
           listingId={listingId}
           hostId={hostId}
-          variant="outline"
-          className="flex-1 h-12"
-          label="Message Host"
+          listingTitle={listingTitle}
         />
         <Button 
           variant="ghost" 
           asChild
-          className="flex-1 h-12 justify-between hover:bg-muted/50"
+          className="w-full h-12 justify-between hover:bg-muted/50"
         >
           <Link to={profileLink}>
             View full profile
