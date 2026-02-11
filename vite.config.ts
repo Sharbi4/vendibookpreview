@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => ({
       filename: "sw.ts",
       injectManifest: {
         // Fix build failure when a JS chunk exceeds Workbox's default 2MiB limit
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
       },
 
       manifest: {
