@@ -54,64 +54,81 @@ const AppDropdownMenu = ({ variant = 'dark', className = '' }: AppDropdownMenuPr
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -4 }}
               transition={{ duration: 0.15 }}
-              className="absolute right-0 top-[calc(100%+8px)] z-[200] w-56 rounded-xl bg-gray-900 backdrop-blur-xl border border-white/15 shadow-2xl shadow-black/40 overflow-hidden"
+              className="absolute right-0 top-[calc(100%+8px)] z-[200] w-56 rounded-2xl overflow-hidden shadow-2xl shadow-black/50"
+              style={{
+                background: 'linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 50%, #1a1a1a 100%)',
+              }}
             >
-              <div className="py-1.5">
+              {/* Top shine edge */}
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+              {/* Left shine edge */}
+              <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-white/20 via-transparent to-transparent" />
+
+              <div className="py-1.5 relative">
                 {/* Logo */}
-                <div className="flex justify-center px-2 py-1 border-b border-white/10">
+                <div className="flex justify-center px-2 py-1 border-b border-white/8">
                   <img 
                     src={vendibookLogo} 
                     alt="Vendibook" 
                     className="h-24 w-auto brightness-0 invert opacity-80 -my-6"
                   />
                 </div>
-                {user ? (
-                  <>
-                    <Link to="/list" onClick={handleClose} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                      <Plus className="w-4 h-4 text-white/70" /> Create a Listing
-                    </Link>
-                    <Link to="/dashboard" onClick={handleClose} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                      <LayoutDashboard className="w-4 h-4 text-white/70" /> Dashboard
-                    </Link>
-                    <Link to="/dashboard?tab=messages" onClick={handleClose} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                      <MessageSquare className="w-4 h-4 text-white/70" /> Messages
-                    </Link>
-                    <Link to="/homepage2" onClick={handleClose} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                      <Search className="w-4 h-4 text-white/70" /> Browse All
-                    </Link>
-                    <Link to="/contact" onClick={handleClose} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                      <HelpCircle className="w-4 h-4 text-white/70" /> Help Center
-                    </Link>
-                    <Link to="/how-it-works" onClick={handleClose} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                      <Info className="w-4 h-4 text-white/70" /> Learn More
-                    </Link>
-                    <button
-                      onClick={handleSignOut}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-red-400 text-sm font-medium hover:bg-white/10 transition-colors"
-                    >
-                      <LogOut className="w-4 h-4 text-red-400/70" /> Log Out
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link to="/auth" onClick={handleClose} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                      <UserPlus className="w-4 h-4 text-white/70" /> Sign Up / Login
-                    </Link>
-                    <Link to="/list" onClick={handleClose} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                      <Plus className="w-4 h-4 text-white/70" /> Create a Listing
-                    </Link>
-                    <Link to="/how-it-works" onClick={handleClose} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                      <Info className="w-4 h-4 text-white/70" /> Learn More
-                    </Link>
-                    <Link to="/homepage2" onClick={handleClose} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                      <Search className="w-4 h-4 text-white/70" /> Browse All
-                    </Link>
-                    <Link to="/contact" onClick={handleClose} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                      <HelpCircle className="w-4 h-4 text-white/70" /> Help Center
-                    </Link>
-                  </>
-                )}
+
+                {/* Glass overlay over links */}
+                <div className="relative">
+                  <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-sm pointer-events-none" />
+                  
+                  {user ? (
+                    <>
+                      <Link to="/list" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
+                        <Plus className="w-4 h-4 text-white/50" /> Create a Listing
+                      </Link>
+                      <Link to="/dashboard" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
+                        <LayoutDashboard className="w-4 h-4 text-white/50" /> Dashboard
+                      </Link>
+                      <Link to="/dashboard?tab=messages" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
+                        <MessageSquare className="w-4 h-4 text-white/50" /> Messages
+                      </Link>
+                      <Link to="/homepage2" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
+                        <Search className="w-4 h-4 text-white/50" /> Browse All
+                      </Link>
+                      <Link to="/contact" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
+                        <HelpCircle className="w-4 h-4 text-white/50" /> Help Center
+                      </Link>
+                      <Link to="/how-it-works" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
+                        <Info className="w-4 h-4 text-white/50" /> Learn More
+                      </Link>
+                      <button
+                        onClick={handleSignOut}
+                        className="relative w-full flex items-center gap-2.5 px-3.5 py-2.5 text-red-400/90 text-sm font-medium hover:bg-red-500/10 hover:text-red-300 transition-all"
+                      >
+                        <LogOut className="w-4 h-4 text-red-400/50" /> Log Out
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link to="/auth" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
+                        <UserPlus className="w-4 h-4 text-white/50" /> Sign Up / Login
+                      </Link>
+                      <Link to="/list" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
+                        <Plus className="w-4 h-4 text-white/50" /> Create a Listing
+                      </Link>
+                      <Link to="/how-it-works" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
+                        <Info className="w-4 h-4 text-white/50" /> Learn More
+                      </Link>
+                      <Link to="/homepage2" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
+                        <Search className="w-4 h-4 text-white/50" /> Browse All
+                      </Link>
+                      <Link to="/contact" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all">
+                        <HelpCircle className="w-4 h-4 text-white/50" /> Help Center
+                      </Link>
+                    </>
+                  )}
+                </div>
               </div>
+
+              {/* Bottom shine edge */}
+              <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
             </motion.div>
           </>
         )}
