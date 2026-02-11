@@ -292,8 +292,11 @@ const Homepage2 = () => {
                   className="absolute right-4 top-[60px] z-[200] w-52 rounded-xl bg-gray-900 backdrop-blur-xl border border-white/15 shadow-2xl shadow-black/40 overflow-hidden"
                 >
                   <div className="py-1.5">
-                    {user ? (
+                     {user ? (
                       <>
+                        <Link to="/list" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
+                          <Plus className="w-4 h-4 text-white/70" /> Create a Listing
+                        </Link>
                         <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
                           <LayoutDashboard className="w-4 h-4 text-white/70" /> Dashboard
                         </Link>
@@ -326,7 +329,7 @@ const Homepage2 = () => {
                           <UserPlus className="w-4 h-4 text-white/70" /> Sign Up / Login
                         </Link>
                         <Link to="/list" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                          <Plus className="w-4 h-4 text-white/70" /> Become a Host
+                          <Plus className="w-4 h-4 text-white/70" /> Create a Listing
                         </Link>
                         <Link to="/how-it-works" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
                           <Info className="w-4 h-4 text-white/70" /> Learn More
