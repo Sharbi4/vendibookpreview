@@ -70,10 +70,7 @@ const HostDashboard = () => {
     publishListing(id);
   };
 
-  // Zero State: Onboarding Wizard Pattern
-  if (!isLoading && listings.length === 0) {
-    return <HostOnboardingWizard />;
-  }
+  // Zero State: no special onboarding, show normal dashboard
 
   // Check if there are actions requiring attention
   const hasActionRequired = bookingStats.pending > 0 || pendingOffers.length > 0 || draftListings.length > 0;
