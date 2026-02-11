@@ -200,6 +200,16 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
     }
   }, [hourlyEnabled, dailyEnabled]);
 
+  // Smart default: pre-select tomorrow as start date for daily mode to reduce taps
+  useEffect(() => {
+    if (mode === 'daily' && !startDate && dailyEnabled) {
+      const tomorrow = addDays(today, 1);
+      if (!isDateDisabled(tomorrow)) {
+        setStartDate(tomorrow);
+      }
+    }
+  }, [mode, dailyEnabled]); // intentionally limited deps - run once on mount/mode change
+
   // Auto-select slot 1 for single-slot listings
   useEffect(() => {
     if (totalSlots === 1 && selectedSlotNumber === null) {
