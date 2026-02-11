@@ -293,8 +293,8 @@ const Homepage2 = () => {
                   transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
                   style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.42) 0%, rgba(150,200,255,0.28) 20%, rgba(255,160,210,0.22) 40%, rgba(170,255,215,0.2) 60%, rgba(255,210,150,0.28) 80%, rgba(210,180,255,0.22) 100%)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', boxShadow: 'inset 0 3px 10px rgba(255,255,255,0.5), inset 0 -3px 8px rgba(0,0,0,0.08), 0 6px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06)' }}
                 />
-                <img src={vendibookFavicon} alt="Vendibook" className="relative h-10 w-auto sm:hidden" />
-                <img src={vendibookFavicon} alt="Vendibook" className="relative hidden sm:block h-10 w-auto" />
+                <img src={vendibookFavicon} alt="Vendibook" className="relative h-10 w-auto sm:hidden drop-shadow-lg" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))' }} />
+                <img src={vendibookFavicon} alt="Vendibook" className="relative hidden sm:block h-10 w-auto drop-shadow-lg" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))' }} />
               </Link>
 
               {/* Search bar — 3D glass field in header */}
