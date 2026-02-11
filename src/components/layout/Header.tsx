@@ -415,10 +415,9 @@ const Header = () => {
               {t('common.createListing')}
             </Button>
           )}
-          {user && <NotificationCenter />}
           {user ? (
             <>
-              {user && <NotificationCenter />}
+              <NotificationCenter />
               <AppDropdownMenu variant="light" />
             </>
           ) : (
