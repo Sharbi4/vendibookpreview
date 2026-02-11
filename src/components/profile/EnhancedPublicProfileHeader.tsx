@@ -317,7 +317,7 @@ const EnhancedPublicProfileHeader = ({
 
       {/* Glass card container for profile info - STRONGER BORDERS */}
       <div className="container pt-28 md:pt-36 pb-6 md:pb-8 relative">
-        <div className="rounded-2xl p-6 md:p-8 border border-white/15 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.2)] bg-black/10 backdrop-blur-2xl">
+        <div className="rounded-2xl p-6 md:p-8 border border-white/20 dark:border-white/10 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.12)] bg-white/40 dark:bg-white/[0.06] backdrop-blur-2xl">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-5">
           {/* Enhanced Avatar with upload support for own profile */}
           <motion.div 
@@ -447,8 +447,8 @@ const EnhancedPublicProfileHeader = ({
                         className={cn(
                           'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border shadow-sm',
                           profile.identity_verified
-                            ? 'bg-gradient-to-r from-amber-50 to-amber-100 text-amber-700 border-amber-200 dark:from-amber-900/30 dark:to-amber-800/30 dark:text-amber-400 dark:border-amber-700'
-                            : 'bg-muted text-muted-foreground border-border'
+                            ? 'bg-white/50 dark:bg-white/10 backdrop-blur-xl text-foreground border-white/30 dark:border-white/15'
+                            : 'bg-white/30 dark:bg-white/5 backdrop-blur-sm text-muted-foreground border-white/20 dark:border-white/10'
                         )}
                       >
                         {profile.identity_verified ? (
@@ -473,7 +473,7 @@ const EnhancedPublicProfileHeader = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <motion.div whileHover={{ scale: 1.05 }}>
-                          <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 rounded-full shadow-sm">
+                          <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 rounded-full shadow-sm bg-white/40 dark:bg-white/[0.06] backdrop-blur-xl border-white/20 dark:border-white/10">
                             <Clock className="h-3.5 w-3.5" />
                             ~{responseTime}
                           </Badge>
@@ -490,7 +490,7 @@ const EnhancedPublicProfileHeader = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <motion.div whileHover={{ scale: 1.05 }}>
-                          <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 rounded-full shadow-sm">
+                          <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 rounded-full shadow-sm bg-white/40 dark:bg-white/[0.06] backdrop-blur-xl border-white/20 dark:border-white/10">
                             <Calendar className="h-3.5 w-3.5" />
                             {completedBookings} booked
                           </Badge>
@@ -507,7 +507,7 @@ const EnhancedPublicProfileHeader = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <motion.div whileHover={{ scale: 1.05 }}>
-                          <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 rounded-full shadow-sm">
+                          <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 rounded-full shadow-sm bg-white/40 dark:bg-white/[0.06] backdrop-blur-xl border-white/20 dark:border-white/10">
                             <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
                             {stats.averageRating.toFixed(1)} ({stats.totalReviewsReceived})
                           </Badge>
@@ -523,7 +523,7 @@ const EnhancedPublicProfileHeader = ({
                 {/* Host Badge */}
                 {isHost && (
                   <motion.div variants={badgeVariants}>
-                    <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 rounded-full border-primary/30 bg-primary/5">
+                    <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 rounded-full bg-white/40 dark:bg-white/[0.06] backdrop-blur-xl border-white/20 dark:border-white/10">
                       <Zap className="h-3.5 w-3.5 text-primary" />
                       Host
                     </Badge>
@@ -611,7 +611,7 @@ const EnhancedPublicProfileHeader = ({
                   <Button 
                     variant="outline" 
                     onClick={onViewListings}
-                    className="w-full rounded-xl bg-black/8 dark:bg-white/5 backdrop-blur-xl border border-white/15 hover:bg-black/15 dark:hover:bg-white/10"
+                    className="w-full rounded-xl bg-white/40 dark:bg-white/[0.06] backdrop-blur-xl border border-white/20 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/10"
                   >
                     View Listings ({stats?.totalListings || 0})
                   </Button>

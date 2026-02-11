@@ -85,8 +85,8 @@ const StorefrontTrustStrip = ({
               transition={{ delay: 0.3 + i * 0.08 }}
               whileHover={{ y: -4, scale: 1.03 }}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl border border-border/50 min-w-fit",
-                "bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all"
+                "flex items-center gap-3 px-4 py-3 rounded-xl min-w-fit",
+                "bg-white/40 dark:bg-white/[0.06] backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-sm hover:shadow-md transition-all"
               )}
             >
               <div className={cn("p-2 rounded-lg", item.bg)}>
