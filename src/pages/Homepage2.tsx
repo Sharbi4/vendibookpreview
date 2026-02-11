@@ -195,15 +195,14 @@ const Homepage2 = () => {
                     className="w-full h-10 pl-9 pr-3 rounded-xl bg-white/15 backdrop-blur-xl border border-white/25 text-white text-sm placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/40 focus:bg-white/20 transition-all"
                   />
                 </div>
-                <div className="hidden md:block min-w-[170px] relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/70 z-10 pointer-events-none" />
+                <div className="hidden md:block min-w-[170px]">
                   <LocationSearchInput
                     value={locationText}
                     onChange={setLocationText}
                     onLocationSelect={(loc) => setCoordinates(loc?.coordinates ?? null)}
                     selectedCoordinates={coordinates}
                     placeholder="Location"
-                    className="h-10 rounded-xl bg-white/15 backdrop-blur-xl border border-white/25 text-sm [&_input]:text-white [&_input]:placeholder:text-white/60 [&_input]:pl-9 [&_input]:h-10 [&_input]:rounded-xl [&_input]:bg-transparent [&_input]:border-0 [&_input]:focus:outline-none [&_input]:focus:ring-2 [&_input]:focus:ring-white/40"
+                    className="[&_.space-y-2]:space-y-0 [&_input]:h-10 [&_input]:rounded-xl [&_input]:bg-white/15 [&_input]:backdrop-blur-xl [&_input]:border [&_input]:border-white/25 [&_input]:text-white [&_input]:text-sm [&_input]:placeholder:text-white/60 [&_input]:focus:outline-none [&_input]:focus:ring-2 [&_input]:focus:ring-white/40 [&_input]:focus:bg-white/20 [&_svg]:text-white/70 [&_button]:text-white/70"
                   />
                 </div>
                 {/* Search button — icon only */}
