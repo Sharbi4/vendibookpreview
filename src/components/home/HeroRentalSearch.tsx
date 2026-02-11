@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, X, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AuthWalkthrough } from '@/components/auth/AuthWalkthrough';
 import { useAuth } from '@/contexts/AuthContext';
 import { lovable } from '@/integrations/lovable/index';
@@ -19,6 +20,7 @@ const GoogleIcon = ({ className }: { className?: string }) => (
 const HeroRentalSearch = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [showWalkthrough, setShowWalkthrough] = useState(false);
 
   const handleGoogleLogin = async () => {
     const { error } = await lovable.auth.signInWithOAuth("google", {
@@ -28,128 +30,181 @@ const HeroRentalSearch = () => {
   };
 
   return (
-    <section className="relative min-h-[80vh] sm:min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden bg-[#FBF8F5]">
-      {/* Warm cream-to-peach base */}
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #FFFAF6 0%, #FFF5EE 30%, #FFEFE4 50%, #FFF5EE 70%, #FFFAF6 100%)' }} />
-      
-      {/* Animated warm shine sweep */}
-      <motion.div
-        className="absolute inset-0"
-        style={{
-          background: 'linear-gradient(105deg, transparent 0%, transparent 30%, rgba(255,255,255,0.9) 42%, rgba(255,237,220,0.5) 50%, rgba(255,255,255,0.9) 58%, transparent 70%, transparent 100%)',
-        }}
-        animate={{ x: ['-100%', '100%'] }}
-        transition={{
-          duration: 6,
-          repeat: Infinity,
-          ease: 'easeInOut',
-          repeatDelay: 4,
-        }}
-      />
-      
-      {/* Warm peach orb */}
-      <motion.div
-        className="absolute w-[35rem] h-[35rem] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(255, 200, 160, 0.25), transparent 60%)', filter: 'blur(90px)' }}
-        animate={{
-          x: ['-10%', '50%', '10%', '-10%'],
-          y: ['-5%', '20%', '-10%', '-5%'],
-        }}
-        transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      {/* Soft coral accent orb */}
-      <motion.div
-        className="absolute w-[25rem] h-[25rem] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(255, 120, 70, 0.1), transparent 60%)', filter: 'blur(80px)' }}
-        animate={{
-          x: ['40%', '-20%', '30%', '40%'],
-          y: ['10%', '-5%', '25%', '10%'],
-        }}
-        transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
-      />
-
-      <div className="relative z-10 container max-w-4xl mx-auto px-5 sm:px-6 py-8 sm:py-12 md:py-16">
-        {/* Logo & Headline */}
+    <>
+      <section className="relative min-h-[70vh] sm:min-h-[75vh] md:min-h-[70vh] flex items-center justify-center overflow-hidden bg-[#FBF8F5]">
+        {/* Warm cream-to-peach base */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #FFFAF6 0%, #FFF5EE 30%, #FFEFE4 50%, #FFF5EE 70%, #FFFAF6 100%)' }} />
+        
+        {/* Animated warm shine sweep */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
-          className="text-center mb-6 sm:mb-10 md:mb-14"
-        >
-          <img
-            src={vendibookLogo}
-            alt="Vendibook"
-            className="h-40 sm:h-56 md:h-72 w-auto mx-auto mb-4 sm:mb-6 transition-transform duration-300 hover:scale-105"
-          />
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight tracking-tight mb-3 sm:mb-4">
-            The Marketplace for <span className="gradient-text-warm">Food Business</span>
-          </h1>
-        </motion.div>
-
-        {/* CTA Buttons - outside the animation border */}
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(105deg, transparent 0%, transparent 30%, rgba(255,255,255,0.9) 42%, rgba(255,237,220,0.5) 50%, rgba(255,255,255,0.9) 58%, transparent 70%, transparent 100%)',
+          }}
+          animate={{ x: ['-100%', '100%'] }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            repeatDelay: 4,
+          }}
+        />
+        
+        {/* Warm peach orb */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-          className="flex flex-col gap-3 mb-6"
-        >
-          <div className="grid grid-cols-2 gap-3">
-            <motion.div whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
-              <Button
-                variant="dark-shine"
-                size="lg"
-                className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
-                onClick={() => navigate('/search')}
-              >
-                Browse Listings
-              </Button>
-            </motion.div>
+          className="absolute w-[35rem] h-[35rem] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(255, 200, 160, 0.25), transparent 60%)', filter: 'blur(90px)' }}
+          animate={{
+            x: ['-10%', '50%', '10%', '-10%'],
+            y: ['-5%', '20%', '-10%', '-5%'],
+          }}
+          transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        {/* Soft coral accent orb */}
+        <motion.div
+          className="absolute w-[25rem] h-[25rem] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(255, 120, 70, 0.1), transparent 60%)', filter: 'blur(80px)' }}
+          animate={{
+            x: ['40%', '-20%', '30%', '40%'],
+            y: ['10%', '-5%', '25%', '10%'],
+          }}
+          transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+        />
 
-            <motion.div whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
-              <Button
-                variant="dark-shine"
-                size="lg"
-                className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
-                onClick={() => navigate('/list')}
-              >
-                Create a Free Listing
-              </Button>
-            </motion.div>
-          </div>
+        <div className="relative z-10 container max-w-4xl mx-auto px-5 sm:px-6 py-8 sm:py-12 md:py-16">
+          {/* Logo & Headline */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            className="text-center mb-6 sm:mb-10 md:mb-14"
+          >
+            <img
+              src={vendibookLogo}
+              alt="Vendibook"
+              className="h-40 sm:h-56 md:h-72 w-auto mx-auto mb-4 sm:mb-6 transition-transform duration-300 hover:scale-105"
+            />
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight tracking-tight mb-3 sm:mb-4">
+              The Marketplace for <span className="gradient-text-warm">Food Business</span>
+            </h1>
+          </motion.div>
 
-          {!user && (
+          {/* CTA Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
+            className="flex flex-col gap-3 mb-6"
+          >
+            <div className="grid grid-cols-2 gap-3">
+              <motion.div whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
+                <Button
+                  variant="dark-shine"
+                  size="lg"
+                  className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+                  onClick={() => navigate('/search')}
+                >
+                  Browse Listings
+                </Button>
+              </motion.div>
+
+              <motion.div whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
+                <Button
+                  variant="dark-shine"
+                  size="lg"
+                  className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+                  onClick={() => navigate('/list')}
+                >
+                  Create a Free Listing
+                </Button>
+              </motion.div>
+            </div>
+
+            {!user && (
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl bg-background hover:bg-muted/60 border-border"
+                onClick={handleGoogleLogin}
+              >
+                <GoogleIcon className="mr-2 h-5 w-5" />
+                Continue with Google
+              </Button>
+            )}
+          </motion.div>
+
+          {/* "Why Vendibook?" trigger button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.35, ease: 'easeOut' }}
+            className="text-center"
+          >
             <Button
-              variant="outline"
-              size="lg"
-              className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl bg-background hover:bg-muted/60 border-border"
-              onClick={handleGoogleLogin}
+              variant="ghost"
+              onClick={() => setShowWalkthrough(true)}
+              className="rounded-full px-6 h-11 gap-2 bg-white/60 backdrop-blur-xl border border-white/40 shadow-sm hover:shadow-md hover:bg-white/80 transition-all"
             >
-              <GoogleIcon className="mr-2 h-5 w-5" />
-              Continue with Google
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="font-medium">Why Vendibook?</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Button>
-          )}
-        </motion.div>
+          </motion.div>
+        </div>
+      </section>
 
-        {/* Walkthrough Animation - inside bordered card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.35, ease: 'easeOut' }}
-          className="glass-premium rounded-3xl p-5 md:p-6 shadow-2xl border border-border/40 hover:shadow-3xl transition-shadow duration-500"
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Sparkles className="h-5 w-5 text-primary" />
-            </div>
-            <div className="text-left">
-              <h3 className="font-semibold text-foreground text-lg">Why Vendibook?</h3>
-              <p className="text-xs text-muted-foreground">See how it works</p>
-            </div>
-          </div>
-          <AuthWalkthrough />
-        </motion.div>
-      </div>
-    </section>
+      {/* Slide-out walkthrough panel */}
+      <AnimatePresence>
+        {showWalkthrough && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
+              onClick={() => setShowWalkthrough(false)}
+            />
+            
+            {/* Panel */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="fixed top-0 right-0 z-50 h-full w-full max-w-md bg-white/80 dark:bg-black/80 backdrop-blur-2xl border-l border-white/20 dark:border-white/10 shadow-2xl overflow-y-auto"
+            >
+              {/* Header */}
+              <div className="sticky top-0 z-10 flex items-center justify-between p-5 bg-white/60 dark:bg-black/60 backdrop-blur-xl border-b border-border/30">
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="font-semibold text-foreground text-base">Why Vendibook?</h2>
+                    <p className="text-xs text-muted-foreground">See how it works</p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowWalkthrough(false)}
+                  className="h-8 w-8 rounded-full"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Content */}
+              <div className="p-5">
+                <AuthWalkthrough />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
