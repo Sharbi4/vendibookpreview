@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutGrid, 
@@ -36,6 +37,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { count: unreadMessageCount } = useUnreadMessageCount();
 
   // Airbnb-style Navigation Config based on mode
   const navigation = mode === 'host' ? [
@@ -356,7 +358,14 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 {location.pathname === '/messages' && (
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-orange-600 rounded-full" />
                 )}
-                <MessageSquare className="h-6 w-6" />
+                <div className="relative">
+                  <MessageSquare className="h-6 w-6" />
+                  {unreadMessageCount > 0 && (
+                    <span className="absolute -top-1 -right-1.5 h-4 min-w-4 px-1 flex items-center justify-center text-[10px] font-bold bg-destructive text-destructive-foreground rounded-full">
+                      {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
+                    </span>
+                  )}
+                </div>
                 <span className="text-[10px] font-medium">Inbox</span>
               </Link>
               <Link 
@@ -425,7 +434,14 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 {location.pathname === '/messages' && (
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-orange-600 rounded-full" />
                 )}
-                <MessageSquare className="h-6 w-6" />
+                <div className="relative">
+                  <MessageSquare className="h-6 w-6" />
+                  {unreadMessageCount > 0 && (
+                    <span className="absolute -top-1 -right-1.5 h-4 min-w-4 px-1 flex items-center justify-center text-[10px] font-bold bg-destructive text-destructive-foreground rounded-full">
+                      {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
+                    </span>
+                  )}
+                </div>
                 <span className="text-[10px] font-medium">Inbox</span>
               </Link>
               <Link 

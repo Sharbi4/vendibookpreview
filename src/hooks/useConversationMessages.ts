@@ -261,13 +261,11 @@ export const useConversationMessages = (conversationId: string | undefined) => {
         (payload) => {
           const newMessage = payload.new as ConversationMessage;
           setMessages((prev) => {
-            // Check if message already exists (from optimistic update or duplicate event)
             const exists = prev.some(
               (msg) => msg.id === newMessage.id || 
               (msg.id.startsWith('temp-') && msg.sender_id === newMessage.sender_id && msg.message === newMessage.message)
             );
             if (exists) {
-              // Replace temp message with real one if it exists
               return prev.map((msg) =>
                 msg.id.startsWith('temp-') && msg.sender_id === newMessage.sender_id && msg.message === newMessage.message
                   ? newMessage
@@ -276,6 +274,21 @@ export const useConversationMessages = (conversationId: string | undefined) => {
             }
             return [...prev, newMessage];
           });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'conversation_messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const updated = payload.new as ConversationMessage;
+          setMessages((prev) =>
+            prev.map((msg) => msg.id === updated.id ? updated : msg)
+          );
         }
       )
       .subscribe();

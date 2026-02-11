@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { 
   ArrowLeft, 
   Send, 
@@ -11,7 +11,9 @@ import {
   X,
   FileText,
   Image as ImageIcon,
-  Download
+  Download,
+  CheckCheck,
+  Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,9 +21,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { useConversationMessages, ConversationMessage } from '@/hooks/useConversationMessages';
+import { useMessageReactions } from '@/hooks/useMessageReactions';
+import { useTypingIndicator } from '@/hooks/useTypingIndicator';
 import { detectPII } from '@/lib/piiDetection';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import TypingIndicator from './TypingIndicator';
+import QuickReplies from './QuickReplies';
+import { MessageReactionPicker, MessageReactionBadges } from './MessageReactions';
+import type { ReactionSummary } from '@/hooks/useMessageReactions';
 
 interface ConversationThreadProps {
   conversationId: string;
@@ -77,21 +85,54 @@ const AttachmentPreview = ({ message, isOwn }: { message: ConversationMessage; i
   );
 };
 
+const ReadReceipt = ({ message, isOwn, isLastOwnMessage }: { 
+  message: ConversationMessage; 
+  isOwn: boolean;
+  isLastOwnMessage: boolean;
+}) => {
+  if (!isOwn) return null;
+  
+  // Only show detailed receipt on the last own message
+  if (!isLastOwnMessage) return null;
+
+  if (message.read_at) {
+    return (
+      <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+        <CheckCheck className="h-3 w-3 text-primary" />
+        Seen {formatDistanceToNow(new Date(message.read_at), { addSuffix: true })}
+      </span>
+    );
+  }
+
+  return (
+    <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+      <Check className="h-3 w-3" />
+      Sent
+    </span>
+  );
+};
+
 const MessageBubble = ({ 
   message, 
   isOwn, 
   senderName,
-  senderAvatar 
+  senderAvatar,
+  isLastOwnMessage,
+  reactions,
+  onToggleReaction,
 }: { 
   message: ConversationMessage; 
   isOwn: boolean;
   senderName: string;
   senderAvatar?: string | null;
+  isLastOwnMessage: boolean;
+  reactions: ReactionSummary[];
+  onToggleReaction: (messageId: string, emoji: string) => void;
 }) => {
   const hasTextContent = message.message && message.message !== 'Sent an attachment';
   
   return (
-    <div className={cn('flex gap-2 mb-4', isOwn ? 'flex-row-reverse' : 'flex-row')}>
+    <div className={cn('flex gap-2 mb-4 group', isOwn ? 'flex-row-reverse' : 'flex-row')}>
       {!isOwn && (
         <Avatar className="h-8 w-8 flex-shrink-0">
           <AvatarImage src={senderAvatar || undefined} alt={senderName} />
@@ -102,22 +143,41 @@ const MessageBubble = ({
       )}
       
       <div className={cn('max-w-[75%]', isOwn && 'text-right')}>
-        <div
-          className={cn(
-            'px-4 py-2 rounded-2xl inline-block text-left',
-            isOwn 
-              ? 'bg-primary text-primary-foreground rounded-br-sm' 
-              : 'bg-muted text-foreground rounded-bl-sm'
-          )}
-        >
-          {hasTextContent && (
-            <p className="text-sm whitespace-pre-wrap break-words">{message.message}</p>
-          )}
-          <AttachmentPreview message={message} isOwn={isOwn} />
+        <div className="relative">
+          <div className={cn('flex items-center gap-1', isOwn ? 'flex-row-reverse' : 'flex-row')}>
+            <div
+              className={cn(
+                'px-4 py-2 rounded-2xl inline-block text-left',
+                isOwn 
+                  ? 'bg-primary text-primary-foreground rounded-br-sm' 
+                  : 'bg-muted text-foreground rounded-bl-sm'
+              )}
+            >
+              {hasTextContent && (
+                <p className="text-sm whitespace-pre-wrap break-words">{message.message}</p>
+              )}
+              <AttachmentPreview message={message} isOwn={isOwn} />
+            </div>
+            {!message.id.startsWith('temp-') && (
+              <MessageReactionPicker 
+                messageId={message.id} 
+                onToggleReaction={onToggleReaction} 
+              />
+            )}
+          </div>
+          <MessageReactionBadges
+            messageId={message.id}
+            reactions={reactions}
+            isOwn={isOwn}
+            onToggleReaction={onToggleReaction}
+          />
         </div>
-        <p className="text-xs text-muted-foreground mt-1 px-1">
-          {format(new Date(message.created_at), 'h:mm a')}
-        </p>
+        <div className={cn('flex items-center gap-2 mt-1 px-1', isOwn ? 'justify-end' : 'justify-start')}>
+          <p className="text-xs text-muted-foreground">
+            {format(new Date(message.created_at), 'h:mm a')}
+          </p>
+          <ReadReceipt message={message} isOwn={isOwn} isLastOwnMessage={isLastOwnMessage} />
+        </div>
       </div>
     </div>
   );
@@ -148,6 +208,9 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
     markAsRead,
   } = useConversationMessages(conversationId);
 
+  const { toggleReaction, getReactionSummary } = useMessageReactions(conversationId);
+  const { isOtherTyping, broadcastTyping, stopTyping } = useTypingIndicator(conversationId);
+
   const [inputValue, setInputValue] = useState('');
   const [piiError, setPiiError] = useState<string | null>(null);
   const [attachment, setAttachment] = useState<{
@@ -158,12 +221,19 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const isHost = user?.id === conversation?.host_id;
+  const hasMessages = messages.length > 0;
+  const isFirstMessage = !hasMessages || messages.every(m => m.sender_id === (isHost ? conversation?.shopper_id : conversation?.host_id));
+
+  // Find last own message for read receipt display
+  const lastOwnMessageId = [...messages].reverse().find(m => m.sender_id === user?.id)?.id;
+
   // Scroll to bottom on new messages
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isOtherTyping]);
 
   // Mark as read when viewing
   useEffect(() => {
@@ -195,27 +265,22 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
     };
   }, [attachment]);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputValue(e.target.value);
+    broadcastTyping();
+  };
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size
     if (file.size > MAX_FILE_SIZE) {
-      toast({
-        title: 'File too large',
-        description: 'Maximum file size is 10MB',
-        variant: 'destructive',
-      });
+      toast({ title: 'File too large', description: 'Maximum file size is 10MB', variant: 'destructive' });
       return;
     }
 
-    // Validate file type
     if (!ALLOWED_TYPES.includes(file.type)) {
-      toast({
-        title: 'Unsupported file type',
-        description: 'Please upload an image, PDF, Word, Excel, or text file.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Unsupported file type', description: 'Please upload an image, PDF, Word, Excel, or text file.', variant: 'destructive' });
       return;
     }
 
@@ -224,7 +289,6 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
       preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : '',
     });
 
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -239,6 +303,8 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
 
   const handleSend = async () => {
     if ((!inputValue.trim() && !attachment) || piiError) return;
+
+    stopTyping();
 
     const attachmentData = attachment ? {
       file: attachment.file,
@@ -265,18 +331,19 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
     }
   };
 
+  const handleQuickReply = (text: string) => {
+    setInputValue(text);
+    textareaRef.current?.focus();
+  };
+
   if (!isAuthorized) {
     return (
       <div className="flex flex-col items-center justify-center h-full py-16 px-4 text-center">
         <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
           <ShieldAlert className="h-8 w-8 text-destructive" />
         </div>
-        <h3 className="text-lg font-medium text-foreground mb-2">
-          Not authorized
-        </h3>
-        <p className="text-muted-foreground mb-4">
-          You don't have permission to view this conversation.
-        </p>
+        <h3 className="text-lg font-medium text-foreground mb-2">Not authorized</h3>
+        <p className="text-muted-foreground mb-4">You don't have permission to view this conversation.</p>
         <Button asChild variant="outline">
           <Link to="/messages">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -330,7 +397,6 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
           </div>
         ) : (
           <div className="space-y-2">
-            {/* Group messages by date */}
             {messages.map((message, index) => {
               const isOwn = message.sender_id === user?.id;
               const currentDate = format(new Date(message.created_at), 'MMM d, yyyy');
@@ -353,12 +419,18 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
                     isOwn={isOwn}
                     senderName={isOwn ? 'You' : otherPartyName}
                     senderAvatar={isOwn ? undefined : otherParty?.avatar_url}
+                    isLastOwnMessage={message.id === lastOwnMessageId}
+                    reactions={getReactionSummary(message.id)}
+                    onToggleReaction={toggleReaction}
                   />
                 </div>
               );
             })}
           </div>
         )}
+
+        {/* Typing Indicator */}
+        {isOtherTyping && <TypingIndicator name={otherPartyName} />}
       </div>
 
       {/* PII Warning */}
@@ -367,6 +439,15 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="text-sm">{piiError}</AlertDescription>
         </Alert>
+      )}
+
+      {/* Quick Replies */}
+      {conversation && (
+        <QuickReplies 
+          onSelect={handleQuickReply} 
+          isFirstMessage={isFirstMessage} 
+          isHost={isHost} 
+        />
       )}
 
       {/* Attachment Preview */}
@@ -405,7 +486,6 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
       {/* Input */}
       <div className="p-4 border-t border-border bg-background">
         <div className="flex gap-2">
-          {/* Hidden file input */}
           <input
             ref={fileInputRef}
             type="file"
@@ -414,7 +494,6 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
             className="hidden"
           />
           
-          {/* Attachment button */}
           <Button
             variant="ghost"
             size="icon"
@@ -428,7 +507,7 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
           <Textarea
             ref={textareaRef}
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             className="min-h-[44px] max-h-32 resize-none"
