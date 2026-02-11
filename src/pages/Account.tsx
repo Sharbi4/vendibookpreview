@@ -4,9 +4,10 @@ import { z } from 'zod';
 import { 
   ArrowLeft, Camera, Eye, EyeOff, Key, Loader2, Save, User, 
   ShieldCheck, CreditCard, Globe, Lock, ExternalLink, Bell,
-  Building2, MapPin, ChevronDown, Pencil, Check, X, AlertCircle
+  Building2, MapPin, ChevronDown, ChevronRight, Pencil, Check, X, AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -1255,7 +1256,13 @@ const Account = () => {
             </CardHeader>
             <CardContent className="space-y-4 pt-6">
               {/* Identity Verification */}
-              <div className="border border-border rounded-xl p-4 bg-muted/30">
+              <div 
+                className={cn(
+                  "border border-border rounded-xl p-4 bg-muted/30 transition-colors",
+                  !formData.identity_verified && "cursor-pointer hover:bg-muted/50"
+                )}
+                onClick={() => !formData.identity_verified && navigate('/verify-identity')}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-medium flex items-center gap-2">
                     <div className="p-1 bg-primary rounded">
@@ -1269,13 +1276,16 @@ const Account = () => {
                       Verified
                     </Badge>
                   ) : (
-                    <Badge variant="secondary">Not Verified</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">Not Verified</Badge>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground mb-3">
                   {formData.identity_verified 
                     ? 'Your identity has been verified. This badge appears on your profile and listings.'
-                    : 'Verify your identity to earn a "Verified ID" badge and build trust with other users.'}
+                    : 'Verify your identity to earn a "Verified ID" badge and build trust with other users. Tap to get started.'}
                 </p>
                 {!formData.identity_verified && (
                   <Button size="sm" asChild>
@@ -1288,7 +1298,13 @@ const Account = () => {
               </div>
 
               {/* Stripe Payouts */}
-              <div className="border border-border rounded-xl p-4 bg-muted/30">
+              <div 
+                className={cn(
+                  "border border-border rounded-xl p-4 bg-muted/30 transition-colors",
+                  !stripeConnected && !stripeLoading && "cursor-pointer hover:bg-muted/50"
+                )}
+                onClick={() => !stripeConnected && !stripeLoading && !isConnecting && connectStripe('/account')}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-medium flex items-center gap-2">
                     <div className="p-1 bg-primary rounded">
@@ -1304,16 +1320,19 @@ const Account = () => {
                       Connected
                     </Badge>
                   ) : (
-                    <Badge variant="secondary">Not Connected</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">Not Connected</Badge>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground mb-3">
                   {stripeConnected 
                     ? 'You can receive payments for bookings and sales. A "Payouts Enabled" badge appears on your profile.'
-                    : 'Connect Stripe to receive payments for bookings and sales.'}
+                    : 'Connect Stripe to receive payments for bookings and sales. Tap to set up now.'}
                 </p>
                 {!stripeConnected && (
-                  <Button size="sm" onClick={() => connectStripe('/account')} disabled={isConnecting}>
+                  <Button size="sm" onClick={(e) => { e.stopPropagation(); connectStripe('/account'); }} disabled={isConnecting}>
                     {isConnecting ? (
                       <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Connecting...</>
                     ) : (

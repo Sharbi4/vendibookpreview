@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useRef } from 'react';
-import { MapPin, DollarSign, Tag, Calendar, Check, AlertCircle, CreditCard } from 'lucide-react';
+import { MapPin, DollarSign, Tag, Calendar, Check, AlertCircle, CreditCard, ChevronRight } from 'lucide-react';
 import { ListingFormData, CATEGORY_LABELS, MODE_LABELS } from '@/types/listing';
 import { cn } from '@/lib/utils';
 
@@ -172,17 +172,25 @@ export const StepReview: React.FC<StepReviewProps> = ({
         <div className="space-y-3">
           {/* Stripe-specific messaging - only show if Stripe is required */}
           {requiresStripeConnect && !isStripeConnected && (
-            <div className="p-4 rounded-xl border-2 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
+            <div 
+              className="p-4 rounded-xl border-2 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+              onClick={() => {
+                // Navigate to the Stripe step in the wizard
+                const stripeStep = document.querySelector('[data-step="stripe"]');
+                if (stripeStep) (stripeStep as HTMLElement).click();
+              }}
+            >
               <div className="flex items-start gap-3">
                 <CreditCard className="w-5 h-5 text-amber-600 mt-0.5" />
-                <div>
+                <div className="flex-1">
                   <p className="font-medium text-amber-800 dark:text-amber-200">
                     Connect Stripe to get paid
                   </p>
                   <p className="text-sm text-amber-700 dark:text-amber-300 mt-0.5">
-                    To go live and receive card payments, connect your Stripe account.
+                    To go live and receive card payments, connect your Stripe account. Tap here to set up now.
                   </p>
                 </div>
+                <ChevronRight className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
               </div>
             </div>
           )}

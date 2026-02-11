@@ -52,7 +52,7 @@ const ProfileNextStepCard = ({
       title: 'Verify your identity',
       description: 'Build trust with renters and hosts by verifying your identity.',
       actionLabel: 'Verify Now',
-      actionHref: '/identity-verification',
+      actionHref: '/verify-identity',
       priority: 1,
     },
     {
