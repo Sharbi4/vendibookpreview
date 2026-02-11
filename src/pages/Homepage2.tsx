@@ -176,7 +176,7 @@ const Homepage2 = () => {
       {/* ══ FULL-PAGE GRADIENT BACKGROUND ══ */}
       <div className="fixed inset-0 z-0">
         {/* Base eggshell / off-white */}
-        <div className="absolute inset-0 bg-[hsl(0,0%,95%)]" />
+        <div className="absolute inset-0 bg-background" />
         {/* Very subtle warm orbs */}
         <motion.div
           animate={{ x: [0, 60, -40, 0], y: [0, -50, 30, 0], scale: [1, 1.2, 0.9, 1] }}

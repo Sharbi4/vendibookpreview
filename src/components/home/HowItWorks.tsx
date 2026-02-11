@@ -29,7 +29,7 @@ const steps: Step[] = [
 
 const HowItWorks = () => {
   return (
-    <section className="py-10 sm:py-12 md:py-16 bg-[hsl(30,10%,97%)]">
+    <section className="py-10 sm:py-12 md:py-16 bg-background">
       <div className="container max-w-4xl mx-auto px-5 sm:px-6">
         <motion.div 
           className="text-center mb-8 sm:mb-10"
