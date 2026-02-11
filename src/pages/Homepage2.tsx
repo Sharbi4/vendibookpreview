@@ -266,11 +266,11 @@ const Homepage2 = () => {
 
       {/* ══ CUSTOM HEADER WITH INTEGRATED SEARCH ══ */}
       <header className="sticky top-5 z-50 w-[calc(100%-1rem)] mx-auto rounded-2xl shadow-lg shadow-black/10 mb-3">
-        <div className="relative overflow-hidden rounded-2xl">
+        <div className="relative rounded-2xl">
           {/* Header gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(14,100%,57%)] via-[hsl(20,90%,50%)] to-[hsl(40,100%,49%)] rounded-2xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(14,100%,57%)] via-[hsl(20,90%,50%)] to-[hsl(40,100%,49%)] rounded-2xl overflow-hidden" />
           {/* Animated shine */}
-          <div className="absolute inset-0 hp2-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+          <div className="absolute inset-0 hp2-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent overflow-hidden rounded-2xl" />
           {/* Glass overlay */}
           <div className="absolute inset-0 backdrop-blur-md bg-black/5" />
 
@@ -364,7 +364,7 @@ const Homepage2 = () => {
                   onClick={() => setLearnMoreOpen(true)}
                   className="hidden sm:flex h-9 rounded-xl text-xs font-semibold px-4"
                 >
-                  Quick Start
+                  Learn More
                 </Button>
                 {/* Hamburger menu — always visible far right */}
                 <AppDropdownMenu variant="dark" />
@@ -587,7 +587,21 @@ const Homepage2 = () => {
           <Footer />
         </div>
 
-        {/* ── QUICK START SLIDE-OUT PANEL ── */}
+        {/* ── QUICK START STICKY TAB + FLOATING PANEL ── */}
+        {/* Sticky tab on right edge */}
+        {!learnMoreOpen && (
+          <motion.button
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            onClick={() => setLearnMoreOpen(true)}
+            className="fixed right-0 top-1/2 -translate-y-1/2 z-40 flex items-center gap-1 px-2 py-3 bg-foreground text-background text-[11px] font-bold rounded-l-xl shadow-lg shadow-black/20 hover:px-3 transition-all"
+            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+          >
+            <ChevronRight className="w-3 h-3 rotate-180" />
+            Quick Start
+          </motion.button>
+        )}
+
         <AnimatePresence>
           {learnMoreOpen && (
             <>
@@ -597,20 +611,20 @@ const Homepage2 = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
+                className="fixed inset-0 z-50 bg-black/20 backdrop-blur-[2px]"
                 onClick={() => setLearnMoreOpen(false)}
               />
               
-              {/* Panel */}
+              {/* Floating Panel */}
               <motion.div
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
+                initial={{ x: '100%', opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: '100%', opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="fixed top-[7.5rem] right-2 z-50 max-h-[calc(100vh-8.5rem)] w-full max-w-sm bg-white/40 dark:bg-black/40 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-2xl shadow-2xl shadow-black/15 overflow-y-auto"
+                className="fixed top-[7.5rem] right-3 z-50 max-h-[calc(100vh-8.5rem)] w-full max-w-sm bg-white/50 dark:bg-black/50 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-2xl shadow-2xl shadow-black/15 overflow-y-auto"
               >
                 {/* Header */}
-                <div className="sticky top-0 z-10 flex items-center justify-between p-5 bg-white/30 dark:bg-black/30 backdrop-blur-xl border-b border-white/20">
+                <div className="flex items-center justify-between p-4 border-b border-white/20">
                   <div className="flex items-center gap-2">
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[hsl(14,100%,57%)]/20 to-[hsl(40,100%,49%)]/20 flex items-center justify-center">
                       <Sparkles className="h-4 w-4 text-[hsl(14,100%,57%)]" />
