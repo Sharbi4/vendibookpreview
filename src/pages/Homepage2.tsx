@@ -282,15 +282,15 @@ const Homepage2 = () => {
                 {/* Mobile glass blob */}
                 <motion.div
                   className="absolute -inset-x-3 -inset-y-2 pointer-events-none sm:hidden"
-                  animate={{ borderRadius: ['70% 30% 55% 45% / 40% 65% 35% 60%', '45% 55% 35% 65% / 60% 40% 65% 35%', '55% 45% 70% 30% / 35% 55% 45% 65%', '70% 30% 55% 45% / 40% 65% 35% 60%'], scale: [1, 1.04, 0.97, 1] }}
-                  transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+                  animate={{ borderRadius: ['75% 25% 60% 40% / 35% 70% 30% 65%', '35% 65% 25% 75% / 65% 30% 70% 30%', '60% 40% 75% 25% / 30% 60% 40% 70%', '40% 60% 35% 65% / 70% 35% 65% 35%', '75% 25% 60% 40% / 35% 70% 30% 65%'], scale: [1, 1.06, 0.95, 1.03, 1] }}
+                  transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
                   style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.35) 0%, rgba(170,210,255,0.2) 25%, rgba(255,180,200,0.16) 50%, rgba(200,255,220,0.14) 75%, rgba(255,220,180,0.24) 100%)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', boxShadow: 'inset 0 2px 6px rgba(255,255,255,0.4), inset 0 -2px 6px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)' }}
                 />
                 {/* Desktop glass blob */}
                 <motion.div
                   className="absolute -inset-x-6 -inset-y-4 pointer-events-none hidden sm:block"
-                  animate={{ borderRadius: ['65% 35% 50% 50% / 45% 60% 40% 55%', '40% 60% 35% 65% / 55% 40% 60% 40%', '50% 50% 65% 35% / 40% 55% 45% 60%', '65% 35% 50% 50% / 45% 60% 40% 55%'], scale: [1, 1.03, 0.98, 1] }}
-                  transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+                  animate={{ borderRadius: ['70% 30% 55% 45% / 40% 65% 35% 60%', '30% 70% 25% 75% / 60% 35% 65% 35%', '55% 45% 70% 30% / 30% 55% 45% 70%', '45% 55% 35% 65% / 65% 40% 60% 35%', '70% 30% 55% 45% / 40% 65% 35% 60%'], scale: [1, 1.05, 0.96, 1.02, 1] }}
+                  transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
                   style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.38) 0%, rgba(160,200,255,0.22) 20%, rgba(255,170,210,0.17) 40%, rgba(180,255,220,0.15) 60%, rgba(255,210,160,0.2) 80%, rgba(220,190,255,0.18) 100%)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', boxShadow: 'inset 0 3px 8px rgba(255,255,255,0.45), inset 0 -3px 8px rgba(0,0,0,0.07), 0 6px 24px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)' }}
                 />
                 <img src={vendibookFavicon} alt="Vendibook" className="relative h-10 w-auto sm:hidden" />
