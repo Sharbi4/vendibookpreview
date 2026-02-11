@@ -621,7 +621,7 @@ const Homepage2 = () => {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: '100%', opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="fixed top-[7.5rem] right-3 z-50 max-h-[calc(100vh-8.5rem)] w-full max-w-sm bg-white/85 dark:bg-black/85 backdrop-blur-2xl border border-white/40 dark:border-white/10 rounded-2xl shadow-2xl shadow-black/15 overflow-y-auto"
+                className="fixed top-[7.5rem] right-3 z-50 max-h-[calc(100vh-8.5rem)] w-full max-w-sm bg-white/60 dark:bg-black/60 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-2xl shadow-2xl shadow-black/15 overflow-y-auto"
               >
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-white/20">
