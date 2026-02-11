@@ -160,7 +160,7 @@ const HowItWorks = () => {
 
       {/* ══ FULL-PAGE GRADIENT BACKGROUND ══ */}
       <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-[hsl(30,10%,97%)]" />
+        <div className="absolute inset-0 bg-background" />
         <motion.div
           animate={{ x: [0, 60, -40, 0], y: [0, -50, 30, 0], scale: [1, 1.2, 0.9, 1] }}
           transition={{ repeat: Infinity, duration: 18, ease: 'easeInOut' }}
