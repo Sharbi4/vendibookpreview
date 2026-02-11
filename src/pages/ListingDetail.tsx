@@ -434,7 +434,7 @@ const ListingDetail = () => {
                   isOwner={isOwner || false}
                 />
               )}
-              {/* Host Section */}
+              {/* Host/Seller Section */}
               <EnhancedHostCard
                 hostId={listing.host_id}
                 listingId={listing.id}
@@ -443,6 +443,7 @@ const ListingDetail = () => {
                 isVerified={host?.identity_verified || false}
                 memberSince={host?.created_at}
                 lastActiveAt={host?.last_active_at}
+                isRental={isRental}
               />
 
               {/* Divider */}
