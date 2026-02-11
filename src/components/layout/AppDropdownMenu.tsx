@@ -34,7 +34,7 @@ const AppDropdownMenu = ({ variant = 'dark', className = '' }: AppDropdownMenuPr
     : 'p-2 rounded-xl bg-foreground/5 border border-border text-foreground hover:bg-foreground/10 transition-colors';
 
   return (
-    <div className="relative">
+    <div className="relative z-[9999]">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`${triggerClasses} ${className}`}
