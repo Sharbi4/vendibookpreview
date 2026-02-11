@@ -73,7 +73,7 @@ const PricingCalculator = () => {
         
         <main className="flex-1">
           {/* Hero Section */}
-          <section className="py-12 md:py-16 bg-gradient-to-br from-primary/5 via-transparent to-amber-500/5">
+          <section className="py-12 md:py-16 bg-[hsl(30,10%,97%)]">
             <div className="container">
               <div className="max-w-3xl mx-auto text-center">
                 <div className="inline-flex items-center gap-2 bg-green-500/10 text-green-700 dark:text-green-400 px-3 py-1 rounded-full text-sm font-medium mb-4">
