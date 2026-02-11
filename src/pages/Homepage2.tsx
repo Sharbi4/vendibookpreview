@@ -201,7 +201,7 @@ const Homepage2 = () => {
       </div>
 
       {/* ══ CUSTOM HEADER WITH INTEGRATED SEARCH ══ */}
-      <header className="sticky top-0 z-50 w-full rounded-b-2xl overflow-hidden shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08),0_1px_6px_-1px_rgba(0,0,0,0.04)]">
+      <header className="sticky top-0 z-50 w-full rounded-b-2xl overflow-hidden shadow-[0_6px_30px_-6px_rgba(0,0,0,0.15),0_2px_10px_-2px_rgba(0,0,0,0.06)]">
         <div className="relative">
           {/* Header gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-[hsl(14,100%,57%)] via-[hsl(20,90%,50%)] to-[hsl(40,100%,49%)]" />
