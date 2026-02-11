@@ -286,7 +286,8 @@ const Homepage2 = () => {
               {/* Search bar — 3D glass field in header */}
               <div className="flex-1 flex items-center gap-2 max-w-2xl">
                 <div ref={searchWrapperRef} className="relative flex-1 group">
-                  <div className="relative rounded-xl bg-white/12 backdrop-blur-xl border border-white/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15),0_1px_3px_-1px_rgba(0,0,0,0.15)] group-focus-within:bg-white/18 group-focus-within:border-white/30 group-focus-within:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_8px_-2px_rgba(0,0,0,0.2)] transition-all duration-200 flex items-center">
+                  <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-white/20 via-white/10 to-white/20 opacity-0 group-focus-within:opacity-100 blur-md transition-opacity duration-500 pointer-events-none" />
+                  <div className="relative rounded-xl bg-white/12 backdrop-blur-xl border border-white/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15),0_2px_12px_-2px_rgba(0,0,0,0.25)] group-focus-within:bg-white/18 group-focus-within:border-white/35 group-focus-within:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_4px_20px_-4px_rgba(0,0,0,0.35),0_0_15px_-3px_rgba(255,255,255,0.15)] transition-all duration-300 flex items-center">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60" />
                     <input
                       value={query}
