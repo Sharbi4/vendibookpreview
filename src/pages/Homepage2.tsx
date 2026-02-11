@@ -288,13 +288,13 @@ const Homepage2 = () => {
                 />
                 {/* Desktop glass blob */}
                 <motion.div
-                  className="absolute inset-x-1 inset-y-0.5 pointer-events-none hidden sm:block overflow-hidden"
-                  animate={{ borderRadius: ['50% 50% 50% 50% / 50% 50% 50% 50%', '46% 54% 48% 52% / 52% 48% 54% 46%', '52% 48% 54% 46% / 46% 54% 48% 52%', '50% 50% 50% 50% / 50% 50% 50% 50%'], scale: [1, 1.01, 0.99, 1] }}
+                  className="absolute -inset-x-2 -inset-y-1 pointer-events-none hidden sm:block overflow-hidden"
+                  animate={{ borderRadius: ['28% 72% 30% 70% / 70% 30% 72% 28%', '30% 70% 28% 72% / 72% 28% 70% 30%', '28% 72% 30% 70% / 70% 30% 72% 28%'], scale: [1, 1.01, 1] }}
                   transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
                   style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.38) 0%, rgba(160,200,255,0.22) 20%, rgba(255,170,210,0.17) 40%, rgba(180,255,220,0.15) 60%, rgba(255,210,160,0.2) 80%, rgba(220,190,255,0.18) 100%)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', boxShadow: 'inset 0 3px 8px rgba(255,255,255,0.45), inset 0 -3px 8px rgba(0,0,0,0.07), 0 6px 24px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)' }}
                 />
                 <img src={vendibookFavicon} alt="Vendibook" className="relative h-10 w-auto sm:hidden" />
-                <img src={vendibookLogo} alt="Vendibook" className="relative hidden sm:block h-14 w-auto" />
+                <img src={vendibookLogo} alt="Vendibook" className="relative hidden sm:block h-[2.6rem] w-auto" />
               </Link>
 
               {/* Search bar — 3D glass field in header */}
