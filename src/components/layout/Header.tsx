@@ -388,7 +388,7 @@ const Header = () => {
         </div>
 
         {/* Centered Search - Desktop */}
-        <div className="hidden lg:flex flex-1 justify-center max-w-2xl mx-6">
+        <div className="hidden md:flex flex-1 justify-center max-w-2xl mx-6">
           <button
             onClick={() => navigate('/search')}
             className="w-full flex items-center gap-4 px-6 py-3.5 rounded-full border border-border bg-white hover:bg-muted/30 text-muted-foreground text-base font-medium shadow-sm transition-all duration-200 group"
