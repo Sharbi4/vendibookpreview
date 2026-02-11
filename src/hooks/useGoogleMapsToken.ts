@@ -9,15 +9,19 @@ import { supabase } from '@/integrations/supabase/client';
  * - Specific HTTP referrers (your domain)
  * - Specific APIs (Maps JavaScript API, Places API)
  */
-export const useGoogleMapsToken = () => {
+export const useGoogleMapsToken = (enabled = true) => {
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!enabled) {
+      setIsLoading(false);
+      return;
+    }
+
     const fetchApiKey = async () => {
       try {
-        // First check if we have it in env (for local dev)
         const envKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
         if (envKey && envKey !== 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
           setApiKey(envKey);
@@ -26,12 +30,9 @@ export const useGoogleMapsToken = () => {
           return;
         }
 
-        // Fetch from Supabase Edge Function (production - Lovable secrets)
         const { data, error: fetchError } = await supabase.functions.invoke('get-maps-api-key');
         
-        if (fetchError) {
-          throw fetchError;
-        }
+        if (fetchError) throw fetchError;
         
         if (data?.apiKey) {
           setApiKey(data.apiKey);
@@ -50,7 +51,7 @@ export const useGoogleMapsToken = () => {
     };
 
     fetchApiKey();
-  }, []);
+  }, [enabled]);
 
   return { apiKey, isLoading, error };
 };

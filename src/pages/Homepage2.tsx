@@ -82,7 +82,7 @@ const Homepage2 = () => {
   const [isConnectingMic, setIsConnectingMic] = useState(false);
   const searchWrapperRef = useRef<HTMLDivElement>(null);
   
-  const { apiKey, isLoading: mapLoading, error: mapError } = useGoogleMapsToken();
+  const { apiKey, isLoading: mapLoading, error: mapError } = useGoogleMapsToken(showMap);
 
   const scribe = useScribe({
     modelId: 'scribe_v2_realtime',
@@ -238,30 +238,11 @@ const Homepage2 = () => {
   return (
     <div className="min-h-screen relative overflow-x-hidden scroll-smooth">
       {/* ══ FULL-PAGE GRADIENT BACKGROUND ══ */}
-      <div className="fixed inset-0 z-0">
-        {/* Base eggshell / off-white */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-background" />
-        {/* Very subtle warm orbs */}
-        <motion.div
-          animate={{ x: [0, 60, -40, 0], y: [0, -50, 30, 0], scale: [1, 1.2, 0.9, 1] }}
-          transition={{ repeat: Infinity, duration: 30, ease: 'easeInOut' }}
-          className="absolute -top-40 -left-40 w-[700px] h-[700px] rounded-full bg-[hsl(14,100%,57%)]/[0.04] blur-[150px]"
-        />
-        <motion.div
-          animate={{ x: [0, -50, 60, 0], y: [0, 40, -40, 0], scale: [1, 0.85, 1.2, 1] }}
-          transition={{ repeat: Infinity, duration: 36, ease: 'easeInOut' }}
-          className="absolute top-1/4 -right-32 w-[800px] h-[800px] rounded-full bg-[hsl(40,100%,49%)]/[0.03] blur-[170px]"
-        />
-        <motion.div
-          animate={{ x: [0, 30, -40, 0], y: [0, -30, 50, 0] }}
-          transition={{ repeat: Infinity, duration: 28, ease: 'easeInOut' }}
-          className="absolute bottom-0 left-1/3 w-[600px] h-[600px] rounded-full bg-[hsl(14,80%,50%)]/[0.03] blur-[130px]"
-        />
-        <motion.div
-          animate={{ x: [0, -25, 35, 0], y: [0, 35, -25, 0], scale: [1, 1.1, 0.9, 1] }}
-          transition={{ repeat: Infinity, duration: 34, ease: 'easeInOut', delay: 4 }}
-          className="absolute top-2/3 right-1/4 w-[500px] h-[500px] rounded-full bg-[hsl(25,95%,55%)]/[0.02] blur-[140px]"
-        />
+        <div className="absolute -top-40 -left-40 w-[700px] h-[700px] rounded-full bg-[hsl(14,100%,57%)]/[0.04] blur-[150px]" />
+        <div className="absolute top-1/4 -right-32 w-[800px] h-[800px] rounded-full bg-[hsl(40,100%,49%)]/[0.03] blur-[170px]" />
+        <div className="absolute bottom-0 left-1/3 w-[600px] h-[600px] rounded-full bg-[hsl(14,80%,50%)]/[0.03] blur-[130px]" />
       </div>
 
       {/* ══ CUSTOM HEADER WITH INTEGRATED SEARCH ══ */}
@@ -279,22 +260,11 @@ const Homepage2 = () => {
             <div className="flex items-center justify-between gap-3 h-14">
               {/* Favicon / Logo */}
               <Link to="/" className="shrink-0 flex items-center gap-2 relative">
-                {/* Mobile glass blob */}
-                <motion.div
-                  className="absolute -inset-x-1 -inset-y-0.5 pointer-events-none sm:hidden overflow-hidden"
-                  animate={{ borderRadius: ['60% 40% 55% 45% / 45% 55% 45% 55%', '50% 50% 45% 55% / 55% 45% 50% 50%', '45% 55% 50% 50% / 50% 50% 55% 45%', '55% 45% 55% 45% / 45% 55% 45% 55%', '60% 40% 55% 45% / 45% 55% 45% 55%'], scale: [1, 1.02, 0.99, 1.01, 1] }}
-                  transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+                <div
+                  className="absolute -inset-x-2 -inset-y-1 pointer-events-none rounded-[50%] overflow-hidden"
                   style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.35) 0%, rgba(170,210,255,0.2) 25%, rgba(255,180,200,0.16) 50%, rgba(200,255,220,0.14) 75%, rgba(255,220,180,0.24) 100%)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', boxShadow: 'inset 0 2px 6px rgba(255,255,255,0.4), inset 0 -2px 6px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)' }}
                 />
-                {/* Desktop glass blob */}
-                <motion.div
-                  className="absolute -inset-x-2.5 -inset-y-1.5 pointer-events-none hidden sm:block overflow-hidden"
-                  animate={{ borderRadius: ['66% 34% 58% 42% / 40% 60% 38% 62%', '42% 58% 36% 64% / 62% 38% 56% 44%', '36% 64% 52% 48% / 44% 56% 64% 36%', '58% 42% 66% 34% / 56% 44% 38% 62%', '66% 34% 58% 42% / 40% 60% 38% 62%'], scale: [1, 1.05, 0.97, 1.03, 1] }}
-                  transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-                  style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.42) 0%, rgba(150,200,255,0.28) 20%, rgba(255,160,210,0.22) 40%, rgba(170,255,215,0.2) 60%, rgba(255,210,150,0.28) 80%, rgba(210,180,255,0.22) 100%)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', boxShadow: 'inset 0 3px 10px rgba(255,255,255,0.5), inset 0 -3px 8px rgba(0,0,0,0.08), 0 6px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06)' }}
-                />
-                <img src={vendibookFavicon} alt="Vendibook" className="relative h-10 w-auto sm:hidden drop-shadow-lg" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))' }} />
-                <img src={vendibookFavicon} alt="Vendibook" className="relative hidden sm:block h-10 w-auto drop-shadow-lg" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))' }} />
+                <img src={vendibookFavicon} alt="Vendibook" className="h-10 w-auto drop-shadow-lg" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))' }} />
               </Link>
 
               {/* Search bar — 3D glass field in header */}
@@ -525,38 +495,25 @@ const Homepage2 = () => {
                 {isLoading ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {Array.from({ length: 4 }).map((_, i) => (
-                      <motion.div
+                      <div
                         key={i}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: i * 0.1 }}
                         className="h-72 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/50 shadow-sm overflow-hidden relative"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full animate-[shimmer_1.5s_ease-in-out_infinite]" />
-                      </motion.div>
+                      </div>
                     ))}
                   </div>
                 ) : listings.length > 0 ? (
                   <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <AnimatePresence mode="popLayout">
                         {listings.map((listing, i) => (
                           <React.Fragment key={listing.id}>
-                            <motion.div
-                              initial={{ opacity: 0, y: 30, scale: 0.97 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.95 }}
-                              transition={{ delay: i * 0.06, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                              whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.25, ease: 'easeOut' } }}
-                              className="rounded-2xl bg-white/70 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5 hover:shadow-2xl hover:shadow-[hsl(14,100%,57%)]/10 hover:border-[hsl(14,100%,57%)]/30 transition-[box-shadow,border-color] duration-300"
-                            >
+                            <div className="rounded-2xl bg-white/70 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5 hover:shadow-2xl hover:shadow-[hsl(14,100%,57%)]/10 hover:border-[hsl(14,100%,57%)]/30 hover:-translate-y-1 transition-all duration-300">
                               <ListingCard listing={listing} />
-                            </motion.div>
-                            {/* Insert newsletter card after 2nd listing */}
+                            </div>
                             {i === 1 && listings.length > 2 && <InlineNewsletterCard />}
                           </React.Fragment>
                         ))}
-                      </AnimatePresence>
                     </div>
 
                     {totalPages > 1 && (
