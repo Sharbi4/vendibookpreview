@@ -231,11 +231,8 @@ const Homepage2 = () => {
               {/* Search bar — 3D glass field in header */}
               <div className="flex-1 flex items-center gap-2 max-w-2xl">
                 <div className="relative flex-1 group">
-                  {/* Outer glow layer */}
-                  <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-b from-white/30 via-white/10 to-white/5 opacity-80 group-focus-within:opacity-100 transition-opacity" />
-                  {/* Inner container with 3D depth */}
-                  <div className="relative rounded-xl bg-gradient-to-b from-white/20 to-white/8 backdrop-blur-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.3),inset_0_-1px_2px_0_rgba(0,0,0,0.15),0_2px_8px_-2px_rgba(0,0,0,0.2),0_0_0_1px_rgba(255,255,255,0.1)] group-focus-within:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.4),inset_0_-1px_2px_0_rgba(0,0,0,0.15),0_4px_16px_-4px_rgba(0,0,0,0.3),0_0_0_1px_rgba(255,255,255,0.2),0_0_20px_-5px_rgba(255,255,255,0.15)] transition-shadow duration-300">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/70 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" />
+                  <div className="relative rounded-xl bg-white/12 backdrop-blur-xl border border-white/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15),0_1px_3px_-1px_rgba(0,0,0,0.15)] group-focus-within:bg-white/18 group-focus-within:border-white/30 group-focus-within:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_8px_-2px_rgba(0,0,0,0.2)] transition-all duration-200">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60" />
                     <input
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
