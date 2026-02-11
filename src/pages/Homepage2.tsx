@@ -297,7 +297,7 @@ const Homepage2 = () => {
                   <button
                     key={m}
                     onClick={() => setMode(m)}
-                    className={`w-14 sm:w-16 text-[11px] sm:text-xs font-semibold rounded-full transition-all duration-200 ${
+                    className={`w-12 sm:w-14 text-[11px] sm:text-xs font-semibold rounded-full transition-all duration-200 ${
                       mode === m
                         ? 'bg-white text-gray-900 shadow-sm'
                         : 'text-white/60 hover:text-white hover:bg-white/10'
