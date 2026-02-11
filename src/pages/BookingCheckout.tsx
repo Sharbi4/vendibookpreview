@@ -1236,11 +1236,14 @@ const BookingCheckout = () => {
         onOpenChange={setShowAuthModal}
         onAuthSuccess={() => {
           setShowAuthModal(false);
-          // After auth, user state will update and they can re-click submit
+          // Auto-submit after successful auth — small delay to let auth state propagate
           toast({
             title: 'Signed in!',
-            description: 'Click "Submit" again to complete your booking.',
+            description: 'Submitting your booking now…',
           });
+          setTimeout(() => {
+            handleSubmit();
+          }, 500);
         }}
       />
     </div>
