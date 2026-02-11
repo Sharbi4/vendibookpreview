@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import HeaderSearchField from '@/components/layout/HeaderSearchField';
+import AppDropdownMenu from '@/components/layout/AppDropdownMenu';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -346,9 +347,10 @@ const ListPage: React.FC = () => {
                   Resume Draft ({drafts.length})
                 </Button>
               )}
-              <Button variant="dark-shine" size="sm" onClick={handleStart} className="h-8 rounded-xl text-xs font-semibold px-4">
+              <Button variant="dark-shine" size="sm" onClick={handleStart} className="hidden sm:flex h-8 rounded-xl text-xs font-semibold px-4">
                 List Your Space
               </Button>
+              <AppDropdownMenu variant="dark" />
             </div>
           </div>
         </div>

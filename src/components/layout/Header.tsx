@@ -18,6 +18,7 @@ import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import MobileMenu from './MobileMenu';
+import AppDropdownMenu from './AppDropdownMenu';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 import AirbnbMenuItem from '@/components/ui/AirbnbMenuItem';
@@ -85,7 +86,7 @@ const saveRecentSearch = (query: string) => {
 
 const Header = () => {
   const { t } = useTranslation();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [mobileSearchQuery, setMobileSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -429,87 +430,21 @@ const Header = () => {
           )}
           {user && <NotificationCenter />}
           {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="rounded-full gap-2 pl-1.5 pr-3">
-                  <Avatar className="h-8 w-8 ring-2 ring-primary/20">
-                    <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || 'User'} />
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-sm font-semibold">
-                      {(profile?.full_name || user.email || 'U').charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64 bg-background p-0 rounded-xl shadow-xl border">
-                {/* Group 1: Core User Actions */}
-                <div className="py-2">
-                  <AirbnbMenuItem icon={Heart} label={t('common.favorites')} to="/favorites" />
-                  <AirbnbMenuItem icon={CalendarDays} label={t('common.bookings')} to="/transactions?tab=bookings" />
-                  <AirbnbMenuItem icon={MessageCircle} label={t('common.messages')} to="/messages" />
-                </div>
-                
-                <DropdownMenuSeparator className="my-0" />
-                
-                {/* Group 2: Profile & Notifications */}
-                <div className="py-2">
-                  <AirbnbMenuItem icon={User} label="Profile" to={`/profile/${user?.id}`} />
-                  <AirbnbMenuItem icon={Bell} label="Notifications" onClick={() => {}} />
-                </div>
-                
-                <DropdownMenuSeparator className="my-0" />
-                
-                {/* Group 3: Account Settings */}
-                <div className="py-2">
-                  <AirbnbMenuItem icon={LayoutDashboard} label={t('common.dashboard')} to="/dashboard" />
-                  <AirbnbMenuItem icon={Globe} label="Language" onClick={() => {}} />
-                  <AirbnbMenuItem icon={HelpCircle} label={t('common.support')} to="/help" />
-                </div>
-                
-                <DropdownMenuSeparator className="my-0" />
-                
-                {/* Group 4: Verification */}
-                <div className="py-2">
-                  {!isVerified ? (
-                    <AirbnbMenuItem 
-                      icon={Shield} 
-                      label="Verify Identity" 
-                      subtext="Get verified to unlock all features"
-                      to="/verify-identity"
-                    />
-                  ) : (
-                    <div className="flex items-center gap-2 px-4 py-2 text-sm text-emerald-600">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Verified</span>
-                    </div>
-                  )}
-                </div>
-                
-                {isAdmin && (
-                  <>
-                    <DropdownMenuSeparator className="my-0" />
-                    <div className="py-2">
-                      <AirbnbMenuItem icon={ShieldCheck} label={t('common.admin')} to="/admin" />
-                    </div>
-                  </>
-                )}
-                
-                <DropdownMenuSeparator className="my-0" />
-                
-                {/* Group 5: Sign Out */}
-                <div className="py-2">
-                  <AirbnbMenuItem icon={LogOut} label={t('common.signOut')} onClick={handleSignOut} />
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <>
+              {user && <NotificationCenter />}
+              <AppDropdownMenu variant="light" />
+            </>
           ) : (
-            <Button 
-              variant="dark-shine" 
-              className="rounded-full"
-              onClick={() => navigate('/auth')}
-            >
-              Sign Up / Login
-            </Button>
+            <>
+              <Button 
+                variant="dark-shine" 
+                className="rounded-full"
+                onClick={() => navigate('/auth')}
+              >
+                Sign Up / Login
+              </Button>
+              <AppDropdownMenu variant="light" />
+            </>
           )}
           {/* Language Switcher - Far Right */}
           <LanguageSwitcher />
@@ -524,32 +459,13 @@ const Header = () => {
             {t('common.learnMore')}
           </Link>
           {user && <NotificationCenter />}
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="text-foreground bg-background border-border relative z-50"
-          >
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </Button>
+          <AppDropdownMenu variant="light" />
           <div className="hidden sm:block">
             <LanguageSwitcher />
           </div>
         </div>
       </div>
     </header>
-
-    {/* Mobile Menu - Rendered outside header to avoid stacking context issues from backdrop-blur */}
-    <MobileMenu
-      isOpen={isMenuOpen}
-      onClose={() => setIsMenuOpen(false)}
-      user={user}
-      profile={profile}
-      isVerified={isVerified}
-      isAdmin={isAdmin}
-      onSignOut={handleSignOut}
-      onNavigate={navigate}
-    />
   </>
   );
 };

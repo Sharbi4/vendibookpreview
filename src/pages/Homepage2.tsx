@@ -3,9 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, MapPin, SlidersHorizontal, Truck, ChevronRight, Sparkles,
   Map as MapIcon, X, Plus, UserPlus, Info, ArrowRight, Utensils,
-  Building2, ShoppingBag, Zap, Menu,
+  Building2, ShoppingBag, Zap,
 } from 'lucide-react';
-import { LayoutDashboard, MessageSquare, HelpCircle, LogOut } from 'lucide-react';
+import AppDropdownMenu from '@/components/layout/AppDropdownMenu';
 import { FilterPanel, FilterValues } from '@/components/search/FilterPanel';
 import { EmptyStateEmailCapture } from '@/components/search/EmptyStateEmailCapture';
 import Footer from '@/components/layout/Footer';
@@ -72,7 +72,7 @@ const Homepage2 = () => {
 
   const [showMap, setShowMap] = useState(false);
   const [learnMoreOpen, setLearnMoreOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
   const { apiKey, isLoading: mapLoading, error: mapError } = useGoogleMapsToken();
 
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -273,80 +273,9 @@ const Homepage2 = () => {
                   Learn More
                 </Button>
                 {/* Hamburger menu — always visible far right */}
-                <button
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="p-2 rounded-xl bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-colors"
-                >
-                  {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                </button>
+                <AppDropdownMenu variant="dark" />
               </div>
             </div>
-
-            {/* Dropdown menu — pops from right */}
-            <AnimatePresence>
-              {mobileMenuOpen && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: -4 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -4 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-4 top-[60px] z-[200] w-52 rounded-xl bg-gray-900 backdrop-blur-xl border border-white/15 shadow-2xl shadow-black/40 overflow-hidden"
-                >
-                  <div className="py-1.5">
-                     {user ? (
-                      <>
-                        <Link to="/list" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                          <Plus className="w-4 h-4 text-white/70" /> Create a Listing
-                        </Link>
-                        <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                          <LayoutDashboard className="w-4 h-4 text-white/70" /> Dashboard
-                        </Link>
-                        <Link to="/dashboard?tab=messages" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                          <MessageSquare className="w-4 h-4 text-white/70" /> Messages
-                        </Link>
-                        <Link to="/homepage2" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                          <Search className="w-4 h-4 text-white/70" /> Browse All
-                        </Link>
-                        <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                          <HelpCircle className="w-4 h-4 text-white/70" /> Help Center
-                        </Link>
-                        <Link to="/how-it-works" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                          <Info className="w-4 h-4 text-white/70" /> Learn More
-                        </Link>
-                        <button
-                          onClick={async () => {
-                            setMobileMenuOpen(false);
-                            await supabase.auth.signOut();
-                            navigate('/');
-                          }}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-red-400 text-sm font-medium hover:bg-white/10 transition-colors"
-                        >
-                          <LogOut className="w-4 h-4 text-red-400/70" /> Log Out
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <Link to="/auth" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                          <UserPlus className="w-4 h-4 text-white/70" /> Sign Up / Login
-                        </Link>
-                        <Link to="/list" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                          <Plus className="w-4 h-4 text-white/70" /> Create a Listing
-                        </Link>
-                        <Link to="/how-it-works" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                          <Info className="w-4 h-4 text-white/70" /> Learn More
-                        </Link>
-                        <Link to="/homepage2" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                          <Search className="w-4 h-4 text-white/70" /> Browse All
-                        </Link>
-                        <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                          <HelpCircle className="w-4 h-4 text-white/70" /> Help Center
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             {/* Bottom row: Category chips + mode + sort */}
             <div className="flex items-center gap-2 pb-2.5 -mt-0.5 overflow-x-auto no-scrollbar">
