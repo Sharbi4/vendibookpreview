@@ -279,8 +279,8 @@ const Homepage2 = () => {
             <div className="flex items-center justify-between gap-3 h-14">
               {/* Favicon / Logo */}
               <Link to="/" className="shrink-0 flex items-center gap-2">
-                <img src={vendibookFavicon} alt="Vendibook" className="h-10 w-auto sm:hidden" style={{ filter: 'brightness(0) invert(1) drop-shadow(0 0 10px rgba(255,255,255,0.8))' }} />
-                <img src={vendibookLogo} alt="Vendibook" className="hidden sm:block h-28 w-auto" style={{ filter: 'brightness(0) invert(1) drop-shadow(0 0 14px rgba(255,255,255,0.9)) drop-shadow(0 0 4px rgba(255,255,255,0.6))' }} />
+                <img src={vendibookFavicon} alt="Vendibook" className="h-10 w-auto sm:hidden drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
+                <img src={vendibookLogo} alt="Vendibook" className="hidden sm:block h-28 w-auto drop-shadow-[0_0_14px_rgba(255,255,255,0.9)] drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]" />
               </Link>
 
               {/* Search bar — 3D glass field in header */}
