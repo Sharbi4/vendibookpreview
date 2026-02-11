@@ -288,10 +288,10 @@ const Homepage2 = () => {
                 />
                 {/* Desktop glass blob */}
                 <motion.div
-                  className="absolute -inset-x-2 -inset-y-1 pointer-events-none hidden sm:block overflow-hidden"
-                  animate={{ borderRadius: ['28% 72% 30% 70% / 70% 30% 72% 28%', '30% 70% 28% 72% / 72% 28% 70% 30%', '28% 72% 30% 70% / 70% 30% 72% 28%'], scale: [1, 1.01, 1] }}
-                  transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
-                  style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.38) 0%, rgba(160,200,255,0.22) 20%, rgba(255,170,210,0.17) 40%, rgba(180,255,220,0.15) 60%, rgba(255,210,160,0.2) 80%, rgba(220,190,255,0.18) 100%)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', boxShadow: 'inset 0 3px 8px rgba(255,255,255,0.45), inset 0 -3px 8px rgba(0,0,0,0.07), 0 6px 24px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)' }}
+                  className="absolute -inset-x-1 -inset-y-0.5 pointer-events-none hidden sm:block overflow-hidden"
+                  animate={{ borderRadius: ['60% 40% 55% 45% / 45% 55% 45% 55%', '50% 50% 45% 55% / 55% 45% 50% 50%', '45% 55% 50% 50% / 50% 50% 55% 45%', '55% 45% 55% 45% / 45% 55% 45% 55%', '60% 40% 55% 45% / 45% 55% 45% 55%'], scale: [1, 1.02, 0.99, 1.01, 1] }}
+                  transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+                  style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.35) 0%, rgba(170,210,255,0.2) 25%, rgba(255,180,200,0.16) 50%, rgba(200,255,220,0.14) 75%, rgba(255,220,180,0.24) 100%)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', boxShadow: 'inset 0 2px 6px rgba(255,255,255,0.4), inset 0 -2px 6px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)' }}
                 />
                 <img src={vendibookFavicon} alt="Vendibook" className="relative h-10 w-auto sm:hidden" />
                 <img src={vendibookFavicon} alt="Vendibook" className="relative hidden sm:block h-10 w-auto" />
