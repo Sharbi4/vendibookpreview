@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import vendibookLogo from '@/assets/vendibook-logo.png';
 
 interface AppDropdownMenuProps {
   /** Button style variant */
@@ -56,6 +57,14 @@ const AppDropdownMenu = ({ variant = 'dark', className = '' }: AppDropdownMenuPr
               className="absolute right-0 top-[calc(100%+8px)] z-[200] w-52 rounded-xl bg-gray-900 backdrop-blur-xl border border-white/15 shadow-2xl shadow-black/40 overflow-hidden"
             >
               <div className="py-1.5">
+                {/* Logo */}
+                <div className="flex justify-center px-3 pt-2 pb-3 border-b border-white/10">
+                  <img 
+                    src={vendibookLogo} 
+                    alt="Vendibook" 
+                    className="h-10 w-auto brightness-0 invert opacity-80"
+                  />
+                </div>
                 {user ? (
                   <>
                     <Link to="/list" onClick={handleClose} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
