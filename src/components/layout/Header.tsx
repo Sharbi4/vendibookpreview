@@ -364,14 +364,13 @@ const Header = () => {
               )}
             </div>
           ) : (
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={() => setIsMobileSearchOpen(true)}
-              className="text-muted-foreground hover:text-foreground px-3"
+              className="flex-1 flex items-center gap-2 px-3 py-2 rounded-full border border-border bg-muted/40 text-muted-foreground text-sm transition-colors hover:bg-muted/60"
             >
-              <span className="text-sm font-medium">{t('common.search')}</span>
-            </Button>
+              <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span className="truncate">{t('common.search')}</span>
+            </button>
           )}
         </div>
 
