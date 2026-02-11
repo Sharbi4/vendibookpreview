@@ -26,6 +26,7 @@ import {
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import vendibookLogo from '@/assets/vendibook-logo.png';
+import FloatingConciergeButton from '@/components/FloatingConciergeButton';
 
 const CATEGORIES = [
   { value: '', label: 'All', icon: Zap },
@@ -606,6 +607,7 @@ const Homepage2 = () => {
           50% { transform: translateX(100%); }
         }
       `}</style>
+      <FloatingConciergeButton />
     </div>
   );
 };
