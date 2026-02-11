@@ -11,6 +11,7 @@ import ZendeskWidget from "@/components/ZendeskWidget";
 import PageTransition from "@/components/PageTransition";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { usePageTracking } from "@/hooks/usePageTracking";
+import { usePendingMessage } from "@/hooks/usePendingMessage";
 import { AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import GoogleOneTap from "@/components/auth/GoogleOneTap";
@@ -136,6 +137,8 @@ const AnimatedRoutes = () => {
   // Track page views with Google Analytics
   usePageTracking();
 
+  // Process any pending messages after sign-in
+  usePendingMessage();
   return (
     <AnimatePresence mode="wait" initial={false}>
       <Suspense fallback={<PageLoader />} key={location.pathname}>

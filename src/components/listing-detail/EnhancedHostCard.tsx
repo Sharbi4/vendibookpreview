@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ShieldCheck, Clock, Star, ChevronRight, MessageCircle, Award, Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import MessageHostButton from '@/components/messaging/MessageHostButton';
+import MessageHostForm from '@/components/messaging/MessageHostForm';
 import { useHostResponseTime } from '@/hooks/useHostResponseTime';
 import { useListingAverageRating } from '@/hooks/useReviews';
 import { VerifiedBadgeImage } from '@/components/verification/VerificationBadge';
@@ -18,6 +18,7 @@ interface EnhancedHostCardProps {
   memberSince?: string;
   lastActiveAt?: string | null;
   isRental?: boolean;
+  listingTitle?: string;
 }
 
 const containerVariants = {
@@ -53,6 +54,7 @@ const EnhancedHostCard = ({
   memberSince,
   lastActiveAt,
   isRental = true,
+  listingTitle,
 }: EnhancedHostCardProps) => {
   const roleLabel = isRental ? 'host' : 'seller';
   const initials = hostName 
@@ -194,21 +196,17 @@ const EnhancedHostCard = ({
         </div>
       </motion.div>
 
-      {/* Action Buttons */}
+      {/* Message Form & Profile Link */}
       <motion.div 
-        className="flex flex-col sm:flex-row gap-3"
+        className="space-y-3"
         variants={itemVariants}
       >
-        <motion.div className="flex-1" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-          <MessageHostButton 
-            listingId={listingId}
-            hostId={hostId}
-            variant="outline"
-            className="w-full h-12 font-medium"
-            label={`Message ${isRental ? 'Host' : 'Seller'}`}
-          />
-        </motion.div>
-        <motion.div className="flex-1" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+        <MessageHostForm 
+          listingId={listingId}
+          hostId={hostId}
+          listingTitle={listingTitle}
+        />
+        <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
           <Button 
             variant="ghost" 
             asChild

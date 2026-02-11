@@ -444,6 +444,7 @@ const ListingDetail = () => {
                 memberSince={host?.created_at}
                 lastActiveAt={host?.last_active_at}
                 isRental={isRental}
+                listingTitle={listing.title}
               />
 
               {/* Divider */}
