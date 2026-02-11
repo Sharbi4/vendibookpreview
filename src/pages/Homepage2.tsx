@@ -272,7 +272,7 @@ const Homepage2 = () => {
           {/* Animated shine */}
           <div className="absolute inset-0 hp2-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent overflow-hidden rounded-2xl" />
           {/* Glass overlay */}
-          <div className="absolute inset-0 backdrop-blur-md bg-black/5" />
+          <div className="absolute inset-0 backdrop-blur-md bg-black/5 rounded-2xl" />
 
           <div className="relative max-w-7xl mx-auto px-4">
             {/* Top row: Logo + Search + Actions */}
