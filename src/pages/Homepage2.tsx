@@ -607,7 +607,7 @@ const Homepage2 = () => {
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="fixed top-[5.5rem] right-2 z-50 max-h-[calc(100vh-6.5rem)] w-full max-w-sm bg-white/80 dark:bg-black/80 backdrop-blur-2xl border-2 border-border rounded-2xl shadow-2xl overflow-y-auto"
+                className="fixed top-[7.5rem] right-2 z-50 max-h-[calc(100vh-8.5rem)] w-full max-w-sm bg-white/80 dark:bg-black/80 backdrop-blur-2xl border-2 border-border rounded-2xl shadow-2xl overflow-y-auto"
               >
                 {/* Header */}
                 <div className="sticky top-0 z-10 flex items-center justify-between p-5 bg-white/60 dark:bg-black/60 backdrop-blur-xl border-b border-border">
