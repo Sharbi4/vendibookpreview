@@ -294,7 +294,7 @@ const Homepage2 = () => {
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                       onFocus={() => setShowTrending(true)}
-                      placeholder={isRecording ? 'Listening...' : 'Search by keyword or location...'}
+                      placeholder={isRecording ? 'Listening...' : (window.innerWidth < 768 ? 'Search' : 'Search by keyword or location...')}
                       className="relative w-full h-10 pl-8 pr-20 md:pr-12 rounded-xl bg-transparent text-white text-sm placeholder:text-white/50 focus:outline-none transition-all"
                     />
                     {/* Mobile: Geolocation button */}
