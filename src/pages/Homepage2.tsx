@@ -75,7 +75,7 @@ const Homepage2 = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const [showMap, setShowMap] = useState(true);
+  const [showMap, setShowMap] = useState(false);
   const [learnMoreOpen, setLearnMoreOpen] = useState(false);
   const [showTrending, setShowTrending] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
