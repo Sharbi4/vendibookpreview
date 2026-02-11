@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, CheckCircle, Truck, Utensils, X } from 'lucide-react';
+import { Bell, CheckCircle, Truck, Utensils, X, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,26 +15,77 @@ interface EmptyStateEmailCaptureProps {
 
 export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFilters }: EmptyStateEmailCaptureProps) => {
   const [email, setEmail] = useState('');
+  const [zipCode, setZipCode] = useState(locationText || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    const trimmedEmail = email.trim();
+    const trimmedZip = zipCode.trim();
+    
+    if (!trimmedEmail || !trimmedZip) {
+      toast.error('Please enter both your email and zip code.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+
+    if (trimmedZip.length < 3 || trimmedZip.length > 10) {
+      toast.error('Please enter a valid zip code or city.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('availability_alerts').insert({
-        email: email.trim(),
-        zip_code: locationText || 'any',
+      // Save to availability_alerts table
+      const { error: dbError } = await supabase.from('availability_alerts').insert({
+        email: trimmedEmail,
+        zip_code: trimmedZip,
         category: category || null,
         mode: mode || null,
         radius_miles: 50,
       });
 
-      if (error) throw error;
+      if (dbError && dbError.code !== '23505') {
+        console.error('DB alert error:', dbError);
+      }
+
+      // Submit to Zendesk via edge function
+      try {
+        const modeLabel = mode === 'rent' ? 'Rental' : mode === 'sale' ? 'Purchase' : 'Rental/Purchase';
+        const categoryLabel = category ? category.replace(/_/g, ' ') : 'Any category';
+        
+        await supabase.functions.invoke('create-zendesk-ticket', {
+          body: {
+            requester_name: trimmedEmail.split('@')[0],
+            requester_email: trimmedEmail,
+            subject: `Availability Alert: ${modeLabel} near ${trimmedZip}`,
+            description: [
+              `A visitor wants to be notified about new listings.`,
+              ``,
+              `Zip Code / Area: ${trimmedZip}`,
+              `Interest: ${modeLabel}`,
+              `Category: ${categoryLabel}`,
+              ``,
+              `This lead came from the empty search results page.`,
+            ].join('\n'),
+            priority: 'normal',
+            type: 'task',
+            tags: ['availability-alert', 'lead', mode || 'any-mode'],
+          },
+        });
+      } catch (zendeskErr) {
+        // Non-blocking — DB save was the primary action
+        console.error('Zendesk ticket error:', zendeskErr);
+      }
+
       setIsSubmitted(true);
-      toast.success('You\'ll be notified when new listings match your search!');
+      toast.success("You're all set! We'll notify you when listings appear in your area.");
     } catch (err) {
       console.error('Alert signup error:', err);
       toast.error('Something went wrong. Please try again.');
@@ -81,35 +132,48 @@ export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFi
         </div>
       </motion.div>
 
-      <h3 className="text-2xl font-bold text-gray-900 mb-2 relative">No listings found here yet</h3>
-      <p className="text-gray-600 text-center max-w-sm mb-6 text-sm relative">
-        Try expanding your search area or adjusting filters. Or get notified when new listings appear!
+      <h3 className="text-2xl font-bold text-foreground mb-2 relative">No listings found here yet</h3>
+      <p className="text-muted-foreground text-center max-w-sm mb-6 text-sm relative">
+        Enter your zip code and email — we'll notify you as soon as rentals or listings become available in your area.
       </p>
 
-      {/* Email signup */}
+      {/* Zip + Email signup form */}
       {!isSubmitted ? (
-        <form onSubmit={handleSubmit} className="relative w-full max-w-sm mb-6">
-          <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white border border-gray-200 shadow-lg">
-            <Bell className="w-4 h-4 text-gray-400 ml-2 shrink-0" />
+        <form onSubmit={handleSubmit} className="relative w-full max-w-md mb-6 space-y-3">
+          <div className="flex items-center gap-2 p-1.5 rounded-xl bg-background border border-border shadow-lg">
+            <MapPin className="w-4 h-4 text-muted-foreground ml-2 shrink-0" />
+            <Input
+              type="text"
+              placeholder="Your zip code or city"
+              value={zipCode}
+              onChange={(e) => setZipCode(e.target.value)}
+              required
+              maxLength={50}
+              className="border-0 shadow-none h-9 text-sm focus-visible:ring-0 px-1"
+            />
+          </div>
+          <div className="flex items-center gap-2 p-1.5 rounded-xl bg-background border border-border shadow-lg">
+            <Bell className="w-4 h-4 text-muted-foreground ml-2 shrink-0" />
             <Input
               type="email"
               placeholder="Enter your email for alerts"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              maxLength={255}
               className="border-0 shadow-none h-9 text-sm focus-visible:ring-0 px-1"
             />
             <Button
               type="submit"
               size="sm"
               disabled={isSubmitting}
-              className="rounded-lg bg-gray-900 text-white hover:bg-gray-800 text-xs font-semibold px-4 shrink-0"
+              className="rounded-lg bg-foreground text-background hover:bg-foreground/90 text-xs font-semibold px-4 shrink-0"
             >
               {isSubmitting ? 'Saving...' : 'Notify Me'}
             </Button>
           </div>
-          <p className="text-[11px] text-gray-400 text-center mt-2">
-            We'll email you when listings match your search. Unsubscribe anytime.
+          <p className="text-[11px] text-muted-foreground text-center">
+            We'll email you when listings match your area. Unsubscribe anytime.
           </p>
         </form>
       ) : (
@@ -119,12 +183,12 @@ export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFi
           className="relative flex items-center gap-2 mb-6 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700"
         >
           <CheckCircle className="w-5 h-5 shrink-0" />
-          <span className="text-sm font-medium">You're all set! We'll notify you when new listings appear.</span>
+          <span className="text-sm font-medium">You're all set! We'll notify you when new listings appear in your area.</span>
         </motion.div>
       )}
 
       <div className="flex gap-3 relative">
-        <Button variant="outline" onClick={onClearFilters} className="rounded-xl bg-white/70 backdrop-blur border-gray-200 hover:bg-white text-gray-900">
+        <Button variant="outline" onClick={onClearFilters} className="rounded-xl bg-white/70 backdrop-blur border-border hover:bg-white text-foreground">
           <X className="w-4 h-4 mr-1" /> Clear Filters
         </Button>
       </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, MapPin, SlidersHorizontal, Truck, ChevronRight, Sparkles,
@@ -8,6 +8,7 @@ import {
 import AppDropdownMenu from '@/components/layout/AppDropdownMenu';
 import { FilterPanel, FilterValues } from '@/components/search/FilterPanel';
 import { EmptyStateEmailCapture } from '@/components/search/EmptyStateEmailCapture';
+import InlineNewsletterCard from '@/components/search/InlineNewsletterCard';
 import Footer from '@/components/layout/Footer';
 import ListingCard from '@/components/listing/ListingCard';
 import { LocationSearchInput } from '@/components/search/LocationSearchInput';
@@ -382,17 +383,20 @@ const Homepage2 = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <AnimatePresence mode="popLayout">
                         {listings.map((listing, i) => (
-                          <motion.div
-                            key={listing.id}
-                            initial={{ opacity: 0, y: 24 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ delay: i * 0.04, duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-                            whileHover={{ y: -6, transition: { duration: 0.2 } }}
-                            className="rounded-2xl bg-white/70 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5 hover:shadow-2xl hover:shadow-[hsl(14,100%,57%)]/10 hover:border-[hsl(14,100%,57%)]/30 transition-all duration-300"
-                          >
-                            <ListingCard listing={listing} />
-                          </motion.div>
+                          <React.Fragment key={listing.id}>
+                            <motion.div
+                              initial={{ opacity: 0, y: 24 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              transition={{ delay: i * 0.04, duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+                              whileHover={{ y: -6, transition: { duration: 0.2 } }}
+                              className="rounded-2xl bg-white/70 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5 hover:shadow-2xl hover:shadow-[hsl(14,100%,57%)]/10 hover:border-[hsl(14,100%,57%)]/30 transition-all duration-300"
+                            >
+                              <ListingCard listing={listing} />
+                            </motion.div>
+                            {/* Insert newsletter card after 2nd listing */}
+                            {i === 1 && listings.length > 2 && <InlineNewsletterCard />}
+                          </React.Fragment>
                         ))}
                       </AnimatePresence>
                     </div>
