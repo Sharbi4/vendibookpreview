@@ -28,7 +28,7 @@ const HeroRentalSearch = () => {
   };
 
   return (
-    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden bg-[#FBF8F5]">
+    <section className="relative min-h-[80vh] sm:min-h-[85vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden bg-[#FBF8F5]">
       {/* Warm cream-to-peach base */}
       <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #FFFAF6 0%, #FFF5EE 30%, #FFEFE4 50%, #FFF5EE 70%, #FFFAF6 100%)' }} />
       
@@ -68,20 +68,20 @@ const HeroRentalSearch = () => {
         transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
       />
 
-      <div className="relative z-10 container max-w-4xl mx-auto px-4 py-12 md:py-16">
+      <div className="relative z-10 container max-w-4xl mx-auto px-5 sm:px-6 py-8 sm:py-12 md:py-16">
         {/* Logo & Headline */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
-          className="text-center mb-10 md:mb-14"
+          className="text-center mb-6 sm:mb-10 md:mb-14"
         >
           <img
             src={vendibookLogo}
             alt="Vendibook"
-            className="h-56 md:h-72 w-auto mx-auto mb-6 transition-transform duration-300 hover:scale-105"
+            className="h-40 sm:h-56 md:h-72 w-auto mx-auto mb-4 sm:mb-6 transition-transform duration-300 hover:scale-105"
           />
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground leading-tight tracking-tight mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight tracking-tight mb-3 sm:mb-4">
             The Marketplace for <span className="gradient-text-warm">Food Business</span>
           </h1>
         </motion.div>

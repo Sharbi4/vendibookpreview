@@ -5,8 +5,8 @@ import supplyImage from '@/assets/supply-food-truck.jpg';
 
 const BecomeHostSection = () => {
   return (
-    <section className="py-16 md:py-24 bg-foreground text-background">
-      <div className="container max-w-6xl mx-auto px-4">
+    <section className="py-12 sm:py-16 md:py-24 bg-foreground text-background">
+      <div className="container max-w-6xl mx-auto px-5 sm:px-6">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Content */}
           <div className="order-2 lg:order-1">
@@ -14,7 +14,7 @@ const BecomeHostSection = () => {
               Become a Host
             </span>
             
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
               Your idle truck is{' '}
               <span className="text-primary">losing you money.</span>
             </h2>

@@ -1,4 +1,5 @@
 import { Sparkles, ShieldCheck, MapPin } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const benefits = [
   {
@@ -20,37 +21,37 @@ const benefits = [
 
 const RentalBenefits = () => {
   return (
-    <section className="py-16 md:py-24 bg-background">
-      <div className="container max-w-6xl mx-auto px-4">
-        {/* Section Header */}
-        <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+    <section className="py-12 sm:py-16 md:py-24 bg-background">
+      <div className="container max-w-6xl mx-auto px-5 sm:px-6">
+        <div className="text-center mb-8 sm:mb-12 md:mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 sm:mb-4">
             The modern way to start a food business.
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
             Skip the $50k down payment. Start cooking next week.
           </p>
         </div>
 
-        {/* Benefits Grid */}
-        <div className="grid md:grid-cols-3 gap-8 md:gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 md:gap-12">
           {benefits.map((benefit, index) => (
-            <div key={index} className="text-center md:text-left">
-              {/* Icon Container */}
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 text-primary mb-5">
-                <benefit.icon className="h-7 w-7" />
+            <motion.div 
+              key={index} 
+              className="text-center sm:text-left"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+            >
+              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary/10 text-primary mb-4 sm:mb-5">
+                <benefit.icon className="h-6 w-6 sm:h-7 sm:w-7" />
               </div>
-              
-              {/* Title */}
-              <h3 className="text-xl font-semibold text-foreground mb-3">
+              <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2 sm:mb-3">
                 {benefit.title}
               </h3>
-              
-              {/* Description */}
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                 {benefit.description}
               </p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
