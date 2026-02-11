@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import HeaderSearchField from '@/components/layout/HeaderSearchField';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
@@ -188,10 +189,11 @@ const HowItWorks = () => {
               <img src={vendibookLogo} alt="Vendibook" className="hidden sm:block h-24 w-auto drop-shadow-lg brightness-0 invert" />
             </Link>
             <div className="flex items-center gap-2">
-              <Button asChild variant="dark-shine" size="sm" className="h-8 rounded-xl text-xs font-semibold px-4">
+              <HeaderSearchField />
+              <Button asChild variant="dark-shine" size="sm" className="hidden sm:flex h-8 rounded-xl text-xs font-semibold px-4">
                 <Link to="/">Browse Listings</Link>
               </Button>
-              <Button asChild variant="dark-shine" size="sm" className="h-8 rounded-xl text-xs font-semibold px-4">
+              <Button asChild variant="dark-shine" size="sm" className="hidden sm:flex h-8 rounded-xl text-xs font-semibold px-4">
                 <Link to="/list">Become a Host</Link>
               </Button>
             </div>

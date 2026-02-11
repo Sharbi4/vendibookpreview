@@ -22,7 +22,7 @@ import {
   Pagination, PaginationContent, PaginationEllipsis,
   PaginationItem, PaginationLink, PaginationNext, PaginationPrevious,
 } from '@/components/ui/pagination';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 
@@ -45,9 +45,10 @@ interface SearchResponse {
 }
 
 const Homepage2 = () => {
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(() => searchParams.get('q') || '');
   const [locationText, setLocationText] = useState('');
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
   const [category, setCategory] = useState('');
