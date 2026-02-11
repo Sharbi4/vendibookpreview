@@ -205,7 +205,7 @@ const ListingDetail = () => {
         </div>
 
         {/* Main Content */}
-        <div className="container pt-6 pb-24 lg:pb-16">
+        <div className="container pt-4 pb-24 lg:pb-16">
           {/* Owner Banner - Show prominently if owner is viewing */}
           {isOwner && (
             <div className="mb-6">
@@ -213,11 +213,11 @@ const ListingDetail = () => {
             </div>
           )}
 
-          <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
+          <div className="grid lg:grid-cols-3 gap-6 lg:gap-10">
             {/* Left Column - Details */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-5">
               {/* Title Section - Airbnb Style */}
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {/* Title */}
                 <div className="flex items-start justify-between gap-4">
                   <h1 className="text-2xl md:text-3xl font-semibold text-foreground leading-tight">
@@ -277,7 +277,7 @@ const ListingDetail = () => {
                 </div>
 
                 {/* Action Buttons Row */}
-                <div className="flex items-center gap-2 pt-1">
+                <div className="flex items-center gap-2">
                   <Button 
                     variant="ghost" 
                     size="sm" 
@@ -376,8 +376,8 @@ const ListingDetail = () => {
               <div className="border-t border-border" />
 
               {/* About Section */}
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-foreground">About this listing</h2>
+              <div className="space-y-2">
+                <h2 className="text-lg font-semibold text-foreground">About this listing</h2>
                 <CollapsibleDescription description={listing.description} />
               </div>
 
@@ -465,8 +465,8 @@ const ListingDetail = () => {
               <div className="border-t border-border" />
 
               {/* Reviews Section */}
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-foreground">Reviews</h2>
+              <div className="space-y-2">
+                <h2 className="text-lg font-semibold text-foreground">Reviews</h2>
                 <ReviewsSection listingId={listing.id} />
               </div>
 
@@ -476,8 +476,8 @@ const ListingDetail = () => {
               {/* Location Map */}
               {location && (
                 <>
-                  <div className="space-y-4">
-                    <h2 className="text-xl font-semibold text-foreground">Where you'll be</h2>
+                  <div className="space-y-2">
+                    <h2 className="text-lg font-semibold text-foreground">Where you'll be</h2>
                     <ListingLocationMap
                       address={listing.address}
                       className="h-64 md:h-80"
