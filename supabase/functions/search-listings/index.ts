@@ -37,6 +37,7 @@ interface SearchRequest {
   instant_book_only?: boolean;
   verified_hosts_only?: boolean;
   delivery_capable?: boolean;
+  featured_only?: boolean;
   page?: number;
   page_size?: number;
   sort_by?: 'newest' | 'price_low' | 'price_high' | 'distance' | 'relevance';
@@ -70,6 +71,7 @@ Deno.serve(async (req) => {
       instant_book_only,
       verified_hosts_only,
       delivery_capable,
+      featured_only,
       page = 1,
       page_size = 20,
       sort_by = 'newest',
@@ -272,6 +274,14 @@ Deno.serve(async (req) => {
     // Filter by delivery capability
     if (delivery_capable) {
       filteredListings = filteredListings.filter(l => l.can_deliver);
+    }
+
+    // Filter by featured listings
+    if (featured_only) {
+      const now = new Date().toISOString();
+      filteredListings = filteredListings.filter(l => 
+        l.featured_enabled && l.featured_expires_at && l.featured_expires_at > now
+      );
     }
 
     // Apply price filter for 'all' mode or rent mode with hourly consideration
