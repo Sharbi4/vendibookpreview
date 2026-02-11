@@ -5,6 +5,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ConversationList from '@/components/messaging/ConversationList';
 import ConversationThread from '@/components/messaging/ConversationThread';
+import MessageSearch from '@/components/messaging/MessageSearch';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Messages = () => {
@@ -35,6 +36,13 @@ const Messages = () => {
               <h1 className="text-2xl font-bold text-foreground">Messages</h1>
             </div>
           </div>
+
+          {/* Search - Show when no conversation is selected */}
+          {!conversationId && (
+            <div className="mt-4">
+              <MessageSearch />
+            </div>
+          )}
         </div>
 
         <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
