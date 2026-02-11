@@ -166,7 +166,7 @@ const Homepage2 = () => {
 
       {/* ══ CUSTOM HEADER WITH INTEGRATED SEARCH ══ */}
       <header className="sticky top-0 z-50 w-full">
-        <div className="relative overflow-hidden">
+        <div className="relative">
           {/* Header gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-[hsl(14,100%,57%)] via-[hsl(20,90%,50%)] to-[hsl(40,100%,49%)]" />
           {/* Animated shine */}
