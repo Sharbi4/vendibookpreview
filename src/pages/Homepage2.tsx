@@ -342,7 +342,24 @@ const Homepage2 = () => {
             </AnimatePresence>
 
             {/* Bottom row: Category chips + mode + sort */}
-            <div className="flex items-center justify-center gap-2.5 pb-2.5 -mt-0.5">
+            <div className="flex items-center gap-2 pb-2.5 -mt-0.5 overflow-x-auto no-scrollbar">
+              {/* Mode pills — compact on mobile */}
+              <div className="flex h-7 sm:h-8 rounded-lg overflow-hidden border border-white/25 bg-white/10 backdrop-blur shrink-0">
+                {(['', 'rent', 'sale'] as const).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => { setMode(m); setTimeout(handleSearch, 0); }}
+                    className={`px-2 sm:px-3 text-[10px] sm:text-xs font-semibold transition-all ${
+                      mode === m
+                        ? 'bg-white text-gray-900'
+                        : 'text-white/70 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {m === '' ? 'All' : m === 'rent' ? 'Rent' : 'Buy'}
+                  </button>
+                ))}
+              </div>
+
               {/* Category chips */}
               <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
                 {CATEGORIES.map((cat) => (
@@ -369,33 +386,10 @@ const Homepage2 = () => {
                 />
               </div>
 
-              {/* Mode pills */}
-              <div className="flex h-8 rounded-lg overflow-hidden border border-white/25 bg-white/10 backdrop-blur">
-                {(['', 'rent', 'sale'] as const).map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => { setMode(m); setTimeout(handleSearch, 0); }}
-                    className={`px-3 text-xs font-semibold transition-all ${
-                      mode === m
-                        ? 'bg-white text-gray-900'
-                        : 'text-white/70 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    {m === '' ? 'All' : m === 'rent' ? 'Rent' : 'Buy'}
-                  </button>
-                ))}
-              </div>
-
-
               {/* Result count */}
-              <span className="text-xs text-white/60 hidden md:inline whitespace-nowrap font-medium">
+              <span className="text-xs text-white/60 hidden md:inline whitespace-nowrap font-medium shrink-0">
                 {totalCount} {totalCount === 1 ? 'result' : 'results'}
               </span>
-
-              {/* Mobile map toggle */}
-              <button onClick={() => setShowMap(!showMap)} className="lg:hidden p-1.5 rounded-lg bg-white/10 border border-white/20 text-white/80 hover:bg-white/20">
-                <MapIcon className="w-4 h-4" />
-              </button>
             </div>
           </div>
         </div>
@@ -406,23 +400,37 @@ const Homepage2 = () => {
         {/* ── CONTENT ── */}
         <div className="flex-1 min-w-0">
           <div ref={resultsRef} className="scroll-mt-32 max-w-6xl mx-auto px-4 pt-6 pb-6">
-            {/* Sort bar */}
+            {/* Sort bar + map toggle */}
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-medium text-foreground/70">
                 {totalCount} {totalCount === 1 ? 'result' : 'results'}
               </span>
-              <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-                <SelectTrigger className="h-8 w-36 text-xs rounded-lg border-border bg-background">
-                  <SlidersHorizontal className="w-3 h-3 mr-1" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-background border-border z-50">
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="price_low">Price ↑</SelectItem>
-                  <SelectItem value="price_high">Price ↓</SelectItem>
-                  <SelectItem value="distance">Nearest</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                {/* Mobile map toggle — next to sort */}
+                <button
+                  onClick={() => setShowMap(!showMap)}
+                  className={`lg:hidden flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg border transition-all ${
+                    showMap
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'border-border bg-background text-foreground/70 hover:bg-muted'
+                  }`}
+                >
+                  <MapIcon className="w-3.5 h-3.5" />
+                  Map
+                </button>
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                  <SelectTrigger className="h-8 w-36 text-xs rounded-lg border-border bg-background">
+                    <SlidersHorizontal className="w-3 h-3 mr-1" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border-border z-50">
+                    <SelectItem value="newest">Newest</SelectItem>
+                    <SelectItem value="price_low">Price ↑</SelectItem>
+                    <SelectItem value="price_high">Price ↓</SelectItem>
+                    <SelectItem value="distance">Nearest</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
               {/* Listings 2x2 Grid */}
