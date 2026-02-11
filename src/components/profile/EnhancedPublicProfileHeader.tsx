@@ -264,42 +264,17 @@ const EnhancedPublicProfileHeader = ({
           )}
           onClick={isOwnProfile ? () => headerInputRef.current?.click() : undefined}
         >
-          {/* Visible gradient background - not all white */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-muted/40" />
+          {/* Orange gradient background matching homepage header */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(14,100%,57%)] via-[hsl(20,90%,50%)] to-[hsl(40,100%,49%)]" />
           
-          {/* Secondary layer for depth */}
+          {/* Animated shine overlay */}
+          <div className="absolute inset-0 hp2-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+          
+          {/* Glass overlay */}
+          <div className="absolute inset-0 backdrop-blur-md bg-black/5" />
+
+          {/* Gradient fade to content */}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
-          
-          {/* Animated gradient orbs - more visible */}
-          <motion.div 
-            className="absolute -top-20 -right-20 w-80 h-80 bg-gradient-to-br from-primary/30 to-primary/10 rounded-full blur-3xl"
-            animate={{ 
-              scale: [1, 1.3, 1],
-              opacity: [0.5, 0.8, 0.5],
-              x: [0, 20, 0],
-            }}
-            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div 
-            className="absolute -bottom-10 -left-10 w-60 h-60 bg-gradient-to-tr from-primary/20 to-accent/15 rounded-full blur-2xl"
-            animate={{ 
-              scale: [1.2, 1, 1.2],
-              opacity: [0.4, 0.6, 0.4],
-              y: [0, -15, 0],
-            }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div 
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-radial from-primary/15 to-transparent rounded-full blur-3xl"
-            animate={{ 
-              scale: [1, 1.15, 1],
-              opacity: [0.3, 0.5, 0.3],
-            }}
-            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-          />
-          
-          {/* Subtle pattern overlay */}
-          <div className="absolute inset-0 bg-dot-pattern opacity-20" />
           
           {/* Upload prompt for own profile */}
           {isOwnProfile && (
@@ -342,7 +317,7 @@ const EnhancedPublicProfileHeader = ({
 
       {/* Glass card container for profile info - STRONGER BORDERS */}
       <div className="container pt-28 md:pt-36 pb-6 md:pb-8 relative">
-        <div className="rounded-2xl p-6 md:p-8 border border-white/20 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.12)] bg-white/60 dark:bg-white/5 backdrop-blur-2xl">
+        <div className="rounded-2xl p-6 md:p-8 border border-white/15 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.2)] bg-black/10 backdrop-blur-2xl">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-5">
           {/* Enhanced Avatar with upload support for own profile */}
           <motion.div 
@@ -636,7 +611,7 @@ const EnhancedPublicProfileHeader = ({
                   <Button 
                     variant="outline" 
                     onClick={onViewListings}
-                    className="w-full rounded-xl bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/20 hover:bg-white/80 dark:hover:bg-white/10"
+                    className="w-full rounded-xl bg-black/8 dark:bg-white/5 backdrop-blur-xl border border-white/15 hover:bg-black/15 dark:hover:bg-white/10"
                   >
                     View Listings ({stats?.totalListings || 0})
                   </Button>

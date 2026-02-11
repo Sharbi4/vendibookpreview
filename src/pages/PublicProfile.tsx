@@ -464,7 +464,7 @@ const PublicProfile = () => {
 
       {/* Section 2: Mobile Sticky CTA with glass-premium styling */}
       {!isOwnProfile && isHost && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/70 dark:bg-black/50 backdrop-blur-2xl border-t border-white/20 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)] z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 12px)' }}>
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-black/10 backdrop-blur-2xl border-t border-white/15 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.15)] z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 12px)' }}>
           <div className="flex gap-2 px-4 py-3 max-w-lg mx-auto">
             <Button 
               variant="dark-shine"
