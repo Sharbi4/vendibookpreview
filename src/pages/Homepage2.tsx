@@ -173,7 +173,7 @@ const Homepage2 = () => {
       {/* ══ FULL-PAGE GRADIENT BACKGROUND ══ */}
       <div className="fixed inset-0 z-0">
         {/* Base warm gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(14,100%,96%)] via-[hsl(30,100%,95%)] to-[hsl(40,100%,93%)]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(30,20%,97%)] via-[hsl(30,15%,96%)] to-[hsl(35,10%,95%)]" />
         {/* Vibrant animated orbs */}
         <motion.div
           animate={{ x: [0, 60, -40, 0], y: [0, -50, 30, 0], scale: [1, 1.2, 0.9, 1] }}

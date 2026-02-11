@@ -289,7 +289,7 @@ const ListPage: React.FC = () => {
       <div className="min-h-screen relative overflow-x-hidden">
         {/* Gradient BG */}
         <div className="fixed inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(14,100%,96%)] via-[hsl(30,100%,95%)] to-[hsl(40,100%,93%)]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(30,20%,97%)] via-[hsl(30,15%,96%)] to-[hsl(35,10%,95%)]" />
         </div>
         <div className="relative z-10 max-w-4xl mx-auto py-6 sm:py-8 px-4">
           <Button
@@ -310,7 +310,7 @@ const ListPage: React.FC = () => {
     <div className="min-h-screen relative overflow-x-hidden">
       {/* ══ FULL-PAGE GRADIENT BACKGROUND ══ */}
       <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(14,100%,96%)] via-[hsl(30,100%,95%)] to-[hsl(40,100%,93%)]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(30,20%,97%)] via-[hsl(30,15%,96%)] to-[hsl(35,10%,95%)]" />
         <motion.div
           animate={{ x: [0, 60, -40, 0], y: [0, -50, 30, 0], scale: [1, 1.2, 0.9, 1] }}
           transition={{ repeat: Infinity, duration: 18, ease: 'easeInOut' }}
