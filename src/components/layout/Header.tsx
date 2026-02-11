@@ -309,19 +309,7 @@ const Header = () => {
                 />
               </form>
               
-              {/* Voice Search Button */}
-              {isSpeechSupported && (
-                <Button
-                  type="button"
-                  variant={isListening ? "default" : "ghost"}
-                  size="icon"
-                  onClick={isListening ? stopVoiceSearch : startVoiceSearch}
-                  className={`shrink-0 ${isListening ? 'bg-primary text-primary-foreground animate-pulse' : ''}`}
-                  aria-label={isListening ? "Stop voice search" : "Start voice search"}
-                >
-                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </Button>
-              )}
+
               
               <Button
                 type="button"
@@ -378,12 +366,12 @@ const Header = () => {
           ) : (
             <Button
               variant="ghost"
-              size="icon"
+              size="sm"
               onClick={() => setIsMobileSearchOpen(true)}
-              className="text-muted-foreground hover:text-foreground"
-              aria-label="Search"
+              className="text-muted-foreground hover:text-foreground gap-1.5 px-3"
             >
               <Search className="h-4 w-4" />
+              <span className="text-sm font-medium">{t('common.search')}</span>
             </Button>
           )}
         </div>
