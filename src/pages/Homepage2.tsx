@@ -27,8 +27,6 @@ const CATEGORIES = [
   { value: 'food_trailer', label: 'Trailers', icon: Truck },
   { value: 'commercial_kitchen', label: 'Kitchens', icon: Building2 },
   { value: 'vendor_space', label: 'Vendor Spaces', icon: MapPin },
-  { value: 'equipment', label: 'Equipment', icon: Utensils },
-  { value: 'pop_up_space', label: 'Pop-Ups', icon: ShoppingBag },
 ];
 
 const PAGE_SIZE = 20;
@@ -232,21 +230,25 @@ const Homepage2 = () => {
                   </Link>
                 </Button>
                 {/* Learn More — mobile only (replaces sign up) */}
-                <Button size="sm" onClick={() => setLearnMoreOpen(!learnMoreOpen)} className="sm:hidden h-9 rounded-xl bg-white/20 backdrop-blur-xl text-white hover:bg-white/30 text-xs font-semibold border border-white/25">
-                  <Info className="w-3.5 h-3.5 mr-1" />
+                {/* Learn More — small inline badge */}
+                <button
+                  onClick={() => setLearnMoreOpen(!learnMoreOpen)}
+                  className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/15 border border-white/20 text-white/80 hover:bg-white/25 hover:text-white text-[11px] font-medium transition-colors"
+                >
+                  <Info className="w-3 h-3" />
                   Learn More
-                </Button>
-                {/* Hamburger menu — mobile far right */}
+                </button>
+                {/* Hamburger menu — always visible far right */}
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="sm:hidden p-2 rounded-xl bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-colors"
+                  className="p-2 rounded-xl bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-colors"
                 >
                   {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
               </div>
             </div>
 
-            {/* Mobile dropdown menu */}
+            {/* Dropdown menu — all screen sizes */}
             <AnimatePresence>
               {mobileMenuOpen && (
                 <motion.div
@@ -254,7 +256,7 @@ const Homepage2 = () => {
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="sm:hidden overflow-hidden border-t border-white/15"
+                  className="overflow-hidden border-t border-white/15"
                 >
                   <div className="py-3 space-y-2">
                     <Link to="/auth" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors">
@@ -265,6 +267,9 @@ const Homepage2 = () => {
                     </Link>
                     <Link to="/how-it-works" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors">
                       <Info className="w-4 h-4" /> How It Works
+                    </Link>
+                    <Link to="/browse" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors">
+                      <Search className="w-4 h-4" /> Browse All
                     </Link>
                   </div>
                 </motion.div>
