@@ -261,7 +261,7 @@ const Homepage2 = () => {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: -4 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-4 top-[60px] z-50 w-52 rounded-xl bg-gray-900/95 backdrop-blur-xl border border-white/15 shadow-2xl shadow-black/40 overflow-hidden"
+                  className="absolute right-4 top-[60px] z-[200] w-52 rounded-xl bg-gray-900 backdrop-blur-xl border border-white/15 shadow-2xl shadow-black/40 overflow-hidden"
                 >
                   <div className="py-1.5">
                     <Link to="/auth" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
