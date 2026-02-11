@@ -379,15 +379,7 @@ const Homepage2 = () => {
                     className="[&_.space-y-2]:space-y-0 [&_input]:h-10 [&_input]:rounded-xl [&_input]:bg-white/15 [&_input]:backdrop-blur-xl [&_input]:border [&_input]:border-white/25 [&_input]:text-white [&_input]:text-sm [&_input]:placeholder:text-white/60 [&_input]:focus:outline-none [&_input]:focus:ring-2 [&_input]:focus:ring-white/40 [&_input]:focus:bg-white/20 [&_svg]:text-white/70 [&_button]:text-white/70"
                   />
                 </div>
-                {/* Search button — icon only */}
-                <Button
-                  variant="dark-shine"
-                  size="icon"
-                  onClick={handleSearch}
-                  className="h-10 w-10 shrink-0 rounded-xl"
-                >
-                  <Search className="w-4 h-4" />
-                </Button>
+                
               </div>
 
               {/* Right actions */}
