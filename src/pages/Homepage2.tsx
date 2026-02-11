@@ -180,7 +180,7 @@ const Homepage2 = () => {
               {/* Favicon / Logo */}
               <Link to="/" className="shrink-0 flex items-center gap-2">
                 <img src={vendibookFavicon} alt="Vendibook" className="h-9 w-auto drop-shadow-lg sm:hidden" />
-                <img src={vendibookLogo} alt="Vendibook" className="hidden sm:block h-10 w-auto drop-shadow-lg brightness-0 invert" />
+                <img src={vendibookLogo} alt="Vendibook" className="hidden sm:block h-28 w-auto drop-shadow-lg brightness-0 invert" />
               </Link>
 
               {/* Search bar — glass field in header */}
@@ -236,7 +236,7 @@ const Homepage2 = () => {
                   onClick={() => setLearnMoreOpen(!learnMoreOpen)}
                   className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/15 border border-white/20 text-white/80 hover:bg-white/25 hover:text-white text-[11px] font-medium transition-colors"
                 >
-                  <Info className="w-3 h-3" />
+                  <Info className="w-3.5 h-3.5" />
                   Learn More
                 </button>
                 {/* Hamburger menu — always visible far right */}
@@ -249,28 +249,28 @@ const Homepage2 = () => {
               </div>
             </div>
 
-            {/* Dropdown menu — all screen sizes */}
+            {/* Dropdown menu — pops from right */}
             <AnimatePresence>
               {mobileMenuOpen && (
                 <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden border-t border-white/15"
+                  initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-4 top-[60px] z-50 w-52 rounded-xl bg-gray-900/95 backdrop-blur-xl border border-white/15 shadow-2xl shadow-black/40 overflow-hidden"
                 >
-                  <div className="py-3 space-y-2">
-                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors">
-                      <UserPlus className="w-4 h-4" /> Sign Up / Sign In
+                  <div className="py-1.5">
+                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
+                      <UserPlus className="w-4 h-4 text-white/70" /> Sign In
                     </Link>
-                    <Link to="/list" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors">
-                      <Plus className="w-4 h-4" /> Create Listing
+                    <Link to="/list" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
+                      <Plus className="w-4 h-4 text-white/70" /> Create Listing
                     </Link>
-                    <Link to="/how-it-works" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors">
-                      <Info className="w-4 h-4" /> How It Works
+                    <Link to="/how-it-works" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
+                      <Info className="w-4 h-4 text-white/70" /> How It Works
                     </Link>
-                    <Link to="/browse" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors">
-                      <Search className="w-4 h-4" /> Browse All
+                    <Link to="/browse" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
+                      <Search className="w-4 h-4 text-white/70" /> Browse All
                     </Link>
                   </div>
                 </motion.div>
@@ -278,7 +278,7 @@ const Homepage2 = () => {
             </AnimatePresence>
 
             {/* Bottom row: Category chips + mode + sort */}
-            <div className="flex items-center gap-2.5 pb-2.5 -mt-0.5">
+            <div className="flex items-center justify-center gap-2.5 pb-2.5 -mt-0.5">
               {/* Category chips */}
               <div className="flex gap-1.5 overflow-x-auto no-scrollbar flex-1">
                 {CATEGORIES.map((cat) => (
@@ -299,7 +299,7 @@ const Homepage2 = () => {
               </div>
 
               {/* Mode pills */}
-              <div className="hidden sm:flex h-8 rounded-lg overflow-hidden border border-white/25 bg-white/10 backdrop-blur">
+              <div className="flex h-8 rounded-lg overflow-hidden border border-white/25 bg-white/10 backdrop-blur">
                 {(['', 'rent', 'sale'] as const).map((m) => (
                   <button
                     key={m}
