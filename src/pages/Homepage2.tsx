@@ -32,7 +32,7 @@ const CATEGORIES = [
   { value: '', label: 'All', icon: Zap },
   { value: 'food_truck', label: 'Food Trucks', icon: Truck },
   { value: 'food_trailer', label: 'Trailers', icon: Truck },
-  { value: 'commercial_kitchen', label: 'Kitchens', icon: Building2 },
+  { value: 'ghost_kitchen', label: 'Kitchens', icon: Building2 },
   { value: 'vendor_space', label: 'Vendor Spaces', icon: MapPin },
 ];
 
