@@ -315,19 +315,6 @@ const Homepage2 = () => {
                 ))}
               </div>
 
-              {/* Sort */}
-              <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-                <SelectTrigger className="h-8 w-32 text-xs rounded-lg bg-white/10 backdrop-blur border-white/25 text-white/80 hover:bg-white/20">
-                  <SlidersHorizontal className="w-3 h-3 mr-1" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="price_low">Price ↑</SelectItem>
-                  <SelectItem value="price_high">Price ↓</SelectItem>
-                  <SelectItem value="distance">Nearest</SelectItem>
-                </SelectContent>
-              </Select>
 
               {/* Result count */}
               <span className="text-xs text-white/60 hidden md:inline whitespace-nowrap font-medium">
@@ -348,6 +335,24 @@ const Homepage2 = () => {
         {/* ── CONTENT ── */}
         <div className="flex-1 min-w-0">
           <div ref={resultsRef} className="scroll-mt-32 max-w-6xl mx-auto px-4 pt-6 pb-6">
+            {/* Sort bar */}
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-medium text-foreground/70">
+                {totalCount} {totalCount === 1 ? 'result' : 'results'}
+              </span>
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                <SelectTrigger className="h-8 w-36 text-xs rounded-lg border-border bg-background">
+                  <SlidersHorizontal className="w-3 h-3 mr-1" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background border-border z-50">
+                  <SelectItem value="newest">Newest</SelectItem>
+                  <SelectItem value="price_low">Price ↑</SelectItem>
+                  <SelectItem value="price_high">Price ↓</SelectItem>
+                  <SelectItem value="distance">Nearest</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
               {/* Listings 2x2 Grid */}
               <div className={`lg:col-span-3 ${showMap ? 'hidden lg:block' : ''}`}>
