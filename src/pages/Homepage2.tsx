@@ -294,7 +294,7 @@ const Homepage2 = () => {
                   style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.38) 0%, rgba(160,200,255,0.22) 20%, rgba(255,170,210,0.17) 40%, rgba(180,255,220,0.15) 60%, rgba(255,210,160,0.2) 80%, rgba(220,190,255,0.18) 100%)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', boxShadow: 'inset 0 3px 8px rgba(255,255,255,0.45), inset 0 -3px 8px rgba(0,0,0,0.07), 0 6px 24px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)' }}
                 />
                 <img src={vendibookFavicon} alt="Vendibook" className="relative h-10 w-auto sm:hidden" />
-                <img src={vendibookLogo} alt="Vendibook" className="relative hidden sm:block h-[2.6rem] w-auto" />
+                <img src={vendibookFavicon} alt="Vendibook" className="relative hidden sm:block h-10 w-auto" />
               </Link>
 
               {/* Search bar — 3D glass field in header */}
