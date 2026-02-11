@@ -350,13 +350,11 @@ const Homepage2 = () => {
               <div className="flex items-center gap-2 shrink-0">
                 <Button asChild variant="dark-shine" size="sm" className="hidden sm:flex h-9 rounded-xl text-xs font-semibold px-4">
                   <Link to="/list">
-                    <Plus className="w-3.5 h-3.5 mr-1" />
                     Create Listing
                   </Link>
                 </Button>
                 <Button asChild variant="dark-shine" size="sm" className="hidden sm:flex h-9 rounded-xl text-xs font-semibold px-4">
                   <Link to="/auth">
-                    <UserPlus className="w-3.5 h-3.5 mr-1" />
                     Sign Up
                   </Link>
                 </Button>
@@ -364,9 +362,8 @@ const Homepage2 = () => {
                   variant="dark-shine"
                   size="sm"
                   onClick={() => setLearnMoreOpen(!learnMoreOpen)}
-                  className="hidden sm:flex h-9 rounded-xl text-xs font-semibold px-4 gap-1"
+                  className="hidden sm:flex h-9 rounded-xl text-xs font-semibold px-4"
                 >
-                  <Info className="w-3.5 h-3.5" />
                   Learn More
                 </Button>
                 {/* Hamburger menu — always visible far right */}
