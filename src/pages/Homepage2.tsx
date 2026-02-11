@@ -172,7 +172,7 @@ const Homepage2 = () => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-x-hidden">
+    <div className="min-h-screen relative overflow-x-hidden scroll-smooth">
       {/* ══ FULL-PAGE GRADIENT BACKGROUND ══ */}
       <div className="fixed inset-0 z-0">
         {/* Base eggshell / off-white */}
@@ -377,7 +377,15 @@ const Homepage2 = () => {
                 {isLoading ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {Array.from({ length: 4 }).map((_, i) => (
-                      <div key={i} className="h-72 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/50 animate-pulse shadow-sm" />
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: i * 0.1 }}
+                        className="h-72 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/50 shadow-sm overflow-hidden relative"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full animate-[shimmer_1.5s_ease-in-out_infinite]" />
+                      </motion.div>
                     ))}
                   </div>
                 ) : listings.length > 0 ? (
@@ -387,12 +395,12 @@ const Homepage2 = () => {
                         {listings.map((listing, i) => (
                           <React.Fragment key={listing.id}>
                             <motion.div
-                              initial={{ opacity: 0, y: 24 }}
-                              animate={{ opacity: 1, y: 0 }}
+                              initial={{ opacity: 0, y: 30, scale: 0.97 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
                               exit={{ opacity: 0, scale: 0.95 }}
-                              transition={{ delay: i * 0.04, duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-                              whileHover={{ y: -6, transition: { duration: 0.2 } }}
-                              className="rounded-2xl bg-white/70 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5 hover:shadow-2xl hover:shadow-[hsl(14,100%,57%)]/10 hover:border-[hsl(14,100%,57%)]/30 transition-all duration-300"
+                              transition={{ delay: i * 0.06, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                              whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.25, ease: 'easeOut' } }}
+                              className="rounded-2xl bg-white/70 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5 hover:shadow-2xl hover:shadow-[hsl(14,100%,57%)]/10 hover:border-[hsl(14,100%,57%)]/30 transition-[box-shadow,border-color] duration-300"
                             >
                               <ListingCard listing={listing} />
                             </motion.div>
@@ -606,6 +614,12 @@ const Homepage2 = () => {
         @keyframes hp2shimmer {
           0%, 100% { transform: translateX(-100%); }
           50% { transform: translateX(100%); }
+        }
+        /* Premium smooth scrolling */
+        html { scroll-behavior: smooth; }
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
         }
       `}</style>
       <FloatingConciergeButton />
