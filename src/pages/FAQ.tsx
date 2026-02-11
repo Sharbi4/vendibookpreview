@@ -28,11 +28,9 @@ import {
   ChevronLeft,
   ChevronRight,
   List,
-  Percent,
-  Check,
-  X as XIcon
+  Percent
 } from 'lucide-react';
-import PricingCalculator from '@/components/pricing/PricingCalculator';
+import RoleFeeSection from '@/components/pricing/RoleFeeSection';
 
 interface FAQSection {
   id: string;
@@ -618,154 +616,9 @@ const FAQ = () => {
                       <h2 className="text-2xl font-bold text-foreground">{section.title}</h2>
                     </div>
 
-                    {/* Special Pricing Grid for Fees & Commission section */}
                     {section.id === 'fees-commission' && (
-                      <div className="mb-8 space-y-6">
-                        {/* Commission Overview Grid */}
-                        <div className="grid md:grid-cols-2 gap-4">
-                          {/* Rentals Card */}
-                          <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-                            <CardContent className="pt-6">
-                              <div className="flex items-center gap-2 mb-4">
-                                <div className="p-2 rounded-lg bg-primary/10">
-                                  <CreditCard className="h-5 w-5 text-primary" />
-                                </div>
-                                <h3 className="font-bold text-lg text-foreground">Rentals (Bookings)</h3>
-                              </div>
-                              <div className="space-y-3">
-                                <div className="flex justify-between items-center py-2 border-b border-border/50">
-                                  <span className="text-muted-foreground">Host commission</span>
-                                  <span className="font-bold text-foreground text-lg">12.9%</span>
-                                </div>
-                                <div className="flex justify-between items-center py-2 border-b border-border/50">
-                                  <span className="text-muted-foreground">Renter service fee</span>
-                                  <span className="font-bold text-foreground text-lg">12.9%</span>
-                                </div>
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-4">
-                                Covers: secure payments, identity safeguards, support, dispute handling, payout routing
-                              </p>
-                            </CardContent>
-                          </Card>
-
-                          {/* Sales Card */}
-                          <Card className="border-2 border-vendibook-orange/20 bg-gradient-to-br from-vendibook-orange/5 to-transparent">
-                            <CardContent className="pt-6">
-                              <div className="flex items-center gap-2 mb-4">
-                                <div className="p-2 rounded-lg bg-vendibook-orange/10">
-                                  <Wallet className="h-5 w-5 text-vendibook-orange" />
-                                </div>
-                                <h3 className="font-bold text-lg text-foreground">Sales (Purchases)</h3>
-                              </div>
-                              <div className="space-y-3">
-                                <div className="flex justify-between items-center py-2 border-b border-border/50">
-                                  <span className="text-muted-foreground">Seller commission</span>
-                                  <span className="font-bold text-foreground text-lg">12.9%</span>
-                                </div>
-                                <div className="flex justify-between items-center py-2 border-b border-border/50">
-                                  <span className="text-muted-foreground">Buyer platform fee</span>
-                                  <span className="font-bold text-green-600 text-lg flex items-center gap-1">
-                                    <Check className="h-4 w-4" /> $0
-                                  </span>
-                                </div>
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-4">
-                                Buyers may add freight if they choose buyer-paid shipping
-                              </p>
-                            </CardContent>
-                          </Card>
-                        </div>
-
-                        {/* Additional Fees */}
-                        <Card className="bg-muted/30 border-dashed">
-                          <CardContent className="pt-6">
-                            <h3 className="font-semibold text-foreground mb-4">Additional Fees (When Applicable)</h3>
-                            <div className="grid sm:grid-cols-2 gap-4 text-sm">
-                              <div className="flex items-start gap-3">
-                                <Truck className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                                <div>
-                                  <p className="font-medium text-foreground">Freight / Shipping</p>
-                                  <p className="text-muted-foreground text-xs">Buyer-paid freight added at checkout when selected. Pricing varies by route.</p>
-                                </div>
-                              </div>
-                              <div className="flex items-start gap-3">
-                                <CreditCard className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                                <div>
-                                  <p className="font-medium text-foreground">Payment Processing</p>
-                                  <p className="text-muted-foreground text-xs">May apply depending on payment method and region. Shown before purchase.</p>
-                                </div>
-                              </div>
-                            </div>
-                        </CardContent>
-                        </Card>
-
-                        {/* Interactive Pricing Calculator */}
-                        <PricingCalculator />
-
-                        {/* Example Calculations */}
-                        <div className="grid md:grid-cols-2 gap-4">
-                          {/* Rental Example */}
-                          <Card className="bg-card">
-                            <CardContent className="pt-6">
-                              <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                                <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Example</span>
-                                Rental
-                              </h4>
-                              <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Rental price</span>
-                                  <span className="font-medium text-foreground">$1,000</span>
-                                </div>
-                                <div className="flex justify-between text-destructive">
-                                  <span>Host commission (12.9%)</span>
-                                  <span>-$129</span>
-                                </div>
-                                <div className="flex justify-between border-t pt-2 mt-2">
-                                  <span className="font-semibold text-foreground">Host receives</span>
-                                  <span className="font-bold text-green-600">$871</span>
-                                </div>
-                                <div className="flex justify-between text-muted-foreground pt-2 border-t">
-                                  <span>Renter service fee (12.9%)</span>
-                                  <span>+$129</span>
-                                </div>
-                                <p className="text-xs text-muted-foreground italic pt-2">
-                                  Deposit and delivery fees shown separately
-                                </p>
-                              </div>
-                            </CardContent>
-                          </Card>
-
-                          {/* Sale Example */}
-                          <Card className="bg-card">
-                            <CardContent className="pt-6">
-                              <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                                <span className="text-xs bg-vendibook-orange/10 text-vendibook-orange px-2 py-1 rounded">Example</span>
-                                Sale
-                              </h4>
-                              <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Sale price</span>
-                                  <span className="font-medium text-foreground">$20,000</span>
-                                </div>
-                                <div className="flex justify-between text-destructive">
-                                  <span>Seller commission (12.9%)</span>
-                                  <span>-$2,580</span>
-                                </div>
-                                <div className="flex justify-between border-t pt-2 mt-2">
-                                  <span className="font-semibold text-foreground">Seller receives</span>
-                                  <span className="font-bold text-green-600">$17,420</span>
-                                </div>
-                                <div className="flex justify-between text-muted-foreground pt-2 border-t">
-                                  <span>Buyer platform fee</span>
-                                  <span className="text-green-600">$0</span>
-                                </div>
-                                <p className="text-xs text-muted-foreground italic pt-2">
-                                  Buyer may add freight if choosing buyer-paid shipping
-                                </p>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </div>
+                      <div className="mb-8">
+                        <RoleFeeSection />
                       </div>
                     )}
 
