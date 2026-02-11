@@ -280,7 +280,7 @@ const Homepage2 = () => {
             {/* Bottom row: Category chips + mode + sort */}
             <div className="flex items-center justify-center gap-2.5 pb-2.5 -mt-0.5">
               {/* Category chips */}
-              <div className="flex gap-1.5 overflow-x-auto no-scrollbar flex-1">
+              <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
                 {CATEGORIES.map((cat) => (
                   <motion.button
                     key={cat.value}
