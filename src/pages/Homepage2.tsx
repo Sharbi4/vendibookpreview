@@ -291,16 +291,16 @@ const Homepage2 = () => {
 
             {/* Bottom row: Category chips + mode + sort */}
             <div className="flex items-center gap-3 pb-2 -mt-0.5">
-              {/* Mode pills — compact on mobile */}
-              <div className="flex h-7 sm:h-8 rounded-lg overflow-hidden border border-white/25 bg-white/10 backdrop-blur shrink-0">
+              {/* Mode pills — equal width, premium */}
+              <div className="flex h-8 rounded-full overflow-hidden border border-white/20 bg-white/10 backdrop-blur-xl shrink-0 p-[2px] gap-[2px]">
                 {(['', 'rent', 'sale'] as const).map((m) => (
                   <button
                     key={m}
                     onClick={() => setMode(m)}
-                    className={`px-2 sm:px-3 text-[10px] sm:text-xs font-semibold transition-all ${
+                    className={`w-14 sm:w-16 text-[11px] sm:text-xs font-semibold rounded-full transition-all duration-200 ${
                       mode === m
-                        ? 'bg-white text-gray-900'
-                        : 'text-white/70 hover:text-white hover:bg-white/10'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-white/60 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     {m === '' ? 'All' : m === 'rent' ? 'Rent' : 'Buy'}
