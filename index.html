@@ -108,43 +108,6 @@
     <!-- End Meta Pixel Code -->
 
     <!-- Start of vendibook1 Zendesk Widget script -->
-    <style>
-      /* Hide all default Zendesk launcher buttons and widgets */
-      iframe[data-product="messenger"][title="Button to launch messaging window"],
-      iframe[data-product="messenger"][title="Messaging window"],
-      #launcher,
-      .zEWidget-launcher,
-      [data-testid="launcher"],
-      iframe[title="Zendesk Chat widget button"],
-      iframe[title="Button to launch messaging window"] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-      }
-    </style>
-    <script>
-      // Programmatically hide Zendesk launcher on load
-      window.addEventListener('load', function() {
-        function hideZendeskLauncher() {
-          if (window.zE) {
-            try {
-              window.zE('messenger', 'hide');
-            } catch (e) {}
-          }
-          // Also hide via DOM
-          document.querySelectorAll('iframe[data-product="messenger"]').forEach(function(el) {
-            if (el.title && el.title.includes('Button')) {
-              el.style.display = 'none';
-            }
-          });
-        }
-        hideZendeskLauncher();
-        // Re-run after a delay in case Zendesk loads late
-        setTimeout(hideZendeskLauncher, 1000);
-        setTimeout(hideZendeskLauncher, 3000);
-      });
-    </script>
     <script>
       window.zESettings = {
         webWidget: {
