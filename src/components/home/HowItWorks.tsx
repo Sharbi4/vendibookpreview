@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Search, ShieldCheck, CreditCard, ArrowRight, LucideIcon } from 'lucide-react';
+import { Compass, BadgeCheck, Landmark, ArrowRight, LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Step {
@@ -10,17 +10,17 @@ interface Step {
 
 const steps: Step[] = [
   {
-    icon: Search,
+    icon: Compass,
     title: 'Find or List',
     description: 'Browse verified listings or create your own',
   },
   {
-    icon: ShieldCheck,
+    icon: BadgeCheck,
     title: 'Verify & Approve',
     description: 'Upload documents, get approved, stay compliant',
   },
   {
-    icon: CreditCard,
+    icon: Landmark,
     title: 'Transact Securely',
     description: 'Payments held in escrow until complete',
   },
