@@ -260,11 +260,48 @@ const Homepage2 = () => {
             <div className="flex items-center justify-between gap-3 h-14">
               {/* Favicon / Logo */}
               <Link to="/" className="shrink-0 flex items-center gap-2 relative">
-                <div
-                  className="absolute -inset-x-2 -inset-y-1 pointer-events-none rounded-[50%] overflow-hidden"
-                  style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.35) 0%, rgba(170,210,255,0.2) 25%, rgba(255,180,200,0.16) 50%, rgba(200,255,220,0.14) 75%, rgba(255,220,180,0.24) 100%)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', boxShadow: 'inset 0 2px 6px rgba(255,255,255,0.4), inset 0 -2px 6px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)' }}
-                />
-                <img src={vendibookFavicon} alt="Vendibook" className="h-10 w-auto drop-shadow-lg" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))' }} />
+                <motion.div
+                  className="absolute -inset-x-3 -inset-y-2 pointer-events-none"
+                  animate={{
+                    borderRadius: [
+                      '50% 40% 60% 45% / 55% 45% 50% 40%',
+                      '40% 55% 45% 60% / 50% 60% 40% 55%',
+                      '55% 45% 50% 40% / 45% 50% 55% 45%',
+                      '45% 60% 40% 55% / 60% 40% 50% 55%',
+                      '50% 40% 60% 45% / 55% 45% 50% 40%',
+                    ],
+                    scale: [1, 1.08, 1.02, 1.1, 1],
+                    rotate: [0, 3, -2, 4, 0],
+                    x: [0, 2, -1, 3, 0],
+                    y: [0, -1, 2, -2, 0],
+                  }}
+                  transition={{
+                    duration: 6,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                  style={{
+                    background: 'linear-gradient(160deg, rgba(255,255,255,0.4) 0%, rgba(170,210,255,0.25) 20%, rgba(255,180,200,0.2) 40%, rgba(200,255,220,0.18) 60%, rgba(255,220,180,0.28) 80%, rgba(255,255,255,0.35) 100%)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    boxShadow: 'inset 0 2px 8px rgba(255,255,255,0.5), inset 0 -2px 8px rgba(0,0,0,0.08), 0 6px 24px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.06)',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {/* Internal shine sweep */}
+                  <motion.div
+                    className="absolute inset-0"
+                    animate={{
+                      background: [
+                        'linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.3) 30%, transparent 60%)',
+                        'linear-gradient(120deg, transparent 40%, rgba(255,255,255,0.3) 70%, transparent 100%)',
+                        'linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.3) 30%, transparent 60%)',
+                      ],
+                    }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  />
+                </motion.div>
+                <img src={vendibookFavicon} alt="Vendibook" className="relative h-10 w-auto drop-shadow-lg" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))' }} />
               </Link>
 
               {/* Search bar — 3D glass field in header */}
