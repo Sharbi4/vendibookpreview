@@ -1,59 +1,55 @@
 
 
-# Homepage 2 -- Premium Redesign
-
-## Overview
-Complete visual overhaul of `/homepage2` to achieve an OpenAI/Turo/Apple-level premium, app-like feel. The structure stays similar but every visual element gets upgraded with richer gradients, deeper glassmorphism, better spacing, and polished interactions. Key fixes: listings won't scroll into the search bar, search bar gets a gradient background with glass fields, and the overall feel becomes more immersive and professional.
+# Redesign Fees & Commission Section with Role-Based FAQ Mapping
 
 ## What Changes
 
-### 1. Search Bar -- Gradient Glass Strip
-- Replace the plain `bg-background/60` sticky bar with a **gradient background** using the 3-color palette (`#FF5124` -> `#E64A19` -> `#FFB800` at low opacity ~15-20%)
-- All input fields, pills, and buttons inside get **glassmorphism treatment**: `backdrop-blur-xl bg-white/20 border border-white/20 text-white placeholder:text-white/60`
-- Search button gets a **frosted white/glass style** instead of dark-shine (to contrast the gradient bar)
-- Category chips row merges into the same gradient strip (single sticky unit) with glass chip styling
+The current Fees & Commission section shows all fee information mixed together (host commission alongside renter fees, seller alongside buyer). This redesign separates the content into three distinct role-based views so users only see what's relevant to them.
 
-### 2. Listings Grid -- No Overlap with Search Bar
-- Add `scroll-margin-top` or adequate top padding to the results container so listings never scroll behind the sticky search bar
-- The results ref scroll target accounts for the sticky bar height
-- Cards get enhanced glass treatment: `backdrop-blur-xl bg-white/60 border border-white/30 shadow-lg` with stronger hover lift and a subtle gradient border glow on hover
+## New Layout
 
-### 3. Map Panel -- Glass Frame
-- Wrap map in a glassmorphism container with rounded corners and a subtle gradient border
-- Add a semi-transparent overlay header on the map showing result count
+The `fees-commission` section in the FAQ page will be restructured with a 3-tab or 3-card navigation:
 
-### 4. Right Sidebar -- Keep Sign Up + Create Listing + Learn More
-- Keep all existing sidebar cards (Sign Up, Create Listing, How It Works, Stats)
-- Upgrade glass styling: deeper blur, slightly more opaque backgrounds, subtle gradient borders
-- No structural changes, just visual polish
+1. **Renter FAQ** - What renters pay, how checkout works, what the service fee covers
+2. **Host FAQ** - What hosts earn, commission breakdown, payout details
+3. **Seller FAQ** - What sellers earn, commission on sales, freight considerations
 
-### 5. Empty State -- Enhanced Animations
-- Larger floating icon with gradient glow ring
-- Add a second floating element (e.g., Utensils icon) offset and delayed
-- Richer gradient orb animations with more color variation
-- Bolder typography and a gradient-styled "Browse All" button
-
-### 6. Background Mesh -- Richer Colors
-- Increase orb opacity slightly for more visual presence
-- Add a 4th subtle orb for depth
-- Fine-tune blur values for a smoother gradient mesh
+Each role view will include:
+- A role-specific pricing card with only their relevant fee (no cross-role fee display)
+- Role-specific FAQ questions filtered from the current list
+- A dedicated example calculation showing only their perspective
+- The pricing calculator scoped to their role
 
 ## Technical Details
 
-### Modified File
-**`src/pages/Homepage2.tsx`** -- Single file rewrite with these key changes:
+### 1. New Component: `RoleFeeSection.tsx`
+- Three clickable role cards (Renter / Host / Seller) with icons and gradient accents
+- Clicking a role reveals that role's fee details, FAQs, and calculator
+- Uses existing `Tabs` component for switching between roles
 
-- **Sticky search bar**: Change from `bg-background/60` to `bg-gradient-to-r from-[#FF5124]/15 via-[#E64A19]/10 to-[#FFB800]/15 backdrop-blur-2xl`
-- **Glass inputs**: All search fields get `bg-white/15 border-white/20 text-foreground` styling
-- **Scroll fix**: Add `scroll-mt-40` (or appropriate value) to the results container and increase `pt` on the content grid so cards never tuck under the sticky bar
-- **Card glass upgrade**: `backdrop-blur-xl bg-white/60 dark:bg-white/10 border border-white/30 hover:shadow-2xl hover:border-[#FF5124]/20`
-- **Map glass frame**: Add gradient border wrapper around map panel
-- **Background**: Add 4th orb, tweak existing orb sizes and opacities
-- **Empty state**: Add second floating icon, gradient glow ring, bolder CTA
+### 2. Update `FAQ.tsx` (fees-commission section)
+- Replace the current dual Rentals/Sales grid with the new `RoleFeeSection` component
+- Split the existing 7 fee questions into role-specific groups:
+  - **Renter**: "When does Vendibook charge fees?", "What is the renter service fee?", "Are there additional fees for freight?", "Are there payment processing fees?"
+  - **Host**: "When does Vendibook charge fees?", "What is the host commission for rentals?", "Are there payment processing fees?"
+  - **Seller**: "When does Vendibook charge fees?", "What is the seller commission for sales?", "Do buyers pay a platform fee on sales?", "Are there additional fees for freight?"
 
-### No New Files
-All changes are contained within the existing `Homepage2.tsx`.
+### 3. Update `PricingCalculator.tsx`
+- Add an optional `role` prop to pre-select and lock the calculator to a specific tab
+- When role is "renter", show only the renter total (hide host receives)
+- When role is "host", show only host receives (hide renter total)
+- When role is "seller", show only seller receives
+- Competitor comparison stays in seller view only
 
-### No Routing Changes
-Route already exists at `/homepage2`.
+### 4. Example Calculations
+- Renter example: Shows rental price + 12.9% service fee = total they pay
+- Host example: Shows rental price - 12.9% commission = what they receive
+- Seller example: Shows sale price - 12.9% commission = what they receive (buyer pays $0 extra)
+
+### Files to Create
+- `src/components/pricing/RoleFeeSection.tsx` - New role-based tab/card component
+
+### Files to Modify
+- `src/pages/FAQ.tsx` - Replace the fees-commission special section with the new role-based component
+- `src/components/pricing/PricingCalculator.tsx` - Add optional `role` prop for scoped view
 
