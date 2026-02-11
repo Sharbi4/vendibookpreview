@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import CookieConsent from "@/components/CookieConsent";
 import ScrollToTop from "@/components/ScrollToTop";
 import ZendeskWidget from "@/components/ZendeskWidget";
+import VoiceAgentButton from "@/components/voice/VoiceAgentButton";
 import PageTransition from "@/components/PageTransition";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { usePageTracking } from "@/hooks/usePageTracking";
@@ -326,6 +327,7 @@ const AppContent = () => {
       <CookieConsent />
       <ZendeskWidget />
       <GoogleOneTap />
+      <VoiceAgentButton />
       <AnimatedRoutes />
     </>
   );
