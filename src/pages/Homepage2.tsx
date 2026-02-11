@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react'; // v2
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, MapPin, SlidersHorizontal, Truck, ChevronRight, Sparkles,
