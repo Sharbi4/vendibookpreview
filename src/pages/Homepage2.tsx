@@ -607,10 +607,10 @@ const Homepage2 = () => {
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="fixed top-[7.5rem] right-2 z-50 max-h-[calc(100vh-8.5rem)] w-full max-w-sm bg-white/80 dark:bg-black/80 backdrop-blur-2xl border-2 border-border rounded-2xl shadow-2xl overflow-y-auto"
+                className="fixed top-[7.5rem] right-2 z-50 max-h-[calc(100vh-8.5rem)] w-full max-w-sm bg-white/40 dark:bg-black/40 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-2xl shadow-2xl shadow-black/15 overflow-y-auto"
               >
                 {/* Header */}
-                <div className="sticky top-0 z-10 flex items-center justify-between p-5 bg-white/60 dark:bg-black/60 backdrop-blur-xl border-b border-border">
+                <div className="sticky top-0 z-10 flex items-center justify-between p-5 bg-white/30 dark:bg-black/30 backdrop-blur-xl border-b border-white/20">
                   <div className="flex items-center gap-2">
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[hsl(14,100%,57%)]/20 to-[hsl(40,100%,49%)]/20 flex items-center justify-center">
                       <Sparkles className="h-4 w-4 text-[hsl(14,100%,57%)]" />
