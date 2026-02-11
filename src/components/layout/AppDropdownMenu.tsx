@@ -54,15 +54,15 @@ const AppDropdownMenu = ({ variant = 'dark', className = '' }: AppDropdownMenuPr
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -4 }}
               transition={{ duration: 0.15 }}
-              className="absolute right-0 top-[calc(100%+8px)] z-[200] w-52 rounded-xl bg-gray-900 backdrop-blur-xl border border-white/15 shadow-2xl shadow-black/40 overflow-hidden"
+              className="absolute right-0 top-[calc(100%+8px)] z-[200] w-72 rounded-xl bg-gray-900 backdrop-blur-xl border border-white/15 shadow-2xl shadow-black/40 overflow-hidden"
             >
               <div className="py-1.5">
                 {/* Logo */}
-                <div className="flex justify-center px-3 pt-2 pb-3 border-b border-white/10">
+                <div className="flex justify-center px-4 pt-3 pb-4 border-b border-white/10">
                   <img 
                     src={vendibookLogo} 
                     alt="Vendibook" 
-                    className="h-10 w-auto brightness-0 invert opacity-80"
+                    className="h-20 w-auto brightness-0 invert opacity-80"
                   />
                 </div>
                 {user ? (
