@@ -140,7 +140,7 @@ const AnimatedRoutes = () => {
     <AnimatePresence mode="wait" initial={false}>
       <Suspense fallback={<PageLoader />} key={location.pathname}>
         <Routes location={location}>
-          <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+          <Route path="/" element={<PageTransition><Homepage2 /></PageTransition>} />
           <Route path="/browse" element={<PageTransition><Browse /></PageTransition>} />
           <Route path="/search" element={<PageTransition><Search /></PageTransition>} />
           <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
