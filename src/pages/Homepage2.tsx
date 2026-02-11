@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/pagination';
 import { Link } from 'react-router-dom';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
+import vendibookLogo from '@/assets/vendibook-logo.png';
 
 const CATEGORIES = [
   { value: '', label: 'All', icon: Zap },
@@ -178,8 +179,8 @@ const Homepage2 = () => {
             <div className="flex items-center gap-4 h-16">
               {/* Favicon / Logo */}
               <Link to="/" className="shrink-0 flex items-center gap-2">
-                <img src={vendibookFavicon} alt="Vendibook" className="h-9 w-auto drop-shadow-lg" />
-                <span className="text-white font-bold text-lg tracking-tight hidden sm:inline drop-shadow-sm">Vendibook</span>
+                <img src={vendibookFavicon} alt="Vendibook" className="h-9 w-auto drop-shadow-lg sm:hidden" />
+                <img src={vendibookLogo} alt="Vendibook" className="hidden sm:block h-10 w-auto drop-shadow-lg brightness-0 invert" />
               </Link>
 
               {/* Search bar — glass field in header */}
