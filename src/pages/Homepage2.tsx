@@ -361,10 +361,10 @@ const Homepage2 = () => {
                 <Button
                   variant="dark-shine"
                   size="sm"
-                  onClick={() => setLearnMoreOpen(!learnMoreOpen)}
+                  onClick={() => setLearnMoreOpen(true)}
                   className="hidden sm:flex h-9 rounded-xl text-xs font-semibold px-4"
                 >
-                  Learn More
+                  Quick Start
                 </Button>
                 {/* Hamburger menu — always visible far right */}
                 <AppDropdownMenu variant="dark" />
@@ -587,133 +587,125 @@ const Homepage2 = () => {
           <Footer />
         </div>
 
-        {/* ── RIGHT SIDEBAR ── */}
-        <aside className="hidden xl:flex flex-col w-[280px] shrink-0 sticky top-[7.5rem] h-[calc(100vh-8rem)] z-20">
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {/* Sign Up CTA */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="rounded-2xl p-5 bg-white/60 backdrop-blur-2xl border-2 border-border shadow-lg shadow-black/5"
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(14,100%,57%)] to-[hsl(40,100%,49%)] flex items-center justify-center mb-3 shadow-lg shadow-[hsl(14,100%,57%)]/25">
-                <UserPlus className="w-5 h-5 text-white" />
-              </div>
-              <h4 className="font-bold text-sm text-gray-900 mb-1">Join Vendibook</h4>
-              <p className="text-xs text-gray-600 mb-4">Create an account to save favorites, book instantly, and more.</p>
-              <Button asChild size="sm" className="w-full rounded-xl bg-gray-900 text-white hover:bg-gray-800 text-xs font-semibold shadow-lg shadow-black/15 border border-gray-700">
-                <Link to="/auth">Sign Up Free</Link>
-              </Button>
-            </motion.div>
-
-            {/* Create Listing CTA */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="rounded-2xl p-5 bg-white/60 backdrop-blur-2xl border-2 border-border shadow-lg shadow-black/5"
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(40,100%,49%)] to-[hsl(14,100%,57%)] flex items-center justify-center mb-3 shadow-lg shadow-[hsl(40,100%,49%)]/25">
-                <Plus className="w-5 h-5 text-white" />
-              </div>
-              <h4 className="font-bold text-sm text-gray-900 mb-1">List Your Asset</h4>
-              <p className="text-xs text-gray-600 mb-4">Rent or sell your food truck, kitchen, or equipment.</p>
-              <Button asChild variant="outline" size="sm" className="w-full rounded-xl bg-white/50 border-gray-200 hover:bg-white text-gray-900 text-xs font-semibold">
-                <Link to="/list">
-                  Create Listing <ArrowRight className="w-3 h-3 ml-1" />
-                </Link>
-              </Button>
-            </motion.div>
-
-            {/* Learn More — expandable */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className="rounded-2xl bg-white/60 backdrop-blur-2xl border-2 border-border overflow-hidden shadow-lg shadow-black/5"
-            >
-              <button
-                onClick={() => setLearnMoreOpen(!learnMoreOpen)}
-                className="w-full p-4 flex items-center gap-3 text-left hover:bg-white/40 transition-colors"
+        {/* ── QUICK START SLIDE-OUT PANEL ── */}
+        <AnimatePresence>
+          {learnMoreOpen && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
+                onClick={() => setLearnMoreOpen(false)}
+              />
+              
+              {/* Panel */}
+              <motion.div
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="fixed top-0 right-0 z-50 h-full w-full max-w-sm bg-white/80 dark:bg-black/80 backdrop-blur-2xl border-l-2 border-border shadow-2xl overflow-y-auto"
               >
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(14,100%,57%)]/20 to-[hsl(40,100%,49%)]/20 flex items-center justify-center shrink-0">
-                  <Info className="w-4 h-4 text-[hsl(14,100%,57%)]" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-bold text-sm text-foreground">How It Works</h4>
-                  <p className="text-xs text-muted-foreground">Learn about Vendibook</p>
-                </div>
-                <motion.div animate={{ rotate: learnMoreOpen ? 90 : 0 }} transition={{ duration: 0.2 }}>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                </motion.div>
-              </button>
-
-              <AnimatePresence>
-                {learnMoreOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="overflow-hidden"
+                {/* Header */}
+                <div className="sticky top-0 z-10 flex items-center justify-between p-5 bg-white/60 dark:bg-black/60 backdrop-blur-xl border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[hsl(14,100%,57%)]/20 to-[hsl(40,100%,49%)]/20 flex items-center justify-center">
+                      <Sparkles className="h-4 w-4 text-[hsl(14,100%,57%)]" />
+                    </div>
+                    <div>
+                      <h2 className="font-semibold text-foreground text-base">Quick Start</h2>
+                      <p className="text-xs text-muted-foreground">Get started with Vendibook</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setLearnMoreOpen(false)}
+                    className="h-8 w-8 rounded-full border-border"
                   >
-                    <div className="px-4 pb-4 space-y-3">
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                {/* Content */}
+                <div className="p-5 space-y-4">
+                  {/* Sign Up CTA */}
+                  <div className="rounded-2xl p-5 bg-white/60 backdrop-blur-2xl border-2 border-border shadow-lg shadow-black/5">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(14,100%,57%)] to-[hsl(40,100%,49%)] flex items-center justify-center mb-3 shadow-lg shadow-[hsl(14,100%,57%)]/25">
+                      <UserPlus className="w-5 h-5 text-white" />
+                    </div>
+                    <h4 className="font-bold text-sm text-foreground mb-1">Join Vendibook</h4>
+                    <p className="text-xs text-muted-foreground mb-4">Create an account to save favorites, book instantly, and more.</p>
+                    <Button asChild variant="dark-shine" size="sm" className="w-full rounded-xl text-xs font-semibold">
+                      <Link to="/auth">Sign Up Free</Link>
+                    </Button>
+                  </div>
+
+                  {/* Create Listing CTA */}
+                  <div className="rounded-2xl p-5 bg-white/60 backdrop-blur-2xl border-2 border-border shadow-lg shadow-black/5">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(40,100%,49%)] to-[hsl(14,100%,57%)] flex items-center justify-center mb-3 shadow-lg shadow-[hsl(40,100%,49%)]/25">
+                      <Plus className="w-5 h-5 text-white" />
+                    </div>
+                    <h4 className="font-bold text-sm text-foreground mb-1">List Your Asset</h4>
+                    <p className="text-xs text-muted-foreground mb-4">Rent or sell your food truck, kitchen, or equipment.</p>
+                    <Button asChild variant="outline" size="sm" className="w-full rounded-xl text-xs font-semibold border-border">
+                      <Link to="/list">
+                        Create Listing <ArrowRight className="w-3 h-3 ml-1" />
+                      </Link>
+                    </Button>
+                  </div>
+
+                  {/* How It Works */}
+                  <div className="rounded-2xl p-5 bg-white/60 backdrop-blur-2xl border-2 border-border shadow-lg shadow-black/5">
+                    <h4 className="font-bold text-sm text-foreground mb-3">How It Works</h4>
+                    <div className="space-y-3">
                       {[
                         { icon: Search, title: 'Search', desc: 'Find assets near you' },
                         { icon: MapPin, title: 'Book', desc: 'Reserve instantly or request' },
                         { icon: Sparkles, title: 'Launch', desc: 'Show up & start serving' },
                       ].map((step, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, x: 10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * 0.08 }}
-                          className="flex items-start gap-2.5"
-                        >
+                        <div key={i} className="flex items-start gap-2.5">
                           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[hsl(14,100%,57%)]/15 to-[hsl(40,100%,49%)]/15 flex items-center justify-center shrink-0 mt-0.5">
                             <step.icon className="w-3.5 h-3.5 text-[hsl(14,100%,57%)]" />
                           </div>
                           <div>
-                            <p className="font-semibold text-xs text-gray-900">{step.title}</p>
-                            <p className="text-[11px] text-gray-500">{step.desc}</p>
+                            <p className="font-semibold text-xs text-foreground">{step.title}</p>
+                            <p className="text-[11px] text-muted-foreground">{step.desc}</p>
                           </div>
-                        </motion.div>
+                        </div>
                       ))}
-                      <Button asChild variant="outline" size="sm" className="w-full rounded-xl text-xs mt-2 bg-white/50 border-gray-200 hover:bg-white text-gray-900 font-semibold">
-                        <Link to="/how-it-works">
-                          Learn More <ChevronRight className="w-3 h-3 ml-1" />
-                        </Link>
-                      </Button>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-
-            {/* Quick stats */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-              className="rounded-2xl p-5 bg-white/60 backdrop-blur-2xl border-2 border-border shadow-lg shadow-black/5"
-            >
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { value: '500+', label: 'Listings' },
-                  { value: '50+', label: 'Cities' },
-                  { value: '4.8★', label: 'Rating' },
-                  { value: '24h', label: 'Avg Response' },
-                ].map((stat, i) => (
-                  <div key={i} className="text-center">
-                    <p className="text-lg font-black bg-gradient-to-r from-[hsl(14,100%,57%)] to-[hsl(40,100%,49%)] bg-clip-text text-transparent">{stat.value}</p>
-                    <p className="text-[10px] text-gray-500 font-medium">{stat.label}</p>
+                    <Button asChild variant="outline" size="sm" className="w-full rounded-xl text-xs mt-4 border-border font-semibold">
+                      <Link to="/how-it-works">
+                        Learn More <ChevronRight className="w-3 h-3 ml-1" />
+                      </Link>
+                    </Button>
                   </div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-        </aside>
+
+                  {/* Quick stats */}
+                  <div className="rounded-2xl p-5 bg-white/60 backdrop-blur-2xl border-2 border-border shadow-lg shadow-black/5">
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { value: '500+', label: 'Listings' },
+                        { value: '50+', label: 'Cities' },
+                        { value: '4.8★', label: 'Rating' },
+                        { value: '24h', label: 'Avg Response' },
+                      ].map((stat, i) => (
+                        <div key={i} className="text-center">
+                          <p className="text-lg font-black bg-gradient-to-r from-[hsl(14,100%,57%)] to-[hsl(40,100%,49%)] bg-clip-text text-transparent">{stat.value}</p>
+                          <p className="text-[10px] text-muted-foreground font-medium">{stat.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
 
       <style>{`
