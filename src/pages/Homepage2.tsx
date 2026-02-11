@@ -325,7 +325,7 @@ const Homepage2 = () => {
                     />
                   </AnimatePresence>
                 </div>
-                <div className="hidden md:block min-w-[170px]">
+                <div className="min-w-0 w-24 sm:w-auto md:min-w-[170px]">
                   <LocationSearchInput
                     value={locationText}
                     onChange={setLocationText}
@@ -423,6 +423,7 @@ const Homepage2 = () => {
                     onChange={setFilters}
                     onApply={applyFilters}
                     onClear={() => { clearFilterPanel(); setTimeout(() => fetchListings(1), 0); }}
+                    autoApply
                   />
                 </div>
                 {/* Scroll position indicator — moves opposite to scroll direction */}
