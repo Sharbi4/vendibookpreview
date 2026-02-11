@@ -278,9 +278,11 @@ const Homepage2 = () => {
             {/* Top row: Logo + Search + Actions */}
             <div className="flex items-center justify-between gap-3 h-14">
               {/* Favicon / Logo */}
-              <Link to="/" className="shrink-0 flex items-center gap-2">
-                <img src={vendibookFavicon} alt="Vendibook" className="h-10 w-auto sm:hidden drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
-                <img src={vendibookLogo} alt="Vendibook" className="hidden sm:block h-28 w-auto drop-shadow-[0_0_14px_rgba(255,255,255,0.9)] drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]" />
+              <Link to="/" className="shrink-0 flex items-center gap-2 relative">
+                <div className="absolute inset-0 -inset-x-3 -inset-y-1 rounded-full bg-white/70 blur-lg pointer-events-none sm:hidden" />
+                <div className="absolute inset-0 -inset-x-4 -inset-y-2 rounded-full bg-white/60 blur-xl pointer-events-none hidden sm:block" />
+                <img src={vendibookFavicon} alt="Vendibook" className="relative h-10 w-auto sm:hidden" />
+                <img src={vendibookLogo} alt="Vendibook" className="relative hidden sm:block h-28 w-auto" />
               </Link>
 
               {/* Search bar — 3D glass field in header */}
