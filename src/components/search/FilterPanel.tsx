@@ -110,13 +110,13 @@ export const FilterPanel = ({ filters, onChange, onApply, onClear }: FilterPanel
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.15 }}
             style={{ top: dropdownPos.top, left: dropdownPos.left }}
-            className="fixed z-[200] w-80 rounded-2xl bg-white border border-gray-200 shadow-2xl shadow-black/20 overflow-hidden"
+            className="fixed z-[200] w-80 rounded-2xl bg-white/70 backdrop-blur-2xl border border-border shadow-2xl shadow-black/20 overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-              <h3 className="text-sm font-bold text-gray-900">Filters</h3>
-              <button onClick={() => setIsOpen(false)} className="p-1 rounded-lg hover:bg-gray-100">
-                <X className="w-4 h-4 text-gray-500" />
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <h3 className="text-sm font-bold text-foreground">Filters</h3>
+              <button onClick={() => setIsOpen(false)} className="p-1 rounded-lg hover:bg-muted border border-border">
+                <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
 
@@ -201,17 +201,18 @@ export const FilterPanel = ({ filters, onChange, onApply, onClear }: FilterPanel
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-white/40 backdrop-blur-xl">
               <button
                 onClick={() => { onClear(); }}
-                className="text-xs font-medium text-gray-500 hover:text-gray-900 underline underline-offset-2"
+                className="text-xs font-medium text-muted-foreground hover:text-foreground underline underline-offset-2"
               >
                 Clear all
               </button>
               <Button
                 size="sm"
+                variant="dark-shine"
                 onClick={() => { onApply(); setIsOpen(false); }}
-                className="rounded-xl bg-gray-900 text-white hover:bg-gray-800 text-xs font-semibold px-6"
+                className="rounded-xl text-xs font-semibold px-6"
               >
                 Apply Filters
               </Button>
