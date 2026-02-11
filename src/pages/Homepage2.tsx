@@ -201,7 +201,7 @@ const Homepage2 = () => {
       </div>
 
       {/* ══ CUSTOM HEADER WITH INTEGRATED SEARCH ══ */}
-      <header className="sticky top-2 z-50 w-[calc(100%-1rem)] mx-auto rounded-2xl shadow-[0_6px_30px_-6px_rgba(0,0,0,0.18),0_2px_10px_-2px_rgba(0,0,0,0.08)]">
+      <header className="sticky top-2 z-50 w-[calc(100%-1rem)] mx-auto rounded-2xl shadow-lg shadow-black/10">
         <div className="relative overflow-hidden rounded-2xl">
           {/* Header gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-[hsl(14,100%,57%)] via-[hsl(20,90%,50%)] to-[hsl(40,100%,49%)] rounded-2xl" />
@@ -212,7 +212,7 @@ const Homepage2 = () => {
 
           <div className="relative max-w-7xl mx-auto px-4">
             {/* Top row: Logo + Search + Actions */}
-            <div className="flex items-center gap-4 h-16">
+            <div className="flex items-center justify-between gap-3 h-14">
               {/* Favicon / Logo */}
               <Link to="/" className="shrink-0 flex items-center gap-2">
                 <img src={vendibookFavicon} alt="Vendibook" className="h-9 w-auto drop-shadow-lg sm:hidden" />
@@ -281,7 +281,7 @@ const Homepage2 = () => {
             </div>
 
             {/* Bottom row: Category chips + mode + sort */}
-            <div className="flex items-center gap-2 pb-2.5 -mt-0.5">
+            <div className="flex items-center gap-3 pb-2 -mt-0.5">
               {/* Mode pills — compact on mobile */}
               <div className="flex h-7 sm:h-8 rounded-lg overflow-hidden border border-white/25 bg-white/10 backdrop-blur shrink-0">
                 {(['', 'rent', 'sale'] as const).map((m) => (
@@ -299,25 +299,30 @@ const Homepage2 = () => {
                 ))}
               </div>
 
-              {/* Category chips — scrollable with glass fade edges */}
-              <div className="relative flex-1 min-w-0">
-                <div className="absolute left-0 top-0 bottom-0 w-5 bg-gradient-to-r from-black/15 to-transparent z-10 pointer-events-none rounded-l-lg" />
-                <div className="absolute right-0 top-0 bottom-0 w-5 bg-gradient-to-l from-black/15 to-transparent z-10 pointer-events-none rounded-r-lg" />
-                <div className="flex gap-1.5 overflow-x-auto no-scrollbar px-1 scroll-smooth">
+              {/* Category chips — simple scrollable with underline indicator */}
+              <div className="flex-1 min-w-0">
+                <div className="flex gap-1 overflow-x-auto no-scrollbar scroll-smooth">
                   {CATEGORIES.map((cat) => (
-                    <motion.button
+                    <button
                       key={cat.value}
-                      whileTap={{ scale: 0.95 }}
                       onClick={() => handleCategoryChip(cat.value)}
-                      className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all border ${
+                      className={`relative whitespace-nowrap px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition-all rounded-t-lg ${
                         category === cat.value
-                          ? 'bg-white text-gray-900 border-white/80 shadow-lg shadow-black/10 font-bold'
-                          : 'bg-white/10 backdrop-blur border-white/20 text-white/80 hover:text-white hover:bg-white/20'
+                          ? 'text-white font-bold'
+                          : 'text-white/60 hover:text-white/90'
                       }`}
                     >
                       <cat.icon className="w-3 h-3" />
                       {cat.label}
-                    </motion.button>
+                      {/* Active underline tab */}
+                      {category === cat.value && (
+                        <motion.div
+                          layoutId="category-tab"
+                          className="absolute bottom-0 left-1 right-1 h-[2px] bg-white rounded-full"
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        />
+                      )}
+                    </button>
                   ))}
                   {/* Filter Panel */}
                   <FilterPanel
