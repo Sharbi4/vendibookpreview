@@ -17,6 +17,7 @@ interface EnhancedHostCardProps {
   isVerified?: boolean;
   memberSince?: string;
   lastActiveAt?: string | null;
+  isRental?: boolean;
 }
 
 const containerVariants = {
@@ -51,7 +52,9 @@ const EnhancedHostCard = ({
   isVerified = false,
   memberSince,
   lastActiveAt,
+  isRental = true,
 }: EnhancedHostCardProps) => {
+  const roleLabel = isRental ? 'host' : 'seller';
   const initials = hostName 
     ? hostName.replace(/\.$/, '').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : 'H';
@@ -76,7 +79,7 @@ const EnhancedHostCard = ({
         className="text-xl font-semibold text-foreground"
         variants={itemVariants}
       >
-        Meet your host
+        Meet your {roleLabel}
       </motion.h2>
       
       {/* Host Profile Card */}
@@ -98,7 +101,7 @@ const EnhancedHostCard = ({
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             >
               <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-background shadow-xl">
-                <AvatarImage src={hostAvatar || undefined} alt={hostName || 'Host'} />
+                <AvatarImage src={hostAvatar || undefined} alt={hostName || roleLabel} />
                 <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xl md:text-2xl font-semibold">
                   {initials}
                 </AvatarFallback>
@@ -123,12 +126,12 @@ const EnhancedHostCard = ({
                 to={profileLink}
                 className="text-xl font-semibold text-foreground hover:text-primary transition-colors"
               >
-                {hostName || 'Host'}
+                {hostName || (isRental ? 'Host' : 'Seller')}
               </Link>
               {memberYear && (
                 <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
                   <Award className="h-3.5 w-3.5" />
-                  Hosting since {memberYear}
+                  {isRental ? 'Hosting' : 'Selling'} since {memberYear}
                 </p>
               )}
               {lastActiveText && (
@@ -202,7 +205,7 @@ const EnhancedHostCard = ({
             hostId={hostId}
             variant="outline"
             className="w-full h-12 font-medium"
-            label="Message Host"
+            label={`Message ${isRental ? 'Host' : 'Seller'}`}
           />
         </motion.div>
         <motion.div className="flex-1" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
