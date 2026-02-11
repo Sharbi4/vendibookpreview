@@ -342,7 +342,7 @@ const EnhancedPublicProfileHeader = ({
 
       {/* Glass card container for profile info - STRONGER BORDERS */}
       <div className="container pt-28 md:pt-36 pb-6 md:pb-8 relative">
-        <div className="glass-premium rounded-2xl p-6 md:p-8 border-2 border-border shadow-xl">
+        <div className="rounded-2xl p-6 md:p-8 border border-white/20 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.12)] bg-white/60 dark:bg-white/5 backdrop-blur-2xl">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-5">
           {/* Enhanced Avatar with upload support for own profile */}
           <motion.div 
@@ -636,7 +636,7 @@ const EnhancedPublicProfileHeader = ({
                   <Button 
                     variant="outline" 
                     onClick={onViewListings}
-                    className="w-full rounded-xl glass-premium border-border/50"
+                    className="w-full rounded-xl bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/20 hover:bg-white/80 dark:hover:bg-white/10"
                   >
                     View Listings ({stats?.totalListings || 0})
                   </Button>

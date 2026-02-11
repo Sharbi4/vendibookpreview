@@ -292,7 +292,7 @@ const PublicProfile = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-premium-gradient">
+      <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -304,7 +304,7 @@ const PublicProfile = () => {
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex flex-col bg-premium-gradient">
+      <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <SEO 
           title="Profile Not Found"
@@ -331,13 +331,39 @@ const PublicProfile = () => {
   const seoDescription = `${displayName}${serviceArea ? ` • ${serviceArea}` : ''} on Vendibook. ${isHost ? `${stats?.totalListings || 0} listings available` : 'View profile'}${stats?.averageRating ? ` • ${stats.averageRating.toFixed(1)}★ rating` : ''}.`;
 
   return (
-    <div className="min-h-screen flex flex-col bg-premium-gradient">
+    <div className="min-h-screen flex flex-col relative overflow-x-hidden">
+      {/* ══ FULL-PAGE ANIMATED GRADIENT BACKGROUND (matches homepage) ══ */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute inset-0 bg-background" />
+        <motion.div
+          animate={{ x: [0, 60, -40, 0], y: [0, -50, 30, 0], scale: [1, 1.2, 0.9, 1] }}
+          transition={{ repeat: Infinity, duration: 18, ease: 'easeInOut' }}
+          className="absolute -top-40 -left-40 w-[700px] h-[700px] rounded-full bg-[hsl(14,100%,57%)]/[0.04] blur-[150px]"
+        />
+        <motion.div
+          animate={{ x: [0, -50, 60, 0], y: [0, 40, -40, 0], scale: [1, 0.85, 1.2, 1] }}
+          transition={{ repeat: Infinity, duration: 22, ease: 'easeInOut' }}
+          className="absolute top-1/4 -right-32 w-[800px] h-[800px] rounded-full bg-[hsl(40,100%,49%)]/[0.03] blur-[170px]"
+        />
+        <motion.div
+          animate={{ x: [0, 30, -40, 0], y: [0, -30, 50, 0] }}
+          transition={{ repeat: Infinity, duration: 16, ease: 'easeInOut' }}
+          className="absolute bottom-0 left-1/3 w-[600px] h-[600px] rounded-full bg-[hsl(14,80%,50%)]/[0.03] blur-[130px]"
+        />
+        <motion.div
+          animate={{ x: [0, -25, 35, 0], y: [0, 35, -25, 0], scale: [1, 1.1, 0.9, 1] }}
+          transition={{ repeat: Infinity, duration: 20, ease: 'easeInOut', delay: 2 }}
+          className="absolute top-2/3 right-1/4 w-[500px] h-[500px] rounded-full bg-[hsl(25,95%,55%)]/[0.02] blur-[140px]"
+        />
+      </div>
+
       <SEO 
         title={`${displayName} on Vendibook`}
         description={seoDescription}
         canonical={`/u/${profile.username || actualUserId}`}
         image={profile.avatar_url || undefined}
       />
+      <div className="relative z-10 flex flex-col min-h-screen">
       <Header />
 
       <main className="flex-1 pb-20 md:pb-0">
@@ -438,7 +464,7 @@ const PublicProfile = () => {
 
       {/* Section 2: Mobile Sticky CTA with glass-premium styling */}
       {!isOwnProfile && isHost && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 glass-premium border-t border-border/50 shadow-2xl z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 12px)' }}>
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/70 dark:bg-black/50 backdrop-blur-2xl border-t border-white/20 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)] z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 12px)' }}>
           <div className="flex gap-2 px-4 py-3 max-w-lg mx-auto">
             <Button 
               variant="dark-shine"
@@ -510,6 +536,7 @@ const PublicProfile = () => {
       </Dialog>
 
       <Footer />
+      </div>
     </div>
   );
 };
