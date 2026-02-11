@@ -29,7 +29,7 @@ import vendibookLogo from '@/assets/vendibook-logo.png';
 import TrendingDropdown from '@/components/search/TrendingDropdown';
 import { useScribe } from '@elevenlabs/react';
 import { toast } from '@/hooks/use-toast';
-import FloatingConciergeButton from '@/components/FloatingConciergeButton';
+
 
 const CATEGORIES = [
   { value: '', label: 'All', icon: Zap },
@@ -787,7 +787,7 @@ const Homepage2 = () => {
           100% { transform: translateX(100%); }
         }
       `}</style>
-      <FloatingConciergeButton />
+      
     </div>
   );
 };

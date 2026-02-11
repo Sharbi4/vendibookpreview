@@ -8,7 +8,7 @@ import AnnouncementBanner from '@/components/home/AnnouncementBanner';
 import VerificationBanner from '@/components/home/VerificationBanner';
 import PaymentsBanner from '@/components/home/PaymentsBanner';
 import ConciergeSection from '@/components/home/ConciergeSection';
-import FloatingConciergeButton from '@/components/FloatingConciergeButton';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -102,7 +102,7 @@ const Index = () => {
       <Footer />
       
       <NewsletterPopup />
-      <FloatingConciergeButton />
+      
     </div>
   );
 };
