@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, MapPin, SlidersHorizontal, Truck, ChevronRight, Sparkles,
   Map as MapIcon, X, Plus, UserPlus, Info, ArrowRight, Utensils,
-  Building2, ShoppingBag, Zap, Mic, MicOff, Loader2,
+  Building2, ShoppingBag, Zap, Mic, MicOff, Loader2, Navigation,
 } from 'lucide-react';
 import AppDropdownMenu from '@/components/layout/AppDropdownMenu';
 import { FilterPanel, FilterValues } from '@/components/search/FilterPanel';
@@ -294,9 +294,39 @@ const Homepage2 = () => {
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                       onFocus={() => setShowTrending(true)}
-                      placeholder={isRecording ? 'Listening...' : 'Search food trucks, kitchens, spaces...'}
-                      className="relative w-full h-10 pl-8 pr-12 rounded-xl bg-transparent text-white text-sm placeholder:text-white/50 focus:outline-none transition-all"
+                      placeholder={isRecording ? 'Listening...' : 'Search by keyword or location...'}
+                      className="relative w-full h-10 pl-8 pr-20 md:pr-12 rounded-xl bg-transparent text-white text-sm placeholder:text-white/50 focus:outline-none transition-all"
                     />
+                    {/* Mobile: Geolocation button */}
+                    <button
+                      onClick={async () => {
+                        if (!navigator.geolocation) return;
+                        try {
+                          const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+                            navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 })
+                          );
+                          const { latitude, longitude } = pos.coords;
+                          setCoordinates([longitude, latitude]);
+                          // Reverse geocode for display
+                          const { data } = await supabase.functions.invoke('geocode-location', {
+                            body: { query: `${longitude},${latitude}`, limit: 1 },
+                          });
+                          if (data?.results?.[0]) {
+                            setLocationText(data.results[0].text);
+                            setQuery(data.results[0].text);
+                          } else {
+                            setQuery('Near me');
+                          }
+                          setTimeout(() => { setPage(1); fetchListings(1); }, 100);
+                        } catch (err) {
+                          console.error('Geolocation error:', err);
+                        }
+                      }}
+                      className="absolute right-10 md:hidden top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
+                      title="Use my location"
+                    >
+                      <Navigation className="w-3.5 h-3.5" />
+                    </button>
                     {/* Mic button */}
                     <button
                       onClick={toggleVoiceSearch}
@@ -325,7 +355,7 @@ const Homepage2 = () => {
                     />
                   </AnimatePresence>
                 </div>
-                <div className="min-w-0 w-24 sm:w-auto md:min-w-[170px]">
+                <div className="hidden md:block min-w-[170px]">
                   <LocationSearchInput
                     value={locationText}
                     onChange={setLocationText}
