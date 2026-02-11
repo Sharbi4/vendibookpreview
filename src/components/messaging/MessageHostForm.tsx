@@ -23,8 +23,8 @@ const MessageHostForm = ({
   className = '',
 }: MessageHostFormProps) => {
   const defaultMessage = listingTitle
-    ? `Hi! I'd like to learn more about "${listingTitle}". Is it available?`
-    : "Hi! I'd like to set up a time to see this. Is it available?";
+    ? `Hi! I'd like to learn more about "${listingTitle}" and set up a time to see it.`
+    : "Hi! I'd like to set up a time to see this.";
 
   const { user } = useAuth();
   const navigate = useNavigate();

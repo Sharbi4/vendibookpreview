@@ -17,6 +17,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import EnhancedPhotoGallery from '@/components/listing-detail/EnhancedPhotoGallery';
 import EnhancedHostCard from '@/components/listing-detail/EnhancedHostCard';
+import MessageHostForm from '@/components/messaging/MessageHostForm';
 import ReviewsSection from '@/components/reviews/ReviewsSection';
 import RequirementsModal from '@/components/listing-detail/RequirementsModal';
 import CollapsibleDescription from '@/components/listing-detail/CollapsibleDescription';
@@ -316,10 +317,35 @@ const ListingDetail = () => {
                     )}
                   </div>
                 </div>
-              </div>
+                </div>
 
-              {/* Divider */}
-              <div className="border-t border-border" />
+                {/* Inline Message Form */}
+                {!isOwner && (
+                  <MessageHostForm
+                    listingId={listing.id}
+                    hostId={listing.host_id}
+                    listingTitle={listing.title}
+                  />
+                )}
+
+                {/* Divider */}
+                <div className="border-t border-border" />
+
+                {/* Host/Seller Section */}
+                <EnhancedHostCard
+                  hostId={listing.host_id}
+                  listingId={listing.id}
+                  hostName={host ? getPublicDisplayName(host) : null}
+                  hostAvatar={host?.avatar_url}
+                  isVerified={host?.identity_verified || false}
+                  memberSince={host?.created_at}
+                  lastActiveAt={host?.last_active_at}
+                  isRental={isRental}
+                  listingTitle={listing.title}
+                />
+
+                {/* Divider */}
+                <div className="border-t border-border" />
 
               {/* Technical Specifications - NEW */}
               <TechSpecsGrid
@@ -434,18 +460,6 @@ const ListingDetail = () => {
                   isOwner={isOwner || false}
                 />
               )}
-              {/* Host/Seller Section */}
-              <EnhancedHostCard
-                hostId={listing.host_id}
-                listingId={listing.id}
-                hostName={host ? getPublicDisplayName(host) : null}
-                hostAvatar={host?.avatar_url}
-                isVerified={host?.identity_verified || false}
-                memberSince={host?.created_at}
-                lastActiveAt={host?.last_active_at}
-                isRental={isRental}
-                listingTitle={listing.title}
-              />
 
               {/* Divider */}
               <div className="border-t border-border" />
