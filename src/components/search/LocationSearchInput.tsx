@@ -198,7 +198,6 @@ export const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
     <div className={cn("space-y-2", className)}>
       <div ref={containerRef} className="relative">
         <div className="relative">
-          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             ref={inputRef}
             type="text"
@@ -207,7 +206,7 @@ export const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
             onChange={handleInputChange}
             onFocus={() => suggestions.length > 0 && setIsOpen(true)}
             className={cn(
-              "pl-10 pr-20",
+              "pl-3 pr-20",
               selectedCoordinates && "border-primary bg-primary/5"
             )}
           />

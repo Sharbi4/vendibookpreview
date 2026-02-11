@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, X, ChevronRight } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthWalkthrough } from '@/components/auth/AuthWalkthrough';
@@ -145,9 +145,7 @@ const HeroRentalSearch = () => {
               onClick={() => setShowWalkthrough(true)}
               className="rounded-full px-6 h-11 gap-2 bg-white/60 backdrop-blur-xl border border-white/40 shadow-sm hover:shadow-md hover:bg-white/80 transition-all"
             >
-              <Sparkles className="h-4 w-4 text-primary" />
               <span className="font-medium">Why Vendibook?</span>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Button>
           </motion.div>
         </div>

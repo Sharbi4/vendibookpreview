@@ -1040,7 +1040,7 @@ const FilterContent = ({
           Category
           <CategoryInfoModal />
         </Label>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 justify-center">
           <label 
             className={cn(
               "flex items-center cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors",
