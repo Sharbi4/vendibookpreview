@@ -1080,7 +1080,7 @@ const BookingCheckout = () => {
 
                       {!listing.instant_book && (
                         <p className="text-xs text-center text-muted-foreground">
-                          You'll enter card details on the next page. Your card will be authorized but not charged until the host approves.
+                          Your card will be authorized now. Funds are only captured if the host approves your request.
                         </p>
                       )}
                     </div>

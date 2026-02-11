@@ -14,7 +14,7 @@ const BookingFAQ = ({ isRental }: BookingFAQProps) => {
   const rentalFaqs = [
     {
       question: "How does the booking process work?",
-      answer: "Submit your booking request with your preferred dates. The host will review your request and either approve or decline it. You won't be charged until your request is approved."
+      answer: "Submit your booking request with your preferred dates. Your card will be authorized at the time of request. The host will review and either approve or decline. If approved, the hold is captured. If declined or no response within 7 days, the hold is released."
     },
     {
       question: "When do I pay?",

@@ -994,7 +994,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {!instantBook && (
           <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5">
             <Shield className="h-3.5 w-3.5" />
-            You won't be charged until your request is approved
+            Your card will be authorized now and only charged if approved
           </p>
         )}
 

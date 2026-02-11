@@ -159,8 +159,8 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
               </Button>
 
               {!instantBook && (
-                <p className="text-xs text-center text-muted-foreground">
-                  You won't be charged until your request is approved
+              <p className="text-xs text-center text-muted-foreground">
+                  Your card will be authorized now and only charged if approved
                 </p>
               )}
             </div>
