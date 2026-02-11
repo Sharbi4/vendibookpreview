@@ -20,7 +20,7 @@ const ZendeskWidget = () => {
   );
 
   useEffect(() => {
-    // Hide/show widget based on route
+    // Show/hide widget based on route
     if (window.zE) {
       try {
         if (isAllowedRoute) {
@@ -31,6 +31,25 @@ const ZendeskWidget = () => {
       } catch (error) {
         console.debug('Zendesk messenger visibility:', error);
       }
+    } else {
+      // Wait for Zendesk to load
+      const checkInterval = setInterval(() => {
+        if (window.zE) {
+          try {
+            if (isAllowedRoute) {
+              window.zE('messenger', 'show');
+            } else {
+              window.zE('messenger', 'hide');
+            }
+          } catch (e) {}
+          clearInterval(checkInterval);
+        }
+      }, 500);
+      const timeout = setTimeout(() => clearInterval(checkInterval), 10000);
+      return () => {
+        clearInterval(checkInterval);
+        clearTimeout(timeout);
+      };
     }
   }, [isAllowedRoute, location.pathname]);
 
