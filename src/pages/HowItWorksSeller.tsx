@@ -65,7 +65,7 @@ const HowItWorksSeller = () => {
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="py-16 md:py-24 bg-gradient-to-b from-emerald-500/5 to-background">
+        <section className="py-16 md:py-24 bg-[hsl(30,10%,97%)]">
           <div className="container max-w-5xl text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
