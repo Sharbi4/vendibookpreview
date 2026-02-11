@@ -22,7 +22,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
-import MobileMenu from './MobileMenu';
+import AppDropdownMenu from './AppDropdownMenu';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -36,7 +36,6 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
 
   // Airbnb-style Navigation Config based on mode
   const navigation = mode === 'host' ? [
@@ -247,32 +246,10 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
           )}
           <div className="flex items-center gap-2">
             <NotificationCenter />
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9"
-              onClick={() => setIsAccountMenuOpen(true)}
-              aria-label="Open menu"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
+            <AppDropdownMenu variant="light" />
           </div>
         </div>
       </header>
-
-
-
-
-      <MobileMenu
-        isOpen={isAccountMenuOpen}
-        onClose={() => setIsAccountMenuOpen(false)}
-        user={user}
-        profile={profile}
-        isVerified={isVerified}
-        isAdmin={false}
-        onSignOut={handleSignOut}
-        onNavigate={navigate}
-      />
 
       <div className="flex flex-1">
         {/* Desktop Sidebar */}
@@ -314,14 +291,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             )}
             <div className="flex items-center gap-3">
               <NotificationCenter />
-              <Link to="/account">
-                <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
-                  <AvatarImage src={profile?.avatar_url || undefined} />
-                  <AvatarFallback className="bg-muted text-foreground text-sm">
-                    {profile?.full_name?.[0] || user?.email?.[0]?.toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </Link>
+              <AppDropdownMenu variant="light" />
             </div>
           </div>
           {/* Page Content */}
