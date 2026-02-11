@@ -207,9 +207,10 @@ const Homepage2 = () => {
                 </div>
                 {/* Search button — icon only */}
                 <Button
+                  variant="dark-shine"
                   size="icon"
                   onClick={handleSearch}
-                  className="h-10 w-10 shrink-0 rounded-xl bg-gray-900 text-white hover:bg-gray-800 shadow-xl shadow-black/20 border border-gray-700"
+                  className="h-10 w-10 shrink-0 rounded-xl"
                 >
                   <Search className="w-4 h-4" />
                 </Button>
@@ -217,14 +218,14 @@ const Homepage2 = () => {
 
               {/* Right actions */}
               <div className="flex items-center gap-2 shrink-0">
-                <Button asChild size="sm" className="hidden sm:flex h-9 rounded-xl bg-gray-900 text-white hover:bg-gray-800 text-xs font-semibold shadow-lg shadow-black/20 border border-gray-700">
+                <Button asChild variant="dark-shine" size="sm" className="hidden sm:flex h-9 rounded-xl text-xs font-semibold">
                   <Link to="/list">
                     <Plus className="w-3.5 h-3.5 mr-1" />
                     Create Listing
                   </Link>
                 </Button>
                 {/* Sign Up — desktop only */}
-                <Button asChild size="sm" className="hidden sm:flex h-9 rounded-xl bg-white/20 backdrop-blur-xl text-white hover:bg-white/30 text-xs font-semibold border border-white/25">
+                <Button asChild variant="dark-shine" size="sm" className="hidden sm:flex h-9 rounded-xl text-xs font-semibold">
                   <Link to="/auth">
                     <UserPlus className="w-3.5 h-3.5 mr-1" />
                     Sign Up
@@ -232,13 +233,15 @@ const Homepage2 = () => {
                 </Button>
                 {/* Learn More — mobile only (replaces sign up) */}
                 {/* Learn More — small inline badge */}
-                <button
+                <Button
+                  variant="dark-shine"
+                  size="sm"
                   onClick={() => setLearnMoreOpen(!learnMoreOpen)}
-                  className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/15 border border-white/20 text-white/80 hover:bg-white/25 hover:text-white text-[11px] font-medium transition-colors"
+                  className="hidden sm:flex h-8 rounded-xl text-[11px] font-medium gap-1"
                 >
                   <Info className="w-3.5 h-3.5" />
                   Learn More
-                </button>
+                </Button>
                 {/* Hamburger menu — always visible far right */}
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
