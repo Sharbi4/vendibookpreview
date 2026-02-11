@@ -94,6 +94,7 @@ const BecomeAHost = lazy(() => import("./pages/BecomeAHost"));
 const SignageRequest = lazy(() => import("./pages/SignageRequest"));
 const Promo = lazy(() => import("./pages/Promo"));
 const StartFoodBusiness = lazy(() => import("./pages/StartFoodBusiness"));
+const Homepage2 = lazy(() => import("./pages/Homepage2"));
 
 // City landing pages - direct imports since they're lightweight wrappers
 import {
@@ -244,6 +245,7 @@ const AnimatedRoutes = () => {
           
           {/* Renter Landing Page */}
           <Route path="/start" element={<PageTransition><StartFoodBusiness /></PageTransition>} />
+          <Route path="/homepage2" element={<PageTransition><Homepage2 /></PageTransition>} />
           
           {/* Rental Manager */}
           <Route path="/rentals" element={<PageTransition><Rentals /></PageTransition>} />
