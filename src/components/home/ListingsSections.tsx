@@ -117,11 +117,11 @@ const ListingsSections = () => {
   }
 
   return (
-    <section className="py-12 bg-gradient-to-b from-background to-muted/10 relative overflow-hidden">
+    <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted/10 relative overflow-hidden">
       {/* Subtle decorative element */}
       <div className="absolute top-0 right-0 w-[400px] h-[300px] bg-gradient-to-bl from-emerald-500/5 to-transparent rounded-full blur-3xl" aria-hidden="true" />
       
-      <div className="container space-y-12 relative z-10">
+      <div className="container px-4 sm:px-6 space-y-8 sm:space-y-12 relative z-10">
         {/* For Rent Section - RENTAL FIRST */}
         {rentListings.length > 0 && (
           <div>

@@ -28,10 +28,10 @@ const steps: Step[] = [
 
 const HowItWorks = () => {
   return (
-    <section className="py-12 md:py-16 bg-gradient-to-br from-primary/5 via-background to-amber-500/5">
-      <div className="container max-w-4xl mx-auto px-4">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+    <section className="py-10 sm:py-12 md:py-16 bg-gradient-to-br from-primary/5 via-background to-amber-500/5">
+      <div className="container max-w-4xl mx-auto px-5 sm:px-6">
+        <div className="text-center mb-8 sm:mb-10">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-2">
             How It Works
           </h2>
           <p className="text-muted-foreground">
@@ -39,7 +39,7 @@ const HowItWorks = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
           {steps.map((step, index) => {
             const Icon = step.icon;
             return (

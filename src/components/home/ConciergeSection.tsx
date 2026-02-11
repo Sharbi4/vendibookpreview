@@ -32,7 +32,7 @@ const ConciergeSection = () => {
   };
 
   return (
-    <section className="py-16 md:py-24 relative overflow-hidden">
+    <section className="py-12 sm:py-16 md:py-24 relative overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
       
@@ -68,7 +68,7 @@ const ConciergeSection = () => {
             <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 via-transparent to-transparent" />
             
             {/* Content */}
-            <div className="relative p-8 md:p-12">
+            <div className="relative p-5 sm:p-8 md:p-12">
               <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
                 {/* Left: Icon/Visual */}
                 <div className="flex-shrink-0">
