@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X, Play, Video, Grid3X3, Images, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,12 +16,44 @@ type MediaItem = {
   url: string;
 };
 
+// Custom hook for swipe detection
+function useSwipe(onSwipeLeft: () => void, onSwipeRight: () => void) {
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const touchEnd = useRef<{ x: number; y: number } | null>(null);
+  const minSwipeDistance = 50;
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchEnd.current = null;
+    touchStart.current = { x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY };
+  }, []);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    touchEnd.current = { x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY };
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    if (!touchStart.current || !touchEnd.current) return;
+    const distX = touchStart.current.x - touchEnd.current.x;
+    const distY = Math.abs(touchStart.current.y - touchEnd.current.y);
+    // Only register horizontal swipes (not vertical scrolls)
+    if (Math.abs(distX) > minSwipeDistance && Math.abs(distX) > distY) {
+      if (distX > 0) onSwipeLeft();
+      else onSwipeRight();
+    }
+    touchStart.current = null;
+    touchEnd.current = null;
+  }, [onSwipeLeft, onSwipeRight]);
+
+  return { onTouchStart, onTouchMove, onTouchEnd };
+}
+
 const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalleryProps) => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [mobileIndex, setMobileIndex] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right'>('left');
 
-  // Combine images and videos into a single media array
   const mediaItems: MediaItem[] = [
     ...images.map(url => ({ type: 'image' as const, url })),
     ...videos.map(url => ({ type: 'video' as const, url })),
@@ -35,11 +67,23 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
   }, []);
 
   const nextImage = useCallback(() => {
+    setSwipeDirection('left');
     setCurrentIndex((prev) => (prev + 1) % displayItems.length);
   }, [displayItems.length]);
 
   const prevImage = useCallback(() => {
+    setSwipeDirection('right');
     setCurrentIndex((prev) => (prev - 1 + displayItems.length) % displayItems.length);
+  }, [displayItems.length]);
+
+  const nextMobile = useCallback(() => {
+    setSwipeDirection('left');
+    setMobileIndex((prev) => (prev + 1) % displayItems.length);
+  }, [displayItems.length]);
+
+  const prevMobile = useCallback(() => {
+    setSwipeDirection('right');
+    setMobileIndex((prev) => (prev - 1 + displayItems.length) % displayItems.length);
   }, [displayItems.length]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -48,18 +92,17 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
     if (e.key === 'Escape') setLightboxOpen(false);
   }, [nextImage, prevImage]);
 
+  // Swipe handlers
+  const mobileSwipe = useSwipe(nextMobile, prevMobile);
+  const lightboxSwipe = useSwipe(nextImage, prevImage);
+
   const renderMediaThumbnail = (item: MediaItem, isMain = false, index = 0) => {
     const isHovered = hoveredIndex === index;
     
     if (item.type === 'video') {
       return (
         <div className="relative w-full h-full group">
-          <video
-            src={item.url}
-            className="w-full h-full object-cover"
-            muted
-            playsInline
-          />
+          <video src={item.url} className="w-full h-full object-cover" muted playsInline />
           <motion.div 
             className="absolute inset-0 flex items-center justify-center bg-black/20"
             animate={{ backgroundColor: isHovered ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.2)' }}
@@ -90,8 +133,8 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
           className="w-full h-full object-cover"
           animate={{ scale: isHovered ? 1.05 : 1 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
+          draggable={false}
         />
-        {/* Hover overlay with icon */}
         <AnimatePresence>
           {isHovered && (
             <motion.div
@@ -120,16 +163,14 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
 
   return (
     <>
-      {/* Enhanced Gallery Grid */}
       <motion.div 
         className="relative rounded-2xl overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 100, damping: 20 }}
       >
-        {/* Desktop: Mosaic Grid with hover effects */}
+        {/* Desktop: Mosaic Grid */}
         <div className="hidden md:grid md:grid-cols-4 md:grid-rows-2 gap-2 h-[450px]">
-          {/* Main Image - Takes 2x2 */}
           <motion.div 
             className="col-span-2 row-span-2 relative cursor-pointer overflow-hidden"
             onClick={() => openLightbox(0)}
@@ -140,7 +181,6 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
             {renderMediaThumbnail(displayItems[0], true, 0)}
           </motion.div>
 
-          {/* Secondary Images - Grid of 4 */}
           {displayItems.slice(1, 5).map((item, idx) => (
             <motion.div 
               key={idx}
@@ -151,17 +191,12 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
               whileTap={{ scale: 0.98 }}
             >
               {renderMediaThumbnail(item, false, idx + 1)}
-              
-              {/* Show remaining count on last visible image */}
               {idx === 3 && totalMedia > 5 && (
                 <motion.div 
                   className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-[2px]"
                   whileHover={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
                 >
-                  <motion.span 
-                    className="text-white font-semibold text-xl"
-                    whileHover={{ scale: 1.1 }}
-                  >
+                  <motion.span className="text-white font-semibold text-xl" whileHover={{ scale: 1.1 }}>
                     +{totalMedia - 5} more
                   </motion.span>
                 </motion.div>
@@ -169,35 +204,76 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
             </motion.div>
           ))}
 
-          {/* Fill empty slots */}
           {displayItems.length < 5 && Array.from({ length: 5 - displayItems.length }).map((_, idx) => (
-            <div 
-              key={`empty-${idx}`}
-              className="bg-muted/50"
-            />
+            <div key={`empty-${idx}`} className="bg-muted/50" />
           ))}
         </div>
 
-        {/* Mobile: Single Hero with Swipe Indicator */}
-        <div className="md:hidden relative aspect-[4/3]">
-          <motion.div 
-            className="w-full h-full cursor-pointer"
-            onClick={() => openLightbox(0)}
-            whileTap={{ scale: 0.98 }}
-          >
-            {renderMediaThumbnail(displayItems[0], true, 0)}
-          </motion.div>
+        {/* Mobile: Swipeable carousel */}
+        <div
+          className="md:hidden relative aspect-[4/3] touch-pan-y"
+          {...mobileSwipe}
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={mobileIndex}
+              initial={{ opacity: 0, x: swipeDirection === 'left' ? 80 : -80 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: swipeDirection === 'left' ? -80 : 80 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              className="absolute inset-0 cursor-pointer"
+              onClick={() => openLightbox(mobileIndex)}
+            >
+              {renderMediaThumbnail(displayItems[mobileIndex], true, mobileIndex)}
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Navigation arrows on mobile */}
+          {hasMultipleMedia && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); prevMobile(); }}
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); nextMobile(); }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </>
+          )}
           
-          {/* Photo count indicator */}
+          {/* Dot indicators */}
+          {hasMultipleMedia && (
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+              {displayItems.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => { e.stopPropagation(); setMobileIndex(idx); }}
+                  className={cn(
+                    "rounded-full transition-all duration-200",
+                    idx === mobileIndex
+                      ? "w-6 h-2 bg-white"
+                      : "w-2 h-2 bg-white/50"
+                  )}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Photo count */}
           {hasMultipleMedia && (
             <motion.div 
-              className="absolute bottom-4 right-4 bg-black/70 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 backdrop-blur-sm"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+              className="absolute top-3 right-3 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 backdrop-blur-sm z-10"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
             >
-              <Images className="w-4 h-4" />
-              1 / {totalMedia}
+              <Images className="w-3.5 h-3.5" />
+              {mobileIndex + 1} / {totalMedia}
             </motion.div>
           )}
         </div>
@@ -246,32 +322,17 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
         )}
       </motion.div>
 
-      {/* Mobile: View All Button */}
-      {hasMultipleMedia && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Button
-            variant="outline"
-            className="mt-3 w-full md:hidden h-12"
-            onClick={() => openLightbox(0)}
-          >
-            <Images className="w-4 h-4 mr-2" />
-            View all {totalMedia} photos
-          </Button>
-        </motion.div>
-      )}
-
-      {/* Enhanced Lightbox Modal */}
+      {/* Lightbox Modal with swipe support */}
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent 
           className="max-w-7xl w-full h-[95vh] p-0 bg-black border-none"
           onKeyDown={handleKeyDown}
         >
-          <div className="relative w-full h-full flex flex-col">
-            {/* Header with gradient */}
+          <div
+            className="relative w-full h-full flex flex-col touch-pan-y"
+            {...lightboxSwipe}
+          >
+            {/* Header */}
             <motion.div 
               className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-4 bg-gradient-to-b from-black/70 to-transparent"
               initial={{ opacity: 0, y: -20 }}
@@ -298,14 +359,14 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
               </Button>
             </motion.div>
 
-            {/* Main Content with animation */}
+            {/* Main Content */}
             <div className="flex-1 flex items-center justify-center px-4 md:px-16">
-              <AnimatePresence mode="wait">
+              <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={currentIndex}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
+                  initial={{ opacity: 0, x: swipeDirection === 'left' ? 100 : -100 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: swipeDirection === 'left' ? -100 : 100 }}
                   transition={{ duration: 0.2 }}
                   className="max-w-full max-h-[80vh]"
                 >
@@ -320,7 +381,8 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
                     <img
                       src={displayItems[currentIndex].url}
                       alt={`${title} ${currentIndex + 1}`}
-                      className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+                      className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl select-none"
+                      draggable={false}
                     />
                   )}
                 </motion.div>
@@ -373,7 +435,7 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
                   {displayItems.map((item, idx) => (
                     <motion.button
                       key={idx}
-                      onClick={() => setCurrentIndex(idx)}
+                      onClick={() => { setSwipeDirection(idx > currentIndex ? 'left' : 'right'); setCurrentIndex(idx); }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className={cn(
