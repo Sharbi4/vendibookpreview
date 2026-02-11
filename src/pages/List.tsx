@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import HeaderSearchField from '@/components/layout/HeaderSearchField';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -339,6 +340,7 @@ const ListPage: React.FC = () => {
               <img src={vendibookLogo} alt="Vendibook" className="hidden sm:block h-24 w-auto drop-shadow-lg brightness-0 invert" />
             </Link>
             <div className="flex items-center gap-2">
+              <HeaderSearchField />
               {drafts.length > 0 && (
                 <Button variant="dark-shine" size="sm" onClick={() => navigate('/dashboard')} className="hidden sm:flex h-8 rounded-xl text-xs font-semibold px-4">
                   Resume Draft ({drafts.length})
