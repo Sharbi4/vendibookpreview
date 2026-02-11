@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import HeaderSearchField from '@/components/layout/HeaderSearchField';
+import AppDropdownMenu from '@/components/layout/AppDropdownMenu';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
@@ -196,6 +197,7 @@ const HowItWorks = () => {
               <Button asChild variant="dark-shine" size="sm" className="hidden sm:flex h-8 rounded-xl text-xs font-semibold px-4">
                 <Link to="/list">Become a Host</Link>
               </Button>
+              <AppDropdownMenu variant="dark" />
             </div>
           </div>
         </div>
