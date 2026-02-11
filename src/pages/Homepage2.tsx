@@ -231,13 +231,13 @@ const Homepage2 = () => {
               {/* Search bar — glass field in header */}
               <div className="flex-1 flex items-center gap-2 max-w-2xl">
                 <div className="relative flex-1">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white/70" />
+                  <Search className="absolute left-1.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/70" />
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                     placeholder="Search food trucks, kitchens, spaces..."
-                    className="w-full h-10 pl-7 pr-3 rounded-xl bg-white/15 backdrop-blur-xl border border-white/25 text-white text-sm placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/40 focus:bg-white/20 transition-all"
+                    className="w-full h-10 pl-6 pr-3 rounded-xl bg-white/15 backdrop-blur-xl border border-white/25 text-white text-sm placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/40 focus:bg-white/20 transition-all"
                   />
                 </div>
                 <div className="hidden md:block min-w-[170px]">
