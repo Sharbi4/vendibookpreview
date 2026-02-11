@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, MapPin, SlidersHorizontal, Truck, ChevronRight, Sparkles,
   Map as MapIcon, X, Plus, UserPlus, Info, ArrowRight, Utensils,
-  Building2, ShoppingBag, Zap,
+  Building2, ShoppingBag, Zap, Mic, MicOff, Loader2,
 } from 'lucide-react';
 import AppDropdownMenu from '@/components/layout/AppDropdownMenu';
 import { FilterPanel, FilterValues } from '@/components/search/FilterPanel';
@@ -26,6 +26,9 @@ import {
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import vendibookLogo from '@/assets/vendibook-logo.png';
+import TrendingDropdown from '@/components/search/TrendingDropdown';
+import { useScribe } from '@elevenlabs/react';
+import { toast } from '@/hooks/use-toast';
 import FloatingConciergeButton from '@/components/FloatingConciergeButton';
 
 const CATEGORIES = [
@@ -74,8 +77,33 @@ const Homepage2 = () => {
 
   const [showMap, setShowMap] = useState(false);
   const [learnMoreOpen, setLearnMoreOpen] = useState(false);
+  const [showTrending, setShowTrending] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isConnectingMic, setIsConnectingMic] = useState(false);
+  const searchWrapperRef = useRef<HTMLDivElement>(null);
   
   const { apiKey, isLoading: mapLoading, error: mapError } = useGoogleMapsToken();
+
+  const scribe = useScribe({
+    modelId: 'scribe_v2_realtime',
+    commitStrategy: 'vad' as any,
+    onCommittedTranscript: (data: any) => {
+      if (data.text?.trim()) {
+        setQuery((prev: string) => (prev ? prev + ' ' : '') + data.text.trim());
+      }
+    },
+  });
+
+  // Close trending dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchWrapperRef.current && !searchWrapperRef.current.contains(e.target as Node)) {
+        setShowTrending(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const resultsRef = useRef<HTMLDivElement>(null);
   const categoryScrollRef = useRef<HTMLDivElement>(null);
@@ -138,6 +166,33 @@ const Homepage2 = () => {
   }, [mode, category, sortBy, filters]);
 
   const handleSearch = () => { setPage(1); fetchListings(1); };
+
+  const toggleVoiceSearch = useCallback(async () => {
+    if (isRecording) {
+      scribe.disconnect();
+      setIsRecording(false);
+      setTimeout(() => { setPage(1); fetchListings(1); }, 300);
+      return;
+    }
+
+    setIsConnectingMic(true);
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      const { data, error } = await supabase.functions.invoke('elevenlabs-scribe-token');
+      if (error || !data?.token) throw new Error('Failed to get voice token');
+      
+      await scribe.connect({
+        token: data.token,
+        microphone: { echoCancellation: true, noiseSuppression: true },
+      });
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Voice search error:', err);
+      toast({ title: 'Could not start voice search', description: 'Please check microphone permissions', variant: 'destructive' });
+    } finally {
+      setIsConnectingMic(false);
+    }
+  }, [isRecording, scribe, fetchListings]);
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -230,17 +285,44 @@ const Homepage2 = () => {
 
               {/* Search bar — 3D glass field in header */}
               <div className="flex-1 flex items-center gap-2 max-w-2xl">
-                <div className="relative flex-1 group">
-                  <div className="relative rounded-xl bg-white/12 backdrop-blur-xl border border-white/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15),0_1px_3px_-1px_rgba(0,0,0,0.15)] group-focus-within:bg-white/18 group-focus-within:border-white/30 group-focus-within:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_8px_-2px_rgba(0,0,0,0.2)] transition-all duration-200">
+                <div ref={searchWrapperRef} className="relative flex-1 group">
+                  <div className="relative rounded-xl bg-white/12 backdrop-blur-xl border border-white/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15),0_1px_3px_-1px_rgba(0,0,0,0.15)] group-focus-within:bg-white/18 group-focus-within:border-white/30 group-focus-within:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_8px_-2px_rgba(0,0,0,0.2)] transition-all duration-200 flex items-center">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60" />
                     <input
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                      placeholder="Search food trucks, kitchens, spaces..."
-                      className="relative w-full h-10 pl-8 pr-3 rounded-xl bg-transparent text-white text-sm placeholder:text-white/50 focus:outline-none transition-all"
+                      onFocus={() => setShowTrending(true)}
+                      placeholder={isRecording ? 'Listening...' : 'Search food trucks, kitchens, spaces...'}
+                      className="relative w-full h-10 pl-8 pr-12 rounded-xl bg-transparent text-white text-sm placeholder:text-white/50 focus:outline-none transition-all"
                     />
+                    {/* Mic button */}
+                    <button
+                      onClick={toggleVoiceSearch}
+                      disabled={isConnectingMic}
+                      className={`absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                        isRecording
+                          ? 'bg-red-500/80 text-white animate-pulse'
+                          : 'text-white/50 hover:text-white hover:bg-white/10'
+                      }`}
+                      title={isRecording ? 'Stop listening' : 'Voice search'}
+                    >
+                      {isConnectingMic ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : isRecording ? (
+                        <MicOff className="w-3.5 h-3.5" />
+                      ) : (
+                        <Mic className="w-3.5 h-3.5" />
+                      )}
+                    </button>
                   </div>
+                  {/* Trending dropdown */}
+                  <AnimatePresence>
+                    <TrendingDropdown
+                      isVisible={showTrending && !query.trim()}
+                      onClose={() => setShowTrending(false)}
+                    />
+                  </AnimatePresence>
                 </div>
                 <div className="hidden md:block min-w-[170px]">
                   <LocationSearchInput
