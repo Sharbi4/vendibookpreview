@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { LocationMapPreview } from './LocationMapPreview';
+import { GpsLocationButton } from './GpsLocationButton';
 import {
   Select,
   SelectContent,
@@ -113,6 +114,17 @@ export const StepLocation: React.FC<StepLocationProps> = ({
           <p className="text-muted-foreground">
             Your address is only shared with guests after they've made a reservation.
           </p>
+          <div className="pt-2">
+            <GpsLocationButton
+              onLocationDetected={(loc) => {
+                updateField('street_address', loc.street_address);
+                updateField('city', loc.city);
+                updateField('state', loc.state);
+                updateField('zip_code', loc.zip_code);
+                updateField('country', loc.country);
+              }}
+            />
+          </div>
         </div>
 
         {/* Structured Address Form - Old School Style with Validation */}
@@ -309,9 +321,22 @@ export const StepLocation: React.FC<StepLocationProps> = ({
         <div className="space-y-6 animate-in fade-in-50 duration-200">
           <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-xl flex items-start gap-3 border border-amber-200 dark:border-amber-800">
             <Info className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" />
-            <p className="text-sm text-muted-foreground">
-              Since this is a stationary asset, customers will come to this location. Provide the address and access details below.
-            </p>
+            <div className="flex-1">
+              <p className="text-sm text-muted-foreground">
+                Since this is a stationary asset, customers will come to this location. Provide the address and access details below.
+              </p>
+              <div className="mt-2">
+                <GpsLocationButton
+                  onLocationDetected={(loc) => {
+                    updateField('street_address', loc.street_address);
+                    updateField('city', loc.city);
+                    updateField('state', loc.state);
+                    updateField('zip_code', loc.zip_code);
+                    updateField('country', loc.country);
+                  }}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Full Structured Address Form - Old School Style with Validation */}

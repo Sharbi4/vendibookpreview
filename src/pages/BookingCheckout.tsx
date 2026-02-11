@@ -7,7 +7,7 @@ import {
   Calendar, 
   MapPin, 
   FileCheck, 
-  CreditCard, 
+  CreditCard,
   ChevronDown, 
   CheckCircle2, 
   Zap,
@@ -49,6 +49,7 @@ import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { DocumentType } from '@/types/documents';
 import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
+import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
@@ -116,6 +117,7 @@ const BookingCheckout = () => {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [stagedDocuments, setStagedDocuments] = useState<StagedDocument[]>([]);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   
   // Business info state for food-related categories
   const [businessInfo, setBusinessInfo] = useState<BusinessInfoData | null>(null);
@@ -171,30 +173,29 @@ const BookingCheckout = () => {
   const depositAmount = (listing as any)?.deposit_amount || null;
 
   // Step definitions - dynamic based on listing requirements
-  // Step order: Login -> Business Info (if food) -> Documents (if required) -> Fulfillment -> Review
-  const getStepNumber = (baseStep: number) => {
-    let offset = 0;
-    if (baseStep > 1 && requiresBusinessInfo) offset++; // Add 1 for business info step
-    if (baseStep > 2 && hasRequiredDocs) offset++; // Add 1 for documents step
-    return baseStep + offset;
-  };
-
-  const STEP_LOGIN = 1;
-  const STEP_BUSINESS_INFO = requiresBusinessInfo ? 2 : -1; // -1 means skip
-  const STEP_DOCUMENTS = hasRequiredDocs ? (requiresBusinessInfo ? 3 : 2) : -1;
-  const STEP_FULFILLMENT = 1 + (requiresBusinessInfo ? 1 : 0) + (hasRequiredDocs ? 1 : 0) + 1;
+  // Auth is now deferred: guests can fill everything first, auth is required only at submission
+  // Step order: Business Info (if food) -> Documents (if required) -> Fulfillment -> Review
+  const STEP_BUSINESS_INFO = requiresBusinessInfo ? 1 : -1;
+  const STEP_DOCUMENTS = hasRequiredDocs ? (requiresBusinessInfo ? 2 : 1) : -1;
+  const STEP_FULFILLMENT = 1 + (requiresBusinessInfo ? 1 : 0) + (hasRequiredDocs ? 1 : 0);
   const STEP_REVIEW = STEP_FULFILLMENT + 1;
 
   const steps = [
-    { id: STEP_LOGIN, label: 'Log in or sign up', icon: CreditCard },
     ...(requiresBusinessInfo ? [{ id: STEP_BUSINESS_INFO, label: 'Business information', icon: Building2 }] : []),
     ...(hasRequiredDocs ? [{ id: STEP_DOCUMENTS, label: 'Required documents', icon: FileCheck }] : []),
     { id: STEP_FULFILLMENT, label: 'Fulfillment & details', icon: Truck },
-    { id: STEP_REVIEW, label: 'Review your request', icon: CheckCircle2 },
+    { id: STEP_REVIEW, label: 'Review & submit', icon: CheckCircle2 },
   ];
 
+  // Set initial active step
+  useEffect(() => {
+    if (activeStep === null || activeStep === 1) {
+      const firstStep = steps[0]?.id || STEP_FULFILLMENT;
+      setActiveStep(firstStep);
+    }
+  }, []);
+
   // Check step completion
-  const isStep1Complete = !!user;
   // Business info is complete when all required fields are filled
   const isBusinessInfoComplete = !requiresBusinessInfo || (
     businessInfo?.licenseType &&
@@ -213,30 +214,22 @@ const BookingCheckout = () => {
     (fulfillmentSelected !== 'delivery' || deliveryAddress.trim());
   const isStepFulfillmentComplete = isFulfillmentComplete;
 
-  // Determine which step can be accessed
+  // Determine which step can be accessed (no longer blocked by auth)
   const canAccessStep = (stepId: number): boolean => {
-    if (stepId === STEP_LOGIN) return true;
-    if (stepId === STEP_BUSINESS_INFO) return isStep1Complete;
-    if (stepId === STEP_DOCUMENTS) return isStep1Complete && (!requiresBusinessInfo || isStepBusinessInfoComplete);
-    if (stepId === STEP_FULFILLMENT) return isStep1Complete && (!requiresBusinessInfo || isStepBusinessInfoComplete) && (!hasRequiredDocs || isStepDocsComplete);
+    if (stepId === STEP_BUSINESS_INFO) return true;
+    if (stepId === STEP_DOCUMENTS) return !requiresBusinessInfo || isStepBusinessInfoComplete;
+    if (stepId === STEP_FULFILLMENT) return (!requiresBusinessInfo || isStepBusinessInfoComplete) && (!hasRequiredDocs || isStepDocsComplete);
     if (stepId === STEP_REVIEW) return Boolean(isStepFulfillmentComplete);
-    return false;
+    return true;
   };
 
-  // Mark step 1 as complete when user logs in
+  // Auto-open first step on mount (no auth gate)
   useEffect(() => {
     if (user && !completedSteps.includes(1)) {
+      // If user is already logged in, silently mark old step 1 as done
       setCompletedSteps(prev => [...prev, 1]);
-      // Auto-advance to next step
-      if (requiresBusinessInfo) {
-        setActiveStep(STEP_BUSINESS_INFO);
-      } else if (hasRequiredDocs) {
-        setActiveStep(STEP_DOCUMENTS);
-      } else {
-        setActiveStep(STEP_FULFILLMENT);
-      }
     }
-  }, [user, requiresBusinessInfo, hasRequiredDocs, completedSteps]);
+  }, [user]);
 
   const handleDatesSelected = (start: Date, end: Date) => {
     setStartDate(start);
@@ -266,7 +259,8 @@ const BookingCheckout = () => {
 
   const handleSubmit = async () => {
     if (!user) {
-      navigate('/auth');
+      // Show inline auth modal instead of redirecting
+      setShowAuthModal(true);
       return;
     }
 
@@ -671,51 +665,25 @@ const BookingCheckout = () => {
         <div className="grid lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Left Column - Steps */}
           <div className="lg:col-span-3 space-y-4">
-            {/* Step 1: Login */}
-            <div className="border border-border rounded-2xl overflow-hidden bg-card">
-              <button
-                onClick={() => setActiveStep(activeStep === STEP_LOGIN ? null : STEP_LOGIN)}
-                className="w-full p-5 flex items-center justify-between text-left"
-              >
-                <div className="flex items-center gap-4">
-                  <span className="text-lg font-semibold">1. Log in or sign up</span>
-                  {isStep1Complete && (
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  )}
+            {/* Auth Status Banner - informational only, not blocking */}
+            {user ? (
+              <div className="border border-border rounded-2xl overflow-hidden bg-card p-5">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                  <p className="text-sm text-muted-foreground">
+                    Logged in as <span className="font-medium text-foreground">{user?.email}</span>
+                  </p>
                 </div>
-                {!isStep1Complete && (
-                  <Button variant="dark-shine" size="sm" asChild onClick={(e) => e.stopPropagation()}>
-                    <Link
-                      to={`/auth?redirect=${encodeURIComponent(`/book/${listingId}?${searchParams.toString()}`)}`}
-                    >
-                      Continue
-                    </Link>
-                  </Button>
-                )}
-                {isStep1Complete && (
-                  <ChevronDown className={cn(
-                    "h-5 w-5 text-muted-foreground transition-transform",
-                    activeStep === STEP_LOGIN && "rotate-180"
-                  )} />
-                )}
-              </button>
-              <AnimatePresence>
-                {activeStep === STEP_LOGIN && isStep1Complete && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="border-t border-border"
-                  >
-                    <div className="p-5 bg-muted/30">
-                      <p className="text-sm text-muted-foreground">
-                        Logged in as <span className="font-medium text-foreground">{user?.email}</span>
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+              </div>
+            ) : (
+              <div className="border border-primary/30 rounded-2xl overflow-hidden bg-primary/5 p-5">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Fill out the details below — you'll sign in when you're ready to submit.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Step 2: Business Info (for food-related categories) */}
             {requiresBusinessInfo && (
@@ -1260,6 +1228,20 @@ const BookingCheckout = () => {
           setShowInfoModal(false);
         }}
         initialData={userInfo || undefined}
+      />
+
+      {/* Auth Gate Modal - shown when guest tries to submit */}
+      <AuthGateOfferModal
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+        onAuthSuccess={() => {
+          setShowAuthModal(false);
+          // After auth, user state will update and they can re-click submit
+          toast({
+            title: 'Signed in!',
+            description: 'Click "Submit" again to complete your booking.',
+          });
+        }}
       />
     </div>
   );
