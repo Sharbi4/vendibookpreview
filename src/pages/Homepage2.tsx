@@ -210,7 +210,7 @@ const Homepage2 = () => {
       </div>
 
       {/* ══ CUSTOM HEADER WITH INTEGRATED SEARCH ══ */}
-      <header className="sticky top-3 z-50 w-[calc(100%-1rem)] mx-auto rounded-2xl shadow-lg shadow-black/10 mb-1">
+      <header className="sticky top-4 z-50 w-[calc(100%-1rem)] mx-auto rounded-2xl shadow-lg shadow-black/10 mb-3">
         <div className="relative overflow-hidden rounded-2xl">
           {/* Header gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-[hsl(14,100%,57%)] via-[hsl(20,90%,50%)] to-[hsl(40,100%,49%)] rounded-2xl" />
