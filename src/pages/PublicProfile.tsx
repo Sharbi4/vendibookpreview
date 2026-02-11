@@ -14,11 +14,15 @@ import {
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import EnhancedPublicProfileHeader from '@/components/profile/EnhancedPublicProfileHeader';
-import EnhancedPublicProfileStats from '@/components/profile/EnhancedPublicProfileStats';
+
 import EnhancedPublicProfileTabs from '@/components/profile/EnhancedPublicProfileTabs';
 import ShopPoliciesCard, { ShopPolicies } from '@/components/profile/ShopPoliciesCard';
 import StorefrontEventsSection from '@/components/profile/StorefrontEventsSection';
 import StorefrontGallerySection from '@/components/profile/StorefrontGallerySection';
+import StorefrontFeaturedListing from '@/components/profile/StorefrontFeaturedListing';
+import StorefrontTrustStrip from '@/components/profile/StorefrontTrustStrip';
+import StorefrontCategoryShowcase from '@/components/profile/StorefrontCategoryShowcase';
+import StorefrontStickyContact from '@/components/profile/StorefrontStickyContact';
 import SEO from '@/components/SEO';
 import { 
   useUserStats, 
@@ -387,7 +391,40 @@ const PublicProfile = () => {
           isSuperhost={hostBadges.isSuperhost}
         />
 
-        {/* Content Section - Mini Website Layout */}
+        {/* ══ FEATURED LISTING SPOTLIGHT ══ */}
+        {isHost && (() => {
+          const pinnedListing = profile.pinned_listing_id 
+            ? (listings as Listing[] | undefined)?.find(l => l.id === profile.pinned_listing_id)
+            : (listings as Listing[] | undefined)?.[0];
+          return pinnedListing ? (
+            <div className="container py-6">
+              <StorefrontFeaturedListing listing={pinnedListing} hostName={displayName} />
+            </div>
+          ) : null;
+        })()}
+
+        {/* ══ TRUST & SOCIAL PROOF STRIP ══ */}
+        <div className="container py-4">
+          <StorefrontTrustStrip
+            isVerified={profile.identity_verified || false}
+            responseTime={responseTimeData?.avgResponseTime}
+            completedBookings={completedBookings || 0}
+            averageRating={stats?.averageRating}
+            totalReviews={stats?.totalReviewsReceived}
+            memberSince={memberSinceText}
+            isTopRated={hostBadges.isTopRated}
+            isSuperhost={hostBadges.isSuperhost}
+          />
+        </div>
+
+        {/* ══ ANIMATED CATEGORY SHOWCASE ══ */}
+        {isHost && (
+          <div className="container py-4">
+            <StorefrontCategoryShowcase listings={listings as Listing[] | undefined} />
+          </div>
+        )}
+
+        {/* Content Section */}
         <motion.div 
           className="container py-6 space-y-6"
           initial={{ opacity: 0, y: 20 }}
@@ -406,13 +443,6 @@ const PublicProfile = () => {
           <ShopPoliciesCard 
             policies={profile.shop_policies || null} 
             isOwnProfile={isOwnProfile} 
-          />
-
-          {/* Stats Row */}
-          <EnhancedPublicProfileStats
-            stats={stats}
-            completedBookings={completedBookings || 0}
-            isHost={isHost}
           />
         </motion.div>
 
@@ -445,7 +475,7 @@ const PublicProfile = () => {
           onViewListings={handleViewListingsClick}
         />
 
-        {/* Photo Gallery - Below Listings */}
+        {/* Photo Gallery */}
         {isHost && (
           <motion.div 
             className="container py-6"
@@ -462,32 +492,16 @@ const PublicProfile = () => {
         )}
       </main>
 
-      {/* Section 2: Mobile Sticky CTA with glass-premium styling */}
+      {/* ══ MOBILE STICKY CONTACT BAR ══ */}
       {!isOwnProfile && isHost && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-black/10 backdrop-blur-2xl border-t border-white/15 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.15)] z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 12px)' }}>
-          <div className="flex gap-2 px-4 py-3 max-w-lg mx-auto">
-            <Button 
-              variant="dark-shine"
-              onClick={handleMessageHost} 
-              disabled={isMessaging}
-              className="flex-1 h-11 rounded-xl font-medium shadow-lg"
-            >
-              {isMessaging ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <MessageCircle className="h-4 w-4 mr-2" />
-              )}
-              {listingContext ? 'Message about listing' : 'Message Host'}
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={handleViewListingsClick}
-              className="flex-1 h-11 rounded-xl font-medium border-border/50"
-            >
-              View Listings ({stats?.totalListings || 0})
-            </Button>
-          </div>
-        </div>
+        <StorefrontStickyContact
+          onMessage={handleMessageHost}
+          onShare={handleShare}
+          onViewListings={handleViewListingsClick}
+          isMessaging={isMessaging}
+          listingsCount={stats?.totalListings || 0}
+          listingContext={listingContext}
+        />
       )}
 
       {/* Safety Tips Modal */}
