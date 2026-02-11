@@ -35,10 +35,12 @@ interface FilterPanelProps {
   onChange: (filters: FilterValues) => void;
   onApply: () => void;
   onClear: () => void;
+  autoApply?: boolean;
 }
 
-export const FilterPanel = ({ filters, onChange, onApply, onClear }: FilterPanelProps) => {
+export const FilterPanel = ({ filters, onChange, onApply, onClear, autoApply = false }: FilterPanelProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const isFirstRender = useRef(true);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
 
@@ -63,6 +65,17 @@ export const FilterPanel = ({ filters, onChange, onApply, onClear }: FilterPanel
       };
     }
   }, [isOpen, updatePosition]);
+
+  // Auto-apply filters when they change (skip first render)
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    if (autoApply) {
+      onApply();
+    }
+  }, [filters, autoApply]);
 
   const activeCount = [
     filters.minPrice || filters.maxPrice ? 1 : 0,
