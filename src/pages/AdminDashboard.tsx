@@ -27,7 +27,7 @@ import AdminUsersListCard from '@/components/admin/AdminUsersListCard';
 import DailyReportExport from '@/components/admin/DailyReportExport';
 import ZendeskBulkSync from '@/components/admin/ZendeskBulkSync';
 import ZendeskContactSync from '@/components/admin/ZendeskContactSync';
-import AdminPromoTab from '@/components/admin/AdminPromoTab';
+
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -259,10 +259,6 @@ const AdminDashboard = () => {
             <TabsTrigger value="reports" className="relative">
               <FileSpreadsheet className="h-4 w-4 mr-1" />
               Reports
-            </TabsTrigger>
-            <TabsTrigger value="promo" className="relative">
-              <DollarSign className="h-4 w-4 mr-1" />
-              Promo
             </TabsTrigger>
           </TabsList>
 
@@ -686,10 +682,6 @@ const AdminDashboard = () => {
             <DailyReportExport />
           </TabsContent>
 
-          {/* Promo Tab */}
-          <TabsContent value="promo" className="space-y-4">
-            <AdminPromoTab />
-          </TabsContent>
         </Tabs>
       </main>
       <Footer />

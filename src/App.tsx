@@ -92,7 +92,7 @@ const HowItWorksHost = lazy(() => import("./pages/HowItWorksHost"));
 const HowItWorksSeller = lazy(() => import("./pages/HowItWorksSeller"));
 const BecomeAHost = lazy(() => import("./pages/BecomeAHost"));
 const SignageRequest = lazy(() => import("./pages/SignageRequest"));
-const Promo = lazy(() => import("./pages/Promo"));
+
 const StartFoodBusiness = lazy(() => import("./pages/StartFoodBusiness"));
 const Homepage2 = lazy(() => import("./pages/Homepage2"));
 
@@ -240,8 +240,6 @@ const AnimatedRoutes = () => {
           {/* Payments & Protection */}
           <Route path="/payments" element={<PageTransition><Payments /></PageTransition>} />
           
-          {/* Promo Landing Page */}
-          <Route path="/promo" element={<PageTransition><Promo /></PageTransition>} />
           
           {/* Renter Landing Page */}
           <Route path="/start" element={<PageTransition><StartFoodBusiness /></PageTransition>} />
