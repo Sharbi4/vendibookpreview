@@ -56,7 +56,7 @@ const Index = () => {
         if (error) throw error;
         return data;
       },
-      staleTime: 30000, // 30 seconds
+      staleTime: 60000, // 60 seconds
     });
   }, [queryClient]);
 

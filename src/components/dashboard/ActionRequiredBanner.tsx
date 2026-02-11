@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AlertCircle, ArrowRight, Calendar, HandCoins, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -9,6 +9,7 @@ interface ActionRequiredBannerProps {
 }
 
 const ActionRequiredBanner = ({ pendingRequests, pendingOffers, draftListings = 0 }: ActionRequiredBannerProps) => {
+  const navigate = useNavigate();
   const totalActions = pendingRequests + pendingOffers + draftListings;
   
   if (totalActions === 0) return null;
@@ -83,8 +84,13 @@ const ActionRequiredBanner = ({ pendingRequests, pendingOffers, draftListings = 
               variant="dark-shine" 
               className="gap-1.5"
               onClick={() => {
-                const tabTrigger = document.querySelector(`[data-state][value="${primaryAction.tab}"]`) as HTMLElement;
-                if (tabTrigger) tabTrigger.click();
+                if (primaryAction.tab === 'bookings') {
+                  navigate('/host/bookings');
+                } else if (primaryAction.tab === 'offers') {
+                  navigate('/dashboard?view=host&tab=overview');
+                } else if (primaryAction.tab === 'listings') {
+                  navigate('/host/listings');
+                }
               }}
             >
               Review
