@@ -159,21 +159,21 @@ const HowItWorks = () => {
 
       {/* ══ FULL-PAGE GRADIENT BACKGROUND ══ */}
       <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(30,20%,97%)] via-[hsl(30,15%,96%)] to-[hsl(35,10%,95%)]" />
+        <div className="absolute inset-0 bg-[hsl(30,10%,97%)]" />
         <motion.div
           animate={{ x: [0, 60, -40, 0], y: [0, -50, 30, 0], scale: [1, 1.2, 0.9, 1] }}
           transition={{ repeat: Infinity, duration: 18, ease: 'easeInOut' }}
-          className="absolute -top-40 -left-40 w-[700px] h-[700px] rounded-full bg-[hsl(14,100%,57%)]/20 blur-[150px]"
+          className="absolute -top-40 -left-40 w-[700px] h-[700px] rounded-full bg-[hsl(14,100%,57%)]/[0.04] blur-[150px]"
         />
         <motion.div
           animate={{ x: [0, -50, 60, 0], y: [0, 40, -40, 0], scale: [1, 0.85, 1.2, 1] }}
           transition={{ repeat: Infinity, duration: 22, ease: 'easeInOut' }}
-          className="absolute top-1/4 -right-32 w-[800px] h-[800px] rounded-full bg-[hsl(40,100%,49%)]/15 blur-[170px]"
+          className="absolute top-1/4 -right-32 w-[800px] h-[800px] rounded-full bg-[hsl(40,100%,49%)]/[0.03] blur-[170px]"
         />
         <motion.div
           animate={{ x: [0, 30, -40, 0], y: [0, -30, 50, 0] }}
           transition={{ repeat: Infinity, duration: 16, ease: 'easeInOut' }}
-          className="absolute bottom-0 left-1/3 w-[600px] h-[600px] rounded-full bg-[hsl(14,80%,50%)]/12 blur-[130px]"
+          className="absolute bottom-0 left-1/3 w-[600px] h-[600px] rounded-full bg-[hsl(14,80%,50%)]/[0.03] blur-[130px]"
         />
       </div>
 
