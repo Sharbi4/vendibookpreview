@@ -31,7 +31,7 @@ import CancellationPolicyCard from '@/components/trust/CancellationPolicyCard';
 import { ListingEventsSection } from '@/components/storefront';
 import ListingLocationMap from '@/components/listing-detail/ListingLocationMap';
 import { TechSpecsGrid } from '@/components/listing-detail/TechSpecsGrid';
-import { InlineAvailabilityCalendar } from '@/components/listing-detail/InlineAvailabilityCalendar';
+
 import { VendorSlotAvailability } from '@/components/listing-detail/VendorSlotAvailability';
 import { WeeklyHoursDisplay } from '@/components/listing-detail/WeeklyHoursDisplay';
 import { RentalBookingWidget } from '@/components/listing-detail/RentalBookingWidget';
@@ -419,17 +419,6 @@ const ListingDetail = () => {
                 </>
               )}
 
-              {/* Inline Availability Calendar - Rentals only (NEW) */}
-              {isRental && (
-                <>
-                  <InlineAvailabilityCalendar
-                    listingId={listing.id}
-                    availableFrom={listing.available_from}
-                    availableTo={listing.available_to}
-                  />
-                  <div className="border-t border-border" />
-                </>
-              )}
 
               {/* Weekly Operating Hours - Show for hourly listings */}
               {isRental && (listing as any).hourly_enabled && (listing as any).hourly_schedule && (
