@@ -5,12 +5,14 @@ import {
   Map as MapIcon, X, Plus, UserPlus, Info, ArrowRight, Utensils,
   Building2, ShoppingBag, Zap, Menu,
 } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, HelpCircle, LogOut } from 'lucide-react';
 import Footer from '@/components/layout/Footer';
 import ListingCard from '@/components/listing/ListingCard';
 import { LocationSearchInput } from '@/components/search/LocationSearchInput';
 import SearchResultsMap from '@/components/search/SearchResultsMap';
 import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Listing } from '@/types/listing';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,7 +20,7 @@ import {
   Pagination, PaginationContent, PaginationEllipsis,
   PaginationItem, PaginationLink, PaginationNext, PaginationPrevious,
 } from '@/components/ui/pagination';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 
@@ -41,6 +43,8 @@ interface SearchResponse {
 }
 
 const Homepage2 = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [locationText, setLocationText] = useState('');
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
@@ -260,18 +264,50 @@ const Homepage2 = () => {
                   className="absolute right-4 top-[60px] z-[200] w-52 rounded-xl bg-gray-900 backdrop-blur-xl border border-white/15 shadow-2xl shadow-black/40 overflow-hidden"
                 >
                   <div className="py-1.5">
-                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                      <UserPlus className="w-4 h-4 text-white/70" /> Sign Up / Login
-                    </Link>
-                    <Link to="/list" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                      <Plus className="w-4 h-4 text-white/70" /> Become a Host
-                    </Link>
-                    <Link to="/how-it-works" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                      <Info className="w-4 h-4 text-white/70" /> Learn More
-                    </Link>
-                    <Link to="/browse" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                      <Search className="w-4 h-4 text-white/70" /> Browse All
-                    </Link>
+                    {user ? (
+                      <>
+                        <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
+                          <LayoutDashboard className="w-4 h-4 text-white/70" /> Dashboard
+                        </Link>
+                        <Link to="/dashboard?tab=messages" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
+                          <MessageSquare className="w-4 h-4 text-white/70" /> Messages
+                        </Link>
+                        <Link to="/homepage2" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
+                          <Search className="w-4 h-4 text-white/70" /> Browse All
+                        </Link>
+                        <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
+                          <HelpCircle className="w-4 h-4 text-white/70" /> Help Center
+                        </Link>
+                        <Link to="/how-it-works" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
+                          <Info className="w-4 h-4 text-white/70" /> Learn More
+                        </Link>
+                        <button
+                          onClick={async () => {
+                            setMobileMenuOpen(false);
+                            await supabase.auth.signOut();
+                            navigate('/');
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-red-400 text-sm font-medium hover:bg-white/10 transition-colors"
+                        >
+                          <LogOut className="w-4 h-4 text-red-400/70" /> Log Out
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link to="/auth" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
+                          <UserPlus className="w-4 h-4 text-white/70" /> Sign Up / Login
+                        </Link>
+                        <Link to="/list" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
+                          <Plus className="w-4 h-4 text-white/70" /> Become a Host
+                        </Link>
+                        <Link to="/how-it-works" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
+                          <Info className="w-4 h-4 text-white/70" /> Learn More
+                        </Link>
+                        <Link to="/homepage2" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-white text-sm font-medium hover:bg-white/10 transition-colors">
+                          <Search className="w-4 h-4 text-white/70" /> Browse All
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </motion.div>
               )}
