@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, MapPin, SlidersHorizontal, Truck, ChevronRight, Sparkles,
   Map as MapIcon, X, Plus, UserPlus, Info, ArrowRight, Utensils,
-  Building2, ShoppingBag, Zap,
+  Building2, ShoppingBag, Zap, Menu,
 } from 'lucide-react';
 import Footer from '@/components/layout/Footer';
 import ListingCard from '@/components/listing/ListingCard';
@@ -58,6 +58,7 @@ const Homepage2 = () => {
 
   const [showMap, setShowMap] = useState(false);
   const [learnMoreOpen, setLearnMoreOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { apiKey, isLoading: mapLoading, error: mapError } = useGoogleMapsToken();
 
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -205,14 +206,13 @@ const Homepage2 = () => {
                     className="h-10 rounded-xl bg-white/15 backdrop-blur-xl border-white/25 text-sm [&_input]:text-white [&_input]:placeholder:text-white/60"
                   />
                 </div>
-                {/* Dark-shine Search button */}
+                {/* Search button — icon only */}
                 <Button
-                  size="sm"
+                  size="icon"
                   onClick={handleSearch}
-                  className="h-10 rounded-xl bg-gray-900 text-white hover:bg-gray-800 px-5 text-sm font-semibold shadow-xl shadow-black/20 border border-gray-700"
+                  className="h-10 w-10 shrink-0 rounded-xl bg-gray-900 text-white hover:bg-gray-800 shadow-xl shadow-black/20 border border-gray-700"
                 >
-                  <Search className="w-4 h-4 mr-1.5" />
-                  Search
+                  <Search className="w-4 h-4" />
                 </Button>
               </div>
 
@@ -224,14 +224,52 @@ const Homepage2 = () => {
                     Create Listing
                   </Link>
                 </Button>
-                <Button asChild size="sm" className="h-9 rounded-xl bg-white/20 backdrop-blur-xl text-white hover:bg-white/30 text-xs font-semibold border border-white/25">
+                {/* Sign Up — desktop only */}
+                <Button asChild size="sm" className="hidden sm:flex h-9 rounded-xl bg-white/20 backdrop-blur-xl text-white hover:bg-white/30 text-xs font-semibold border border-white/25">
                   <Link to="/auth">
                     <UserPlus className="w-3.5 h-3.5 mr-1" />
                     Sign Up
                   </Link>
                 </Button>
+                {/* Learn More — mobile only (replaces sign up) */}
+                <Button size="sm" onClick={() => setLearnMoreOpen(!learnMoreOpen)} className="sm:hidden h-9 rounded-xl bg-white/20 backdrop-blur-xl text-white hover:bg-white/30 text-xs font-semibold border border-white/25">
+                  <Info className="w-3.5 h-3.5 mr-1" />
+                  Learn More
+                </Button>
+                {/* Hamburger menu — mobile far right */}
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="sm:hidden p-2 rounded-xl bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-colors"
+                >
+                  {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </button>
               </div>
             </div>
+
+            {/* Mobile dropdown menu */}
+            <AnimatePresence>
+              {mobileMenuOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="sm:hidden overflow-hidden border-t border-white/15"
+                >
+                  <div className="py-3 space-y-2">
+                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors">
+                      <UserPlus className="w-4 h-4" /> Sign Up / Sign In
+                    </Link>
+                    <Link to="/list" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors">
+                      <Plus className="w-4 h-4" /> Create Listing
+                    </Link>
+                    <Link to="/how-it-works" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors">
+                      <Info className="w-4 h-4" /> How It Works
+                    </Link>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Bottom row: Category chips + mode + sort */}
             <div className="flex items-center gap-2.5 pb-2.5 -mt-0.5">
