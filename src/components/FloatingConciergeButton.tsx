@@ -7,7 +7,7 @@ import { useLocation } from 'react-router-dom';
 const HIDDEN_ROUTES = ['/contact', '/help', '/faq'];
 
 const FloatingConciergeButton = () => {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const location = useLocation();
 
@@ -16,19 +16,7 @@ const FloatingConciergeButton = () => {
     location.pathname === route || location.pathname.startsWith(`${route}/`)
   );
 
-  // Show button after scrolling past hero
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      // Show after scrolling 400px
-      setIsVisible(scrollY > 400);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // Check initial state
-    
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  // Always visible — no scroll gating
 
   const openZendeskChat = () => {
     if (window.zE) {
