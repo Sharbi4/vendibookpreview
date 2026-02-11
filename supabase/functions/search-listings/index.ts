@@ -85,7 +85,8 @@ Deno.serve(async (req) => {
     let queryBuilder = supabaseClient
       .from('listings')
       .select('*', { count: 'exact' })
-      .eq('status', 'published');
+      .eq('status', 'published')
+      .not('title', 'ilike', 'Demo %');
 
     // Apply mode filter
     if (mode) {
