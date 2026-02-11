@@ -163,8 +163,9 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
 
   return (
     <>
+      <div className="relative rounded-[18px] p-[2px] bg-gradient-to-br from-[hsl(14,100%,55%)] via-[hsl(25,95%,53%)]/40 to-[hsl(40,100%,49%)]/60">
       <motion.div 
-        className="relative rounded-2xl overflow-hidden"
+        className="relative rounded-2xl overflow-hidden bg-background"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 100, damping: 20 }}
@@ -321,6 +322,7 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
           </motion.div>
         )}
       </motion.div>
+      </div>
 
       {/* Lightbox Modal with swipe support */}
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
