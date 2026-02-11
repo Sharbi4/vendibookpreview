@@ -2100,54 +2100,6 @@ export type Database = {
         }
         Relationships: []
       }
-      voice_agent_leads: {
-        Row: {
-          budget: string | null
-          category: string | null
-          created_at: string
-          dates: string | null
-          id: string
-          intent_type: string | null
-          listing_mode: string | null
-          location: string | null
-          metadata: Json | null
-          raw_transcript: string | null
-          session_id: string | null
-          summary: string
-          user_id: string | null
-        }
-        Insert: {
-          budget?: string | null
-          category?: string | null
-          created_at?: string
-          dates?: string | null
-          id?: string
-          intent_type?: string | null
-          listing_mode?: string | null
-          location?: string | null
-          metadata?: Json | null
-          raw_transcript?: string | null
-          session_id?: string | null
-          summary: string
-          user_id?: string | null
-        }
-        Update: {
-          budget?: string | null
-          category?: string | null
-          created_at?: string
-          dates?: string | null
-          id?: string
-          intent_type?: string | null
-          listing_mode?: string | null
-          location?: string | null
-          metadata?: Json | null
-          raw_transcript?: string | null
-          session_id?: string | null
-          summary?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       zendesk_ticket_comments: {
         Row: {
           author_email: string | null
