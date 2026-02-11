@@ -291,9 +291,8 @@ const Header = () => {
           }`}
         >
           {isMobileSearchOpen ? (
-            <div className="relative flex items-center gap-1 w-full">
-              <form onSubmit={handleMobileSearch} className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="relative flex items-center gap-2 w-full">
+              <form onSubmit={handleMobileSearch} className="flex-1">
                 <Input
                   ref={mobileSearchInputRef}
                   type="text"
@@ -304,7 +303,7 @@ const Header = () => {
                   }}
                   onFocus={() => setShowSuggestions(true)}
                   placeholder={isListening ? t('header.listening') : t('header.mobileSearchPlaceholder')}
-                  className={`pl-9 pr-4 py-2 w-full rounded-full border-border bg-muted/50 focus-visible:ring-primary ${isListening ? 'border-primary ring-2 ring-primary/20' : ''}`}
+                  className={`px-4 py-2 w-full rounded-full border-border bg-muted/50 focus-visible:ring-primary ${isListening ? 'border-primary ring-2 ring-primary/20' : ''}`}
                   autoComplete="off"
                 />
               </form>
