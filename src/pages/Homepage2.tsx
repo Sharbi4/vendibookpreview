@@ -279,8 +279,10 @@ const Homepage2 = () => {
             <div className="flex items-center justify-between gap-3 h-14">
               {/* Favicon / Logo */}
               <Link to="/" className="shrink-0 flex items-center gap-2 relative">
-                <div className="absolute inset-0 -inset-x-1 rounded-full bg-white/25 blur-sm pointer-events-none sm:hidden" />
-                <div className="absolute inset-0 -inset-x-4 -inset-y-2 rounded-full bg-white/60 blur-xl pointer-events-none hidden sm:block" />
+                {/* Mobile glass blob */}
+                <div className="absolute -inset-x-2 -inset-y-1 pointer-events-none sm:hidden" style={{ borderRadius: '60% 40% 50% 45% / 50% 60% 40% 55%', background: 'linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.25) 100%)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 2px 12px rgba(255,255,255,0.1)' }} />
+                {/* Desktop glass blob */}
+                <div className="absolute -inset-x-5 -inset-y-3 pointer-events-none hidden sm:block" style={{ borderRadius: '55% 45% 60% 40% / 45% 55% 45% 55%', background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.15) 40%, rgba(255,255,255,0.3) 100%)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.25)', boxShadow: '0 4px 20px rgba(255,255,255,0.12), inset 0 1px 0 rgba(255,255,255,0.3)' }} />
                 <img src={vendibookFavicon} alt="Vendibook" className="relative h-10 w-auto sm:hidden" />
                 <img src={vendibookLogo} alt="Vendibook" className="relative hidden sm:block h-28 w-auto" />
               </Link>
