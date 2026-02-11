@@ -94,23 +94,27 @@ const HeroRentalSearch = () => {
           className="flex flex-col gap-3 mb-6"
         >
           <div className="grid grid-cols-2 gap-3">
-            <Button
-              variant="dark-shine"
-              size="lg"
-              className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl"
-              onClick={() => navigate('/search')}
-            >
-              Browse Listings
-            </Button>
+            <motion.div whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
+              <Button
+                variant="dark-shine"
+                size="lg"
+                className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+                onClick={() => navigate('/search')}
+              >
+                Browse Listings
+              </Button>
+            </motion.div>
 
-            <Button
-              variant="dark-shine"
-              size="lg"
-              className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl"
-              onClick={() => navigate('/list')}
-            >
-              Create a Free Listing
-            </Button>
+            <motion.div whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
+              <Button
+                variant="dark-shine"
+                size="lg"
+                className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+                onClick={() => navigate('/list')}
+              >
+                Create a Free Listing
+              </Button>
+            </motion.div>
           </div>
 
           {!user && (
@@ -131,7 +135,7 @@ const HeroRentalSearch = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.35, ease: 'easeOut' }}
-          className="glass-premium rounded-3xl p-5 md:p-6 shadow-2xl border border-border/40"
+          className="glass-premium rounded-3xl p-5 md:p-6 shadow-2xl border border-border/40 hover:shadow-3xl transition-shadow duration-500"
         >
           <div className="flex items-center gap-2 mb-4">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">

@@ -36,16 +36,20 @@ const RentalBenefits = () => {
           {benefits.map((benefit, index) => (
             <motion.div 
               key={index} 
-              className="text-center sm:text-left"
+              className="text-center sm:text-left group cursor-default"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
+              whileHover={{ y: -3, transition: { duration: 0.25 } }}
             >
-              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary/10 text-primary mb-4 sm:mb-5">
+              <motion.div 
+                className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary/10 text-primary mb-4 sm:mb-5"
+                whileHover={{ scale: 1.1, rotate: -3, transition: { duration: 0.3 } }}
+              >
                 <benefit.icon className="h-6 w-6 sm:h-7 sm:w-7" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2 sm:mb-3">
+              </motion.div>
+              <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2 sm:mb-3 group-hover:text-primary transition-colors duration-300">
                 {benefit.title}
               </h3>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
