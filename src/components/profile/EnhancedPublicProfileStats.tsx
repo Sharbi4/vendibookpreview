@@ -92,10 +92,9 @@ const EnhancedPublicProfileStats = ({
               transition: { type: 'spring', stiffness: 400, damping: 17 } 
             }}
             className={cn(
-              'relative overflow-hidden text-center p-4 md:p-5 rounded-2xl shadow-lg cursor-default',
-              'glass-premium',
-              item.bgColor,
-              'border-2 border-border'
+              'relative overflow-hidden text-center p-4 md:p-5 rounded-2xl shadow-[0_8px_32px_-8px_rgba(0,0,0,0.1)] cursor-default',
+              'bg-white/60 dark:bg-white/5 backdrop-blur-2xl',
+              'border border-white/20'
             )}
           >
             {/* Decorative gradient orb */}
