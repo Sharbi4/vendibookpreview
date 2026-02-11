@@ -201,10 +201,10 @@ const Homepage2 = () => {
       </div>
 
       {/* ══ CUSTOM HEADER WITH INTEGRATED SEARCH ══ */}
-      <header className="sticky top-2 z-50 w-[calc(100%-1rem)] mx-auto rounded-2xl overflow-hidden shadow-[0_6px_30px_-6px_rgba(0,0,0,0.18),0_2px_10px_-2px_rgba(0,0,0,0.08)]">
-        <div className="relative">
+      <header className="sticky top-2 z-50 w-[calc(100%-1rem)] mx-auto rounded-2xl shadow-[0_6px_30px_-6px_rgba(0,0,0,0.18),0_2px_10px_-2px_rgba(0,0,0,0.08)]">
+        <div className="relative overflow-hidden rounded-2xl">
           {/* Header gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(14,100%,57%)] via-[hsl(20,90%,50%)] to-[hsl(40,100%,49%)]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(14,100%,57%)] via-[hsl(20,90%,50%)] to-[hsl(40,100%,49%)] rounded-2xl" />
           {/* Animated shine */}
           <div className="absolute inset-0 hp2-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent" />
           {/* Glass overlay */}
