@@ -26,6 +26,7 @@ const ListingsSections = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 60000,
   });
 
   // Fetch sale listings (newest first)
@@ -43,6 +44,7 @@ const ListingsSections = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 60000,
   });
 
   // Fetch vendor space listings
@@ -60,6 +62,7 @@ const ListingsSections = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 60000,
   });
 
   // Combine all listings for host lookup
