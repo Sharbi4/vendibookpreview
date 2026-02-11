@@ -280,9 +280,9 @@ const Homepage2 = () => {
               {/* Favicon / Logo */}
               <Link to="/" className="shrink-0 flex items-center gap-2 relative">
                 {/* Mobile glass blob */}
-                <div className="absolute -inset-x-2 -inset-y-1 pointer-events-none sm:hidden" style={{ borderRadius: '60% 40% 50% 45% / 50% 60% 40% 55%', background: 'linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.25) 100%)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 2px 12px rgba(255,255,255,0.1)' }} />
+                <div className="absolute -inset-x-2 -inset-y-1 pointer-events-none sm:hidden" style={{ borderRadius: '60% 40% 50% 45% / 50% 60% 40% 55%', background: 'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(200,220,255,0.15) 30%, rgba(255,200,150,0.12) 60%, rgba(255,255,255,0.25) 100%)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', boxShadow: '0 2px 16px rgba(255,255,255,0.08)' }} />
                 {/* Desktop glass blob */}
-                <div className="absolute -inset-x-5 -inset-y-3 pointer-events-none hidden sm:block" style={{ borderRadius: '55% 45% 60% 40% / 45% 55% 45% 55%', background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.15) 40%, rgba(255,255,255,0.3) 100%)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.25)', boxShadow: '0 4px 20px rgba(255,255,255,0.12), inset 0 1px 0 rgba(255,255,255,0.3)' }} />
+                <div className="absolute -inset-x-5 -inset-y-3 pointer-events-none hidden sm:block" style={{ borderRadius: '55% 45% 60% 40% / 45% 55% 45% 55%', background: 'linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(180,210,255,0.18) 25%, rgba(255,180,120,0.12) 50%, rgba(220,200,255,0.15) 75%, rgba(255,255,255,0.3) 100%)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', boxShadow: '0 4px 24px rgba(255,255,255,0.1)' }} />
                 <img src={vendibookFavicon} alt="Vendibook" className="relative h-10 w-auto sm:hidden" />
                 <img src={vendibookLogo} alt="Vendibook" className="relative hidden sm:block h-28 w-auto" />
               </Link>
