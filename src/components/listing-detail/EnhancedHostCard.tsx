@@ -196,16 +196,8 @@ const EnhancedHostCard = ({
         </div>
       </motion.div>
 
-      {/* Message Form & Profile Link */}
-      <motion.div 
-        className="space-y-3"
-        variants={itemVariants}
-      >
-        <MessageHostForm 
-          listingId={listingId}
-          hostId={hostId}
-          listingTitle={listingTitle}
-        />
+      {/* Profile Link */}
+      <motion.div variants={itemVariants}>
         <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
           <Button 
             variant="ghost" 
