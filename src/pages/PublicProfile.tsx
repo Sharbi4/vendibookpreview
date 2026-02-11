@@ -420,7 +420,7 @@ const PublicProfile = () => {
         {/* ══ ANIMATED CATEGORY SHOWCASE ══ */}
         {isHost && (
           <div className="container py-4">
-            <StorefrontCategoryShowcase listings={listings as Listing[] | undefined} />
+            <StorefrontCategoryShowcase listings={listings as Listing[] | undefined} hostName={displayName} />
           </div>
         )}
 

@@ -5,6 +5,7 @@ import { Listing } from '@/types/listing';
 
 interface StorefrontCategoryShowcaseProps {
   listings: Listing[] | undefined;
+  hostName?: string;
 }
 
 const CATEGORY_META: Record<string, { label: string; icon: typeof Truck; gradient: string }> = {
@@ -30,7 +31,7 @@ const CATEGORY_META: Record<string, { label: string; icon: typeof Truck; gradien
   },
 };
 
-const StorefrontCategoryShowcase = ({ listings }: StorefrontCategoryShowcaseProps) => {
+const StorefrontCategoryShowcase = ({ listings, hostName }: StorefrontCategoryShowcaseProps) => {
   if (!listings || listings.length === 0) return null;
 
   // Group listings by category
@@ -52,10 +53,13 @@ const StorefrontCategoryShowcase = ({ listings }: StorefrontCategoryShowcaseProp
     >
       {/* Warm gradient background band */}
       <div className="relative rounded-2xl overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-[hsl(14,100%,57%)]/8 via-[hsl(25,95%,55%)]/5 to-[hsl(40,100%,49%)]/8" />
+        {/* Clean grey base with clear glass morph */}
+        <div className="absolute inset-0 bg-[hsl(0,0%,92%)] dark:bg-[hsl(0,0%,12%)]" />
+        <div className="absolute inset-0 backdrop-blur-xl bg-white/30 dark:bg-white/[0.04]" />
+        <div className="absolute inset-0 border border-white/20 dark:border-white/10 rounded-2xl" />
         
         <div className="relative p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-1">What this host offers</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-1">What {hostName} Offers</h3>
           <p className="text-sm text-muted-foreground mb-5">Browse by asset type</p>
 
           <div className={cn(

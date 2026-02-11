@@ -26,15 +26,37 @@ const StorefrontFeaturedListing = ({ listing, hostName }: StorefrontFeaturedList
       transition={{ delay: 0.15, type: 'spring', stiffness: 200, damping: 24 }}
       className="relative overflow-hidden rounded-2xl"
     >
-      {/* Warm gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(14,100%,57%)]/10 via-[hsl(25,95%,55%)]/8 to-[hsl(40,100%,49%)]/10" />
+      {/* Animated grey-to-orange gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(0,0%,92%)] via-[hsl(0,0%,88%)] to-[hsl(0,0%,85%)] dark:from-[hsl(0,0%,14%)] dark:via-[hsl(0,0%,12%)] dark:to-[hsl(0,0%,10%)]" />
+      <motion.div
+        className="absolute inset-0 opacity-40"
+        animate={{
+          background: [
+            'linear-gradient(135deg, hsl(14,100%,57%,0.15) 0%, hsl(40,100%,49%,0.1) 50%, transparent 100%)',
+            'linear-gradient(225deg, hsl(40,100%,49%,0.15) 0%, hsl(14,100%,57%,0.1) 50%, transparent 100%)',
+            'linear-gradient(135deg, hsl(14,100%,57%,0.15) 0%, hsl(40,100%,49%,0.1) 50%, transparent 100%)',
+          ],
+        }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      {/* Clear glass overlay */}
+      <div className="absolute inset-0 backdrop-blur-sm bg-white/5 dark:bg-white/[0.02]" />
       
       <div className="relative p-6 md:p-8">
         <div className="flex items-center gap-2 mb-4">
-          <Badge className="bg-foreground text-background text-xs font-semibold px-2.5 py-0.5">
-            <Zap className="h-3 w-3 mr-1" />
-            Featured
-          </Badge>
+          <motion.div
+            animate={{
+              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ backgroundSize: '200% 200%' }}
+            className="inline-flex"
+          >
+            <Badge className="bg-gradient-to-r from-[hsl(14,100%,57%)] to-[hsl(40,100%,49%)] text-white text-xs font-semibold px-2.5 py-0.5 border-0 shadow-md">
+              <Zap className="h-3 w-3 mr-1" />
+              Featured
+            </Badge>
+          </motion.div>
           <span className="text-xs text-muted-foreground">{hostName}'s spotlight</span>
         </div>
 
