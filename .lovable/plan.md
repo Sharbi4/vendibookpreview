@@ -1,44 +1,46 @@
 
 
-# Add Slot Names and Operating Hours Enforcement to Listing Wizard
+# Restyle City/State Confirmation + Ensure Data Persistence
 
-## Overview
-The listing wizard currently collects the number of slots (total_slots) but never asks hosts to **name** each slot. The database already supports `slot_names` (string array) and booking uses `slot_name` per reservation, but the wizard doesn't populate this data. Additionally, when a host configures multiple slots, they should be required to set operating hours before proceeding.
+## Problem
+1. The city/state confirmation overlay in both the QuickStartWizard and StepLocation uses emerald/green borders and backgrounds, which conflicts with the platform's "dark-shine" design system (black borders, clean neutral greys).
+2. The ZIP code input also turns green on confirmation (`border-emerald-500`), which is inconsistent.
+3. The QuickStartWizard saves city/state into the `address` field as "City, ST" but the database has no dedicated `city`, `state`, or `zip_code` columns -- so the data only persists as a concatenated string. This is already correct behavior since listing cards and detail pages read from `listing.address`. However, we should verify that the full wizard (ListingWizard) also properly saves the structured fields into the `address` column.
 
-## What Changes
+## Changes
 
-### 1. Slot Naming UI (StepDetails.tsx)
-When a host sets `total_slots` > 1 (for categories like ghost_kitchen, vendor_space, vendor_lot), a dynamic list of text inputs appears -- one per slot -- so they can name each one (e.g., "Prep Station A", "Bay 2", "Corner Spot").
+### 1. Restyle City/State Confirmation Overlay (StepLocation.tsx)
+**Lines 154-171**: Replace emerald-themed overlay with dark-shine consistent styling:
+- Background: `bg-muted/50` (clean grey) instead of `bg-emerald-50`
+- Border: `border-border` (standard dark/neutral) instead of `border-emerald-200`
+- Check icon: `text-foreground` instead of `text-emerald-600`
+- Remove dark mode emerald variants
 
-- Inputs auto-generate with placeholder names ("Slot 1", "Slot 2", etc.)
-- Hosts can customize each name
-- Names are stored in `formData.slot_names` as a string array
+### 2. Restyle City/State Confirmation Overlay (QuickStartWizard.tsx)
+**Lines 448-465**: Same restyling as above -- replace emerald with neutral dark-shine:
+- Background: `bg-muted/50`
+- Border: `border-border`
+- Check icon: `text-foreground`
 
-### 2. Form Data Update (useListingForm.ts + types/listing.ts)
-- Add `slot_names: string[]` to `ListingFormData` with default `[]`
-- When `total_slots` changes, auto-resize the `slot_names` array (add new entries with defaults, trim excess)
+### 3. Restyle ZIP Code Input Confirmed State (both files)
+- Replace `border-emerald-500 focus-visible:ring-emerald-500` with `border-foreground focus-visible:ring-foreground` for a clean black/dark border on confirmation instead of green.
 
-### 3. Operating Hours Requirement
-When `total_slots` is selected (slots > 0 for rental listings), the Details step will show an informational note: "You will need to configure operating hours in the Availability step before publishing." The actual enforcement already exists in the PublishWizard's `RentalAvailabilityStep` -- this adds a visual reminder earlier in the flow.
+### 4. Verify Data Flow
+The existing data pipeline is:
+- QuickStartWizard: ZIP lookup populates `city`, `state`, `latitude`, `longitude` in local state, then saves `address: "City, ST"` to DB.
+- ListingWizard: Builds `address` from `street_address, apt_suite, city, state, zip_code` fields (form-only, not DB columns). Saves the concatenated result to `listings.address`.
+- Listing cards (HostListingCard, ShopperBookingCard) and detail page read `listing.address` -- this works correctly.
 
-### 4. Persist Slot Names on Save (ListingWizard.tsx)
-- Include `slot_names` in the insert/update payload sent to the database when saving the draft or publishing
-- The `listings` table already has a `slot_names` column (string array), so no database migration is needed
-
-### 5. PublishWizard Sync (PublishWizard.tsx)
-- Load `slot_names` from the database when editing an existing listing
-- Display slot name inputs in the PublishWizard's "Spaces Available" section alongside the existing `totalSlots` input
-- Save `slot_names` back during publish
+No database migration is needed. The structured fields are form-level only and correctly persist as the joined `address` string.
 
 ## Technical Details
 
 ### Files Modified
-- **src/types/listing.ts** -- Add `slot_names: string[]` to `ListingFormData`
-- **src/hooks/useListingForm.ts** -- Add `slot_names: []` to initial data
-- **src/components/listing-wizard/StepDetails.tsx** -- Add slot name inputs below the total_slots field; auto-resize array when count changes
-- **src/components/listing-wizard/StepListingType.tsx** -- Add slot name inputs for vendor_space/vendor_lot category below the total_slots input
-- **src/components/listing-wizard/ListingWizard.tsx** -- Include `slot_names` in the database save payload
-- **src/components/listing-wizard/PublishWizard.tsx** -- Load and save `slot_names`; add name inputs next to the existing spaces count
+- **src/components/listing-wizard/StepLocation.tsx** -- Restyle ZipCodeLookup component (confirmed input border + confirmation overlay)
+- **src/components/listing-wizard/QuickStartWizard.tsx** -- Restyle ZIP confirmed state and city/state overlay
 
-### No Database Migration Needed
-The `listings` table already has `slot_names: string[] | null` and the `booking_requests` table already has `slot_name` and `slot_number`. This is purely a frontend wiring task.
+### Design Tokens Used
+- `bg-muted/50` -- clean grey fill (consistent with other panels in the wizard)
+- `border-border` -- standard neutral border
+- `text-foreground` -- dark text/icon color for the check mark
+- `border-foreground` -- dark border for confirmed ZIP input
