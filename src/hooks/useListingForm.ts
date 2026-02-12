@@ -59,6 +59,9 @@ const initialFormData: ListingFormData = {
   featured_enabled: false,
   // Multi-slot capacity for Vendor Spaces (default 1)
   total_slots: 1,
+  // Geocoded coordinates
+  latitude: null,
+  longitude: null,
 };
 
 const TOTAL_STEPS = 7;
@@ -166,20 +169,23 @@ export const useListingForm = () => {
         // Location required - validate structured address fields for ALL listing types
         const isStatic = isStaticLocation(formData.category) || formData.is_static_location;
         
-        // All listings now require full address: street, city, state, zip
+        // All listings now require full address: street, city, state, zip + validated coordinates
         const hasValidAddress = 
           formData.street_address.trim().length > 0 &&
           formData.city.trim().length > 0 &&
           formData.state.trim().length > 0 &&
           formData.zip_code.trim().length >= 5;
         
+        // Coordinates must be set (validated by the map preview)
+        const hasCoordinates = formData.latitude !== null && formData.longitude !== null;
+        
         if (isStatic) {
           // Static locations also need access instructions
-          return hasValidAddress && formData.access_instructions.trim().length > 0;
+          return hasValidAddress && hasCoordinates && formData.access_instructions.trim().length > 0;
         }
         
-        // Mobile assets need fulfillment type + full address
-        return !!formData.fulfillment_type && hasValidAddress;
+        // Mobile assets need fulfillment type + full address + coordinates
+        return !!formData.fulfillment_type && hasValidAddress && hasCoordinates;
       case 5:
         // Documents step - always valid (documents are optional)
         return true;

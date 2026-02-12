@@ -615,6 +615,9 @@ export interface ListingFormData {
   featured_enabled: boolean;
   // Multi-slot capacity for Vendor Spaces (default 1)
   total_slots: number;
+  // Geocoded coordinates (set by LocationMapPreview)
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export const CATEGORY_LABELS: Record<ListingCategory, string> = {

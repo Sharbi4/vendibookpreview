@@ -104,6 +104,13 @@ export const StepLocation: React.FC<StepLocationProps> = ({
   const [isLocationValid, setIsLocationValid] = useState(false);
   const [locationCoordinates, setLocationCoordinates] = useState<{ lat: number; lng: number } | null>(null);
 
+  // Write coordinates to form data whenever they change
+  const handleCoordinatesChange = (coords: { lat: number; lng: number } | null) => {
+    setLocationCoordinates(coords);
+    updateField('latitude', coords?.lat ?? null);
+    updateField('longitude', coords?.lng ?? null);
+  };
+
   // Static location - Airbnb-style structured address form
   if (isStaticLocation) {
     return (
@@ -217,7 +224,7 @@ export const StepLocation: React.FC<StepLocationProps> = ({
             zipCode={formData.zip_code}
             streetAddress={formData.street_address}
             showPreciseLocation={formData.show_precise_location}
-            onCoordinatesChange={setLocationCoordinates}
+            onCoordinatesChange={handleCoordinatesChange}
             onValidationChange={setIsLocationValid}
             className="h-48"
           />
@@ -426,7 +433,7 @@ export const StepLocation: React.FC<StepLocationProps> = ({
               zipCode={formData.zip_code}
               streetAddress={formData.street_address}
               showPreciseLocation={formData.show_precise_location}
-              onCoordinatesChange={setLocationCoordinates}
+              onCoordinatesChange={handleCoordinatesChange}
               onValidationChange={setIsLocationValid}
               className="h-48"
             />
@@ -609,7 +616,7 @@ export const StepLocation: React.FC<StepLocationProps> = ({
                             zipCode={formData.zip_code}
                             streetAddress={formData.street_address}
                             showPreciseLocation={false}
-                            onCoordinatesChange={setLocationCoordinates}
+                            onCoordinatesChange={handleCoordinatesChange}
                             onValidationChange={setIsLocationValid}
                             className="h-48"
                           />
@@ -720,7 +727,7 @@ export const StepLocation: React.FC<StepLocationProps> = ({
                               zipCode={formData.zip_code}
                               streetAddress={formData.street_address}
                               showPreciseLocation={false}
-                              onCoordinatesChange={setLocationCoordinates}
+                              onCoordinatesChange={handleCoordinatesChange}
                               onValidationChange={setIsLocationValid}
                               className="h-48"
                             />
