@@ -384,14 +384,17 @@ const SmartConciergeModal = () => {
                     >
                       Back to Browsing
                     </button>
-                    <a
-                      href="https://wa.me/18778836342"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block text-xs text-[#FF5124] hover:text-[#FFB800] transition-colors"
+                    <button
+                      onClick={() => {
+                        dismiss();
+                        if (window.zE) {
+                          try { window.zE('messenger', 'open'); } catch {}
+                        }
+                      }}
+                      className="block text-xs text-[#FF5124] hover:text-[#FFB800] transition-colors mx-auto"
                     >
-                      Chat now on WhatsApp →
-                    </a>
+                      Chat with us now →
+                    </button>
                   </div>
                 </div>
               )}
