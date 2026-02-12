@@ -192,6 +192,13 @@ export const PublishWizard: React.FC = () => {
   const [fulfillmentType, setFulfillmentType] = useState<FulfillmentType | null>(null);
   const [pickupLocationText, setPickupLocationText] = useState('');
   const [address, setAddress] = useState('');
+  // Structured address fields
+  const [streetAddress, setStreetAddress] = useState('');
+  const [aptSuite, setAptSuite] = useState('');
+  const [locCity, setLocCity] = useState('');
+  const [locState, setLocState] = useState('');
+  const [locZipCode, setLocZipCode] = useState('');
+  const [locPhoneNumber, setLocPhoneNumber] = useState('');
   const [deliveryFee, setDeliveryFee] = useState('');
   const [deliveryRadiusMiles, setDeliveryRadiusMiles] = useState('');
   const [pickupInstructions, setPickupInstructions] = useState('');
@@ -398,6 +405,27 @@ export const PublishWizard: React.FC = () => {
       setFulfillmentType((data.fulfillment_type as FulfillmentType) || null);
       setPickupLocationText(data.pickup_location_text || '');
       setAddress(data.address || '');
+      // Parse structured address from address field if available
+      if (data.address) {
+        const parts = data.address.split(',').map((p: string) => p.trim());
+        if (parts.length >= 3) {
+          setStreetAddress(parts[0] || '');
+          setLocCity(parts[parts.length - 2] || '');
+          // Last part might be "STATE ZIP"
+          const lastPart = parts[parts.length - 1] || '';
+          const stateZipMatch = lastPart.match(/^([A-Z]{2})\s+(\d{5})/);
+          if (stateZipMatch) {
+            setLocState(stateZipMatch[1]);
+            setLocZipCode(stateZipMatch[2]);
+          } else {
+            setLocState(lastPart);
+          }
+        }
+      }
+      // Load phone number from pickup_location_text if it looks like a phone
+      if (data.pickup_location_text && /^\(?\d{3}/.test(data.pickup_location_text)) {
+        setLocPhoneNumber(data.pickup_location_text);
+      }
       setDeliveryFee(data.delivery_fee?.toString() || '');
       setDeliveryRadiusMiles(data.delivery_radius_miles?.toString() || '');
       setPickupInstructions(data.pickup_instructions || '');
@@ -1150,10 +1178,14 @@ export const PublishWizard: React.FC = () => {
         const categoryIsStatic = isStaticLocationFn(listing.category);
         const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation) ? 'on_site' : (fulfillmentType || 'pickup');
 
+        // Build structured address string
+        const addressParts = [streetAddress, locCity, `${locState} ${locZipCode}`].filter(Boolean);
+        const fullAddress = addressParts.join(', ');
+
         updateData = {
           fulfillment_type: effectiveFulfillmentType,
-          pickup_location_text: pickupLocationText || null,
-          address: address || null,
+          pickup_location_text: locPhoneNumber || pickupLocationText || null,
+          address: fullAddress || address || null,
           delivery_fee: parseFloat(deliveryFee) || null,
           delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
           pickup_instructions: pickupInstructions || null,
@@ -3092,15 +3124,13 @@ export const PublishWizard: React.FC = () => {
               {step === 'location' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Location & Fulfillment</h2>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Full Address & Fulfillment</h2>
                     <p className="text-muted-foreground">
-                      {isStaticLocationFn(listing.category) 
-                        ? 'Tell customers how to access your location.'
-                        : 'Set up how customers can get your asset.'}
+                      Provide your complete address. It will only be shared after a booking is confirmed.
                     </p>
                   </div>
 
-                  {/* Static Location Toggle - Only for mobile assets (show regardless of current state) */}
+                  {/* Static Location Toggle - Only for mobile assets */}
                   {isMobileAsset(listing.category) && (
                     <div className="p-4 bg-muted/50 rounded-xl border">
                       <div className="flex items-center justify-between">
@@ -3111,7 +3141,7 @@ export const PublishWizard: React.FC = () => {
                               Static Location
                             </Label>
                             <p className="text-sm text-muted-foreground mt-1">
-                              This asset is parked at a fixed location (e.g., permanently stationed at a venue, lot, or property)
+                              This asset is at a fixed location
                             </p>
                           </div>
                         </div>
@@ -3120,54 +3150,115 @@ export const PublishWizard: React.FC = () => {
                           checked={isStaticLocation}
                           onCheckedChange={(checked) => {
                             setIsStaticLocation(checked);
-                            if (checked) {
-                              setFulfillmentType('on_site');
-                            } else {
-                              setFulfillmentType('pickup');
-                            }
+                            if (checked) setFulfillmentType('on_site');
+                            else setFulfillmentType('pickup');
                           }}
                         />
                       </div>
                     </div>
                   )}
 
-                  {/* Static Location (Ghost Kitchen, Vendor Space) or Mobile Asset with Static Toggle */}
-                  {(isStaticLocationFn(listing.category) || isStaticLocation) ? (
-                    <div className="space-y-6">
-                      <div className="p-4 bg-muted rounded-xl flex items-start gap-3">
-                        <Info className="w-5 h-5 text-muted-foreground mt-0.5" />
-                        <p className="text-sm text-muted-foreground">
-                          {isStaticLocationFn(listing.category)
-                            ? 'This is a fixed on-site location. Customers will come to this address.'
-                            : 'This asset is at a fixed location. Customers will come to pick it up.'}
-                        </p>
-                      </div>
-
-                      {/* Full Address */}
+                  {/* Structured Address Form */}
+                  <div className="space-y-4">
+                    <Label className="text-base font-semibold">Address *</Label>
+                    <div className="space-y-3">
                       <div className="space-y-2">
-                        <Label htmlFor="address" className="text-base font-medium">Full Address *</Label>
-                        <Textarea
-                          id="address"
-                          value={address}
-                          onChange={(e) => setAddress(e.target.value)}
-                          placeholder="123 Main Street, Suite 100, City, State ZIP"
-                          rows={2}
+                        <Label htmlFor="street_address" className="text-sm font-medium">Address Line 1</Label>
+                        <Input
+                          id="street_address"
+                          value={streetAddress}
+                          onChange={(e) => setStreetAddress(e.target.value)}
+                          placeholder="123 Main Street"
+                          className={cn(!streetAddress.trim() && "border-destructive/50")}
                         />
                       </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="apt_suite" className="text-sm font-medium">Address Line 2 (Optional)</Label>
+                        <Input
+                          id="apt_suite"
+                          value={aptSuite}
+                          onChange={(e) => setAptSuite(e.target.value)}
+                          placeholder="Apt, Suite, Unit, etc."
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="loc_city" className="text-sm font-medium">City</Label>
+                          <Input
+                            id="loc_city"
+                            value={locCity}
+                            onChange={(e) => setLocCity(e.target.value)}
+                            placeholder="Austin"
+                            className={cn(!locCity.trim() && "border-destructive/50")}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="loc_state" className="text-sm font-medium">State</Label>
+                          <Input
+                            id="loc_state"
+                            value={locState}
+                            onChange={(e) => setLocState(e.target.value.toUpperCase().slice(0, 2))}
+                            placeholder="TX"
+                            maxLength={2}
+                            className={cn(!locState.trim() && "border-destructive/50")}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="loc_zip" className="text-sm font-medium">ZIP Code</Label>
+                          <Input
+                            id="loc_zip"
+                            value={locZipCode}
+                            onChange={(e) => setLocZipCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
+                            placeholder="78701"
+                            maxLength={5}
+                            className={cn(!locZipCode.trim() && "border-destructive/50")}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="loc_phone" className="text-sm font-medium">Phone Number</Label>
+                          <Input
+                            id="loc_phone"
+                            type="tel"
+                            value={locPhoneNumber}
+                            onChange={(e) => setLocPhoneNumber(e.target.value)}
+                            placeholder="(555) 123-4567"
+                          />
+                        </div>
+                      </div>
+                    </div>
 
-                      {/* Access Instructions */}
+                    {/* Validation */}
+                    {(!streetAddress.trim() || !locCity.trim() || !locState.trim() || !locZipCode.trim()) && (
+                      <p className="text-sm text-destructive flex items-center gap-1.5">
+                        <AlertCircle className="w-4 h-4" />
+                        Please fill in all required address fields
+                      </p>
+                    )}
+
+                    {/* Privacy Notes */}
+                    <div className="p-3 rounded-lg bg-muted/50 border border-border space-y-1">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <Info className="w-3.5 h-3.5 shrink-0" />
+                        Your full address and phone number are kept private until a booking is confirmed.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Static Location extras */}
+                  {(isStaticLocationFn(listing.category) || isStaticLocation) && (
+                    <div className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="access_instructions" className="text-base font-medium">Access Instructions *</Label>
                         <Textarea
                           id="access_instructions"
                           value={accessInstructions}
                           onChange={(e) => setAccessInstructions(e.target.value)}
-                          placeholder="How do guests access the space? Any gate codes, parking instructions, or check-in procedures?"
+                          placeholder="Gate codes, parking instructions, check-in procedures..."
                           rows={3}
                         />
                       </div>
-
-                      {/* Hours of Access */}
                       <div className="space-y-2">
                         <Label htmlFor="hours_of_access" className="text-base font-medium">Hours of Access (Optional)</Label>
                         <Input
@@ -3177,24 +3268,22 @@ export const PublishWizard: React.FC = () => {
                           placeholder="e.g., 6 AM - 10 PM daily"
                         />
                       </div>
-
-                      {/* Location Notes */}
                       <div className="space-y-2">
                         <Label htmlFor="location_notes" className="text-base font-medium">Additional Notes (Optional)</Label>
                         <Textarea
                           id="location_notes"
                           value={locationNotes}
                           onChange={(e) => setLocationNotes(e.target.value)}
-                          placeholder="Utilities included, parking availability, nearby amenities..."
+                          placeholder="Utilities, parking, nearby amenities..."
                           rows={3}
                         />
                       </div>
                     </div>
-                  ) : (
-                    /* Mobile Asset - Not Static */
-                    <div className="space-y-6">
+                  )}
 
-                      {/* Fulfillment Type */}
+                  {/* Fulfillment - for non-static mobile assets */}
+                  {!(isStaticLocationFn(listing.category) || isStaticLocation) && (
+                    <div className="space-y-6">
                       <div className="space-y-3">
                         <Label className="text-base font-medium">Fulfillment Options *</Label>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -3232,71 +3321,26 @@ export const PublishWizard: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Pickup Location */}
                       {(fulfillmentType === 'pickup' || fulfillmentType === 'both') && (
-                        <>
-                          <div className="space-y-2">
-                            <Label htmlFor="pickup_location_text" className="text-base font-medium">Pickup Location *</Label>
-                            <LocationSearchInput
-                              value={pickupLocationText}
-                              onChange={(value) => setPickupLocationText(value)}
-                              onLocationSelect={(location) => {
-                                if (location) {
-                                  setPickupCoordinates(location.coordinates);
-                                } else {
-                                  setPickupCoordinates(null);
-                                }
-                              }}
-                              selectedCoordinates={pickupCoordinates}
-                              placeholder="City, State (e.g., Austin, TX)"
-                            />
-                            <p className="text-sm text-muted-foreground">
-                              Enter a general area. Exact address shared after booking.
-                            </p>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="pickup_instructions" className="text-base font-medium">Pickup Instructions (Optional)</Label>
-                            <Textarea
-                              id="pickup_instructions"
-                              value={pickupInstructions}
-                              onChange={(e) => setPickupInstructions(e.target.value)}
-                              placeholder="Any special instructions for pickup?"
-                              rows={2}
-                            />
-                          </div>
-                        </>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Pickup Instructions (Optional)</Label>
+                          <Textarea
+                            value={pickupInstructions}
+                            onChange={(e) => setPickupInstructions(e.target.value)}
+                            placeholder="Any special instructions for pickup?"
+                            rows={2}
+                          />
+                        </div>
                       )}
 
-                      {/* Delivery Options */}
                       {(fulfillmentType === 'delivery' || fulfillmentType === 'both') && (
                         <>
-                          {fulfillmentType === 'delivery' && (
-                            <div className="space-y-2">
-                              <Label htmlFor="delivery_base_location" className="text-base font-medium">Your Base Location *</Label>
-                              <LocationSearchInput
-                                value={pickupLocationText}
-                                onChange={(value) => setPickupLocationText(value)}
-                                onLocationSelect={(location) => {
-                                  if (location) {
-                                    setPickupCoordinates(location.coordinates);
-                                  } else {
-                                    setPickupCoordinates(null);
-                                  }
-                                }}
-                                selectedCoordinates={pickupCoordinates}
-                                placeholder="City, State (e.g., Austin, TX)"
-                              />
-                            </div>
-                          )}
-
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <Label htmlFor="delivery_fee" className="text-base font-medium">Delivery Fee (Optional)</Label>
+                              <Label className="text-base font-medium">Delivery Fee (Optional)</Label>
                               <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                                 <Input
-                                  id="delivery_fee"
                                   type="number"
                                   min="0"
                                   step="0.01"
@@ -3307,12 +3351,10 @@ export const PublishWizard: React.FC = () => {
                                 />
                               </div>
                             </div>
-
                             <div className="space-y-2">
-                              <Label htmlFor="delivery_radius_miles" className="text-base font-medium">Delivery Radius (Optional)</Label>
+                              <Label className="text-base font-medium">Delivery Radius (Optional)</Label>
                               <div className="relative">
                                 <Input
-                                  id="delivery_radius_miles"
                                   type="number"
                                   min="0"
                                   value={deliveryRadiusMiles}
@@ -3324,11 +3366,9 @@ export const PublishWizard: React.FC = () => {
                               </div>
                             </div>
                           </div>
-
                           <div className="space-y-2">
-                            <Label htmlFor="delivery_instructions" className="text-base font-medium">Delivery Instructions (Optional)</Label>
+                            <Label className="text-base font-medium">Delivery Instructions (Optional)</Label>
                             <Textarea
-                              id="delivery_instructions"
                               value={deliveryInstructions}
                               onChange={(e) => setDeliveryInstructions(e.target.value)}
                               placeholder="Any special requirements for delivery?"
@@ -3345,10 +3385,10 @@ export const PublishWizard: React.FC = () => {
                     <Button 
                       variant="dark-shine"
                       onClick={saveStep} 
-                      disabled={isSaving || (
+                      disabled={isSaving || !streetAddress.trim() || !locCity.trim() || !locState.trim() || !locZipCode.trim() || (
                         (isStaticLocationFn(listing.category) || isStaticLocation) 
-                          ? !address || !accessInstructions
-                          : !fulfillmentType || !pickupLocationText
+                          ? !accessInstructions
+                          : !fulfillmentType
                       )}
                     >
                       {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
