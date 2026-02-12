@@ -16,6 +16,8 @@ interface GeocodeResult {
   center: [number, number]; // [lng, lat]
   text: string;
   context?: string;
+  city?: string;
+  state?: string;
 }
 
 const parseLatLngQuery = (query: string): { lat: number; lng: number } | null => {
@@ -107,6 +109,44 @@ const handler = async (req: Request): Promise<Response> => {
 
       console.log(`Found ${results.length} results for "${query}" (reverse geocode)`);
 
+      return new Response(
+        JSON.stringify({ results }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // If query looks like a US ZIP code (5 digits), use Geocoding API directly
+    const zipMatch = query.trim().match(/^(\d{5})$/);
+    if (zipMatch) {
+      const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${zipMatch[1]},+USA&key=${GOOGLE_MAPS_API_KEY}`;
+      const geoRes = await fetch(geoUrl);
+      if (!geoRes.ok) {
+        return new Response(
+          JSON.stringify({ error: "Geocoding service error" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+      const geoData = await geoRes.json();
+      if (geoData.status !== "OK" || !geoData.results?.length) {
+        return new Response(
+          JSON.stringify({ results: [] }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+      const r = geoData.results[0];
+      const comps = r.address_components || [];
+      const cityComp = comps.find((c: any) => c.types.includes('locality') || c.types.includes('sublocality'));
+      const stateComp = comps.find((c: any) => c.types.includes('administrative_area_level_1'));
+      const loc = r.geometry?.location;
+      const results: GeocodeResult[] = [{
+        id: `zip:${zipMatch[1]}`,
+        placeName: r.formatted_address || `${zipMatch[1]}, USA`,
+        center: [loc?.lng || 0, loc?.lat || 0],
+        text: cityComp?.long_name || zipMatch[1],
+        context: stateComp?.short_name || '',
+        city: cityComp?.long_name || '',
+        state: stateComp?.short_name || '',
+      }];
       return new Response(
         JSON.stringify({ results }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
