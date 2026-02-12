@@ -14,7 +14,7 @@ import { usePageTracking } from '@/hooks/usePageTracking';
 import { Skeleton } from '@/components/ui/skeleton';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
-import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
+
 import SmartConciergeModal from '@/components/home/SmartConciergeModal';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -102,7 +102,6 @@ const Index = () => {
 
       <Footer />
       
-      <NewsletterPopup />
       <SmartConciergeModal />
       
     </div>
