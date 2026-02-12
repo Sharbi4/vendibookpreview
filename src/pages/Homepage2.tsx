@@ -36,7 +36,7 @@ const CATEGORIES = [
   { value: 'food_truck', label: 'Food Trucks', icon: Truck },
   { value: 'food_trailer', label: 'Trailers', icon: Truck },
   { value: 'ghost_kitchen', label: 'Kitchens', icon: Building2 },
-  { value: 'vendor_space', label: 'Vendor Spaces', icon: MapPin },
+  { value: 'vendor_lot', label: 'Vendor Spaces', icon: MapPin },
 ];
 
 const PAGE_SIZE = 20;
@@ -67,6 +67,7 @@ const Homepage2 = () => {
     featuredOnly: false,
     deliveryCapable: false,
     amenities: [],
+    radiusMiles: '25',
   });
 
   const [listings, setListings] = useState<Listing[]>([]);
@@ -131,7 +132,7 @@ const Homepage2 = () => {
       if (coordinates) {
         body.latitude = coordinates[1];
         body.longitude = coordinates[0];
-        body.radius_miles = 100;
+        body.radius_miles = filters.radiusMiles ? Number(filters.radiusMiles) : 25;
       }
       // Apply filters
       if (filters.minPrice) body.min_price = Number(filters.minPrice);
@@ -208,12 +209,12 @@ const Homepage2 = () => {
   const clearFilters = () => {
     setQuery(''); setLocationText(''); setCoordinates(null);
     setCategory(''); setMode(''); setSortBy('newest'); setPage(1);
-    setFilters({ minPrice: '', maxPrice: '', instantBookOnly: false, featuredOnly: false, deliveryCapable: false, amenities: [] });
+    setFilters({ minPrice: '', maxPrice: '', instantBookOnly: false, featuredOnly: false, deliveryCapable: false, amenities: [], radiusMiles: '25' });
     fetchListings(1);
   };
 
   const clearFilterPanel = () => {
-    setFilters({ minPrice: '', maxPrice: '', instantBookOnly: false, featuredOnly: false, deliveryCapable: false, amenities: [] });
+    setFilters({ minPrice: '', maxPrice: '', instantBookOnly: false, featuredOnly: false, deliveryCapable: false, amenities: [], radiusMiles: '25' });
   };
 
   const applyFilters = () => {
@@ -570,7 +571,7 @@ const Homepage2 = () => {
                       isLoading={mapLoading || isLoading}
                       error={mapError}
                       userLocation={coordinates}
-                      searchRadius={100}
+                      searchRadius={filters.radiusMiles ? Number(filters.radiusMiles) : 25}
                     />
                   </div>
                 </div>

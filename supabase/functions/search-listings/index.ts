@@ -257,7 +257,7 @@ Deno.serve(async (req) => {
     // Filter by precise distance (Haversine)
     if (latitude !== undefined && longitude !== undefined) {
       filteredListings = filteredListings.filter(l => {
-        if (l.distance_miles === null) return true; // Include if no coords
+        if (l.distance_miles === null) return false; // Exclude listings without coordinates in location searches
         return l.distance_miles <= radius_miles;
       });
     }

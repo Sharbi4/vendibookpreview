@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SlidersHorizontal, X, Zap, Star, DollarSign, Truck } from 'lucide-react';
+import { SlidersHorizontal, X, Zap, Star, DollarSign, Truck, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,6 +29,7 @@ export interface FilterValues {
   featuredOnly: boolean;
   deliveryCapable: boolean;
   amenities: string[];
+  radiusMiles: string;
 }
 
 interface FilterPanelProps {
@@ -83,6 +85,7 @@ export const FilterPanel = ({ filters, onChange, onApply, onClear, autoApply = f
     filters.featuredOnly ? 1 : 0,
     filters.deliveryCapable ? 1 : 0,
     filters.amenities.length > 0 ? 1 : 0,
+    filters.radiusMiles && filters.radiusMiles !== '25' ? 1 : 0,
   ].reduce((a, b) => a + b, 0);
 
   const handleToggleAmenity = (amenity: string) => {
@@ -156,6 +159,29 @@ export const FilterPanel = ({ filters, onChange, onApply, onClear, autoApply = f
                     className="h-9 text-sm rounded-lg"
                   />
                 </div>
+              </div>
+
+              {/* Search Radius */}
+              <div>
+                <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5 mb-2">
+                  <MapPin className="w-3.5 h-3.5" /> Search Radius
+                </Label>
+                <Select
+                  value={filters.radiusMiles || '25'}
+                  onValueChange={(v) => onChange({ ...filters, radiusMiles: v })}
+                >
+                  <SelectTrigger className="h-9 text-sm rounded-lg">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border-border z-[250]">
+                    <SelectItem value="5">5 miles</SelectItem>
+                    <SelectItem value="10">10 miles</SelectItem>
+                    <SelectItem value="25">25 miles</SelectItem>
+                    <SelectItem value="50">50 miles</SelectItem>
+                    <SelectItem value="100">100 miles</SelectItem>
+                    <SelectItem value="250">250 miles</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Quick Toggles */}
