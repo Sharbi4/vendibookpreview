@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Truck, Store, Building2, MapPin, Tag, ShoppingBag, MapPinned, Loader2, Check } from 'lucide-react';
+import { Truck, Store, Building2, MapPin, Tag, ShoppingBag, MapPinned, Loader2, Check, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,11 @@ interface QuickStartData {
   category: ListingCategory | null;
   mode: ListingMode | null;
   location: string;
+  zipCode: string;
+  city: string;
+  state: string;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 const categoryOptions = [
@@ -41,8 +46,67 @@ export const QuickStartWizard: React.FC = () => {
     category: null,
     mode: null,
     location: '',
+    zipCode: '',
+    city: '',
+    state: '',
+    latitude: null,
+    longitude: null,
   });
   const [isCreating, setIsCreating] = useState(false);
+  const [isLookingUpZip, setIsLookingUpZip] = useState(false);
+  const [zipError, setZipError] = useState<string | null>(null);
+  const [zipConfirmed, setZipConfirmed] = useState(false);
+
+  const lookupZipCode = useCallback(async (zip: string) => {
+    if (zip.length < 5) return;
+    setIsLookingUpZip(true);
+    setZipError(null);
+    setZipConfirmed(false);
+    try {
+      // Use Google Geocoding API directly via edge function for ZIP lookup
+      const { data: geoData, error } = await supabase.functions.invoke('geocode-location', {
+        body: { query: `${zip}`, limit: 1 },
+      });
+      if (error) throw error;
+      if (!geoData?.results?.length) { setZipError('ZIP code not found'); return; }
+      const result = geoData.results[0];
+      // Use city/state from the response (returned by ZIP geocoding)
+      const city = result.city || '';
+      const state = result.state || '';
+      if (!city || !state) { setZipError('Could not determine city/state from this ZIP code'); return; }
+      const [lng, lat] = result.center;
+      setData(prev => ({
+        ...prev,
+        city,
+        state,
+        latitude: lat,
+        longitude: lng,
+        location: `${city}, ${state}`,
+      }));
+      setZipConfirmed(true);
+    } catch {
+      setZipError('Invalid ZIP code. Please try again.');
+    } finally {
+      setIsLookingUpZip(false);
+    }
+  }, []);
+
+  const handleZipChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '').slice(0, 5);
+    setData(prev => ({ ...prev, zipCode: val }));
+    if (val.length < 5) {
+      setZipConfirmed(false);
+      setData(prev => ({ ...prev, city: '', state: '', latitude: null, longitude: null }));
+      setZipError(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (data.zipCode.length === 5) {
+      const timer = setTimeout(() => lookupZipCode(data.zipCode), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [data.zipCode, lookupZipCode]);
   const [createdListingId, setCreatedListingId] = useState<string | null>(null);
 
   const handleCategorySelect = (category: ListingCategory) => {
@@ -115,24 +179,9 @@ export const QuickStartWizard: React.FC = () => {
     setIsCreating(true);
 
     try {
-      // Geocode location
-      let latitude: number | null = null;
-      let longitude: number | null = null;
-      
-      if (data.location) {
-        try {
-          const { data: geoData } = await supabase.functions.invoke('geocode-location', {
-            body: { query: data.location, limit: 1 },
-          });
-          if (geoData?.results?.length > 0) {
-            const [lng, lat] = geoData.results[0].center;
-            latitude = lat;
-            longitude = lng;
-          }
-        } catch (geoError) {
-          console.warn('Failed to geocode:', geoError);
-        }
-      }
+      // Use coordinates from ZIP lookup (already geocoded)
+      const latitude = data.latitude;
+      const longitude = data.longitude;
 
       // If authenticated user, ensure they have host role before creating listing
       if (user) {
@@ -353,40 +402,67 @@ export const QuickStartWizard: React.FC = () => {
         </div>
       )}
 
-      {/* Step: Location */}
+      {/* Step: Location (ZIP Code → City/State confirmation) */}
       {step === 'location' && (
         <div className="space-y-6">
           <div className="relative overflow-hidden rounded-2xl border-0 shadow-xl bg-card/80 backdrop-blur-sm">
             {/* Header */}
             <div className="relative bg-muted/30 border-b border-border px-4 sm:px-6 py-4 sm:py-5">
               <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Where is it located?</h1>
-              <p className="text-sm sm:text-base text-muted-foreground">City, state, or zip code.</p>
+              <p className="text-sm sm:text-base text-muted-foreground">Enter your ZIP code and we'll confirm your city and state.</p>
             </div>
             {/* Content */}
             <div className="relative bg-card p-4 sm:p-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="location" className="font-medium text-sm sm:text-base">Location</Label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                      <MapPinned className="w-4 h-4 text-muted-foreground" />
-                    </div>
+                  <Label htmlFor="zipCode" className="font-medium text-sm sm:text-base">ZIP Code *</Label>
+                  <div className="relative max-w-[200px]">
                     <Input
-                      id="location"
-                      placeholder="e.g., Los Angeles, CA"
-                      value={data.location}
-                      onChange={handleLocationChange}
-                      className="pl-14 h-11 sm:h-12 border border-border focus:border-primary text-sm sm:text-base"
+                      id="zipCode"
+                      type="text"
+                      maxLength={5}
+                      value={data.zipCode}
+                      onChange={handleZipChange}
+                      placeholder="Enter ZIP"
+                      className={cn(
+                        "text-xl font-semibold tracking-wider text-center h-12",
+                        zipConfirmed && "border-emerald-500 focus-visible:ring-emerald-500"
+                      )}
                     />
+                    {isLookingUpZip && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleUseMyLocation}
-                  className="text-xs sm:text-sm text-primary hover:underline font-medium"
-                >
-                  Use my current location
-                </button>
+
+                {/* Error */}
+                {zipError && (
+                  <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                    <p className="text-sm text-destructive">{zipError}</p>
+                  </div>
+                )}
+
+                {/* City/State Confirmation Overlay */}
+                {zipConfirmed && data.city && data.state && (
+                  <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 animate-in fade-in-50 slide-in-from-top-2 duration-300">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          Based on your ZIP code, your listing is in:
+                        </p>
+                        <p className="text-lg font-bold text-foreground mt-1">
+                          {data.city}, {data.state}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Your full address will be collected later and kept private until a booking is confirmed.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -398,7 +474,7 @@ export const QuickStartWizard: React.FC = () => {
               <Button 
                 variant="dark-shine"
                 onClick={handleCreateDraft} 
-                disabled={isCreating}
+                disabled={isCreating || !zipConfirmed}
                 className="flex-1 shadow-lg"
               >
                 {isCreating ? (
