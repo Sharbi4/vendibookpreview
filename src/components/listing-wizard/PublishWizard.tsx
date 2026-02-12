@@ -1211,7 +1211,7 @@ export const PublishWizard: React.FC = () => {
         updateData = {
           available_from: availableFrom || null,
           available_to: availableTo || null,
-          total_slots: ['vendor_space', 'ghost_kitchen', 'food_truck', 'food_trailer'].includes(listing.category) ? totalSlots : 1,
+          total_slots: ['vendor_lot', 'vendor_space', 'ghost_kitchen', 'food_truck', 'food_trailer'].includes(listing.category) ? totalSlots : 1,
           slot_names: slotNames.length > 0 ? slotNames : null,
           // Hourly/Daily booking settings
           price_hourly: priceHourly,
@@ -2691,7 +2691,7 @@ export const PublishWizard: React.FC = () => {
                   </div>
 
                   {/* Spaces Available - For categories with multiple slots */}
-                  {['vendor_space', 'ghost_kitchen', 'food_truck', 'food_trailer'].includes(listing.category) && (
+                  {['vendor_lot', 'vendor_space', 'ghost_kitchen', 'food_truck', 'food_trailer'].includes(listing.category) && (
                     <div className="space-y-4 p-4 rounded-xl border border-border bg-muted/30">
                       <div className="flex items-center gap-2">
                         <MapPin className="h-5 w-5 text-primary" />
