@@ -119,6 +119,27 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
   // Check if category supports multiple slots (shared kitchens, vendor spaces)
   const supportsMultipleSlots = ['ghost_kitchen', 'vendor_space', 'vendor_lot'].includes(formData.category || '');
 
+  // Auto-resize slot_names when total_slots changes
+  const handleTotalSlotsChange = (newCount: number) => {
+    updateField('total_slots', newCount);
+    const currentNames = formData.slot_names || [];
+    if (newCount > currentNames.length) {
+      const newNames = [...currentNames];
+      for (let i = currentNames.length; i < newCount; i++) {
+        newNames.push(`Slot ${i + 1}`);
+      }
+      updateField('slot_names', newNames);
+    } else if (newCount < currentNames.length) {
+      updateField('slot_names', currentNames.slice(0, newCount));
+    }
+  };
+
+  const updateSlotName = (index: number, name: string) => {
+    const newNames = [...(formData.slot_names || [])];
+    newNames[index] = name;
+    updateField('slot_names', newNames);
+  };
+
   return (
     <div className="space-y-6">
       {/* Title */}
@@ -222,7 +243,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
             <Grid3X3 className="h-4 w-4" />
             Capacity & Slots
           </Label>
-          <div className="bg-muted/30 border border-border rounded-xl p-4">
+          <div className="bg-muted/30 border border-border rounded-xl p-4 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="flex-1">
                 <Label htmlFor="total_slots" className="text-sm font-medium">Total Available Workstations/Spots</Label>
@@ -240,13 +261,41 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
                   onChange={(e) => {
                     const val = parseInt(e.target.value);
                     if (!isNaN(val) && val >= 1 && val <= 100) {
-                      updateField('total_slots', val);
+                      handleTotalSlotsChange(val);
                     }
                   }}
                   className="bg-background text-center text-lg font-semibold"
                 />
               </div>
             </div>
+
+            {/* Slot Names */}
+            {formData.total_slots > 1 && (
+              <div className="space-y-2 pt-2 border-t border-border/50">
+                <Label className="text-sm font-medium">Name Each Slot</Label>
+                <p className="text-xs text-muted-foreground">
+                  Give each slot a unique name so renters can identify them (e.g., "Bay A", "Prep Station 2").
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {Array.from({ length: formData.total_slots }, (_, i) => (
+                    <Input
+                      key={i}
+                      value={(formData.slot_names || [])[i] || `Slot ${i + 1}`}
+                      onChange={(e) => updateSlotName(i, e.target.value)}
+                      placeholder={`Slot ${i + 1}`}
+                      className="bg-background"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Operating hours reminder */}
+            {formData.total_slots >= 1 && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 font-medium bg-amber-50 dark:bg-amber-950/30 p-2 rounded-lg">
+                ⏰ You'll need to configure operating hours in the Availability step before publishing.
+              </p>
+            )}
           </div>
         </div>
       )}

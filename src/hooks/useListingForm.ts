@@ -59,6 +59,7 @@ const initialFormData: ListingFormData = {
   featured_enabled: false,
   // Multi-slot capacity for Vendor Spaces (default 1)
   total_slots: 1,
+  slot_names: [],
   // Geocoded coordinates
   latitude: null,
   longitude: null,
