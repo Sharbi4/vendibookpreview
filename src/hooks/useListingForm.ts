@@ -166,26 +166,25 @@ export const useListingForm = () => {
         }
         return formData.price_daily.trim().length > 0 && parseFloat(formData.price_daily) > 0;
       case 4:
-        // Location required - validate structured address fields for ALL listing types
+        // Location required - validate ZIP code + city/state confirmed + coordinates
         const isStatic = isStaticLocation(formData.category) || formData.is_static_location;
         
-        // All listings now require full address: street, city, state, zip + validated coordinates
-        const hasValidAddress = 
-          formData.street_address.trim().length > 0 &&
+        // Wizard step requires: zip code (5 digits) + city + state + coordinates
+        const hasZipAndCityState = 
+          formData.zip_code.trim().length >= 5 &&
           formData.city.trim().length > 0 &&
-          formData.state.trim().length > 0 &&
-          formData.zip_code.trim().length >= 5;
+          formData.state.trim().length > 0;
         
-        // Coordinates must be set (validated by the map preview)
+        // Coordinates must be set (validated by ZIP code lookup)
         const hasCoordinates = formData.latitude !== null && formData.longitude !== null;
         
         if (isStatic) {
           // Static locations also need access instructions
-          return hasValidAddress && hasCoordinates && formData.access_instructions.trim().length > 0;
+          return hasZipAndCityState && hasCoordinates && formData.access_instructions.trim().length > 0;
         }
         
-        // Mobile assets need fulfillment type + full address + coordinates
-        return !!formData.fulfillment_type && hasValidAddress && hasCoordinates;
+        // Mobile assets need fulfillment type + zip/city/state + coordinates
+        return !!formData.fulfillment_type && hasZipAndCityState && hasCoordinates;
       case 5:
         // Documents step - always valid (documents are optional)
         return true;
