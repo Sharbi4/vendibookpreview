@@ -187,6 +187,17 @@ export const StepListingType: React.FC<StepListingTypeProps> = ({
                       const value = parseInt(e.target.value, 10);
                       if (!isNaN(value) && value >= 1) {
                         updateField('total_slots', value);
+                        // Auto-resize slot_names
+                        const currentNames = formData.slot_names || [];
+                        if (value > currentNames.length) {
+                          const newNames = [...currentNames];
+                          for (let i = currentNames.length; i < value; i++) {
+                            newNames.push(`Slot ${i + 1}`);
+                          }
+                          updateField('slot_names', newNames);
+                        } else if (value < currentNames.length) {
+                          updateField('slot_names', currentNames.slice(0, value));
+                        }
                       }
                     }}
                     className="w-24"
@@ -196,9 +207,28 @@ export const StepListingType: React.FC<StepListingTypeProps> = ({
                   </span>
                 </div>
                 {formData.total_slots > 1 && (
-                  <p className="text-xs text-primary font-medium">
-                    ✓ Multiple vendors can book the same dates
-                  </p>
+                  <>
+                    <p className="text-xs text-primary font-medium">
+                      ✓ Multiple vendors can book the same dates
+                    </p>
+                    <div className="space-y-2 pt-2 border-t border-border/50">
+                      <Label className="text-sm font-medium">Name Each Slot</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {Array.from({ length: formData.total_slots }, (_, i) => (
+                          <Input
+                            key={i}
+                            value={(formData.slot_names || [])[i] || `Slot ${i + 1}`}
+                            onChange={(e) => {
+                              const newNames = [...(formData.slot_names || [])];
+                              newNames[i] = e.target.value;
+                              updateField('slot_names', newNames);
+                            }}
+                            placeholder={`Slot ${i + 1}`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             </div>

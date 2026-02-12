@@ -629,6 +629,9 @@ export const ListingWizard: React.FC = () => {
         accept_card_payment: formData.mode === 'sale' ? formData.accept_card_payment : true,
         // Proof Notary add-on (for sales)
         proof_notary_enabled: formData.mode === 'sale' ? formData.proof_notary_enabled : false,
+        // Multi-slot capacity
+        total_slots: formData.total_slots || 1,
+        slot_names: formData.slot_names.length > 0 ? formData.slot_names : null,
       };
 
       const { data: listing, error: insertError } = await supabase

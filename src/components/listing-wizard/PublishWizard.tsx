@@ -183,6 +183,7 @@ export const PublishWizard: React.FC = () => {
   
   // Total slots for Vendor Spaces (multi-slot capacity)
   const [totalSlots, setTotalSlots] = useState(1);
+  const [slotNames, setSlotNames] = useState<string[]>([]);
   const [lengthInches, setLengthInches] = useState('');
   const [widthInches, setWidthInches] = useState('');
   const [heightInches, setHeightInches] = useState('');
@@ -399,8 +400,9 @@ export const PublishWizard: React.FC = () => {
       setWidthInches(data.width_inches?.toString() || '');
       setHeightInches(data.height_inches?.toString() || '');
       setFreightCategory((data.freight_category as FreightCategory) || null);
-      // Set total slots for vendor spaces
+      // Set total slots and slot names for vendor spaces
       setTotalSlots(data.total_slots || 1);
+      setSlotNames((data as any).slot_names || []);
       // Set location step fields
       setFulfillmentType((data.fulfillment_type as FulfillmentType) || null);
       setPickupLocationText(data.pickup_location_text || '');
@@ -1210,6 +1212,7 @@ export const PublishWizard: React.FC = () => {
           available_from: availableFrom || null,
           available_to: availableTo || null,
           total_slots: ['vendor_space', 'ghost_kitchen', 'food_truck', 'food_trailer'].includes(listing.category) ? totalSlots : 1,
+          slot_names: slotNames.length > 0 ? slotNames : null,
           // Hourly/Daily booking settings
           price_hourly: priceHourly,
           hourly_enabled: hourlyEnabled,
@@ -2709,6 +2712,17 @@ export const PublishWizard: React.FC = () => {
                             const value = parseInt(e.target.value, 10);
                             if (!isNaN(value) && value >= 1) {
                               setTotalSlots(value);
+                              // Auto-resize slot names
+                              setSlotNames(prev => {
+                                if (value > prev.length) {
+                                  const newNames = [...prev];
+                                  for (let i = prev.length; i < value; i++) {
+                                    newNames.push(`Slot ${i + 1}`);
+                                  }
+                                  return newNames;
+                                }
+                                return prev.slice(0, value);
+                              });
                             }
                           }}
                           className="w-24"
@@ -2718,9 +2732,32 @@ export const PublishWizard: React.FC = () => {
                         </span>
                       </div>
                       {totalSlots > 1 && (
-                        <p className="text-xs text-primary font-medium">
-                          ✓ Multiple vendors can book the same dates
-                        </p>
+                        <>
+                          <p className="text-xs text-primary font-medium">
+                            ✓ Multiple vendors can book the same dates
+                          </p>
+                          <div className="space-y-2 pt-2 border-t border-border/50">
+                            <Label className="text-sm font-medium">Name Each Slot</Label>
+                            <p className="text-xs text-muted-foreground">
+                              Give each slot a unique name so renters can identify them.
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {Array.from({ length: totalSlots }, (_, i) => (
+                                <Input
+                                  key={i}
+                                  value={slotNames[i] || `Slot ${i + 1}`}
+                                  onChange={(e) => {
+                                    const newNames = [...slotNames];
+                                    while (newNames.length <= i) newNames.push(`Slot ${newNames.length + 1}`);
+                                    newNames[i] = e.target.value;
+                                    setSlotNames(newNames);
+                                  }}
+                                  placeholder={`Slot ${i + 1}`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </>
                       )}
                     </div>
                   )}
