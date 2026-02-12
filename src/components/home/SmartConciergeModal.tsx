@@ -4,6 +4,7 @@ import { X, Home, Store, Truck, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import confetti from 'canvas-confetti';
+import conciergeImage from '@/assets/concierge-kitchen.jpg';
 
 type Intent = 'rent' | 'host' | 'sell';
 type Step = 'segment' | 'form' | 'success';
@@ -139,21 +140,35 @@ const SmartConciergeModal = () => {
               boxShadow: '0 25px 60px -12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)',
             }}
           >
-            {/* Gradient accent line at top */}
-            <div
-              className="h-[2px] w-full"
-              style={{
-                background: 'linear-gradient(90deg, #FF5124, #E64A19, #FFB800)',
-              }}
-            />
+            {/* Hero image */}
+            <div className="relative h-32 w-full overflow-hidden">
+              <img
+                src={conciergeImage}
+                alt="Commercial kitchen space"
+                className="w-full h-full object-cover"
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: 'linear-gradient(to bottom, transparent 30%, rgba(15,15,18,0.95) 100%)',
+                }}
+              />
+              {/* Gradient accent line at top */}
+              <div
+                className="absolute top-0 left-0 h-[2px] w-full"
+                style={{
+                  background: 'linear-gradient(90deg, #FF5124, #E64A19, #FFB800)',
+                }}
+              />
+            </div>
 
             {/* Close button */}
             <button
               onClick={dismiss}
-              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-white/10 transition-colors z-10"
+              className="absolute top-3 right-3 p-1.5 rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-colors z-10"
               aria-label="Close"
             >
-              <X className="w-4 h-4 text-white/50" />
+              <X className="w-4 h-4 text-white/70" />
             </button>
 
             <div className="p-6">
