@@ -6,6 +6,7 @@ import {
   Building2, ShoppingBag, Zap, Mic, MicOff, Loader2, Navigation,
 } from 'lucide-react';
 import AppDropdownMenu from '@/components/layout/AppDropdownMenu';
+import SmartConciergeModal from '@/components/home/SmartConciergeModal';
 import { FilterPanel, FilterValues } from '@/components/search/FilterPanel';
 import { EmptyStateEmailCapture } from '@/components/search/EmptyStateEmailCapture';
 import InlineNewsletterCard from '@/components/search/InlineNewsletterCard';
@@ -738,6 +739,7 @@ const Homepage2 = () => {
         }
       `}</style>
       
+      <SmartConciergeModal />
     </div>
   );
 };
