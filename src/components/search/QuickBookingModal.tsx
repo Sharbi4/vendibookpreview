@@ -27,6 +27,7 @@ import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { calculateRentalFees, RENTAL_RENTER_FEE_PERCENT } from '@/lib/commissions';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
+import { SlotSelector } from '@/components/booking';
 
 interface QuickBookingModalProps {
   listing: Listing | null;
@@ -78,6 +79,10 @@ const QuickBookingModal = ({
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryInstructionsInput, setDeliveryInstructionsInput] = useState('');
 
+  // Slot selection state
+  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+  const [selectedSlotName, setSelectedSlotName] = useState<string | null>(null);
+
   // Reset form when modal opens with new listing
   useEffect(() => {
     if (open && listing) {
@@ -89,10 +94,17 @@ const QuickBookingModal = ({
       setFulfillmentSelected(defaultFulfillment);
       setDeliveryAddress('');
       setDeliveryInstructionsInput('');
+      setSelectedSlot(null);
+      setSelectedSlotName(null);
     }
   }, [open, listing?.id, initialStartDate, initialEndDate, defaultFulfillment]);
 
   if (!listing) return null;
+
+  // Multi-slot detection
+  const supportsMultipleSlots = ['vendor_lot', 'vendor_space', 'ghost_kitchen', 'food_truck', 'food_trailer'].includes(listing.category);
+  const totalSlots = listing.total_slots || 1;
+  const hasMultipleSlots = supportsMultipleSlots && totalSlots > 1;
 
   const minDate = listing.available_from ? new Date(listing.available_from) : new Date();
   const maxDate = listing.available_to ? new Date(listing.available_to) : undefined;
@@ -139,6 +151,9 @@ const QuickBookingModal = ({
     }
     if (fulfillmentSelected === 'delivery' && !deliveryAddress.trim()) {
       return 'Please enter a delivery address';
+    }
+    if (hasMultipleSlots && !selectedSlot) {
+      return 'Please select a slot/space';
     }
     if (!agreedToTerms) {
       return 'Please agree to the Terms of Service to continue';
@@ -188,6 +203,8 @@ const QuickBookingModal = ({
         total_price: fees.customerTotal,
         fulfillment_selected: fulfillmentSelected,
         is_instant_book: isInstantBook,
+        slot_number: hasMultipleSlots && selectedSlot ? selectedSlot : null,
+        slot_name: hasMultipleSlots && selectedSlotName ? selectedSlotName : null,
       };
 
       if (fulfillmentSelected === 'delivery') {
@@ -474,6 +491,24 @@ const QuickBookingModal = ({
                 </div>
                 <p className="text-sm text-muted-foreground">{listing.address}</p>
               </div>
+            )}
+
+            {/* Slot Selector for multi-slot listings */}
+            {hasMultipleSlots && (
+              <SlotSelector
+                listingId={listing.id}
+                totalSlots={totalSlots}
+                slotNames={listing.slot_names || null}
+                startDate={startDate}
+                endDate={endDate}
+                selectedSlot={selectedSlot}
+                selectedSlotName={selectedSlotName}
+                onSlotSelect={(slotNumber, slotName) => {
+                  setSelectedSlot(slotNumber);
+                  setSelectedSlotName(slotName);
+                }}
+                disabled={!isListingAvailable}
+              />
             )}
 
             {/* Required Documents Banner */}
