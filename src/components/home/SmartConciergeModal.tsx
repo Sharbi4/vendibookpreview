@@ -10,7 +10,8 @@ type Intent = 'rent' | 'host' | 'sell';
 type Step = 'segment' | 'form' | 'success';
 
 const STORAGE_KEY = 'smart_concierge_dismissed';
-const SCROLL_THRESHOLD = 0.5; // 50% of page
+const SCROLL_THRESHOLD = 0.3; // 30% of page
+const FALLBACK_DELAY_MS = 30000; // 30s fallback if page isn't scrollable
 
 const budgetOptions = [
   { label: 'Under $500', min: 0, max: 500 },
@@ -35,16 +36,30 @@ const SmartConciergeModal = () => {
   useEffect(() => {
     if (localStorage.getItem(STORAGE_KEY)) return;
 
-    const handleScroll = () => {
-      const scrollPercent = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
-      if (scrollPercent >= SCROLL_THRESHOLD) {
-        setIsOpen(true);
-        window.removeEventListener('scroll', handleScroll);
-      }
+    let triggered = false;
+    const trigger = () => {
+      if (triggered) return;
+      triggered = true;
+      setIsOpen(true);
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(fallbackTimer);
     };
 
+    const handleScroll = () => {
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+      if (scrollable <= 0) return;
+      const scrollPercent = window.scrollY / scrollable;
+      if (scrollPercent >= SCROLL_THRESHOLD) trigger();
+    };
+
+    // Fallback timer in case page isn't scrollable enough
+    const fallbackTimer = setTimeout(trigger, FALLBACK_DELAY_MS);
+
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(fallbackTimer);
+    };
   }, []);
 
   const dismiss = useCallback(() => {
