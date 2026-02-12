@@ -24,7 +24,6 @@ const SmartConciergeModal = () => {
   const [intent, setIntent] = useState<Intent | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Form fields
   const [zipCode, setZipCode] = useState('');
   const [budget, setBudget] = useState('');
   const [fullName, setFullName] = useState('');
@@ -35,7 +34,6 @@ const SmartConciergeModal = () => {
   useEffect(() => {
     if (localStorage.getItem(STORAGE_KEY)) return;
     const t = setTimeout(() => {
-      // Skip if newsletter popup is still showing
       if (document.querySelector('[data-newsletter-popup]')) return;
       setIsOpen(true);
     }, DELAY_MS);
@@ -80,10 +78,9 @@ const SmartConciergeModal = () => {
 
       await supabase.from('asset_requests').insert(payload as any);
 
-      // Fire admin notification (best-effort)
       supabase.functions.invoke('send-admin-notification', {
         body: {
-          type: 'new_booking', // reuse existing type for admin alert
+          type: 'new_booking',
           data: {
             listing_title: `Concierge Lead (${intent})`,
             start_date: new Date().toLocaleDateString(),
@@ -98,11 +95,9 @@ const SmartConciergeModal = () => {
 
       setStep('success');
       fireConfetti();
-
-      // Auto-close after 5s
       setTimeout(dismiss, 5000);
     } catch {
-      // Silently fail — don't block the user
+      // Silently fail
     } finally {
       setSubmitting(false);
     }
@@ -116,31 +111,49 @@ const SmartConciergeModal = () => {
     return true;
   };
 
+  const glassInputClass =
+    'h-10 bg-white/[0.06] border-white/[0.12] text-white placeholder:text-white/40 focus-visible:ring-[#FF5124]/40 focus-visible:border-white/20 rounded-lg';
+
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-md px-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={dismiss}
         >
           <motion.div
-            className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
+            className="relative w-full max-w-sm overflow-hidden rounded-2xl shadow-2xl"
             initial={{ opacity: 0, scale: 0.92, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
             onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'linear-gradient(145deg, rgba(20,20,25,0.88) 0%, rgba(15,15,18,0.92) 100%)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              boxShadow: '0 25px 60px -12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)',
+            }}
           >
+            {/* Gradient accent line at top */}
+            <div
+              className="h-[2px] w-full"
+              style={{
+                background: 'linear-gradient(90deg, #FF5124, #E64A19, #FFB800)',
+              }}
+            />
+
             {/* Close button */}
             <button
               onClick={dismiss}
-              className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-gray-100 transition-colors z-10"
+              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-white/10 transition-colors z-10"
               aria-label="Close"
             >
-              <X className="w-4 h-4 text-gray-400" />
+              <X className="w-4 h-4 text-white/50" />
             </button>
 
             <div className="p-6">
@@ -148,49 +161,48 @@ const SmartConciergeModal = () => {
               {step === 'segment' && (
                 <div className="space-y-4">
                   <div className="text-center space-y-1">
-                    <h3 className="text-lg font-semibold text-gray-900">How can we help you today?</h3>
-                    <p className="text-sm text-gray-500">Select an option to get started.</p>
+                    <h3 className="text-lg font-semibold text-white">How can we help you today?</h3>
+                    <p className="text-sm text-white/50">Select an option to get started.</p>
                   </div>
 
                   <div className="space-y-2.5 pt-2">
-                    <button
-                      onClick={() => selectIntent('rent')}
-                      className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-left group"
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                        <Home className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-900 text-sm">I want to Rent</span>
-                        <p className="text-xs text-gray-500">Finding a Kitchen or Parking</p>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => selectIntent('host')}
-                      className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-left group"
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
-                        <Store className="w-5 h-5 text-emerald-600" />
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-900 text-sm">I want to Host</span>
-                        <p className="text-xs text-gray-500">Listing my Space</p>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => selectIntent('sell')}
-                      className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-left group"
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center shrink-0">
-                        <Truck className="w-5 h-5 text-orange-600" />
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-900 text-sm">I want to Sell</span>
-                        <p className="text-xs text-gray-500">Selling a Truck or Equipment</p>
-                      </div>
-                    </button>
+                    {[
+                      { id: 'rent' as Intent, icon: Home, label: 'I want to Rent', desc: 'Finding a Kitchen or Parking' },
+                      { id: 'host' as Intent, icon: Store, label: 'I want to Host', desc: 'Listing my Space' },
+                      { id: 'sell' as Intent, icon: Truck, label: 'I want to Sell', desc: 'Selling a Truck or Equipment' },
+                    ].map(({ id, icon: Icon, label, desc }) => (
+                      <button
+                        key={id}
+                        onClick={() => selectIntent(id)}
+                        className="w-full flex items-center gap-3 p-3.5 rounded-xl transition-all text-left group hover:scale-[1.01]"
+                        style={{
+                          background: 'rgba(255,255,255,0.04)',
+                          border: '1px solid rgba(255,255,255,0.08)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                        }}
+                      >
+                        <div
+                          className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(255,81,36,0.15), rgba(255,184,0,0.1))',
+                            border: '1px solid rgba(255,81,36,0.2)',
+                          }}
+                        >
+                          <Icon className="w-5 h-5 text-[#FF5124]" />
+                        </div>
+                        <div>
+                          <span className="font-medium text-white text-sm">{label}</span>
+                          <p className="text-xs text-white/40">{desc}</p>
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
@@ -199,7 +211,7 @@ const SmartConciergeModal = () => {
               {step === 'form' && intent && (
                 <div className="space-y-4">
                   <div className="text-center space-y-1">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-white">
                       {intent === 'rent' && 'Find your perfect spot.'}
                       {intent === 'host' && 'List your space.'}
                       {intent === 'sell' && 'Sell your equipment.'}
@@ -213,17 +225,18 @@ const SmartConciergeModal = () => {
                           placeholder="Zip Code"
                           value={zipCode}
                           onChange={(e) => setZipCode(e.target.value)}
-                          className="h-10 border-gray-200 focus-visible:ring-blue-500"
+                          className={glassInputClass}
                           maxLength={10}
                         />
                         <select
                           value={budget}
                           onChange={(e) => setBudget(e.target.value)}
-                          className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                          className="flex h-10 w-full rounded-lg bg-white/[0.06] border border-white/[0.12] px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5124]/40 focus-visible:ring-offset-0"
+                          style={{ colorScheme: 'dark' }}
                         >
-                          <option value="">Monthly Budget</option>
+                          <option value="" className="bg-[#1a1a1e] text-white/50">Monthly Budget</option>
                           {budgetOptions.map((b) => (
-                            <option key={b.label} value={b.label}>
+                            <option key={b.label} value={b.label} className="bg-[#1a1a1e] text-white">
                               {b.label}
                             </option>
                           ))}
@@ -236,7 +249,7 @@ const SmartConciergeModal = () => {
                         placeholder="Address of your space"
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
-                        className="h-10 border-gray-200 focus-visible:ring-blue-500"
+                        className={glassInputClass}
                       />
                     )}
 
@@ -245,7 +258,7 @@ const SmartConciergeModal = () => {
                         placeholder="What are you selling?"
                         value={sellItem}
                         onChange={(e) => setSellItem(e.target.value)}
-                        className="h-10 border-gray-200 focus-visible:ring-blue-500"
+                        className={glassInputClass}
                       />
                     )}
 
@@ -253,21 +266,29 @@ const SmartConciergeModal = () => {
                       placeholder="Full Name"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="h-10 border-gray-200 focus-visible:ring-blue-500"
+                      className={glassInputClass}
                     />
                     <Input
                       type="email"
                       placeholder="Email Address"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="h-10 border-gray-200 focus-visible:ring-blue-500"
+                      className={glassInputClass}
                     />
                   </div>
 
                   <button
                     onClick={handleSubmit}
                     disabled={!isFormValid() || submitting}
-                    className="w-full h-11 bg-black text-white rounded-lg font-medium text-sm hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed mt-1"
+                    className="w-full h-11 rounded-lg font-medium text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed mt-1 text-white"
+                    style={{
+                      background: !isFormValid() || submitting
+                        ? 'rgba(255,255,255,0.08)'
+                        : 'linear-gradient(135deg, #FF5124, #E64A19, #FFB800)',
+                      boxShadow: isFormValid() && !submitting
+                        ? '0 4px 20px -4px rgba(255,81,36,0.4)'
+                        : 'none',
+                    }}
                   >
                     {submitting
                       ? 'Submitting…'
@@ -280,7 +301,7 @@ const SmartConciergeModal = () => {
 
                   <button
                     onClick={() => { setStep('segment'); setIntent(null); }}
-                    className="w-full text-center text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                    className="w-full text-center text-xs text-white/30 hover:text-white/60 transition-colors"
                   >
                     ← Back
                   </button>
@@ -291,31 +312,39 @@ const SmartConciergeModal = () => {
               {step === 'success' && (
                 <div className="space-y-4 text-center py-2">
                   <motion.div
-                    className="mx-auto w-14 h-14 rounded-full bg-green-100 flex items-center justify-center"
+                    className="mx-auto w-14 h-14 rounded-full flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255,81,36,0.2), rgba(255,184,0,0.15))',
+                      border: '1px solid rgba(255,81,36,0.3)',
+                    }}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: 'spring', stiffness: 260, damping: 20 }}
                   >
-                    <Check className="w-7 h-7 text-green-600" />
+                    <Check className="w-7 h-7 text-[#FF5124]" />
                   </motion.div>
 
                   <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-gray-900">We're on it.</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">
+                    <h3 className="text-lg font-semibold text-white">We're on it.</h3>
+                    <p className="text-sm text-white/60 leading-relaxed">
                       {intent === 'rent'
                         ? `Thanks! Our team is now manually scouting ${zipCode || 'your area'} for spaces${budget ? ` within your ${budget} budget` : ''}. Expect a text or email within 24 hours.`
                         : 'Thanks! An expert will review your details and reach out shortly to verify your spot.'}
                     </p>
                   </div>
 
-                  <p className="text-xs text-gray-400 italic">
+                  <p className="text-xs text-white/30 italic">
                     You've been assigned to a dedicated agent. No bots here.
                   </p>
 
                   <div className="space-y-2 pt-1">
                     <button
                       onClick={dismiss}
-                      className="w-full h-10 bg-black text-white rounded-lg font-medium text-sm hover:bg-gray-800 transition-colors"
+                      className="w-full h-10 rounded-lg font-medium text-sm transition-all text-white"
+                      style={{
+                        background: 'rgba(255,255,255,0.08)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                      }}
                     >
                       Back to Browsing
                     </button>
@@ -323,7 +352,7 @@ const SmartConciergeModal = () => {
                       href="https://wa.me/18778836342"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block text-xs text-blue-600 hover:underline"
+                      className="block text-xs text-[#FF5124] hover:text-[#FFB800] transition-colors"
                     >
                       Chat now on WhatsApp →
                     </a>
