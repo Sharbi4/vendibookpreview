@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
+import SmartConciergeModal from '@/components/home/SmartConciergeModal';
 import { supabase } from '@/integrations/supabase/client';
 
 // Lazy load below-the-fold components for faster initial load
@@ -102,6 +103,7 @@ const Index = () => {
       <Footer />
       
       <NewsletterPopup />
+      <SmartConciergeModal />
       
     </div>
   );
