@@ -554,23 +554,26 @@ export const ListingWizard: React.FC = () => {
         formData.zip_code
       ].filter(Boolean).join(', ') || formData.address || formData.pickup_location_text || null;
       
-      // Geocode address to get coordinates
-      let latitude: number | null = null;
-      let longitude: number | null = null;
-      const addressToGeocode = fullAddress || formData.pickup_location_text;
+      // Use coordinates from form data (set by LocationMapPreview during step 4)
+      let latitude: number | null = formData.latitude;
+      let longitude: number | null = formData.longitude;
       
-      if (addressToGeocode) {
-        try {
-          const { data: geoData } = await supabase.functions.invoke('geocode-location', {
-            body: { query: addressToGeocode, limit: 1 },
-          });
-          if (geoData?.results?.length > 0) {
-            const [lng, lat] = geoData.results[0].center;
-            latitude = lat;
-            longitude = lng;
+      // Fallback: geocode if coordinates are missing (shouldn't happen with validation)
+      if (!latitude || !longitude) {
+        const addressToGeocode = fullAddress || formData.pickup_location_text;
+        if (addressToGeocode) {
+          try {
+            const { data: geoData } = await supabase.functions.invoke('geocode-location', {
+              body: { query: addressToGeocode, limit: 1 },
+            });
+            if (geoData?.results?.length > 0) {
+              const [lng, lat] = geoData.results[0].center;
+              latitude = lat;
+              longitude = lng;
+            }
+          } catch (geoError) {
+            console.warn('Failed to geocode address:', geoError);
           }
-        } catch (geoError) {
-          console.warn('Failed to geocode address:', geoError);
         }
       }
 
