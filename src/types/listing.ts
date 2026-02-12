@@ -166,6 +166,7 @@ export interface Listing {
   accept_card_payment?: boolean;
   // Multi-slot capacity for Vendor Spaces
   total_slots?: number;
+  slot_names?: string[] | null;
 }
 
 // Category-specific amenities
