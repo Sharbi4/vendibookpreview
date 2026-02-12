@@ -1,55 +1,59 @@
 
 
-# Redesign Fees & Commission Section with Role-Based FAQ Mapping
+# SmartConciergeModal -- Behavior-Based Lead Capture
 
-## What Changes
+## Overview
+Build a timed concierge modal that appears after 24 seconds of browsing. It uses a micro-commitment pattern (Rent/Host/Sell segmentation first, then data capture) and saves leads to the existing `asset_requests` table. Includes a polished success state with confetti, dynamic confirmation copy, and auto-close.
 
-The current Fees & Commission section shows all fee information mixed together (host commission alongside renter fees, seller alongside buyer). This redesign separates the content into three distinct role-based views so users only see what's relevant to them.
+## How It Works
 
-## New Layout
+**Trigger**: After 24 seconds on the homepage, the modal fades in -- but only if the user hasn't dismissed it before (tracked via `localStorage`).
 
-The `fees-commission` section in the FAQ page will be restructured with a 3-tab or 3-card navigation:
+**Step 1 -- Segmentation (The Hook)**
+- Headline: "How can we help you today?"
+- Three vertical buttons: "I want to Rent", "I want to Host", "I want to Sell"
+- Clicking one advances to Step 2 with conditional fields
 
-1. **Renter FAQ** - What renters pay, how checkout works, what the service fee covers
-2. **Host FAQ** - What hosts earn, commission breakdown, payout details
-3. **Seller FAQ** - What sellers earn, commission on sales, freight considerations
+**Step 2 -- Data Capture (Conditional)**
+- **Rent path**: Zip Code, Monthly Budget (dropdown: Under $500 / $500-$1,000 / $1,000-$2,500 / $2,500+), Full Name, Email
+- **Host path**: Address, Full Name, Email
+- **Sell path**: What are you selling? (text), Full Name, Email
 
-Each role view will include:
-- A role-specific pricing card with only their relevant fee (no cross-role fee display)
-- Role-specific FAQ questions filtered from the current list
-- A dedicated example calculation showing only their perspective
-- The pricing calculator scoped to their role
+**Step 3 -- Success State**
+- Animated green checkmark + confetti burst
+- Dynamic copy based on path (e.g., "Our team is now manually scouting [Zip Code] for spaces within your [Budget] budget")
+- "You have been assigned to a dedicated agent. No bots here."
+- "Back to Browsing" button + "Chat now on WhatsApp" link
+- Auto-closes after 5 seconds if user doesn't interact
+
+## Data Storage
+Submissions save to the existing `asset_requests` table. The table already has fields for email, city/state (zip code maps here), asset_type, budget_min/budget_max, and notes -- a perfect fit. No database migration needed.
+
+- **Rent**: `asset_type` = "rental", zip code in `city`, budget range parsed into `budget_min`/`budget_max`
+- **Host**: `asset_type` = "hosting", address in `notes`
+- **Sell**: `asset_type` = "sale", item description in `notes`
+
+An admin notification is also fired (via existing `send-admin-notification` edge function) so your team knows immediately.
+
+## Data Integrity
+All existing data collection remains untouched. This modal is additive -- it creates a new lead capture channel that feeds into the same `asset_requests` pipeline your admin dashboard already monitors under the "Concierge" tab.
+
+## Interaction with Existing Popups
+The `NewsletterPopup` fires at 5 seconds. This modal fires at 24 seconds. To avoid stacking, if the newsletter popup is still visible, the concierge modal will wait or skip. The `localStorage` key `smart_concierge_dismissed` prevents repeat appearances.
 
 ## Technical Details
 
-### 1. New Component: `RoleFeeSection.tsx`
-- Three clickable role cards (Renter / Host / Seller) with icons and gradient accents
-- Clicking a role reveals that role's fee details, FAQs, and calculator
-- Uses existing `Tabs` component for switching between roles
+### New file
+- `src/components/home/SmartConciergeModal.tsx` -- Self-contained component with all 3 steps, form validation (zod), submission logic, confetti via `canvas-confetti`, and localStorage persistence
 
-### 2. Update `FAQ.tsx` (fees-commission section)
-- Replace the current dual Rentals/Sales grid with the new `RoleFeeSection` component
-- Split the existing 7 fee questions into role-specific groups:
-  - **Renter**: "When does Vendibook charge fees?", "What is the renter service fee?", "Are there additional fees for freight?", "Are there payment processing fees?"
-  - **Host**: "When does Vendibook charge fees?", "What is the host commission for rentals?", "Are there payment processing fees?"
-  - **Seller**: "When does Vendibook charge fees?", "What is the seller commission for sales?", "Do buyers pay a platform fee on sales?", "Are there additional fees for freight?"
+### Modified files
+- `src/pages/Index.tsx` -- Import and render `SmartConciergeModal` alongside existing components
 
-### 3. Update `PricingCalculator.tsx`
-- Add an optional `role` prop to pre-select and lock the calculator to a specific tab
-- When role is "renter", show only the renter total (hide host receives)
-- When role is "host", show only host receives (hide renter total)
-- When role is "seller", show only seller receives
-- Competitor comparison stays in seller view only
-
-### 4. Example Calculations
-- Renter example: Shows rental price + 12.9% service fee = total they pay
-- Host example: Shows rental price - 12.9% commission = what they receive
-- Seller example: Shows sale price - 12.9% commission = what they receive (buyer pays $0 extra)
-
-### Files to Create
-- `src/components/pricing/RoleFeeSection.tsx` - New role-based tab/card component
-
-### Files to Modify
-- `src/pages/FAQ.tsx` - Replace the fees-commission special section with the new role-based component
-- `src/components/pricing/PricingCalculator.tsx` - Add optional `role` prop for scoped view
+### Styling
+- Apple/Turo aesthetic: white background, `rounded-2xl`, subtle `border-gray-200`
+- Backdrop: `backdrop-blur-sm bg-black/40`
+- Compact size: `max-w-sm`
+- Smooth entry animation via framer-motion (fade + scale)
+- Action buttons: full-width, `bg-black text-white`, `rounded-lg`
+- Inputs: `h-10`, `border-gray-200`, `focus:ring-blue-500`
 
