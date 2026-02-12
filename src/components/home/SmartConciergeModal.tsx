@@ -10,7 +10,7 @@ type Intent = 'rent' | 'host' | 'sell';
 type Step = 'segment' | 'form' | 'success';
 
 const STORAGE_KEY = 'smart_concierge_dismissed';
-const DELAY_MS = 24000;
+const SCROLL_THRESHOLD = 0.5; // 50% of page
 
 const budgetOptions = [
   { label: 'Under $500', min: 0, max: 500 },
@@ -34,11 +34,17 @@ const SmartConciergeModal = () => {
 
   useEffect(() => {
     if (localStorage.getItem(STORAGE_KEY)) return;
-    const t = setTimeout(() => {
-      if (document.querySelector('[data-newsletter-popup]')) return;
-      setIsOpen(true);
-    }, DELAY_MS);
-    return () => clearTimeout(t);
+
+    const handleScroll = () => {
+      const scrollPercent = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+      if (scrollPercent >= SCROLL_THRESHOLD) {
+        setIsOpen(true);
+        window.removeEventListener('scroll', handleScroll);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const dismiss = useCallback(() => {
