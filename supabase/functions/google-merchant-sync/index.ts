@@ -135,16 +135,29 @@ Deno.serve(async (req) => {
       throw new Error('Missing GOOGLE_MERCHANT_ID or GOOGLE_SERVICE_ACCOUNT_JSON');
     }
 
-    // Parse service account JSON - handle potential escaping issues
+    // Parse service account JSON - handle various encoding scenarios
     let serviceAccount;
+    let rawJson = serviceAccountJson.trim();
+    
+    // Remove surrounding quotes if present
+    if ((rawJson.startsWith('"') && rawJson.endsWith('"')) || (rawJson.startsWith("'") && rawJson.endsWith("'"))) {
+      rawJson = rawJson.slice(1, -1);
+    }
+    
+    // Unescape common escape sequences
+    rawJson = rawJson.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+    
     try {
-      serviceAccount = JSON.parse(serviceAccountJson);
-    } catch {
-      // Try unescaping if it was double-encoded
+      serviceAccount = JSON.parse(rawJson);
+    } catch (e1) {
+      console.error('First parse attempt failed:', (e1 as Error).message);
+      console.error('First 100 chars of raw value:', rawJson.substring(0, 100));
+      // Try parsing without the unescape step
       try {
-        serviceAccount = JSON.parse(JSON.parse(`"${serviceAccountJson.replace(/"/g, '\\"')}"`));
-      } catch {
-        throw new Error('Invalid GOOGLE_SERVICE_ACCOUNT_JSON format. Please re-enter the full JSON key file contents.');
+        serviceAccount = JSON.parse(serviceAccountJson.trim());
+      } catch (e2) {
+        console.error('Second parse attempt failed:', (e2 as Error).message);
+        throw new Error('Invalid GOOGLE_SERVICE_ACCOUNT_JSON format. Ensure you paste the raw JSON file contents without extra quotes or escaping.');
       }
     }
 
