@@ -4,7 +4,7 @@ import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, Ca
 import { DateRange } from 'react-day-picker';
 import { format, parseISO } from 'date-fns';
 import Header from '@/components/layout/Header';
-import vendibookLogo from '@/assets/vendibook-logo.png';
+
 import Footer from '@/components/layout/Footer';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import ListingCard from '@/components/listing/ListingCard';
@@ -460,18 +460,6 @@ const Search = () => {
       <Header />
       
       <main className="flex-1">
-        {/* Logo + Tagline */}
-        <div className="flex flex-col items-center pt-6 pb-4">
-          <img
-            src={vendibookLogo}
-            alt="Vendibook"
-            className="h-20 sm:h-28 w-auto mb-2"
-          />
-          <p className="text-sm sm:text-base text-muted-foreground font-medium">
-            The Marketplace for Food Business
-          </p>
-        </div>
-
         {/* Search Header - Enhanced styling matching Contact page */}
         <div className="border-b border-border bg-card/50 backdrop-blur-sm">
           <div className="container py-4">
