@@ -453,35 +453,33 @@ const Homepage2 = () => {
                 {totalCount} {totalCount === 1 ? 'result' : 'results'}
               </span>
             </div>
+
+            {/* Quick-link pills row */}
+            <div className="flex items-center justify-center gap-2 pb-2.5 -mt-0.5">
+              <Link
+                to="/how-it-works"
+                className="px-3.5 py-1 text-[11px] font-semibold rounded-full bg-white/15 border border-white/20 text-white/70 hover:text-white hover:bg-white/25 active:scale-[0.97] transition-all whitespace-nowrap"
+              >
+                Learn More
+              </Link>
+              <Link
+                to="/list"
+                className="px-3.5 py-1 text-[11px] font-semibold rounded-full bg-white/15 border border-white/20 text-white/70 hover:text-white hover:bg-white/25 active:scale-[0.97] transition-all whitespace-nowrap"
+              >
+                Create a Listing
+              </Link>
+              {!user && (
+                <Link
+                  to="/auth"
+                  className="px-3.5 py-1 text-[11px] font-semibold rounded-full bg-white/20 border border-white/25 text-white hover:bg-white/30 active:scale-[0.97] transition-all whitespace-nowrap"
+                >
+                  Sign Up
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </header>
-
-      {/* ══ FLOATING QUICK-LINK GLASS BAR ══ */}
-      <div className="relative z-10 flex justify-center px-4 pt-4 pb-1">
-        <div className="inline-flex items-center gap-2 px-2 py-2 rounded-2xl bg-gradient-to-b from-white/30 to-white/10 backdrop-blur-2xl border border-white/30 shadow-[0_4px_24px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.4),inset_0_-1px_0_rgba(0,0,0,0.04)]">
-          <Link
-            to="/how-it-works"
-            className="group relative px-5 py-2 text-[11px] font-semibold tracking-wide uppercase rounded-xl bg-gradient-to-b from-[hsl(25,30%,96%)] to-[hsl(25,20%,90%)] text-foreground/70 hover:text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.7)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.8)] hover:from-[hsl(25,30%,98%)] hover:to-[hsl(25,20%,92%)] active:scale-[0.97] transition-all duration-200 whitespace-nowrap"
-          >
-            Learn More
-          </Link>
-          <Link
-            to="/list"
-            className="group relative px-5 py-2 text-[11px] font-semibold tracking-wide uppercase rounded-xl bg-gradient-to-b from-[hsl(25,30%,96%)] to-[hsl(25,20%,90%)] text-foreground/70 hover:text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.7)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.8)] hover:from-[hsl(25,30%,98%)] hover:to-[hsl(25,20%,92%)] active:scale-[0.97] transition-all duration-200 whitespace-nowrap"
-          >
-            Create a Listing
-          </Link>
-          {!user && (
-            <Link
-              to="/auth"
-              className="group relative px-5 py-2 text-[11px] font-semibold tracking-wide uppercase rounded-xl bg-gradient-to-b from-[hsl(14,90%,55%)] to-[hsl(14,85%,45%)] text-white shadow-[0_1px_3px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_2px_8px_rgba(255,81,36,0.3),inset_0_1px_0_rgba(255,255,255,0.25)] hover:from-[hsl(14,90%,58%)] hover:to-[hsl(14,85%,48%)] active:scale-[0.97] transition-all duration-200 whitespace-nowrap"
-            >
-              Sign Up
-            </Link>
-          )}
-        </div>
-      </div>
 
       {/* ══ MAIN LAYOUT ══ */}
       <div className="relative z-10 flex">
