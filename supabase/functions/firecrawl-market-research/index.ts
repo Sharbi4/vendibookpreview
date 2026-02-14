@@ -26,46 +26,95 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Build a targeted search query for Facebook Marketplace
-    let searchQuery = `site:facebook.com/marketplace ${query}`;
-    if (location) searchQuery += ` ${location}`;
-    if (listing_type === 'sale') searchQuery += ' for sale';
-    if (listing_type === 'rent') searchQuery += ' for rent';
+    // Build multiple search queries to cast a wider net
+    const searchQueries: string[] = [];
+    
+    const typeLabel = listing_type === 'rent' ? 'for rent' : listing_type === 'sale' ? 'for sale' : '';
+    const loc = location?.trim() || 'United States';
 
-    console.log('Firecrawl market research query:', searchQuery);
-
-    const response = await fetch('https://api.firecrawl.dev/v1/search', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: searchQuery,
-        limit: 20,
-        scrapeOptions: {
-          formats: ['markdown'],
-        },
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error('Firecrawl API error:', data);
-      return new Response(
-        JSON.stringify({ success: false, error: data.error || `Request failed with status ${response.status}` }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Search across multiple platforms
+    searchQueries.push(`"food truck" ${typeLabel} ${loc} phone contact`);
+    searchQueries.push(`"food trailer" ${typeLabel} ${loc} phone contact`);
+    searchQueries.push(`site:facebook.com/marketplace "food truck" ${typeLabel} ${loc}`);
+    searchQueries.push(`site:craigslist.org "food truck" OR "food trailer" ${typeLabel}`);
+    if (query !== 'food truck' && query !== 'food trailer') {
+      searchQueries.push(`${query} ${typeLabel} ${loc} phone contact`);
     }
 
-    // Extract phone numbers from results using regex
-    const phoneRegex = /(\+?1?\s*[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})/g;
+    console.log('Running', searchQueries.length, 'search queries');
+
+    // Run all searches in parallel
+    const allResults: any[] = [];
+
+    const fetchResults = async (q: string) => {
+      try {
+        const response = await fetch('https://api.firecrawl.dev/v1/search', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query: q,
+            limit: 20,
+            scrapeOptions: {
+              formats: ['markdown'],
+            },
+          }),
+        });
+
+        const data = await response.json();
+        if (response.ok && data.data) {
+          return data.data;
+        }
+        console.error('Search failed for query:', q, data.error);
+        return [];
+      } catch (err) {
+        console.error('Fetch error for query:', q, err);
+        return [];
+      }
+    };
+
+    const resultSets = await Promise.all(searchQueries.map(fetchResults));
+    for (const set of resultSets) {
+      allResults.push(...set);
+    }
+
+    // Deduplicate by URL
+    const seenUrls = new Set<string>();
+    const uniqueResults: any[] = [];
+    for (const r of allResults) {
+      const url = r.url || '';
+      if (url && seenUrls.has(url)) continue;
+      if (url) seenUrls.add(url);
+      uniqueResults.push(r);
+    }
+
+    // Extract phone numbers using multiple patterns
+    const phoneRegex = /(?:(?:\+?1[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?)?\d{3}[\s.-]?\d{4})/g;
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
     
-    const enrichedResults = (data.data || []).map((result: any) => {
-      const content = (result.markdown || '') + ' ' + (result.description || '');
-      const phones = content.match(phoneRegex) || [];
-      const uniquePhones = [...new Set(phones.map((p: string) => p.trim()))];
+    const enrichedResults = uniqueResults.map((result: any) => {
+      const content = [
+        result.markdown || '',
+        result.description || '',
+        result.title || '',
+      ].join(' ');
+      
+      const rawPhones = content.match(phoneRegex) || [];
+      // Filter out unlikely phone numbers (too short, all same digit, etc.)
+      const validPhones = rawPhones
+        .map((p: string) => p.trim())
+        .filter((p: string) => {
+          const digits = p.replace(/\D/g, '');
+          if (digits.length < 10 || digits.length > 11) return false;
+          if (/^(.)\1+$/.test(digits)) return false; // all same digit
+          return true;
+        });
+      const uniquePhones = [...new Set(validPhones)];
+
+      const emails = content.match(emailRegex) || [];
+      const uniqueEmails = [...new Set(emails.map((e: string) => e.toLowerCase()))];
 
       return {
         title: result.title || 'Untitled',
@@ -73,16 +122,17 @@ Deno.serve(async (req) => {
         description: result.description || '',
         snippet: result.markdown?.substring(0, 500) || '',
         phones: uniquePhones,
+        emails: uniqueEmails,
       };
     });
 
-    console.log(`Found ${enrichedResults.length} results`);
+    console.log(`Found ${enrichedResults.length} unique results, ${enrichedResults.filter((r: any) => r.phones.length > 0).length} with phones`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         results: enrichedResults,
-        query: searchQuery,
+        query: searchQueries[0],
         count: enrichedResults.length,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
