@@ -55,10 +55,14 @@ const ListHero = ({ onStart }: { onStart: () => void }) => (
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button size="lg" variant="dark-shine" onClick={onStart} className="text-base sm:text-lg px-8 py-6 h-auto shadow-xl rounded-xl w-full sm:w-auto">
-            Create Your Listing
+            Create Step-by-Step
+          </Button>
+          <Button size="lg" variant="gradient" onClick={() => window.location.href = '/list/ai'} className="text-base sm:text-lg px-8 py-6 h-auto shadow-xl rounded-xl w-full sm:w-auto">
+            <Bot className="h-5 w-5 mr-2" />
+            Create with VendiBot
           </Button>
         </div>
-        <p className="mt-6 text-sm text-muted-foreground">Free to list • Accept card or cash • Cancel anytime</p>
+        <p className="mt-4 text-sm text-muted-foreground max-w-md mx-auto">Use our traditional wizard or let VendiBot AI build your listing in under a minute</p>
       </motion.div>
     </div>
   </section>
