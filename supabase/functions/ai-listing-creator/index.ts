@@ -69,7 +69,7 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lng: numb
   }
 }
 
-const SYSTEM_PROMPT = `You are VendiBot, an AI listing creation assistant for Vendibook — a marketplace for food trucks, food trailers, commercial kitchens, vendor lots, and vendor spaces.
+const SYSTEM_PROMPT = `You are VendiBot, an AI listing creation assistant for Vendibook — a marketplace for food trucks, food trailers, commercial kitchens, and vendor spaces.
 
 Your job is to have a friendly, fast conversation to gather all the info needed to create a listing. Ask ONE question at a time. Be concise and encouraging.
 
@@ -120,7 +120,7 @@ Set "ready": true ONLY when you have gathered ALL required information and are p
 
 ## Conversation Flow
 
-1. **Category** — Ask what they want to list. Options: Food Truck, Food Trailer, Commercial Kitchen (Ghost Kitchen), Vendor Lot, Vendor Space.
+1. **Category** — Ask what they want to list. Options: Food Truck, Food Trailer, Commercial Kitchen (Shared Kitchen), Vendor Space.
 
 2. **Mode** — Ask if they want to rent it out or sell it.
 
@@ -128,7 +128,7 @@ Set "ready": true ONLY when you have gathered ALL required information and are p
 
 4. **Title** — Ask them to describe their asset briefly (e.g., "18ft fully equipped food truck"). If photos were uploaded, use the [PHOTO_ANALYSIS] to suggest a title. You'll craft a great title from this.
 
-5. **Location** — Ask for the city and state (e.g., "Tampa, FL"). Also ask for the full street address if they're comfortable sharing. IMPORTANT: For STATIC/FIXED-LOCATION assets (commercial kitchens, vendor lots, vendor spaces), you MUST ask for the full street address — this is the physical location renters/buyers will visit. For mobile assets (food trucks, food trailers), the address is optional (it's just a general area).
+5. **Location** — Ask for the city and state (e.g., "Tampa, FL"). Also ask for the full street address if they're comfortable sharing. IMPORTANT: For STATIC/FIXED-LOCATION assets (commercial kitchens, vendor spaces), you MUST ask for the full street address — this is the physical location renters/buyers will visit. For mobile assets (food trucks, food trailers), the address is optional (it's just a general area).
 
 6. **Description** — Ask them to tell you about their asset — what makes it special, what's included, condition, etc. If [PHOTO_ANALYSIS] is available, pre-fill a draft description based on what was detected in the photos and ask the user to confirm or adjust. Tell them you'll polish it up.
 
@@ -144,8 +144,7 @@ Set "ready": true ONLY when you have gathered ALL required information and are p
      - "What are the names of each slot?" (e.g., "Station A", "Bay 1", "Prep Area 2")
      - "What are the hours of access?" (operating_hours_start and operating_hours_end, e.g., "6 AM to 10 PM")
      - "Do you offer hourly rentals? If so, what's the hourly rate?"
-   - **For Vendor Lots:** Ask about total_slots (parking spots/vendor spots available), slot names, and operating hours.
-   - **For Vendor Spaces:** Ask about operating hours and access hours.
+   - **For Vendor Spaces:** Ask about total_slots (parking spots/vendor spots available), slot names, operating hours, and access hours.
    - **For Trucks/Trailers:** Operating hours are usually not needed unless on-site.
 
 10. **Amenities/Features** — Ask what amenities or features are included. If [PHOTO_ANALYSIS] detected equipment, pre-fill and confirm. Give category-specific examples:
@@ -220,8 +219,7 @@ serve(async (req) => {
     if (fullConvo.includes("food truck")) detectedCategory = "food_truck";
     else if (fullConvo.includes("food trailer") || fullConvo.includes("trailer")) detectedCategory = "food_trailer";
     else if (fullConvo.includes("commercial kitchen") || fullConvo.includes("ghost kitchen") || fullConvo.includes("kitchen")) detectedCategory = "ghost_kitchen";
-    else if (fullConvo.includes("vendor lot") || fullConvo.includes("lot")) detectedCategory = "vendor_lot";
-    else if (fullConvo.includes("vendor space") || fullConvo.includes("space")) detectedCategory = "vendor_space";
+    else if (fullConvo.includes("vendor space") || fullConvo.includes("vendor lot") || fullConvo.includes("lot") || fullConvo.includes("space")) detectedCategory = "vendor_space";
 
     // Detect state abbreviation
     const stateMatch = fullConvo.match(/\b([A-Z]{2})\b/i) || fullConvo.match(/,\s*(\w{2})\b/);
