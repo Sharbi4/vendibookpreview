@@ -457,11 +457,40 @@ const Homepage2 = () => {
         </div>
       </header>
 
+      {/* ══ FLOATING QUICK-LINK PILLS ══ */}
+      <div className="relative z-10 max-w-6xl mx-auto px-4 pt-4 pb-1">
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <Link
+            to="/how-it-works"
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium rounded-full bg-background/80 backdrop-blur-xl border border-border/60 shadow-sm hover:shadow-md hover:bg-background text-foreground/70 hover:text-foreground transition-all"
+          >
+            <Info className="w-3 h-3" />
+            Learn More
+          </Link>
+          <Link
+            to="/list"
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium rounded-full bg-background/80 backdrop-blur-xl border border-border/60 shadow-sm hover:shadow-md hover:bg-background text-foreground/70 hover:text-foreground transition-all"
+          >
+            <Plus className="w-3 h-3" />
+            Create a Listing
+          </Link>
+          {!user && (
+            <Link
+              to="/auth"
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium rounded-full bg-background/80 backdrop-blur-xl border border-border/60 shadow-sm hover:shadow-md hover:bg-background text-foreground/70 hover:text-foreground transition-all"
+            >
+              <UserPlus className="w-3 h-3" />
+              Sign Up
+            </Link>
+          )}
+        </div>
+      </div>
+
       {/* ══ MAIN LAYOUT ══ */}
       <div className="relative z-10 flex">
         {/* ── CONTENT ── */}
         <div className="flex-1 min-w-0">
-          <div ref={resultsRef} className="scroll-mt-32 max-w-6xl mx-auto px-4 pt-6 pb-6">
+          <div ref={resultsRef} className="scroll-mt-32 max-w-6xl mx-auto px-4 pt-4 pb-6">
             {/* Sort bar + map toggle */}
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-medium text-foreground/70">
