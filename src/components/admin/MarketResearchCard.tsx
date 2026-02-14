@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, ExternalLink, Phone, Loader2, Globe } from 'lucide-react';
+import { Search, ExternalLink, Phone, Loader2, Globe, Mail } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ interface SearchResult {
   description: string;
   snippet: string;
   phones: string[];
+  emails: string[];
 }
 
 const MarketResearchCard = () => {
@@ -173,6 +174,17 @@ const MarketResearchCard = () => {
                   <Badge key={i} variant="secondary" className="flex items-center gap-1">
                     <Phone className="h-3 w-3" />
                     {phone}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {result.emails.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {result.emails.map((email, i) => (
+                  <Badge key={i} variant="outline" className="flex items-center gap-1">
+                    <Mail className="h-3 w-3" />
+                    {email}
                   </Badge>
                 ))}
               </div>
