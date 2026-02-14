@@ -27,6 +27,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const CreateListing = lazy(() => import("./pages/CreateListing"));
 const EditListing = lazy(() => import("./pages/EditListing"));
 const ListPage = lazy(() => import("./pages/List"));
+const AIListingCreator = lazy(() => import("./pages/AIListingCreator"));
 const ListingDetail = lazy(() => import("./pages/ListingDetail"));
 const Account = lazy(() => import("./pages/Account"));
 const Favorites = lazy(() => import("./pages/Favorites"));
@@ -207,6 +208,7 @@ const AnimatedRoutes = () => {
           
           {/* Supply flow: /list is quick start, then /create-listing/:id for publish wizard */}
           <Route path="/list" element={<PageTransition><ListPage /></PageTransition>} />
+          <Route path="/list/ai" element={<PageTransition><AIListingCreator /></PageTransition>} />
           <Route path="/create-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />
           <Route path="/listing-published" element={<PageTransition><ListingPublished /></PageTransition>} />
           <Route path="/listing-published/:listingId" element={<PageTransition><ListingPublished /></PageTransition>} />

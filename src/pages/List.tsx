@@ -13,7 +13,8 @@ import {
   LayoutGrid, 
   Wallet, 
   Store,
-  MapPin
+  MapPin,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -301,6 +302,24 @@ const ListPage: React.FC = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
+
+          {/* AI Create CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 to-orange-400/5 p-4 sm:p-5 flex items-center gap-4 cursor-pointer hover:border-primary/40 transition-colors"
+            onClick={() => navigate('/list/ai')}
+          >
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center shrink-0">
+              <Sparkles className="h-5 w-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold text-foreground">Create with AI — under 1 minute</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Answer a few questions and our AI builds your listing for you. Upload photos, get a polished title & description.</p>
+            </div>
+            <ArrowRight className="h-5 w-5 text-muted-foreground shrink-0 hidden sm:block" />
+          </motion.div>
+
           <QuickStartWizard />
         </div>
       </div>
