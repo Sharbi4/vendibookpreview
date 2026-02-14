@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, forwardRef, useCallback, memo } from 'react';
-import { GoogleMap, useJsApiLoader, MarkerF, Circle, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, MarkerF, Circle, InfoWindowF } from '@react-google-maps/api';
 import { GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_LOADER_ID } from '@/lib/googleMapsLoader';
 import { Listing } from '@/types/listing';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -44,8 +44,7 @@ const SearchResultsMapLoaded = forwardRef<
     libraries: GOOGLE_MAPS_LIBRARIES,
   });
 
-  // Fit bounds whenever listings change and map is ready
-  useEffect(() => {
+  const fitMapBounds = useCallback(() => {
     const map = mapRef.current;
     if (!map) return;
 
@@ -56,20 +55,27 @@ const SearchResultsMapLoaded = forwardRef<
     withCoords.forEach(l => bounds.extend({ lat: l.latitude!, lng: l.longitude! }));
     if (userLocation) bounds.extend({ lat: userLocation[1], lng: userLocation[0] });
 
-    // Use idle listener to ensure map is ready
-    const listener = google.maps.event.addListenerOnce(map, 'idle', () => {
-      map.fitBounds(bounds, 50);
-    });
-
-    // Also try immediately
     map.fitBounds(bounds, 50);
-
-    return () => { google.maps.event.removeListener(listener); };
   }, [listings, userLocation]);
+
+  // Fit bounds whenever listings change
+  useEffect(() => {
+    fitMapBounds();
+  }, [fitMapBounds]);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
-  }, []);
+    // Fit bounds on initial load after a small delay to ensure map is ready
+    setTimeout(() => {
+      const withCoords = listings.filter(l => l.latitude != null && l.longitude != null);
+      if (withCoords.length > 0) {
+        const bounds = new google.maps.LatLngBounds();
+        withCoords.forEach(l => bounds.extend({ lat: l.latitude!, lng: l.longitude! }));
+        if (userLocation) bounds.extend({ lat: userLocation[1], lng: userLocation[0] });
+        map.fitBounds(bounds, 50);
+      }
+    }, 100);
+  }, [listings, userLocation]);
 
   const onUnmount = useCallback(() => {
     mapRef.current = null;
@@ -162,67 +168,80 @@ const SearchResultsMapLoaded = forwardRef<
 
         {/* Info window popup */}
         {selectedListing && selectedListing.latitude && selectedListing.longitude && (
-          <InfoWindow
+          <InfoWindowF
             position={{ lat: selectedListing.latitude, lng: selectedListing.longitude }}
             onCloseClick={() => setSelectedListing(null)}
             options={{ pixelOffset: new google.maps.Size(0, -40) }}
           >
-            <div className="p-1 max-w-[260px]">
-              <div className="relative">
+            <div style={{ padding: '4px', maxWidth: '260px', fontFamily: 'system-ui, sans-serif' }}>
+              <div style={{ position: 'relative' }}>
                 <img
                   src={selectedListing.cover_image_url || selectedListing.image_urls?.[0] || '/placeholder.svg'}
                   alt={selectedListing.title}
-                  className="w-full h-36 object-cover rounded-lg"
+                  style={{ width: '100%', height: '144px', objectFit: 'cover', borderRadius: '8px' }}
                 />
-                <span className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full font-medium text-white ${
-                  selectedListing.mode === 'rent' ? 'bg-blue-500' : 'bg-emerald-500'
-                }`}>
+                <span style={{
+                  position: 'absolute', top: '8px', left: '8px',
+                  fontSize: '10px', padding: '2px 8px', borderRadius: '999px',
+                  fontWeight: 500, color: '#fff',
+                  backgroundColor: selectedListing.mode === 'rent' ? '#3b82f6' : '#10b981',
+                }}>
                   {selectedListing.mode === 'rent' ? 'For Rent' : 'For Sale'}
                 </span>
                 {selectedListing.mode === 'rent' && selectedListing.instant_book && (
-                  <span className="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full font-medium bg-amber-500 text-white">
+                  <span style={{
+                    position: 'absolute', top: '8px', right: '8px',
+                    fontSize: '10px', padding: '2px 8px', borderRadius: '999px',
+                    fontWeight: 500, backgroundColor: '#f59e0b', color: '#fff',
+                  }}>
                     ⚡ Instant
                   </span>
                 )}
               </div>
-              <div className="mt-2">
-                <h3 className="font-bold text-sm line-clamp-1 text-gray-900">{selectedListing.title}</h3>
-                <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+              <div style={{ marginTop: '8px' }}>
+                <h3 style={{ fontWeight: 700, fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#111', margin: 0 }}>
+                  {selectedListing.title}
+                </h3>
+                <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {selectedListing.address?.split(',').slice(-2).join(',').trim() || 'Location TBD'}
                 </p>
-                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
                   {selectedListing.mode === 'rent' ? (
                     <>
                       {selectedListing.price_hourly && (
-                        <span className="font-bold text-sm" style={{ color: '#FF5722' }}>
-                          ${selectedListing.price_hourly}<span className="text-xs font-normal text-gray-500">/hr</span>
+                        <span style={{ fontWeight: 700, fontSize: '14px', color: '#FF5722' }}>
+                          ${selectedListing.price_hourly}<span style={{ fontSize: '12px', fontWeight: 400, color: '#6b7280' }}>/hr</span>
                         </span>
                       )}
                       {selectedListing.price_daily && (
-                        <span className="font-bold text-sm" style={{ color: '#FF5722' }}>
-                          ${selectedListing.price_daily}<span className="text-xs font-normal text-gray-500">/day</span>
+                        <span style={{ fontWeight: 700, fontSize: '14px', color: '#FF5722' }}>
+                          ${selectedListing.price_daily}<span style={{ fontSize: '12px', fontWeight: 400, color: '#6b7280' }}>/day</span>
                         </span>
                       )}
                       {selectedListing.price_weekly && (
-                        <span className="text-xs text-gray-500">${selectedListing.price_weekly}/wk</span>
+                        <span style={{ fontSize: '12px', color: '#6b7280' }}>${selectedListing.price_weekly}/wk</span>
                       )}
                     </>
                   ) : (
-                    <span className="font-bold text-base" style={{ color: '#FF5722' }}>
+                    <span style={{ fontWeight: 700, fontSize: '16px', color: '#FF5722' }}>
                       ${selectedListing.price_sale?.toLocaleString()}
                     </span>
                   )}
                 </div>
-                <button
-                  onClick={() => { window.location.href = `/listing/${selectedListing.id}`; }}
-                  className="mt-3 w-full py-2 px-4 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-95"
-                  style={{ backgroundColor: '#FF5722' }}
+                <a
+                  href={`/listing/${selectedListing.id}`}
+                  style={{
+                    display: 'block', marginTop: '12px', width: '100%', padding: '8px 16px',
+                    borderRadius: '8px', fontSize: '14px', fontWeight: 600, color: '#fff',
+                    backgroundColor: '#FF5722', textAlign: 'center', textDecoration: 'none',
+                    cursor: 'pointer',
+                  }}
                 >
                   View Details
-                </button>
+                </a>
               </div>
             </div>
-          </InfoWindow>
+          </InfoWindowF>
         )}
       </GoogleMap>
 
