@@ -1,110 +1,83 @@
 
 
-# Programmatic SEO Engine for Vendibook
+# Harden Listing Page Structured Data for Google Rich Results
 
-This plan addresses the full SEO playbook to get Vendibook listings ranking for searches like "food truck for rent near me" and "food truck rental Tampa."
+## Current State
 
-## Overview
+Your listing pages already have a solid foundation:
+- Product + Offer schema with price, availability, images, SKU, and seller
+- BreadcrumbList schema
+- AggregateRating when reviews exist
+- UnitPriceSpecification for rental pricing
+- Keyword-rich SEO titles and meta descriptions
 
-There are three major gaps to close:
+## What's Missing (and Why Listings Aren't Showing as Rich Results)
 
-1. **No category+city landing pages** matching how people actually search (e.g., `/rent/food-trucks/houston-tx/`)
-2. **No dynamic sitemap** that includes every published listing
-3. **No "Related Listings" section** on listing detail pages to boost internal linking
+### 1. Product Name Isn't Search-Optimized
+Currently: `"name": "Tampa Kitchen Hub"`
+Should be: `"name": "Shared Kitchen for Rent in Tampa, FL - Tampa Kitchen Hub"`
 
----
+Google uses the Product name to match search queries. If someone searches "shared kitchen for rent Tampa," your schema name needs to contain those words.
 
-## 1. Programmatic Category + City + Mode Landing Pages
+### 2. No LocalBusiness Schema for Physical Locations
+Kitchens, vendor spaces, and food truck parks are physical places. Google expects LocalBusiness schema for these, not just Product. The fix: emit BOTH Product and LocalBusiness schemas for `ghost_kitchen` and `vendor_lot`/`vendor_space` categories.
 
-Create a new `CategoryCityPage` component that renders pages like:
+### 3. H1 Tag Missing City Name
+Currently: `<h1>Tampa Kitchen Hub</h1>`
+Should be: `<h1>Tampa Kitchen Hub - Shared Kitchen for Rent in Tampa, FL</h1>`
 
-```text
-/rent/food-trucks/houston-tx/
-/rent/food-trailers/phoenix-az/
-/buy/food-trucks/dallas-tx/
-/rent/commercial-kitchens/los-angeles-ca/
-/rent/vendor-spaces/houston-tx/
-```
+Google weights the H1 heavily for ranking. Adding category + city to the H1 directly targets "shared kitchen for rent Tampa" queries.
 
-Each page will:
-- Fetch real listings from the database filtered by category, mode, and city
-- Display an `ItemList` schema with up to 50 listings for Google indexing
-- Include 150-250 words of unique, city-specific intro copy
-- Show breadcrumbs: `Home > For Rent > Food Trucks > Houston, TX`
-- Link to individual listings + related categories + the city hub page
-- Have a keyword-optimized title like: `Food Trucks for Rent in Houston, TX | Vendibook`
-- Have a keyword-optimized H1: `Food Trucks for Rent in Houston, TX`
+### 4. Missing Product Meta Tags for Social / Shopping
+Open Graph type is set to `website` instead of `product`. Adding `og:price:amount` and `og:price:currency` enables richer social previews and potential shopping integrations.
 
-**Route pattern:** Dynamic routes in App.tsx:
-- `/rent/:categorySlug/:cityStateSlug`
-- `/buy/:categorySlug/:cityStateSlug`
+### 5. No FAQ Schema
+Adding a small FAQ section to listings (auto-generated from listing attributes) gives Google another rich result opportunity, like:
+- "Is this food truck available for rent?" -> "Yes, starting at $150/day"
+- "Where is this located?" -> "Tampa, FL"
 
-**City data expansion:** Add Tampa, Portland, Miami, Atlanta, Austin, San Antonio, Chicago to cityData.ts (with state codes for URL slugs like `tampa-fl`).
-
-**Category slug map:**
-- `food-trucks` -> `food_truck`
-- `food-trailers` -> `food_trailer`
-- `commercial-kitchens` -> `ghost_kitchen`
-- `vendor-spaces` -> `vendor_lot`
+### 6. No `additionalProperty` for Specs
+Google can display specs (dimensions, equipment) in product rich results. Currently the tech specs are visible on-page but invisible to the schema.
 
 ---
 
-## 2. Dynamic Listing Sitemap
+## Technical Changes
 
-Create a new edge function `generate-sitemap` that:
-- Queries all published listings from the database
-- Returns a valid XML sitemap with `<lastmod>` from `updated_at`
-- Includes all programmatic category+city pages
-- Returns proper `Content-Type: application/xml` header
+### File: `src/components/JsonLd.tsx`
 
-Update `sitemap.xml` to become a sitemap index that references:
-- `sitemap_pages.xml` (static pages, already defined)
-- `sitemap_listings.xml` (from edge function)
-- `sitemap_locations.xml` (programmatic city+category pages)
+**A. Update `generateProductSchema`:**
+- Change `name` to include category label + mode + city: `"Food Truck for Rent in Tampa, FL - [Title]"`
+- Add `additionalProperty` array from listing specs (length, width, weight) when available
+- Accept new optional params: `length_inches`, `width_inches`, `weight_lbs`
 
----
+**B. Add `generateListingLocalBusinessSchema`:**
+- New function for ghost_kitchen / vendor_lot / vendor_space categories
+- Includes `@type: LocalBusiness`, address, geo coordinates (if available), and `makesOffer` linking to the Product
 
-## 3. "Related Listings" Section on Listing Detail Pages
+**C. Add `generateListingFAQSchema`:**
+- Auto-generates 3-5 Q&A pairs from listing data:
+  - "Is this [category] available?" -> based on status
+  - "How much does it cost?" -> based on pricing
+  - "Where is it located?" -> based on address
+  - "Can I book instantly?" -> based on instant_book flag
+  - "Is delivery available?" -> based on fulfillment_type
 
-Add a section at the bottom of `ListingDetail.tsx` (above Footer) that:
-- Queries 4-6 published listings matching the same category or city
-- Excludes the current listing
-- Displays as a horizontal card grid with title, image, price, location
-- Each card links to the listing detail page
-- Section title: `"Similar {Category} near {City}"`
+### File: `src/pages/ListingDetail.tsx`
 
-This creates the internal linking web that helps Google discover every listing.
+**A. Enrich H1:**
+- Append ` - ${categoryLabel} ${modeLabel} in ${locationShort}` to the H1 when location is available
 
----
+**B. Add LocalBusiness + FAQ schemas:**
+- For physical location categories (ghost_kitchen, vendor_lot, vendor_space), generate and include the LocalBusiness schema alongside Product
+- Generate and include FAQ schema for all listings
 
-## 4. Listing Detail SEO Hardening
+**C. Update SEO component call:**
+- Change `type` from `"website"` to `"product"` (this maps to `og:type`)
 
-Small but impactful tweaks to the existing listing detail page:
+### File: `src/components/SEO.tsx`
 
-- Add `"Ideal for..."` text to the meta description when specs data is available
-- Add image `alt` text pattern: `"{Listing Title} - {Category} for {Mode} in {City}"`
-- Ensure the H1 contains the city name (currently it only shows listing title)
-
----
-
-## Technical Details
-
-### New Files
-- `src/pages/CategoryCityPage.tsx` -- The programmatic SEO landing page component
-- `src/components/listing-detail/RelatedListings.tsx` -- Related listings section
-- `supabase/functions/generate-sitemap/index.ts` -- Dynamic sitemap edge function
-
-### Modified Files
-- `src/App.tsx` -- Add routes for `/rent/:categorySlug/:cityStateSlug` and `/buy/:categorySlug/:cityStateSlug`
-- `src/data/cityData.ts` -- Add Tampa, Portland, Miami, Atlanta, Austin, San Antonio, Chicago with state codes
-- `src/pages/ListingDetail.tsx` -- Add RelatedListings section, refine H1 to include city
-- `src/components/JsonLd.tsx` -- Add `generateCategoryCitySchema()` helper for the new pages
-- `public/sitemap.xml` -- Convert to sitemap index pointing to sub-sitemaps
-- `public/robots.txt` -- Update sitemap reference to sitemap index
-
-### Database
-No schema changes needed. All queries use existing `listings` table filtered by `status = 'published'`, `category`, `mode`, and `address ILIKE '%city%'`.
-
-### Route Priority
-The new `/rent/...` and `/buy/...` routes won't conflict with existing city routes (`/:citySlug`) because they have explicit prefixes.
+**A. Support `product` OG type:**
+- Extend the `type` prop to accept `'product'`
+- When type is `product`, also set `og:price:amount` and `og:price:currency` meta tags
+- Add optional `price` and `priceCurrency` props to SEOProps
 
