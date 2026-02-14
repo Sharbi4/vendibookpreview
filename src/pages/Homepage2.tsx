@@ -247,18 +247,6 @@ const Homepage2 = () => {
         <div className="absolute bottom-0 left-1/3 w-[600px] h-[600px] rounded-full bg-[hsl(14,80%,50%)]/[0.03] blur-[130px]" />
       </div>
 
-      {/* Logo + Tagline above search */}
-      <div className="flex flex-col items-center -mb-2">
-        <img
-          src={vendibookLogo}
-          alt="Vendibook"
-          className="h-16 sm:h-20 w-auto drop-shadow-md"
-        />
-        <p className="text-[11px] sm:text-xs text-foreground/80 font-semibold tracking-tight -mt-1">
-          The Marketplace for Food Business
-        </p>
-      </div>
-
       {/* ══ CUSTOM HEADER WITH INTEGRATED SEARCH ══ */}
       <header className="sticky top-5 z-50 w-[calc(100%-1rem)] lg:w-fit lg:max-w-[calc(100%-2rem)] mx-auto rounded-2xl shadow-lg shadow-black/10 mb-3">
         <div className="relative rounded-2xl">
@@ -466,14 +454,11 @@ const Homepage2 = () => {
         </div>
       </header>
 
-
-
-
       {/* ══ MAIN LAYOUT ══ */}
       <div className="relative z-10 flex">
         {/* ── CONTENT ── */}
         <div className="flex-1 min-w-0">
-          <div ref={resultsRef} className="scroll-mt-32 max-w-6xl mx-auto px-4 pt-4 pb-6">
+          <div ref={resultsRef} className="scroll-mt-32 max-w-6xl mx-auto px-4 pt-6 pb-6">
             {/* Sort bar + map toggle */}
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-medium text-foreground/70">
