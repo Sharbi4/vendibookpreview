@@ -30,6 +30,7 @@ import CompactTrustSection from '@/components/trust/CompactTrustSection';
 import CancellationPolicyCard from '@/components/trust/CancellationPolicyCard';
 import { ListingEventsSection } from '@/components/storefront';
 import ListingLocationMap from '@/components/listing-detail/ListingLocationMap';
+import RelatedListings from '@/components/listing-detail/RelatedListings';
 import { TechSpecsGrid } from '@/components/listing-detail/TechSpecsGrid';
 
 import { VendorSlotAvailability } from '@/components/listing-detail/VendorSlotAvailability';
@@ -511,6 +512,14 @@ const ListingDetail = () => {
 
               {/* Policies */}
               <CancellationPolicyCard isRental={isRental} />
+
+              {/* Related Listings - Internal Linking for SEO */}
+              <RelatedListings
+                listingId={listing.id}
+                category={listing.category}
+                mode={listing.mode}
+                address={listing.address}
+              />
 
               {/* Trust Section */}
               <CompactTrustSection />
