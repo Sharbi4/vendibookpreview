@@ -258,7 +258,7 @@ export const generateProductSchema = (listing: {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: listing.title,
-    description: listing.description?.slice(0, 500) || `${categoryLabel} ${isRental ? 'for rent' : 'for sale'}`,
+    description: listing.description?.slice(0, 5000) || `${categoryLabel} ${isRental ? 'for rent' : 'for sale'}`,
     url: `https://vendibook.com/listing/${listing.id}`,
     image: images,
     sku: listing.id,
@@ -273,7 +273,7 @@ export const generateProductSchema = (listing: {
       url: `https://vendibook.com/listing/${listing.id}`,
       priceCurrency: 'USD',
       price: price.toString(),
-      priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
+      priceValidUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       availability: listing.status === 'published' 
         ? 'https://schema.org/InStock' 
         : 'https://schema.org/OutOfStock',
