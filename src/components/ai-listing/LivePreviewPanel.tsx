@@ -31,6 +31,8 @@ export interface ListingPreview {
   operating_hours_start?: string | null;
   operating_hours_end?: string | null;
   subcategory?: string | null;
+  total_slots?: number | null;
+  slot_names?: string[];
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
