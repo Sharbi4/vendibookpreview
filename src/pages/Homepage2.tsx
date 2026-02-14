@@ -385,7 +385,7 @@ const Homepage2 = () => {
             {/* Bottom row: Category chips + mode + sort */}
             <div className="flex items-center gap-3 pb-2 -mt-0.5">
               {/* Mode pills — equal width, premium */}
-              <div className="flex h-8 rounded-full overflow-hidden border border-white/20 bg-white/10 backdrop-blur-xl shrink-0 p-[2px] gap-[2px]">
+              <div className="flex h-8 rounded-full overflow-hidden bg-white/10 backdrop-blur-xl shrink-0 p-[2px] gap-[2px]">
                 {(['', 'rent', 'sale'] as const).map((m) => (
                   <button
                     key={m}
