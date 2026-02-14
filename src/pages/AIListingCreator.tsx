@@ -16,10 +16,28 @@ type Msg = { role: 'user' | 'assistant'; content: string };
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-listing-creator`;
 
 function extractPreview(text: string): { preview: ListingPreview | null; ready: boolean; confirmed: boolean } {
-  const match = text.match(/```listing-preview\s*([\s\S]*?)```/);
-  if (!match) return { preview: null, ready: false, confirmed: false };
+  // Find ALL listing-preview blocks and use the LAST one (most recent/complete)
+  const blocks = [...text.matchAll(/```listing-preview\s*([\s\S]*?)```/g)];
+  if (blocks.length === 0) {
+    // Also try to match an incomplete block (still streaming)
+    const partial = text.match(/```listing-preview\s*([\s\S]*?)$/);
+    if (partial) {
+      try {
+        const parsed = JSON.parse(partial[1]);
+        return {
+          preview: parsed.listing || null,
+          ready: parsed.ready === true,
+          confirmed: parsed.confirmed === true,
+        };
+      } catch { /* JSON not complete yet */ }
+    }
+    return { preview: null, ready: false, confirmed: false };
+  }
+  
+  // Use the last complete block
+  const lastBlock = blocks[blocks.length - 1];
   try {
-    const parsed = JSON.parse(match[1]);
+    const parsed = JSON.parse(lastBlock[1]);
     return {
       preview: parsed.listing || null,
       ready: parsed.ready === true,
@@ -47,6 +65,8 @@ const AIListingCreator: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Use a ref to track latest preview to avoid stale closure issues
+  const previewRef = useRef<ListingPreview | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -60,14 +80,76 @@ const AIListingCreator: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Extract preview from any assistant message as it streams
+  // Keep ref in sync with state
+  useEffect(() => {
+    previewRef.current = preview;
+  }, [preview]);
+
   const updatePreviewFromText = useCallback((text: string) => {
     const { preview: p, ready } = extractPreview(text);
     if (p) {
       setPreview(p);
+      previewRef.current = p;
       setPreviewReady(ready);
     }
   }, []);
+
+  const saveListing = useCallback(async (listingData: ListingPreview) => {
+    if (!user || !listingData.title) return;
+    setIsSaving(true);
+    try {
+      const categoryMap: Record<string, string> = {
+        food_truck: 'food_truck', food_trailer: 'food_trailer', ghost_kitchen: 'ghost_kitchen',
+        commercial_kitchen: 'ghost_kitchen', vendor_lot: 'vendor_lot', vendor_space: 'vendor_space',
+      };
+      const fulfillmentMap: Record<string, string> = {
+        pickup: 'pickup', delivery: 'delivery', both: 'both', on_site: 'on_site',
+      };
+      const insertData: any = {
+        host_id: user.id,
+        title: listingData.title || 'Untitled Listing',
+        description: listingData.description || '',
+        category: categoryMap[listingData.category || 'food_truck'] || 'food_truck',
+        mode: listingData.mode === 'sale' ? 'sale' : 'rent',
+        status: 'draft',
+        fulfillment_type: fulfillmentMap[listingData.fulfillment_type || 'pickup'] || 'pickup',
+        address: listingData.address || null,
+        city: listingData.city || null,
+        state: listingData.state || null,
+        latitude: listingData.latitude || null,
+        longitude: listingData.longitude || null,
+        amenities: listingData.amenities || [],
+        highlights: listingData.highlights || [],
+        price_daily: listingData.price_daily || null,
+        price_weekly: listingData.price_weekly || null,
+        price_monthly: listingData.price_monthly || null,
+        price_hourly: listingData.price_hourly || null,
+        price_sale: listingData.price_sale || null,
+        length_inches: listingData.length_inches || null,
+        width_inches: listingData.width_inches || null,
+        height_inches: listingData.height_inches || null,
+        weight_lbs: listingData.weight_lbs || null,
+        instant_book: listingData.instant_book || false,
+        deposit_amount: listingData.deposit_amount || null,
+        available_from: listingData.available_from || null,
+        available_to: listingData.available_to || null,
+        operating_hours_start: listingData.operating_hours_start || null,
+        operating_hours_end: listingData.operating_hours_end || null,
+        subcategory: listingData.subcategory || null,
+        image_urls: uploadedImages.length > 0 ? uploadedImages : null,
+        cover_image_url: uploadedImages.length > 0 ? uploadedImages[0] : null,
+      };
+      const { data, error } = await supabase.from('listings').insert(insertData).select('id').single();
+      if (error) throw error;
+      await supabase.from('user_roles').upsert({ user_id: user.id, role: 'host' }, { onConflict: 'user_id,role' });
+      toast.success('Listing draft created! Redirecting to editor...');
+      setTimeout(() => navigate(`/create-listing/${data.id}`), 1500);
+    } catch (e: any) {
+      console.error('Save listing error:', e);
+      toast.error('Failed to save listing. Please try again.');
+    }
+    setIsSaving(false);
+  }, [user, uploadedImages, navigate]);
 
   const streamChat = useCallback(async (msgs: Msg[], isInitial = false, imgUrls?: string[]) => {
     setIsLoading(true);
@@ -138,17 +220,20 @@ const AIListingCreator: React.FC = () => {
         }
       }
 
-      // Final check
-      const { confirmed } = extractPreview(assistantSoFar);
-      if (confirmed && preview) {
-        await saveListing(preview);
+      // Final check - extract directly from accumulated text, not from stale state
+      const { confirmed, preview: finalPreview } = extractPreview(assistantSoFar);
+      if (confirmed && (finalPreview || previewRef.current)) {
+        const dataToSave = finalPreview || previewRef.current;
+        if (dataToSave) {
+          await saveListing(dataToSave);
+        }
       }
     } catch (e) {
       console.error(e);
       toast.error('Connection error. Please try again.');
     }
     setIsLoading(false);
-  }, [preview, updatePreviewFromText]);
+  }, [updatePreviewFromText, saveListing]);
 
   const handleSend = async () => {
     const text = input.trim();
@@ -187,60 +272,6 @@ const AIListingCreator: React.FC = () => {
     }
     setUploadingImage(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const saveListing = async (listingData: ListingPreview) => {
-    if (!user || isSaving) return;
-    setIsSaving(true);
-    try {
-      const categoryMap: Record<string, string> = {
-        food_truck: 'food_truck', food_trailer: 'food_trailer', ghost_kitchen: 'ghost_kitchen',
-        commercial_kitchen: 'ghost_kitchen', vendor_lot: 'vendor_lot', vendor_space: 'vendor_space',
-      };
-      const fulfillmentMap: Record<string, string> = {
-        pickup: 'pickup', delivery: 'delivery', both: 'both', on_site: 'on_site',
-      };
-      const insertData: any = {
-        host_id: user.id,
-        title: listingData.title || 'Untitled Listing',
-        description: listingData.description || '',
-        category: categoryMap[listingData.category || 'food_truck'] || 'food_truck',
-        mode: listingData.mode === 'sale' ? 'sale' : 'rent',
-        status: 'draft',
-        fulfillment_type: fulfillmentMap[listingData.fulfillment_type || 'pickup'] || 'pickup',
-        address: listingData.address || null,
-        latitude: listingData.latitude || null,
-        longitude: listingData.longitude || null,
-        amenities: listingData.amenities || [],
-        highlights: listingData.highlights || [],
-        price_daily: listingData.price_daily || null,
-        price_weekly: listingData.price_weekly || null,
-        price_monthly: listingData.price_monthly || null,
-        price_hourly: listingData.price_hourly || null,
-        price_sale: listingData.price_sale || null,
-        length_inches: listingData.length_inches || null,
-        width_inches: listingData.width_inches || null,
-        height_inches: listingData.height_inches || null,
-        weight_lbs: listingData.weight_lbs || null,
-        instant_book: listingData.instant_book || false,
-        deposit_amount: listingData.deposit_amount || null,
-        available_from: listingData.available_from || null,
-        available_to: listingData.available_to || null,
-        operating_hours_start: listingData.operating_hours_start || null,
-        operating_hours_end: listingData.operating_hours_end || null,
-        image_urls: uploadedImages.length > 0 ? uploadedImages : null,
-        cover_image_url: uploadedImages.length > 0 ? uploadedImages[0] : null,
-      };
-      const { data, error } = await supabase.from('listings').insert(insertData).select('id').single();
-      if (error) throw error;
-      await supabase.from('user_roles').upsert({ user_id: user.id, role: 'host' }, { onConflict: 'user_id,role' });
-      toast.success('Listing draft created! Redirecting to editor...');
-      setTimeout(() => navigate(`/create-listing/${data.id}`), 1500);
-    } catch (e: any) {
-      console.error('Save listing error:', e);
-      toast.error('Failed to save listing. Please try again.');
-    }
-    setIsSaving(false);
   };
 
   const handleConfirmPreview = async () => { if (preview) await saveListing(preview); };
@@ -341,6 +372,24 @@ const AIListingCreator: React.FC = () => {
                   <Button variant="outline" size="sm" onClick={() => inputRef.current?.focus()} className="gap-1.5">
                     <Edit3 className="h-4 w-4" />
                     Request Changes
+                  </Button>
+                </motion.div>
+              )}
+
+              {/* Photo upload reminder when no photos uploaded */}
+              {!isLoading && messages.length > 4 && uploadedImages.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-primary/30 bg-primary/5"
+                >
+                  <ImagePlus className="h-5 w-5 text-primary shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-xs font-medium text-foreground">Don't forget photos!</p>
+                    <p className="text-xs text-muted-foreground">Tap the camera icon below to upload photos of your asset.</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="shrink-0 text-xs">
+                    Upload
                   </Button>
                 </motion.div>
               )}
