@@ -24,6 +24,14 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Health check for GET requests
+  if (req.method === 'GET') {
+    return new Response(
+      JSON.stringify({ status: 'ok', service: 'vapi-listings-lookup' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -31,12 +39,23 @@ Deno.serve(async (req) => {
     );
 
     const body = await req.json();
+    console.log('Vapi request:', JSON.stringify(body).substring(0, 500));
     
     // Handle Vapi tool-calls format
     const message = body.message;
     if (!message || message.type !== 'tool-calls') {
+      // Fallback: maybe it's a direct call with tool name/arguments at top level
+      if (body.tool_name || body.function_name) {
+        const fnName = body.tool_name || body.function_name;
+        const args = body.arguments || body.parameters || {};
+        const result = await handleToolCall(supabase, fnName, args);
+        return new Response(
+          JSON.stringify({ results: [{ result: JSON.stringify(result) }] }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       return new Response(
-        JSON.stringify({ error: 'Expected tool-calls message type' }),
+        JSON.stringify({ error: 'Expected tool-calls message type', received: message?.type || 'none' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -44,8 +63,9 @@ Deno.serve(async (req) => {
     const results = [];
 
     for (const toolCall of message.toolCallList || []) {
-      const fnName = toolCall.function?.name;
-      const args = toolCall.function?.arguments || {};
+      // Vapi sends name/arguments directly on toolCall, not nested under .function
+      const fnName = toolCall.function?.name || toolCall.name;
+      const args = toolCall.function?.arguments || toolCall.arguments || {};
       let result: any;
 
       switch (fnName) {
