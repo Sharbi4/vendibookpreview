@@ -1071,6 +1071,7 @@ export type Database = {
           available_to: string | null
           buffer_time_mins: number | null
           category: Database["public"]["Enums"]["listing_category"]
+          city: string | null
           cover_image_url: string | null
           created_at: string
           daily_enabled: boolean | null
@@ -1108,6 +1109,7 @@ export type Database = {
           operating_hours_start: string | null
           pickup_instructions: string | null
           pickup_location_text: string | null
+          postal_code: string | null
           price_daily: number | null
           price_hourly: number | null
           price_monthly: number | null
@@ -1118,6 +1120,7 @@ export type Database = {
           rental_buffer_days: number | null
           rental_min_days: number | null
           slot_names: string[] | null
+          state: string | null
           status: Database["public"]["Enums"]["listing_status"]
           subcategory: string | null
           title: string
@@ -1139,6 +1142,7 @@ export type Database = {
           available_to?: string | null
           buffer_time_mins?: number | null
           category: Database["public"]["Enums"]["listing_category"]
+          city?: string | null
           cover_image_url?: string | null
           created_at?: string
           daily_enabled?: boolean | null
@@ -1176,6 +1180,7 @@ export type Database = {
           operating_hours_start?: string | null
           pickup_instructions?: string | null
           pickup_location_text?: string | null
+          postal_code?: string | null
           price_daily?: number | null
           price_hourly?: number | null
           price_monthly?: number | null
@@ -1186,6 +1191,7 @@ export type Database = {
           rental_buffer_days?: number | null
           rental_min_days?: number | null
           slot_names?: string[] | null
+          state?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           subcategory?: string | null
           title: string
@@ -1207,6 +1213,7 @@ export type Database = {
           available_to?: string | null
           buffer_time_mins?: number | null
           category?: Database["public"]["Enums"]["listing_category"]
+          city?: string | null
           cover_image_url?: string | null
           created_at?: string
           daily_enabled?: boolean | null
@@ -1244,6 +1251,7 @@ export type Database = {
           operating_hours_start?: string | null
           pickup_instructions?: string | null
           pickup_location_text?: string | null
+          postal_code?: string | null
           price_daily?: number | null
           price_hourly?: number | null
           price_monthly?: number | null
@@ -1254,6 +1262,7 @@ export type Database = {
           rental_buffer_days?: number | null
           rental_min_days?: number | null
           slot_names?: string[] | null
+          state?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           subcategory?: string | null
           title?: string
