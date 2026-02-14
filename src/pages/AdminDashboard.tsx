@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History, Zap, Headphones, Mail, Users, FileSpreadsheet } from 'lucide-react';
+import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History, Zap, Headphones, Mail, Users, FileSpreadsheet, Globe } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminTransactions } from '@/hooks/useAdminTransactions';
 import { useAdminPendingDocuments, useAdminDocumentStats } from '@/hooks/useAdminDocumentReview';
@@ -27,6 +27,7 @@ import AdminUsersListCard from '@/components/admin/AdminUsersListCard';
 import DailyReportExport from '@/components/admin/DailyReportExport';
 import ZendeskBulkSync from '@/components/admin/ZendeskBulkSync';
 import ZendeskContactSync from '@/components/admin/ZendeskContactSync';
+import MarketResearchCard from '@/components/admin/MarketResearchCard';
 
 
 const AdminDashboard = () => {
@@ -259,6 +260,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="reports" className="relative">
               <FileSpreadsheet className="h-4 w-4 mr-1" />
               Reports
+            </TabsTrigger>
+            <TabsTrigger value="research" className="relative">
+              <Globe className="h-4 w-4 mr-1" />
+              Research
             </TabsTrigger>
           </TabsList>
 
@@ -680,6 +685,11 @@ const AdminDashboard = () => {
           {/* Reports Tab */}
           <TabsContent value="reports" className="space-y-4">
             <DailyReportExport />
+          </TabsContent>
+
+          {/* Market Research Tab */}
+          <TabsContent value="research" className="space-y-4">
+            <MarketResearchCard />
           </TabsContent>
 
         </Tabs>
