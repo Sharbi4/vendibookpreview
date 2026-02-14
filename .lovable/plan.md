@@ -1,46 +1,66 @@
+# Upgrade the Listing Share Kit
 
+## What Already Exists
 
-# Restyle City/State Confirmation + Ensure Data Persistence
+Your `ListingPublished` page and `ShareKit` component already have solid bones -- copy link, Facebook post variants, QR code, PDF flyer, and share image downloads. This plan enhances it with the missing pieces from your vision.
 
-## Problem
-1. The city/state confirmation overlay in both the QuickStartWizard and StepLocation uses emerald/green borders and backgrounds, which conflicts with the platform's "dark-shine" design system (black borders, clean neutral greys).
-2. The ZIP code input also turns green on confirmation (`border-emerald-500`), which is inconsistent.
-3. The QuickStartWizard saves city/state into the `address` field as "City, ST" but the database has no dedicated `city`, `state`, or `zip_code` columns -- so the data only persists as a concatenated string. This is already correct behavior since listing cards and detail pages read from `listing.address`. However, we should verify that the full wizard (ListingWizard) also properly saves the structured fields into the `address` column.
+## What We'll Add
 
-## Changes
+### 1. "Boost Your Visibility in 5 Minutes" Section Header
 
-### 1. Restyle City/State Confirmation Overlay (StepLocation.tsx)
-**Lines 154-171**: Replace emerald-themed overlay with dark-shine consistent styling:
-- Background: `bg-muted/50` (clean grey) instead of `bg-emerald-50`
-- Border: `border-border` (standard dark/neutral) instead of `border-emerald-200`
-- Check icon: `text-foreground` instead of `text-emerald-600`
-- Remove dark mode emerald variants
+A new section title above the share tools with motivating copy, replacing the current minimal header.
 
-### 2. Restyle City/State Confirmation Overlay (QuickStartWizard.tsx)
-**Lines 448-465**: Same restyling as above -- replace emerald with neutral dark-shine:
-- Background: `bg-muted/50`
-- Border: `border-border`
-- Check icon: `text-foreground`
+### 2. "Add Your Link Everywhere" Checklist
 
-### 3. Restyle ZIP Code Input Confirmed State (both files)
-- Replace `border-emerald-500 focus-visible:ring-emerald-500` with `border-foreground focus-visible:ring-foreground` for a clean black/dark border on confirmation instead of green.
+An interactive checklist card with these items (users can check them off for satisfaction):
 
-### 4. Verify Data Flow
-The existing data pipeline is:
-- QuickStartWizard: ZIP lookup populates `city`, `state`, `latitude`, `longitude` in local state, then saves `address: "City, ST"` to DB.
-- ListingWizard: Builds `address` from `street_address, apt_suite, city, state, zip_code` fields (form-only, not DB columns). Saves the concatenated result to `listings.address`.
-- Listing cards (HostListingCard, ShopperBookingCard) and detail page read `listing.address` -- this works correctly.
+- Facebook bio
+- Instagram bio
+- Facebook Marketplace listing
+- Google Business profile
+- Linktree
 
-No database migration is needed. The structured fields are form-level only and correctly persist as the joined `address` string.
+Progress persists in localStorage per listing so hosts feel accomplishment.
+
+### 3. Psychology Banner
+
+A subtle but persuasive banner at the top:
+
+> "Listings that share their link receive up to 3x more booking requests."
+
+Styled with the signature gradient accent to draw attention without being obnoxious.
+
+### 4. Category-Aware Default Caption
+
+The existing post variant system already handles this well. We'll refine it so the default selected variant maps better to category:
+
+- Kitchen categories default to "Short + Direct" with kitchen-specific language
+- Food truck/trailer defaults to "Friendly + Story"
+- Vendor lots default to "Seller-focused"
+
+### 5. Bottom Action Buttons
+
+Add an "Edit Listing" button alongside the existing "View listing" and "Add another listing" links.
 
 ## Technical Details
 
 ### Files Modified
-- **src/components/listing-wizard/StepLocation.tsx** -- Restyle ZipCodeLookup component (confirmed input border + confirmation overlay)
-- **src/components/listing-wizard/QuickStartWizard.tsx** -- Restyle ZIP confirmed state and city/state overlay
 
-### Design Tokens Used
-- `bg-muted/50` -- clean grey fill (consistent with other panels in the wizard)
-- `border-border` -- standard neutral border
-- `text-foreground` -- dark text/icon color for the check mark
-- `border-foreground` -- dark border for confirmed ZIP input
+`**src/components/listing-wizard/ShareKit.tsx**`
+
+- Add the psychology banner as a gradient-accented card at the top of the component
+- Add the "Add Your Link Everywhere" checklist card (new card between the header and copy-link card) with localStorage-backed checkbox state
+- Update default variant selection logic to be category-aware (kitchen vs truck vs vendor)
+- Add "Edit Listing" button to the bottom actions section
+- Add "Boost Your Visibility in 5 Minutes" as a section title above the share tools
+
+`**src/pages/ListingPublished.tsx**`
+
+- No structural changes needed; the ShareKit component handles all the new content
+
+### Design Approach
+
+- All new elements follow the existing card-based layout pattern
+- Checklist uses standard Radix checkbox components
+- Psychology banner uses the signature gradient (`#FF5124` to `#FFB800`) at low opacity
+- Mobile-first, no popups, large tap targets -- consistent with current UX
