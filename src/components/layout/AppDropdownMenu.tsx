@@ -101,7 +101,7 @@ const AppDropdownMenu = ({ variant = 'dark', className = '' }: AppDropdownMenuPr
                     <img 
                       src={vendibookLogo} 
                       alt="Vendibook" 
-                      className="h-24 w-auto brightness-0 invert opacity-80 -my-6"
+                      className="h-24 w-auto opacity-90 -my-6"
                     />
                   </div>
 
