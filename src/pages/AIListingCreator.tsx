@@ -144,8 +144,13 @@ const AIListingCreator: React.FC = () => {
       const { data, error } = await supabase.from('listings').insert(insertData).select('id').single();
       if (error) throw error;
       await supabase.from('user_roles').upsert({ user_id: user.id, role: 'host' }, { onConflict: 'user_id,role' });
-      toast.success('Listing draft created! Redirecting to editor...');
-      setTimeout(() => navigate(`/create-listing/${data.id}`), 1500);
+      toast.success('Draft saved! Taking you to the listing editor to finalize & publish.');
+      // Add a next-steps message to the chat before redirecting
+      setMessages(prev => [...prev, {
+        role: 'assistant' as const,
+        content: `🎉 **Your draft has been saved!** Here's what happens next:\n\n1. **Review & Edit** — You'll be taken to the listing editor where you can fine-tune everything\n2. **Add Photos** — ${uploadedImages.length > 0 ? 'Your photos are attached! You can add more in the editor' : 'Upload photos in the editor to make your listing stand out'}\n3. **Connect Payments** — Set up Stripe to receive payments (the editor will walk you through it)\n4. **Publish** — Hit publish when you're ready and start getting bookings!\n\nRedirecting you now...`
+      }]);
+      setTimeout(() => navigate(`/create-listing/${data.id}`), 3500);
     } catch (e: any) {
       console.error('Save listing error:', e);
       toast.error('Failed to save listing. Please try again.');
