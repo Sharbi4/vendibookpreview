@@ -442,6 +442,45 @@ export const generateItemListSchema = (
   };
 };
 
+// City + Category breadcrumb schema for programmatic SEO pages
+export const generateCityCategoryBreadcrumbSchema = (
+  mode: string,
+  categorySlug: string,
+  categoryLabel: string,
+  cityStateSlug: string,
+  cityName: string,
+  stateCode: string
+) => ({
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: 'https://vendibook.com',
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: mode === 'rent' ? 'For Rent' : 'For Sale',
+      item: `https://vendibook.com/search?mode=${mode === 'buy' ? 'sale' : 'rent'}`,
+    },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      name: categoryLabel,
+      item: `https://vendibook.com/search?mode=${mode === 'buy' ? 'sale' : 'rent'}&category=${categorySlug}`,
+    },
+    {
+      '@type': 'ListItem',
+      position: 4,
+      name: `${cityName}, ${stateCode}`,
+      item: `https://vendibook.com/${mode}/${categorySlug}/${cityStateSlug}`,
+    },
+  ],
+});
+
 // Search results breadcrumb schema
 export const generateSearchBreadcrumbSchema = (searchParams?: {
   mode?: 'rent' | 'sale' | 'all';
