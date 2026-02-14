@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, forwardRef, useCallback, memo } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, Circle, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, MarkerF, Circle, InfoWindow } from '@react-google-maps/api';
 import { GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_LOADER_ID } from '@/lib/googleMapsLoader';
 import { Listing } from '@/types/listing';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -37,7 +37,6 @@ const SearchResultsMapLoaded = forwardRef<
 >(({ listings, mapToken, isLoading: propsLoading, error: propsError, userLocation, searchRadius, onListingClick }, ref) => {
   const [selectedListing, setSelectedListing] = useState<ListingWithCoords | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
-  const boundsApplied = useRef(false);
 
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: mapToken,
@@ -45,8 +44,8 @@ const SearchResultsMapLoaded = forwardRef<
     libraries: GOOGLE_MAPS_LIBRARIES,
   });
 
-  // Fit bounds when map loads or listings change
-  const applyBounds = useCallback(() => {
+  // Fit bounds whenever listings change and map is ready
+  useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
@@ -57,34 +56,23 @@ const SearchResultsMapLoaded = forwardRef<
     withCoords.forEach(l => bounds.extend({ lat: l.latitude!, lng: l.longitude! }));
     if (userLocation) bounds.extend({ lat: userLocation[1], lng: userLocation[0] });
 
-    map.fitBounds(bounds, 50);
-    boundsApplied.current = true;
-  }, [listings, userLocation]);
+    // Use idle listener to ensure map is ready
+    const listener = google.maps.event.addListenerOnce(map, 'idle', () => {
+      map.fitBounds(bounds, 50);
+    });
 
-  useEffect(() => {
-    if (mapRef.current && listings.length > 0) {
-      applyBounds();
-    }
-  }, [listings, userLocation, applyBounds]);
+    // Also try immediately
+    map.fitBounds(bounds, 50);
+
+    return () => { google.maps.event.removeListener(listener); };
+  }, [listings, userLocation]);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
-    // Apply bounds immediately on load if we have listings
-    if (listings.length > 0) {
-      const withCoords = listings.filter(l => l.latitude != null && l.longitude != null);
-      if (withCoords.length > 0) {
-        const bounds = new google.maps.LatLngBounds();
-        withCoords.forEach(l => bounds.extend({ lat: l.latitude!, lng: l.longitude! }));
-        if (userLocation) bounds.extend({ lat: userLocation[1], lng: userLocation[0] });
-        map.fitBounds(bounds, 50);
-        boundsApplied.current = true;
-      }
-    }
-  }, [listings, userLocation]);
+  }, []);
 
   const onUnmount = useCallback(() => {
     mapRef.current = null;
-    boundsApplied.current = false;
   }, []);
 
   const handleMarkerClick = (listing: ListingWithCoords) => {
@@ -137,7 +125,7 @@ const SearchResultsMapLoaded = forwardRef<
               radius={searchRadius * 1609.34}
               options={{ fillColor: '#3b82f6', fillOpacity: 0.1, strokeColor: '#3b82f6', strokeWeight: 2, strokeOpacity: 0.8 }}
             />
-            <Marker
+            <MarkerF
               position={{ lat: userLocation[1], lng: userLocation[0] }}
               icon={{ path: google.maps.SymbolPath.CIRCLE, scale: 10, fillColor: '#3b82f6', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 3 }}
               title="Your location"
@@ -147,7 +135,7 @@ const SearchResultsMapLoaded = forwardRef<
 
         {/* Listing markers with price labels */}
         {listingsWithCoords.map((listing) => (
-          <Marker
+          <MarkerF
             key={listing.id}
             position={{ lat: listing.latitude!, lng: listing.longitude! }}
             label={{
