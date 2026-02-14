@@ -247,6 +247,18 @@ const Homepage2 = () => {
         <div className="absolute bottom-0 left-1/3 w-[600px] h-[600px] rounded-full bg-[hsl(14,80%,50%)]/[0.03] blur-[130px]" />
       </div>
 
+      {/* Logo + Tagline above search */}
+      <div className="flex flex-col items-center pt-6 pb-3">
+        <img
+          src={vendibookLogo}
+          alt="Vendibook"
+          className="h-24 sm:h-32 w-auto mb-1 drop-shadow-md"
+        />
+        <p className="text-sm sm:text-base text-foreground font-semibold tracking-tight">
+          The Marketplace for Food Business
+        </p>
+      </div>
+
       {/* ══ CUSTOM HEADER WITH INTEGRATED SEARCH ══ */}
       <header className="sticky top-5 z-50 w-[calc(100%-1rem)] lg:w-fit lg:max-w-[calc(100%-2rem)] mx-auto rounded-2xl shadow-lg shadow-black/10 mb-3">
         <div className="relative rounded-2xl">
@@ -454,17 +466,8 @@ const Homepage2 = () => {
         </div>
       </header>
 
-      {/* Logo + Tagline */}
-      <div className="flex flex-col items-center pt-6 pb-2">
-        <img
-          src={vendibookLogo}
-          alt="Vendibook"
-          className="h-24 sm:h-32 w-auto mb-1 drop-shadow-md"
-        />
-        <p className="text-sm sm:text-base text-foreground font-semibold tracking-tight">
-          The Marketplace for Food Business
-        </p>
-      </div>
+
+
 
       {/* ══ MAIN LAYOUT ══ */}
       <div className="relative z-10 flex">
