@@ -194,3 +194,6 @@ verify_jwt = false
 
 [functions.generate-sitemap]
 verify_jwt = false
+
+[functions.google-merchant-sync]
+verify_jwt = false
