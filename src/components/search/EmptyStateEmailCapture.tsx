@@ -70,6 +70,7 @@ export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFi
           body: {
             requester_name: trimmedName,
             requester_email: trimmedEmail,
+            requester_phone: trimmedPhone || undefined,
             subject: `Availability Alert: ${modeLabel} near ${trimmedZip}`,
             description: [
               `A visitor wants to be notified about new listings.`,
