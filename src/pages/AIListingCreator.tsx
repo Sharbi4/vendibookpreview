@@ -136,6 +136,8 @@ const AIListingCreator: React.FC = () => {
         operating_hours_start: listingData.operating_hours_start || null,
         operating_hours_end: listingData.operating_hours_end || null,
         subcategory: listingData.subcategory || null,
+        total_slots: (listingData as any).total_slots || null,
+        slot_names: (listingData as any).slot_names?.length > 0 ? (listingData as any).slot_names : null,
         image_urls: uploadedImages.length > 0 ? uploadedImages : null,
         cover_image_url: uploadedImages.length > 0 ? uploadedImages[0] : null,
       };
