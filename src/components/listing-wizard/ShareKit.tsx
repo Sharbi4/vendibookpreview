@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import QRCode from 'qrcode';
 import { jsPDF } from 'jspdf';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Check, 
   Copy, 
@@ -13,7 +14,8 @@ import {
   Image as ImageIcon,
   ChevronDown,
   Sparkles,
-  FileText
+  FileText,
+  Pencil
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,16 +62,47 @@ const POST_VARIANTS: { id: PostVariant; label: string; description: string }[] =
   { id: 'seller', label: 'Seller-focused', description: 'Highlight the business opportunity' },
 ];
 
+const CHECKLIST_ITEMS = [
+  { id: 'facebook_bio', label: 'Facebook bio' },
+  { id: 'instagram_bio', label: 'Instagram bio' },
+  { id: 'fb_marketplace', label: 'Facebook Marketplace listing' },
+  { id: 'google_business', label: 'Google Business profile' },
+  { id: 'linktree', label: 'Linktree' },
+];
+
+const getCategoryDefaultVariant = (category: ListingCategory, mode: ListingMode): PostVariant => {
+  if (mode === 'sale') return 'seller';
+  if (category === 'ghost_kitchen') return 'short';
+  if (category === 'food_truck' || category === 'food_trailer') return 'friendly';
+  if (category === 'vendor_space' || category === 'vendor_lot') return 'seller';
+  return 'short';
+};
+
 export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
-  const [selectedVariant, setSelectedVariant] = useState<PostVariant>(listing.mode === 'sale' ? 'seller' : 'short');
+  const [selectedVariant, setSelectedVariant] = useState<PostVariant>(getCategoryDefaultVariant(listing.category, listing.mode));
   const [postText, setPostText] = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
   const [showVariants, setShowVariants] = useState(false);
+
+  // Checklist state persisted in localStorage per listing
+  const [checkedItems, setCheckedItems] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(`share_checklist_${listing.id}`) || '[]');
+    } catch { return []; }
+  });
+
+  const toggleCheckItem = (id: string) => {
+    setCheckedItems(prev => {
+      const next = prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id];
+      localStorage.setItem(`share_checklist_${listing.id}`, JSON.stringify(next));
+      return next;
+    });
+  };
 
   const listingUrl = `${window.location.origin}/listing/${listing.id}`;
   const categoryLabel = CATEGORY_LABELS[listing.category] || listing.category;
@@ -663,6 +696,13 @@ ${hashtags}`;
 
   return (
     <div className="space-y-6 max-w-lg mx-auto">
+      {/* Psychology Banner */}
+      <div className="rounded-xl border p-4" style={{ background: 'linear-gradient(135deg, hsla(14, 100%, 55%, 0.08), hsla(40, 100%, 49%, 0.08))', borderColor: 'hsla(14, 100%, 55%, 0.2)' }}>
+        <p className="text-sm text-center font-medium text-foreground">
+          📈 Listings that share their link receive up to <span className="font-bold" style={{ color: 'hsl(14, 100%, 55%)' }}>3× more booking requests</span>.
+        </p>
+      </div>
+
       {/* Header */}
       <div className="text-center">
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
@@ -671,6 +711,36 @@ ${hashtags}`;
         <h1 className="text-2xl font-bold mb-1">You're live 🎉</h1>
         <p className="text-muted-foreground">Share your listing to get booked faster.</p>
       </div>
+
+      {/* Section Title */}
+      <div className="text-center pt-2">
+        <h2 className="text-lg font-semibold">🚀 Boost Your Visibility in 5 Minutes</h2>
+        <p className="text-sm text-muted-foreground mt-1">Complete these steps to maximize your reach.</p>
+      </div>
+
+      {/* Add Your Link Everywhere Checklist */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Add your link everywhere</CardTitle>
+          <p className="text-xs text-muted-foreground">{checkedItems.length}/{CHECKLIST_ITEMS.length} done</p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {CHECKLIST_ITEMS.map((item) => (
+            <label key={item.id} className="flex items-center gap-3 cursor-pointer group">
+              <Checkbox
+                checked={checkedItems.includes(item.id)}
+                onCheckedChange={() => toggleCheckItem(item.id)}
+              />
+              <span className={cn(
+                "text-sm transition-colors",
+                checkedItems.includes(item.id) ? "text-muted-foreground line-through" : "text-foreground"
+              )}>
+                {item.label}
+              </span>
+            </label>
+          ))}
+        </CardContent>
+      </Card>
 
       {/* Card 1: Copy Link (PRIMARY) */}
       <Card>
@@ -868,13 +938,21 @@ ${hashtags}`;
       </Card>
 
       {/* Bottom Actions */}
-      <div className="flex items-center justify-center gap-4 pt-2">
+      <div className="flex items-center justify-center gap-4 pt-2 flex-wrap">
         <button
           onClick={handleViewListing}
           className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
         >
           <ExternalLink className="w-4 h-4" />
           View listing
+        </button>
+        <span className="text-muted-foreground">•</span>
+        <button
+          onClick={() => navigate(`/list?edit=${listing.id}`)}
+          className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+        >
+          <Pencil className="w-4 h-4" />
+          Edit listing
         </button>
         <span className="text-muted-foreground">•</span>
         <button
