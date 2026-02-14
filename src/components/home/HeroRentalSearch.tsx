@@ -133,20 +133,33 @@ const HeroRentalSearch = () => {
             )}
           </motion.div>
 
-          {/* "Why Vendibook?" trigger button */}
+          {/* Floating pill links */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.35, ease: 'easeOut' }}
-            className="text-center"
+            className="flex flex-wrap items-center justify-center gap-2"
           >
-            <Button
-              variant="ghost"
+            <button
               onClick={() => setShowWalkthrough(true)}
-              className="rounded-full px-6 h-11 gap-2 bg-white/60 backdrop-blur-xl border border-white/40 shadow-sm hover:shadow-md hover:bg-white/80 transition-all"
+              className="px-4 py-2 text-sm font-medium rounded-full bg-white/60 backdrop-blur-xl border border-white/40 shadow-sm hover:shadow-md hover:bg-white/80 text-foreground transition-all"
             >
-              <span className="font-medium">Why Vendibook?</span>
-            </Button>
+              Learn More
+            </button>
+            <button
+              onClick={() => navigate('/list')}
+              className="px-4 py-2 text-sm font-medium rounded-full bg-white/60 backdrop-blur-xl border border-white/40 shadow-sm hover:shadow-md hover:bg-white/80 text-foreground transition-all"
+            >
+              Create a Listing
+            </button>
+            {!user && (
+              <button
+                onClick={() => navigate('/auth')}
+                className="px-4 py-2 text-sm font-medium rounded-full bg-white/60 backdrop-blur-xl border border-white/40 shadow-sm hover:shadow-md hover:bg-white/80 text-foreground transition-all"
+              >
+                Sign Up
+              </button>
+            )}
           </motion.div>
         </div>
       </section>
