@@ -248,13 +248,13 @@ const Homepage2 = () => {
       </div>
 
       {/* Logo + Tagline above search */}
-      <div className="flex flex-col items-center pt-2 pb-1">
+      <div className="flex flex-col items-center pt-0 pb-0 -mb-1">
         <img
           src={vendibookLogo}
           alt="Vendibook"
-          className="h-12 sm:h-16 w-auto mb-0.5 drop-shadow-md"
+          className="h-10 sm:h-14 w-auto drop-shadow-md"
         />
-        <p className="text-xs sm:text-sm text-foreground font-semibold tracking-tight">
+        <p className="text-[11px] sm:text-xs text-foreground/80 font-semibold tracking-tight -mt-0.5">
           The Marketplace for Food Business
         </p>
       </div>
