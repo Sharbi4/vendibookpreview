@@ -457,25 +457,25 @@ const Homepage2 = () => {
         </div>
       </header>
 
-      {/* ══ FLOATING QUICK-LINK PILLS ══ */}
-      <div className="relative z-10 max-w-6xl mx-auto px-4 pt-4 pb-1">
-        <div className="flex items-center justify-center gap-2">
+      {/* ══ FLOATING QUICK-LINK GLASS BAR ══ */}
+      <div className="relative z-10 flex justify-center px-4 pt-4 pb-1">
+        <div className="inline-flex items-center gap-1.5 px-1.5 py-1.5 rounded-full bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg shadow-black/5">
           <Link
             to="/how-it-works"
-            className="px-4 py-1.5 text-xs font-medium rounded-full bg-background/80 backdrop-blur-xl border border-border/60 shadow-sm hover:shadow-md hover:bg-background text-foreground/70 hover:text-foreground transition-all whitespace-nowrap"
+            className="px-4 py-1.5 text-xs font-semibold rounded-full bg-gradient-to-b from-gray-800 to-gray-950 text-white shadow-sm hover:shadow-md hover:from-gray-700 hover:to-gray-900 transition-all whitespace-nowrap"
           >
             Learn More
           </Link>
           <Link
             to="/list"
-            className="px-4 py-1.5 text-xs font-medium rounded-full bg-background/80 backdrop-blur-xl border border-border/60 shadow-sm hover:shadow-md hover:bg-background text-foreground/70 hover:text-foreground transition-all whitespace-nowrap"
+            className="px-4 py-1.5 text-xs font-semibold rounded-full bg-gradient-to-b from-gray-800 to-gray-950 text-white shadow-sm hover:shadow-md hover:from-gray-700 hover:to-gray-900 transition-all whitespace-nowrap"
           >
             Create a Listing
           </Link>
           {!user && (
             <Link
               to="/auth"
-              className="px-4 py-1.5 text-xs font-medium rounded-full bg-background/80 backdrop-blur-xl border border-border/60 shadow-sm hover:shadow-md hover:bg-background text-foreground/70 hover:text-foreground transition-all whitespace-nowrap"
+              className="px-4 py-1.5 text-xs font-semibold rounded-full bg-gradient-to-b from-gray-800 to-gray-950 text-white shadow-sm hover:shadow-md hover:from-gray-700 hover:to-gray-900 transition-all whitespace-nowrap"
             >
               Sign Up
             </Link>
