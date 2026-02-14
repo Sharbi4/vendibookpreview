@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, CheckCircle, Truck, Utensils, X, MapPin } from 'lucide-react';
+import { Bell, CheckCircle, Truck, Utensils, X, MapPin, User, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +15,8 @@ interface EmptyStateEmailCaptureProps {
 
 export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFilters }: EmptyStateEmailCaptureProps) => {
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [zipCode, setZipCode] = useState(locationText || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -22,10 +24,12 @@ export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedEmail = email.trim();
+    const trimmedName = name.trim();
+    const trimmedPhone = phone.trim();
     const trimmedZip = zipCode.trim();
     
-    if (!trimmedEmail || !trimmedZip) {
-      toast.error('Please enter both your email and zip code.');
+    if (!trimmedEmail || !trimmedZip || !trimmedName) {
+      toast.error('Please enter your name, email, and zip code.');
       return;
     }
 
@@ -62,12 +66,15 @@ export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFi
         
         await supabase.functions.invoke('create-zendesk-ticket', {
           body: {
-            requester_name: trimmedEmail.split('@')[0],
+            requester_name: trimmedName,
             requester_email: trimmedEmail,
             subject: `Availability Alert: ${modeLabel} near ${trimmedZip}`,
             description: [
               `A visitor wants to be notified about new listings.`,
               ``,
+              `Name: ${trimmedName}`,
+              `Email: ${trimmedEmail}`,
+              `Phone: ${trimmedPhone || 'Not provided'}`,
               `Zip Code / Area: ${trimmedZip}`,
               `Interest: ${modeLabel}`,
               `Category: ${categoryLabel}`,
@@ -134,17 +141,31 @@ export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFi
 
       <h3 className="text-2xl font-bold text-foreground mb-2 relative">No listings found here yet</h3>
       <p className="text-muted-foreground text-center max-w-sm mb-6 text-sm relative">
-        Enter your zip code and email — we'll notify you as soon as rentals or listings become available in your area.
+        Enter your name, email, and zip code — we'll notify you as soon as rentals or listings become available in your area.
       </p>
 
-      {/* Zip + Email signup form */}
+      {/* Form */}
       {!isSubmitted ? (
         <form onSubmit={handleSubmit} className="relative w-full max-w-md mb-6 space-y-3">
+          {/* Name */}
+          <div className="flex items-center gap-2 p-1.5 rounded-xl bg-background border border-border shadow-lg">
+            <User className="w-4 h-4 text-muted-foreground ml-2 shrink-0" />
+            <Input
+              type="text"
+              placeholder="Your name *"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              maxLength={100}
+              className="border-0 shadow-none h-9 text-sm focus-visible:ring-0 px-1"
+            />
+          </div>
+          {/* Zip Code */}
           <div className="flex items-center gap-2 p-1.5 rounded-xl bg-background border border-border shadow-lg">
             <MapPin className="w-4 h-4 text-muted-foreground ml-2 shrink-0" />
             <Input
               type="text"
-              placeholder="Your zip code or city"
+              placeholder="Your zip code or city *"
               value={zipCode}
               onChange={(e) => setZipCode(e.target.value)}
               required
@@ -152,26 +173,38 @@ export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFi
               className="border-0 shadow-none h-9 text-sm focus-visible:ring-0 px-1"
             />
           </div>
+          {/* Email */}
           <div className="flex items-center gap-2 p-1.5 rounded-xl bg-background border border-border shadow-lg">
             <Bell className="w-4 h-4 text-muted-foreground ml-2 shrink-0" />
             <Input
               type="email"
-              placeholder="Enter your email for alerts"
+              placeholder="Your email *"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               maxLength={255}
               className="border-0 shadow-none h-9 text-sm focus-visible:ring-0 px-1"
             />
-            <Button
-              type="submit"
-              size="sm"
-              disabled={isSubmitting}
-              className="rounded-lg bg-foreground text-background hover:bg-foreground/90 text-xs font-semibold px-4 shrink-0"
-            >
-              {isSubmitting ? 'Saving...' : 'Notify Me'}
-            </Button>
           </div>
+          {/* Phone (optional) */}
+          <div className="flex items-center gap-2 p-1.5 rounded-xl bg-background border border-border shadow-lg">
+            <Phone className="w-4 h-4 text-muted-foreground ml-2 shrink-0" />
+            <Input
+              type="tel"
+              placeholder="Phone (optional)"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              maxLength={20}
+              className="border-0 shadow-none h-9 text-sm focus-visible:ring-0 px-1"
+            />
+          </div>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full rounded-xl bg-foreground text-background hover:bg-foreground/90 font-semibold h-11"
+          >
+            {isSubmitting ? 'Saving...' : 'Notify Me'}
+          </Button>
           <p className="text-[11px] text-muted-foreground text-center">
             We'll email you when listings match your area. Unsubscribe anytime.
           </p>
