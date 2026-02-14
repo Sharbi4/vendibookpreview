@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Edit2, Eye, Pause, Play, Trash2, Calendar, Heart, Check, X, DollarSign, Star, Shield, Loader2 } from 'lucide-react';
+import { Edit2, Eye, Pause, Play, Trash2, Calendar, Heart, Check, X, DollarSign, Star, Shield, Loader2, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CATEGORY_LABELS } from '@/types/listing';
@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
 import { Badge } from '@/components/ui/badge';
 import { FeaturedListingModal } from './FeaturedListingModal';
+import ShareKitModal from './ShareKitModal';
 
 type Listing = Tables<'listings'>;
 
@@ -45,6 +46,7 @@ const StatusPill = ({ status }: { status: Listing['status'] }) => {
 const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate }: HostListingCardProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [showFeaturedModal, setShowFeaturedModal] = useState(false);
+  const [showShareKit, setShowShareKit] = useState(false);
   const [isEditingPrice, setIsEditingPrice] = useState(false);
   const [editedPrice, setEditedPrice] = useState(listing.price_sale?.toString() || '');
   const [isSaving, setIsSaving] = useState(false);
@@ -277,6 +279,17 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
                   Edit
                 </Link>
               </Button>
+              {isPublished && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="h-9 rounded-xl"
+                  onClick={() => setShowShareKit(true)}
+                >
+                  <Share2 className="h-4 w-4 mr-1.5" />
+                  Share
+                </Button>
+              )}
               {isRental && (
                 <Button 
                   variant="outline" 
@@ -375,6 +388,13 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
         onOpenChange={setShowFeaturedModal}
         listingId={listing.id}
         listingTitle={listing.title}
+      />
+
+      {/* Share Kit Modal */}
+      <ShareKitModal
+        open={showShareKit}
+        onOpenChange={setShowShareKit}
+        listing={listing}
       />
     </>
   );
