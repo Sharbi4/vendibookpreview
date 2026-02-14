@@ -83,23 +83,35 @@ const HeroRentalSearch = () => {
               src={vendibookLogo}
               alt="Vendibook"
               className="h-40 sm:h-56 md:h-72 w-auto mx-auto mb-4 sm:mb-6"
+              initial={{ opacity: 0 }}
               animate={{
-                scaleX: [1, 1.03, 0.98, 1.01, 1],
-                scaleY: [1, 0.97, 1.02, 0.99, 1],
-                rotate: [0, -0.5, 0.7, -0.3, 0],
-                skewX: [0, 0.8, -0.6, 0.3, 0],
+                opacity: 1,
+                scaleX: [1, 1.04, 0.97, 1.02, 1],
+                scaleY: [1, 0.96, 1.03, 0.98, 1],
+                rotate: [0, -0.6, 0.8, -0.4, 0],
+                skewX: [0, 1, -0.8, 0.4, 0],
+                filter: [
+                  'drop-shadow(0 0 8px rgba(255,81,36,0.3)) hue-rotate(0deg)',
+                  'drop-shadow(0 0 16px rgba(230,74,25,0.5)) hue-rotate(30deg)',
+                  'drop-shadow(0 0 12px rgba(255,184,0,0.4)) hue-rotate(60deg)',
+                  'drop-shadow(0 0 18px rgba(255,81,36,0.5)) hue-rotate(20deg)',
+                  'drop-shadow(0 0 8px rgba(255,81,36,0.3)) hue-rotate(0deg)',
+                ],
               }}
               transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: 'easeInOut',
+                opacity: { duration: 0.8 },
+                scaleX: { duration: 3.5, repeat: Infinity, ease: 'easeInOut' },
+                scaleY: { duration: 3.5, repeat: Infinity, ease: 'easeInOut' },
+                rotate: { duration: 3.5, repeat: Infinity, ease: 'easeInOut' },
+                skewX: { duration: 3.5, repeat: Infinity, ease: 'easeInOut' },
+                filter: { duration: 5, repeat: Infinity, ease: 'easeInOut' },
               }}
               whileHover={{
-                scaleX: [1, 1.08, 0.94, 1.04, 1],
-                scaleY: [1, 0.92, 1.06, 0.97, 1],
-                rotate: [0, -1.5, 2, -0.8, 0],
-                skewX: [0, 2, -1.5, 0.8, 0],
-                transition: { duration: 1.2, repeat: Infinity, ease: 'easeInOut' },
+                scaleX: [1, 1.08, 0.93, 1.05, 1],
+                scaleY: [1, 0.91, 1.07, 0.96, 1],
+                rotate: [0, -2, 2.5, -1, 0],
+                skewX: [0, 2.5, -2, 1, 0],
+                transition: { duration: 1, repeat: Infinity, ease: 'easeInOut' },
               }}
             />
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight tracking-tight mb-3 sm:mb-4">
