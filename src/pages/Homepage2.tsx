@@ -84,7 +84,10 @@ const Homepage2 = () => {
   const [isConnectingMic, setIsConnectingMic] = useState(false);
   const searchWrapperRef = useRef<HTMLDivElement>(null);
   
-  const { apiKey, isLoading: mapLoading, error: mapError } = useGoogleMapsToken(showMap);
+  // On desktop (lg+), the map panel is always visible, so always fetch the token.
+  // On mobile, only fetch when the user toggles the map on.
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+  const { apiKey, isLoading: mapLoading, error: mapError } = useGoogleMapsToken(showMap || isDesktop);
 
   const scribe = useScribe({
     modelId: 'scribe_v2_realtime',

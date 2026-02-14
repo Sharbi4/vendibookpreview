@@ -19,7 +19,7 @@ import SmartConciergeModal from '@/components/home/SmartConciergeModal';
 import { supabase } from '@/integrations/supabase/client';
 
 // Lazy load below-the-fold components for faster initial load
-const FeaturedListings = lazy(() => import('@/components/home/FeaturedListings'));
+const ListingsSections = lazy(() => import('@/components/home/ListingsSections'));
 const BecomeHostSection = lazy(() => import('@/components/home/BecomeHostSection'));
 const FinalCTA = lazy(() => import('@/components/home/FinalCTA'));
 
@@ -83,8 +83,8 @@ const Index = () => {
         
 
         <Suspense fallback={<SectionSkeleton />}>
-          {/* 3. Featured Listings with Map */}
-          <FeaturedListings />
+          {/* 3. Listings - Rentals First, Then Sales */}
+          <ListingsSections />
 
           {/* 4. BNPL Banner */}
           <PaymentsBanner />
