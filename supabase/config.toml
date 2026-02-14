@@ -188,3 +188,6 @@ verify_jwt = false
 
 [functions.ai-listing-creator]
 verify_jwt = false
+
+[functions.seo-prerender]
+verify_jwt = false

@@ -93,9 +93,13 @@ const ListingDetail = () => {
   };
 
   // Generate structured data for Google Shopping / Search
-  // Must be called before any conditional returns to follow Rules of Hooks
+  // IMPORTANT: Physical locations (kitchens/lots/spaces) use LocalBusiness ONLY
+  // Trucks/trailers/equipment use Product ONLY — never both on same page
+  const physicalCategories = ['ghost_kitchen', 'vendor_lot', 'vendor_space'];
+  const isPhysicalLocation = listing ? physicalCategories.includes(listing.category) : false;
+
   const productSchema = useMemo(() => {
-    if (!listing) return null;
+    if (!listing || isPhysicalLocation) return null;
     return generateProductSchema({
       id: listing.id,
       title: listing.title,
@@ -117,7 +121,7 @@ const ListingDetail = () => {
       height_inches: listing.height_inches,
       weight_lbs: listing.weight_lbs,
     });
-  }, [listing, host, ratingData]);
+  }, [listing, host, ratingData, isPhysicalLocation]);
 
   const breadcrumbSchema = useMemo(() => {
     if (!listing) return null;
@@ -129,11 +133,9 @@ const ListingDetail = () => {
     });
   }, [listing]);
 
-  // LocalBusiness schema for physical locations
+  // LocalBusiness schema ONLY for physical locations (kitchens, vendor spaces/lots)
   const localBusinessSchema = useMemo(() => {
-    if (!listing) return null;
-    const physicalCategories = ['ghost_kitchen', 'vendor_lot', 'vendor_space'];
-    if (!physicalCategories.includes(listing.category)) return null;
+    if (!listing || !isPhysicalLocation) return null;
     return generateListingLocalBusinessSchema({
       id: listing.id,
       title: listing.title,
@@ -147,7 +149,7 @@ const ListingDetail = () => {
       price_weekly: listing.price_weekly,
       price_sale: listing.price_sale,
     });
-  }, [listing]);
+  }, [listing, isPhysicalLocation]);
 
   // FAQ schema auto-generated from listing attributes
   const faqSchema = useMemo(() => {
