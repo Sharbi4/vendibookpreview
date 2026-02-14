@@ -19,6 +19,7 @@ import {
 import SearchResultsMap from '@/components/search/SearchResultsMap';
 import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
 import { Listing } from '@/types/listing';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const ITEMS_PER_PAGE = 8;
 
@@ -28,17 +29,23 @@ interface UserLocation {
 }
 
 const FeaturedListings = () => {
+  const isMobile = useIsMobile();
   const [sortBy, setSortBy] = useState<'nearest' | 'newest' | 'price-low' | 'price-high'>('nearest');
   const [currentPage, setCurrentPage] = useState(1);
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'map' | 'split'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'map' | 'split'>(() => isMobile === false ? 'split' : 'list');
   const [selectedListing, setSelectedListing] = useState<(Listing & { distance_miles?: number }) | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   
   const navigate = useNavigate();
   const { apiKey: mapToken, isLoading: isMapLoading, error: mapError } = useGoogleMapsToken();
+
+  // Default to split view on desktop once mobile detection resolves
+  useEffect(() => {
+    if (isMobile === false) setViewMode('split');
+  }, [isMobile]);
 
   // Auto-request location removed - keep only manual "Find nearby" button
   // This prevents unsolicited location prompts which feel invasive (UX audit item #11)
