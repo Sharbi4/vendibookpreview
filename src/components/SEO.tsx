@@ -4,7 +4,7 @@ interface SEOProps {
   title: string;
   description: string;
   canonical?: string;
-  type?: 'website' | 'article';
+  type?: 'website' | 'article' | 'product';
   image?: string;
   article?: {
     publishedTime?: string;
@@ -12,6 +12,10 @@ interface SEOProps {
     author?: string;
     section?: string;
     tags?: string[];
+  };
+  product?: {
+    price?: number;
+    currency?: string;
   };
   noindex?: boolean;
 }
@@ -31,6 +35,7 @@ const SEO = ({
   type = 'website',
   image = DEFAULT_IMAGE,
   article,
+  product,
   noindex = false,
 }: SEOProps) => {
   const fullTitle = title.includes('Vendibook') ? title : `${title} | Vendibook`;
@@ -108,11 +113,20 @@ const SEO = ({
       }
     }
 
+    // Product-specific meta (for listing pages)
+    if (type === 'product' && product) {
+      setMeta('og:type', 'product', true);
+      if (product.price) {
+        setMeta('product:price:amount', product.price.toString(), true);
+        setMeta('product:price:currency', product.currency || 'USD', true);
+      }
+    }
+
     // Cleanup on unmount - reset to defaults
     return () => {
       document.title = 'Vendibook | Food Truck & Mobile Vendor Marketplace';
     };
-  }, [fullTitle, description, canonicalUrl, type, imageUrl, article, noindex]);
+  }, [fullTitle, description, canonicalUrl, type, imageUrl, article, product, noindex]);
 
   return null;
 };

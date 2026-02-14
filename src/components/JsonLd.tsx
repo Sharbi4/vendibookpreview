@@ -224,6 +224,10 @@ export const generateProductSchema = (listing: {
   host_name?: string | null;
   average_rating?: number | null;
   review_count?: number;
+  length_inches?: number | null;
+  width_inches?: number | null;
+  height_inches?: number | null;
+  weight_lbs?: number | null;
 }) => {
   const categoryLabels: Record<string, string> = {
     food_truck: 'Food Truck',
@@ -234,6 +238,16 @@ export const generateProductSchema = (listing: {
 
   const categoryLabel = categoryLabels[listing.category] || 'Mobile Food Asset';
   const isRental = listing.mode === 'rent';
+  const modeLabel = isRental ? 'for Rent' : 'for Sale';
+
+  // Extract city/state for SEO-rich product name
+  const locationParts = listing.address?.split(',').map(s => s.trim()) || [];
+  const city = locationParts.length >= 2 ? locationParts[locationParts.length - 2] : undefined;
+  const state = locationParts.length >= 1 ? locationParts[locationParts.length - 1]?.split(' ')[0] : undefined;
+  const locationShort = city && state ? `${city}, ${state}` : city || '';
+  const seoName = locationShort
+    ? `${categoryLabel} ${modeLabel} in ${locationShort} - ${listing.title}`
+    : `${categoryLabel} ${modeLabel} - ${listing.title}`;
   
   // Determine price and availability
   const price = isRental 
@@ -249,15 +263,12 @@ export const generateProductSchema = (listing: {
     ? listing.image_urls 
     : (listing.cover_image_url ? [listing.cover_image_url] : ['https://vendibook.com/placeholder.svg']);
 
-  // Extract location for areaServed
-  const locationParts = listing.address?.split(',').map(s => s.trim()) || [];
-  const city = locationParts.length >= 2 ? locationParts[locationParts.length - 2] : undefined;
-  const state = locationParts.length >= 1 ? locationParts[locationParts.length - 1]?.split(' ')[0] : undefined;
+  // city/state already extracted above for seoName
 
   const schema: Record<string, any> = {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: listing.title,
+    name: seoName,
     description: listing.description?.slice(0, 5000) || `${categoryLabel} ${isRental ? 'for rent' : 'for sale'}`,
     url: `https://vendibook.com/listing/${listing.id}`,
     image: images,
@@ -294,6 +305,24 @@ export const generateProductSchema = (listing: {
       worstRating: '1',
       reviewCount: listing.review_count.toString(),
     };
+  }
+
+  // Add additionalProperty for specs
+  const additionalProperties: Array<{ '@type': string; name: string; value: string }> = [];
+  if (listing.length_inches) {
+    additionalProperties.push({ '@type': 'PropertyValue', name: 'Length', value: `${Math.floor(listing.length_inches / 12)}ft ${listing.length_inches % 12}in` });
+  }
+  if (listing.width_inches) {
+    additionalProperties.push({ '@type': 'PropertyValue', name: 'Width', value: `${Math.floor(listing.width_inches / 12)}ft ${listing.width_inches % 12}in` });
+  }
+  if (listing.height_inches) {
+    additionalProperties.push({ '@type': 'PropertyValue', name: 'Height', value: `${Math.floor(listing.height_inches / 12)}ft ${listing.height_inches % 12}in` });
+  }
+  if (listing.weight_lbs) {
+    additionalProperties.push({ '@type': 'PropertyValue', name: 'Weight', value: `${listing.weight_lbs.toLocaleString()} lbs` });
+  }
+  if (additionalProperties.length > 0) {
+    schema.additionalProperty = additionalProperties;
   }
 
   // Add rental-specific fields using extended offer
@@ -523,6 +552,162 @@ export const generateSearchBreadcrumbSchema = (searchParams?: {
       position: index + 1,
       name: item.name,
       item: `https://vendibook.com${item.url}`,
+    })),
+  };
+};
+
+// LocalBusiness schema for physical locations (kitchens, vendor spaces)
+export const generateListingLocalBusinessSchema = (listing: {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  mode: 'rent' | 'sale';
+  address?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  price_daily?: number | null;
+  price_weekly?: number | null;
+  price_sale?: number | null;
+}) => {
+  const categoryLabels: Record<string, string> = {
+    ghost_kitchen: 'Shared Kitchen',
+    vendor_lot: 'Vendor Space',
+    vendor_space: 'Vendor Space',
+  };
+  const categoryLabel = categoryLabels[listing.category] || 'Commercial Kitchen';
+  const locationParts = listing.address?.split(',').map(s => s.trim()) || [];
+  const city = locationParts.length >= 2 ? locationParts[locationParts.length - 2] : undefined;
+  const state = locationParts.length >= 1 ? locationParts[locationParts.length - 1]?.split(' ')[0] : undefined;
+
+  const schema: Record<string, any> = {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: listing.title,
+    description: listing.description?.slice(0, 500) || `${categoryLabel} available on Vendibook`,
+    url: `https://vendibook.com/listing/${listing.id}`,
+    '@id': `https://vendibook.com/listing/${listing.id}#business`,
+  };
+
+  if (listing.address) {
+    schema.address = {
+      '@type': 'PostalAddress',
+      streetAddress: locationParts.length >= 3 ? locationParts.slice(0, -2).join(', ') : undefined,
+      addressLocality: city,
+      addressRegion: state,
+      addressCountry: 'US',
+    };
+  }
+
+  if (listing.latitude && listing.longitude) {
+    schema.geo = {
+      '@type': 'GeoCoordinates',
+      latitude: listing.latitude,
+      longitude: listing.longitude,
+    };
+  }
+
+  const price = listing.mode === 'rent'
+    ? (listing.price_daily || listing.price_weekly || 0)
+    : (listing.price_sale || 0);
+
+  schema.makesOffer = {
+    '@type': 'Offer',
+    url: `https://vendibook.com/listing/${listing.id}`,
+    priceCurrency: 'USD',
+    price: price.toString(),
+    availability: 'https://schema.org/InStock',
+  };
+
+  return schema;
+};
+
+// FAQ schema auto-generated from listing data
+export const generateListingFAQSchema = (listing: {
+  category: string;
+  mode: 'rent' | 'sale';
+  status: string;
+  address?: string | null;
+  price_daily?: number | null;
+  price_weekly?: number | null;
+  price_sale?: number | null;
+  instant_book?: boolean | null;
+  fulfillment_type?: string;
+}) => {
+  const categoryLabels: Record<string, string> = {
+    food_truck: 'food truck',
+    food_trailer: 'food trailer',
+    ghost_kitchen: 'shared kitchen',
+    vendor_lot: 'vendor space',
+    vendor_space: 'vendor space',
+  };
+  const cat = categoryLabels[listing.category] || 'listing';
+  const isRental = listing.mode === 'rent';
+  const locationParts = listing.address?.split(',').map(s => s.trim()) || [];
+  const city = locationParts.length >= 2 ? locationParts[locationParts.length - 2] : undefined;
+
+  const faqs: Array<{ question: string; answer: string }> = [];
+
+  // Availability
+  faqs.push({
+    question: `Is this ${cat} available ${isRental ? 'for rent' : 'for sale'}?`,
+    answer: listing.status === 'published'
+      ? `Yes, this ${cat} is currently available ${isRental ? 'for rent' : 'for purchase'} on Vendibook.`
+      : `This ${cat} is not currently available. Check back soon or browse similar listings on Vendibook.`,
+  });
+
+  // Pricing
+  if (isRental && (listing.price_daily || listing.price_weekly)) {
+    const priceInfo = listing.price_daily
+      ? `$${listing.price_daily}/day`
+      : `$${listing.price_weekly}/week`;
+    faqs.push({
+      question: `How much does it cost to rent this ${cat}?`,
+      answer: `Rental pricing starts at ${priceInfo}. Contact the host for custom quotes or longer-term rates.`,
+    });
+  } else if (!isRental && listing.price_sale) {
+    faqs.push({
+      question: `What is the price of this ${cat}?`,
+      answer: `This ${cat} is listed at $${listing.price_sale.toLocaleString()}. Make an offer or contact the seller on Vendibook.`,
+    });
+  }
+
+  // Location
+  if (city) {
+    faqs.push({
+      question: `Where is this ${cat} located?`,
+      answer: `This ${cat} is located in ${locationParts.slice(-2).join(', ')}. View the full listing on Vendibook for exact location details.`,
+    });
+  }
+
+  // Instant book
+  if (isRental && listing.instant_book) {
+    faqs.push({
+      question: `Can I book this ${cat} instantly?`,
+      answer: `Yes! This listing supports instant booking — you can reserve it immediately without waiting for host approval.`,
+    });
+  }
+
+  // Delivery
+  if (listing.fulfillment_type === 'delivery' || listing.fulfillment_type === 'both') {
+    faqs.push({
+      question: `Is delivery available for this ${cat}?`,
+      answer: `Yes, the host offers delivery for this ${cat}. Check the listing for delivery radius and fees.`,
+    });
+  }
+
+  if (faqs.length === 0) return null;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map(faq => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
     })),
   };
 };
