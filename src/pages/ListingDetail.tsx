@@ -94,7 +94,7 @@ const ListingDetail = () => {
   // Generate structured data for Google Shopping / Search
   // Must be called before any conditional returns to follow Rules of Hooks
   const productSchema = useMemo(() => {
-    if (!listing || !host) return null;
+    if (!listing) return null;
     return generateProductSchema({
       id: listing.id,
       title: listing.title,
@@ -108,7 +108,7 @@ const ListingDetail = () => {
       image_urls: listing.image_urls || [],
       address: listing.address,
       status: listing.status,
-      host_name: host?.full_name,
+      host_name: host?.full_name || host?.display_name || host?.business_name,
       average_rating: ratingData?.average,
       review_count: ratingData?.count,
     });
@@ -180,19 +180,46 @@ const ListingDetail = () => {
   // Extract city/state from address for compact display
   const locationShort = location?.split(',').slice(-2).join(',').trim() || location;
 
-  // SEO meta description
-  const metaDescription = `${listing.mode === 'rent' ? 'Rent' : 'Buy'} this ${CATEGORY_LABELS[listing.category as keyof typeof CATEGORY_LABELS] || 'listing'}${location ? ` in ${locationShort}` : ''}. ${listing.description?.slice(0, 120) || ''}`;
+  // SEO: Build keyword-rich meta title & description
+  const categoryLabel = CATEGORY_LABELS[listing.category as keyof typeof CATEGORY_LABELS] || 'Listing';
+  const modeLabel = listing.mode === 'rent' ? 'for Rent' : 'for Sale';
+  const priceText = listing.mode === 'rent'
+    ? (listing.price_daily ? `$${listing.price_daily}/day` : listing.price_weekly ? `$${listing.price_weekly}/week` : '')
+    : (listing.price_sale ? `$${listing.price_sale.toLocaleString()}` : '');
+  
+  // Title: "Food Truck for Rent in Tampa, FL | $150/day - Vendibook" (under 60 chars ideal)
+  const seoTitle = [
+    listing.title,
+    modeLabel,
+    locationShort ? `in ${locationShort}` : '',
+  ].filter(Boolean).join(' ');
+
+  // Description: keyword-rich, under 160 chars, action-oriented
+  const descSnippet = listing.description?.replace(/\s+/g, ' ').slice(0, 80)?.trim() || '';
+  const metaDescription = [
+    `${listing.mode === 'rent' ? 'Rent' : 'Buy'} this ${categoryLabel.toLowerCase()}`,
+    locationShort ? `in ${locationShort}` : '',
+    priceText ? `starting at ${priceText}` : '',
+    '— book instantly on Vendibook.',
+    descSnippet,
+  ].filter(Boolean).join(' ').slice(0, 160);
+
+  // Build comprehensive JSON-LD schemas array
+  const schemas: object[] = [];
+  if (productSchema) schemas.push(productSchema);
+  if (breadcrumbSchema) schemas.push(breadcrumbSchema);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title={`${listing.title} | ${listing.mode === 'rent' ? 'For Rent' : 'For Sale'} - Vendibook`}
+        title={seoTitle}
         description={metaDescription}
         canonical={`/listing/${listing.id}`}
         image={listing.cover_image_url || undefined}
+        type="website"
       />
-      {productSchema && breadcrumbSchema && (
-        <JsonLd schema={[productSchema, breadcrumbSchema]} />
+      {schemas.length > 0 && (
+        <JsonLd schema={schemas} />
       )}
       <Header />
 
