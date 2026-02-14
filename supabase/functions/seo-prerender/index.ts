@@ -7,22 +7,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-/**
- * SEO Prerender Edge Function
- * 
- * This function generates pre-rendered HTML with JSON-LD structured data
- * for listing and SEO pages. It's designed to be called by a reverse proxy
- * or CDN edge rule that detects bot user-agents (Googlebot, etc.) and
- * serves this response instead of the SPA.
- * 
- * Usage:
- *   GET /functions/v1/seo-prerender?path=/listing/UUID
- *   GET /functions/v1/seo-prerender?path=/rent/food-trucks/tampa-fl
- * 
- * Returns: Full HTML page with JSON-LD in <head>, proper meta tags,
- *          and a minimal body that redirects JS-capable browsers.
- */
-
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SITE_URL = "https://vendibook.com";
@@ -38,6 +22,15 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const PHYSICAL_CATEGORIES = ["ghost_kitchen", "vendor_lot", "vendor_space"];
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function generateProductSchema(listing: any) {
   const categoryLabel = CATEGORY_LABELS[listing.category] || "Mobile Food Asset";
@@ -222,14 +215,10 @@ function generateFAQSchema(listing: any) {
 
 function buildListingHTML(listing: any): string {
   const isPhysical = PHYSICAL_CATEGORIES.includes(listing.category);
-  const schemas: object[] = [];
 
-  // Mutual exclusion: Product OR LocalBusiness, never both
-  if (isPhysical) {
-    schemas.push(generateLocalBusinessSchema(listing));
-  } else {
-    schemas.push(generateProductSchema(listing));
-  }
+  const schemas: object[] = [];
+  if (isPhysical) schemas.push(generateLocalBusinessSchema(listing));
+  else schemas.push(generateProductSchema(listing));
   schemas.push(generateBreadcrumbSchema(listing));
   schemas.push(generateFAQSchema(listing));
 
@@ -240,70 +229,73 @@ function buildListingHTML(listing: any): string {
   const locationShort = city && state ? `${city}, ${state}` : city;
 
   const priceText = listing.mode === "rent"
-    ? listing.price_daily ? `$${listing.price_daily}/day` : listing.price_weekly ? `$${listing.price_weekly}/week` : ""
-    : listing.price_sale ? `$${listing.price_sale.toLocaleString()}` : "";
+    ? listing.price_daily ? `$${listing.price_daily}/day`
+      : listing.price_weekly ? `$${listing.price_weekly}/week`
+      : ""
+    : listing.price_sale ? `$${Number(listing.price_sale).toLocaleString()}`
+      : "";
 
-  const title = [listing.title, modeLabel, locationShort ? `in ${locationShort}` : ""].filter(Boolean).join(" ");
+  const title = [listing.title, `${categoryLabel} ${modeLabel}`, locationShort ? `in ${locationShort}` : ""]
+    .filter(Boolean)
+    .join(" ");
+
   const description = [
     `${listing.mode === "rent" ? "Rent" : "Buy"} this ${categoryLabel.toLowerCase()}`,
     locationShort ? `in ${locationShort}` : "",
     priceText ? `starting at ${priceText}` : "",
-    "— book instantly on Vendibook.",
-    listing.description?.replace(/\s+/g, " ").slice(0, 80),
+    "— on Vendibook.",
   ].filter(Boolean).join(" ").slice(0, 160);
 
   const canonicalUrl = `${SITE_URL}/listing/${listing.id}`;
   const imageUrl = listing.cover_image_url || `${SITE_URL}/placeholder.svg`;
 
-  return `<!DOCTYPE html>
+  // IMPORTANT: JSON-LD is in its own <script> tag with pure JSON only.
+  // Redirect is in a SEPARATE <script> tag.
+  // escapeHtml is NOT applied to JSON-LD content (it's already inside a script tag).
+  return `<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
   <title>${escapeHtml(title)} | Vendibook</title>
-  <meta name="description" content="${escapeHtml(description)}">
-  <link rel="canonical" href="${canonicalUrl}">
-  
+  <meta name="description" content="${escapeHtml(description)}" />
+  <link rel="canonical" href="${canonicalUrl}" />
+
   <!-- Open Graph -->
-  <meta property="og:type" content="product">
-  <meta property="og:title" content="${escapeHtml(title)}">
-  <meta property="og:description" content="${escapeHtml(description)}">
-  <meta property="og:url" content="${canonicalUrl}">
-  <meta property="og:image" content="${escapeHtml(imageUrl)}">
-  <meta property="og:site_name" content="Vendibook">
-  ${priceText ? `<meta property="product:price:amount" content="${listing.price_sale || listing.price_daily || listing.price_weekly || 0}">
-  <meta property="product:price:currency" content="USD">` : ""}
-  
+  <meta property="og:type" content="${isPhysical ? "website" : "product"}" />
+  <meta property="og:title" content="${escapeHtml(title)}" />
+  <meta property="og:description" content="${escapeHtml(description)}" />
+  <meta property="og:url" content="${canonicalUrl}" />
+  <meta property="og:image" content="${imageUrl}" />
+  <meta property="og:site_name" content="Vendibook" />
+  ${!isPhysical && priceText ? `
+  <meta property="product:price:amount" content="${String(listing.price_sale || listing.price_daily || listing.price_weekly || 0)}" />
+  <meta property="product:price:currency" content="USD" />` : ""}
+
   <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${escapeHtml(title)}">
-  <meta name="twitter:description" content="${escapeHtml(description)}">
-  <meta name="twitter:image" content="${escapeHtml(imageUrl)}">
-  
-  <!-- JSON-LD Structured Data -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${escapeHtml(title)}" />
+  <meta name="twitter:description" content="${escapeHtml(description)}" />
+  <meta name="twitter:image" content="${imageUrl}" />
+
+  <!-- JSON-LD (pure JSON, no other content) -->
   <script type="application/ld+json">${JSON.stringify(schemas)}</script>
-  
-  <!-- Redirect JS-capable browsers to the SPA -->
-  <script>window.location.replace("${canonicalUrl}");</script>
+
+  <!-- Redirect humans to SPA (separate script tag) -->
+  <script>window.location.replace(${JSON.stringify(canonicalUrl)});</script>
+  <noscript>
+    <meta http-equiv="refresh" content="0; url=${canonicalUrl}" />
+  </noscript>
 </head>
 <body>
   <h1>${escapeHtml(listing.title)}</h1>
-  <p>${escapeHtml(categoryLabel)} ${escapeHtml(modeLabel)}${locationShort ? ` in ${escapeHtml(locationShort)}` : ""}</p>
+  <p>${escapeHtml(`${categoryLabel} ${modeLabel}${locationShort ? ` in ${locationShort}` : ""}`)}</p>
   ${priceText ? `<p>Price: ${escapeHtml(priceText)}</p>` : ""}
-  <p>${escapeHtml(listing.description?.slice(0, 500) || "")}</p>
-  ${listing.cover_image_url ? `<img src="${escapeHtml(listing.cover_image_url)}" alt="${escapeHtml(listing.title)}">` : ""}
+  <p>${escapeHtml((listing.description || "").slice(0, 500))}</p>
   <p><a href="${canonicalUrl}">View on Vendibook</a></p>
 </body>
 </html>`;
-}
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
 }
 
 serve(async (req) => {

@@ -46,7 +46,7 @@ export function CityDemandPage({ city }: CityDemandPageProps) {
           .from('listings')
           .select('id, title, cover_image_url, category, price_daily, address')
           .eq('status', 'published')
-          .ilike('address', `%${city.name}%`)
+          .or(`city.eq.${city.name},address.ilike.%${city.name}%`)
           .limit(6);
         
         setFeaturedListings(data || []);

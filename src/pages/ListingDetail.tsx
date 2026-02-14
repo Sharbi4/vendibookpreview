@@ -64,11 +64,10 @@ const ListingDetail = () => {
   // Check if user is the owner of this listing
   const isOwner = user?.id && listing?.host_id && user.id === listing.host_id;
 
-  // Share URL routes through edge function for rich social previews
-  // Social bots (Facebook, Twitter, LinkedIn) get full OG tags + JSON-LD
-  // Human browsers are auto-redirected to the SPA via window.location.replace
-  const shareUrl = `https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/seo-prerender?path=/listing/${id}`;
-  const directUrl = `https://vendibook.com/listing/${id}`;
+  // Share URL uses a pretty route on vendibook.com
+  // The /share/listing/:id route redirects humans to the SPA
+  // Social bots get routed to the edge function for rich OG tags + JSON-LD
+  const shareUrl = `https://vendibook.com/share/listing/${id}`;
 
   // Handle share listing
   const handleShare = async () => {
