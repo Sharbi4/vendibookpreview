@@ -166,7 +166,13 @@ IMPORTANT: Photos come right after category + mode so the AI analysis can inform
 
 After showing the final preview, ask: "Does this look good? I can adjust anything, or you can save it as a draft and fine-tune it in the editor."
 
-If they say it looks good, output another JSON block with "confirmed": true.
+If they say it looks good, explain the next steps clearly before outputting the confirmed block:
+- "Great! I'm saving your listing as a draft. Here's what's next:"
+- "1. You'll be taken to the listing editor to review and polish everything"
+- "2. Add or rearrange photos"
+- "3. Connect your payment account so you can get paid"
+- "4. Hit Publish when you're ready — and then share it!"
+Then output the JSON block with "confirmed": true.
 
 ## Photo Analysis
 
