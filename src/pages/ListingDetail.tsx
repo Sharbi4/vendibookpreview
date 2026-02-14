@@ -47,7 +47,7 @@ import { useEffect, useMemo } from 'react';
 import { trackListingViewed } from '@/lib/analytics';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 import SEO from '@/components/SEO';
-import JsonLd, { generateProductSchema, generateListingBreadcrumbSchema } from '@/components/JsonLd';
+import JsonLd, { generateProductSchema, generateListingBreadcrumbSchema, generateListingLocalBusinessSchema, generateListingFAQSchema } from '@/components/JsonLd';
 import { getPublicDisplayName } from '@/lib/displayName';
 import { formatLastActive } from '@/hooks/useActivityTracker';
 
@@ -112,6 +112,10 @@ const ListingDetail = () => {
       host_name: host?.full_name || host?.display_name || host?.business_name,
       average_rating: ratingData?.average,
       review_count: ratingData?.count,
+      length_inches: listing.length_inches,
+      width_inches: listing.width_inches,
+      height_inches: listing.height_inches,
+      weight_lbs: listing.weight_lbs,
     });
   }, [listing, host, ratingData]);
 
@@ -122,6 +126,42 @@ const ListingDetail = () => {
       title: listing.title,
       category: listing.category,
       mode: listing.mode as 'rent' | 'sale',
+    });
+  }, [listing]);
+
+  // LocalBusiness schema for physical locations
+  const localBusinessSchema = useMemo(() => {
+    if (!listing) return null;
+    const physicalCategories = ['ghost_kitchen', 'vendor_lot', 'vendor_space'];
+    if (!physicalCategories.includes(listing.category)) return null;
+    return generateListingLocalBusinessSchema({
+      id: listing.id,
+      title: listing.title,
+      description: listing.description,
+      category: listing.category,
+      mode: listing.mode as 'rent' | 'sale',
+      address: listing.address,
+      latitude: listing.latitude,
+      longitude: listing.longitude,
+      price_daily: listing.price_daily,
+      price_weekly: listing.price_weekly,
+      price_sale: listing.price_sale,
+    });
+  }, [listing]);
+
+  // FAQ schema auto-generated from listing attributes
+  const faqSchema = useMemo(() => {
+    if (!listing) return null;
+    return generateListingFAQSchema({
+      category: listing.category,
+      mode: listing.mode as 'rent' | 'sale',
+      status: listing.status,
+      address: listing.address,
+      price_daily: listing.price_daily,
+      price_weekly: listing.price_weekly,
+      price_sale: listing.price_sale,
+      instant_book: listing.instant_book,
+      fulfillment_type: listing.fulfillment_type,
     });
   }, [listing]);
 
@@ -205,10 +245,17 @@ const ListingDetail = () => {
     descSnippet,
   ].filter(Boolean).join(' ').slice(0, 160);
 
+  // Determine listing price for OG product tags
+  const listingPrice = listing.mode === 'rent'
+    ? (listing.price_daily || listing.price_weekly || undefined)
+    : (listing.price_sale || undefined);
+
   // Build comprehensive JSON-LD schemas array
   const schemas: object[] = [];
   if (productSchema) schemas.push(productSchema);
   if (breadcrumbSchema) schemas.push(breadcrumbSchema);
+  if (localBusinessSchema) schemas.push(localBusinessSchema);
+  if (faqSchema) schemas.push(faqSchema);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -217,7 +264,8 @@ const ListingDetail = () => {
         description={metaDescription}
         canonical={`/listing/${listing.id}`}
         image={listing.cover_image_url || undefined}
-        type="website"
+        type="product"
+        product={listingPrice ? { price: listingPrice, currency: 'USD' } : undefined}
       />
       {schemas.length > 0 && (
         <JsonLd schema={schemas} />
@@ -250,6 +298,11 @@ const ListingDetail = () => {
                 <div className="flex items-start justify-between gap-4">
                   <h1 className="text-2xl md:text-3xl font-semibold text-foreground leading-tight">
                     {listing.title}
+                    {locationShort && (
+                      <span className="text-muted-foreground font-normal text-lg md:text-xl block mt-1">
+                        {categoryLabel} {modeLabel} in {locationShort}
+                      </span>
+                    )}
                   </h1>
                   {isOwner && (
                     <Button asChild size="sm" variant="outline" className="shrink-0">
