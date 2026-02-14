@@ -67,7 +67,7 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
         .eq('status', 'published')
         .eq('category', dbCategory as any)
         .eq('mode', dbMode)
-        .ilike('address', `%${city.name}%`)
+        .or(`city.eq.${city.name},address.ilike.%${city.name}%`)
         .limit(50);
 
       setListings(data || []);

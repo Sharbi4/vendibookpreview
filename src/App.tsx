@@ -132,6 +132,14 @@ const PageLoader = () => (
   </div>
 );
 
+// Share redirect: pretty URL → actual listing page
+const ShareRedirect = () => {
+  const params = new URLSearchParams();
+  const pathParts = window.location.pathname.split('/');
+  const listingId = pathParts[pathParts.length - 1];
+  return <Navigate to={`/listing/${listingId}`} replace />;
+};
+
 // Animated Routes wrapper component
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -157,6 +165,8 @@ const AnimatedRoutes = () => {
           <Route path="/host/reporting" element={<PageTransition><HostReporting /></PageTransition>} />
           <Route path="/create-listing" element={<Navigate to="/list" replace />} />
           <Route path="/listing/:id" element={<PageTransition><ListingDetail /></PageTransition>} />
+          {/* Share route: pretty URL for social sharing, redirects to /listing/:id */}
+          <Route path="/share/listing/:id" element={<ShareRedirect />} />
           {/* Profile routes */}
           <Route path="/profile" element={<Navigate to="/account" replace />} />
           <Route path="/profile/edit" element={<Navigate to="/account" replace />} />

@@ -174,7 +174,7 @@ export const useAdminCityStats = () => {
           .from('listings')
           .select('*', { count: 'exact', head: true })
           .eq('status', 'published')
-          .ilike('address', `%${city}%`);
+          .or(`city.eq.${city},address.ilike.%${city}%`);
 
         // Get requests count (last 30 days)
         const thirtyDaysAgo = new Date();
@@ -191,7 +191,7 @@ export const useAdminCityStats = () => {
           const { data: cityListings } = await supabase
             .from('listings')
             .select('id')
-            .ilike('address', `%${city}%`);
+            .or(`city.eq.${city},address.ilike.%${city}%`);
           
           const cityListingIds = new Set((cityListings || []).map(l => l.id));
           requestCount = requests.filter(r => cityListingIds.has(r.listing_id)).length;
