@@ -49,6 +49,8 @@ export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFi
       // Save to availability_alerts table
       const { error: dbError } = await supabase.from('availability_alerts').insert({
         email: trimmedEmail,
+        name: trimmedName,
+        phone: trimmedPhone || null,
         zip_code: trimmedZip,
         category: category || null,
         mode: mode || null,

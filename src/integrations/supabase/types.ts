@@ -155,7 +155,9 @@ export type Database = {
           email: string
           id: string
           mode: string | null
+          name: string | null
           notified_at: string | null
+          phone: string | null
           radius_miles: number | null
           unsubscribed_at: string | null
           zip_code: string
@@ -166,7 +168,9 @@ export type Database = {
           email: string
           id?: string
           mode?: string | null
+          name?: string | null
           notified_at?: string | null
+          phone?: string | null
           radius_miles?: number | null
           unsubscribed_at?: string | null
           zip_code: string
@@ -177,7 +181,9 @@ export type Database = {
           email?: string
           id?: string
           mode?: string | null
+          name?: string | null
           notified_at?: string | null
+          phone?: string | null
           radius_miles?: number | null
           unsubscribed_at?: string | null
           zip_code?: string
