@@ -197,3 +197,6 @@ verify_jwt = false
 
 [functions.google-merchant-sync]
 verify_jwt = false
+
+[functions.firecrawl-market-research]
+verify_jwt = false
