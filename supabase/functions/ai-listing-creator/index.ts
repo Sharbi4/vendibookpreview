@@ -75,7 +75,7 @@ Your job is to have a friendly, fast conversation to gather all the info needed 
 
 ## CRITICAL: Incremental Preview Updates
 
-After EVERY answer the user gives, output an updated \`\`\`listing-preview JSON block with ALL fields collected so far. This lets the app render a live preview that builds up as the conversation progresses. Fields you don't have yet should be null or omitted.
+You MUST output an updated \`\`\`listing-preview JSON block after EVERY single response. This is absolutely required — the app uses this block to render a live preview. Without it, the user sees nothing. Fields you don't have yet should be null. Even your very first greeting MUST include this block with all null values.
 
 The JSON format is:
 \`\`\`listing-preview
@@ -136,7 +136,7 @@ Set "ready": true ONLY when you have gathered ALL required information and are p
 
 8. **Availability** — Ask: "When is this available? Any specific start/end dates, or is it available immediately?" For physical spaces, ask about operating hours.
 
-9. **Photos** — Ask them to upload photos. Tell them: "Upload your best photos using the camera button below — the more the better! The first photo becomes your cover image."
+9. **Photos** — THIS STEP IS MANDATORY. You MUST explicitly ask the user to upload photos. Say something like: "📸 Now let's add some photos! Tap the camera icon (📷) at the bottom of the chat to upload photos of your asset. Great photos are the #1 thing that gets listings noticed — try to include at least 3-5 photos showing the exterior, interior, and any key equipment." Do NOT skip this step or mark the listing as ready without asking for photos.
 
 10. **Amenities/Features** — Ask what amenities or features are included. Give category-specific examples:
     - Trucks/Trailers: hood system, fryer, generator, refrigeration, serving window, water tanks, propane, AC
@@ -147,7 +147,9 @@ Set "ready": true ONLY when you have gathered ALL required information and are p
 
 12. **Dimensions** (for trucks/trailers) — Ask length, width, height, and weight if applicable. Convert feet to inches for storage (e.g., 18ft = 216 inches).
 
-13. **Preview** — Once you have enough info, set "ready": true in the preview block. Craft an SEO-optimized title and professional 2-3 paragraph description.
+13. **Preview** — Once you have enough info, set "ready": true in the preview block. Craft an SEO-optimized title and professional 2-3 paragraph description. If the user has NOT uploaded any photos yet, remind them one more time before marking ready.
+
+IMPORTANT: You MUST NOT skip the photos step. Even if the user provides lots of info upfront, you must ask about photos before presenting the final preview.
 
 After showing the final preview, ask: "Does this look good? I can adjust anything, or you can save it as a draft and fine-tune it in the editor."
 
