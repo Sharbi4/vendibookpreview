@@ -30,6 +30,7 @@ const SmartConciergeModal = () => {
   const [budget, setBudget] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [sellItem, setSellItem] = useState('');
 
@@ -77,7 +78,7 @@ const SmartConciergeModal = () => {
   };
 
   const handleSubmit = async () => {
-    if (!intent || !fullName.trim() || !email.trim()) return;
+    if (!intent || !fullName.trim() || !email.trim() || !phone.trim()) return;
     setSubmitting(true);
 
     try {
@@ -86,6 +87,7 @@ const SmartConciergeModal = () => {
       const payload: Record<string, unknown> = {
         asset_type: intent === 'rent' ? 'rental' : intent === 'host' ? 'hosting' : 'sale',
         email: email.trim(),
+        phone: phone.trim(),
         city: intent === 'rent' ? zipCode.trim() : '',
         budget_min: budgetEntry?.min ?? null,
         budget_max: budgetEntry?.max ?? null,
@@ -126,7 +128,7 @@ const SmartConciergeModal = () => {
   };
 
   const isFormValid = () => {
-    if (!fullName.trim() || !email.trim()) return false;
+    if (!fullName.trim() || !email.trim() || !phone.trim()) return false;
     if (intent === 'rent' && !zipCode.trim()) return false;
     if (intent === 'host' && !address.trim()) return false;
     if (intent === 'sell' && !sellItem.trim()) return false;
@@ -310,6 +312,14 @@ const SmartConciergeModal = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className={glassInputClass}
+                    />
+                    <Input
+                      type="tel"
+                      placeholder="Phone Number *"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className={glassInputClass}
+                      maxLength={15}
                     />
                   </div>
 
