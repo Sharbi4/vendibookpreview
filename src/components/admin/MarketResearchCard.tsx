@@ -18,12 +18,13 @@ interface SearchResult {
 }
 
 const MarketResearchCard = () => {
-  const [query, setQuery] = useState('food truck');
+  const [query, setQuery] = useState('food truck for sale by owner');
   const [location, setLocation] = useState('');
   const [listingType, setListingType] = useState<string>('sale');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [phoneOnly, setPhoneOnly] = useState(true);
 
   const handleSearch = async () => {
     if (!query.trim()) {
@@ -59,7 +60,7 @@ const MarketResearchCard = () => {
       setIsSearching(false);
     }
   };
-
+  const filteredResults = phoneOnly ? results.filter((r) => r.phones.length > 0) : results;
   const resultsWithPhones = results.filter((r) => r.phones.length > 0);
 
   return (
@@ -116,34 +117,27 @@ const MarketResearchCard = () => {
         </CardContent>
       </Card>
 
-      {/* Summary */}
+      {/* Filter toggle */}
       {results.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="pt-4">
-              <p className="text-sm text-muted-foreground">Total Results</p>
-              <p className="text-2xl font-bold">{results.length}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <p className="text-sm text-muted-foreground">With Phone Numbers</p>
-              <p className="text-2xl font-bold text-emerald-600">{resultsWithPhones.length}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <p className="text-sm text-muted-foreground">Total Phones Found</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {results.reduce((sum, r) => sum + r.phones.length, 0)}
-              </p>
-            </CardContent>
-          </Card>
+        <div className="flex items-center gap-3">
+          <Button
+            variant={phoneOnly ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setPhoneOnly(!phoneOnly)}
+          >
+            <Phone className="h-3 w-3 mr-1" />
+            {phoneOnly ? 'Showing phone # only' : 'Show all results'}
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {filteredResults.length} of {results.length} results
+            {' · '}{resultsWithPhones.length} with phones
+            {' · '}{results.reduce((sum, r) => sum + r.phones.length, 0)} total phones
+          </span>
         </div>
       )}
 
       {/* Results */}
-      {results.map((result, idx) => (
+      {filteredResults.map((result, idx) => (
         <Card key={idx} className="overflow-hidden">
           <CardContent className="pt-4 space-y-2">
             <div className="flex items-start justify-between gap-2">
