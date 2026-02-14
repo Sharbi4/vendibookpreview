@@ -140,17 +140,19 @@ const AIListingCreator: React.FC = () => {
         slot_names: listingData.slot_names?.length ? listingData.slot_names : null,
         image_urls: uploadedImages.length > 0 ? uploadedImages : null,
         cover_image_url: uploadedImages.length > 0 ? uploadedImages[0] : null,
+        accept_card_payment: listingData.accept_card_payment ?? (listingData.mode === 'sale' ? true : null),
+        accept_cash_payment: listingData.accept_cash_payment ?? null,
       };
       const { data, error } = await supabase.from('listings').insert(insertData).select('id').single();
       if (error) throw error;
       await supabase.from('user_roles').upsert({ user_id: user.id, role: 'host' }, { onConflict: 'user_id,role' });
-      toast.success('Draft saved! Taking you to the listing editor to finalize & publish.');
+      toast.success('Draft saved! Taking you to your drafts.');
       // Add a next-steps message to the chat before redirecting
       setMessages(prev => [...prev, {
         role: 'assistant' as const,
-        content: `🎉 **Your draft has been saved!** Here's what happens next:\n\n1. **Review & Edit** — You'll be taken to the listing editor where you can fine-tune everything\n2. **Add Photos** — ${uploadedImages.length > 0 ? 'Your photos are attached! You can add more in the editor' : 'Upload photos in the editor to make your listing stand out'}\n3. **Connect Payments** — Set up Stripe to receive payments (the editor will walk you through it)\n4. **Publish** — Hit publish when you're ready and start getting bookings!\n\nRedirecting you now...`
+        content: `🎉 **Your draft has been saved!** Here's what happens next:\n\n1. **Review & Edit** — You'll be taken to your drafts where you can fine-tune everything\n2. **Add Photos** — ${uploadedImages.length > 0 ? 'Your photos are attached! You can add more in the editor' : 'Upload photos in the editor to make your listing stand out'}\n3. **Connect Payments** — Set up Stripe to receive payments (the editor will walk you through it)\n4. **Publish** — Hit publish when you're ready and start getting bookings!\n\nRedirecting you now...`
       }]);
-      setTimeout(() => navigate(`/create-listing/${data.id}`), 3500);
+      setTimeout(() => navigate('/dashboard?tab=listings'), 3500);
     } catch (e: any) {
       console.error('Save listing error:', e);
       toast.error('Failed to save listing. Please try again.');
