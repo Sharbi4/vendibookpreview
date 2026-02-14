@@ -79,71 +79,18 @@ const HeroRentalSearch = () => {
             transition={{ duration: 0.8, ease: 'easeOut' }}
             className="text-center mb-6 sm:mb-10 md:mb-14"
           >
-            {/* Slimy blob logo container */}
-            <div className="relative mx-auto mb-4 sm:mb-6 w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 flex items-center justify-center overflow-hidden">
-              {/* Iridescent blob background */}
-              <motion.div
-                className="absolute inset-0"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255,81,36,0.15), rgba(230,74,25,0.1), rgba(255,184,0,0.12))',
-                }}
-                animate={{
-                  borderRadius: [
-                    '40% 60% 55% 45% / 55% 40% 60% 45%',
-                    '55% 45% 40% 60% / 45% 60% 40% 55%',
-                    '45% 55% 60% 40% / 60% 45% 55% 40%',
-                    '60% 40% 45% 55% / 40% 55% 45% 60%',
-                    '40% 60% 55% 45% / 55% 40% 60% 45%',
-                  ],
-                  scale: [1, 1.03, 0.98, 1.02, 1],
-                  x: [0, 6, -4, 3, 0],
-                  y: [0, -4, 5, -2, 0],
-                }}
-                transition={{
-                  duration: 8,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-              />
-              {/* Main blob shape with logo */}
-              <motion.div
-                className="absolute inset-2 flex items-center justify-center"
-                style={{
-                  background: 'linear-gradient(160deg, rgba(255,255,255,0.85), rgba(255,245,238,0.9))',
-                  backdropFilter: 'blur(20px)',
-                  boxShadow: '0 8px 32px rgba(255,81,36,0.08), inset 0 1px 2px rgba(255,255,255,0.6)',
-                }}
-                animate={{
-                  borderRadius: [
-                    '45% 55% 50% 50% / 50% 45% 55% 50%',
-                    '50% 50% 45% 55% / 55% 50% 50% 45%',
-                    '55% 45% 55% 45% / 45% 55% 45% 55%',
-                    '48% 52% 50% 50% / 52% 48% 52% 48%',
-                    '45% 55% 50% 50% / 50% 45% 55% 50%',
-                  ],
-                  x: [0, -5, 4, -2, 0],
-                  y: [0, 3, -4, 2, 0],
-                  filter: [
-                    'drop-shadow(0 0 6px rgba(255,81,36,0.15))',
-                    'drop-shadow(0 0 12px rgba(255,184,0,0.2))',
-                    'drop-shadow(0 0 8px rgba(230,74,25,0.18))',
-                    'drop-shadow(0 0 14px rgba(255,81,36,0.22))',
-                    'drop-shadow(0 0 6px rgba(255,81,36,0.15))',
-                  ],
-                }}
-                transition={{
-                  duration: 6,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                  delay: 0.5,
-                }}
-              >
+            {/* Slimy blob logo */}
+            <div className="relative mx-auto mb-4 sm:mb-6 w-52 h-52 sm:w-68 sm:h-68 md:w-80 md:h-80 flex items-center justify-center">
+              {/* Outer iridescent blob */}
+              <div className="blob-outer absolute inset-0" />
+              {/* Inner blob with logo */}
+              <div className="blob-inner absolute inset-3 flex items-center justify-center">
                 <img
                   src={vendibookLogo}
                   alt="Vendibook"
-                  className="w-[75%] h-auto object-contain"
+                  className="w-[72%] h-auto object-contain drop-shadow-sm"
                 />
-              </motion.div>
+              </div>
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight tracking-tight mb-3 sm:mb-4">
               The Marketplace for <span className="gradient-text-warm">Food Business</span>
