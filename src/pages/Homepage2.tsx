@@ -459,23 +459,23 @@ const Homepage2 = () => {
 
       {/* ══ FLOATING QUICK-LINK GLASS BAR ══ */}
       <div className="relative z-10 flex justify-center px-4 pt-4 pb-1">
-        <div className="inline-flex items-center gap-1.5 px-1.5 py-1.5 rounded-full bg-[hsl(30,30%,92%)]/60 backdrop-blur-2xl border border-[hsl(30,20%,85%)]/40 shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.3)]">
+        <div className="inline-flex items-center gap-2 px-2 py-2 rounded-2xl bg-gradient-to-b from-white/30 to-white/10 backdrop-blur-2xl border border-white/30 shadow-[0_4px_24px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.4),inset_0_-1px_0_rgba(0,0,0,0.04)]">
           <Link
             to="/how-it-works"
-            className="px-4 py-1.5 text-xs font-medium rounded-full bg-[hsl(30,25%,88%)]/80 text-foreground/80 hover:text-foreground hover:bg-[hsl(30,25%,84%)] transition-all whitespace-nowrap"
+            className="group relative px-5 py-2 text-[11px] font-semibold tracking-wide uppercase rounded-xl bg-gradient-to-b from-[hsl(25,30%,96%)] to-[hsl(25,20%,90%)] text-foreground/70 hover:text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.7)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.8)] hover:from-[hsl(25,30%,98%)] hover:to-[hsl(25,20%,92%)] active:scale-[0.97] transition-all duration-200 whitespace-nowrap"
           >
             Learn More
           </Link>
           <Link
             to="/list"
-            className="px-4 py-1.5 text-xs font-medium rounded-full bg-[hsl(30,25%,88%)]/80 text-foreground/80 hover:text-foreground hover:bg-[hsl(30,25%,84%)] transition-all whitespace-nowrap"
+            className="group relative px-5 py-2 text-[11px] font-semibold tracking-wide uppercase rounded-xl bg-gradient-to-b from-[hsl(25,30%,96%)] to-[hsl(25,20%,90%)] text-foreground/70 hover:text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.7)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.8)] hover:from-[hsl(25,30%,98%)] hover:to-[hsl(25,20%,92%)] active:scale-[0.97] transition-all duration-200 whitespace-nowrap"
           >
             Create a Listing
           </Link>
           {!user && (
             <Link
               to="/auth"
-              className="px-4 py-1.5 text-xs font-medium rounded-full bg-[hsl(30,25%,88%)]/80 text-foreground/80 hover:text-foreground hover:bg-[hsl(30,25%,84%)] transition-all whitespace-nowrap"
+              className="group relative px-5 py-2 text-[11px] font-semibold tracking-wide uppercase rounded-xl bg-gradient-to-b from-[hsl(14,90%,55%)] to-[hsl(14,85%,45%)] text-white shadow-[0_1px_3px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_2px_8px_rgba(255,81,36,0.3),inset_0_1px_0_rgba(255,255,255,0.25)] hover:from-[hsl(14,90%,58%)] hover:to-[hsl(14,85%,48%)] active:scale-[0.97] transition-all duration-200 whitespace-nowrap"
             >
               Sign Up
             </Link>
