@@ -459,7 +459,7 @@ const Homepage2 = () => {
 
       {/* ══ FLOATING QUICK-LINK GLASS BAR ══ */}
       <div className="relative z-10 flex justify-center px-4 pt-4 pb-1">
-        <div className="inline-flex items-center gap-1.5 px-1.5 py-1.5 rounded-full bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg shadow-black/5">
+        <div className="inline-flex items-center gap-1.5 px-1.5 py-1.5 rounded-full bg-white/15 backdrop-blur-2xl border border-white/25 shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.2)]">
           <Link
             to="/how-it-works"
             className="px-4 py-1.5 text-xs font-semibold rounded-full bg-gradient-to-b from-gray-800 to-gray-950 text-white shadow-sm hover:shadow-md hover:from-gray-700 hover:to-gray-900 transition-all whitespace-nowrap"
