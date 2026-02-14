@@ -193,6 +193,11 @@ const ListingDetail = () => {
   if (error || !listing) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
+        <SEO
+          title="Listing Not Found"
+          description="This listing may have been removed or is no longer available on Vendibook."
+          noindex={true}
+        />
         <Header />
         <div className="flex-1 container py-16 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">
@@ -201,12 +206,30 @@ const ListingDetail = () => {
           <p className="text-muted-foreground mb-8">
             This listing may have been removed or is no longer available.
           </p>
-          <Button variant="dark-shine" asChild>
-            <Link to="/search">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Search
-            </Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button variant="dark-shine" asChild>
+              <Link to="/search">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Search
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/search?category=food_truck&mode=sale">
+                Browse Food Trucks for Sale
+              </Link>
+            </Button>
+          </div>
+          {/* Crawlable internal links for SEO */}
+          <nav className="mt-12 text-sm text-muted-foreground" aria-label="Browse categories">
+            <p className="mb-3 font-medium">Browse by category:</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Link to="/search?category=food_truck&mode=rent" className="underline hover:text-primary">Food Trucks for Rent</Link>
+              <Link to="/search?category=food_truck&mode=sale" className="underline hover:text-primary">Food Trucks for Sale</Link>
+              <Link to="/search?category=food_trailer&mode=sale" className="underline hover:text-primary">Food Trailers for Sale</Link>
+              <Link to="/search?category=ghost_kitchen&mode=rent" className="underline hover:text-primary">Shared Kitchens</Link>
+              <Link to="/search?category=vendor_space&mode=rent" className="underline hover:text-primary">Vendor Spaces</Link>
+            </div>
+          </nav>
         </div>
         <Footer />
       </div>
@@ -652,6 +675,21 @@ const ListingDetail = () => {
         totalSlots={listing.total_slots || 1}
         slotNames={listing.slot_names}
       />
+
+      {/* SEO: Crawlable internal links for deep crawl paths */}
+      <nav className="container py-8 border-t border-border" aria-label="Browse more listings">
+        <h2 className="text-lg font-semibold text-foreground mb-4">Browse More on Vendibook</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+          <Link to="/search?category=food_truck&mode=sale" className="text-muted-foreground hover:text-primary underline underline-offset-2">Food Trucks for Sale</Link>
+          <Link to="/search?category=food_truck&mode=rent" className="text-muted-foreground hover:text-primary underline underline-offset-2">Food Trucks for Rent</Link>
+          <Link to="/search?category=food_trailer&mode=sale" className="text-muted-foreground hover:text-primary underline underline-offset-2">Food Trailers for Sale</Link>
+          <Link to="/search?category=food_trailer&mode=rent" className="text-muted-foreground hover:text-primary underline underline-offset-2">Food Trailers for Rent</Link>
+          <Link to="/search?category=ghost_kitchen&mode=rent" className="text-muted-foreground hover:text-primary underline underline-offset-2">Shared Kitchens for Rent</Link>
+          <Link to="/search?category=vendor_space&mode=rent" className="text-muted-foreground hover:text-primary underline underline-offset-2">Vendor Spaces for Rent</Link>
+          <Link to="/cities" className="text-muted-foreground hover:text-primary underline underline-offset-2">Browse by City</Link>
+          <Link to="/how-it-works" className="text-muted-foreground hover:text-primary underline underline-offset-2">How It Works</Link>
+        </div>
+      </nav>
 
       <Footer />
     </div>
