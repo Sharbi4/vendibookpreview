@@ -314,6 +314,25 @@ serve(async (req) => {
       });
     }
 
+    // Return 410 Gone for legacy URLs that no longer exist
+    const legacyPatterns = [
+      /^\/ListingDetail/i,
+      /^\/listingdetail/i,
+      /^\/searchresults/i,
+      /^\/SearchResults/i,
+      /^\/sign-up$/i,
+      /^\/features$/i,
+      /^\/safety$/i,
+      /^\/create$/i,
+      /^\/OrganizerDashboard/i,
+    ];
+    if (legacyPatterns.some((re) => re.test(path))) {
+      return new Response("Gone – this page has been permanently removed.", {
+        status: 410,
+        headers: { ...corsHeaders, "Content-Type": "text/plain; charset=utf-8" },
+      });
+    }
+
     // Handle listing detail pages: /listing/UUID
     const listingMatch = path.match(/^\/listing\/([a-f0-9-]{36})$/i);
     if (listingMatch) {
