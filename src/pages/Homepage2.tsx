@@ -385,7 +385,7 @@ const Homepage2 = () => {
             {/* Bottom row: Category chips + mode + sort */}
             <div className="flex items-center gap-3 pb-2 -mt-0.5">
               {/* Mode pills — equal width, premium */}
-              <div className="flex h-8 rounded-full overflow-hidden bg-white/10 backdrop-blur-xl shrink-0 p-[2px] gap-[2px]">
+              <div className="flex h-8 rounded-full overflow-hidden border border-white/20 bg-white/10 backdrop-blur-xl shrink-0 p-[2px] gap-[2px]">
                 {(['', 'rent', 'sale'] as const).map((m) => (
                   <button
                     key={m}
@@ -453,30 +453,6 @@ const Homepage2 = () => {
                 {totalCount} {totalCount === 1 ? 'result' : 'results'}
               </span>
             </div>
-
-            {/* Quick-link pills row */}
-            <div className="flex items-center justify-center gap-2 pb-2.5 -mt-0.5">
-              <Link
-                to="/how-it-works"
-                className="px-3.5 py-1 text-[11px] font-semibold rounded-full bg-white/15 border border-white/20 text-white/70 hover:text-white hover:bg-white/25 active:scale-[0.97] transition-all whitespace-nowrap"
-              >
-                Learn More
-              </Link>
-              <Link
-                to="/list"
-                className="px-3.5 py-1 text-[11px] font-semibold rounded-full bg-white/15 border border-white/20 text-white/70 hover:text-white hover:bg-white/25 active:scale-[0.97] transition-all whitespace-nowrap"
-              >
-                Create a Listing
-              </Link>
-              {!user && (
-                <Link
-                  to="/auth"
-                  className="px-3.5 py-1 text-[11px] font-semibold rounded-full bg-white/20 border border-white/25 text-white hover:bg-white/30 active:scale-[0.97] transition-all whitespace-nowrap"
-                >
-                  Sign Up
-                </Link>
-              )}
-            </div>
           </div>
         </div>
       </header>
@@ -485,7 +461,7 @@ const Homepage2 = () => {
       <div className="relative z-10 flex">
         {/* ── CONTENT ── */}
         <div className="flex-1 min-w-0">
-          <div ref={resultsRef} className="scroll-mt-32 max-w-6xl mx-auto px-4 pt-4 pb-6">
+          <div ref={resultsRef} className="scroll-mt-32 max-w-6xl mx-auto px-4 pt-6 pb-6">
             {/* Sort bar + map toggle */}
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-medium text-foreground/70">
