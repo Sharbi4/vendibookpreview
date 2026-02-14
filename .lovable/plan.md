@@ -1,83 +1,71 @@
 
 
-# Harden Listing Page Structured Data for Google Rich Results
+# Dynamic Share Kit Modal for Host Dashboard Listings
 
-## Current State
+## Overview
+Add a "Share" button to each listing card on the host dashboard that opens a polished, Airbnb-style modal populated with that listing's real data. The modal consolidates link sharing, auto-generated captions, social quick-share buttons, QR code generation, a mini listing preview, and a psychology nudge -- all in one place.
 
-Your listing pages already have a solid foundation:
-- Product + Offer schema with price, availability, images, SKU, and seller
-- BreadcrumbList schema
-- AggregateRating when reviews exist
-- UnitPriceSpecification for rental pricing
-- Keyword-rich SEO titles and meta descriptions
+## What Gets Built
 
-## What's Missing (and Why Listings Aren't Showing as Rich Results)
+### 1. New Component: `ShareKitModal`
+A new `src/components/dashboard/ShareKitModal.tsx` component that receives a listing object and renders inside a Radix Dialog (existing `Dialog` component from the UI library).
 
-### 1. Product Name Isn't Search-Optimized
-Currently: `"name": "Tampa Kitchen Hub"`
-Should be: `"name": "Shared Kitchen for Rent in Tampa, FL - Tampa Kitchen Hub"`
+**Sections inside the modal (top to bottom):**
 
-Google uses the Product name to match search queries. If someone searches "shared kitchen for rent Tampa," your schema name needs to contain those words.
+- **Header**: "Promote Your Listing" title + "Get more bookings and visibility by sharing your listing." subtitle
+- **Share Link**: Pretty URL (`vendibook.com/share/listing/{id}`) displayed in a mono-font box with "Copy Link" and "Open Listing" buttons
+- **Auto-Generated Caption**: Dynamic text based on listing mode:
+  - Rent: Emoji + "Now Booking in {City, State}" + title + price/day + booking link
+  - Sale: Emoji + "Food Truck for Sale in {City, State}" + title + price + link
+  - Buttons: "Copy Caption" and "Copy Caption + Link"
+- **Quick Share Buttons**: Facebook, LinkedIn, X (Twitter), and SMS -- each opens the native share intent URL in a new tab. Uses existing SVG icon patterns from `BuiltInShareKit.tsx`
+- **QR Code**: Generated dynamically using the existing `qrcode` package (already installed). Shows QR image inline with a "Download QR" button and helper text
+- **Listing Preview Card**: Mini card showing cover image thumbnail, title, city/state, price, and Instant Book badge if enabled
+- **Psychology Boost**: Bottom banner with "Listings shared within the first 24 hours get significantly more visibility." and a "Copy Everything and Close" CTA that copies caption + link and closes the modal
+- **UTM Toggle** (optional): Appends `?utm_source=host_share&utm_medium=dashboard&utm_campaign=listing_{id}` to the share URL when enabled
 
-### 2. No LocalBusiness Schema for Physical Locations
-Kitchens, vendor spaces, and food truck parks are physical places. Google expects LocalBusiness schema for these, not just Product. The fix: emit BOTH Product and LocalBusiness schemas for `ghost_kitchen` and `vendor_lot`/`vendor_space` categories.
+### 2. Modify: `HostListingCard`
+Add a "Share" button (using the `Share2` icon from lucide-react) in the actions row, positioned after the "Edit" button and before the "Availability"/"Boost" buttons. Clicking it opens `ShareKitModal` with the listing data. The button only shows for published listings.
 
-### 3. H1 Tag Missing City Name
-Currently: `<h1>Tampa Kitchen Hub</h1>`
-Should be: `<h1>Tampa Kitchen Hub - Shared Kitchen for Rent in Tampa, FL</h1>`
+### 3. Data Flow
+The modal receives the full listing object (already available in `HostListingCard` as `Tables<'listings'>`). It extracts:
+- `title`, `mode`, `category`
+- `city`, `state` (new columns from the recent migration)
+- `price_daily`, `price_weekly`, `price_sale`
+- `instant_book`
+- `cover_image_url`
+- `id`
 
-Google weights the H1 heavily for ranking. Adding category + city to the H1 directly targets "shared kitchen for rent Tampa" queries.
+No additional database queries needed.
 
-### 4. Missing Product Meta Tags for Social / Shopping
-Open Graph type is set to `website` instead of `product`. Adding `og:price:amount` and `og:price:currency` enables richer social previews and potential shopping integrations.
-
-### 5. No FAQ Schema
-Adding a small FAQ section to listings (auto-generated from listing attributes) gives Google another rich result opportunity, like:
-- "Is this food truck available for rent?" -> "Yes, starting at $150/day"
-- "Where is this located?" -> "Tampa, FL"
-
-### 6. No `additionalProperty` for Specs
-Google can display specs (dimensions, equipment) in product rich results. Currently the tech specs are visible on-page but invisible to the schema.
+### 4. Analytics Tracking
+Uses the existing `trackEventToDb` function to log:
+- `share_kit_opened` -- when modal opens
+- `share_link_copied` -- copy link click
+- `share_caption_copied` -- copy caption click
+- `share_qr_downloaded` -- QR download
+- `share_social_click` -- with `{ platform }` metadata
+- `share_everything_copied` -- "Copy Everything" CTA
 
 ---
 
-## Technical Changes
+## Technical Details
 
-### File: `src/components/JsonLd.tsx`
+### Files to Create
+- `src/components/dashboard/ShareKitModal.tsx` -- the full modal component
 
-**A. Update `generateProductSchema`:**
-- Change `name` to include category label + mode + city: `"Food Truck for Rent in Tampa, FL - [Title]"`
-- Add `additionalProperty` array from listing specs (length, width, weight) when available
-- Accept new optional params: `length_inches`, `width_inches`, `weight_lbs`
+### Files to Modify
+- `src/components/dashboard/HostListingCard.tsx` -- add Share button + state for modal open/close, import `ShareKitModal`
 
-**B. Add `generateListingLocalBusinessSchema`:**
-- New function for ghost_kitchen / vendor_lot / vendor_space categories
-- Includes `@type: LocalBusiness`, address, geo coordinates (if available), and `makesOffer` linking to the Product
+### Existing Patterns Reused
+- `Dialog` / `DialogContent` / `DialogHeader` from `@/components/ui/dialog` for the modal shell
+- `QRCode.toDataURL()` from the `qrcode` package (same pattern as `ShareKit.tsx`)
+- Social icon SVGs from `BuiltInShareKit.tsx` (TikTok, Instagram, Facebook, X) plus adding LinkedIn and SMS
+- `trackEventToDb` from `@/hooks/useAnalyticsEvents`
+- Pretty share URL format: `https://vendibook.com/share/listing/{id}` (already routed in App.tsx)
+- Button styling: `h-9 rounded-xl` to match existing action buttons
+- Vendibook orange accent (`#FF5124`) for primary CTAs
 
-**C. Add `generateListingFAQSchema`:**
-- Auto-generates 3-5 Q&A pairs from listing data:
-  - "Is this [category] available?" -> based on status
-  - "How much does it cost?" -> based on pricing
-  - "Where is it located?" -> based on address
-  - "Can I book instantly?" -> based on instant_book flag
-  - "Is delivery available?" -> based on fulfillment_type
-
-### File: `src/pages/ListingDetail.tsx`
-
-**A. Enrich H1:**
-- Append ` - ${categoryLabel} ${modeLabel} in ${locationShort}` to the H1 when location is available
-
-**B. Add LocalBusiness + FAQ schemas:**
-- For physical location categories (ghost_kitchen, vendor_lot, vendor_space), generate and include the LocalBusiness schema alongside Product
-- Generate and include FAQ schema for all listings
-
-**C. Update SEO component call:**
-- Change `type` from `"website"` to `"product"` (this maps to `og:type`)
-
-### File: `src/components/SEO.tsx`
-
-**A. Support `product` OG type:**
-- Extend the `type` prop to accept `'product'`
-- When type is `product`, also set `og:price:amount` and `og:price:currency` meta tags
-- Add optional `price` and `priceCurrency` props to SEOProps
+### No New Dependencies
+Everything needed is already installed (`qrcode`, `@radix-ui/react-dialog`, `lucide-react`, `framer-motion`).
 
