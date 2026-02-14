@@ -454,11 +454,23 @@ const Homepage2 = () => {
         </div>
       </header>
 
+      {/* Logo + Tagline */}
+      <div className="flex flex-col items-center pt-6 pb-2">
+        <img
+          src={vendibookLogo}
+          alt="Vendibook"
+          className="h-24 sm:h-32 w-auto mb-1 drop-shadow-md"
+        />
+        <p className="text-sm sm:text-base text-foreground font-semibold tracking-tight">
+          The Marketplace for Food Business
+        </p>
+      </div>
+
       {/* ══ MAIN LAYOUT ══ */}
       <div className="relative z-10 flex">
         {/* ── CONTENT ── */}
         <div className="flex-1 min-w-0">
-          <div ref={resultsRef} className="scroll-mt-32 max-w-6xl mx-auto px-4 pt-6 pb-6">
+          <div ref={resultsRef} className="scroll-mt-32 max-w-6xl mx-auto px-4 pt-4 pb-6">
             {/* Sort bar + map toggle */}
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-medium text-foreground/70">
