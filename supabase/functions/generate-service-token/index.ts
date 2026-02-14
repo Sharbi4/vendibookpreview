@@ -12,7 +12,10 @@ const SERVICE_ACCOUNTS: Record<string, { name: string; permissions: string[] }> 
     name: 'Clawdbot Service Account',
     permissions: ['read:listings', 'read:profiles', 'read:bookings', 'write:analytics'],
   },
-  // Add more service accounts as needed
+  bappie: {
+    name: 'Bappie Bot',
+    permissions: ['read:listings', 'read:profiles', 'read:reviews'],
+  },
 };
 
 serve(async (req) => {
