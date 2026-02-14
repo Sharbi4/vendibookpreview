@@ -1,10 +1,73 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+async function fetchMarketPricing(category: string, city: string | null, state: string | null): Promise<string> {
+  try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    let query = supabase
+      .from("listings")
+      .select("price_daily, price_weekly, price_monthly, price_hourly, price_sale, mode, city, state")
+      .eq("category", category)
+      .eq("status", "active");
+
+    if (state) query = query.eq("state", state);
+
+    const { data, error } = await query.limit(50);
+    if (error || !data || data.length === 0) return "";
+
+    const rentals = data.filter(l => l.mode === "rent");
+    const sales = data.filter(l => l.mode === "sale");
+
+    const avg = (arr: number[]) => arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null;
+
+    const dailyPrices = rentals.map(l => l.price_daily).filter(Boolean) as number[];
+    const weeklyPrices = rentals.map(l => l.price_weekly).filter(Boolean) as number[];
+    const monthlyPrices = rentals.map(l => l.price_monthly).filter(Boolean) as number[];
+    const salePrices = sales.map(l => l.price_sale).filter(Boolean) as number[];
+
+    let summary = `\n\n[MARKET DATA for ${category}${state ? ` in ${state}` : ""}]: `;
+    summary += `${data.length} active listings found. `;
+    if (dailyPrices.length) summary += `Avg daily: $${avg(dailyPrices)} (range $${Math.min(...dailyPrices)}-$${Math.max(...dailyPrices)}). `;
+    if (weeklyPrices.length) summary += `Avg weekly: $${avg(weeklyPrices)} (range $${Math.min(...weeklyPrices)}-$${Math.max(...weeklyPrices)}). `;
+    if (monthlyPrices.length) summary += `Avg monthly: $${avg(monthlyPrices)} (range $${Math.min(...monthlyPrices)}-$${Math.max(...monthlyPrices)}). `;
+    if (salePrices.length) summary += `Avg sale price: $${avg(salePrices)} (range $${Math.min(...salePrices)}-$${Math.max(...salePrices)}). `;
+
+    return summary;
+  } catch (e) {
+    console.error("Market pricing error:", e);
+    return "";
+  }
+}
+
+async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const mapboxToken = Deno.env.get("MAPBOX_PUBLIC_TOKEN");
+    if (!mapboxToken) return null;
+
+    const resp = await fetch(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${mapboxToken}&limit=1&country=us`
+    );
+    const data = await resp.json();
+    if (data.features?.length > 0) {
+      const [lng, lat] = data.features[0].center;
+      return { lat, lng };
+    }
+    return null;
+  } catch (e) {
+    console.error("Geocode error:", e);
+    return null;
+  }
+}
 
 const SYSTEM_PROMPT = `You are VendiBot, an AI listing creation assistant for Vendibook — a marketplace for food trucks, food trailers, commercial kitchens, vendor lots, and vendor spaces.
 
@@ -26,6 +89,8 @@ The JSON format is:
     "address": "string or null",
     "city": "string or null",
     "state": "string or null",
+    "latitude": number or null,
+    "longitude": number or null,
     "price_daily": number or null,
     "price_weekly": number or null,
     "price_monthly": number or null,
@@ -64,8 +129,8 @@ Set "ready": true ONLY when you have gathered ALL required information and are p
 5. **Description** — Ask them to tell you about their asset — what makes it special, what's included, condition, etc. Tell them you'll polish it up for them.
 
 6. **Pricing** — Based on mode:
-   - If RENT: Ask for daily rate. Optionally ask about weekly/monthly/hourly rates.
-   - If SALE: Ask for the sale price.
+   - If RENT: Suggest competitive pricing based on the [MARKET DATA] provided in the system context (if available). Present the market average and range, then ask the user to confirm or adjust. Ask for daily rate first, then optionally weekly/monthly/hourly rates.
+   - If SALE: Suggest a price range based on [MARKET DATA] if available, then ask the user to confirm.
 
 7. **Deposit & Booking** — For rentals: "Do you want to require a security deposit? If so, how much?" Then ask: "Should renters be able to instantly book, or do you prefer to approve each request?"
 
@@ -88,6 +153,20 @@ After showing the final preview, ask: "Does this look good? I can adjust anythin
 
 If they say it looks good, output another JSON block with "confirmed": true.
 
+## Photo Analysis
+
+When the user uploads photos and the message contains [PHOTO_ANALYSIS], use that analysis to:
+- Auto-detect equipment, condition, features and include them in the description and amenities
+- Pre-fill dimensions if visible (e.g., truck length from exterior shots)
+- Suggest relevant highlights based on what's visible
+- Mention specific details you noticed from the photos to the user (e.g., "I can see you have a nice serving window and what looks like a generator setup!")
+
+## Smart Pricing
+
+When [MARKET DATA] is included in messages, use it to suggest competitive pricing. Present the data conversationally:
+- "Based on similar listings in your area, the average daily rate is $X. I'd suggest starting around $Y — does that work for you?"
+- Provide context on why you're suggesting that price
+
 ## Rules
 - Be warm, professional, and brief. Use emoji sparingly (1 per message max).
 - If they give multiple pieces of info at once, acknowledge all of them and move to the next missing piece.
@@ -103,9 +182,121 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, imageUrls } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    // Build enriched messages with context
+    const enrichedMessages = [...messages];
+
+    // Extract category, city, state from conversation for market data
+    const fullConvo = messages.map((m: any) => m.content).join(" ").toLowerCase();
+    let detectedCategory: string | null = null;
+    let detectedCity: string | null = null;
+    let detectedState: string | null = null;
+
+    // Detect category
+    if (fullConvo.includes("food truck")) detectedCategory = "food_truck";
+    else if (fullConvo.includes("food trailer") || fullConvo.includes("trailer")) detectedCategory = "food_trailer";
+    else if (fullConvo.includes("commercial kitchen") || fullConvo.includes("ghost kitchen") || fullConvo.includes("kitchen")) detectedCategory = "ghost_kitchen";
+    else if (fullConvo.includes("vendor lot") || fullConvo.includes("lot")) detectedCategory = "vendor_lot";
+    else if (fullConvo.includes("vendor space") || fullConvo.includes("space")) detectedCategory = "vendor_space";
+
+    // Detect state abbreviation
+    const stateMatch = fullConvo.match(/\b([A-Z]{2})\b/i) || fullConvo.match(/,\s*(\w{2})\b/);
+    if (stateMatch) {
+      const stateAbbrs = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
+      const st = stateMatch[1].toUpperCase();
+      if (stateAbbrs.includes(st)) detectedState = st;
+    }
+
+    // Inject market data if we have category
+    if (detectedCategory) {
+      const marketData = await fetchMarketPricing(detectedCategory, detectedCity, detectedState);
+      if (marketData) {
+        // Append market data to the last user message
+        const lastIdx = enrichedMessages.length - 1;
+        if (enrichedMessages[lastIdx]?.role === "user") {
+          enrichedMessages[lastIdx] = {
+            ...enrichedMessages[lastIdx],
+            content: enrichedMessages[lastIdx].content + marketData,
+          };
+        }
+      }
+    }
+
+    // Handle photo analysis - if image URLs are provided, ask vision model to analyze
+    if (imageUrls && imageUrls.length > 0) {
+      try {
+        const analysisResp = await fetch(
+          "https://ai.gateway.lovable.dev/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash",
+              messages: [
+                {
+                  role: "user",
+                  content: [
+                    {
+                      type: "text",
+                      text: "Analyze these photos of a food service asset (food truck, trailer, kitchen, or vendor space). Identify: 1) Type of asset, 2) Visible equipment and amenities (fryer, grill, serving window, generator, etc.), 3) Estimated dimensions if visible, 4) Condition (new, good, fair), 5) Notable features or selling points. Be specific and concise.",
+                    },
+                    ...imageUrls.map((url: string) => ({
+                      type: "image_url",
+                      image_url: { url },
+                    })),
+                  ],
+                },
+              ],
+            }),
+          }
+        );
+
+        if (analysisResp.ok) {
+          const analysisData = await analysisResp.json();
+          const analysis = analysisData.choices?.[0]?.message?.content;
+          if (analysis) {
+            // Inject photo analysis into the last user message
+            const lastIdx = enrichedMessages.length - 1;
+            if (enrichedMessages[lastIdx]?.role === "user") {
+              enrichedMessages[lastIdx] = {
+                ...enrichedMessages[lastIdx],
+                content: enrichedMessages[lastIdx].content + `\n\n[PHOTO_ANALYSIS]: ${analysis}`,
+              };
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Photo analysis error:", e);
+      }
+    }
+
+    // Geocode: check if location info exists, geocode on the fly
+    // We'll look for address/city in the last user message for geocoding
+    const lastUserMsg = enrichedMessages.filter((m: any) => m.role === "user").pop();
+    if (lastUserMsg) {
+      const addressMatch = lastUserMsg.content.match(/(\d+\s+[\w\s]+(?:St|Street|Ave|Avenue|Blvd|Boulevard|Rd|Road|Dr|Drive|Ln|Lane|Way|Ct|Court|Pl|Place|Cir|Circle)[^,]*,\s*\w[\w\s]*,?\s*[A-Z]{2})/i);
+      const cityStateMatch = lastUserMsg.content.match(/([A-Z][a-z]+(?:\s[A-Z][a-z]+)*),?\s*([A-Z]{2})\b/);
+      const locationToGeocode = addressMatch?.[1] || (cityStateMatch ? `${cityStateMatch[1]}, ${cityStateMatch[2]}` : null);
+
+      if (locationToGeocode) {
+        const coords = await geocodeAddress(locationToGeocode);
+        if (coords) {
+          const lastIdx = enrichedMessages.length - 1;
+          if (enrichedMessages[lastIdx]?.role === "user") {
+            enrichedMessages[lastIdx] = {
+              ...enrichedMessages[lastIdx],
+              content: enrichedMessages[lastIdx].content + `\n\n[GEOCODED_LOCATION]: latitude=${coords.lat}, longitude=${coords.lng}. Include these in the listing-preview JSON as "latitude" and "longitude" fields.`,
+            };
+          }
+        }
+      }
+    }
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -119,7 +310,7 @@ serve(async (req) => {
           model: "google/gemini-2.5-flash",
           messages: [
             { role: "system", content: SYSTEM_PROMPT },
-            ...messages,
+            ...enrichedMessages,
           ],
           stream: true,
         }),

@@ -10,6 +10,8 @@ export interface ListingPreview {
   address?: string | null;
   city?: string | null;
   state?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   price_daily?: number | null;
   price_weekly?: number | null;
   price_monthly?: number | null;

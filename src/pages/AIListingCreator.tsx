@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import LivePreviewPanel, { ListingPreview } from '@/components/ai-listing/LivePreviewPanel';
+import VoiceInputButton from '@/components/ai-listing/VoiceInputButton';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
@@ -68,7 +69,7 @@ const AIListingCreator: React.FC = () => {
     }
   }, []);
 
-  const streamChat = useCallback(async (msgs: Msg[], isInitial = false) => {
+  const streamChat = useCallback(async (msgs: Msg[], isInitial = false, imgUrls?: string[]) => {
     setIsLoading(true);
     let assistantSoFar = '';
 
@@ -85,13 +86,18 @@ const AIListingCreator: React.FC = () => {
     };
 
     try {
+      const body: any = { messages: msgs };
+      if (imgUrls && imgUrls.length > 0) {
+        body.imageUrls = imgUrls;
+      }
+
       const resp = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: msgs }),
+        body: JSON.stringify(body),
       });
 
       if (!resp.ok || !resp.body) {
@@ -177,7 +183,7 @@ const AIListingCreator: React.FC = () => {
       const photoMsg: Msg = { role: 'user', content: `I just uploaded ${newUrls.length} photo${newUrls.length > 1 ? 's' : ''}.` };
       const newMsgs = [...messages, photoMsg];
       setMessages(prev => [...prev, photoMsg]);
-      await streamChat(newMsgs);
+      await streamChat(newMsgs, false, newUrls);
     }
     setUploadingImage(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -203,6 +209,8 @@ const AIListingCreator: React.FC = () => {
         status: 'draft',
         fulfillment_type: fulfillmentMap[listingData.fulfillment_type || 'pickup'] || 'pickup',
         address: listingData.address || null,
+        latitude: listingData.latitude || null,
+        longitude: listingData.longitude || null,
         amenities: listingData.amenities || [],
         highlights: listingData.highlights || [],
         price_daily: listingData.price_daily || null,
@@ -362,6 +370,10 @@ const AIListingCreator: React.FC = () => {
           <div className="sticky bottom-0 border-t border-border bg-card/80 backdrop-blur-xl">
             <div className="max-w-2xl mx-auto px-4 py-3">
               <div className="flex items-end gap-2">
+                <VoiceInputButton
+                  onTranscript={(text) => setInput(prev => prev ? prev + ' ' + text : text)}
+                  disabled={isLoading}
+                />
                 <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
                 <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={uploadingImage} className="shrink-0 mb-0.5">
                   {uploadingImage ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
