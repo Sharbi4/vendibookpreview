@@ -1,15 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import QRCode from 'qrcode';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Copy, Check, ExternalLink, Download, Link2, MessageSquare,
-  Zap, Sparkles, ToggleLeft, ToggleRight,
+  Zap, Sparkles, X,
 } from 'lucide-react';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 import { CATEGORY_LABELS } from '@/types/listing';
@@ -41,6 +36,11 @@ interface ShareKitModalProps {
 }
 
 const SITE_URL = 'https://vendibook.com';
+
+const glassButtonBase =
+  'h-9 rounded-lg font-medium text-sm transition-all text-white';
+const glassButtonOutline =
+  `${glassButtonBase} px-3 inline-flex items-center gap-1.5`;
 
 const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
   const { toast } = useToast();
@@ -76,7 +76,7 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
   /* ── QR Code ── */
   useEffect(() => {
     if (!open) return;
-    QRCode.toDataURL(shareUrl, { width: 256, margin: 2, color: { dark: '#000000', light: '#FFFFFF' } })
+    QRCode.toDataURL(shareUrl, { width: 256, margin: 2, color: { dark: '#FFFFFF', light: '#00000000' } })
       .then(setQrDataUrl)
       .catch(console.error);
     trackEventToDb('share_kit_opened', 'share_kit', { listing_id: listing.id }, listing.id);
@@ -96,7 +96,7 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
   };
 
   const handleCopyCaption = async (withLink = false) => {
-    const text = withLink ? `${caption}` : caption.split('\n').filter(l => !l.startsWith('http')).join('\n');
+    const text = withLink ? caption : caption.split('\n').filter(l => !l.startsWith('http')).join('\n');
     await copyToClipboard(withLink ? caption : text);
     setCopiedCaption(true);
     setTimeout(() => setCopiedCaption(false), 2000);
@@ -137,169 +137,260 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
   };
 
   const socialButtons = [
-    { id: 'facebook', label: 'Facebook', icon: FacebookIcon, hover: 'hover:text-[#1877F2]' },
-    { id: 'linkedin', label: 'LinkedIn', icon: LinkedInIcon, hover: 'hover:text-[#0A66C2]' },
-    { id: 'x', label: 'X', icon: XIcon, hover: 'hover:text-foreground' },
-    { id: 'sms', label: 'Text', icon: null, hover: 'hover:text-emerald-600' },
+    { id: 'facebook', label: 'Facebook', icon: FacebookIcon },
+    { id: 'linkedin', label: 'LinkedIn', icon: LinkedInIcon },
+    { id: 'x', label: 'X', icon: XIcon },
+    { id: 'sms', label: 'Text', icon: null },
   ];
 
+  const dismiss = () => onOpenChange(false);
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl p-0">
-        <div className="p-6 space-y-6">
-          {/* Header */}
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Promote Your Listing</DialogTitle>
-            <DialogDescription>Get more bookings and visibility by sharing your listing.</DialogDescription>
-          </DialogHeader>
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-md px-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={dismiss}
+        >
+          <motion.div
+            className="relative w-full max-w-md overflow-hidden rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto"
+            initial={{ opacity: 0, scale: 0.92, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 20 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'linear-gradient(145deg, rgba(20,20,25,0.88) 0%, rgba(15,15,18,0.92) 100%)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              boxShadow: '0 25px 60px -12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)',
+            }}
+          >
+            {/* Gradient accent line at top */}
+            <div
+              className="absolute top-0 left-0 h-[2px] w-full z-10"
+              style={{ background: 'linear-gradient(90deg, #FF5124, #E64A19, #FFB800)' }}
+            />
 
-          {/* Section 1 — Share Link */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">Share Link</p>
-            <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-xl px-3 py-2">
-              <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span className="text-sm font-mono text-foreground truncate flex-1">
-                vendibook.com/share/listing/{listing.id.slice(0, 8)}…
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" className="h-9 rounded-xl bg-[#FF5124] hover:bg-[#FF5124]/90 text-white" onClick={handleCopyLink}>
-                {copiedLink ? <Check className="h-4 w-4 mr-1.5" /> : <Copy className="h-4 w-4 mr-1.5" />}
-                {copiedLink ? 'Copied!' : 'Copy Link'}
-              </Button>
-              <Button size="sm" variant="outline" className="h-9 rounded-xl" asChild>
-                <a href={`/listing/${listing.id}`} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4 mr-1.5" />
-                  Open Listing
-                </a>
-              </Button>
-            </div>
-          </div>
+            {/* Close button */}
+            <button
+              onClick={dismiss}
+              className="absolute top-3 right-3 p-1.5 rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-colors z-10"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4 text-white/70" />
+            </button>
 
-          {/* Section 2 — Auto-Generated Caption */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">Ready-to-Post Caption</p>
-            <div className="bg-muted/50 border border-border rounded-xl p-3 text-sm whitespace-pre-line text-foreground leading-relaxed max-h-40 overflow-y-auto">
-              {caption}
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="h-9 rounded-xl" onClick={() => handleCopyCaption(false)}>
-                {copiedCaption ? <Check className="h-4 w-4 mr-1.5" /> : <Copy className="h-4 w-4 mr-1.5" />}
-                Copy Caption
-              </Button>
-              <Button size="sm" variant="outline" className="h-9 rounded-xl" onClick={() => handleCopyCaption(true)}>
-                <Copy className="h-4 w-4 mr-1.5" />
-                Caption + Link
-              </Button>
-            </div>
-          </div>
-
-          {/* Section 3 — Quick Share */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">Quick Share</p>
-            <div className="flex gap-2">
-              {socialButtons.map((btn) => (
-                <button
-                  key={btn.id}
-                  onClick={() => handleSocialClick(btn.id)}
-                  className={`inline-flex items-center justify-center w-11 h-11 rounded-xl border border-border bg-background text-muted-foreground transition-all ${btn.hover} hover:border-[#FF5124]/30`}
-                  aria-label={`Share to ${btn.label}`}
-                >
-                  {btn.icon ? (
-                    <btn.icon className="h-5 w-5" />
-                  ) : (
-                    <MessageSquare className="h-5 w-5" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Section 4 — QR Code */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">QR Code</p>
-            <div className="flex items-start gap-4">
-              {qrDataUrl && (
-                <div className="bg-white p-2 rounded-xl border shadow-sm shrink-0">
-                  <img src={qrDataUrl} alt="QR Code" className="w-24 h-24" />
-                </div>
-              )}
-              <div className="space-y-2">
-                <Button size="sm" variant="outline" className="h-9 rounded-xl" onClick={handleDownloadQr}>
-                  <Download className="h-4 w-4 mr-1.5" />
-                  Download QR
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  Print this and display at events or on your truck.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 5 — Listing Preview */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">Preview</p>
-            <div className="flex items-center gap-3 bg-muted/30 border border-border rounded-xl p-3">
+            {/* Listing preview hero */}
+            <div className="relative h-28 w-full overflow-hidden">
               <img
                 src={listing.cover_image_url || '/placeholder.svg'}
                 alt={listing.title}
-                className="w-16 h-16 rounded-lg object-cover shrink-0"
+                className="w-full h-full object-cover"
               />
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold text-sm text-foreground truncate">{listing.title}</p>
-                {cityState && <p className="text-xs text-muted-foreground">{cityState}</p>}
-                <div className="flex items-center gap-2 mt-1">
-                  {priceText && <span className="text-sm font-semibold text-primary">{priceText}</span>}
+              <div
+                className="absolute inset-0"
+                style={{ background: 'linear-gradient(to bottom, transparent 20%, rgba(15,15,18,0.95) 100%)' }}
+              />
+              <div className="absolute bottom-3 left-4 right-4">
+                <h3 className="font-semibold text-white text-sm truncate">{listing.title}</h3>
+                <div className="flex items-center gap-2 mt-0.5">
+                  {cityState && <span className="text-xs text-white/50">{cityState}</span>}
+                  {priceText && <span className="text-xs font-medium text-[#FFB800]">{priceText}</span>}
                   {listing.instant_book && (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                      <Zap className="w-3 h-3 mr-0.5" />
-                      Instant Book
-                    </Badge>
+                    <span className="text-[10px] text-[#FF5124] flex items-center gap-0.5">
+                      <Zap className="w-3 h-3" /> Instant
+                    </span>
                   )}
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* UTM Toggle */}
-          <div className="flex items-center justify-between py-2 border-t border-border">
-            <span className="text-sm text-muted-foreground">Add UTM tracking to link</span>
-            <button
-              onClick={() => setUtmEnabled(!utmEnabled)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Toggle UTM tracking"
-            >
-              {utmEnabled ? (
-                <ToggleRight className="h-6 w-6 text-[#FF5124]" />
-              ) : (
-                <ToggleLeft className="h-6 w-6" />
-              )}
-            </button>
-          </div>
+            <div className="p-5 space-y-5">
+              {/* Header */}
+              <div className="text-center space-y-1">
+                <h3 className="text-lg font-semibold text-white">Promote Your Listing</h3>
+                <p className="text-sm text-white/50">Get more bookings and visibility by sharing.</p>
+              </div>
 
-          {/* Section 6 — Psychology Boost */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-gradient-to-r from-[#FF5124]/10 to-transparent border border-[#FF5124]/20 rounded-xl p-4 space-y-3"
-          >
-            <div className="flex items-start gap-2">
-              <Sparkles className="h-5 w-5 text-[#FF5124] shrink-0 mt-0.5" />
-              <p className="text-sm text-foreground">
-                <span className="font-medium">Listings shared within the first 24 hours</span> get significantly more visibility.
-              </p>
+              {/* Section 1 — Share Link */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Share Link</p>
+                <div
+                  className="flex items-center gap-2 rounded-lg px-3 py-2.5"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                >
+                  <Link2 className="h-4 w-4 text-white/30 shrink-0" />
+                  <span className="text-sm font-mono text-white/70 truncate flex-1">
+                    vendibook.com/share/listing/{listing.id.slice(0, 8)}…
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCopyLink}
+                    className={glassButtonOutline}
+                    style={{
+                      background: 'linear-gradient(135deg, #FF5124, #E64A19, #FFB800)',
+                      boxShadow: '0 4px 20px -4px rgba(255,81,36,0.4)',
+                    }}
+                  >
+                    {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    {copiedLink ? 'Copied!' : 'Copy Link'}
+                  </button>
+                  <a
+                    href={`/listing/${listing.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={glassButtonOutline}
+                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Open
+                  </a>
+                </div>
+              </div>
+
+              {/* Section 2 — Auto-Generated Caption */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Ready-to-Post Caption</p>
+                <div
+                  className="rounded-lg p-3 text-sm whitespace-pre-line text-white/70 leading-relaxed max-h-32 overflow-y-auto"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                >
+                  {caption}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleCopyCaption(false)}
+                    className={glassButtonOutline}
+                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  >
+                    {copiedCaption ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    Caption
+                  </button>
+                  <button
+                    onClick={() => handleCopyCaption(true)}
+                    className={glassButtonOutline}
+                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  >
+                    <Copy className="h-4 w-4" />
+                    Caption + Link
+                  </button>
+                </div>
+              </div>
+
+              {/* Section 3 — Quick Share */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Quick Share</p>
+                <div className="flex gap-2">
+                  {socialButtons.map((btn) => (
+                    <button
+                      key={btn.id}
+                      onClick={() => handleSocialClick(btn.id)}
+                      className="w-11 h-11 rounded-lg flex items-center justify-center text-white/50 transition-all hover:text-white hover:scale-105"
+                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                        e.currentTarget.style.borderColor = 'rgba(255,81,36,0.3)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                      }}
+                      aria-label={`Share to ${btn.label}`}
+                    >
+                      {btn.icon ? (
+                        <btn.icon className="h-5 w-5" />
+                      ) : (
+                        <MessageSquare className="h-5 w-5" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section 4 — QR Code */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-white/60 uppercase tracking-wider">QR Code</p>
+                <div className="flex items-start gap-4">
+                  {qrDataUrl && (
+                    <div
+                      className="shrink-0 p-2 rounded-lg"
+                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                    >
+                      <img src={qrDataUrl} alt="QR Code" className="w-20 h-20" />
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <button
+                      onClick={handleDownloadQr}
+                      className={glassButtonOutline}
+                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                    >
+                      <Download className="h-4 w-4" />
+                      Download QR
+                    </button>
+                    <p className="text-xs text-white/30">
+                      Print this and display at events or on your truck.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* UTM Toggle */}
+              <div
+                className="flex items-center justify-between py-2.5 px-3 rounded-lg"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+              >
+                <span className="text-xs text-white/40">Add UTM tracking</span>
+                <button
+                  onClick={() => setUtmEnabled(!utmEnabled)}
+                  className={`w-9 h-5 rounded-full transition-all relative ${utmEnabled ? 'bg-[#FF5124]' : 'bg-white/10'}`}
+                  aria-label="Toggle UTM tracking"
+                >
+                  <span
+                    className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${utmEnabled ? 'left-[18px]' : 'left-0.5'}`}
+                  />
+                </button>
+              </div>
+
+              {/* Section 6 — Psychology Boost */}
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="rounded-xl p-4 space-y-3"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,81,36,0.12), rgba(255,184,0,0.06))',
+                  border: '1px solid rgba(255,81,36,0.2)',
+                }}
+              >
+                <div className="flex items-start gap-2">
+                  <Sparkles className="h-4 w-4 text-[#FFB800] shrink-0 mt-0.5" />
+                  <p className="text-xs text-white/70">
+                    <span className="font-medium text-white/90">Listings shared within the first 24 hours</span> get significantly more visibility.
+                  </p>
+                </div>
+                <button
+                  onClick={handleCopyEverything}
+                  className="w-full h-10 rounded-lg font-medium text-sm transition-all text-white"
+                  style={{
+                    background: 'linear-gradient(135deg, #FF5124, #E64A19, #FFB800)',
+                    boxShadow: '0 4px 20px -4px rgba(255,81,36,0.4)',
+                  }}
+                >
+                  Copy Everything & Close
+                </button>
+              </motion.div>
             </div>
-            <Button
-              className="w-full h-10 rounded-xl bg-[#FF5124] hover:bg-[#FF5124]/90 text-white font-semibold"
-              onClick={handleCopyEverything}
-            >
-              Copy Everything & Close
-            </Button>
           </motion.div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
