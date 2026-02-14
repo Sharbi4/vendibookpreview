@@ -64,10 +64,14 @@ const ListingDetail = () => {
   // Check if user is the owner of this listing
   const isOwner = user?.id && listing?.host_id && user.id === listing.host_id;
 
+  // Share URL routes through edge function for rich social previews
+  // Social bots (Facebook, Twitter, LinkedIn) get full OG tags + JSON-LD
+  // Human browsers are auto-redirected to the SPA via window.location.replace
+  const shareUrl = `https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/seo-prerender?path=/listing/${id}`;
+  const directUrl = `https://vendibook.com/listing/${id}`;
+
   // Handle share listing
   const handleShare = async () => {
-    const listingUrl = `https://vendibook.com/listing/${id}`;
-    
     trackEventToDb('share_listing', 'listing_detail', { listing_id: id });
     
     // Try native share on mobile
@@ -75,7 +79,7 @@ const ListingDetail = () => {
       try {
         await navigator.share({
           title: listing?.title || 'Check out this listing on Vendibook',
-          url: listingUrl,
+          url: shareUrl,
         });
         return;
       } catch {
@@ -85,7 +89,7 @@ const ListingDetail = () => {
     
     // Fallback to clipboard copy
     try {
-      await navigator.clipboard.writeText(listingUrl);
+      await navigator.clipboard.writeText(shareUrl);
       toast({ title: 'Link copied!' });
     } catch {
       toast({ title: 'Failed to copy link', variant: 'destructive' });
