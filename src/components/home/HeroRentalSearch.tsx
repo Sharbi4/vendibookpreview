@@ -79,10 +79,28 @@ const HeroRentalSearch = () => {
             transition={{ duration: 0.8, ease: 'easeOut' }}
             className="text-center mb-6 sm:mb-10 md:mb-14"
           >
-            <img
+            <motion.img
               src={vendibookLogo}
               alt="Vendibook"
-              className="h-40 sm:h-56 md:h-72 w-auto mx-auto mb-4 sm:mb-6 transition-transform duration-300 hover:scale-105"
+              className="h-40 sm:h-56 md:h-72 w-auto mx-auto mb-4 sm:mb-6"
+              animate={{
+                scaleX: [1, 1.03, 0.98, 1.01, 1],
+                scaleY: [1, 0.97, 1.02, 0.99, 1],
+                rotate: [0, -0.5, 0.7, -0.3, 0],
+                skewX: [0, 0.8, -0.6, 0.3, 0],
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+              whileHover={{
+                scaleX: [1, 1.08, 0.94, 1.04, 1],
+                scaleY: [1, 0.92, 1.06, 0.97, 1],
+                rotate: [0, -1.5, 2, -0.8, 0],
+                skewX: [0, 2, -1.5, 0.8, 0],
+                transition: { duration: 1.2, repeat: Infinity, ease: 'easeInOut' },
+              }}
             />
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight tracking-tight mb-3 sm:mb-4">
               The Marketplace for <span className="gradient-text-warm">Food Business</span>
