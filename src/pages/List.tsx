@@ -68,6 +68,202 @@ const ListHero = ({ onStart }: { onStart: () => void }) => (
   </section>
 );
 
+const ListingBuildAnimation = () => {
+  const containerVariants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.3, delayChildren: 0.2 } },
+  };
+  const item = (delay = 0) => ({
+    hidden: { opacity: 0, y: 20, scale: 0.95 },
+    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, delay, ease: 'easeOut' as const } },
+  });
+
+  return (
+    <section className="py-10 sm:py-16 md:py-20 overflow-hidden">
+      <div className="max-w-5xl mx-auto px-4">
+        <div className="text-center mb-10">
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3"
+          >
+            Your listing, ready in seconds
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.15 }}
+            className="text-muted-foreground text-base sm:text-lg"
+          >
+            Watch a listing come to life.
+          </motion.p>
+        </div>
+
+        <div className="flex justify-center">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+            className="w-full max-w-md"
+          >
+            {/* Card Shell */}
+            <motion.div
+              variants={item()}
+              className="rounded-3xl bg-white/70 backdrop-blur-2xl border border-white/60 shadow-2xl shadow-black/10 overflow-hidden"
+            >
+              {/* Image placeholder with shimmer */}
+              <motion.div
+                variants={item(0)}
+                className="relative h-48 sm:h-56 bg-gradient-to-br from-primary/20 via-accent/10 to-primary/5 overflow-hidden"
+              >
+                <motion.div
+                  animate={{ x: ['-100%', '200%'] }}
+                  transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut', repeatDelay: 1 }}
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12"
+                />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 1.2, type: 'spring', stiffness: 200 }}
+                  className="absolute top-4 right-4 bg-white/90 backdrop-blur rounded-full px-3 py-1 text-xs font-semibold text-foreground shadow-lg flex items-center gap-1"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                  Verified
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.8 }}
+                  className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white/70 to-transparent"
+                />
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 1 }}
+                  className="absolute bottom-3 left-4 flex items-center gap-2"
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm">🏠</div>
+                  <span className="text-xs font-medium text-foreground/80">Tampa, FL</span>
+                </motion.div>
+              </motion.div>
+
+              {/* Content */}
+              <div className="p-5 sm:p-6 space-y-4">
+                {/* Title typing animation */}
+                <motion.div variants={item(0.4)}>
+                  <motion.h3
+                    className="text-lg sm:text-xl font-bold text-foreground"
+                    initial={{ width: 0 }}
+                    whileInView={{ width: '100%' }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.8, duration: 0.8, ease: 'easeOut' }}
+                    style={{ overflow: 'hidden', whiteSpace: 'nowrap' }}
+                  >
+                    The Cookhouse — Shared Kitchen
+                  </motion.h3>
+                </motion.div>
+
+                {/* Badges row */}
+                <motion.div variants={item(0.6)} className="flex flex-wrap gap-2">
+                  {['Shared Kitchen', 'Tampa, FL', 'Instant Book'].map((tag, i) => (
+                    <motion.span
+                      key={tag}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 1.2 + i * 0.15, type: 'spring', stiffness: 300 }}
+                      className="px-2.5 py-1 rounded-full bg-secondary text-xs font-medium text-secondary-foreground"
+                    >
+                      {tag}
+                    </motion.span>
+                  ))}
+                </motion.div>
+
+                {/* Rating + Reviews */}
+                <motion.div variants={item(0.8)} className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1 text-primary">
+                    {[...Array(5)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, rotateY: 90 }}
+                        whileInView={{ opacity: 1, rotateY: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 1.6 + i * 0.1 }}
+                      >
+                        <Star className="h-4 w-4 fill-current" />
+                      </motion.div>
+                    ))}
+                  </div>
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 2.2 }}
+                  >
+                    4.9 (128 reviews)
+                  </motion.span>
+                </motion.div>
+
+                {/* Price row */}
+                <motion.div
+                  variants={item(1)}
+                  className="flex items-end justify-between pt-2 border-t border-border/50"
+                >
+                  <div>
+                    <motion.p
+                      initial={{ opacity: 0, x: -10 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 2.4 }}
+                      className="text-2xl font-bold text-foreground"
+                    >
+                      $250
+                      <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                    </motion.p>
+                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 2.6, type: 'spring', stiffness: 200 }}
+                  >
+                    <div className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-white text-sm font-semibold shadow-lg shadow-primary/20">
+                      Book Now
+                    </div>
+                  </motion.div>
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Floating notification */}
+            <motion.div
+              initial={{ opacity: 0, x: 60, y: -20 }}
+              whileInView={{ opacity: 1, x: 40, y: -40 }}
+              viewport={{ once: true }}
+              transition={{ delay: 3, type: 'spring', stiffness: 120 }}
+              className="hidden sm:flex ml-auto w-fit items-center gap-2.5 bg-white/80 backdrop-blur-xl border border-white/60 shadow-xl rounded-xl p-3 -mt-6 relative z-10"
+            >
+              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                <Share2 className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-foreground">Share Kit ready</p>
+                <p className="text-[10px] text-muted-foreground">QR code + social captions</p>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const HowItWorks = () => {
   const steps = [
     { icon: Bot, label: 'Create with AI', desc: 'Answer a few questions and VendiBot writes your title, description, and optimizes your photos — under 1 minute.' },
@@ -403,6 +599,7 @@ const ListPage: React.FC = () => {
 
       <main className="relative z-10">
         <ListHero onStart={handleStart} />
+        <ListingBuildAnimation />
         <HowItWorks />
         <RentOrSell />
         <ToolsGrid />
