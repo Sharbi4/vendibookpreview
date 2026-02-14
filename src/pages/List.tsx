@@ -62,7 +62,7 @@ const ListHero = ({ onStart }: { onStart: () => void }) => (
             Create with VendiBot
           </Button>
         </div>
-        <p className="mt-4 text-sm text-muted-foreground max-w-md mx-auto">Use our traditional wizard or let VendiBot AI build your listing in under a minute</p>
+        <p className="mt-4 text-sm text-muted-foreground max-w-md mx-auto">Always free to list • Use our wizard or let VendiBot AI do it in under a minute</p>
       </motion.div>
     </div>
   </section>
@@ -615,7 +615,7 @@ const ListPage: React.FC = () => {
               viewport={{ once: true }}
             >
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Ready to start listing?</h2>
-              <p className="text-lg opacity-90 mb-8">Create your first listing in under 5 minutes. Rent or sell — your call.</p>
+              <p className="text-lg opacity-90 mb-8">Always free to list. Rent or sell — your call. Go live in under 5 minutes.</p>
               <Button size="lg" onClick={handleStart} className="text-base sm:text-lg px-8 py-6 h-auto bg-white text-foreground hover:bg-white/90 rounded-xl shadow-xl w-full sm:w-auto">
                 Get Started Now
                 <ArrowRight className="h-5 w-5 ml-2" />
