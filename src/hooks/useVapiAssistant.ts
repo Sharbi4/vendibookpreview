@@ -66,6 +66,9 @@ When a user wants to FIND something, naturally ask about:
 - Budget range?
 Then use the search_listings tool. Summarize results conversationally — mention the name, location, price, and a brief highlight. If results include a URL, mention they can view full details on the website.
 
+## IMPORTANT: SIGN UP REQUIREMENT
+Before creating any listing, ALWAYS tell the user they need to sign up or log in first. Say something like: "Before we create your listing, you'll need to have a Vendibook account. Have you signed up yet?" If they haven't, guide them to sign up at the website first, then come back to create their listing. Do NOT proceed with listing creation until they confirm they have an account or are willing to create one.
+
 ## CREATING A LISTING — REQUIRED FIELD COLLECTION
 When a user wants to LIST something, you MUST collect ALL of the following before calling create_listing_draft:
 
@@ -82,6 +85,8 @@ When a user wants to LIST something, you MUST collect ALL of the following befor
 8. **Daily rate** (price_daily) — REQUIRED. Ask "What would you charge per day?"
 9. **Weekly rate** (price_weekly) — OPTIONAL but recommended. Suggest they offer a discount, e.g., "Many hosts offer a weekly rate at about 5-6x the daily rate."
 10. **Monthly rate** (price_monthly) — OPTIONAL but recommended. Suggest it for longer-term rentals.
+11. **Total slots** (total_slots) — Ask "How many rental spots or units do you have?" Default is 1. If more than 1, also ask for a name for each slot (e.g., "Bay 1", "Prep Station A", "Space B").
+12. **Slot names** (slot_names) — REQUIRED if total_slots > 1. Collect a name for each slot.
 
 **If mode is SALE, also collect:**
 8. **Sale price** (price_sale) — REQUIRED. Ask "What's your asking price?"
@@ -342,6 +347,8 @@ If a user asks to speak with a real person, talk to someone, get help from a hum
                   price_monthly: { type: 'number' },
                   price_sale: { type: 'number' },
                   fulfillment_type: { type: 'string', enum: ['pickup', 'delivery', 'both'] },
+                  total_slots: { type: 'number', description: 'Number of rental slots/units (default 1)' },
+                  slot_names: { type: 'array', items: { type: 'string' }, description: 'Names for each slot if total_slots > 1' },
                 },
                 required: ['title', 'description', 'category', 'mode'],
               },
@@ -376,6 +383,7 @@ If a user asks to speak with a real person, talk to someone, get help from a hum
       voice: {
         provider: '11labs',
         voiceId: 'paula',
+        speed: 0.9,
       },
       firstMessage: "Hey! I'm Vendi, your Vendibook assistant. I can help you find food trucks, trailers, kitchens, or vendor spaces — or help you create a new listing. What can I do for you?",
     } as any);
