@@ -1,17 +1,23 @@
 import { motion } from 'framer-motion';
+import { ShieldCheck, CreditCard, Zap, BadgeDollarSign } from 'lucide-react';
 
-const SIGNALS = ['Verified listings', 'Secure payments', 'Instant booking', 'Buy now, pay later'];
+const SIGNALS = [
+  { icon: ShieldCheck, text: 'Verified' },
+  { icon: CreditCard, text: 'Secure pay' },
+  { icon: Zap, text: 'Instant book' },
+  { icon: BadgeDollarSign, text: 'Pay later' },
+];
 
 const HeroTrustSignals = () => (
   <motion.div
-    className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground"
+    className="flex items-center justify-center gap-4 sm:gap-6"
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     transition={{ duration: 0.5, delay: 0.7 }}
   >
-    {SIGNALS.map((text) => (
-      <span key={text} className="flex items-center gap-1.5">
-        <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+    {SIGNALS.map(({ icon: Icon, text }) => (
+      <span key={text} className="flex items-center gap-1.5 text-[11px] text-muted-foreground/50">
+        <Icon className="w-3 h-3 text-primary/40" />
         {text}
       </span>
     ))}

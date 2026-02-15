@@ -9,10 +9,6 @@ import HeroTrustSignals from './HeroTrustSignals';
 import HeroVendiButton from './HeroVendiButton';
 import { useHeroSearch } from './useHeroSearch';
 
-/**
- * Variant B: Value Prop + Search
- * Bold headline that sells the marketplace, then search below. Current design refined.
- */
 const HeroValueProp = () => {
   const navigate = useNavigate();
   const search = useHeroSearch();
@@ -22,7 +18,7 @@ const HeroValueProp = () => {
       <HeroBackground />
 
       <div className="container relative z-10 max-w-4xl mx-auto px-5 py-20 md:py-28">
-        <div className="text-center">
+        <div className="text-center space-y-0">
           {/* Logo */}
           <motion.img
             src={vendibookLogo}
@@ -34,9 +30,9 @@ const HeroValueProp = () => {
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           />
 
-          {/* Big headline */}
+          {/* Headline */}
           <motion.h1
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground leading-[1.05] tracking-tight mb-5"
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground leading-[1.05] tracking-tight mb-4"
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.15 }}
@@ -56,7 +52,7 @@ const HeroValueProp = () => {
 
           {/* Sub */}
           <motion.p
-            className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed"
+            className="text-lg sm:text-xl text-muted-foreground/60 max-w-2xl mx-auto mb-10 leading-relaxed"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.25 }}
@@ -64,9 +60,9 @@ const HeroValueProp = () => {
             Food trucks, trailers, shared kitchens, and vendor spaces — verified assets, instant booking, flexible payments.
           </motion.p>
 
-          {/* Search */}
+          {/* Search + Vendi — unified block */}
           <motion.div
-            className="max-w-xl mx-auto mb-8"
+            className="max-w-xl mx-auto space-y-3 mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.35 }}
@@ -75,9 +71,9 @@ const HeroValueProp = () => {
             <HeroVendiButton />
           </motion.div>
 
-          {/* CTAs */}
+          {/* Single CTA */}
           <motion.div
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12"
+            className="mb-10"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
@@ -86,20 +82,14 @@ const HeroValueProp = () => {
               variant="outline"
               size="lg"
               onClick={() => navigate('/search')}
-              className="rounded-full px-8 border-border hover:border-primary/40 hover:bg-primary/5 text-foreground gap-2 transition-all"
+              className="rounded-full px-8 border-border/50 hover:border-primary/40 hover:bg-primary/5 text-foreground gap-2 transition-all"
             >
               Browse Listings
               <ArrowRight className="w-4 h-4" />
             </Button>
-            <Button
-              size="lg"
-              onClick={() => navigate('/list')}
-              className="rounded-full px-8 bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-lg shadow-primary/20 transition-all"
-            >
-              List for Free
-            </Button>
           </motion.div>
 
+          {/* Trust strip */}
           <HeroTrustSignals />
         </div>
       </div>
