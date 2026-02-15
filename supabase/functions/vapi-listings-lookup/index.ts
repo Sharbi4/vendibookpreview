@@ -74,6 +74,7 @@ Deno.serve(async (req) => {
         case 'get_categories':
         case 'check_availability':
         case 'create_listing_draft':
+        case 'schedule_callback':
           result = await handleToolCall(supabase, fnName, args);
           break;
         default:
@@ -113,6 +114,8 @@ async function handleToolCall(supabase: any, fnName: string, args: any) {
       return await checkAvailability(supabase, args);
     case 'create_listing_draft':
       return await createListingDraft(supabase, args);
+    case 'schedule_callback':
+      return await scheduleCallback(args);
     default:
       return { error: `Unknown function: ${fnName}` };
   }
@@ -330,4 +333,51 @@ async function createListingDraft(supabase: any, args: any) {
     message: `Draft listing "${data.title}" created! The user can finish and publish it on the website.`,
     url: `https://vendibookpreview.lovable.app/create-listing/${data.id}`,
   };
+}
+
+async function scheduleCallback(args: any) {
+  const { name, phone, email, preferred_time, reason } = args;
+
+  if (!name || !phone) {
+    return { error: 'name and phone are required to schedule a callback' };
+  }
+
+  // Call the existing schedule-callback edge function
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/schedule-callback`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${anonKey}`,
+      },
+      body: JSON.stringify({
+        name: name.trim(),
+        phone: phone.trim(),
+        email: email?.trim() || undefined,
+        source: 'voice-assistant-bappie',
+        preferredTime: preferred_time || 'asap',
+        preferredContact: 'phone',
+        restaurantName: reason || 'Voice assistant callback request',
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Schedule callback error:', data);
+      return { error: data.error || 'Failed to schedule callback' };
+    }
+
+    return {
+      success: true,
+      message: `Callback scheduled for ${name}. The Vendibook team will call ${phone} ${preferred_time || 'as soon as possible'}.`,
+      ticketId: data.ticketId,
+    };
+  } catch (error) {
+    console.error('Schedule callback error:', error);
+    return { error: 'Failed to schedule callback. Please try again.' };
+  }
 }
