@@ -143,7 +143,7 @@ const AIToolsOnboarding = ({ onComplete }: AIToolsOnboardingProps) => {
           >
             <Card className="border-2 border-primary/20 shadow-2xl overflow-hidden">
               {/* Header with gradient */}
-              <div className="bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 p-6 text-white relative overflow-hidden">
+              <div className="bg-gradient-to-br from-[#FF5124] via-[#FF9F1C] to-[#FFBA08] p-6 text-white relative overflow-hidden">
                 {/* Background decoration */}
                 <div className="absolute inset-0 opacity-10">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-1/2 translate-x-1/2" />
@@ -264,7 +264,7 @@ const AIToolsOnboarding = ({ onComplete }: AIToolsOnboardingProps) => {
                     )}
                     <Button
                       onClick={handleNext}
-                      className="gap-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+                      className="gap-1 bg-gradient-to-r from-[#FF5124] to-[#FFBA08] hover:from-[#E5481F] hover:to-[#FF9F1C]"
                     >
                       {isLastStep ? (
                         <>

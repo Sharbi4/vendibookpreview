@@ -90,9 +90,9 @@ const BuildKit = () => {
         <main className="flex-1">
           {/* Hero */}
           <section className="relative py-16 md:py-24 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-red-500/5 to-amber-500/10" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent" />
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-10 right-10 w-[400px] h-[400px] bg-gradient-to-br from-orange-500/10 to-red-500/8 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute top-10 right-10 w-[400px] h-[400px] bg-gradient-to-br from-primary/8 to-transparent rounded-full blur-3xl animate-pulse" />
             </div>
             
             <div className="container relative z-10">
@@ -341,7 +341,7 @@ const BuildKit = () => {
           />
 
           {/* Final CTA */}
-          <section className="py-20 bg-gradient-to-r from-orange-500/10 via-red-500/10 to-amber-500/10">
+          <section className="py-20 bg-gradient-to-r from-primary/5 via-primary/8 to-primary/5">
             <div className="container text-center">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to master your equipment?</h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">Get detailed maintenance guides and keep your kitchen running smoothly.</p>

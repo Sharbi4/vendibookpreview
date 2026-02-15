@@ -110,8 +110,8 @@ export default {
           "100%": { left: "150%", opacity: "0" },
         },
         "premium-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px rgba(255, 81, 36, 0.4), 0 0 40px rgba(255, 81, 36, 0.2)" },
-          "50%": { boxShadow: "0 0 30px rgba(255, 81, 36, 0.6), 0 0 60px rgba(255, 81, 36, 0.3)" },
+          "0%, 100%": { boxShadow: "0 0 20px rgba(255, 255, 255, 0.1), 0 0 40px rgba(255, 255, 255, 0.05)" },
+          "50%": { boxShadow: "0 0 30px rgba(255, 255, 255, 0.15), 0 0 60px rgba(255, 255, 255, 0.08)" },
         },
       },
       animation: {
