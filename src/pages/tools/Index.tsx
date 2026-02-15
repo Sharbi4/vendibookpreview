@@ -119,9 +119,9 @@ const ToolsIndex = () => {
 
         <main className="flex-1">
           {/* Hero Section - Clear, benefit-first headline */}
-          <section className="py-16 md:py-20 bg-gradient-to-b from-primary/5 to-background">
+          <section className="py-16 md:py-20 bg-gradient-to-b from-foreground/[0.03] to-background">
             <div className="container text-center">
-              <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
+              <Badge className="mb-4 bg-foreground/10 text-foreground border-foreground/15">
                 100% Free
               </Badge>
               
@@ -133,7 +133,7 @@ const ToolsIndex = () => {
               </p>
               
               {/* Primary CTA */}
-              <Button size="lg" variant="dark-shine" asChild>
+              <Button size="lg" variant="glass-cta" asChild>
                 <Link to="/tools/pricepilot">
                   <DollarSign className="h-5 w-5 mr-2" />
                   Start with PricePilot
@@ -153,10 +153,10 @@ const ToolsIndex = () => {
                 {tools.map((tool) => {
                   const Icon = tool.icon;
                   return (
-                    <Card key={tool.name} className="group hover:shadow-lg transition-all duration-200 border hover:border-primary/20">
+                    <Card key={tool.name} className="group hover:shadow-lg transition-all duration-200 border hover:border-foreground/20 bg-card/80 backdrop-blur-xl">
                       <CardHeader className="pb-3">
-                        <div className={`h-11 w-11 rounded-xl bg-gradient-to-br ${tool.gradient} flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-200`}>
-                          <Icon className="h-5 w-5 text-white" />
+                        <div className="h-11 w-11 rounded-xl bg-foreground flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-200">
+                          <Icon className="h-5 w-5 text-background" />
                         </div>
                         <CardTitle className="text-lg mt-3">{tool.name}</CardTitle>
                         <CardDescription className="text-sm leading-relaxed">
@@ -164,7 +164,7 @@ const ToolsIndex = () => {
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0">
-                        <Button asChild variant="dark-shine" className="w-full justify-between">
+                        <Button asChild variant="glass-cta" className="w-full justify-between">
                           <Link to={tool.href}>
                             Try {tool.name}
                             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -189,7 +189,7 @@ const ToolsIndex = () => {
                 <div className="grid sm:grid-cols-2 gap-3">
                   {benefits.map((benefit, i) => (
                     <div key={i} className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-4 w-4 text-foreground/50 shrink-0 mt-0.5" />
                       <span>{benefit}</span>
                     </div>
                   ))}
@@ -199,20 +199,20 @@ const ToolsIndex = () => {
           </section>
 
           {/* CTA Section */}
-          <section className="py-16 bg-gradient-to-r from-primary/10 via-amber-500/10 to-orange-500/10">
+          <section className="py-16 bg-foreground">
             <div className="container text-center">
-              <h2 className="text-2xl md:text-3xl font-bold mb-3">Ready to list your asset?</h2>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              <h2 className="text-2xl md:text-3xl font-bold mb-3 text-background">Ready to list your asset?</h2>
+              <p className="text-background/60 mb-6 max-w-md mx-auto">
                 Create your listing in minutes and start earning from your food truck, trailer, or equipment.
               </p>
               <div className="flex flex-wrap gap-3 justify-center">
-                <Button size="lg" variant="dark-shine" asChild>
+                <Button size="lg" className="bg-background text-foreground hover:bg-background/90" asChild>
                   <Link to="/host">
                     List Your Asset
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="dark-shine" asChild>
+                <Button size="lg" variant="outline" className="border-background/20 text-background hover:bg-background/10 hover:text-background" asChild>
                   <Link to="/search">Browse Listings</Link>
                 </Button>
               </div>
