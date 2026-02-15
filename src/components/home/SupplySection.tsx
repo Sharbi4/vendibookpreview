@@ -123,7 +123,7 @@ const SupplySection = () => {
                 className="gap-2 h-12 text-base w-full sm:w-auto"
               >
                 <BookOpen className="h-5 w-5" />
-                Learn More
+                Learn how it works
               </Button>
             </div>
 

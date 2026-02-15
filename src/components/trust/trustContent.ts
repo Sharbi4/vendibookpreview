@@ -67,7 +67,7 @@ export const trustTiles: TrustTile[] = [
         { question: 'How long does verification take?', answer: 'Most verifications complete in under 2 minutes. In rare cases, manual review may take up to 24 hours.' },
         { question: 'What if my verification fails?', answer: 'You can retry with a different ID or contact support. Common issues include blurry photos, expired IDs, or mismatched names.' }
       ],
-      primaryCta: { label: 'Learn More', href: '/how-it-works', requiresAuth: true, authLabel: 'Start Listing', authHref: '/list' },
+      primaryCta: { label: 'Learn how Vendibook works', href: '/how-it-works', requiresAuth: true, authLabel: 'Start Listing', authHref: '/list' },
       secondaryCta: { label: 'Contact Support', href: '/contact' }
     }
   },
@@ -93,7 +93,7 @@ export const trustTiles: TrustTile[] = [
         { question: 'Are fees included in the listed price?', answer: 'Yes. The price you see includes platform fees. Payment processing fees are transparent and shown at checkout.' },
         { question: 'Is my card information stored?', answer: 'Card details are stored securely by Stripe (not Vendibook) if you opt to save your card. You can manage or delete saved cards anytime.' }
       ],
-      primaryCta: { label: 'Learn More', href: '/how-it-works', requiresAuth: true, authLabel: 'Start Listing', authHref: '/list' },
+      primaryCta: { label: 'Learn how Vendibook works', href: '/how-it-works', requiresAuth: true, authLabel: 'Start Listing', authHref: '/list' },
       secondaryCta: { label: 'Contact Support', href: '/contact' }
     }
   },
@@ -120,7 +120,7 @@ export const trustTiles: TrustTile[] = [
         { question: 'What if the buyer does not confirm?', answer: 'If no dispute is raised within the acceptance window, funds auto-release to the host. Buyers are notified before the window closes.' },
         { question: 'What if there is damage during a rental?', answer: 'Hosts must file a damage claim within 24 hours of return, with photo evidence. Vendibook reviews and may hold or adjust the payout accordingly.' }
       ],
-      primaryCta: { label: 'Learn More', href: '/how-it-works', requiresAuth: true, authLabel: 'Start Listing', authHref: '/list' },
+      primaryCta: { label: 'Learn how Vendibook works', href: '/how-it-works', requiresAuth: true, authLabel: 'Start Listing', authHref: '/list' },
       secondaryCta: { label: 'Contact Support', href: '/contact' }
     }
   },
@@ -174,7 +174,7 @@ export const trustTiles: TrustTile[] = [
         { question: 'What evidence is needed?', answer: 'Photos of the issue, screenshots of listing details, communication records, and any relevant documents (receipts, contracts). More evidence = faster resolution.' },
         { question: 'Can I appeal a decision?', answer: 'Yes. You have 7 days to submit an appeal with new evidence. Appeals are reviewed by a senior support specialist.' }
       ],
-      primaryCta: { label: 'Learn More', href: '/how-it-works', requiresAuth: true, authLabel: 'View Transactions', authHref: '/dashboard' },
+      primaryCta: { label: 'Learn how Vendibook works', href: '/how-it-works', requiresAuth: true, authLabel: 'View Transactions', authHref: '/dashboard' },
       secondaryCta: { label: 'Contact Support', href: '/contact' }
     }
   },
