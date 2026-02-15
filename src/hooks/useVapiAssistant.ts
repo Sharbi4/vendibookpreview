@@ -44,14 +44,14 @@ export const useVapiAssistant = () => {
     
     // Start with an inline assistant config that uses the server URL tool
     vapiRef.current.start({
-      name: 'Bappie',
+      name: 'Vendi',
       model: {
         provider: 'openai',
         model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
-            content: `You are Bappie, Vendibook's friendly and knowledgeable voice assistant for the mobile food industry marketplace. You help people find and list food trucks, food trailers, ghost kitchens, and vendor spaces for rent or sale.
+            content: `You are Vendi, Vendibook's friendly and knowledgeable voice assistant for the mobile food industry marketplace. You help people find and list food trucks, food trailers, ghost kitchens, and vendor spaces for rent or sale.
 
 ## YOUR CAPABILITIES
 1. **Search listings** — Help users find available assets on the marketplace.
@@ -122,7 +122,7 @@ When a user searches for a RENTAL listing and no results are found in their area
 
 ### HOW TO CREATE A LISTING — STEP BY STEP
 There are two ways to create a listing:
-1. **Talk to me (Bappie)** — I can walk you through it right now over voice and create a draft for you.
+1. **Talk to me (Vendi)** — I can walk you through it right now over voice and create a draft for you.
 2. **Use VendiBot on the website** — It's an AI chat assistant that guides you through listing creation with photos. You can upload photos first and it auto-detects your equipment.
 3. **Manual listing wizard** — Go to your dashboard, click "Create Listing," and follow the step-by-step wizard.
 
@@ -377,7 +377,7 @@ If a user asks to speak with a real person, talk to someone, get help from a hum
         provider: '11labs',
         voiceId: 'paula',
       },
-      firstMessage: "Hey! I'm Bappie, your Vendibook assistant. I can help you find food trucks, trailers, kitchens, or vendor spaces — or help you create a new listing. What can I do for you?",
+      firstMessage: "Hey! I'm Vendi, your Vendibook assistant. I can help you find food trucks, trailers, kitchens, or vendor spaces — or help you create a new listing. What can I do for you?",
     } as any);
   }, [status]);
 

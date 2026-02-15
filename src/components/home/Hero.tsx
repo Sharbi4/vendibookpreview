@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Navigation, ArrowRight, Sparkles, Home, ShoppingCart, Wand2, Mic, MicOff } from 'lucide-react';
+import { Search, MapPin, Navigation, ArrowRight, Sparkles, Home, ShoppingCart, Wand2, Mic, MicOff, HelpCircle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import vendibookLogo from '@/assets/vendibook-logo.png';
@@ -315,16 +316,26 @@ const Hero = () => {
                 </div>
               </div>
               
-              {/* AI hint */}
-              <motion.p
-                className="text-[11px] text-muted-foreground/50 mt-2 flex items-center justify-center gap-1"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.2 }}
-              >
-                <Sparkles className="w-3 h-3 text-primary/40" />
-                AI-powered — try natural language like "food truck in Austin for sale"
-              </motion.p>
+              {/* Vendi helper hint */}
+              <div className="mt-2 flex items-center justify-center gap-1.5">
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                      >
+                        <HelpCircle className="w-3 h-3" />
+                        What is Vendi?
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs text-sm p-3">
+                      <p className="font-semibold mb-1">Meet Vendi 🎙️</p>
+                      <p className="text-muted-foreground text-xs">Vendi is your AI voice guide for Vendibook. It can help you search listings, create new ones, answer questions about the platform, and walk you through anything — all by voice. Tap the phone icon in the bottom-right corner to start!</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </div>
           </motion.div>
 
