@@ -291,7 +291,6 @@ const Hero = () => {
               onClick={() => navigate('/list')}
               className="rounded-full px-8 bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-lg shadow-primary/20 transition-all"
             >
-              <Sparkles className="w-4 h-4" />
               List for Free
             </Button>
           </motion.div>
