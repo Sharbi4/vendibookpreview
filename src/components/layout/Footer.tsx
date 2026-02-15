@@ -75,26 +75,26 @@ const FooterAccordion = ({ section }: { section: FooterSection }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="border-b border-background/10 md:border-none">
+    <div className="border-b border-border/50 md:border-none">
       <button
         className="flex w-full items-center justify-between py-4 md:hidden"
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
       >
-        <span className="font-semibold text-background">{section.title}</span>
+        <span className="font-semibold text-foreground">{section.title}</span>
         <ChevronDown
           className={cn(
-            'h-4 w-4 text-background/70 transition-transform',
+            'h-4 w-4 text-muted-foreground transition-transform',
             isOpen && 'rotate-180'
           )}
         />
       </button>
-      <h4 className="hidden md:block font-semibold mb-4 text-background">
+      <h4 className="hidden md:block font-semibold mb-4 text-foreground">
         {section.title}
       </h4>
       <ul
         className={cn(
-          'space-y-2 text-sm text-background/80 overflow-hidden transition-all',
+          'space-y-2 text-sm text-muted-foreground overflow-hidden transition-all',
           'md:block md:max-h-none md:pb-0',
           isOpen ? 'max-h-96 pb-4' : 'max-h-0 md:max-h-none'
         )}
@@ -106,14 +106,14 @@ const FooterAccordion = ({ section }: { section: FooterSection }) => {
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-background transition-colors inline-block py-1 md:py-0"
+                className="hover:text-foreground transition-colors inline-block py-1 md:py-0"
               >
                 {link.label}
               </a>
             ) : (
               <Link
                 to={link.href}
-                className="hover:text-background transition-colors inline-block py-1 md:py-0"
+                className="hover:text-foreground transition-colors inline-block py-1 md:py-0"
                 onClick={() => {
                   if (link.href === '/cities') {
                     trackFooterCitiesClicked();
@@ -132,7 +132,7 @@ const FooterAccordion = ({ section }: { section: FooterSection }) => {
 
 const Footer = () => {
   return (
-    <footer className="bg-foreground text-background">
+    <footer className="bg-card text-foreground border-t border-border">
       {/* Main Footer Content */}
       <div className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-6 gap-0 md:gap-8">
@@ -145,12 +145,12 @@ const Footer = () => {
                 className="h-10 w-10 rounded-lg"
               />
             </Link>
-            <p className="text-sm text-background/70 mb-4 max-w-[200px]">
+            <p className="text-sm text-muted-foreground mb-4 max-w-[200px]">
               The marketplace for mobile food businesses.
             </p>
             <a
               href="tel:+18778836342"
-              className="text-sm text-background/80 hover:text-background transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               1-877-8-VENDI-2
             </a>
@@ -166,11 +166,11 @@ const Footer = () => {
       </div>
 
       {/* Trust Bar */}
-      <div className="border-t border-background/10">
+      <div className="border-t border-border/50">
         <div className="container py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             {/* Trust Badges */}
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-6 gap-y-2 text-sm text-background/70">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-6 gap-y-2 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
                 Secure Payments
@@ -186,7 +186,7 @@ const Footer = () => {
             </div>
 
             {/* Stripe Badge */}
-            <div className="flex items-center gap-2 text-sm text-background/60">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>Payments by</span>
               <StripeLogo className="h-5 opacity-70" />
             </div>
@@ -195,11 +195,11 @@ const Footer = () => {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-background/10">
+      <div className="border-t border-border/50">
         <div className="container py-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             {/* Copyright */}
-            <p className="text-sm text-background/60 order-2 md:order-1">
+            <p className="text-sm text-muted-foreground order-2 md:order-1">
               © {new Date().getFullYear()} Vendibook. All rights reserved.
             </p>
 
@@ -211,7 +211,7 @@ const Footer = () => {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-background/60 hover:text-background transition-colors"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
                   aria-label={social.label}
                 >
                   <social.icon className="h-5 w-5" />
