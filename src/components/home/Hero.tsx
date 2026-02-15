@@ -212,17 +212,35 @@ const Hero = () => {
                 ) : (
                   <Search className="absolute left-4 w-5 h-5 text-muted-foreground" />
                 )}
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAISearch()}
-                  onFocus={() => setIsInputFocused(true)}
-                  onBlur={() => setIsInputFocused(false)}
-                  placeholder={AI_PLACEHOLDERS[placeholderIndex]}
-                  className="w-full h-14 pl-12 pr-28 bg-transparent text-foreground placeholder:text-muted-foreground/40 text-sm focus:outline-none"
-                />
+                <div className="relative flex-1">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAISearch()}
+                    onFocus={() => setIsInputFocused(true)}
+                    onBlur={() => setIsInputFocused(false)}
+                    className="w-full h-14 sm:h-14 pl-12 pr-28 bg-transparent text-foreground text-[16px] sm:text-sm focus:outline-none"
+                  />
+                  {/* Animated placeholder overlay */}
+                  {!location && !isInputFocused && (
+                    <div className="absolute inset-0 flex items-center pl-12 pr-28 pointer-events-none overflow-hidden">
+                      <AnimatePresence mode="wait">
+                        <motion.span
+                          key={placeholderIndex}
+                          className="text-muted-foreground/40 text-[16px] sm:text-sm truncate"
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -8 }}
+                          transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        >
+                          {AI_PLACEHOLDERS[placeholderIndex]}
+                        </motion.span>
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </div>
                 <div className="absolute right-2 flex items-center gap-1">
                   <button
                     onClick={handleGeolocation}
