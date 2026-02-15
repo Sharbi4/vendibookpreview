@@ -315,7 +315,7 @@ const handler = async (req: Request): Promise<Response> => {
               This is an admin notification from VendiBook.
             </p>
             <p style="color: #9ca3af; font-size: 12px; margin: 12px 0 0 0;">
-              Support: <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a>
+              Support: <a href="tel:+17257559598" style="color: #FF5124; text-decoration: none;">(725) 755-9598</a>
             </p>
             <p style="color: #9ca3af; font-size: 12px; margin: 8px 0 0 0;">
               © ${new Date().getFullYear()} VendiBook. All rights reserved.

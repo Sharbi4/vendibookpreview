@@ -175,7 +175,7 @@ serve(async (req) => {
               <strong>The Vendibook Team</strong>
             </p>
             <p style="margin: 12px 0;">
-              <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none; font-size: 14px;">1-877-8-VENDI-2</a>
+              <a href="tel:+17257559598" style="color: #FF5124; text-decoration: none; font-size: 14px;">(725) 755-9598</a>
             </p>
             <p style="color: #9a9a9a; font-size: 12px; margin-top: 16px;">
               <a href="https://vendibook.com" style="color: #9a9a9a;">vendibook.com</a>
@@ -235,7 +235,7 @@ serve(async (req) => {
           <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #e5e5e5; text-align: center;">
             <p style="color: #4a4a4a; font-size: 14px; margin: 0;">
               Need help? Contact us:<br>
-              <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a>
+              <a href="tel:+17257559598" style="color: #FF5124; text-decoration: none;">(725) 755-9598</a>
             </p>
             <p style="color: #4a4a4a; font-size: 14px; margin-top: 16px;">
               Best regards,<br>

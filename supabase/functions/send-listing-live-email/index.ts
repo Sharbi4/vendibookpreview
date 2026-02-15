@@ -309,7 +309,7 @@ const handler = async (req: Request): Promise<Response> => {
             <!-- Footer -->
             <div style="text-align: center; margin-top: 32px; padding: 24px;">
               <p style="color: #9CA3AF; font-size: 12px; margin: 0 0 8px 0;">
-                Questions? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none; font-weight: 500;">1-877-8-VENDI-2</a> or email <a href="mailto:support@vendibook.com" style="color: #FF5124; text-decoration: none; font-weight: 500;">support@vendibook.com</a>
+                Questions? Call <a href="tel:+17257559598" style="color: #FF5124; text-decoration: none; font-weight: 500;">(725) 755-9598</a> or email <a href="mailto:support@vendibook.com" style="color: #FF5124; text-decoration: none; font-weight: 500;">support@vendibook.com</a>
               </p>
               <p style="color: #D1D5DB; font-size: 11px; margin: 0;">
                 You're receiving this email because you published a listing on VendiBook.<br/>

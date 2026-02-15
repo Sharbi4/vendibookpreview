@@ -149,10 +149,10 @@ const Footer = () => {
               The marketplace for mobile food businesses.
             </p>
             <a
-              href="tel:+18778836342"
+              href="tel:+17257559598"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              1-877-8-VENDI-2
+              (725) 755-9598
             </a>
           </div>
 

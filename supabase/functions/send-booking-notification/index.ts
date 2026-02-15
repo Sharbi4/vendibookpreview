@@ -51,7 +51,7 @@ const wrapEmailHtml = (content: string) => `
         ${content}
         <p style="color: #888; font-size: 14px; margin-top: 30px;">
           — The VendiBook Team<br>
-          <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a>
+          <a href="tel:+17257559598" style="color: #FF5124; text-decoration: none;">(725) 755-9598</a>
         </p>
       </div>
     </div>

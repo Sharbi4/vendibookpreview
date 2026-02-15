@@ -308,7 +308,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
           <div class="footer">
             <p>Vendibook - The marketplace for mobile food businesses</p>
-            <p><a href="tel:+18778836342" style="color: #F97316;">1-877-8-VENDI-2</a> | <a href="mailto:support@vendibook.com">support@vendibook.com</a></p>
+            <p><a href="tel:+17257559598" style="color: #F97316;">(725) 755-9598</a> | <a href="mailto:support@vendibook.com">support@vendibook.com</a></p>
           </div>
         </div>
       </body>
