@@ -68,7 +68,7 @@ const Hero = () => {
       <div className="container relative z-10 max-w-6xl mx-auto px-4 py-12 md:py-20">
         {/* Headline */}
         <div className="text-center mb-8 md:mb-12 animate-fade-in">
-          <img src={vendibookLogo} alt="Vendibook" className="h-48 sm:h-60 md:h-72 w-auto mx-auto mb-5 drop-shadow-lg" />
+          <img src={vendibookLogo} alt="Vendibook" className="h-48 sm:h-60 md:h-72 w-auto mx-auto mb-5" style={{ filter: 'drop-shadow(0 0 40px rgba(255,81,36,0.35)) drop-shadow(0 0 80px rgba(255,184,0,0.2))' }} />
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-4">
             Rent it. Buy it. Find your spot.
           </h1>
