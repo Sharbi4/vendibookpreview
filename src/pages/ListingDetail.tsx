@@ -600,6 +600,8 @@ const ListingDetail = () => {
                 category={listing.category}
                 mode={listing.mode}
                 address={listing.address}
+                latitude={listing.latitude}
+                longitude={listing.longitude}
               />
 
               {/* Trust Section */}
