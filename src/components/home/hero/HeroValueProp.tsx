@@ -26,12 +26,12 @@ const HeroValueProp = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="absolute inset-0 scale-75 rounded-full bg-primary/15 blur-[60px] sm:blur-[80px]" />
+            <div className="absolute inset-0 scale-75 rounded-full bg-foreground/8 blur-[60px] sm:blur-[80px]" />
             <img
               src={vendibookLogo}
               alt="Vendibook"
               className="relative h-36 sm:h-44 md:h-52 lg:h-64 w-auto"
-              style={{ filter: 'drop-shadow(0 0 30px rgba(255,81,36,0.2))' }}
+              style={{ filter: 'drop-shadow(0 0 30px rgba(255,255,255,0.08))' }}
             />
           </motion.div>
 
@@ -47,7 +47,7 @@ const HeroValueProp = () => {
             <span className="relative inline-block">
               <span className="gradient-text-warm">food business.</span>
               <motion.span
-                className="absolute -bottom-1 left-0 h-[3px] bg-gradient-to-r from-primary/60 via-primary to-primary/60 rounded-full"
+                className="absolute -bottom-1 left-0 h-[3px] bg-gradient-to-r from-foreground/30 via-foreground/60 to-foreground/30 rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: '100%' }}
                 transition={{ duration: 0.8, delay: 0.8 }}
@@ -77,7 +77,7 @@ const HeroValueProp = () => {
               variant="outline"
               size="lg"
               onClick={() => navigate('/list')}
-              className="rounded-full px-8 border-border/50 hover:border-primary/40 hover:bg-primary/5 text-foreground gap-2 transition-all text-sm sm:text-base"
+              className="rounded-full px-8 border-border/50 hover:border-foreground/30 hover:bg-foreground/5 text-foreground gap-2 transition-all text-sm sm:text-base"
             >
               Create a Free Listing
               <ArrowRight className="w-4 h-4" />

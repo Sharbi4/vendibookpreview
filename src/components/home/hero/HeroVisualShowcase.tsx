@@ -14,10 +14,10 @@ const HeroVisualShowcase = () => {
   return (
     <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-foreground/5" />
       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
       <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary/[0.08] rounded-full blur-[120px]"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-foreground/[0.04] rounded-full blur-[120px]"
         animate={{ scale: [1, 1.15, 1], opacity: [0.08, 0.12, 0.08] }}
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
       />
@@ -32,7 +32,7 @@ const HeroVisualShowcase = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-foreground/60 animate-pulse" />
             The #1 marketplace for mobile food vendors
           </motion.div>
 
@@ -79,7 +79,7 @@ const HeroVisualShowcase = () => {
               variant="outline"
               size="lg"
               onClick={() => navigate('/list')}
-              className="rounded-full px-8 border-border/50 hover:border-primary/40 hover:bg-primary/5 text-foreground gap-2"
+              className="rounded-full px-8 border-border/50 hover:border-foreground/30 hover:bg-foreground/5 text-foreground gap-2"
             >
               Create a Free Listing
               <ArrowRight className="w-4 h-4" />

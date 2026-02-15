@@ -38,12 +38,12 @@ const HeroSearchInput = ({
 }: HeroSearchInputProps) => {
   return (
     <div className={`relative group ${className || ''}`}>
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/25 via-primary/10 to-primary/25 rounded-2xl blur-sm opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-500" />
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-foreground/10 via-foreground/5 to-foreground/10 rounded-2xl blur-sm opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-500" />
       <div className={`relative flex items-center bg-card border rounded-2xl overflow-hidden transition-all duration-300 ${
-        isInputFocused ? 'border-primary/40 shadow-lg shadow-primary/10' : 'border-border group-hover:border-primary/30'
+        isInputFocused ? 'border-foreground/30 shadow-lg shadow-foreground/5' : 'border-border group-hover:border-foreground/20'
       }`}>
         {isAIParsing && (
-          <Wand2 className="absolute left-4 w-5 h-5 text-primary animate-pulse" />
+          <Wand2 className="absolute left-4 w-5 h-5 text-foreground/60 animate-pulse" />
         )}
         <div className="relative flex-1">
           <input
