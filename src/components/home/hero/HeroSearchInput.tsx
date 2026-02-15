@@ -1,5 +1,4 @@
-import { Search, Navigation, Wand2, Mic, MicOff } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Navigation, Wand2, Mic, MicOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface HeroSearchInputProps {
@@ -95,19 +94,6 @@ const HeroSearchInput = ({
           >
             <Navigation className={`w-5 h-5 ${isLocating ? 'animate-pulse' : ''}`} />
           </button>
-          <Button
-            onClick={handleAISearch}
-            size="sm"
-            disabled={isAIParsing}
-            className="rounded-xl h-10 px-5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium gap-1.5"
-          >
-            {isAIParsing ? (
-              <Wand2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Search className="w-4 h-4" />
-            )}
-            {isAIParsing ? 'Parsing…' : 'Search'}
-          </Button>
         </div>
       </div>
     </div>
