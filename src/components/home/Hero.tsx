@@ -129,8 +129,8 @@ const Hero = () => {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  placeholder="City, zip code, or keyword…"
-                  className="w-full h-14 pl-12 pr-28 bg-transparent text-foreground placeholder:text-muted-foreground text-base focus:outline-none"
+                  placeholder="City or zip…"
+                  className="w-full h-14 pl-12 pr-28 bg-transparent text-foreground placeholder:text-muted-foreground/60 text-sm focus:outline-none"
                 />
                 <div className="absolute right-2 flex items-center gap-1">
                   <button
