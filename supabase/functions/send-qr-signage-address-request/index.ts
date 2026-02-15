@@ -154,7 +154,7 @@ serve(async (req) => {
               <!-- Support -->
               <p style="color: #6B7280; font-size: 14px;">
                 Questions? Reply to this email or call us at 
-                <a href="tel:+18778836342" style="color: #FF6D1F; text-decoration: none; font-weight: 600;">1-877-8-VENDI-2</a>
+                <a href="tel:+17257559598" style="color: #FF6D1F; text-decoration: none; font-weight: 600;">(725) 755-9598</a>
               </p>
               
               <p style="color: #6B7280; font-size: 14px; margin-top: 16px;">

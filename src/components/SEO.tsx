@@ -143,7 +143,7 @@ export const generateOrganizationSchema = () => ({
   description: 'Rent or buy food trucks, food trailers, shared kitchens, and Vendor Spaces.',
   contactPoint: {
     '@type': 'ContactPoint',
-    telephone: '+1-877-8-VENDI-2',
+    telephone: '+1-725-755-9598',
     contactType: 'customer service',
     availableLanguage: 'English',
   },

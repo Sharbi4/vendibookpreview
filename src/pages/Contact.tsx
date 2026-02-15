@@ -236,13 +236,13 @@ const Contact = () => {
                       {/* Contact Cards - Enhanced */}
                       <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow group cursor-pointer">
                         <CardContent className="p-5">
-                          <a href="tel:+18778836342" className="flex items-center gap-4">
+                          <a href="tel:+17257559598" className="flex items-center gap-4">
                             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
                               <Phone className="h-6 w-6" />
                             </div>
                             <div className="flex-1">
                               <h3 className="font-semibold text-foreground mb-0.5">Call Us</h3>
-                              <p className="text-primary font-medium">1-877-8-VENDI-2</p>
+                              <p className="text-primary font-medium">(725) 755-9598</p>
                             </div>
                             <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                           </a>

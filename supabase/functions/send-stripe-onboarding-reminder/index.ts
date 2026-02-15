@@ -132,7 +132,7 @@ serve(async (req) => {
                 <p style="color: #999; font-size: 12px; text-align: center;">
                   You're receiving this email because you started the payment setup process on Vendibook.
                   <br><br>
-                  Need help? Call <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none;">1-877-8-VENDI-2</a>
+                  Need help? Call <a href="tel:+17257559598" style="color: #FF5124; text-decoration: none;">(725) 755-9598</a>
                   <br>
                   © ${new Date().getFullYear()} Vendibook. All rights reserved.
                 </p>

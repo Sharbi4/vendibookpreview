@@ -111,7 +111,7 @@ serve(async (req) => {
               
               <p style="color: #6B7280; font-size: 14px;">Need help writing your description? Just reply to this email and we'll help you craft the perfect one.</p>
               
-              <p style="color: #6B7280; font-size: 14px;">Or give us a call: <a href="tel:+18778836342" style="color: #FF5124; text-decoration: none; font-weight: 600;">1-877-8-VENDI-2</a></p>
+              <p style="color: #6B7280; font-size: 14px;">Or give us a call: <a href="tel:+17257559598" style="color: #FF5124; text-decoration: none; font-weight: 600;">(725) 755-9598</a></p>
             </div>
             
             <p style="color: #9CA3AF; font-size: 12px; text-align: center; margin-top: 24px;">

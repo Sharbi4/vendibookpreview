@@ -277,7 +277,7 @@ export function generateReceiptPdf(data: ReceiptData): void {
   
   doc.setTextColor(...grayColor);
   doc.setFontSize(8);
-  doc.text('Need help? Call us at 1-877-8-VENDI-2 or email support@vendibook.com', pageWidth / 2, yPos, { align: 'center' });
+  doc.text('Need help? Call us at (725) 755-9598 or email support@vendibook.com', pageWidth / 2, yPos, { align: 'center' });
   
   yPos += 8;
   

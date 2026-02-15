@@ -259,7 +259,7 @@ const generateHtmlEmail = (unsubscribeUrl: string): string => {
                 You're receiving this because you subscribed to updates on <a href="https://vendibook.com" style="color: ${COLORS.primary}; text-decoration: none;">Vendibook</a>.
               </p>
               <p style="margin: 0 0 12px; font-size: 13px; color: ${COLORS.gray}; text-align: center; line-height: 1.5;">
-                Need help? <a href="https://vendibook.com/contact" style="color: ${COLORS.primary}; text-decoration: none;">Contact us</a> or call <a href="tel:+18778836342" style="color: ${COLORS.primary}; text-decoration: none;">1-877-8-VENDI-2</a>
+                Need help? <a href="https://vendibook.com/contact" style="color: ${COLORS.primary}; text-decoration: none;">Contact us</a> or call <a href="tel:+17257559598" style="color: ${COLORS.primary}; text-decoration: none;">(725) 755-9598</a>
               </p>
               <p style="margin: 0; font-size: 12px; color: ${COLORS.gray}; text-align: center;">
                 <a href="${unsubscribeUrl}" style="color: ${COLORS.gray}; text-decoration: underline;">Unsubscribe</a>
@@ -333,7 +333,7 @@ ${HOST_TOOLS.map(tool => `• ${tool.name} – ${tool.description}: ${tool.url}`
 
 You're receiving this because you subscribed to updates on Vendibook.
 
-Need help? Contact us at https://vendibook.com/contact or call 1-877-8-VENDI-2
+Need help? Contact us at https://vendibook.com/contact or call (725) 755-9598
 
 Unsubscribe: ${unsubscribeUrl}
 
