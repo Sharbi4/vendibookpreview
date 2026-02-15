@@ -13,18 +13,21 @@ const NewsletterPopup = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user has already seen/dismissed the popup
     const hasSeenPopup = localStorage.getItem('newsletter_popup_dismissed');
     const hasSubscribed = localStorage.getItem('newsletter_subscribed');
     
-    if (!hasSeenPopup && !hasSubscribed) {
-      // Show popup after 5 seconds
-      const timer = setTimeout(() => {
+    if (hasSeenPopup || hasSubscribed) return;
+
+    const handleScroll = () => {
+      const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+      if (scrollPercent >= 30) {
         setIsOpen(true);
-      }, 5000);
-      
-      return () => clearTimeout(timer);
-    }
+        window.removeEventListener('scroll', handleScroll);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleClose = () => {
