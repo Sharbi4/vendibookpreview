@@ -269,7 +269,7 @@ const Homepage2 = () => {
                   className="absolute -inset-x-2 -inset-y-1 pointer-events-none rounded-[50%] overflow-hidden"
                   style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.35) 0%, rgba(170,210,255,0.2) 25%, rgba(255,180,200,0.16) 50%, rgba(200,255,220,0.14) 75%, rgba(255,220,180,0.24) 100%)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', boxShadow: 'inset 0 2px 6px rgba(255,255,255,0.4), inset 0 -2px 6px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)' }}
                 />
-                <img src={vendibookFavicon} alt="Vendibook" className="h-10 w-auto drop-shadow-lg" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))' }} />
+                <img src={vendibookFavicon} alt="Vendibook" className="h-20 w-auto drop-shadow-lg" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))' }} />
               </Link>
 
               {/* Search bar — 3D glass field in header */}
