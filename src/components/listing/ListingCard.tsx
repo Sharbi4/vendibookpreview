@@ -289,9 +289,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         {/* Top Right Badges */}
         <div className={cn("absolute flex items-center gap-1.5", compact ? "top-2 right-2" : "top-3 right-3 gap-2")}>
           {/* Favorite Button */}
-          {!compact && (
-            <FavoriteButton listingId={listing.id} category={listing.category} size="sm" />
-          )}
+          <FavoriteButton listingId={listing.id} category={listing.category} size="sm" />
         </div>
 
         {/* Amenities Icons Overlay */}

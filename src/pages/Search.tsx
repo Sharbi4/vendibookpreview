@@ -463,7 +463,7 @@ const Search = () => {
       {/* Spacer - logo/tagline removed */}
 
         {/* Search Header - Enhanced styling matching Contact page */}
-        <div className="border-b border-border/40 bg-card/30 backdrop-blur-xl">
+        <div className="border-b border-cyan-500/15" style={{ background: 'linear-gradient(135deg, rgba(0, 210, 230, 0.06) 0%, rgba(0, 180, 220, 0.03) 100%)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)' }}>
           <div className="container py-4">
             {/* Row 1: Search + Filters */}
             <div className="flex gap-3">
@@ -600,7 +600,15 @@ const Search = () => {
           <div className="flex gap-8">
             {/* Desktop Sidebar Filters - Enhanced card styling */}
             <aside className="hidden md:block w-64 shrink-0">
-              <div className="sticky top-24 space-y-6 p-5 bg-card/40 backdrop-blur-xl rounded-2xl border border-border/30 shadow-xl">
+              <div
+                className="sticky top-24 space-y-6 p-5 rounded-2xl shadow-xl shadow-cyan-500/5"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(0, 210, 230, 0.08) 0%, rgba(0, 180, 220, 0.04) 50%, rgba(255, 255, 255, 0.03) 100%)',
+                  backdropFilter: 'blur(24px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+                  border: '1px solid rgba(0, 210, 230, 0.15)',
+                }}
+              >
                 <div className="flex items-center justify-between">
                   <h2 className="font-semibold text-foreground">Filters</h2>
                   {activeFiltersCount > 0 && (
