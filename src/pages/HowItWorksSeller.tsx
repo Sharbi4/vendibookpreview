@@ -160,7 +160,8 @@ const HowItWorksSeller = () => {
         {/* CTA Section */}
         <section className="py-16 md:py-20">
           <div className="container max-w-3xl text-center">
-            <div className="bg-emerald-600 rounded-3xl p-8 md:p-12 text-white">
+            <div className="bg-primary rounded-3xl p-8 md:p-12 text-primary-foreground relative overflow-hidden">
+              <div className="absolute inset-0 pointer-events-none overflow-hidden"><div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent" style={{ animation: 'shimmer-sweep 5s ease-in-out infinite' }} /></div>
               <h2 className="text-3xl font-bold mb-4">Ready to Sell?</h2>
               <p className="text-lg opacity-90 mb-8">
                 List your food truck or equipment today. No upfront fees - you only pay when you make a sale.

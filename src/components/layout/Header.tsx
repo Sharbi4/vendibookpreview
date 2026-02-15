@@ -268,7 +268,7 @@ const Header = () => {
 
   return (
     <>
-    <header className="sticky top-0 z-50 w-full border-b border-border/50 shadow-sm" style={{ background: 'hsla(0, 0%, 5%, 0.6)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)' }}>
+    <header className="sticky top-0 z-50 w-full border-b border-border/30 shadow-sm" style={{ background: 'hsla(0, 0%, 8%, 0.55)', backdropFilter: 'blur(24px) saturate(200%)', WebkitBackdropFilter: 'blur(24px) saturate(200%)' }}>
       <div className="container max-w-7xl mx-auto px-4 flex h-16 items-center justify-between">
         {/* Logo - hide when mobile search is open */}
         <Link 

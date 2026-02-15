@@ -460,20 +460,10 @@ const Search = () => {
       <Header />
       
       <main className="flex-1">
-        {/* Logo + Tagline */}
-        <div className="flex flex-col items-center pt-6 pb-4">
-          <img
-            src={vendibookLogo}
-            alt="Vendibook"
-            className="h-20 sm:h-28 w-auto mb-2 invert"
-          />
-          <p className="text-sm sm:text-base text-muted-foreground font-medium">
-            The Marketplace for Food Business
-          </p>
-        </div>
+      {/* Spacer - logo/tagline removed */}
 
         {/* Search Header - Enhanced styling matching Contact page */}
-        <div className="border-b border-border bg-card/50 backdrop-blur-sm">
+        <div className="border-b border-border/40 bg-card/30 backdrop-blur-xl">
           <div className="container py-4">
             {/* Row 1: Search + Filters */}
             <div className="flex gap-3">
@@ -610,7 +600,7 @@ const Search = () => {
           <div className="flex gap-8">
             {/* Desktop Sidebar Filters - Enhanced card styling */}
             <aside className="hidden md:block w-64 shrink-0">
-              <div className="sticky top-24 space-y-6 p-5 bg-card rounded-2xl border-0 shadow-xl">
+              <div className="sticky top-24 space-y-6 p-5 bg-card/40 backdrop-blur-xl rounded-2xl border border-border/30 shadow-xl">
                 <div className="flex items-center justify-between">
                   <h2 className="font-semibold text-foreground">Filters</h2>
                   {activeFiltersCount > 0 && (
@@ -1125,13 +1115,15 @@ const FilterContent = ({
         </div>
       )}
 
-      {/* Date Range Filter */}
-      <div className="max-w-xs">
-        <DateRangeFilter
-          dateRange={dateRange}
-          onDateRangeChange={onDateRangeChange}
-        />
-      </div>
+      {/* Date Range Filter - Only show for rent mode */}
+      {mode !== 'sale' && (
+        <div className="max-w-xs">
+          <DateRangeFilter
+            dateRange={dateRange}
+            onDateRangeChange={onDateRangeChange}
+          />
+        </div>
+      )}
 
       {/* Delivery to My Location Filter */}
       <div className="space-y-2">

@@ -9,7 +9,7 @@ import trailerCreamParty from '@/assets/trailer-cream-party.jpg';
 const FinalCTA = () => {
   const navigate = useNavigate();
   return (
-    <section className="py-14 sm:py-20 md:py-28 bg-gradient-to-br from-card via-secondary to-card relative overflow-hidden">
+    <section className="py-14 sm:py-20 md:py-28 bg-gradient-to-br from-card via-secondary to-card relative overflow-hidden group">
       {/* Background image gallery - decorative */}
       <div className="absolute inset-0 opacity-[0.07]">
         <div className="absolute top-0 left-0 w-1/3 h-full">
@@ -25,6 +25,10 @@ const FinalCTA = () => {
       
       {/* Premium overlay gradient */}
       <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-card/90 pointer-events-none" aria-hidden="true" />
+      
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.04] to-transparent" style={{ animation: 'shimmer-sweep 5s ease-in-out infinite' }} />
+      </div>
       
       <div className="container max-w-4xl mx-auto px-5 sm:px-6 text-center relative z-10">
         <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-3 sm:mb-4 text-shadow-premium">

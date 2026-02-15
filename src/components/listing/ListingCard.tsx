@@ -429,19 +429,6 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
               ${listing.price_weekly}/week
             </span>
           )}
-          {/* BNPL badges for eligible listings */}
-          {listing.mode === 'sale' && listing.price_sale && (
-            <>
-              <AfterpayBadge price={listing.price_sale} showEstimate={false} showTooltip={!compact} />
-              <AffirmBadge price={listing.price_sale} showEstimate={false} showTooltip={!compact} />
-            </>
-          )}
-          {listing.mode === 'rent' && listing.price_daily && (
-            <>
-              <AfterpayBadge price={listing.price_daily * 7} showEstimate={false} showTooltip={!compact} />
-              <AffirmBadge price={listing.price_daily * 30} showEstimate={false} showTooltip={!compact} />
-            </>
-          )}
         </div>
         
         {/* Hourly Schedule Summary - shows available days/hours for hourly rentals */}
