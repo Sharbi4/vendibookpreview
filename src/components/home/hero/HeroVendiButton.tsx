@@ -1,4 +1,4 @@
-import { Phone, HelpCircle } from 'lucide-react';
+import { Headset, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -9,20 +9,18 @@ const HeroVendiButton = () => (
     animate={{ opacity: 1 }}
     transition={{ delay: 0.8 }}
   >
-    <div className="w-8 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-    <div className="w-1.5 h-1.5 rounded-full bg-primary/40 shadow-[0_0_6px_hsl(var(--primary)/0.4)]" />
-    <div className="w-8 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+    <div className="w-16 h-px bg-gradient-to-r from-transparent via-primary/60 to-primary/20" />
     <button
       onClick={() => {
-        // Trigger the floating Vendi voice button
         const vendiBtn = document.querySelector('[title="Talk to Vendi"]') as HTMLButtonElement;
         if (vendiBtn) vendiBtn.click();
       }}
       className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border hover:border-primary/40 bg-card/50 hover:bg-card text-sm text-muted-foreground hover:text-foreground transition-all group"
     >
-      <Phone className="w-3.5 h-3.5 text-primary group-hover:scale-110 transition-transform" />
+      <Headset className="w-3.5 h-3.5 text-primary group-hover:scale-110 transition-transform" />
       <span>Let Vendi guide you</span>
     </button>
+    <div className="w-16 h-px bg-gradient-to-l from-transparent via-primary/60 to-primary/20" />
     <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>

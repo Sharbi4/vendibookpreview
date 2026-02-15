@@ -85,19 +85,10 @@ const HeroValueProp = () => {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => navigate('/search?mode=rent')}
+              onClick={() => navigate('/search')}
               className="rounded-full px-8 border-border hover:border-primary/40 hover:bg-primary/5 text-foreground gap-2 transition-all"
             >
-              Browse Rentals
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => navigate('/search?mode=sale')}
-              className="rounded-full px-8 border-border hover:border-primary/40 hover:bg-primary/5 text-foreground gap-2 transition-all"
-            >
-              Shop for Sale
+              Browse Listings
               <ArrowRight className="w-4 h-4" />
             </Button>
             <Button
