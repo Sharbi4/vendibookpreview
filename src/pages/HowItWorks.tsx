@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import HeaderSearchField from '@/components/layout/HeaderSearchField';
+import Header from '@/components/layout/Header';
 import AppDropdownMenu from '@/components/layout/AppDropdownMenu';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -179,29 +179,7 @@ const HowItWorks = () => {
       </div>
 
       {/* ══ HEADER ══ */}
-      <header className="sticky top-0 z-50 w-full">
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary via-[hsl(20,90%,50%)] to-[hsl(40,100%,49%)]" />
-          <div className="absolute inset-0 hp2-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-          <div className="absolute inset-0 backdrop-blur-md bg-black/5" />
-          <div className="relative max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
-            <Link to="/" className="flex items-center gap-2">
-              <img src={vendibookFavicon} alt="Vendibook" className="h-8 w-auto drop-shadow-lg sm:hidden" />
-              <img src={vendibookLogo} alt="Vendibook" className="hidden sm:block h-24 w-auto drop-shadow-lg brightness-0 invert" />
-            </Link>
-            <div className="flex items-center gap-2">
-              <HeaderSearchField />
-              <Button asChild variant="dark-shine" size="sm" className="hidden sm:flex h-8 rounded-xl text-xs font-semibold px-4">
-                <Link to="/">Browse Listings</Link>
-              </Button>
-              <Button asChild variant="dark-shine" size="sm" className="hidden sm:flex h-8 rounded-xl text-xs font-semibold px-4">
-                <Link to="/list">Become a Host</Link>
-              </Button>
-              <AppDropdownMenu variant="dark" />
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* ══ MAIN CONTENT ══ */}
       <main className="relative z-10">
