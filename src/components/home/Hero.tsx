@@ -57,7 +57,7 @@ const Hero = () => {
           <motion.img
             src={vendibookLogo}
             alt="Vendibook"
-            className="h-20 sm:h-24 w-auto mx-auto mb-8"
+            className="h-40 sm:h-48 w-auto mx-auto mb-8"
             style={{ filter: 'drop-shadow(0 0 30px rgba(255,81,36,0.2))' }}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
