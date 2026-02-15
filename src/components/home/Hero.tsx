@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
 import heroImage from '@/assets/hero-food-truck.jpg';
+import vendibookLogo from '@/assets/vendibook-logo.png';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Hero = () => {
@@ -67,6 +68,7 @@ const Hero = () => {
       <div className="container relative z-10 max-w-6xl mx-auto px-4 py-12 md:py-20">
         {/* Headline */}
         <div className="text-center mb-8 md:mb-12 animate-fade-in">
+          <img src={vendibookLogo} alt="Vendibook" className="h-16 sm:h-20 md:h-24 w-auto mx-auto mb-5 drop-shadow-lg" />
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-4">
             Rent it. Buy it. Find your spot.
           </h1>
@@ -147,7 +149,7 @@ const Hero = () => {
             </div>
 
             {/* Type + Dates row */}
-            <div className="grid grid-cols-2 gap-3 mb-5">
+            <div className={`grid ${mode === 'rent' ? 'grid-cols-2' : 'grid-cols-1'} gap-3 mb-5`}>
               <div>
                 <label className="text-[10px] uppercase tracking-widest text-white/50 font-semibold mb-1.5 block">Type</label>
                 <div className="relative">
@@ -165,42 +167,44 @@ const Hero = () => {
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
                 </div>
               </div>
-              <div>
-                <label className="text-[10px] uppercase tracking-widest text-white/50 font-semibold mb-1.5 block">Dates</label>
-                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                  <PopoverTrigger asChild>
-                    <button
-                      className="w-full h-11 px-3 rounded-xl bg-white/10 border border-white/15 text-sm text-left flex items-center gap-2 hover:border-white/30 transition-colors"
-                    >
-                      <CalendarIcon className="w-3.5 h-3.5 text-white/40" />
-                      {dateRange?.from ? (
-                        <span className="text-white">
-                          {format(dateRange.from, 'MMM d')}
-                          {dateRange.to ? ` - ${format(dateRange.to, 'MMM d')}` : ''}
-                        </span>
-                      ) : (
-                        <span className="text-white/40">Add dates</span>
-                      )}
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 z-[60]" align="start">
-                    <Calendar
-                      mode="range"
-                      selected={dateRange}
-                      onSelect={(range) => {
-                        setDateRange(range);
-                        if (range?.from && range?.to) {
-                          setIsCalendarOpen(false);
-                        }
-                      }}
-                      numberOfMonths={2}
-                      disabled={(date) => date < new Date()}
-                      className={cn('p-3 pointer-events-auto')}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+              {mode === 'rent' && (
+                <div>
+                  <label className="text-[10px] uppercase tracking-widest text-white/50 font-semibold mb-1.5 block">Dates</label>
+                  <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                    <PopoverTrigger asChild>
+                      <button
+                        className="w-full h-11 px-3 rounded-xl bg-white/10 border border-white/15 text-sm text-left flex items-center gap-2 hover:border-white/30 transition-colors"
+                      >
+                        <CalendarIcon className="w-3.5 h-3.5 text-white/40" />
+                        {dateRange?.from ? (
+                          <span className="text-white">
+                            {format(dateRange.from, 'MMM d')}
+                            {dateRange.to ? ` - ${format(dateRange.to, 'MMM d')}` : ''}
+                          </span>
+                        ) : (
+                          <span className="text-white/40">Add dates</span>
+                        )}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 z-[60]" align="start">
+                      <Calendar
+                        mode="range"
+                        selected={dateRange}
+                        onSelect={(range) => {
+                          setDateRange(range);
+                          if (range?.from && range?.to) {
+                            setIsCalendarOpen(false);
+                          }
+                        }}
+                        numberOfMonths={2}
+                        disabled={(date) => date < new Date()}
+                        className={cn('p-3 pointer-events-auto')}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
             </div>
 
             {/* Search CTA */}
