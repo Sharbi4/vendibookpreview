@@ -2,7 +2,7 @@ import { useEffect, lazy, Suspense } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import HeroRentalSearch from '@/components/home/HeroRentalSearch';
+import Hero from '@/components/home/Hero';
 
 import AnnouncementBanner from '@/components/home/AnnouncementBanner';
 import VerificationBanner from '@/components/home/VerificationBanner';
@@ -15,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 
-import SmartConciergeModal from '@/components/home/SmartConciergeModal';
+
 import { supabase } from '@/integrations/supabase/client';
 
 // Lazy load below-the-fold components for faster initial load
@@ -78,8 +78,8 @@ const Index = () => {
       {showVerificationBanner && <VerificationBanner userId={user.id} />}
       
       <main className="flex-1">
-        {/* 1. Hero - Immersive Rental-First Search */}
-        <HeroRentalSearch />
+        {/* 1. Hero */}
+        <Hero />
         
 
         <Suspense fallback={<SectionSkeleton />}>
@@ -102,7 +102,7 @@ const Index = () => {
 
       <Footer />
       
-      <SmartConciergeModal />
+      
       
     </div>
   );
