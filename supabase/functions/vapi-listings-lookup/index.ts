@@ -285,11 +285,40 @@ async function createListingDraft(supabase: any, args: any) {
     mode,
     city,
     state,
+    address,
+    fulfillment_type = 'pickup',
+    pickup_instructions,
+    access_instructions,
+    hours_of_access,
+    delivery_fee,
+    delivery_radius_miles,
+    delivery_instructions,
+    location_notes,
+    // Rental pricing
     price_daily,
     price_weekly,
     price_monthly,
+    deposit_amount,
+    instant_book,
+    rental_min_days,
+    // Sale pricing
     price_sale,
-    fulfillment_type = 'pickup',
+    accept_card_payment,
+    accept_cash_payment,
+    // Dimensions
+    weight_lbs,
+    length_inches,
+    width_inches,
+    height_inches,
+    // Details
+    highlights,
+    amenities,
+    // Multi-slot
+    total_slots,
+    slot_names,
+    // Availability
+    available_from,
+    available_to,
   } = args;
 
   if (!title || !description || !category || !mode) {
@@ -299,23 +328,55 @@ async function createListingDraft(supabase: any, args: any) {
   // Generate a guest draft token so the user can claim it later
   const guest_draft_token = crypto.randomUUID();
 
+  const insertData: Record<string, any> = {
+    title,
+    description,
+    category,
+    mode,
+    city: city || null,
+    state: state || null,
+    address: address || null,
+    fulfillment_type,
+    status: 'draft',
+    guest_draft_token,
+    // Location details
+    pickup_instructions: pickup_instructions || null,
+    access_instructions: access_instructions || null,
+    hours_of_access: hours_of_access || null,
+    delivery_fee: delivery_fee || null,
+    delivery_radius_miles: delivery_radius_miles || null,
+    delivery_instructions: delivery_instructions || null,
+    location_notes: location_notes || null,
+    // Pricing
+    price_daily: price_daily || null,
+    price_weekly: price_weekly || null,
+    price_monthly: price_monthly || null,
+    price_sale: price_sale || null,
+    deposit_amount: deposit_amount || null,
+    instant_book: instant_book ?? false,
+    rental_min_days: rental_min_days || null,
+    // Payment preferences
+    accept_card_payment: accept_card_payment ?? true,
+    accept_cash_payment: accept_cash_payment ?? false,
+    // Dimensions
+    weight_lbs: weight_lbs || null,
+    length_inches: length_inches || null,
+    width_inches: width_inches || null,
+    height_inches: height_inches || null,
+    // Details
+    highlights: highlights?.length ? highlights : null,
+    amenities: amenities?.length ? amenities : null,
+    // Multi-slot
+    total_slots: total_slots || 1,
+    slot_names: slot_names?.length ? slot_names : null,
+    // Availability
+    available_from: available_from || null,
+    available_to: available_to || null,
+  };
+
   const { data, error } = await supabase
     .from('listings')
-    .insert({
-      title,
-      description,
-      category,
-      mode,
-      city: city || null,
-      state: state || null,
-      price_daily: price_daily || null,
-      price_weekly: price_weekly || null,
-      price_monthly: price_monthly || null,
-      price_sale: price_sale || null,
-      fulfillment_type,
-      status: 'draft',
-      guest_draft_token,
-    })
+    .insert(insertData)
     .select('id, title, status')
     .single();
 
@@ -330,7 +391,7 @@ async function createListingDraft(supabase: any, args: any) {
     title: data.title,
     status: data.status,
     draft_token: guest_draft_token,
-    message: `Draft listing "${data.title}" created! The user can finish and publish it on the website.`,
+    message: `Draft listing "${data.title}" created with all details! The user just needs to add photos and connect Stripe to publish.`,
     url: `https://vendibookpreview.lovable.app/create-listing/${data.id}`,
   };
 }

@@ -70,37 +70,71 @@ Then use the search_listings tool. Summarize results conversationally — mentio
 Before creating any listing, ALWAYS tell the user they need to sign up or log in first. Say something like: "Before we create your listing, you'll need to have a Vendibook account. Have you signed up yet?" If they haven't, guide them to sign up at the website first, then come back to create their listing. Do NOT proceed with listing creation until they confirm they have an account or are willing to create one.
 
 ## CREATING A LISTING — REQUIRED FIELD COLLECTION
-When a user wants to LIST something, you MUST collect ALL of the following before calling create_listing_draft:
+When a user wants to LIST something, you MUST collect ALL of the following before calling create_listing_draft. Walk through them conversationally — don't read a checklist. Group related questions naturally.
 
-**Always required (every listing):**
-1. **Title** — A clear, descriptive name (e.g., "20ft Food Trailer with Full Kitchen")
-2. **Description** — At least 2-3 sentences about the asset. Help them describe it well — ask about condition, features, equipment included, size, year/make if applicable.
+### PHASE 1 — THE BASICS (always required)
+1. **Title** — A clear, descriptive name (e.g., "20ft Food Trailer with Full Kitchen"). Must be at least 5 characters.
+2. **Description** — At least 2-3 sentences (50+ characters). Help them describe it well — ask about condition, features, equipment included, size, year/make if applicable.
 3. **Category** — One of: food_truck, food_trailer, ghost_kitchen, vendor_space. If they're unsure, explain the differences.
 4. **Mode** — rent or sale
-5. **City** — Where is it located?
-6. **State** — What state?
-7. **Fulfillment type** — How will the renter/buyer get it? Options: pickup (they come to you), delivery (you bring it to them), or both.
 
-**If mode is RENT, also collect:**
-8. **Daily rate** (price_daily) — REQUIRED. Ask "What would you charge per day?"
-9. **Weekly rate** (price_weekly) — OPTIONAL but recommended. Suggest they offer a discount, e.g., "Many hosts offer a weekly rate at about 5-6x the daily rate."
-10. **Monthly rate** (price_monthly) — OPTIONAL but recommended. Suggest it for longer-term rentals.
-11. **Total slots** (total_slots) — Ask "How many rental spots or units do you have?" Default is 1. If more than 1, also ask for a name for each slot (e.g., "Bay 1", "Prep Station A", "Space B").
-12. **Slot names** (slot_names) — REQUIRED if total_slots > 1. Collect a name for each slot.
+### PHASE 2 — LOCATION & FULFILLMENT
+5. **Full address** (address) — Ask for the full street address where the asset is located, e.g., "1234 Main St, Miami, FL 33101". This is important for shoppers to find it on the map.
+6. **City** — Where is it located?
+7. **State** — What state?
+8. **Fulfillment type** — How will the renter/buyer get it? Options: pickup (they come to you), delivery (you bring it to them), both, or on_site (for ghost kitchens/vendor spaces). For ghost kitchens and vendor spaces, default to on_site.
+9. **Pickup instructions** (pickup_instructions) — If fulfillment includes pickup, ask "Any special instructions for picking up? Like gate codes, parking info, or who to ask for?"
+10. **Access instructions** (access_instructions) — For ghost kitchens and vendor spaces, ask "How do renters access the space? Any key codes, check-in procedures, or contact info?"
+11. **Hours of access** (hours_of_access) — For ghost kitchens and vendor spaces, ask "What are the hours of access? Like 6am to midnight, or 24/7?"
+12. **Delivery fee** (delivery_fee) — If fulfillment includes delivery, ask "Do you charge a delivery fee? If so, how much?"
+13. **Delivery radius** (delivery_radius_miles) — If delivery, ask "How far are you willing to deliver, in miles?"
 
-**If mode is SALE, also collect:**
-8. **Sale price** (price_sale) — REQUIRED. Ask "What's your asking price?"
+### PHASE 3 — PRICING
+**If mode is RENT:**
+14. **Daily rate** (price_daily) — REQUIRED. Ask "What would you charge per day?"
+15. **Weekly rate** (price_weekly) — OPTIONAL but recommended. Suggest: "Many hosts offer a weekly rate at about 5-6x the daily rate."
+16. **Monthly rate** (price_monthly) — OPTIONAL but recommended. Suggest it for longer-term rentals.
+17. **Deposit amount** (deposit_amount) — Ask "Would you like to require a security deposit? If so, how much?" Explain: "The deposit is held during the rental and refunded when the asset is returned in good condition."
+18. **Instant book** (instant_book) — Ask "Do you want to enable Instant Book, so renters can book without waiting for your approval? Or would you prefer to review each request first?" Default is false (review each request).
+19. **Minimum rental days** (rental_min_days) — Ask "Is there a minimum number of days for a rental? Like 1 day, 2 days, a week?" Default is 1.
 
-**Before calling the tool**, read back a summary of everything you collected and ask for confirmation. Example: "Okay, let me confirm — you want to list a 20-foot food trailer for rent in Miami, Florida, at $250 per day and $1,200 per week, with pickup available. Does that sound right?"
+**If mode is SALE:**
+14. **Sale price** (price_sale) — REQUIRED. Ask "What's your asking price?"
+15. **Accept card payment** (accept_card_payment) — Default true. Ask "Will you accept card payments online?"
+16. **Accept cash payment** (accept_cash_payment) — Ask "Do you also want to accept cash (Pay in Person)? There are no platform fees for cash transactions."
+17. **Weight** (weight_lbs) — Ask "About how much does it weigh, in pounds? This helps with shipping estimates."
+18. **Dimensions** (length_inches, width_inches, height_inches) — Ask "Do you know the approximate dimensions? Length, width, and height in inches — or feet is fine, I'll convert."
+
+### PHASE 4 — DETAILS & FEATURES
+20. **Highlights** (highlights) — Ask "What are the top 3-5 selling points? Like 'Fully equipped kitchen', 'Brand new tires', 'NSF-certified equipment', 'Generator included'." Collect as an array of short phrases.
+21. **Amenities** (amenities) — Based on category, suggest relevant amenities:
+    - Food Trucks/Trailers: Generator, Propane System, Deep Fryer, Flat Top Griddle, Hood Ventilation, Refrigeration, Freezer, Sinks (3-compartment), Fire Suppression, Serving Window, AC/Heating, Fresh Water Tank, Waste Water Tank, Electrical Hookup
+    - Ghost Kitchens: Walk-in Cooler, Walk-in Freezer, Prep Tables, Commercial Oven, Dishwasher, Storage Space, Loading Dock, Parking, WiFi, Security System
+    - Vendor Spaces: Power Hookup, Water Access, Shade/Covered, Restrooms Nearby, High Foot Traffic, Weekend Events, Parking Available, Lighting
+    Ask "Which of these does your [asset] have?" and let them pick. Also accept custom amenities.
+
+### PHASE 5 — MULTI-SLOT (rentals only)
+22. **Total slots** (total_slots) — For vendor spaces and ghost kitchens, ask "How many rental spots or units do you have available?" Default is 1. If more than 1, also ask for a name for each slot (e.g., "Bay 1", "Prep Station A", "Space B").
+23. **Slot names** (slot_names) — REQUIRED if total_slots > 1. Collect a name for each slot.
+
+### PHASE 6 — AVAILABILITY (rentals only)
+24. **Available from** (available_from) — Ask "When is your listing available starting? Like 'immediately', 'next Monday', or a specific date?"
+25. **Available to** (available_to) — Ask "Is there an end date, or is it available indefinitely?" If indefinitely, leave blank.
+
+### BEFORE CALLING THE TOOL
+Read back a COMPLETE summary of everything collected and ask for confirmation. Example: "Okay, let me confirm — you want to list a 20-foot food trailer for rent at 1234 Main St, Miami, Florida. $250 per day, $1,200 per week, with a $500 security deposit. Pickup available with instant book disabled. Highlights include 'fully equipped kitchen' and 'brand new tires'. Amenities are generator, propane system, and hood ventilation. Available starting immediately. Does that all sound right?"
 
 ## WHAT HAPPENS NEXT — GUIDE THE USER
 After creating a draft, explain:
 1. "Great! I've created a draft listing for you. Here's what happens next."
 2. "You'll need to sign up or log in to Vendibook to claim your listing."
-3. "Once logged in, you can add photos and videos — listings with great photos get 3x more views!"
-4. "You can set your availability calendar, add amenities, and fine-tune your pricing in the listing wizard."
-5. "When everything looks good, hit Publish and your listing goes live on the marketplace."
-6. "I'll send you a link where you can finish setting it up."
+3. "Once logged in, there are two things you'll need to finish in the listing wizard that I can't do over voice:"
+4. "First — **add photos and videos**. Listings with great photos get 3x more views! You can upload them right in the wizard."
+5. "Second — **connect your Stripe account** to get paid. It takes just 2-3 minutes to verify your identity and link your bank account."
+6. "Everything else we just set up — your pricing, location, amenities, availability — it's all saved in your draft."
+7. "You can also fine-tune anything in the wizard, like setting an hourly schedule, blocking specific dates, or requiring documents from renters."
+8. "When everything looks good, hit Publish and your listing goes live on the marketplace!"
+9. "I'll send you a link where you can finish setting it up."
 
 ## UPSELL: RENT TO SALE WITH FINANCING
 When a user searches for a RENTAL listing and no results are found in their area (or very few), do the following:
@@ -332,23 +366,50 @@ If a user asks to speak with a real person, talk to someone, get help from a hum
             type: 'function',
             function: {
               name: 'create_listing_draft',
-              description: 'Create a draft listing from voice-gathered info',
+              description: 'Create a draft listing from voice-gathered info. Collects all wizard fields.',
               parameters: {
                 type: 'object',
                 properties: {
-                  title: { type: 'string', description: 'Listing title' },
-                  description: { type: 'string', description: 'Full description' },
+                  title: { type: 'string', description: 'Listing title (5+ chars)' },
+                  description: { type: 'string', description: 'Full description (50+ chars)' },
                   category: { type: 'string', enum: ['food_truck', 'food_trailer', 'ghost_kitchen', 'vendor_space'] },
                   mode: { type: 'string', enum: ['rent', 'sale'] },
                   city: { type: 'string' },
                   state: { type: 'string' },
+                  address: { type: 'string', description: 'Full street address' },
+                  fulfillment_type: { type: 'string', enum: ['pickup', 'delivery', 'both', 'on_site'] },
+                  pickup_instructions: { type: 'string', description: 'Instructions for pickup' },
+                  access_instructions: { type: 'string', description: 'How to access the space (ghost kitchens/vendor spaces)' },
+                  hours_of_access: { type: 'string', description: 'Hours of access e.g. 6am-midnight, 24/7' },
+                  delivery_fee: { type: 'number', description: 'Delivery fee in dollars' },
+                  delivery_radius_miles: { type: 'number', description: 'Delivery radius in miles' },
+                  delivery_instructions: { type: 'string', description: 'Delivery instructions' },
+                  location_notes: { type: 'string', description: 'Additional location notes' },
+                  // Rental pricing
                   price_daily: { type: 'number' },
                   price_weekly: { type: 'number' },
                   price_monthly: { type: 'number' },
+                  deposit_amount: { type: 'number', description: 'Security deposit amount' },
+                  instant_book: { type: 'boolean', description: 'Enable instant booking (default false)' },
+                  rental_min_days: { type: 'number', description: 'Minimum rental days (default 1)' },
+                  // Sale pricing
                   price_sale: { type: 'number' },
-                  fulfillment_type: { type: 'string', enum: ['pickup', 'delivery', 'both'] },
+                  accept_card_payment: { type: 'boolean', description: 'Accept card payments (default true)' },
+                  accept_cash_payment: { type: 'boolean', description: 'Accept cash/Pay in Person (default false)' },
+                  // Dimensions (sale)
+                  weight_lbs: { type: 'number', description: 'Weight in pounds' },
+                  length_inches: { type: 'number', description: 'Length in inches' },
+                  width_inches: { type: 'number', description: 'Width in inches' },
+                  height_inches: { type: 'number', description: 'Height in inches' },
+                  // Details
+                  highlights: { type: 'array', items: { type: 'string' }, description: 'Top selling points' },
+                  amenities: { type: 'array', items: { type: 'string' }, description: 'Amenities/features included' },
+                  // Multi-slot
                   total_slots: { type: 'number', description: 'Number of rental slots/units (default 1)' },
                   slot_names: { type: 'array', items: { type: 'string' }, description: 'Names for each slot if total_slots > 1' },
+                  // Availability
+                  available_from: { type: 'string', description: 'Available from date YYYY-MM-DD' },
+                  available_to: { type: 'string', description: 'Available to date YYYY-MM-DD or null for indefinite' },
                 },
                 required: ['title', 'description', 'category', 'mode'],
               },
