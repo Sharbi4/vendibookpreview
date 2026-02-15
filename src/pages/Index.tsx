@@ -65,7 +65,7 @@ const Index = () => {
   const showVerificationBanner = !isLoading && user && !isVerified;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#0d0d0d]">
       <SEO
         title="Vendibook: The Food Truck Marketplace"
         description="Buy food trucks, rent food trailers, and find shared kitchen rentals. The #1 marketplace for mobile food vendors with Vendor Spaces across the United States."

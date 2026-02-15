@@ -195,7 +195,14 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   const remainingAmenitiesCount = (listing.amenities?.length || 0) - displayAmenities.length;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 ease-out flex flex-col overflow-hidden h-full group">
+    <div 
+      className="rounded-2xl border border-white/15 hover:-translate-y-1 transition-all duration-300 ease-out flex flex-col overflow-hidden h-full group shadow-2xl shadow-black/30"
+      style={{
+        background: 'rgba(255, 255, 255, 0.06)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+      }}
+    >
       <Link 
         to={`/listing/${listing.id}`} 
         className={cn("cursor-pointer block flex-1 flex flex-col", className)}
@@ -203,7 +210,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
       >
         {/* Image Container - Turo Look */}
         <div className={cn(
-          "relative w-full bg-gray-50 overflow-hidden",
+          "relative w-full bg-white/5 overflow-hidden",
           compact ? "aspect-[4/3]" : "aspect-[4/3]"
         )}>
           <img
@@ -367,7 +374,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
       <div className={cn("p-4 space-y-2 flex-1 flex flex-col", compact && "p-3 space-y-1")}>
         {/* Location & Category */}
         <div className="flex items-center justify-between gap-2">
-          <span className={cn("text-gray-500 font-medium flex items-center gap-1", compact ? "text-xs" : "text-sm")}>
+          <span className={cn("text-white/60 font-medium flex items-center gap-1", compact ? "text-xs" : "text-sm")}>
             <MapPin className={cn(compact ? "h-2.5 w-2.5" : "h-3 w-3")} />
             <span className="line-clamp-1">{location}</span>
             {distanceMiles !== undefined && (
@@ -378,7 +385,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           </span>
           {!compact && (
             <CategoryTooltip category={listing.category} side="top">
-              <span className="bg-gray-100 text-gray-900 text-xs font-bold px-3 py-1 rounded-full cursor-help">
+              <span className="bg-white/10 text-white/80 text-xs font-bold px-3 py-1 rounded-full cursor-help">
                 {CATEGORY_LABELS[listing.category]}
               </span>
             </CategoryTooltip>
@@ -387,11 +394,11 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
 
         {/* Delivery Radius Badge */}
         {!compact && (listing.fulfillment_type === 'delivery' || listing.fulfillment_type === 'both') && listing.delivery_radius_miles && (
-          <div className="flex items-center gap-1 text-xs text-gray-500">
+          <div className="flex items-center gap-1 text-xs text-white/50">
             <Truck className="h-3 w-3" />
             <span>Delivers within {listing.delivery_radius_miles} mi</span>
             {listing.delivery_fee && (
-              <span className="text-gray-900 font-medium">· ${listing.delivery_fee} fee</span>
+              <span className="text-white/80 font-medium">· ${listing.delivery_fee} fee</span>
             )}
           </div>
         )}
@@ -399,7 +406,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         {/* Title & Rating - Tracking Tight Typography */}
         <div className="flex items-center justify-between gap-2">
           <h3 className={cn(
-            "text-lg font-semibold tracking-tight text-gray-900 line-clamp-1 group-hover:text-primary transition-colors",
+            "text-lg font-semibold tracking-tight text-white line-clamp-1 group-hover:text-primary transition-colors",
             compact && "text-sm"
           )}>
             {listing.title}
@@ -409,16 +416,16 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
 
         {/* Price - Premium Pill Badge Style */}
         <div className="flex items-center gap-2 flex-wrap mt-auto pt-1">
-          <span className="bg-gray-100 text-gray-900 text-sm font-bold px-3 py-1 rounded-full">
+          <span className="bg-white/10 text-white text-sm font-bold px-3 py-1 rounded-full">
             {price}
           </span>
           {showHourlyRate && (
-            <span className={cn("text-gray-500 font-medium", compact ? "text-xs" : "text-sm")}>
+            <span className={cn("text-white/50 font-medium", compact ? "text-xs" : "text-sm")}>
               ${listing.price_hourly}/hr
             </span>
           )}
           {!compact && listing.mode === 'rent' && listing.price_weekly && (
-            <span className="text-sm text-gray-500 font-medium">
+            <span className="text-sm text-white/50 font-medium">
               ${listing.price_weekly}/week
             </span>
           )}
