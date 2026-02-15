@@ -4,6 +4,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
 import Hero from '@/components/home/Hero';
+import SocialProofStrip from '@/components/home/SocialProofStrip';
 
 import AnnouncementBanner from '@/components/home/AnnouncementBanner';
 import VerificationBanner from '@/components/home/VerificationBanner';
@@ -82,6 +83,9 @@ const Index = () => {
         {/* 1. Hero */}
         <Hero />
         
+        {/* 2. Social Proof Stats */}
+        <SocialProofStrip />
+
 
         <Suspense fallback={<SectionSkeleton />}>
           {/* 3. Listings - Rentals First, Then Sales */}
