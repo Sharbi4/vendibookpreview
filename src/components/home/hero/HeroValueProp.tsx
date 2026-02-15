@@ -26,12 +26,12 @@ const HeroValueProp = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="absolute inset-0 scale-75 rounded-full bg-foreground/8 blur-[60px] sm:blur-[80px]" />
+            <div className="absolute inset-0 scale-90 rounded-full bg-foreground/10 blur-[80px] sm:blur-[100px]" />
             <img
               src={vendibookLogo}
               alt="Vendibook"
-              className="relative h-36 sm:h-44 md:h-52 lg:h-64 w-auto"
-              style={{ filter: 'drop-shadow(0 0 30px rgba(255,255,255,0.08))' }}
+              className="relative h-44 sm:h-52 md:h-60 lg:h-72 w-auto"
+              style={{ filter: 'drop-shadow(0 0 40px rgba(255,255,255,0.15))' }}
             />
           </motion.div>
 
