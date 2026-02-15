@@ -41,13 +41,13 @@ const StartFoodBusiness = () => {
         {/* Hero Section — warm background consistent with homepage */}
         <section className="relative min-h-[80vh] flex items-center overflow-hidden">
           {/* Warm cream-to-peach base */}
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #FFFAF6 0%, #FFF5EE 30%, #FFEFE4 50%, #FFF5EE 70%, #FFFAF6 100%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, hsl(var(--background)) 0%, hsl(var(--muted)) 50%, hsl(var(--background)) 100%)' }} />
 
-          {/* Animated warm shine sweep */}
+          {/* Animated shine sweep */}
           <motion.div
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(105deg, transparent 0%, transparent 30%, rgba(255,255,255,0.9) 42%, rgba(255,237,220,0.5) 50%, rgba(255,255,255,0.9) 58%, transparent 70%, transparent 100%)',
+              background: 'linear-gradient(105deg, transparent 0%, transparent 30%, rgba(255,255,255,0.08) 42%, rgba(255,255,255,0.04) 50%, rgba(255,255,255,0.08) 58%, transparent 70%, transparent 100%)',
             }}
             animate={{ x: ['-100%', '100%'] }}
             transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', repeatDelay: 4 }}
@@ -56,13 +56,13 @@ const StartFoodBusiness = () => {
           {/* Decorative orbs */}
           <motion.div
             className="absolute w-[35rem] h-[35rem] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(255, 200, 160, 0.25), transparent 60%)', filter: 'blur(90px)' }}
+            style={{ background: 'radial-gradient(circle, hsl(var(--foreground) / 0.04), transparent 60%)', filter: 'blur(90px)' }}
             animate={{ x: ['-10%', '50%', '10%', '-10%'], y: ['-5%', '20%', '-10%', '-5%'] }}
             transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
           />
           <motion.div
             className="absolute w-[25rem] h-[25rem] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(255, 120, 70, 0.1), transparent 60%)', filter: 'blur(80px)' }}
+            style={{ background: 'radial-gradient(circle, hsl(var(--foreground) / 0.03), transparent 60%)', filter: 'blur(80px)' }}
             animate={{ x: ['40%', '-20%', '30%', '40%'], y: ['10%', '-5%', '25%', '10%'] }}
             transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
           />
@@ -77,7 +77,7 @@ const StartFoodBusiness = () => {
               >
                 <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground leading-tight tracking-tight mb-6">
                   Launch Your{' '}
-                  <span className="gradient-text-warm">Food Business</span>
+                  <span className="text-muted-foreground">Food Business</span>
                 </h1>
                 <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl">
                   Find verified food trucks, trailers, commercial kitchens, and vendor spaces — all in one place. Sign up free and start browsing.
@@ -85,15 +85,15 @@ const StartFoodBusiness = () => {
 
                 <div className="flex flex-wrap gap-6 mb-8">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <CheckCircle2 className="h-4 w-4 text-foreground/50" />
                     Free to browse
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <CheckCircle2 className="h-4 w-4 text-foreground/50" />
                     No hidden fees
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <CheckCircle2 className="h-4 w-4 text-foreground/50" />
                     Verified hosts
                   </div>
                 </div>
@@ -101,7 +101,7 @@ const StartFoodBusiness = () => {
                 {/* Already signed in CTA */}
                 {user && (
                   <div className="flex gap-3">
-                    <Button asChild variant="dark-shine" size="lg" className="rounded-xl">
+                    <Button asChild variant="glass-cta" size="lg" className="rounded-xl">
                       <Link to="/search">
                         <Search className="mr-2 h-5 w-5" />
                         Browse Listings
@@ -126,10 +126,10 @@ const StartFoodBusiness = () => {
                   </div>
                 ) : (
                   <div className="glass-premium rounded-3xl p-8 shadow-2xl border border-border/40 text-center">
-                    <CheckCircle2 className="h-12 w-12 text-primary mx-auto mb-4" />
+                    <CheckCircle2 className="h-12 w-12 text-foreground/50 mx-auto mb-4" />
                     <h3 className="text-xl font-bold text-foreground mb-2">You're signed in!</h3>
                     <p className="text-muted-foreground mb-6">Start exploring verified listings near you.</p>
-                    <Button asChild variant="dark-shine" size="lg" className="w-full rounded-xl">
+                    <Button asChild variant="glass-cta" size="lg" className="w-full rounded-xl">
                       <Link to="/search">
                         <Search className="mr-2 h-5 w-5" />
                         Browse Listings
@@ -188,20 +188,20 @@ const StartFoodBusiness = () => {
           <div className="container mx-auto px-4">
             <div className="flex flex-wrap justify-center gap-8 md:gap-16">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <ShieldCheck className="h-5 w-5 text-primary" />
+                <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center">
+                  <ShieldCheck className="h-5 w-5 text-foreground/60" />
                 </div>
                 <span className="text-foreground font-medium">Secure payments</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center">
+                  <CheckCircle2 className="h-5 w-5 text-foreground/60" />
                 </div>
                 <span className="text-foreground font-medium">Verified hosts</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <CreditCard className="h-5 w-5 text-primary" />
+                <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center">
+                  <CreditCard className="h-5 w-5 text-foreground/60" />
                 </div>
                 <span className="text-foreground font-medium">Escrow protection</span>
               </div>
@@ -278,16 +278,16 @@ const StartFoodBusiness = () => {
 
         {/* Final CTA */}
         <section className="relative py-20 md:py-28 overflow-hidden">
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #FFFAF6 0%, #FFEFE4 50%, #FFFAF6 100%)' }} />
+          <div className="absolute inset-0 bg-foreground" />
           <div className="container mx-auto px-4 relative z-10 text-center">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-background mb-6">
               Ready to get started?
             </h2>
-            <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
+            <p className="text-lg text-background/60 mb-8 max-w-xl mx-auto">
               Join thousands of food entrepreneurs on Vendibook.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild variant="dark-shine" size="lg" className="text-lg px-8 rounded-xl">
+              <Button asChild size="lg" className="text-lg px-8 rounded-xl bg-background text-foreground hover:bg-background/90">
                 <Link to="/search">
                   <Search className="mr-2 h-5 w-5" />
                   Browse Listings
@@ -320,7 +320,7 @@ const CategoryTile = ({ icon, title, description, href }: { icon: React.ReactNod
   <Link to={href}>
     <Card className="group hover:shadow-lg transition-all duration-300 border border-border/40 h-full">
       <CardContent className="p-6 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mx-auto mb-4 group-hover:scale-105 transition-transform duration-300">
+        <div className="w-16 h-16 rounded-2xl bg-foreground/10 flex items-center justify-center text-foreground/70 mx-auto mb-4 group-hover:scale-105 transition-transform duration-300">
           {icon}
         </div>
         <h3 className="text-lg font-semibold text-foreground mb-1">{title}</h3>
@@ -336,7 +336,7 @@ const StepCard = ({ step, icon, title, description }: { step: number; icon: Reac
       <div className="w-14 h-14 rounded-full bg-foreground text-background flex items-center justify-center">
         {icon}
       </div>
-      <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
+      <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-foreground text-background text-xs font-bold flex items-center justify-center">
         {step}
       </span>
     </div>
@@ -350,7 +350,7 @@ const TestimonialCard = ({ quote, author, role, rating }: { quote: string; autho
     <CardContent className="p-6">
       <div className="flex gap-0.5 mb-4">
         {Array.from({ length: rating }).map((_, i) => (
-          <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+          <Star key={i} className="h-4 w-4 fill-foreground/30 text-foreground/30" />
         ))}
       </div>
       <p className="text-foreground mb-4 italic">"{quote}"</p>

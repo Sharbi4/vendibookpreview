@@ -85,7 +85,7 @@ export function CitySupplyPage({ city, assetType }: CitySupplyPageProps) {
       
       <main>
         {/* Hero Section */}
-        <section className="relative bg-gradient-to-br from-primary/10 via-background to-emerald-500/5 py-20 lg:py-28">
+        <section className="relative bg-gradient-to-br from-foreground/[0.04] via-background to-foreground/[0.02] py-20 lg:py-28">
           <div className="absolute inset-0 bg-grid-pattern opacity-5" />
           {/* Background image collage */}
           <div className="absolute inset-0 opacity-5">
@@ -97,7 +97,7 @@ export function CitySupplyPage({ city, assetType }: CitySupplyPageProps) {
           </div>
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-foreground/10 text-foreground text-sm font-medium mb-6">
                 <MapPin className="h-4 w-4" />
                 {city.name}, {city.state}
               </div>
@@ -123,15 +123,15 @@ export function CitySupplyPage({ city, assetType }: CitySupplyPageProps) {
               {/* Quick Stats */}
               <div className="flex flex-wrap gap-6 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  <CheckCircle2 className="h-4 w-4 text-foreground/50" />
                   <span>{city.stats.activeListings}+ active listings</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-amber-500" />
+                  <Zap className="h-4 w-4 text-foreground/50" />
                   <span>${city.stats.avgDailyRate}/day avg rate</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-primary" />
+                  <Users className="h-4 w-4 text-foreground/50" />
                   <span>{city.stats.hostsEarning}+ hosts earning</span>
                 </div>
               </div>
@@ -167,7 +167,7 @@ export function CitySupplyPage({ city, assetType }: CitySupplyPageProps) {
               {HOW_IT_WORKS.map(({ step, title, desc }) => (
                 <div key={step} className="relative">
                   <div className="flex items-center gap-3 mb-3">
-                    <span className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground font-bold text-sm">
+                    <span className="flex items-center justify-center h-8 w-8 rounded-full bg-foreground text-background font-bold text-sm">
                       {step}
                     </span>
                     <h3 className="font-semibold text-foreground">{title}</h3>
@@ -194,8 +194,8 @@ export function CitySupplyPage({ city, assetType }: CitySupplyPageProps) {
               </div>
               
               <div className="text-center">
-                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <BadgeCheck className="h-7 w-7 text-primary" />
+                <div className="h-14 w-14 rounded-full bg-foreground/10 flex items-center justify-center mx-auto mb-4">
+                  <BadgeCheck className="h-7 w-7 text-foreground/60" />
                 </div>
                 <h3 className="font-semibold text-foreground mb-2">Verified users</h3>
                 <p className="text-sm text-muted-foreground">Identity verification builds trust.</p>
@@ -211,7 +211,7 @@ export function CitySupplyPage({ city, assetType }: CitySupplyPageProps) {
             </div>
             
             <div className="text-center mt-8">
-              <Button variant="link" className="text-primary" asChild>
+              <Button variant="link" className="text-foreground/60" asChild>
                 <Link to="/how-it-works">
                   Learn more about our trust & safety features
                 </Link>
@@ -235,7 +235,7 @@ export function CitySupplyPage({ city, assetType }: CitySupplyPageProps) {
                   <CardContent className="p-6">
                     <div className="flex gap-1 mb-3">
                       {[...Array(5)].map((_, j) => (
-                        <Star key={j} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        <Star key={j} className="h-4 w-4 fill-foreground/30 text-foreground/30" />
                       ))}
                     </div>
                     <p className="text-foreground mb-4">&quot;{testimonial.quote}&quot;</p>
@@ -266,21 +266,21 @@ export function CitySupplyPage({ city, assetType }: CitySupplyPageProps) {
         </section>
 
         {/* Final CTA */}
-        <section className="py-20 bg-gradient-to-r from-primary/10 via-primary/5 to-emerald-500/10">
+        <section className="py-20 bg-foreground">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold text-foreground mb-4">
+            <h2 className="text-3xl font-bold text-background mb-4">
               Ready to start earning in {city.name}?
             </h2>
-            <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+            <p className="text-background/60 mb-8 max-w-xl mx-auto">
               Create your listing in minutes. It is free to list.
             </p>
-            <Button size="lg" onClick={handleStartListing} className="text-lg px-8">
+            <Button size="lg" onClick={handleStartListing} className="text-lg px-8 bg-background text-foreground hover:bg-background/90">
               Start listing
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             
             <p className="text-xs text-muted-foreground mt-6">
-              <Link to="/tools" className="hover:text-primary transition-colors">
+              <Link to="/tools" className="hover:text-background/70 text-background/50 transition-colors">
                 Explore Host Tools →
               </Link>
             </p>

@@ -98,7 +98,7 @@ const PricingCalculator = () => {
                     Free for pay-in-person
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <BadgeCheck className="h-4 w-4 text-primary" />
+                    <BadgeCheck className="h-4 w-4 text-foreground/50" />
                     Buyer protection included
                   </span>
                 </div>
@@ -112,8 +112,8 @@ const PricingCalculator = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
                 {transparencyPoints.map((point, index) => (
                   <div key={index} className="text-center">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-2">
-                      <point.icon className="h-5 w-5 text-primary" />
+                    <div className="w-10 h-10 rounded-xl bg-foreground/10 flex items-center justify-center mx-auto mb-2">
+                      <point.icon className="h-5 w-5 text-foreground/60" />
                     </div>
                     <h3 className="font-medium text-sm mb-0.5">{point.title}</h3>
                     <p className="text-xs text-muted-foreground">{point.description}</p>
