@@ -28,11 +28,9 @@ const defaultPreferences: CookiePreferences = {
 
 // Pages where cookie consent is required for tracking
 const CONSENT_REQUIRED_ROUTES = [
-  '/listing/',
   '/checkout',
   '/book/',
   '/buy/',
-  '/search',
   '/browse',
 ];
 
