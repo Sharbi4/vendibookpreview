@@ -210,7 +210,7 @@ const Hero = () => {
                 {isAIParsing ? (
                   <Wand2 className="absolute left-4 w-5 h-5 text-primary animate-pulse" />
                 ) : (
-                  <MapPin className="absolute left-4 w-5 h-5 text-muted-foreground" />
+                  <Search className="absolute left-4 w-5 h-5 text-muted-foreground" />
                 )}
                 <input
                   ref={inputRef}
