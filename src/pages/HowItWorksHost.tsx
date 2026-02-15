@@ -55,13 +55,13 @@ const EarningsCalculator = () => {
   return (
     <div className="bg-gradient-to-br from-foreground to-foreground/95 text-background rounded-3xl p-6 md:p-10 relative overflow-hidden">
       {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/5 rounded-full blur-2xl" />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-background/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-background/3 rounded-full blur-2xl" />
       
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <span className="text-sm font-medium text-primary">Earnings Calculator</span>
+          <Sparkles className="h-5 w-5 text-background/60" />
+          <span className="text-sm font-medium text-background/60">Earnings Calculator</span>
         </div>
         <h3 className="text-2xl md:text-3xl font-bold mb-6">See your earning potential</h3>
 
@@ -82,7 +82,7 @@ const EarningsCalculator = () => {
                 }}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all ${
                   assetType === type.id
-                    ? 'bg-primary text-primary-foreground border-primary'
+                    ? 'bg-background/20 text-background border-background/40'
                     : 'bg-background/5 border-background/20 hover:bg-background/10'
                 }`}
               >
@@ -97,7 +97,7 @@ const EarningsCalculator = () => {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-3">
             <label className="text-sm text-background/60">Daily rate</label>
-            <span className="text-2xl font-bold text-primary">${dailyRate[0]}</span>
+            <span className="text-2xl font-bold text-background">${dailyRate[0]}</span>
           </div>
           <Slider
             value={dailyRate}
@@ -142,7 +142,7 @@ const EarningsCalculator = () => {
                 key={monthlyEarnings}
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="text-3xl md:text-4xl font-bold text-primary"
+                className="text-3xl md:text-4xl font-bold text-background"
               >
                 ${monthlyEarnings.toLocaleString()}
               </motion.p>
@@ -161,7 +161,7 @@ const EarningsCalculator = () => {
           </div>
         </div>
 
-        <Button size="lg" className="w-full mt-6 rounded-xl h-14 text-base" asChild>
+        <Button size="lg" variant="glass-cta" className="w-full mt-6 rounded-xl h-14 text-base" asChild>
           <Link to="/list">
             Start Earning Now
             <ArrowRight className="ml-2 h-5 w-5" />
@@ -193,15 +193,15 @@ const AnimatedStep = ({
       onClick={onClick}
       className={`w-full text-left p-6 rounded-2xl border-2 transition-all ${
         isActive 
-          ? 'border-primary bg-primary/5' 
-          : 'border-border hover:border-primary/50 bg-background'
+          ? 'border-foreground/30 bg-foreground/[0.03]' 
+          : 'border-border hover:border-foreground/20 bg-background'
       }`}
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
     >
       <div className="flex items-start gap-4">
         <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
-          isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+          isActive ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'
         }`}>
           <Icon className="h-6 w-6" />
         </div>
@@ -258,7 +258,7 @@ const AnimatedStat = ({ value, suffix, label }: { value: number; suffix: string;
   const { count, ref } = useAnimatedCounter(value);
   return (
     <div ref={ref} className="text-center">
-      <div className="text-4xl md:text-5xl font-bold text-primary mb-2">
+      <div className="text-4xl md:text-5xl font-bold text-foreground mb-2">
         {count.toLocaleString()}{suffix}
       </div>
       <p className="text-muted-foreground">{label}</p>
@@ -388,11 +388,11 @@ const HowItWorksHost = () => {
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative py-20 md:py-32 overflow-hidden">
+          <section className="relative py-20 md:py-32 overflow-hidden">
           {/* Gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/10" />
-          <div className="absolute top-20 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-foreground/[0.03] via-background to-foreground/[0.05]" />
+          <div className="absolute top-20 left-1/4 w-72 h-72 bg-foreground/[0.05] rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-foreground/[0.03] rounded-full blur-3xl" />
           
           <div className="container max-w-6xl relative z-10">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
@@ -401,14 +401,14 @@ const HowItWorksHost = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-6">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-foreground/10 text-foreground text-sm font-semibold mb-6">
                   <Truck className="h-4 w-4" />
                   Become a Host
                 </div>
                 
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 leading-[1.1]">
                   Your idle assets are{' '}
-                  <span className="text-primary">losing you money</span>
+                  <span className="text-muted-foreground">losing you money</span>
                 </h1>
                 
                 <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
@@ -416,7 +416,7 @@ const HowItWorksHost = () => {
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                  <Button size="lg" className="rounded-xl h-14 text-base px-8" asChild>
+                  <Button size="lg" variant="glass-cta" className="rounded-xl h-14 text-base px-8" asChild>
                     <Link to="/list">
                       Start Listing — It's Free
                       <ArrowRight className="ml-2 h-5 w-5" />
@@ -432,15 +432,15 @@ const HowItWorksHost = () => {
                 {/* Trust badges */}
                 <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <CheckCircle2 className="h-4 w-4 text-foreground/50" />
                     <span>Free to list</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <CheckCircle2 className="h-4 w-4 text-foreground/50" />
                     <span>Pay only when you earn</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <CheckCircle2 className="h-4 w-4 text-foreground/50" />
                     <span>24-48hr payouts</span>
                   </div>
                 </div>
@@ -502,7 +502,7 @@ const HowItWorksHost = () => {
 
               {/* Visual */}
               <div className="lg:sticky lg:top-8">
-                <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-3xl p-8 md:p-12 border border-primary/20">
+                <div className="bg-gradient-to-br from-foreground/[0.05] to-foreground/[0.02] rounded-3xl p-8 md:p-12 border border-foreground/10">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={activeStep}
@@ -512,7 +512,7 @@ const HowItWorksHost = () => {
                       transition={{ duration: 0.3 }}
                       className="text-center"
                     >
-                      <div className="w-20 h-20 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center mx-auto mb-6">
+                      <div className="w-20 h-20 rounded-2xl bg-foreground text-background flex items-center justify-center mx-auto mb-6">
                         {activeStep === 1 && <Camera className="h-10 w-10" />}
                         {activeStep === 2 && <MessageSquare className="h-10 w-10" />}
                         {activeStep === 3 && <Calendar className="h-10 w-10" />}
@@ -533,8 +533,8 @@ const HowItWorksHost = () => {
                             onClick={() => setActiveStep(dot)}
                             className={`w-2.5 h-2.5 rounded-full transition-all ${
                               dot === activeStep 
-                                ? 'bg-primary w-8' 
-                                : 'bg-primary/30 hover:bg-primary/50'
+                                ? 'bg-foreground w-8' 
+                                : 'bg-foreground/20 hover:bg-foreground/40'
                             }`}
                           />
                         ))}
@@ -580,10 +580,10 @@ const HowItWorksHost = () => {
                   <Card className="h-full bg-background/5 border-background/10 hover:bg-background/10 transition-colors">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 rounded-xl bg-primary/20 text-primary flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-xl bg-background/10 text-background/80 flex items-center justify-center">
                           <benefit.icon className="h-6 w-6" />
                         </div>
-                        <span className="text-2xl font-bold text-primary">{benefit.stat}</span>
+                        <span className="text-2xl font-bold text-background/80">{benefit.stat}</span>
                       </div>
                       <h3 className="font-semibold text-background mb-2">{benefit.title}</h3>
                       <p className="text-sm text-background/60">{benefit.description}</p>
@@ -623,13 +623,13 @@ const HowItWorksHost = () => {
                     <CardContent className="p-6">
                       <div className="flex items-center gap-1 mb-4">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                          <Star key={i} className="h-4 w-4 fill-foreground/30 text-foreground/30" />
                         ))}
                       </div>
                       <p className="text-muted-foreground mb-6 italic">"{testimonial.quote}"</p>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary font-semibold flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-full bg-foreground/10 text-foreground font-semibold flex items-center justify-center">
                             {testimonial.avatar}
                           </div>
                           <div>
@@ -637,7 +637,7 @@ const HowItWorksHost = () => {
                             <p className="text-xs text-muted-foreground">{testimonial.role}</p>
                           </div>
                         </div>
-                        <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-0">
+                        <Badge variant="secondary" className="bg-foreground/10 text-foreground border-0">
                           {testimonial.earnings}
                         </Badge>
                       </div>
@@ -686,14 +686,14 @@ const HowItWorksHost = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="bg-gradient-to-br from-primary via-primary to-primary/80 rounded-3xl p-10 md:p-16 text-center text-primary-foreground relative overflow-hidden"
+              className="bg-foreground rounded-3xl p-10 md:p-16 text-center text-background relative overflow-hidden"
             >
               {/* Decorative elements */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full blur-2xl" />
               
               <div className="relative z-10">
-                <Badge className="bg-white/20 text-white border-0 mb-6">
+                <Badge className="bg-background/20 text-background border-0 mb-6">
                   Join 2,500+ hosts
                 </Badge>
                 <h2 className="text-3xl md:text-5xl font-bold mb-6">
@@ -712,7 +712,7 @@ const HowItWorksHost = () => {
                   <Button 
                     size="lg" 
                     variant="ghost" 
-                    className="rounded-xl h-14 text-base text-white hover:bg-white/10 hover:text-white"
+                    className="rounded-xl h-14 text-base text-background hover:bg-background/10 hover:text-background"
                     asChild
                   >
                     <Link to="/help">

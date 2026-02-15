@@ -26,28 +26,28 @@ const steps = [
     title: 'List Your Asset',
     description: 'Upload high-quality photos, set your asking price, and provide detailed specifications of your food truck or equipment.',
     icon: Camera,
-    color: 'bg-blue-500',
+    color: 'bg-foreground/80',
   },
   {
     step: 2,
     title: 'Receive Offers',
     description: 'Interested buyers can make offers directly through the platform. Review, negotiate, or accept with one click.',
     icon: MessageSquare,
-    color: 'bg-emerald-500',
+    color: 'bg-foreground/70',
   },
   {
     step: 3,
     title: 'Secure Transaction',
     description: 'Once you accept an offer, the buyer pays through our secure escrow system. Funds are held until delivery is confirmed.',
     icon: CreditCard,
-    color: 'bg-amber-500',
+    color: 'bg-foreground/60',
   },
   {
     step: 4,
     title: 'Complete the Sale',
     description: 'Coordinate handoff with the buyer. Once they confirm receipt, your payment is released instantly.',
     icon: DollarSign,
-    color: 'bg-primary',
+    color: 'bg-foreground',
   },
 ];
 
@@ -72,7 +72,7 @@ const HowItWorksSeller = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-600 text-sm font-medium mb-6">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-foreground/10 text-foreground text-sm font-medium mb-6">
                 <Package className="h-4 w-4" />
                 For Sellers
               </div>
@@ -83,7 +83,7 @@ const HowItWorksSeller = () => {
                 Reach thousands of verified buyers looking for food trucks, trailers, and commercial kitchen equipment.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" className="rounded-full bg-emerald-600 hover:bg-emerald-700" asChild>
+                <Button size="lg" variant="glass-cta" className="rounded-full" asChild>
                   <Link to="/list">
                     List for Sale
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -112,10 +112,10 @@ const HowItWorksSeller = () => {
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   viewport={{ once: true }}
                 >
-                  <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-shadow">
+                   <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-shadow bg-card/80 backdrop-blur-xl">
                     <CardContent className="p-6">
                       <div className="flex items-start gap-4">
-                        <div className={`${step.color} text-white p-3 rounded-xl`}>
+                        <div className={`${step.color} text-background p-3 rounded-xl`}>
                           <step.icon className="h-6 w-6" />
                         </div>
                         <div>
@@ -146,7 +146,7 @@ const HowItWorksSeller = () => {
                   viewport={{ once: true }}
                   className="text-center"
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto mb-4">
+                  <div className="w-14 h-14 rounded-2xl bg-foreground/10 text-foreground flex items-center justify-center mx-auto mb-4">
                     <benefit.icon className="h-7 w-7" />
                   </div>
                   <h3 className="font-semibold mb-2">{benefit.title}</h3>
@@ -160,8 +160,8 @@ const HowItWorksSeller = () => {
         {/* CTA Section */}
         <section className="py-16 md:py-20">
           <div className="container max-w-3xl text-center">
-            <div className="bg-primary rounded-3xl p-8 md:p-12 text-primary-foreground relative overflow-hidden">
-              <div className="absolute inset-0 pointer-events-none overflow-hidden"><div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent" style={{ animation: 'shimmer-sweep 5s ease-in-out infinite' }} /></div>
+            <div className="bg-foreground rounded-3xl p-8 md:p-12 text-background relative overflow-hidden">
+              <div className="absolute inset-0 pointer-events-none overflow-hidden"><div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/[0.05] to-transparent" style={{ animation: 'shimmer-sweep 5s ease-in-out infinite' }} /></div>
               <h2 className="text-3xl font-bold mb-4">Ready to Sell?</h2>
               <p className="text-lg opacity-90 mb-8">
                 List your food truck or equipment today. No upfront fees - you only pay when you make a sale.

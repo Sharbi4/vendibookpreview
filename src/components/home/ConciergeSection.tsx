@@ -50,7 +50,8 @@ const ConciergeSection = () => {
               <Button
                 onClick={() => setIsTicketDialogOpen(true)}
                 size="lg"
-                className="rounded-full px-8 bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-lg shadow-primary/20"
+                variant="glass-cta"
+                className="rounded-full px-8 gap-2"
               >
                 <MessageCircle className="w-4 h-4" />
                 Match Me
