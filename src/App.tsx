@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-route
 import { AuthProvider } from "@/contexts/AuthContext";
 import CookieConsent from "@/components/CookieConsent";
 import ScrollToTop from "@/components/ScrollToTop";
-import ZendeskWidget from "@/components/ZendeskWidget";
+
 import PageTransition from "@/components/PageTransition";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { usePageTracking } from "@/hooks/usePageTracking";
@@ -343,7 +343,7 @@ const AppContent = () => {
       <Toaster />
       <Sonner />
       <CookieConsent />
-      <ZendeskWidget />
+      
       <GoogleOneTap />
       <VoiceAssistantButton />
       <AnimatedRoutes />
