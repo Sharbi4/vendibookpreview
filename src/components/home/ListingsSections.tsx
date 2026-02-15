@@ -146,8 +146,8 @@ const ListingsSections = () => {
       <div className="container px-4 sm:px-6 relative z-10">
         {/* Section header */}
         <div className="text-center mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Featured Listings</h2>
-          <p className="text-muted-foreground text-sm">Discover verified assets across the country</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Discover Your Next Kitchen</h2>
+          <p className="text-muted-foreground text-sm">Browse verified food trucks, trailers, kitchens & vendor spaces</p>
         </div>
 
         {/* Tab bar */}
