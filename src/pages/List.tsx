@@ -447,6 +447,7 @@ const PaymentOptions = () => (
           <p className="text-sm text-muted-foreground leading-relaxed mb-3">
             Card, ACH, Afterpay, Klarna, Affirm — all processed through our secure escrow. Funds are held until the deal is complete.
           </p>
+          <p className="text-xs text-primary/80 font-medium mb-1">Buyer pays for payment processing — you get paid upfront</p>
           <p className="text-xs text-muted-foreground">12.9% success fee on completed transactions</p>
         </motion.div>
 

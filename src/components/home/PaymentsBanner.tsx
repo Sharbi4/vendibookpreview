@@ -9,7 +9,7 @@ const PaymentsBanner = () => {
       <div className="container">
         <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
           <p className="text-sm text-muted-foreground text-center md:text-left">
-            <span className="font-medium text-foreground">Flexible payments</span> — buyers pay over time, you get paid upfront
+            <span className="font-medium text-foreground">Buy now, pay later</span> — finance your food truck or trailer with
           </p>
           <div className="flex items-center gap-6">
             <img 
