@@ -65,11 +65,6 @@ const BecomeHostSection = () => {
               <p className="text-xs text-muted-foreground">Average monthly earnings</p>
               <p className="text-2xl font-bold gradient-text-warm">$2,847</p>
             </div>
-            <div className="w-px h-10 bg-border" />
-            <div className="text-left">
-              <p className="text-xs text-muted-foreground">Platform fee</p>
-              <p className="text-2xl font-bold text-foreground">$0</p>
-            </div>
           </motion.div>
 
           <div>
