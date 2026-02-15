@@ -17,14 +17,27 @@ const Hero = () => {
     if (location) params.set('q', location);
     if (category) params.set('category', category);
     if (mode === 'buy') params.set('mode', 'sale');
+    if (mode === 'rent') params.set('mode', 'rent');
     navigate(`/search?${params.toString()}`);
   };
 
   const handleGeolocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation(`${position.coords.latitude.toFixed(2)}, ${position.coords.longitude.toFixed(2)}`);
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
+            );
+            const data = await response.json();
+            const city = data.address?.city || data.address?.town || data.address?.village || '';
+            const state = data.address?.state || '';
+            const locationName = city && state ? `${city}, ${state}` : city || `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
+            setLocation(locationName);
+          } catch {
+            setLocation(`${latitude.toFixed(2)}, ${longitude.toFixed(2)}`);
+          }
         },
         () => setLocation('')
       );

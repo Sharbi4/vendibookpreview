@@ -13,7 +13,7 @@ import DateRangeFilter from '@/components/search/DateRangeFilter';
 import { LocationSearchInput } from '@/components/search/LocationSearchInput';
 import { RadiusFilter } from '@/components/search/RadiusFilter';
 import SearchResultsMap from '@/components/search/SearchResultsMap';
-import NoResultsAlert from '@/components/search/NoResultsAlert';
+import { EmptyStateEmailCapture } from '@/components/search/EmptyStateEmailCapture';
 import GetAlertsCard from '@/components/search/GetAlertsCard';
 import RequestAssetCTA from '@/components/search/RequestAssetCTA';
 import MobileStickyBar from '@/components/search/MobileStickyBar';
@@ -89,7 +89,7 @@ const Search = () => {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [mode, setMode] = useState<ListingMode | 'all'>(initialMode);
   const [category, setCategory] = useState<ListingCategory | 'all'>(initialCategory);
-  const [locationText, setLocationText] = useState('');
+  const [locationText, setLocationText] = useState(searchParams.get('location') || '');
   const [locationCoords, setLocationCoords] = useState<[number, number] | null>(
     initialLat && initialLng ? [parseFloat(initialLng), parseFloat(initialLat)] : null
   );
@@ -765,10 +765,11 @@ const Search = () => {
                           })}
                         </>
                       ) : (
-                        <NoResultsAlert 
+                        <EmptyStateEmailCapture 
                           onClearFilters={clearFilters}
-                          category={category}
-                          mode={mode}
+                          category={category !== 'all' ? category : undefined}
+                          mode={mode !== 'all' ? mode : undefined}
+                          locationText={searchQuery || locationText}
                         />
                       )}
                     </div>
@@ -862,10 +863,11 @@ const Search = () => {
                       ))}
                     </div>
                   ) : (
-                    <NoResultsAlert 
+                    <EmptyStateEmailCapture 
                       onClearFilters={clearFilters}
-                      category={category}
-                      mode={mode}
+                      category={category !== 'all' ? category : undefined}
+                      mode={mode !== 'all' ? mode : undefined}
+                      locationText={searchQuery || locationText}
                     />
                   )}
                   

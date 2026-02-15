@@ -2,6 +2,7 @@ import { useEffect, lazy, Suspense } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
 import Hero from '@/components/home/Hero';
 
 import AnnouncementBanner from '@/components/home/AnnouncementBanner';
@@ -101,6 +102,7 @@ const Index = () => {
       </main>
 
       <Footer />
+      <NewsletterPopup />
       
       
       
