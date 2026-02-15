@@ -27,7 +27,7 @@ const AfterpayBadgeInner = forwardRef<HTMLDivElement, AfterpayBadgeProps & React
         <img 
           src={afterpayLogo} 
           alt="Afterpay" 
-          className="h-4 w-auto dark:invert"
+          className="h-4 w-auto dark:invert dark:brightness-200"
         />
         {showEstimate && <span className="ml-1 text-[11px] font-medium">4 × ${paymentAmount}</span>}
       </div>
