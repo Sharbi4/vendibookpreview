@@ -55,13 +55,7 @@ const ConciergeSection = () => {
                 <MessageCircle className="w-4 h-4" />
                 Match Me
               </Button>
-              <button
-                onClick={() => setIsTicketDialogOpen(true)}
-                className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-sm"
-              >
-                <Send className="w-3.5 h-3.5" />
-                Send a Ticket
-              </button>
+              
             </div>
           </div>
         </motion.div>
