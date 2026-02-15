@@ -27,7 +27,7 @@ const AffirmBadgeInner = forwardRef<HTMLDivElement, AffirmBadgeProps & React.HTM
         <img 
           src={affirmLogo} 
           alt="Affirm" 
-          className="h-4 w-auto dark:invert"
+          className="h-4 w-auto dark:invert dark:brightness-200"
         />
         {showEstimate && <span className="ml-1 text-[11px] font-medium">~${monthlyEstimate}/mo</span>}
       </div>
