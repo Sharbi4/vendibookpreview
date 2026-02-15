@@ -1,6 +1,7 @@
 import { Headset, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 
 const HeroVendiButton = () => (
   <motion.div
@@ -15,6 +16,7 @@ const HeroVendiButton = () => (
     <div className="flex items-center gap-2">
       <motion.button
         onClick={() => {
+          trackEventToDb('hero_vendi_click', 'cta', { source: 'hero' });
           const vendiBtn = document.querySelector('[title="Talk to Vendi"]') as HTMLButtonElement;
           if (vendiBtn) vendiBtn.click();
         }}
