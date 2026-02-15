@@ -98,22 +98,55 @@ Deno.serve(async (req) => {
       queryBuilder = queryBuilder.eq('category', category);
     }
 
+    // Smart query parsing: extract intent, strip filler words, map to categories
+    const categoryKeywords: Record<string, string> = {
+      'kitchen': 'ghost_kitchen',
+      'ghost kitchen': 'ghost_kitchen',
+      'commercial kitchen': 'ghost_kitchen',
+      'food truck': 'food_truck',
+      'truck': 'food_truck',
+      'food trailer': 'food_trailer',
+      'trailer': 'food_trailer',
+      'vendor lot': 'vendor_lot',
+      'lot': 'vendor_lot',
+      'vendor space': 'vendor_space',
+      'space': 'vendor_space',
+      'vending': 'vendor_space',
+    };
+
+    // Strip mode-related filler words from query
+    let cleanedQuery = (query || '').trim();
+    const modeFillers = /\b(for\s+rent|for\s+sale|to\s+rent|to\s+buy|rental|rentals)\b/gi;
+    cleanedQuery = cleanedQuery.replace(modeFillers, '').trim();
+
+    // Check if cleaned query maps to a known category
+    const queryLower = cleanedQuery.toLowerCase();
+    let inferredCategory: string | null = null;
+    for (const [keyword, cat] of Object.entries(categoryKeywords)) {
+      if (queryLower === keyword || queryLower.includes(keyword)) {
+        inferredCategory = cat;
+        break;
+      }
+    }
+
+    // If we inferred a category and no explicit category was set, apply it as a filter
+    if (inferredCategory && !category) {
+      queryBuilder = queryBuilder.eq('category', inferredCategory);
+    }
+
     // Apply text search (ILIKE on title, description, address, city, state)
-    if (query && query.trim()) {
-      const trimmed = query.trim();
+    if (cleanedQuery) {
       // Parse "City, State" format for location searches
-      const parts = trimmed.split(',').map(p => p.trim()).filter(Boolean);
+      const parts = cleanedQuery.split(',').map(p => p.trim()).filter(Boolean);
       
       if (parts.length >= 2) {
-        // Likely a "City, State" query - search city and state columns directly
         const city = parts[0];
-        const state = parts[parts.length - 1];
         queryBuilder = queryBuilder.or(
           `city.ilike.%${city}%,address.ilike.%${city}%,title.ilike.%${city}%`
         );
-      } else {
-        // Single term search - safe to use in .or() since no commas
-        const searchTerm = `%${trimmed}%`;
+      } else if (!inferredCategory) {
+        // Only do text search if we didn't already narrow by category
+        const searchTerm = `%${cleanedQuery}%`;
         queryBuilder = queryBuilder.or(
           `title.ilike.${searchTerm},description.ilike.${searchTerm},address.ilike.${searchTerm},city.ilike.${searchTerm}`
         );
