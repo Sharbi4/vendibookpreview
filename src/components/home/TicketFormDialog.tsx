@@ -119,7 +119,7 @@ const TicketFormDialog = ({ open, onOpenChange }: TicketFormDialogProps) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
           onClick={handleClose}
         >
           {/* Backdrop */}
@@ -132,7 +132,7 @@ const TicketFormDialog = ({ open, onOpenChange }: TicketFormDialogProps) => {
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
             onClick={e => e.stopPropagation()}
-            className="relative w-full max-w-md rounded-3xl border border-white/20 shadow-2xl overflow-hidden"
+            className="relative w-full max-w-md rounded-t-2xl sm:rounded-3xl border border-white/20 shadow-2xl overflow-hidden max-h-[85vh] overflow-y-auto"
             style={{
               background: 'rgba(20, 20, 20, 0.85)',
               backdropFilter: 'blur(40px) saturate(180%)',
@@ -150,7 +150,7 @@ const TicketFormDialog = ({ open, onOpenChange }: TicketFormDialogProps) => {
               <X className="w-4 h-4" />
             </button>
 
-            <div className="relative p-6 sm:p-8">
+            <div className="relative p-4 sm:p-8">
               {isSuccess ? (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -168,19 +168,19 @@ const TicketFormDialog = ({ open, onOpenChange }: TicketFormDialogProps) => {
               ) : (
                 <>
                   {/* Header */}
-                  <div className="text-center mb-6">
+                   <div className="text-center mb-3 sm:mb-6">
                     <div
-                      className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-amber-400/30 text-amber-400 text-xs font-semibold uppercase tracking-wider mb-3"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-amber-400/30 text-amber-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-2 sm:mb-3"
                       style={{ background: 'rgba(245, 158, 11, 0.15)' }}
                     >
-                      <Sparkles className="w-3 h-3" />
+                      <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                       Free Concierge
                     </div>
-                    <h2 className="text-2xl font-bold text-white">Match Me</h2>
-                    <p className="text-white/50 text-sm mt-1">Tell us what you need — we'll find it for you.</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-white">Match Me</h2>
+                    <p className="text-white/50 text-xs sm:text-sm mt-0.5">Tell us what you need — we'll find it for you.</p>
                   </div>
 
-                  <form onSubmit={handleSubmit} className="space-y-4">
+                  <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                     {/* Intent selector */}
                     <div className="space-y-2">
                       <Label className="text-white/70 text-sm">I'm looking to *</Label>
@@ -193,13 +193,13 @@ const TicketFormDialog = ({ open, onOpenChange }: TicketFormDialogProps) => {
                               setFormData(prev => ({ ...prev, intent: option.value }));
                               if (errors.intent) setErrors(prev => ({ ...prev, intent: undefined }));
                             }}
-                            className={`flex flex-col items-center gap-1 py-3 rounded-xl border text-sm font-medium transition-all ${
+                            className={`flex flex-col items-center gap-0.5 py-2 sm:py-3 rounded-xl border text-xs sm:text-sm font-medium transition-all ${
                               formData.intent === option.value
                                 ? 'border-primary bg-primary/20 text-white shadow-lg shadow-primary/20'
                                 : 'border-white/10 text-white/60 hover:border-white/20 hover:bg-white/5'
                             }`}
                           >
-                            <span className="text-lg">{option.emoji}</span>
+                            <span className="text-base sm:text-lg">{option.emoji}</span>
                             <span>{option.label}</span>
                           </button>
                         ))}
@@ -265,7 +265,7 @@ const TicketFormDialog = ({ open, onOpenChange }: TicketFormDialogProps) => {
                     <Button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full h-12 rounded-full bg-black text-white hover:bg-gray-800 font-semibold shadow-lg text-base"
+                      className="w-full h-10 sm:h-12 rounded-full bg-black text-white hover:bg-gray-800 font-semibold shadow-lg text-sm sm:text-base"
                     >
                       {isSubmitting ? (
                         <>
