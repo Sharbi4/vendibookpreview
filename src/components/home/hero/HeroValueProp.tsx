@@ -20,15 +20,20 @@ const HeroValueProp = () => {
       <div className="container relative z-10 max-w-4xl mx-auto px-5 pt-10 pb-6 sm:py-20 md:py-28">
         <div className="text-center flex flex-col items-center gap-0">
           {/* Logo */}
-          <motion.img
-            src={vendibookLogo}
-            alt="Vendibook"
-            className="h-36 sm:h-44 md:h-52 lg:h-64 w-auto mb-4 sm:mb-6"
-            style={{ filter: 'drop-shadow(0 0 40px rgba(255,81,36,0.25))' }}
+          <motion.div
+            className="relative mb-4 sm:mb-6"
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          />
+          >
+            <div className="absolute inset-0 scale-75 rounded-full bg-primary/15 blur-[60px] sm:blur-[80px]" />
+            <img
+              src={vendibookLogo}
+              alt="Vendibook"
+              className="relative h-36 sm:h-44 md:h-52 lg:h-64 w-auto"
+              style={{ filter: 'drop-shadow(0 0 30px rgba(255,81,36,0.2))' }}
+            />
+          </motion.div>
 
           {/* Headline */}
           <motion.h1
