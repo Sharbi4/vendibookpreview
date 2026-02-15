@@ -190,7 +190,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   const locationParts = [raw.city, raw.state].filter(Boolean);
   const location = locationParts.length > 0 
     ? locationParts.join(', ') + (raw.postal_code ? ` ${raw.postal_code}` : '')
-    : listing.address?.split(',').slice(-2).join(',').trim() || 'Location TBD';
+    : listing.address || 'United States';
 
   // Get displayable amenities (max 3 to leave room for Quick Book button)
   const maxAmenities = compact ? 2 : 3;
