@@ -199,31 +199,7 @@ const Hero = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.35 }}
           >
-            {/* Rent / Buy toggle */}
-            <div className="flex items-center justify-center gap-1 mb-4">
-              <button
-                onClick={() => setMode('rent')}
-                className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all ${
-                  mode === 'rent'
-                    ? 'bg-primary/15 text-primary border border-primary/30'
-                    : 'text-muted-foreground hover:text-foreground border border-transparent'
-                }`}
-              >
-                <Home className="w-3.5 h-3.5" />
-                Rent
-              </button>
-              <button
-                onClick={() => setMode('buy')}
-                className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all ${
-                  mode === 'buy'
-                    ? 'bg-primary/15 text-primary border border-primary/30'
-                    : 'text-muted-foreground hover:text-foreground border border-transparent'
-                }`}
-              >
-                <ShoppingCart className="w-3.5 h-3.5" />
-                Buy
-              </button>
-            </div>
+
 
             {/* AI Search input */}
             <div className="relative group">
