@@ -141,7 +141,7 @@ const ListingsSections = () => {
 
   return (
     <section className="py-10 sm:py-16 relative overflow-hidden bg-background">
-      <div className="absolute top-0 right-0 w-[400px] h-[300px] bg-primary/5 rounded-full blur-3xl" aria-hidden="true" />
+      <div className="absolute top-0 right-0 w-[400px] h-[300px] bg-foreground/[0.03] rounded-full blur-3xl" aria-hidden="true" />
       
       <div className="container px-4 sm:px-6 relative z-10">
         {/* Section header */}
@@ -158,14 +158,14 @@ const ListingsSections = () => {
               onClick={() => setActiveTab(tab.key)}
               className={`relative flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-full text-sm font-medium transition-all ${
                 activeTab === tab.key
-                  ? 'text-primary-foreground'
+                  ? 'text-background'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent'
               }`}
             >
               {activeTab === tab.key && (
                 <motion.div
                   layoutId="active-tab"
-                  className="absolute inset-0 bg-primary rounded-full shadow-lg shadow-primary/20"
+                  className="absolute inset-0 bg-foreground rounded-full shadow-lg shadow-foreground/10"
                   transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
                 />
               )}
@@ -203,7 +203,7 @@ const ListingsSections = () => {
                   <Button
                     variant="outline"
                     onClick={() => navigate(viewAllPath)}
-                    className="rounded-full px-8 border-border hover:border-primary/40 hover:bg-primary/5 text-foreground gap-2"
+                    className="rounded-full px-8 border-border hover:border-foreground/20 hover:bg-foreground/5 text-foreground gap-2"
                   >
                     View All {tabs.find(t => t.key === activeTab)?.label}
                     <ArrowRight className="w-4 h-4" />

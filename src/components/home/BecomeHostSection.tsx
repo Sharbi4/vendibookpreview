@@ -13,7 +13,7 @@ const BecomeHostSection = () => {
   return (
     <section className="py-16 sm:py-24 relative overflow-hidden">
       {/* Subtle glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary/[0.04] rounded-full blur-[100px]" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-foreground/[0.03] rounded-full blur-[100px]" />
       
       <div className="container max-w-4xl mx-auto px-5 sm:px-6 relative z-10">
         <motion.div

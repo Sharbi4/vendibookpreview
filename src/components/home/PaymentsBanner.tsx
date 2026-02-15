@@ -25,7 +25,7 @@ const PaymentsBanner = () => {
           </div>
           <Link 
             to="/payments" 
-            className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1 transition-colors"
+            className="text-sm text-foreground/60 hover:text-foreground font-medium flex items-center gap-1 transition-colors"
           >
             Learn more about financing
             <ArrowRight className="h-3.5 w-3.5" />
