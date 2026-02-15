@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Phone, PhoneOff, MicOff, Mic, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVapiAssistant } from '@/hooks/useVapiAssistant';
@@ -8,6 +8,20 @@ import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 const VoiceAssistantButton = () => {
   const { status, isMuted, volumeLevel, startCall, endCall, toggleMute, isConfigured } = useVapiAssistant();
   const [isExpanded, setIsExpanded] = useState(false);
+  const callStartRef = useRef<number | null>(null);
+
+  // Track call start/end times
+  useEffect(() => {
+    if (status === 'active' && !callStartRef.current) {
+      callStartRef.current = Date.now();
+    }
+    if (status === 'idle' && callStartRef.current) {
+      const durationMs = Date.now() - callStartRef.current;
+      const durationSec = Math.round(durationMs / 1000);
+      trackEventToDb('voice_call_end', 'voice', { duration_seconds: durationSec });
+      callStartRef.current = null;
+    }
+  }, [status]);
 
   // Listen for external trigger (e.g., from List page "Set Up with Vendi" button)
   useEffect(() => {

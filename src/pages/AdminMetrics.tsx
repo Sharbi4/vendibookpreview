@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { 
   Shield, TrendingUp, TrendingDown, AlertTriangle, MapPin, 
   Activity, ArrowRight, ArrowUpRight, ArrowDownRight, Minus,
   Users, DollarSign, Package, Eye, MessageSquare, Search,
-  BarChart3, Zap, MousePointer, Headset, Download
+  BarChart3, Zap, MousePointer, Headset, Download, Phone
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCityStats, useAdminAlerts } from '@/hooks/useAnalyticsEvents';
@@ -87,6 +88,25 @@ const AdminMetrics = () => {
   const { data: ctaClicks, isLoading: ctaLoading } = useCTAClickMetrics(dateRange);
   const { data: cityStats, isLoading: cityLoading } = useAdminCityStats();
   const { data: alerts, isLoading: alertsLoading } = useAdminAlerts();
+
+  // Voice call logs
+  const { data: voiceLogs, isLoading: voiceLoading } = useQuery({
+    queryKey: ['admin-voice-logs', dateRange],
+    queryFn: async () => {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - dateRange);
+      const { data, error } = await supabase
+        .from('analytics_events')
+        .select('*')
+        .eq('event_category', 'voice')
+        .gte('created_at', startDate.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -207,6 +227,9 @@ const AdminMetrics = () => {
             </TabsTrigger>
             <TabsTrigger value="cta">
               <MousePointer className="h-4 w-4 mr-1" /> CTA Clicks
+            </TabsTrigger>
+            <TabsTrigger value="voice">
+              <Phone className="h-4 w-4 mr-1" /> Voice (Vendi)
             </TabsTrigger>
           </TabsList>
 
@@ -470,6 +493,88 @@ const AdminMetrics = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* ═══════════════ VOICE (VENDI) ═══════════════ */}
+          <TabsContent value="voice">
+            <div className="space-y-6">
+              {/* Summary cards */}
+              {(() => {
+                const opens = voiceLogs?.filter(e => e.event_name === 'voice_widget_open').length || 0;
+                const ends = voiceLogs?.filter(e => e.event_name === 'voice_call_end') || [];
+                const completed = ends.length;
+                const avgDuration = completed > 0
+                  ? Math.round(ends.reduce((sum, e) => sum + ((e.metadata as any)?.duration_seconds || 0), 0) / completed)
+                  : 0;
+                return (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <MetricCard icon={Phone} label="Calls Started" value={opens} />
+                    <MetricCard icon={Phone} label="Calls Completed" value={completed} iconColor="text-emerald-600" />
+                    <MetricCard icon={Activity} label="Completion Rate" value={opens > 0 ? `${Math.round((completed / opens) * 100)}%` : '—'} />
+                    <MetricCard icon={Activity} label="Avg Duration" value={avgDuration > 0 ? `${Math.floor(avgDuration / 60)}m ${avgDuration % 60}s` : '—'} />
+                  </div>
+                );
+              })()}
+
+              {/* Call log table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Phone className="h-5 w-5 text-foreground/60" />
+                    Voice Call Log
+                  </CardTitle>
+                  <CardDescription>All Vendi voice interactions in the selected period</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {voiceLoading ? (
+                    <Skeleton className="h-48" />
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Event</TableHead>
+                          <TableHead>Source</TableHead>
+                          <TableHead>Duration</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Session</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {voiceLogs && voiceLogs.length > 0 ? voiceLogs.map((log) => {
+                          const meta = (log.metadata || {}) as Record<string, any>;
+                          const dur = meta.duration_seconds;
+                          return (
+                            <TableRow key={log.id}>
+                              <TableCell className="font-medium">
+                                {log.event_name === 'voice_widget_open' ? '📞 Call Started' :
+                                 log.event_name === 'voice_call_end' ? '✅ Call Ended' :
+                                 log.event_name.replace(/_/g, ' ')}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">{meta.source || '—'}</TableCell>
+                              <TableCell className="tabular-nums">
+                                {dur ? `${Math.floor(dur / 60)}m ${dur % 60}s` : '—'}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {new Date(log.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                              </TableCell>
+                              <TableCell className="text-xs text-muted-foreground font-mono truncate max-w-[120px]">
+                                {log.session_id?.slice(-8) || '—'}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        }) : (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                              No voice events tracked yet for this period.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
 
