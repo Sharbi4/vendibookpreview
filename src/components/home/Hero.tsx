@@ -1,41 +1,45 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Navigation, ArrowRight, Sparkles } from 'lucide-react';
+import { Search, MapPin, Navigation, ArrowRight, Sparkles, Home, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 
 const Hero = () => {
   const navigate = useNavigate();
+  const [mode, setMode] = useState<'rent' | 'buy'>('rent');
   const [location, setLocation] = useState('');
+  const [isLocating, setIsLocating] = useState(false);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (location) params.set('q', location);
+    params.set('mode', mode === 'buy' ? 'sale' : 'rent');
     navigate(`/search?${params.toString()}`);
   };
 
   const handleGeolocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          try {
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
-            );
-            const data = await response.json();
-            const city = data.address?.city || data.address?.town || data.address?.village || '';
-            const state = data.address?.state || '';
-            const locationName = city && state ? `${city}, ${state}` : city || `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
-            setLocation(locationName);
-          } catch {
-            setLocation(`${latitude.toFixed(2)}, ${longitude.toFixed(2)}`);
-          }
-        },
-        () => setLocation('')
-      );
-    }
+    if (!navigator.geolocation) return;
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
+          );
+          const data = await response.json();
+          const city = data.address?.city || data.address?.town || data.address?.village || '';
+          const state = data.address?.state || '';
+          setLocation(city && state ? `${city}, ${state}` : city || `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`);
+        } catch {
+          setLocation(`${latitude.toFixed(2)}, ${longitude.toFixed(2)}`);
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      () => setIsLocating(false)
+    );
   };
 
   return (
@@ -60,7 +64,7 @@ const Hero = () => {
             transition={{ duration: 0.5 }}
           />
 
-          {/* Headline — OpenAI style: massive, clean, no fluff */}
+          {/* Headline */}
           <motion.h1
             className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground leading-[1.08] tracking-tight mb-6"
             initial={{ opacity: 0, y: 20 }}
@@ -69,26 +73,53 @@ const Hero = () => {
           >
             The marketplace for
             <br />
-            <span className="gradient-text-warm">mobile food business.</span>
+            <span className="gradient-text-warm">food business.</span>
           </motion.h1>
 
-          {/* Sub — concise value prop */}
+          {/* Sub */}
           <motion.p
             className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            Buy trucks, rent trailers, find vendor spaces — verified assets, instant booking, flexible payments.
+            Food trucks, trailers, shared kitchens, and vendor spaces — verified assets, instant booking, flexible payments.
           </motion.p>
 
-          {/* Search bar — single input, maximum simplicity */}
+          {/* Search card */}
           <motion.div
             className="max-w-xl mx-auto mb-10"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
+            {/* Rent / Buy toggle */}
+            <div className="flex items-center justify-center gap-1 mb-4">
+              <button
+                onClick={() => setMode('rent')}
+                className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                  mode === 'rent'
+                    ? 'bg-primary/15 text-primary border border-primary/30'
+                    : 'text-muted-foreground hover:text-foreground border border-transparent'
+                }`}
+              >
+                <Home className="w-3.5 h-3.5" />
+                Rent
+              </button>
+              <button
+                onClick={() => setMode('buy')}
+                className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                  mode === 'buy'
+                    ? 'bg-primary/15 text-primary border border-primary/30'
+                    : 'text-muted-foreground hover:text-foreground border border-transparent'
+                }`}
+              >
+                <ShoppingCart className="w-3.5 h-3.5" />
+                Buy
+              </button>
+            </div>
+
+            {/* Search input */}
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-2xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="relative flex items-center bg-card border border-border rounded-2xl overflow-hidden transition-all duration-300 group-hover:border-primary/30">
@@ -98,16 +129,17 @@ const Hero = () => {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  placeholder="Search by city, zip, or keyword…"
-                  className="w-full h-14 pl-12 pr-24 bg-transparent text-foreground placeholder:text-muted-foreground text-base focus:outline-none"
+                  placeholder="City, zip code, or keyword…"
+                  className="w-full h-14 pl-12 pr-28 bg-transparent text-foreground placeholder:text-muted-foreground text-base focus:outline-none"
                 />
                 <div className="absolute right-2 flex items-center gap-1">
                   <button
                     onClick={handleGeolocation}
-                    className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent"
+                    disabled={isLocating}
+                    className="p-2 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-accent disabled:opacity-50"
                     aria-label="Use current location"
                   >
-                    <Navigation className="w-4 h-4" />
+                    <Navigation className={`w-4 h-4 ${isLocating ? 'animate-pulse' : ''}`} />
                   </button>
                   <Button
                     onClick={handleSearch}
@@ -122,7 +154,7 @@ const Hero = () => {
             </div>
           </motion.div>
 
-          {/* Dual CTA — reduce friction for BOTH sides */}
+          {/* Dual CTA */}
           <motion.div
             className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12"
             initial={{ opacity: 0, y: 12 }}
@@ -144,7 +176,7 @@ const Hero = () => {
               onClick={() => navigate('/search?mode=sale')}
               className="rounded-full px-8 border-border hover:border-primary/40 hover:bg-primary/5 text-foreground gap-2 transition-all"
             >
-              Shop Trucks for Sale
+              Shop for Sale
               <ArrowRight className="w-4 h-4" />
             </Button>
             <Button
@@ -157,7 +189,7 @@ const Hero = () => {
             </Button>
           </motion.div>
 
-          {/* Trust signals — minimal, clean */}
+          {/* Trust signals */}
           <motion.div
             className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground"
             initial={{ opacity: 0 }}
