@@ -102,7 +102,7 @@ const NoResultsAlert = ({ onClearFilters, category, mode }: NoResultsAlertProps)
       <Card className="max-w-md mx-auto border-0 shadow-xl bg-card">
         <CardContent className="p-6 md:p-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 rounded-2xl bg-foreground text-background flex items-center justify-center shadow-lg">
               <Bell className="h-6 w-6" />
             </div>
           </div>

@@ -35,10 +35,10 @@ const Insurance = () => {
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-16">
+        <section className="bg-gradient-to-br from-foreground/[0.03] via-background to-foreground/[0.02] py-16">
           <div className="container max-w-4xl">
             <div className="flex items-center gap-3 mb-4">
-              <Shield className="h-10 w-10 text-primary" />
+              <Shield className="h-10 w-10 text-foreground/70" />
               <h1 className="text-4xl font-bold text-foreground">Insurance Information</h1>
             </div>
             <p className="text-xl text-muted-foreground mb-4">
@@ -70,12 +70,12 @@ const Insurance = () => {
           <div className="container max-w-4xl">
             <h2 className="text-lg font-semibold mb-4">Contents</h2>
             <div className="flex flex-wrap gap-4">
-              <a href="#overview" className="text-primary hover:underline">1. Overview</a>
-              <a href="#policy" className="text-primary hover:underline">2. Vendibook Policy</a>
-              <a href="#responsibility" className="text-primary hover:underline">3. Renter Responsibility</a>
-              <a href="#options" className="text-primary hover:underline">4. Recommended Options</a>
-              <a href="#host-requirements" className="text-primary hover:underline">5. Host Requirements</a>
-              <a href="#faq" className="text-primary hover:underline">6. FAQ</a>
+              <a href="#overview" className="text-foreground/60 hover:underline">1. Overview</a>
+              <a href="#policy" className="text-foreground/60 hover:underline">2. Vendibook Policy</a>
+              <a href="#responsibility" className="text-foreground/60 hover:underline">3. Renter Responsibility</a>
+              <a href="#options" className="text-foreground/60 hover:underline">4. Recommended Options</a>
+              <a href="#host-requirements" className="text-foreground/60 hover:underline">5. Host Requirements</a>
+              <a href="#faq" className="text-foreground/60 hover:underline">6. FAQ</a>
             </div>
           </div>
         </section>
@@ -84,7 +84,7 @@ const Insurance = () => {
           {/* Section 1: Overview */}
           <section id="overview">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <span className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
+              <span className="bg-foreground text-background w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
               Insurance Overview
             </h2>
             <div className="prose prose-gray max-w-none">
@@ -98,7 +98,7 @@ const Insurance = () => {
                 or liability claims. The specific coverage needed depends on the type of equipment being rented 
                 and how it will be used.
               </p>
-              <Card className="bg-primary/5 border-primary/20">
+             <Card className="bg-foreground/[0.03] border-foreground/10">
                 <CardContent className="pt-6">
                   <p className="font-medium text-foreground">
                     <strong>Key Point:</strong> Always verify your insurance coverage before operating any rented 
@@ -112,7 +112,7 @@ const Insurance = () => {
           {/* Section 2: Vendibook Policy */}
           <section id="policy">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <span className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
+              <span className="bg-foreground text-background w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
               Vendibook Insurance Policy
             </h2>
             
@@ -151,7 +151,7 @@ const Insurance = () => {
             <div className="grid sm:grid-cols-2 gap-4">
               <Card>
                 <CardContent className="pt-6 flex items-start gap-3">
-                  <CreditCard className="h-5 w-5 text-primary flex-shrink-0" />
+                  <CreditCard className="h-5 w-5 text-foreground/60 flex-shrink-0" />
                   <div>
                     <h4 className="font-medium">Secure Payments</h4>
                     <p className="text-sm text-muted-foreground">All transactions via Stripe</p>
@@ -160,7 +160,7 @@ const Insurance = () => {
               </Card>
               <Card>
                 <CardContent className="pt-6 flex items-start gap-3">
-                  <Lock className="h-5 w-5 text-primary flex-shrink-0" />
+                  <Lock className="h-5 w-5 text-foreground/60 flex-shrink-0" />
                   <div>
                     <h4 className="font-medium">Security Deposits</h4>
                     <p className="text-sm text-muted-foreground">Refundable deposits available</p>
@@ -169,7 +169,7 @@ const Insurance = () => {
               </Card>
               <Card>
                 <CardContent className="pt-6 flex items-start gap-3">
-                  <Scale className="h-5 w-5 text-primary flex-shrink-0" />
+                  <Scale className="h-5 w-5 text-foreground/60 flex-shrink-0" />
                   <div>
                     <h4 className="font-medium">Dispute Resolution</h4>
                     <p className="text-sm text-muted-foreground">Mediation for booking disputes</p>
@@ -178,7 +178,7 @@ const Insurance = () => {
               </Card>
               <Card>
                 <CardContent className="pt-6 flex items-start gap-3">
-                  <UserCheck className="h-5 w-5 text-primary flex-shrink-0" />
+                  <UserCheck className="h-5 w-5 text-foreground/60 flex-shrink-0" />
                   <div>
                     <h4 className="font-medium">Identity Verification</h4>
                     <p className="text-sm text-muted-foreground">Stripe Identity verification</p>
@@ -191,7 +191,7 @@ const Insurance = () => {
           {/* Section 3: Renter Responsibility */}
           <section id="responsibility">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <span className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span>
+              <span className="bg-foreground text-background w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span>
               Renter Responsibility
             </h2>
             
@@ -205,7 +205,7 @@ const Insurance = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-4">
-                    <Shield className="h-8 w-8 text-primary flex-shrink-0" />
+                    <Shield className="h-8 w-8 text-foreground/60 flex-shrink-0" />
                     <div>
                       <h4 className="font-semibold mb-1">General Liability Insurance</h4>
                       <p className="text-sm text-muted-foreground">
@@ -219,7 +219,7 @@ const Insurance = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-4">
-                    <Car className="h-8 w-8 text-primary flex-shrink-0" />
+                    <Car className="h-8 w-8 text-foreground/60 flex-shrink-0" />
                     <div>
                       <h4 className="font-semibold mb-1">Commercial Auto Insurance</h4>
                       <p className="text-sm text-muted-foreground">
@@ -233,7 +233,7 @@ const Insurance = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-4">
-                    <Package className="h-8 w-8 text-primary flex-shrink-0" />
+                    <Package className="h-8 w-8 text-foreground/60 flex-shrink-0" />
                     <div>
                       <h4 className="font-semibold mb-1">Equipment/Inland Marine Insurance</h4>
                       <p className="text-sm text-muted-foreground">
@@ -247,7 +247,7 @@ const Insurance = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-4">
-                    <UtensilsCrossed className="h-8 w-8 text-primary flex-shrink-0" />
+                    <UtensilsCrossed className="h-8 w-8 text-foreground/60 flex-shrink-0" />
                     <div>
                       <h4 className="font-semibold mb-1">Product Liability Insurance</h4>
                       <p className="text-sm text-muted-foreground">
@@ -269,7 +269,7 @@ const Insurance = () => {
                 'Understand what is and isn\'t covered by your policy'
               ].map((item, index) => (
                 <div key={index} className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="h-5 w-5 text-foreground/50 flex-shrink-0 mt-0.5" />
                   <p className="text-muted-foreground">{item}</p>
                 </div>
               ))}
@@ -279,14 +279,14 @@ const Insurance = () => {
           {/* Section 4: Recommended Options */}
           <section id="options">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <span className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center text-sm">4</span>
+              <span className="bg-foreground text-background w-8 h-8 rounded-full flex items-center justify-center text-sm">4</span>
               Recommended Options
             </h2>
 
-            <Card className="mb-6 border-2 border-primary/20">
+            <Card className="mb-6 border-2 border-foreground/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-primary" />
+                  <Shield className="h-5 w-5 text-foreground/60" />
                   FLIP Insurance
                 </CardTitle>
               </CardHeader>
@@ -296,7 +296,7 @@ const Insurance = () => {
                   food vendors, event professionals, and mobile business operators. Coverage can be purchased 
                   for single events or ongoing operations.
                 </p>
-                <Button variant="dark-shine" asChild>
+                <Button variant="glass-cta" asChild>
                   <a 
                     href="https://www.fliprogram.com" 
                     target="_blank" 
@@ -327,7 +327,7 @@ const Insurance = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-3">
-                    <FileText className="h-5 w-5 text-primary flex-shrink-0" />
+                    <FileText className="h-5 w-5 text-foreground/60 flex-shrink-0" />
                     <div>
                       <h4 className="font-medium">Your Existing Insurance</h4>
                       <p className="text-sm text-muted-foreground">
@@ -340,7 +340,7 @@ const Insurance = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-3">
-                    <Building className="h-5 w-5 text-primary flex-shrink-0" />
+                    <Building className="h-5 w-5 text-foreground/60 flex-shrink-0" />
                     <div>
                       <h4 className="font-medium">Event Insurance Providers</h4>
                       <p className="text-sm text-muted-foreground">
@@ -353,7 +353,7 @@ const Insurance = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-3">
-                    <Briefcase className="h-5 w-5 text-primary flex-shrink-0" />
+                    <Briefcase className="h-5 w-5 text-foreground/60 flex-shrink-0" />
                     <div>
                       <h4 className="font-medium">Local Insurance Agents</h4>
                       <p className="text-sm text-muted-foreground">
@@ -366,7 +366,7 @@ const Insurance = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-3">
-                    <Users className="h-5 w-5 text-primary flex-shrink-0" />
+                    <Users className="h-5 w-5 text-foreground/60 flex-shrink-0" />
                     <div>
                       <h4 className="font-medium">Industry Associations</h4>
                       <p className="text-sm text-muted-foreground">
@@ -382,7 +382,7 @@ const Insurance = () => {
           {/* Section 5: Host Requirements */}
           <section id="host-requirements">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <span className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center text-sm">5</span>
+              <span className="bg-foreground text-background w-8 h-8 rounded-full flex items-center justify-center text-sm">5</span>
               Host Requirements
             </h2>
 
@@ -402,13 +402,13 @@ const Insurance = () => {
                 { title: 'Workers\' Compensation', desc: 'If you have employees' }
               ].map((item, index) => (
                 <li key={index} className="flex items-start gap-2 text-muted-foreground">
-                  <span className="text-primary mt-1">•</span>
+                  <span className="text-foreground/50 mt-1">•</span>
                   <span><strong>{item.title}:</strong> {item.desc}</span>
                 </li>
               ))}
             </ul>
 
-            <Card className="bg-primary/5 border-primary/20">
+            <Card className="bg-foreground/[0.03] border-foreground/10">
               <CardContent className="pt-6">
                 <p className="text-muted-foreground">
                   <strong>Tip:</strong> If you frequently rent equipment, consider getting a COI that can be 
@@ -422,7 +422,7 @@ const Insurance = () => {
           {/* Section 6: FAQ */}
           <section id="faq">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <span className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center text-sm">6</span>
+              <span className="bg-foreground text-background w-8 h-8 rounded-full flex items-center justify-center text-sm">6</span>
               Frequently Asked Questions
             </h2>
 
@@ -430,7 +430,7 @@ const Insurance = () => {
               <AccordionItem value="item-1">
                 <AccordionTrigger className="text-left">
                   <span className="flex items-center gap-2">
-                    <HelpCircle className="h-4 w-4 text-primary flex-shrink-0" />
+                     <HelpCircle className="h-4 w-4 text-foreground/50 flex-shrink-0" />
                     Does Vendibook provide any insurance coverage?
                   </span>
                 </AccordionTrigger>
@@ -443,7 +443,7 @@ const Insurance = () => {
               <AccordionItem value="item-2">
                 <AccordionTrigger className="text-left">
                   <span className="flex items-center gap-2">
-                    <HelpCircle className="h-4 w-4 text-primary flex-shrink-0" />
+                     <HelpCircle className="h-4 w-4 text-foreground/50 flex-shrink-0" />
                     What happens if I damage rented equipment?
                   </span>
                 </AccordionTrigger>
@@ -457,7 +457,7 @@ const Insurance = () => {
               <AccordionItem value="item-3">
                 <AccordionTrigger className="text-left">
                   <span className="flex items-center gap-2">
-                    <HelpCircle className="h-4 w-4 text-primary flex-shrink-0" />
+                     <HelpCircle className="h-4 w-4 text-foreground/50 flex-shrink-0" />
                     Can I book without insurance if the Host doesn't require it?
                   </span>
                 </AccordionTrigger>
@@ -471,7 +471,7 @@ const Insurance = () => {
               <AccordionItem value="item-4">
                 <AccordionTrigger className="text-left">
                   <span className="flex items-center gap-2">
-                    <HelpCircle className="h-4 w-4 text-primary flex-shrink-0" />
+                     <HelpCircle className="h-4 w-4 text-foreground/50 flex-shrink-0" />
                     How do I know what insurance a Host requires?
                   </span>
                 </AccordionTrigger>
@@ -484,7 +484,7 @@ const Insurance = () => {
               <AccordionItem value="item-5">
                 <AccordionTrigger className="text-left">
                   <span className="flex items-center gap-2">
-                    <HelpCircle className="h-4 w-4 text-primary flex-shrink-0" />
+                     <HelpCircle className="h-4 w-4 text-foreground/50 flex-shrink-0" />
                     Is FLIP the only insurance option?
                   </span>
                 </AccordionTrigger>
@@ -498,7 +498,7 @@ const Insurance = () => {
               <AccordionItem value="item-6">
                 <AccordionTrigger className="text-left">
                   <span className="flex items-center gap-2">
-                    <HelpCircle className="h-4 w-4 text-primary flex-shrink-0" />
+                    <HelpCircle className="h-4 w-4 text-foreground/50 flex-shrink-0" />
                     What if I have questions about insurance requirements?
                   </span>
                 </AccordionTrigger>
@@ -517,14 +517,14 @@ const Insurance = () => {
             <p className="text-muted-foreground mb-6">
               Contact us if you need clarification on insurance requirements or have concerns about coverage.
             </p>
-            <Button variant="dark-shine" asChild>
+            <Button variant="glass-cta" asChild>
               <Link to="/contact">Contact Support</Link>
             </Button>
           </section>
 
           {/* Back to Home */}
           <div className="text-center">
-            <Link to="/" className="text-primary hover:underline">
+            <Link to="/" className="text-foreground/60 hover:underline">
               ← Back to Home
             </Link>
           </div>

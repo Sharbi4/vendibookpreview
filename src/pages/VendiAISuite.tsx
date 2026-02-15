@@ -26,10 +26,10 @@ const VendiAISuite = () => {
       <main className="min-h-screen bg-background">
         {/* Hero Section */}
         <section className="relative py-20 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-b from-foreground/[0.03] to-background" />
           
           <div className="container max-w-4xl mx-auto px-4 text-center relative z-10">
-            <Badge className="mb-6 bg-primary/10 text-primary border-primary/20 px-4 py-1.5 text-sm">
+            <Badge className="mb-6 bg-foreground/10 text-foreground border-foreground/15 px-4 py-1.5 text-sm">
               <Sparkles className="w-3.5 h-3.5 mr-2" />
               Vendor Toolkit
             </Badge>
@@ -61,7 +61,7 @@ const VendiAISuite = () => {
                 <ul className="space-y-3 mb-8">
                   {['Interactive launch checklist', 'Budgeting templates', 'Equipment sourcing guide', 'Marketing launch plan'].map(item => (
                     <li key={item} className="flex items-center gap-3">
-                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <CheckCircle className="w-5 h-5 text-foreground/50" />
                       <span className="font-medium">{item}</span>
                     </li>
                   ))}
@@ -93,7 +93,7 @@ const VendiAISuite = () => {
                 <ul className="space-y-3 mb-8">
                   {['City-specific permit database', 'Health department requirements', 'Insurance compliance check', 'Renewal reminders'].map(item => (
                     <li key={item} className="flex items-center gap-3">
-                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <CheckCircle className="w-5 h-5 text-foreground/50" />
                       <span className="font-medium">{item}</span>
                     </li>
                   ))}
