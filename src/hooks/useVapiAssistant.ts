@@ -3,7 +3,7 @@ import Vapi from '@vapi-ai/web';
 
 type VapiStatus = 'idle' | 'connecting' | 'active' | 'ending';
 
-const VAPI_PUBLIC_KEY = import.meta.env.VITE_VAPI_PUBLIC_KEY;
+const VAPI_PUBLIC_KEY = '928649b5-8507-42d1-bb35-31db32a5d6a6';
 
 export const useVapiAssistant = () => {
   const [status, setStatus] = useState<VapiStatus>('idle');
