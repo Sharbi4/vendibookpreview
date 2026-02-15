@@ -18,7 +18,7 @@ async function fetchMarketPricing(category: string, city: string | null, state: 
       .from("listings")
       .select("price_daily, price_weekly, price_monthly, price_hourly, price_sale, mode, city, state")
       .eq("category", category)
-      .eq("status", "active");
+      .eq("status", "published");
 
     if (state) query = query.eq("state", state);
 
@@ -169,12 +169,20 @@ IMPORTANT: Photos come right after category + mode so the AI analysis can inform
 
 After showing the final preview, ask: "Does this look good? I can adjust anything, or you can save it as a draft and fine-tune it in the editor."
 
-If they say it looks good, explain the next steps clearly before outputting the confirmed block:
-- "Great! I'm saving your listing as a draft. Here's what's next:"
-- "1. You'll be taken to the listing editor to review and polish everything"
-- "2. Add or rearrange photos"
-- "3. Connect your payment account so you can get paid"
-- "4. Hit Publish when you're ready — and then share it!"
+If they say it looks good, you MUST explain the next steps clearly and enthusiastically before outputting the confirmed block:
+
+"🎉 Awesome — saving your listing as a draft now! Here's exactly what to do next:
+
+**Step 1: Review Your Draft** — You'll land on your Dashboard where you can see your new draft. Tap on it to open the listing editor.
+
+**Step 2: Add Photos** — [If no photos were uploaded: "Upload at least 3-5 great photos — listings with photos get 5x more views!"] [If photos were uploaded: "Your photos are already attached! You can add more or rearrange them in the editor."]
+
+**Step 3: Set Up Payments** — Connect your Stripe account so you can get paid. The editor will walk you through it — it only takes 2 minutes.
+
+**Step 4: Hit Publish** — Once everything looks good, tap Publish. Your listing goes live instantly and buyers/renters can find it!
+
+**Bonus: Share It** — After publishing, use the Share Kit to post to Facebook, Instagram, and generate a QR code to put on your truck or storefront."
+
 Then output the JSON block with "confirmed": true.
 
 ## Photo Analysis
