@@ -89,7 +89,7 @@ const HowItWorks = () => {
             className="border-primary/30 hover:bg-gradient-to-r hover:from-primary/10 hover:to-amber-500/10 transition-all duration-300 hover:shadow-md"
           >
             <Link to="/how-it-works" className="gap-2">
-              Learn more
+              Learn how Vendibook works
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
             </Link>
           </Button>

@@ -148,7 +148,7 @@ const PaymentsSection = () => {
               size="lg" 
               onClick={() => navigate('/how-it-works')}
             >
-              Learn More
+              Learn how it works
             </Button>
           </div>
         </div>
