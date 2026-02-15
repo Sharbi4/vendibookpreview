@@ -23,7 +23,7 @@ const HeroValueProp = () => {
           <motion.img
             src={vendibookLogo}
             alt="Vendibook"
-            className="h-28 sm:h-36 md:h-44 lg:h-56 w-auto mb-4 sm:mb-6"
+            className="h-36 sm:h-44 md:h-52 lg:h-64 w-auto mb-4 sm:mb-6"
             style={{ filter: 'drop-shadow(0 0 40px rgba(255,81,36,0.25))' }}
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
