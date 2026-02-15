@@ -460,17 +460,17 @@ const FAQ = () => {
 
       <main className="flex-1">
         {/* Hero Section - GRADIENT */}
-        <section className="relative py-16 md:py-24 overflow-hidden">
-          {/* Orange Gradient - #FF5124 based, subtle */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/8 via-[#FF5124]/5 to-amber-200/4" />
+          <section className="relative py-16 md:py-24 overflow-hidden">
+          {/* Neutral gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-foreground/[0.04] via-foreground/[0.02] to-foreground/[0.03]" />
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-20 right-20 w-96 h-96 bg-[#FF5124]/6 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#FF5124]/5 rounded-full blur-3xl" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#FF5124]/4 rounded-full blur-3xl" />
+            <div className="absolute top-20 right-20 w-96 h-96 bg-foreground/[0.03] rounded-full blur-3xl" />
+            <div className="absolute bottom-20 left-20 w-80 h-80 bg-foreground/[0.02] rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-foreground/[0.02] rounded-full blur-3xl" />
           </div>
 
           <div className="container relative z-10 text-center">
-            <Badge variant="secondary" className="mb-4 bg-gradient-to-r from-vendibook-orange/20 to-amber-400/20 border-vendibook-orange/30">
+            <Badge variant="secondary" className="mb-4 bg-foreground/10 border-foreground/15">
               <HelpCircle className="h-3 w-3 mr-1" />
               FAQ
             </Badge>
@@ -506,7 +506,7 @@ const FAQ = () => {
                     )}>
                       {!isSidebarCollapsed && (
                         <div className="flex items-center gap-2">
-                          <List className="h-4 w-4 text-vendibook-orange" />
+                          <List className="h-4 w-4 text-foreground/60" />
                           <span className="font-semibold text-sm text-foreground">Contents</span>
                         </div>
                       )}
@@ -541,7 +541,7 @@ const FAQ = () => {
                                 ? "p-2 justify-center" 
                                 : "px-3 py-2",
                               isActive 
-                                ? "bg-gradient-to-r from-vendibook-orange/20 to-amber-400/10 text-vendibook-orange border-l-2 border-vendibook-orange" 
+                                ? "bg-foreground/10 text-foreground border-l-2 border-foreground" 
                                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                             )}
                             title={isSidebarCollapsed ? section.title : undefined}
@@ -579,7 +579,7 @@ const FAQ = () => {
                 {/* Mobile Table of Contents */}
                 <div className="lg:hidden mb-8 pb-8 border-b">
                   <div className="flex items-center gap-2 mb-4">
-                    <List className="h-4 w-4 text-vendibook-orange" />
+                    <List className="h-4 w-4 text-foreground/60" />
                     <span className="font-semibold text-sm text-foreground">Jump to section</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -590,7 +590,7 @@ const FAQ = () => {
                         className={cn(
                           "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors",
                           activeSection === section.id
-                            ? "bg-gradient-to-r from-vendibook-orange/20 to-amber-400/10 border-vendibook-orange/30 text-vendibook-orange"
+                            ? "bg-foreground/10 border-foreground/20 text-foreground"
                             : "bg-background hover:bg-primary/10 hover:border-primary/30"
                         )}
                       >
@@ -610,8 +610,8 @@ const FAQ = () => {
                     className={sectionIndex > 0 ? 'mt-12 pt-12 border-t' : ''}
                   >
                     <div className="flex items-center gap-3 mb-6">
-                      <div className="p-2 rounded-lg bg-gradient-to-br from-vendibook-orange/20 to-amber-400/20">
-                        <section.icon className="h-5 w-5 text-vendibook-orange" />
+                      <div className="p-2 rounded-lg bg-foreground/10">
+                        <section.icon className="h-5 w-5 text-foreground/70" />
                       </div>
                       <h2 className="text-2xl font-bold text-foreground">{section.title}</h2>
                     </div>
@@ -643,17 +643,17 @@ const FAQ = () => {
 
         {/* Still Need Help CTA - GRADIENT */}
         <section className="relative py-12 md:py-16 overflow-hidden">
-          {/* Orange Gradient - #FF5124 based, subtle */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/6 via-[#FF5124]/4 to-amber-100/3" />
+          {/* Neutral gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-foreground/[0.03] via-foreground/[0.02] to-foreground/[0.02]" />
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-10 left-20 w-72 h-72 bg-[#FF5124]/5 rounded-full blur-3xl" />
-            <div className="absolute bottom-10 right-20 w-80 h-80 bg-[#FF5124]/4 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute top-10 left-20 w-72 h-72 bg-foreground/[0.02] rounded-full blur-3xl" />
+            <div className="absolute bottom-10 right-20 w-80 h-80 bg-foreground/[0.02] rounded-full blur-3xl" />
           </div>
           <div className="container max-w-3xl text-center relative z-10">
-            <Card className="border-2 border-vendibook-orange/20 bg-gradient-to-br from-background to-vendibook-orange/5">
+            <Card className="border-2 border-foreground/10 bg-card/80 backdrop-blur-xl">
               <CardContent className="pt-8 pb-8">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-vendibook-orange/20 to-amber-400/20 w-fit mx-auto mb-4">
-                  <MessageCircle className="h-6 w-6 text-vendibook-orange" />
+                <div className="p-3 rounded-xl bg-foreground/10 w-fit mx-auto mb-4">
+                  <MessageCircle className="h-6 w-6 text-foreground/70" />
                 </div>
                 <h2 className="text-2xl font-bold text-foreground mb-2">Still Have Questions?</h2>
                 <p className="text-muted-foreground mb-6">

@@ -164,17 +164,17 @@ const HowItWorks = () => {
         <motion.div
           animate={{ x: [0, 60, -40, 0], y: [0, -50, 30, 0], scale: [1, 1.2, 0.9, 1] }}
           transition={{ repeat: Infinity, duration: 18, ease: 'easeInOut' }}
-          className="absolute -top-40 -left-40 w-[700px] h-[700px] rounded-full bg-primary/[0.06] blur-[150px]"
+          className="absolute -top-40 -left-40 w-[700px] h-[700px] rounded-full bg-foreground/[0.03] blur-[150px]"
         />
         <motion.div
           animate={{ x: [0, -50, 60, 0], y: [0, 40, -40, 0], scale: [1, 0.85, 1.2, 1] }}
           transition={{ repeat: Infinity, duration: 22, ease: 'easeInOut' }}
-          className="absolute top-1/4 -right-32 w-[800px] h-[800px] rounded-full bg-[hsl(40,100%,49%)]/[0.04] blur-[170px]"
+          className="absolute top-1/4 -right-32 w-[800px] h-[800px] rounded-full bg-foreground/[0.02] blur-[170px]"
         />
         <motion.div
           animate={{ x: [0, 30, -40, 0], y: [0, -30, 50, 0] }}
           transition={{ repeat: Infinity, duration: 16, ease: 'easeInOut' }}
-          className="absolute bottom-0 left-1/3 w-[600px] h-[600px] rounded-full bg-primary/[0.04] blur-[130px]"
+          className="absolute bottom-0 left-1/3 w-[600px] h-[600px] rounded-full bg-foreground/[0.02] blur-[130px]"
         />
       </div>
 
@@ -204,16 +204,16 @@ const HowItWorks = () => {
                   onClick={() => handleRoleSelect('buyer')}
                   className={`p-6 rounded-2xl text-left transition-all backdrop-blur-xl border ${
                     selectedRole === 'buyer'
-                      ? 'bg-card/90 border-primary/40 shadow-xl shadow-primary/10 ring-2 ring-primary/20'
+                      ? 'bg-card/90 border-foreground/20 shadow-xl shadow-foreground/5 ring-2 ring-foreground/10'
                       : 'bg-card/60 border-border hover:bg-card/80 hover:shadow-lg'
                   }`}
                   whileHover={shouldReduceMotion ? {} : { y: -4 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
-                    selectedRole === 'buyer' ? 'bg-gradient-to-br from-primary to-[hsl(40,100%,49%)]' : 'bg-muted'
+                    selectedRole === 'buyer' ? 'bg-foreground' : 'bg-muted'
                   }`}>
-                    <Search className={`h-6 w-6 ${selectedRole === 'buyer' ? 'text-white' : 'text-muted-foreground'}`} />
+                    <Search className={`h-6 w-6 ${selectedRole === 'buyer' ? 'text-background' : 'text-muted-foreground'}`} />
                   </div>
                   <h2 className="text-xl font-bold text-foreground mb-2">Buy or Rent</h2>
                   <p className="text-sm text-muted-foreground">Find food trucks, trailers, kitchens, and Vendor Spaces.</p>
@@ -223,16 +223,16 @@ const HowItWorks = () => {
                   onClick={() => handleRoleSelect('seller')}
                   className={`p-6 rounded-2xl text-left transition-all backdrop-blur-xl border ${
                     selectedRole === 'seller'
-                      ? 'bg-card/90 border-primary/40 shadow-xl shadow-primary/10 ring-2 ring-primary/20'
+                      ? 'bg-card/90 border-foreground/20 shadow-xl shadow-foreground/5 ring-2 ring-foreground/10'
                       : 'bg-card/60 border-border hover:bg-card/80 hover:shadow-lg'
                   }`}
                   whileHover={shouldReduceMotion ? {} : { y: -4 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
-                    selectedRole === 'seller' ? 'bg-gradient-to-br from-primary to-[hsl(40,100%,49%)]' : 'bg-muted'
+                    selectedRole === 'seller' ? 'bg-foreground' : 'bg-muted'
                   }`}>
-                    <PlusCircle className={`h-6 w-6 ${selectedRole === 'seller' ? 'text-white' : 'text-muted-foreground'}`} />
+                    <PlusCircle className={`h-6 w-6 ${selectedRole === 'seller' ? 'text-background' : 'text-muted-foreground'}`} />
                   </div>
                   <h2 className="text-xl font-bold text-foreground mb-2">Sell or Host</h2>
                   <p className="text-sm text-muted-foreground">Sell your assets, rent out equipment, or list your space.</p>
@@ -298,7 +298,7 @@ const HowItWorks = () => {
                           className="rounded-2xl bg-card/80 backdrop-blur-xl border border-border shadow-lg hover:shadow-xl hover:border-primary/30 transition-all p-5"
                         >
                           <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-[hsl(40,100%,49%)] flex items-center justify-center text-white font-bold text-sm">
+                            <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center text-background font-bold text-sm">
                               {step.step}
                             </div>
                             <Icon className="h-5 w-5 text-muted-foreground" />
@@ -311,7 +311,7 @@ const HowItWorks = () => {
                   </div>
 
                   <div className="text-center">
-                    <Button size="lg" variant="dark-shine" className="gap-2 rounded-xl" asChild>
+                    <Button size="lg" variant="glass-cta" className="gap-2 rounded-xl" asChild>
                       <Link to="/">Start Browsing <ArrowRight className="h-4 w-4" /></Link>
                     </Button>
                   </div>
@@ -339,26 +339,26 @@ const HowItWorks = () => {
                           viewport={{ once: true }}
                           transition={{ delay: index * 0.1 }}
                           whileHover={{ y: -4 }}
-                          className="rounded-2xl bg-card/80 backdrop-blur-xl border border-border shadow-lg hover:shadow-xl hover:border-primary/30 transition-all p-6"
+                          className="rounded-2xl bg-card/80 backdrop-blur-xl border border-border shadow-lg hover:shadow-xl hover:border-foreground/20 transition-all p-6"
                         >
                           <motion.div 
-                            className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-[hsl(40,100%,49%)] flex items-center justify-center mb-4"
+                            className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center mb-4"
                             whileHover={{ scale: 1.1, rotate: 5 }}
                             transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                           >
-                            <Icon className="h-6 w-6 text-white" />
+                            <Icon className="h-6 w-6 text-background" />
                           </motion.div>
                           <h3 className="text-lg font-bold text-foreground mb-2">{option.title}</h3>
                           <p className="text-sm text-muted-foreground mb-4">{option.description}</p>
                           <ul className="space-y-2 text-sm text-muted-foreground mb-6">
                             {option.features.map((feature, i) => (
                               <li key={i} className="flex items-center gap-2">
-                                <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                                <CheckCircle2 className="h-4 w-4 text-foreground/60 shrink-0" />
                                 {feature}
                               </li>
                             ))}
                           </ul>
-                          <Button variant="dark-shine" className="w-full gap-2 rounded-xl" asChild>
+                          <Button variant="glass-cta" className="w-full gap-2 rounded-xl" asChild>
                             <Link to={option.link}>Learn More <ArrowRight className="h-4 w-4" /></Link>
                           </Button>
                         </motion.div>
@@ -388,8 +388,8 @@ const HowItWorks = () => {
                     { icon: Package, title: 'Nationwide Freight', desc: 'Buy or sell to anyone in the 48 contiguous states.' },
                   ].map((item) => (
                     <div key={item.title} className="flex gap-4 p-4 rounded-2xl bg-card/80 backdrop-blur-xl border border-border shadow-sm">
-                      <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-                        <item.icon className="h-5 w-5 text-foreground" />
+                      <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center shrink-0">
+                        <item.icon className="h-5 w-5 text-foreground/70" />
                       </div>
                       <div>
                         <h3 className="font-semibold text-foreground mb-1">{item.title}</h3>
@@ -406,7 +406,7 @@ const HowItWorks = () => {
               <div className="max-w-4xl mx-auto px-4">
                 <div className="text-center mb-10">
                   <div className="inline-flex items-center gap-2 bg-card/80 backdrop-blur border border-border text-foreground px-3 py-1.5 rounded-full text-sm font-medium mb-4">
-                    <Star className="h-4 w-4 text-primary" />
+                    <Star className="h-4 w-4 text-foreground/60" />
                     Trusted by Entrepreneurs
                   </div>
                   <h2 className="text-2xl md:text-3xl font-bold text-foreground">What Users Are Saying</h2>
@@ -424,26 +424,26 @@ const HowItWorks = () => {
                       className="rounded-2xl bg-card/80 backdrop-blur-xl border border-border shadow-lg p-5 transition-all"
                     >
                       <div className="flex items-center gap-3 mb-3">
-                        <Avatar className="h-9 w-9 border-2 border-primary/20">
-                          <AvatarFallback className="bg-primary/15 text-foreground font-semibold text-xs">
+                        <Avatar className="h-9 w-9 border-2 border-foreground/15">
+                          <AvatarFallback className="bg-foreground/10 text-foreground font-semibold text-xs">
                             {testimonial.name.split(' ').map(n => n[0]).join('')}
                           </AvatarFallback>
                         </Avatar>
                         <div>
                           <div className="flex items-center gap-1.5">
                             <span className="font-semibold text-foreground text-sm">{testimonial.name}</span>
-                            <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                            <CheckCircle2 className="h-3.5 w-3.5 text-foreground/50" />
                           </div>
                           <p className="text-xs text-muted-foreground">{testimonial.role} • {testimonial.location}</p>
                         </div>
                       </div>
                       <div className="flex gap-0.5 mb-2">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="h-3 w-3 fill-primary text-primary" />
+                          <Star key={i} className="h-3 w-3 fill-foreground/40 text-foreground/40" />
                         ))}
                       </div>
                       <div className="relative">
-                        <Quote className="absolute -top-0.5 -left-0.5 h-5 w-5 text-primary/15" />
+                        <Quote className="absolute -top-0.5 -left-0.5 h-5 w-5 text-foreground/10" />
                         <p className="text-muted-foreground text-sm leading-relaxed pl-2">{testimonial.text}</p>
                       </div>
                     </motion.div>
@@ -474,7 +474,7 @@ const HowItWorks = () => {
                     >
                       <AccordionItem 
                         value={`item-${index}`} 
-                        className="bg-card/80 backdrop-blur-xl border border-border rounded-xl px-5 data-[state=open]:border-primary/30 data-[state=open]:bg-card transition-colors shadow-sm"
+                        className="bg-card/80 backdrop-blur-xl border border-border rounded-xl px-5 data-[state=open]:border-foreground/20 data-[state=open]:bg-card transition-colors shadow-sm"
                       >
                         <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-4">
                           {faq.question}
@@ -505,7 +505,7 @@ const HowItWorks = () => {
             <section className="py-16 md:py-20">
               <div className="max-w-2xl mx-auto px-4">
                 <motion.div
-                  className="rounded-3xl bg-gradient-to-br from-primary via-[hsl(20,90%,50%)] to-[hsl(40,100%,49%)] p-10 md:p-14 text-center text-white shadow-2xl shadow-primary/20"
+                  className="rounded-3xl bg-foreground p-10 md:p-14 text-center text-background shadow-2xl relative overflow-hidden"
                   initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -513,16 +513,16 @@ const HowItWorks = () => {
                   <h2 className="text-3xl md:text-4xl font-bold mb-4">
                     {selectedRole === 'buyer' ? 'Find Your Next Asset' : 'Start Earning Today'}
                   </h2>
-                  <p className="text-lg opacity-90 mb-8">
+                  <p className="text-lg opacity-80 mb-8">
                     {selectedRole === 'buyer' 
                       ? 'Browse verified listings from trusted sellers across the country.'
                       : 'Create your first listing in under 5 minutes. No monthly fees.'}
                   </p>
                   
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Button 
                       size="lg" 
-                      className="gap-2 px-8 h-12 text-base bg-white text-gray-900 hover:bg-white/90 rounded-xl shadow-xl"
+                      className="gap-2 px-8 h-12 text-base bg-background text-foreground hover:bg-background/90 rounded-xl shadow-xl"
                       asChild
                     >
                       <Link to={selectedRole === 'buyer' ? '/' : '/list'}>
@@ -533,7 +533,7 @@ const HowItWorks = () => {
                     <Button 
                       size="lg" 
                       variant="outline"
-                      className="gap-2 px-8 h-12 text-base border-white/30 text-white hover:bg-white/10 rounded-xl"
+                      className="gap-2 px-8 h-12 text-base border-background/30 text-background hover:bg-background/10 rounded-xl"
                       asChild
                     >
                       <Link to="/contact">Talk to Us</Link>
