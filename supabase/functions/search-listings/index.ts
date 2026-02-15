@@ -98,12 +98,26 @@ Deno.serve(async (req) => {
       queryBuilder = queryBuilder.eq('category', category);
     }
 
-    // Apply text search (ILIKE on title, description, address)
+    // Apply text search (ILIKE on title, description, address, city, state)
     if (query && query.trim()) {
-      const searchTerm = `%${query.trim()}%`;
-      queryBuilder = queryBuilder.or(
-        `title.ilike.${searchTerm},description.ilike.${searchTerm},address.ilike.${searchTerm}`
-      );
+      const trimmed = query.trim();
+      // Parse "City, State" format for location searches
+      const parts = trimmed.split(',').map(p => p.trim()).filter(Boolean);
+      
+      if (parts.length >= 2) {
+        // Likely a "City, State" query - search city and state columns directly
+        const city = parts[0];
+        const state = parts[parts.length - 1];
+        queryBuilder = queryBuilder.or(
+          `city.ilike.%${city}%,address.ilike.%${city}%,title.ilike.%${city}%`
+        );
+      } else {
+        // Single term search - safe to use in .or() since no commas
+        const searchTerm = `%${trimmed}%`;
+        queryBuilder = queryBuilder.or(
+          `title.ilike.${searchTerm},description.ilike.${searchTerm},address.ilike.${searchTerm},city.ilike.${searchTerm}`
+        );
+      }
     }
 
     // Apply price filters
