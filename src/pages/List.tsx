@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import HeaderSearchField from '@/components/layout/HeaderSearchField';
+import Header from '@/components/layout/Header';
 import AppDropdownMenu from '@/components/layout/AppDropdownMenu';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -571,31 +571,7 @@ const ListPage: React.FC = () => {
       </div>
 
       {/* ══ HEADER ══ */}
-      <header className="sticky top-0 z-50 w-full">
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/80 to-accent" />
-          <div className="absolute inset-0 hp2-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-          <div className="absolute inset-0 backdrop-blur-md bg-black/5" />
-          <div className="relative max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
-            <Link to="/" className="flex items-center gap-2">
-              <img src={vendibookFavicon} alt="Vendibook" className="h-8 w-auto drop-shadow-lg sm:hidden" />
-              <img src={vendibookLogo} alt="Vendibook" className="hidden sm:block h-24 w-auto drop-shadow-lg brightness-0 invert" />
-            </Link>
-            <div className="flex items-center gap-2">
-              <HeaderSearchField />
-              {drafts.length > 0 && (
-                <Button variant="dark-shine" size="sm" onClick={() => navigate('/dashboard')} className="hidden sm:flex h-8 rounded-xl text-xs font-semibold px-4">
-                  Resume Draft ({drafts.length})
-                </Button>
-              )}
-              <Button variant="dark-shine" size="sm" onClick={handleStart} className="hidden sm:flex h-8 rounded-xl text-xs font-semibold px-4">
-                List Your Space
-              </Button>
-              <AppDropdownMenu variant="dark" />
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main className="relative z-10">
         <ListHero onStart={handleStart} />
