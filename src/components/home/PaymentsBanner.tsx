@@ -6,7 +6,7 @@ import afterpayLogo from '@/assets/afterpay-logo.jpg';
 
 const PaymentsBanner = () => {
   return (
-    <section className="py-10 bg-gradient-to-r from-muted/50 via-primary/5 to-muted/50 border-y border-border/50 relative overflow-hidden">
+    <section className="py-10 bg-gradient-to-r from-secondary via-primary/10 to-secondary border-y border-border relative overflow-hidden">
       {/* Subtle decorative element */}
       <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none" aria-hidden="true" />
       

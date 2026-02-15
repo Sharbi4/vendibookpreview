@@ -6,7 +6,7 @@ import supplyImage from '@/assets/supply-food-truck.jpg';
 
 const BecomeHostSection = () => {
   return (
-    <section className="py-12 sm:py-16 md:py-24 bg-foreground text-background">
+    <section className="py-12 sm:py-16 md:py-24 bg-card border-y border-border">
       <div className="container max-w-6xl mx-auto px-5 sm:px-6">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Content */}
@@ -26,7 +26,7 @@ const BecomeHostSection = () => {
               <span className="text-primary">losing you money.</span>
             </h2>
             
-            <p className="text-lg text-background/70 mb-8 max-w-lg">
+            <p className="text-lg text-muted-foreground mb-8 max-w-lg">
               Join thousands of owners earning $2,500+/mo by renting their assets on Vendibook. We handle the payments, contracts, and insurance verification.
             </p>
 
@@ -48,7 +48,7 @@ const BecomeHostSection = () => {
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
                     <item.icon className="h-5 w-5 text-primary" />
                   </div>
-                  <span className="text-background/80 group-hover:text-background transition-colors duration-300">{item.text}</span>
+                  <span className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">{item.text}</span>
                 </motion.div>
               ))}
             </div>
