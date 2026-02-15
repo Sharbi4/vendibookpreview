@@ -112,7 +112,7 @@ const VoiceAssistantButton = () => {
           animate={{ opacity: 1 }}
           className="text-xs font-medium text-muted-foreground bg-card px-2 py-0.5 rounded-full shadow-sm border border-border"
         >
-          Ask Bappie
+          Talk to Bappie
         </motion.span>
       )}
     </motion.div>
