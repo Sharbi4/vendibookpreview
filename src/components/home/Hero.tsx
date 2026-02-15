@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Calendar, ChevronDown, Sparkles, Navigation, ShoppingCart, Home } from 'lucide-react';
+import { Search, MapPin, Calendar as CalendarIcon, ChevronDown, Sparkles, Navigation, ShoppingCart, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { DateRange } from 'react-day-picker';
 import heroImage from '@/assets/hero-food-truck.jpg';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -11,13 +16,16 @@ const Hero = () => {
   const [mode, setMode] = useState<'rent' | 'buy'>('rent');
   const [location, setLocation] = useState('');
   const [category, setCategory] = useState('');
-
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (location) params.set('q', location);
     if (category) params.set('category', category);
     if (mode === 'buy') params.set('mode', 'sale');
     if (mode === 'rent') params.set('mode', 'rent');
+    if (dateRange?.from) params.set('start', format(dateRange.from, 'yyyy-MM-dd'));
+    if (dateRange?.to) params.set('end', format(dateRange.to, 'yyyy-MM-dd'));
     navigate(`/search?${params.toString()}`);
   };
 
@@ -159,13 +167,39 @@ const Hero = () => {
               </div>
               <div>
                 <label className="text-[10px] uppercase tracking-widest text-white/50 font-semibold mb-1.5 block">Dates</label>
-                <button
-                  onClick={handleSearch}
-                  className="w-full h-11 px-3 rounded-xl bg-white/10 border border-white/15 text-white/40 text-sm text-left flex items-center gap-2 hover:border-white/30 transition-colors"
-                >
-                  <Calendar className="w-3.5 h-3.5" />
-                  Add dates
-                </button>
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <button
+                      className="w-full h-11 px-3 rounded-xl bg-white/10 border border-white/15 text-sm text-left flex items-center gap-2 hover:border-white/30 transition-colors"
+                    >
+                      <CalendarIcon className="w-3.5 h-3.5 text-white/40" />
+                      {dateRange?.from ? (
+                        <span className="text-white">
+                          {format(dateRange.from, 'MMM d')}
+                          {dateRange.to ? ` - ${format(dateRange.to, 'MMM d')}` : ''}
+                        </span>
+                      ) : (
+                        <span className="text-white/40">Add dates</span>
+                      )}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-[60]" align="start">
+                    <Calendar
+                      mode="range"
+                      selected={dateRange}
+                      onSelect={(range) => {
+                        setDateRange(range);
+                        if (range?.from && range?.to) {
+                          setIsCalendarOpen(false);
+                        }
+                      }}
+                      numberOfMonths={2}
+                      disabled={(date) => date < new Date()}
+                      className={cn('p-3 pointer-events-auto')}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 
