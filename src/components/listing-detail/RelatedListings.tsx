@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { MapPin } from 'lucide-react';
 import { CATEGORY_LABELS } from '@/types/listing';
+import { calculateDistance } from '@/lib/geolocation';
 
 interface RelatedListing {
   id: string;
@@ -13,6 +14,7 @@ interface RelatedListing {
   mode: string;
   category: string;
   address: string | null;
+  distance_miles?: number;
 }
 
 interface RelatedListingsProps {
@@ -20,43 +22,48 @@ interface RelatedListingsProps {
   category: string;
   mode: string;
   address: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
-const RelatedListings = ({ listingId, category, mode, address }: RelatedListingsProps) => {
+const RelatedListings = ({ listingId, category, mode, address, latitude, longitude }: RelatedListingsProps) => {
   const [listings, setListings] = useState<RelatedListing[]>([]);
 
   useEffect(() => {
     const fetchRelated = async () => {
-      // Extract city from address for locality matching
-      const addressParts = address?.split(',').map(s => s.trim()) || [];
-      const city = addressParts.length >= 2 ? addressParts[addressParts.length - 2] : null;
-
       const { data } = await supabase
         .from('listings')
-        .select('id, title, cover_image_url, price_daily, price_sale, mode, category, address')
+        .select('id, title, cover_image_url, price_daily, price_sale, mode, category, address, latitude, longitude')
         .eq('status', 'published')
         .neq('id', listingId)
         .eq('category', category as any)
         .eq('mode', mode as any)
-        .limit(6);
-
-      
+        .limit(50);
 
       if (data && data.length > 0) {
-        // Sort: same city first
-        const sorted = city
-          ? [...data].sort((a, b) => {
-              const aMatch = a.address?.includes(city) ? 0 : 1;
-              const bMatch = b.address?.includes(city) ? 0 : 1;
-              return aMatch - bMatch;
-            })
-          : data;
-        setListings(sorted.slice(0, 6));
+        let sorted: RelatedListing[];
+
+        if (latitude && longitude) {
+          // Calculate actual distance and sort by proximity
+          sorted = data
+            .map(l => ({
+              ...l,
+              distance_miles: (l.latitude && l.longitude)
+                ? calculateDistance(latitude, longitude, l.latitude, l.longitude)
+                : Infinity,
+            }))
+            .sort((a, b) => (a.distance_miles ?? Infinity) - (b.distance_miles ?? Infinity))
+            .slice(0, 6);
+        } else {
+          sorted = data.slice(0, 6);
+        }
+
+        setListings(sorted);
       }
     };
 
     fetchRelated();
-  }, [listingId, category, mode, address]);
+  }, [listingId, category, mode, latitude, longitude]);
 
   if (listings.length === 0) return null;
 
