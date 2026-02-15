@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import vendibookLogo from '@/assets/vendibook-logo.png';
+import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -280,7 +280,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           className={`flex items-center transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'} md:opacity-100 md:pointer-events-auto md:relative`}
         >
           <img 
-            src={vendibookLogo} 
+            src={vendibookFavicon} 
             alt="Vendibook" 
             className="h-8 w-auto"
           />
