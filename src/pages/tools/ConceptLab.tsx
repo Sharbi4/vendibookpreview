@@ -85,9 +85,9 @@ const ConceptLab = () => {
         <main className="flex-1">
           {/* Hero */}
           <section className="relative py-16 md:py-24 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-amber-500/5 to-yellow-500/10" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent" />
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-10 right-10 w-[400px] h-[400px] bg-gradient-to-br from-orange-500/10 to-amber-500/8 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute top-10 right-10 w-[400px] h-[400px] bg-gradient-to-br from-primary/8 to-transparent rounded-full blur-3xl animate-pulse" />
             </div>
             
             <div className="container relative z-10">
@@ -116,10 +116,10 @@ const ConceptLab = () => {
               
               <div className="max-w-3xl">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-yellow-300 to-amber-500 flex items-center justify-center shadow-lg">
+                  <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-[#FF5124] to-[#FFBA08] flex items-center justify-center shadow-lg">
                     <Lightbulb className="h-6 w-6 text-white" />
                   </div>
-                  <Badge className="bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0">
+                  <Badge className="bg-gradient-to-r from-[#FF5124] to-[#FFBA08] text-white border-0">
                     Concept Lab
                   </Badge>
                 </div>
@@ -365,7 +365,7 @@ const ConceptLab = () => {
           />
 
           {/* Final CTA */}
-          <section className="py-20 bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-yellow-500/10">
+          <section className="py-20 bg-gradient-to-r from-primary/5 via-primary/8 to-primary/5">
             <div className="container text-center">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to find your concept?</h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">Generate 10 unique business ideas matched to your preferences and budget.</p>
