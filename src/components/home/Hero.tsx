@@ -1,188 +1,226 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Search } from 'lucide-react';
+import { Search, MapPin, Calendar, ChevronDown, Sparkles, Navigation, ShoppingCart, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import vendibookLogo from '@/assets/vendibook-logo.png';
 import heroImage from '@/assets/hero-food-truck.jpg';
-import { trackHeroCTAClick } from '@/lib/analytics';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 
 const Hero = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [scrollY, setScrollY] = useState(0);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [mode, setMode] = useState<'rent' | 'buy'>('rent');
+  const [location, setLocation] = useState('');
+  const [category, setCategory] = useState('');
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (location) params.set('q', location);
+    if (category) params.set('category', category);
+    if (mode === 'buy') params.set('mode', 'sale');
+    navigate(`/search?${params.toString()}`);
+  };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const handleGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-          skipBrowserRedirect: true,
+  const handleGeolocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation(`${position.coords.latitude.toFixed(2)}, ${position.coords.longitude.toFixed(2)}`);
         },
-      });
-
-      if (error) {
-        setIsGoogleLoading(false);
-        toast({
-          title: 'Google sign-in failed',
-          description: error.message,
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      const url = data?.url;
-      if (url) {
-        try {
-          (window.top ?? window).location.assign(url);
-        } catch {
-          window.location.assign(url);
-        }
-      }
-    } catch (error: any) {
-      setIsGoogleLoading(false);
-      toast({
-        title: 'Google sign-in failed',
-        description: error.message || 'An unexpected error occurred',
-        variant: 'destructive',
-      });
+        () => setLocation('')
+      );
     }
   };
 
-  // Parallax multipliers for different orbs (slower = more subtle)
-  const parallax1 = scrollY * 0.15;
-  const parallax2 = scrollY * 0.1;
-  const parallax3 = scrollY * 0.2;
-
   return (
-    <section className="relative overflow-hidden pt-2 pb-6 mx-4 mt-4 rounded-[3rem]">
-      {/* Hero background image */}
-      <div 
+    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center overflow-hidden">
+      {/* Background image */}
+      <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: `url(${heroImage})`,
-        }}
+        style={{ backgroundImage: `url(${heroImage})` }}
       />
-      
-      {/* Dark overlay for text readability */}
+      {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/50" />
-      
-      {/* Subtle gradient overlay */}
-      <div 
-        className="absolute inset-0 bg-gradient-to-br from-black/30 via-transparent to-primary/20"
-      />
-      
-      <div className="container max-w-5xl mx-auto px-4 relative z-10">
-        {/* Hero Content */}
-        <div className="max-w-3xl mx-auto text-center animate-fade-in">
-          {/* Logo */}
-          <div className="flex justify-center animate-fade-in">
-            <img 
-              src={vendibookLogo} 
-              alt="Vendibook" 
-              className="h-[22rem] md:h-[26rem] w-auto transition-transform duration-300 hover:scale-105 drop-shadow-lg brightness-0 invert"
-            />
-          </div>
-          
+      {/* Warm gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
 
-          {/* Headline */}
-          <h1 
-            className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight animate-fade-in"
-            style={{ animationDelay: '0.15s', animationFillMode: 'backwards' }}
-          >
+      <div className="container relative z-10 max-w-6xl mx-auto px-4 py-12 md:py-20">
+        {/* Headline */}
+        <div className="text-center mb-8 md:mb-12 animate-fade-in">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-4">
             Rent it. Buy it. Find your spot.
           </h1>
-          
-          {/* Subheader */}
-          <p 
-            className="text-base md:text-lg text-white/90 mt-3 max-w-2xl mx-auto animate-fade-in"
-            style={{ animationDelay: '0.25s', animationFillMode: 'backwards' }}
-          >
+          <p className="text-base sm:text-lg md:text-xl text-white/85 max-w-2xl mx-auto leading-relaxed">
             From turnkey rentals and trucks for sale to premium food truck parks—launch your food business this weekend with verified assets and spaces.
           </p>
-          
+        </div>
 
-          {/* CTA Buttons */}
-          <div 
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6 animate-fade-in"
-            style={{ animationDelay: '0.4s', animationFillMode: 'backwards' }}
+        {/* Two glassmorphic cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-5 max-w-5xl mx-auto animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'backwards' }}>
+          {/* Left: Browse card (wider) */}
+          <div
+            className="lg:col-span-3 rounded-2xl border border-white/20 p-5 sm:p-6 shadow-2xl"
+            style={{
+              background: 'rgba(0, 0, 0, 0.45)',
+              backdropFilter: 'blur(24px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+            }}
           >
+            {/* Card header */}
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
+                <Search className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h2 className="text-white font-semibold text-lg">Browse</h2>
+                <p className="text-white/60 text-xs">Search our verified marketplace</p>
+              </div>
+            </div>
+
+            {/* Rent / Buy toggle */}
+            <div className="flex gap-2 mb-5">
+              <button
+                onClick={() => setMode('rent')}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  mode === 'rent'
+                    ? 'bg-white/20 text-white border border-white/30'
+                    : 'text-white/60 hover:text-white/80 border border-transparent'
+                }`}
+              >
+                <Home className="w-3.5 h-3.5" />
+                Rent
+              </button>
+              <button
+                onClick={() => setMode('buy')}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  mode === 'buy'
+                    ? 'bg-white/20 text-white border border-white/30'
+                    : 'text-white/60 hover:text-white/80 border border-transparent'
+                }`}
+              >
+                <ShoppingCart className="w-3.5 h-3.5" />
+                Buy
+              </button>
+            </div>
+
+            {/* Location input */}
+            <div className="mb-4">
+              <label className="text-[10px] uppercase tracking-widest text-white/50 font-semibold mb-1.5 block">Location</label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  placeholder="City, Zip, or current location"
+                  className="w-full h-11 pl-10 pr-10 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/40 text-sm focus:outline-none focus:border-white/40 focus:bg-white/15 transition-all"
+                />
+                <button
+                  onClick={handleGeolocation}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+                  aria-label="Use current location"
+                >
+                  <Navigation className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Type + Dates row */}
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              <div>
+                <label className="text-[10px] uppercase tracking-widest text-white/50 font-semibold mb-1.5 block">Type</label>
+                <div className="relative">
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full h-11 px-3 pr-8 rounded-xl bg-white/10 border border-white/15 text-white text-sm focus:outline-none focus:border-white/40 appearance-none cursor-pointer"
+                  >
+                    <option value="" className="bg-gray-900">Everything</option>
+                    <option value="food_truck" className="bg-gray-900">Food Trucks</option>
+                    <option value="food_trailer" className="bg-gray-900">Food Trailers</option>
+                    <option value="commercial_kitchen" className="bg-gray-900">Shared Kitchens</option>
+                    <option value="vendor_space" className="bg-gray-900">Vendor Spaces</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-widest text-white/50 font-semibold mb-1.5 block">Dates</label>
+                <button
+                  onClick={handleSearch}
+                  className="w-full h-11 px-3 rounded-xl bg-white/10 border border-white/15 text-white/40 text-sm text-left flex items-center gap-2 hover:border-white/30 transition-colors"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  Add dates
+                </button>
+              </div>
+            </div>
+
+            {/* Search CTA */}
             <Button
-              variant="dark-shine"
-              size="lg"
-              onClick={() => {
-                trackHeroCTAClick('browse');
-                navigate('/search');
-              }}
-              className="text-base px-8 py-6"
+              onClick={handleSearch}
+              className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold text-sm shadow-lg shadow-primary/30"
             >
-              <Search className="mr-2 h-5 w-5" />
-              Browse Listings
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button
-              variant="dark-shine"
-              size="lg"
-              onClick={() => {
-                trackHeroCTAClick('list');
-                navigate('/list');
-              }}
-              className="text-base px-8 py-6"
-            >
-              Create a Free Listing
+              <Search className="w-4 h-4 mr-2" />
+              Search the Marketplace
             </Button>
           </div>
 
-          {/* Google Sign-in for logged out users */}
-          {!user && (
-            <div 
-              className="mt-4 animate-fade-in"
-              style={{ animationDelay: '0.5s', animationFillMode: 'backwards' }}
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleGoogleSignIn}
-                disabled={isGoogleLoading}
-                className="bg-white hover:bg-gray-50 text-gray-700 border-white/50 gap-2"
-              >
-                <svg className="h-4 w-4" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-                {isGoogleLoading ? 'Signing in...' : 'Continue with Google'}
-              </Button>
+          {/* Right: Concierge card */}
+          <div
+            className="lg:col-span-2 rounded-2xl border border-white/20 p-5 sm:p-6 shadow-2xl flex flex-col"
+            style={{
+              background: 'rgba(0, 0, 0, 0.45)',
+              backdropFilter: 'blur(24px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+            }}
+          >
+            {/* Card header */}
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-white font-semibold text-lg">Let Us Match You</h2>
+                <p className="text-white/60 text-xs">Done-for-you concierge service</p>
+              </div>
             </div>
-          )}
+
+            <h3 className="text-white font-bold text-xl mb-3">Don't have time to search?</h3>
+            <p className="text-white/70 text-sm leading-relaxed mb-5">
+              Our experts will manually find the best deal for your specific needs. Tell us what you're looking for, and we'll do the legwork.
+            </p>
+
+            {/* Benefits */}
+            <div className="space-y-3 mb-6 flex-1">
+              {[
+                'Personalized asset recommendations',
+                'Price negotiation on your behalf',
+                'No sign-up required',
+              ].map((benefit) => (
+                <div key={benefit} className="flex items-center gap-2.5 text-sm text-white/80">
+                  <Sparkles className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                  <span>{benefit}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Match Me CTA */}
+            <Button
+              onClick={() => {
+                // Open Zendesk chat or navigate to concierge
+                if (window.zE) {
+                  try { window.zE('messenger', 'open'); } catch { /* noop */ }
+                } else {
+                  navigate('/concierge');
+                }
+              }}
+              className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold text-sm shadow-lg shadow-primary/30"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Match Me
+            </Button>
+          </div>
         </div>
       </div>
     </section>
