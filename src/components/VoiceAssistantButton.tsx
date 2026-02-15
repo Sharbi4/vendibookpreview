@@ -85,7 +85,7 @@ const VoiceAssistantButton = () => {
         style={isActive ? {
           boxShadow: `0 0 ${glowIntensity}px ${glowIntensity / 2}px hsl(var(--primary) / 0.4)`,
         } : undefined}
-        title={isIdle ? 'Talk to Bappie' : isActive ? 'Call controls' : 'Connecting...'}
+        title={isIdle ? 'Talk to Vendi' : isActive ? 'Call controls' : 'Connecting...'}
       >
         {/* Pulse ring when active */}
         {isActive && (
@@ -112,7 +112,7 @@ const VoiceAssistantButton = () => {
           animate={{ opacity: 1 }}
           className="text-xs font-medium text-muted-foreground bg-card px-2 py-0.5 rounded-full shadow-sm border border-border"
         >
-          Talk to Bappie
+          Talk to Vendi
         </motion.span>
       )}
     </motion.div>
