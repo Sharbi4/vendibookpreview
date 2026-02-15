@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Phone, PhoneOff, MicOff, Mic, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVapiAssistant } from '@/hooks/useVapiAssistant';
@@ -7,6 +7,17 @@ import { cn } from '@/lib/utils';
 const VoiceAssistantButton = () => {
   const { status, isMuted, volumeLevel, startCall, endCall, toggleMute, isConfigured } = useVapiAssistant();
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Listen for external trigger (e.g., from List page "Set Up with Vendi" button)
+  useEffect(() => {
+    const handleStartCall = () => {
+      if (status === 'idle') {
+        startCall();
+      }
+    };
+    window.addEventListener('start-vendi-call', handleStartCall);
+    return () => window.removeEventListener('start-vendi-call', handleStartCall);
+  }, [status, startCall]);
 
   if (!isConfigured) return null;
 

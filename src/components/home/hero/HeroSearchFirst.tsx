@@ -47,14 +47,7 @@ const HeroSearchFirst = () => {
             Find it. Book it. <span className="gradient-text-warm">Go.</span>
           </motion.h1>
 
-          <motion.p
-            className="text-base text-muted-foreground/60 max-w-md mx-auto mb-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            Search food trucks, trailers, kitchens, and vendor spaces across the country.
-          </motion.p>
+          {/* Removed subheader text */}
 
           {/* Search + Vendi — tight block */}
           <motion.div

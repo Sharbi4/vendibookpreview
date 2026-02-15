@@ -57,12 +57,15 @@ const ListHero = ({ onStart }: { onStart: () => void }) => (
           <Button size="lg" variant="dark-shine" onClick={onStart} className="text-base sm:text-lg px-8 py-6 h-auto shadow-xl rounded-xl w-full sm:w-auto">
             Create Step-by-Step
           </Button>
-          <Button size="lg" variant="gradient" onClick={() => window.location.href = '/list/ai'} className="text-base sm:text-lg px-8 py-6 h-auto shadow-xl rounded-xl w-full sm:w-auto">
+          <Button size="lg" variant="gradient" onClick={() => {
+            // Trigger the Vendi voice agent by dispatching a custom event
+            window.dispatchEvent(new CustomEvent('start-vendi-call'));
+          }} className="text-base sm:text-lg px-8 py-6 h-auto shadow-xl rounded-xl w-full sm:w-auto">
             <Bot className="h-5 w-5 mr-2" />
-            Create with VendiBot
+            Set Up with Vendi
           </Button>
         </div>
-        <p className="mt-4 text-sm text-muted-foreground max-w-md mx-auto">Always free to list • Use our wizard or let VendiBot AI do it in under a minute</p>
+        <p className="mt-4 text-sm text-muted-foreground max-w-md mx-auto">Always free to list • Use our wizard or let Vendi walk you through it by voice</p>
       </motion.div>
     </div>
   </section>
@@ -266,7 +269,7 @@ const ListingBuildAnimation = () => {
 
 const HowItWorks = () => {
   const steps = [
-    { icon: Bot, label: 'Create with AI', desc: 'Answer a few questions and VendiBot writes your title, description, and optimizes your photos — under 1 minute.' },
+    { icon: Bot, label: 'Create with AI', desc: 'Talk to Vendi or use our step-by-step wizard. Your listing is written, optimized, and ready in under a minute.' },
     { icon: Store, label: 'Go Live', desc: 'Publish a professional storefront. Choose to rent or sell. Accept card payments online or cash in person.' },
     { icon: Share2, label: 'Share & Grow', desc: 'Use the built-in Share Kit to post to social media, generate QR codes, and track who\'s clicking.' },
     { icon: Wallet, label: 'Get Paid', desc: 'Online payments are held in escrow and released securely. Cash payments are handled directly between you and your customer.' },
@@ -380,7 +383,7 @@ const RentOrSell = () => (
 
 const ToolsGrid = () => {
   const features = [
-    { icon: Bot, label: 'AI Listing Creator', desc: 'VendiBot writes your listing in under a minute. Upload photos, answer a few prompts, done.' },
+    { icon: Bot, label: 'AI Listing Creator', desc: 'Talk to Vendi by voice or use the step-by-step wizard. Your listing is written and optimized in under a minute.' },
     { icon: Search, label: 'Built-In SEO', desc: 'Every listing is optimized for Google. Your storefront gets indexed so buyers and renters find you.' },
     { icon: Share2, label: 'Share Kit', desc: 'Generate social media captions, QR codes, and branded graphics. Track every click.' },
     { icon: QrCode, label: 'Free Signage & QR', desc: 'We send you professional signage. Walk-ins scan the QR code to book or buy instantly.' },
@@ -531,14 +534,14 @@ const ListPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ scale: 1.01 }}
             className="mb-6 rounded-2xl border border-white/20 bg-foreground/90 backdrop-blur-xl p-4 sm:p-5 flex items-center gap-4 cursor-pointer hover:bg-foreground/95 transition-all shadow-2xl shadow-black/20"
-            onClick={() => navigate('/list/ai')}
+            onClick={() => window.dispatchEvent(new CustomEvent('start-vendi-call'))}
           >
             <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0 shadow-lg shadow-primary/30">
               <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-background">Create with VendiBot — under 1 minute</h3>
-              <p className="text-xs text-background/60 mt-0.5">Answer a few questions and our AI builds your listing for you. Upload photos, get a polished title & description.</p>
+              <h3 className="text-sm font-semibold text-background">Set Up with Vendi — by voice</h3>
+              <p className="text-xs text-background/60 mt-0.5">Talk to Vendi and she'll walk you through creating your listing step by step. Just speak naturally.</p>
             </div>
             <ArrowRight className="h-5 w-5 text-background/50 shrink-0 hidden sm:block" />
           </motion.div>
