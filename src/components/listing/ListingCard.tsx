@@ -185,8 +185,12 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   const modeLabel = listing.mode === 'rent' ? 'For Rent' : 'For Sale';
   const modeColor = listing.mode === 'rent' ? 'bg-primary' : 'bg-emerald-500';
 
-  // Get location from pickup_location_text or address
-  const location = listing.pickup_location_text || listing.address?.split(',').slice(-2).join(',').trim() || 'Location TBD';
+  // Build consistent location: City, State Zip
+  const raw = listing as any;
+  const locationParts = [raw.city, raw.state].filter(Boolean);
+  const location = locationParts.length > 0 
+    ? locationParts.join(', ') + (raw.postal_code ? ` ${raw.postal_code}` : '')
+    : listing.address?.split(',').slice(-2).join(',').trim() || 'Location TBD';
 
   // Get displayable amenities (max 3 to leave room for Quick Book button)
   const maxAmenities = compact ? 2 : 3;
