@@ -70,16 +70,11 @@ Deno.serve(async (req) => {
 
       switch (fnName) {
         case 'search_listings':
-          result = await searchListings(supabase, args);
-          break;
         case 'get_listing_details':
-          result = await getListingDetails(supabase, args);
-          break;
         case 'get_categories':
-          result = getCategories();
-          break;
         case 'check_availability':
-          result = await checkAvailability(supabase, args);
+        case 'create_listing_draft':
+          result = await handleToolCall(supabase, fnName, args);
           break;
         default:
           result = { error: `Unknown function: ${fnName}` };
@@ -103,6 +98,25 @@ Deno.serve(async (req) => {
     );
   }
 });
+
+// --- Helper: route tool calls ---
+
+async function handleToolCall(supabase: any, fnName: string, args: any) {
+  switch (fnName) {
+    case 'search_listings':
+      return await searchListings(supabase, args);
+    case 'get_listing_details':
+      return await getListingDetails(supabase, args);
+    case 'get_categories':
+      return getCategories();
+    case 'check_availability':
+      return await checkAvailability(supabase, args);
+    case 'create_listing_draft':
+      return await createListingDraft(supabase, args);
+    default:
+      return { error: `Unknown function: ${fnName}` };
+  }
+}
 
 // --- Tool implementations ---
 
@@ -258,4 +272,62 @@ function formatPricing(listing: any) {
   if (listing.price_monthly) prices.push(`$${listing.price_monthly}/mo`);
   if (listing.price_sale) prices.push(`$${listing.price_sale.toLocaleString()} (sale)`);
   return prices.join(' | ') || 'Contact for pricing';
+}
+
+async function createListingDraft(supabase: any, args: any) {
+  const {
+    title,
+    description,
+    category,
+    mode,
+    city,
+    state,
+    price_daily,
+    price_weekly,
+    price_monthly,
+    price_sale,
+    fulfillment_type = 'pickup',
+  } = args;
+
+  if (!title || !description || !category || !mode) {
+    return { error: 'title, description, category, and mode are required' };
+  }
+
+  // Generate a guest draft token so the user can claim it later
+  const guest_draft_token = crypto.randomUUID();
+
+  const { data, error } = await supabase
+    .from('listings')
+    .insert({
+      title,
+      description,
+      category,
+      mode,
+      city: city || null,
+      state: state || null,
+      price_daily: price_daily || null,
+      price_weekly: price_weekly || null,
+      price_monthly: price_monthly || null,
+      price_sale: price_sale || null,
+      fulfillment_type,
+      status: 'draft',
+      guest_draft_token,
+    })
+    .select('id, title, status')
+    .single();
+
+  if (error) {
+    console.error('Create draft error:', error);
+    return { error: error.message };
+  }
+
+  return {
+    success: true,
+    listing_id: data.id,
+    title: data.title,
+    status: data.status,
+    draft_token: guest_draft_token,
+    message: `Draft listing "${data.title}" created! The user can finish and publish it on the website.`,
+    url: `https://vendibookpreview.lovable.app/create-listing/${data.id}`,
+  };
 }

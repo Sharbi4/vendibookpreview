@@ -15,6 +15,7 @@ import { usePendingMessage } from "@/hooks/usePendingMessage";
 import { AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import GoogleOneTap from "@/components/auth/GoogleOneTap";
+import VoiceAssistantButton from "@/components/VoiceAssistantButton";
 import { toast } from "sonner";
 
 
@@ -344,6 +345,7 @@ const AppContent = () => {
       <CookieConsent />
       <ZendeskWidget />
       <GoogleOneTap />
+      <VoiceAssistantButton />
       <AnimatedRoutes />
     </>
   );
