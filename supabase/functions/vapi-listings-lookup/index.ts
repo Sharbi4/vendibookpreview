@@ -75,6 +75,9 @@ Deno.serve(async (req) => {
         case 'check_availability':
         case 'create_listing_draft':
         case 'schedule_callback':
+        case 'get_booking_info':
+        case 'get_required_documents':
+        case 'lookup_document_help':
           result = await handleToolCall(supabase, fnName, args);
           break;
         default:
@@ -116,6 +119,12 @@ async function handleToolCall(supabase: any, fnName: string, args: any) {
       return await createListingDraft(supabase, args);
     case 'schedule_callback':
       return await scheduleCallback(args);
+    case 'get_booking_info':
+      return await getBookingInfo(supabase, args);
+    case 'get_required_documents':
+      return await getRequiredDocuments(supabase, args);
+    case 'lookup_document_help':
+      return await lookupDocumentHelp(args);
     default:
       return { error: `Unknown function: ${fnName}` };
   }
@@ -440,5 +449,269 @@ async function scheduleCallback(args: any) {
   } catch (error) {
     console.error('Schedule callback error:', error);
     return { error: 'Failed to schedule callback. Please try again.' };
+  }
+}
+
+// --- Booking Assistant Tools ---
+
+async function getBookingInfo(supabase: any, args: any) {
+  const { listing_id, start_date, end_date } = args;
+  if (!listing_id) return { error: 'listing_id is required' };
+
+  const { data: listing, error } = await supabase
+    .from('listings')
+    .select('id, title, category, mode, price_hourly, price_daily, price_weekly, price_monthly, price_sale, deposit_amount, instant_book, fulfillment_type, delivery_fee, delivery_radius_miles, rental_min_days, total_slots, slot_names, available_from, available_to, hourly_enabled, daily_enabled, city, state, address, amenities, highlights, pickup_instructions, access_instructions, hours_of_access')
+    .eq('id', listing_id)
+    .eq('status', 'published')
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!listing) return { error: 'Listing not found or not published' };
+
+  // Check availability if dates provided
+  let availability = null;
+  if (start_date && end_date) {
+    const { data: avail } = await supabase.rpc('check_booking_availability', {
+      p_listing_id: listing_id,
+      p_start_date: start_date,
+      p_end_date: end_date,
+    });
+    availability = avail;
+  }
+
+  // Get required documents
+  const { data: docs } = await supabase
+    .from('listing_required_documents')
+    .select('document_type, is_required, description')
+    .eq('listing_id', listing_id);
+
+  // Calculate pricing estimate
+  let pricingBreakdown = null;
+  if (start_date && end_date && listing.price_daily) {
+    const days = Math.ceil((new Date(end_date).getTime() - new Date(start_date).getTime()) / (1000 * 60 * 60 * 24));
+    
+    let rentalPrice = days * listing.price_daily;
+    let pricingMethod = `${days} days × $${listing.price_daily}/day`;
+    
+    // Check if weekly/monthly pricing is better
+    if (listing.price_monthly && days >= 28) {
+      const months = Math.floor(days / 30);
+      const remainDays = days - (months * 30);
+      const monthlyTotal = months * listing.price_monthly + remainDays * listing.price_daily;
+      if (monthlyTotal < rentalPrice) {
+        rentalPrice = monthlyTotal;
+        pricingMethod = `${months} month(s) × $${listing.price_monthly}/mo + ${remainDays} days × $${listing.price_daily}/day`;
+      }
+    } else if (listing.price_weekly && days >= 7) {
+      const weeks = Math.floor(days / 7);
+      const remainDays = days - (weeks * 7);
+      const weeklyTotal = weeks * listing.price_weekly + remainDays * listing.price_daily;
+      if (weeklyTotal < rentalPrice) {
+        rentalPrice = weeklyTotal;
+        pricingMethod = `${weeks} week(s) × $${listing.price_weekly}/wk + ${remainDays} days × $${listing.price_daily}/day`;
+      }
+    }
+
+    pricingBreakdown = {
+      rental_total: rentalPrice,
+      pricing_method: pricingMethod,
+      deposit: listing.deposit_amount || 0,
+      delivery_fee: listing.fulfillment_type === 'delivery' ? (listing.delivery_fee || 0) : 0,
+      estimated_total: rentalPrice + (listing.deposit_amount || 0) + (listing.fulfillment_type === 'delivery' ? (listing.delivery_fee || 0) : 0),
+    };
+  }
+
+  const docLabels: Record<string, string> = {
+    drivers_license: "Driver's License",
+    business_license: 'Business License',
+    food_handler_certificate: 'Food Handler Certificate',
+    safeserve_certification: 'SafeServe Certification',
+    health_department_permit: 'Health Department Permit',
+    commercial_liability_insurance: 'Commercial Liability Insurance',
+    vehicle_insurance: 'Vehicle Insurance',
+    certificate_of_insurance: 'Certificate of Insurance',
+    work_history_proof: 'Work History / Experience Proof',
+    prior_experience_proof: 'Prior Experience Proof',
+  };
+
+  return {
+    listing: {
+      id: listing.id,
+      title: listing.title,
+      category: listing.category,
+      mode: listing.mode,
+      location: [listing.city, listing.state].filter(Boolean).join(', ') || listing.address,
+      pricing: formatPricing(listing),
+      fulfillment: listing.fulfillment_type,
+      delivery_fee: listing.delivery_fee,
+      delivery_radius: listing.delivery_radius_miles,
+      deposit: listing.deposit_amount,
+      instant_book: listing.instant_book,
+      min_rental_days: listing.rental_min_days,
+      total_slots: listing.total_slots || 1,
+      slot_names: listing.slot_names,
+      available_from: listing.available_from,
+      available_to: listing.available_to,
+      pickup_instructions: listing.pickup_instructions,
+      access_instructions: listing.access_instructions,
+      hours_of_access: listing.hours_of_access,
+      amenities: listing.amenities?.slice(0, 5),
+    },
+    availability,
+    pricing_breakdown: pricingBreakdown,
+    required_documents: (docs || []).map((d: any) => ({
+      type: d.document_type,
+      label: docLabels[d.document_type] || d.document_type,
+      required: d.is_required,
+      description: d.description,
+    })),
+    has_required_documents: (docs || []).some((d: any) => d.is_required),
+    booking_url: `https://vendibookpreview.lovable.app/listing/${listing.id}`,
+    message: listing.instant_book
+      ? `This listing supports Instant Book — you can reserve it right away on the website!`
+      : `This listing requires host approval. Submit a booking request and the host will respond.`,
+    next_steps: [
+      'Visit the listing page to start your booking',
+      ...(docs?.some((d: any) => d.is_required) ? ['Prepare your required documents (I can help you understand what you need!)'] : []),
+      listing.deposit_amount ? `Be ready for a $${listing.deposit_amount} refundable deposit` : null,
+      listing.fulfillment_type === 'delivery' ? 'Have your delivery address ready' : 'Plan for pickup at the listed location',
+    ].filter(Boolean),
+  };
+}
+
+async function getRequiredDocuments(supabase: any, args: any) {
+  const { listing_id } = args;
+  if (!listing_id) return { error: 'listing_id is required' };
+
+  const { data: listing } = await supabase
+    .from('listings')
+    .select('title, city, state, category')
+    .eq('id', listing_id)
+    .maybeSingle();
+
+  const { data: docs, error } = await supabase
+    .from('listing_required_documents')
+    .select('document_type, is_required, description')
+    .eq('listing_id', listing_id);
+
+  if (error) throw error;
+
+  const docLabels: Record<string, string> = {
+    drivers_license: "Driver's License",
+    business_license: 'Business License',
+    food_handler_certificate: 'Food Handler Certificate',
+    safeserve_certification: 'SafeServe Certification',
+    health_department_permit: 'Health Department Permit',
+    commercial_liability_insurance: 'Commercial Liability Insurance',
+    vehicle_insurance: 'Vehicle Insurance',
+    certificate_of_insurance: 'Certificate of Insurance',
+    work_history_proof: 'Work History / Experience Proof',
+    prior_experience_proof: 'Prior Experience Proof',
+  };
+
+  const docHelp: Record<string, string> = {
+    drivers_license: "A valid government-issued photo ID. Most people already have this.",
+    business_license: "A business license from your city or county. You can usually apply at your local city hall or online through your county clerk's office. Processing typically takes 1-3 weeks.",
+    food_handler_certificate: "A food safety certification. You can get this online through ServSafe, StateFoodSafety.com, or your local health department. Most online courses take 1-2 hours and cost around $10-15.",
+    safeserve_certification: "SafeServe (also called ServSafe Manager) is a more advanced food safety certification. The exam costs about $36 and you can study online. Many community colleges also offer prep courses.",
+    health_department_permit: "A permit from your local health department. Contact your county health department to apply. They'll need to inspect your food operation. Plan for 2-4 weeks processing time.",
+    commercial_liability_insurance: "General liability insurance for your food business. Companies like FLIP (Food Liability Insurance Program), Next Insurance, or Hiscox offer affordable policies starting around $25-50/month. You can get coverage same-day online.",
+    vehicle_insurance: "Proof of vehicle insurance if you're operating a food truck. Your standard auto insurance may not cover commercial use — check with your provider about adding commercial vehicle coverage.",
+    certificate_of_insurance: "A COI from your insurance provider naming the listing host as additionally insured. Call your insurance company and request one — they usually issue it within 24-48 hours at no extra charge.",
+    work_history_proof: "Documentation showing your relevant work experience in the food industry. This could be a resume, reference letters, or previous employment records.",
+    prior_experience_proof: "Evidence of prior experience operating similar equipment or in a similar setting. Photos of your work, social media posts, or references from past employers work great.",
+  };
+
+  if (!docs || docs.length === 0) {
+    return {
+      listing_title: listing?.title,
+      has_documents: false,
+      message: 'Great news! This listing does not require any documents to book. You can go ahead and submit a booking request right away!',
+    };
+  }
+
+  return {
+    listing_title: listing?.title,
+    location: listing ? [listing.city, listing.state].filter(Boolean).join(', ') : null,
+    category: listing?.category,
+    has_documents: true,
+    documents: docs.map((d: any) => ({
+      type: d.document_type,
+      label: docLabels[d.document_type] || d.document_type,
+      required: d.is_required,
+      description: d.description,
+      how_to_get: docHelp[d.document_type] || 'Contact the listing host for details on this requirement.',
+    })),
+    message: `This listing requires ${docs.filter((d: any) => d.is_required).length} document(s). I can explain how to get any of them — just ask!`,
+    tip: "You can upload documents after submitting your booking request. The host will review them before approving your booking.",
+  };
+}
+
+async function lookupDocumentHelp(args: any) {
+  const { document_type, city, state } = args;
+  if (!document_type) return { error: 'document_type is required (e.g., food_handler_certificate, business_license)' };
+
+  const searchQueries: Record<string, string> = {
+    business_license: `how to get a business license for food business ${city || ''} ${state || ''}`,
+    food_handler_certificate: `food handler certificate course online ${state || ''}`,
+    safeserve_certification: `ServSafe food manager certification exam ${state || ''}`,
+    health_department_permit: `health department food permit application ${city || ''} ${state || ''}`,
+    commercial_liability_insurance: `food vendor liability insurance affordable online`,
+    vehicle_insurance: `food truck commercial vehicle insurance ${state || ''}`,
+  };
+
+  const query = searchQueries[document_type] || `how to get ${document_type.replace(/_/g, ' ')} for food business ${state || ''}`;
+
+  try {
+    const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
+    if (!apiKey) {
+      console.log('Firecrawl not configured, returning static help');
+      return {
+        document_type,
+        message: `I don't have web search available right now, but here's what I know: For a ${document_type.replace(/_/g, ' ')}, check with your local city hall or county clerk, or search online for "${query}".`,
+      };
+    }
+
+    const response = await fetch('https://api.firecrawl.dev/v1/search', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        limit: 3,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      return {
+        document_type,
+        message: `I couldn't search for that right now, but try searching online for: "${query}"`,
+      };
+    }
+
+    const results = (data.data || []).map((r: any) => ({
+      title: r.title,
+      url: r.url,
+      snippet: r.description?.substring(0, 200),
+    }));
+
+    return {
+      document_type,
+      search_query: query,
+      results,
+      message: results.length > 0
+        ? `Here's what I found about getting your ${document_type.replace(/_/g, ' ')}. I found ${results.length} helpful resource(s).`
+        : `I searched but couldn't find specific results. Try visiting your local government website or searching "${query}" for the most up-to-date info.`,
+    };
+  } catch (err) {
+    console.error('Document help lookup error:', err);
+    return {
+      document_type,
+      message: `I had trouble searching right now. Try Googling: "${query}"`,
+    };
   }
 }
