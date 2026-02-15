@@ -173,15 +173,6 @@ const ListingsSections = () => {
                 <tab.icon className="w-4 h-4" />
                 <span className="hidden sm:inline">{tab.label}</span>
                 <span className="sm:hidden">{tab.label.replace('For ', '')}</span>
-                {tabCounts[tab.key] > 0 && (
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                    activeTab === tab.key 
-                      ? 'bg-primary-foreground/20 text-primary-foreground' 
-                      : 'bg-accent text-muted-foreground'
-                  }`}>
-                    {tabCounts[tab.key]}
-                  </span>
-                )}
               </span>
             </button>
           ))}
