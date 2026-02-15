@@ -3,6 +3,7 @@ import { Phone, PhoneOff, MicOff, Mic, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVapiAssistant } from '@/hooks/useVapiAssistant';
 import { cn } from '@/lib/utils';
+import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 
 const VoiceAssistantButton = () => {
   const { status, isMuted, volumeLevel, startCall, endCall, toggleMute, isConfigured } = useVapiAssistant();
@@ -27,6 +28,7 @@ const VoiceAssistantButton = () => {
 
   const handleMainClick = () => {
     if (isIdle) {
+      trackEventToDb('voice_widget_open', 'voice', { source: 'fab' });
       startCall();
     } else if (isActive) {
       setIsExpanded(!isExpanded);
