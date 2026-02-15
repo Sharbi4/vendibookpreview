@@ -146,13 +146,13 @@ const AIListingCreator: React.FC = () => {
       const { data, error } = await supabase.from('listings').insert(insertData).select('id').single();
       if (error) throw error;
       await supabase.from('user_roles').upsert({ user_id: user.id, role: 'host' }, { onConflict: 'user_id,role' });
-      toast.success('Draft saved! Taking you to your drafts.');
+      toast.success('Draft saved! Redirecting to your dashboard...');
       // Add a next-steps message to the chat before redirecting
       setMessages(prev => [...prev, {
         role: 'assistant' as const,
-        content: `🎉 **Your draft has been saved!** Here's what happens next:\n\n1. **Review & Edit** — You'll be taken to your drafts where you can fine-tune everything\n2. **Add Photos** — ${uploadedImages.length > 0 ? 'Your photos are attached! You can add more in the editor' : 'Upload photos in the editor to make your listing stand out'}\n3. **Connect Payments** — Set up Stripe to receive payments (the editor will walk you through it)\n4. **Publish** — Hit publish when you're ready and start getting bookings!\n\nRedirecting you now...`
+        content: `🎉 **Your draft has been saved!**\n\nHere's what to do next:\n\n1. **Open your draft** — You'll land on your Dashboard. Tap on the draft to open the editor.\n2. **${uploadedImages.length > 0 ? 'Review your photos — they\'re attached! Add more or rearrange in the editor.' : 'Add photos — listings with photos get 5x more views! Upload at least 3-5 in the editor.'}**\n3. **Connect payments** — Set up Stripe so you can get paid (takes ~2 min).\n4. **Hit Publish** — Your listing goes live instantly!\n5. **Share it** — Use the Share Kit to post on social media and generate a QR code.\n\nRedirecting you to your dashboard now...`
       }]);
-      setTimeout(() => navigate('/dashboard?tab=listings'), 3500);
+      setTimeout(() => navigate('/dashboard?tab=listings'), 4000);
     } catch (e: any) {
       console.error('Save listing error:', e);
       toast.error('Failed to save listing. Please try again.');
