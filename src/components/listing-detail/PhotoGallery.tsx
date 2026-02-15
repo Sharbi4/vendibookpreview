@@ -152,7 +152,7 @@ const PhotoGallery = ({ images, videos = [], title }: PhotoGalleryProps) => {
           <Button
             variant="outline"
             size="sm"
-            className="absolute bottom-4 right-4 hidden md:flex bg-white hover:bg-white/90 text-foreground shadow-lg border-0 gap-2"
+            className="absolute bottom-4 right-4 hidden md:flex bg-white hover:bg-white/90 text-black shadow-lg border-0 gap-2"
             onClick={() => openLightbox(0)}
           >
             <Grid3X3 className="w-4 h-4" />
@@ -166,7 +166,7 @@ const PhotoGallery = ({ images, videos = [], title }: PhotoGalleryProps) => {
             <Button
               variant="outline"
               size="sm"
-              className="bg-white hover:bg-white/90 text-foreground shadow-lg border-0 gap-2"
+              className="bg-white hover:bg-white/90 text-black shadow-lg border-0 gap-2"
               onClick={() => {
                 const firstVideoIndex = displayItems.findIndex(item => item.type === 'video');
                 if (firstVideoIndex !== -1) openLightbox(firstVideoIndex);

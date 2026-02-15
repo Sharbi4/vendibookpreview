@@ -290,7 +290,7 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
             <Button
               variant="outline"
               size="sm"
-              className="bg-white/95 hover:bg-white text-foreground shadow-lg border-0 gap-2 backdrop-blur-sm"
+              className="bg-white/95 hover:bg-white text-black shadow-lg border-0 gap-2 backdrop-blur-sm"
               onClick={() => openLightbox(0)}
             >
               <Grid3X3 className="w-4 h-4" />
