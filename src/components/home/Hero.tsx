@@ -246,10 +246,8 @@ const Hero = () => {
               <div className={`relative flex items-center bg-card border rounded-2xl overflow-hidden transition-all duration-300 ${
                 isInputFocused ? 'border-primary/40 shadow-lg shadow-primary/10' : 'border-border group-hover:border-primary/30'
               }`}>
-                {isAIParsing ? (
+                {isAIParsing && (
                   <Wand2 className="absolute left-4 w-5 h-5 text-primary animate-pulse" />
-                ) : (
-                  <Search className="absolute left-4 w-5 h-5 text-muted-foreground" />
                 )}
                 <div className="relative flex-1">
                   <input
@@ -260,11 +258,11 @@ const Hero = () => {
                     onKeyDown={(e) => e.key === 'Enter' && handleAISearch()}
                     onFocus={() => setIsInputFocused(true)}
                     onBlur={() => setIsInputFocused(false)}
-                    className="w-full h-14 sm:h-14 pl-12 pr-28 bg-transparent text-foreground text-[16px] sm:text-sm focus:outline-none"
+                    className={`w-full h-14 sm:h-14 ${isAIParsing ? 'pl-12' : 'pl-5'} pr-36 bg-transparent text-foreground text-[16px] sm:text-sm focus:outline-none`}
                   />
                   {/* Animated placeholder overlay */}
                   {!location && !isInputFocused && (
-                    <div className="absolute inset-0 flex items-center pl-12 pr-28 pointer-events-none overflow-hidden">
+                    <div className={`absolute inset-0 flex items-center ${isAIParsing ? 'pl-12' : 'pl-5'} pr-36 pointer-events-none overflow-hidden`}>
                       <AnimatePresence mode="wait">
                         <motion.span
                           key={placeholderIndex}
@@ -280,26 +278,26 @@ const Hero = () => {
                     </div>
                   )}
                 </div>
-                <div className="absolute right-2 flex items-center gap-1">
+                <div className="absolute right-2 flex items-center gap-2">
                   <button
                     onClick={toggleVoiceSearch}
                     disabled={isConnectingMic}
-                    className={`p-2 rounded-lg transition-colors ${
+                    className={`p-2.5 rounded-xl transition-colors ${
                       isRecording
                         ? 'text-red-500 bg-red-500/10 hover:bg-red-500/20 animate-pulse'
                         : 'text-muted-foreground hover:text-primary hover:bg-accent'
                     } disabled:opacity-50`}
                     aria-label={isRecording ? 'Stop voice search' : 'Voice search'}
                   >
-                    {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                    {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                   </button>
                   <button
                     onClick={handleGeolocation}
                     disabled={isLocating}
-                    className="p-2 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-accent disabled:opacity-50"
+                    className="p-2.5 text-muted-foreground hover:text-primary transition-colors rounded-xl hover:bg-accent disabled:opacity-50"
                     aria-label="Use current location"
                   >
-                    <Navigation className={`w-4 h-4 ${isLocating ? 'animate-pulse' : ''}`} />
+                    <Navigation className={`w-5 h-5 ${isLocating ? 'animate-pulse' : ''}`} />
                   </button>
                   <Button
                     onClick={handleAISearch}
