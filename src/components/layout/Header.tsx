@@ -268,7 +268,7 @@ const Header = () => {
 
   return (
     <>
-    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-0 z-50 w-full bg-[#0d0d0d] backdrop-blur-xl border-b border-white/10 shadow-sm">
       <div className="container max-w-7xl mx-auto px-4 flex h-16 items-center justify-between">
         {/* Logo - hide when mobile search is open */}
         <Link 
@@ -366,9 +366,9 @@ const Header = () => {
           ) : (
             <button
               onClick={() => setIsMobileSearchOpen(true)}
-              className="flex-1 flex items-center gap-2 px-3 py-2 rounded-full border border-border bg-muted/40 text-muted-foreground text-sm transition-colors hover:bg-muted/60"
+              className="flex-1 flex items-center gap-2 px-3 py-2 rounded-full border border-white/15 bg-white/5 text-white/50 text-sm transition-colors hover:bg-white/10"
             >
-              <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+              <Search className="h-4 w-4 text-white/40 shrink-0" />
               <span className="truncate">{t('common.search')}</span>
             </button>
           )}
@@ -378,10 +378,10 @@ const Header = () => {
         <div className="hidden md:flex flex-1 justify-center max-w-2xl mx-6">
           <button
             onClick={() => navigate('/search')}
-            className="w-full flex items-center gap-4 px-6 py-3.5 rounded-full border border-border bg-white hover:bg-muted/30 text-muted-foreground text-base font-medium shadow-sm transition-all duration-200 group"
+            className="w-full flex items-center gap-4 px-6 py-3.5 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 text-white/50 text-base font-medium shadow-sm transition-all duration-200 group"
           >
             <Search className="h-5 w-5 text-primary transition-transform duration-200 group-hover:scale-105" />
-            <span className="text-muted-foreground/80 group-hover:text-foreground transition-colors">{t('header.searchPlaceholder')}</span>
+            <span className="text-white/50 group-hover:text-white/80 transition-colors">{t('header.searchPlaceholder')}</span>
           </button>
         </div>
 
@@ -389,14 +389,14 @@ const Header = () => {
         <nav className="hidden lg:flex items-center gap-3">
           <Link 
             to="/how-it-works" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="text-sm font-medium text-white/60 hover:text-white transition-colors"
           >
             {t('common.learnMore')}
           </Link>
           {!user && (
             <Link 
               to="/become-a-host" 
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm font-medium text-white/60 hover:text-white transition-colors"
             >
               Become a Host
             </Link>
@@ -439,7 +439,7 @@ const Header = () => {
         <div className={`flex lg:hidden items-center gap-1 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}> 
           <Link
             to="/how-it-works"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
+            className="text-sm font-medium text-white/60 hover:text-white transition-colors px-2"
           >
             {t('common.learnMore')}
           </Link>
