@@ -105,7 +105,7 @@ const ListingsSections = () => {
 
   if (isLoading) {
     return (
-      <section className="py-8" style={{ background: '#0d0d0d' }}>
+      <section className="py-8 bg-background">
         <div className="container">
           <Skeleton className="h-8 w-32 mb-6" />
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
@@ -123,17 +123,17 @@ const ListingsSections = () => {
   }
 
   return (
-    <section className="py-8 sm:py-12 relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #0d0d0d 0%, #141414 50%, #0d0d0d 100%)' }}>
+    <section className="py-8 sm:py-12 relative overflow-hidden bg-background">
       {/* Subtle decorative orbs */}
       <div className="absolute top-0 right-0 w-[400px] h-[300px] bg-primary/5 rounded-full blur-3xl" aria-hidden="true" />
-      <div className="absolute bottom-0 left-0 w-[300px] h-[200px] bg-amber-500/5 rounded-full blur-3xl" aria-hidden="true" />
+      <div className="absolute bottom-0 left-0 w-[300px] h-[200px] bg-accent/10 rounded-full blur-3xl" aria-hidden="true" />
       
       <div className="container px-4 sm:px-6 space-y-8 sm:space-y-12 relative z-10">
         {/* For Rent Section - RENTAL FIRST */}
         {rentListings.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-bold text-white">Featured Rentals</h2>
+              <h2 className="text-xl font-bold text-foreground">Featured Rentals</h2>
               <Button 
                 variant="ghost" 
                 size="sm"
@@ -162,8 +162,8 @@ const ListingsSections = () => {
           <div>
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-xl font-bold text-white">Featured Vendor Spaces</h2>
-                <p className="text-sm text-white/50 mt-1">Find the perfect location or food truck park for your business</p>
+                <h2 className="text-xl font-bold text-foreground">Featured Vendor Spaces</h2>
+                <p className="text-sm text-muted-foreground mt-1">Find the perfect location or food truck park for your business</p>
               </div>
               <Button 
                 variant="ghost" 
@@ -192,7 +192,7 @@ const ListingsSections = () => {
         {saleListings.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-bold text-white">Featured for Sale</h2>
+              <h2 className="text-xl font-bold text-foreground">Featured for Sale</h2>
               <Button 
                 variant="ghost" 
                 size="sm"
