@@ -44,7 +44,7 @@ const ListHero = ({ onStart }: { onStart: () => void }) => (
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur border border-white/60 text-foreground px-3 py-1.5 rounded-full text-sm font-medium mb-6">
+        <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-lg border border-white/15 text-white/90 px-3 py-1.5 rounded-full text-sm font-medium mb-6">
           Vendibook for Hosts & Sellers
         </div>
         <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight text-foreground mb-6">
@@ -112,7 +112,7 @@ const ListingBuildAnimation = () => {
             {/* Card Shell */}
             <motion.div
               variants={item()}
-              className="rounded-3xl bg-white/70 backdrop-blur-2xl border border-white/60 shadow-2xl shadow-black/10 overflow-hidden"
+              className="rounded-3xl bg-white/[0.07] backdrop-blur-2xl border border-white/[0.12] shadow-2xl shadow-black/30 overflow-hidden"
             >
               {/* Image placeholder with shimmer */}
               <motion.div
@@ -129,7 +129,7 @@ const ListingBuildAnimation = () => {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: 1.2, type: 'spring', stiffness: 200 }}
-                  className="absolute top-4 right-4 bg-white/90 backdrop-blur rounded-full px-3 py-1 text-xs font-semibold text-foreground shadow-lg flex items-center gap-1"
+                  className="absolute top-4 right-4 bg-white/10 backdrop-blur-lg border border-white/15 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-lg flex items-center gap-1"
                 >
                   <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
                   Verified
@@ -139,7 +139,7 @@ const ListingBuildAnimation = () => {
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.8 }}
-                  className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white/70 to-transparent"
+                  className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/40 to-transparent"
                 />
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -148,8 +148,8 @@ const ListingBuildAnimation = () => {
                   transition={{ delay: 1 }}
                   className="absolute bottom-3 left-4 flex items-center gap-2"
                 >
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm">🏠</div>
-                  <span className="text-xs font-medium text-foreground/80">Tampa, FL</span>
+                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm">🏠</div>
+                  <span className="text-xs font-medium text-white/80">Tampa, FL</span>
                 </motion.div>
               </motion.div>
 
@@ -158,7 +158,7 @@ const ListingBuildAnimation = () => {
                 {/* Title typing animation */}
                 <motion.div variants={item(0.4)}>
                   <motion.h3
-                    className="text-lg sm:text-xl font-bold text-foreground"
+                    className="text-lg sm:text-xl font-bold text-white"
                     initial={{ width: 0 }}
                     whileInView={{ width: '100%' }}
                     viewport={{ once: true }}
@@ -178,7 +178,7 @@ const ListingBuildAnimation = () => {
                       whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
                       transition={{ delay: 1.2 + i * 0.15, type: 'spring', stiffness: 300 }}
-                      className="px-2.5 py-1 rounded-full bg-secondary text-xs font-medium text-secondary-foreground"
+                      className="px-2.5 py-1 rounded-full bg-white/10 border border-white/10 text-xs font-medium text-white/80"
                     >
                       {tag}
                     </motion.span>
@@ -186,7 +186,7 @@ const ListingBuildAnimation = () => {
                 </motion.div>
 
                 {/* Rating + Reviews */}
-                <motion.div variants={item(0.8)} className="flex items-center gap-3 text-sm text-muted-foreground">
+                <motion.div variants={item(0.8)} className="flex items-center gap-3 text-sm text-white/60">
                   <div className="flex items-center gap-1 text-primary">
                     {[...Array(5)].map((_, i) => (
                       <motion.div
@@ -213,7 +213,7 @@ const ListingBuildAnimation = () => {
                 {/* Price row */}
                 <motion.div
                   variants={item(1)}
-                  className="flex items-end justify-between pt-2 border-t border-border/50"
+                  className="flex items-end justify-between pt-2 border-t border-white/10"
                 >
                   <div>
                     <motion.p
@@ -221,10 +221,10 @@ const ListingBuildAnimation = () => {
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: 2.4 }}
-                      className="text-2xl font-bold text-foreground"
+                      className="text-2xl font-bold text-white"
                     >
                       $250
-                      <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                      <span className="text-sm font-normal text-white/50">/mo</span>
                     </motion.p>
                   </div>
                   <motion.div
@@ -247,14 +247,14 @@ const ListingBuildAnimation = () => {
               whileInView={{ opacity: 1, x: 40, y: -40 }}
               viewport={{ once: true }}
               transition={{ delay: 3, type: 'spring', stiffness: 120 }}
-              className="hidden sm:flex ml-auto w-fit items-center gap-2.5 bg-white/80 backdrop-blur-xl border border-white/60 shadow-xl rounded-xl p-3 -mt-6 relative z-10"
+              className="hidden sm:flex ml-auto w-fit items-center gap-2.5 bg-white/[0.07] backdrop-blur-xl border border-white/[0.12] shadow-xl rounded-xl p-3 -mt-6 relative z-10"
             >
               <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
                 <Share2 className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-foreground">Share Kit ready</p>
-                <p className="text-[10px] text-muted-foreground">QR code + social captions</p>
+                <p className="text-xs font-semibold text-white">Share Kit ready</p>
+                <p className="text-[10px] text-white/50">QR code + social captions</p>
               </div>
             </motion.div>
           </motion.div>
@@ -291,7 +291,7 @@ const HowItWorks = () => {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
               whileHover={{ y: -4 }}
-              className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5 hover:shadow-xl hover:border-primary/30 transition-all p-6 text-center relative"
+              className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.1] shadow-lg shadow-black/10 hover:shadow-xl hover:border-primary/30 transition-all p-6 text-center relative"
             >
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-foreground text-background flex items-center justify-center text-xs font-bold shadow-md">
                 {i + 1}
@@ -326,7 +326,7 @@ const RentOrSell = () => (
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           whileHover={{ y: -4 }}
-          className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5 hover:shadow-xl p-6 sm:p-8 transition-all"
+          className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.1] shadow-lg shadow-black/10 hover:shadow-xl p-6 sm:p-8 transition-all"
         >
           <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">For Rent</Badge>
           <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-3">Shared Kitchens, Parking & More</h3>
@@ -353,7 +353,7 @@ const RentOrSell = () => (
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           whileHover={{ y: -4 }}
-          className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5 hover:shadow-xl p-6 sm:p-8 transition-all"
+          className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.1] shadow-lg shadow-black/10 hover:shadow-xl p-6 sm:p-8 transition-all"
         >
           <Badge className="mb-4 bg-accent/10 text-accent-foreground border-accent/20">For Sale</Badge>
           <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-3">Equipment, Trucks & Supplies</h3>
@@ -407,7 +407,7 @@ const ToolsGrid = () => {
               viewport={{ once: true }}
               transition={{ delay: i * 0.05 }}
               whileHover={{ y: -4 }}
-              className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5 hover:shadow-xl hover:border-primary/30 transition-all p-6 text-center"
+              className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.1] shadow-lg shadow-black/10 hover:shadow-xl hover:border-primary/30 transition-all p-6 text-center"
             >
               <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center">
                 <feat.icon className="h-7 w-7 text-foreground" />
@@ -438,7 +438,7 @@ const PaymentOptions = () => (
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           whileHover={{ y: -4 }}
-          className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5 hover:shadow-xl p-6 transition-all"
+          className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.1] shadow-lg shadow-black/10 hover:shadow-xl p-6 transition-all"
         >
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center mb-4">
             <CreditCard className="h-6 w-6 text-foreground" />
@@ -456,7 +456,7 @@ const PaymentOptions = () => (
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
           whileHover={{ y: -4 }}
-          className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5 hover:shadow-xl p-6 transition-all"
+          className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.1] shadow-lg shadow-black/10 hover:shadow-xl p-6 transition-all"
         >
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center mb-4">
             <Banknote className="h-6 w-6 text-foreground" />
