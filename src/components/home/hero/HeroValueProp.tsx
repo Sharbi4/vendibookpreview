@@ -81,10 +81,10 @@ const HeroValueProp = () => {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => navigate('/search')}
+              onClick={() => navigate('/list')}
               className="rounded-full px-8 border-border/50 hover:border-primary/40 hover:bg-primary/5 text-foreground gap-2 transition-all"
             >
-              Browse Listings
+              Create a Free Listing
               <ArrowRight className="w-4 h-4" />
             </Button>
           </motion.div>
