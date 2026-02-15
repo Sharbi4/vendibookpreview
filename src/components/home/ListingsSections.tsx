@@ -20,6 +20,7 @@ const ListingsSections = () => {
         .eq('status', 'published')
         .eq('mode', 'rent')
         .neq('category', 'vendor_space')
+        .not('title', 'ilike', 'Demo%')
         .order('published_at', { ascending: false })
         .limit(6);
       
@@ -38,6 +39,7 @@ const ListingsSections = () => {
         .select('*')
         .eq('status', 'published')
         .eq('mode', 'sale')
+        .not('title', 'ilike', 'Demo%')
         .order('published_at', { ascending: false })
         .limit(6);
       
@@ -56,6 +58,7 @@ const ListingsSections = () => {
         .select('*')
         .eq('status', 'published')
         .or('category.eq.vendor_space,category.eq.vendor_lot')
+        .not('title', 'ilike', 'Demo%')
         .order('published_at', { ascending: false })
         .limit(6);
       
