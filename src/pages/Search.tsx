@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet, Truck, LayoutGrid, Map, Columns } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
@@ -111,6 +111,39 @@ const Search = () => {
 
   // Google Maps API key for map view
   const { apiKey: mapToken, isLoading: isMapTokenLoading, error: mapTokenError } = useGoogleMapsToken();
+
+  // Auto-geocode the search query if it looks like a location and no coordinates are set
+  useEffect(() => {
+    const shouldGeocode = initialQuery && !initialLat && !initialLng && !locationCoords;
+    if (!shouldGeocode) return;
+
+    const geocodeQuery = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('geocode-location', {
+          body: { query: initialQuery, limit: 1 },
+        });
+        if (!error && data?.results?.length > 0) {
+          const result = data.results[0];
+          const coords: [number, number] = result.center; // [lng, lat]
+          setLocationCoords(coords);
+          setLocationText(result.text);
+          // Update URL with coordinates
+          const params = new URLSearchParams(searchParams);
+          params.set('lat', coords[1].toString());
+          params.set('lng', coords[0].toString());
+          params.set('radius', searchRadius.toString());
+          params.set('location', result.text);
+          setSearchParams(params, { replace: true });
+        }
+      } catch (err) {
+        console.error('Auto-geocode failed:', err);
+      }
+    };
+
+    geocodeQuery();
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Quick booking modal state
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
