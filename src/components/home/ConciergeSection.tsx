@@ -9,8 +9,8 @@ const ConciergeSection = () => {
 
   return (
     <section className="py-16 sm:py-24 relative overflow-hidden">
-      {/* Subtle amber glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[400px] bg-primary/[0.04] rounded-full blur-[100px]" />
+      {/* Subtle neutral glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[400px] bg-foreground/[0.02] rounded-full blur-[100px]" />
       
       <div className="container relative z-10">
         <motion.div
@@ -22,7 +22,7 @@ const ConciergeSection = () => {
         >
           <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-8 sm:p-12 text-center">
             {/* Badge */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-semibold uppercase tracking-widest mb-6">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-foreground/10 border border-foreground/15 text-foreground text-[10px] font-semibold uppercase tracking-widest mb-6">
               <Sparkles className="w-2.5 h-2.5" />
               Concierge
             </div>

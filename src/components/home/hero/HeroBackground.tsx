@@ -4,12 +4,12 @@ const HeroBackground = () => (
   <>
     {/* Animated background orbs */}
     <motion.div
-      className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[700px] bg-primary/[0.07] rounded-full blur-[150px]"
+      className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[700px] bg-foreground/[0.03] rounded-full blur-[150px]"
       animate={{ scale: [1, 1.1, 1], opacity: [0.07, 0.1, 0.07] }}
       transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
     />
     <motion.div
-      className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-primary/[0.04] rounded-full blur-[120px]"
+      className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-foreground/[0.02] rounded-full blur-[120px]"
       animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
       transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
     />
@@ -26,7 +26,7 @@ const HeroBackground = () => (
     {[...Array(6)].map((_, i) => (
       <motion.div
         key={i}
-        className="absolute w-1 h-1 rounded-full bg-primary/20"
+        className="absolute w-1 h-1 rounded-full bg-foreground/15"
         style={{
           left: `${15 + i * 15}%`,
           top: `${20 + (i % 3) * 25}%`,

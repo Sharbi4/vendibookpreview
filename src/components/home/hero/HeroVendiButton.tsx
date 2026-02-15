@@ -10,7 +10,7 @@ const HeroVendiButton = () => (
     transition={{ delay: 0.8, duration: 0.5 }}
   >
     {/* Neon gradient divider */}
-    <div className="w-56 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+    <div className="w-56 h-px bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
 
     <div className="flex items-center gap-2">
       <motion.button
@@ -20,18 +20,18 @@ const HeroVendiButton = () => (
         }}
         className="relative inline-flex items-center gap-2.5 px-5 py-2.5 rounded-2xl text-sm font-medium transition-all duration-300 group cursor-pointer
           bg-white/[0.04] backdrop-blur-xl
-          border border-white/[0.08] hover:border-primary/30
-          text-muted-foreground hover:text-foreground
-          shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_4px_24px_-4px_rgba(0,0,0,0.4)]
-          hover:shadow-[0_0_0_1px_rgba(255,81,36,0.1),0_8px_32px_-4px_rgba(255,81,36,0.15),0_0_60px_-12px_rgba(255,81,36,0.1)]
+           border border-white/[0.08] hover:border-foreground/30
+           text-muted-foreground hover:text-foreground
+           shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_4px_24px_-4px_rgba(0,0,0,0.4)]
+           hover:shadow-[0_0_0_1px_rgba(255,255,255,0.1),0_8px_32px_-4px_rgba(255,255,255,0.08)]
           hover:bg-white/[0.06]"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
         {/* Ambient glow behind icon */}
         <span className="relative flex items-center justify-center">
-          <span className="absolute inset-0 w-6 h-6 -m-1 rounded-full bg-primary/20 blur-md group-hover:bg-primary/30 transition-colors" />
-          <Headset className="relative w-4 h-4 text-primary group-hover:text-primary transition-colors" />
+          <span className="absolute inset-0 w-6 h-6 -m-1 rounded-full bg-foreground/10 blur-md group-hover:bg-foreground/15 transition-colors" />
+          <Headset className="relative w-4 h-4 text-foreground/70 group-hover:text-foreground transition-colors" />
         </span>
         <span className="relative">
           <span className="bg-gradient-to-r from-muted-foreground via-foreground/80 to-muted-foreground group-hover:from-foreground group-hover:via-foreground group-hover:to-foreground/80 bg-clip-text text-transparent transition-all duration-300">

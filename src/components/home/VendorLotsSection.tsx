@@ -32,10 +32,10 @@ const VendorLotsSection = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="py-20 px-4 bg-gradient-to-br from-accent/10 via-background to-primary/5 relative overflow-hidden">
+    <section className="py-20 px-4 bg-gradient-to-br from-accent/10 via-background to-foreground/3 relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-foreground rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 left-0 w-72 h-72 bg-accent rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
       </div>
 
@@ -62,10 +62,10 @@ const VendorLotsSection = () => {
             {benefits.map((benefit, index) => (
               <div 
                 key={index}
-                className="relative overflow-hidden flex gap-4 p-6 bg-card rounded-xl border-2 border-primary/20 hover:border-primary/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-gradient-to-br from-primary/5 via-transparent to-amber-500/5"
+                className="relative overflow-hidden flex gap-4 p-6 bg-card rounded-xl border-2 border-border hover:border-foreground/20 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
               >
-                <div className="p-3 bg-gradient-to-br from-primary to-amber-500 rounded-xl h-fit flex-shrink-0 shadow-md">
-                  <benefit.icon className="h-6 w-6 text-white" />
+                <div className="p-3 bg-foreground rounded-xl h-fit flex-shrink-0 shadow-md">
+                  <benefit.icon className="h-6 w-6 text-background" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground text-lg mb-2">{benefit.title}</h3>
@@ -76,9 +76,9 @@ const VendorLotsSection = () => {
           </div>
 
           {/* Right: CTA Card */}
-          <div className="relative overflow-hidden bg-card rounded-2xl p-8 lg:p-10 border-2 border-primary/30 shadow-xl bg-gradient-to-br from-primary/10 via-amber-500/10 to-yellow-400/10">
+          <div className="relative overflow-hidden bg-card rounded-2xl p-8 lg:p-10 border-2 border-border shadow-xl">
             {/* Animated background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 animate-pulse" />
+            <div className="absolute inset-0 bg-foreground/[0.02] animate-pulse" />
             
             <h3 className="relative text-2xl font-bold text-foreground mb-4">
               Start Hosting Today
@@ -110,7 +110,7 @@ const VendorLotsSection = () => {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="w-full border-primary/30 hover:bg-gradient-to-r hover:from-primary/10 hover:to-amber-500/10"
+                className="w-full border-border hover:border-foreground/30 hover:bg-foreground/5"
                 onClick={() => navigate('/vendor-spaces')}
               >
                 Browse Vendor Spaces

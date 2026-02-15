@@ -52,7 +52,7 @@ const HowItWorks = () => {
             return (
               <motion.div 
                 key={index} 
-                className="relative overflow-hidden text-center group p-6 rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-amber-500/5 to-yellow-400/5 cursor-default"
+                className="relative overflow-hidden text-center group p-6 rounded-xl border-2 border-border hover:border-foreground/20 bg-card cursor-default"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-40px" }}
@@ -60,15 +60,15 @@ const HowItWorks = () => {
                 whileHover={{ y: -4, transition: { duration: 0.25, ease: 'easeOut' } }}
               >
                 {/* Animated background */}
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-yellow-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-foreground/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
                 <motion.div 
-                  className="relative inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-amber-500 mb-3 shadow-md"
+                  className="relative inline-flex items-center justify-center w-12 h-12 rounded-xl bg-foreground mb-3 shadow-md"
                   whileHover={{ scale: 1.15, rotate: 3, transition: { duration: 0.3 } }}
                 >
-                  <Icon className="h-5 w-5 text-white" strokeWidth={2} />
+                  <Icon className="h-5 w-5 text-background" strokeWidth={2} />
                 </motion.div>
-                <div className="relative text-xs font-medium text-primary mb-1">Step {index + 1}</div>
+                <div className="relative text-xs font-medium text-muted-foreground mb-1">Step {index + 1}</div>
                 <h3 className="relative text-base font-semibold text-foreground mb-1">{step.title}</h3>
                 <p className="relative text-muted-foreground text-sm">{step.description}</p>
               </motion.div>
@@ -86,7 +86,7 @@ const HowItWorks = () => {
           <Button 
             variant="outline" 
             asChild
-            className="border-primary/30 hover:bg-gradient-to-r hover:from-primary/10 hover:to-amber-500/10 transition-all duration-300 hover:shadow-md"
+            className="border-border hover:border-foreground/30 hover:bg-foreground/5 transition-all duration-300 hover:shadow-md"
           >
             <Link to="/how-it-works" className="gap-2">
               Learn how Vendibook works
