@@ -76,7 +76,9 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     // Validate required fields - White Glove needs name and email (phone is optional)
-    if (isWhiteGlove) {
+    // Voice assistant sources only need name and phone (email may not be collected)
+    const isVoiceSource = source === 'voice-assistant-bappie';
+    if (isWhiteGlove && !isVoiceSource) {
       if (!name || !email) {
         return new Response(
           JSON.stringify({ error: "Missing required fields: name, email" }),
