@@ -446,9 +446,9 @@ export const QuickStartWizard: React.FC = () => {
 
                 {/* City/State Confirmation Overlay */}
                 {zipConfirmed && data.city && data.state && (
-                  <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 animate-in fade-in-50 slide-in-from-top-2 duration-300">
+                  <div className="p-4 rounded-xl bg-muted/50 border border-foreground animate-in fade-in-50 slide-in-from-top-2 duration-300">
                     <div className="flex items-start gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+                      <CheckCircle2 className="w-5 h-5 text-foreground mt-0.5 shrink-0" />
                       <div>
                         <p className="text-sm font-medium text-foreground">
                           Based on your ZIP code, your listing is in:
