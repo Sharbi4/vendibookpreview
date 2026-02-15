@@ -74,7 +74,7 @@ const SupplySection = () => {
               Built by a food truck owner & chef
             </motion.div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4 text-shadow-premium">
-              A safe way to <span className="gradient-text-warm">sell or rent</span> your food truck.
+              A safe way to <span className="text-muted-foreground">sell or rent</span> your food truck.
             </h2>
             <div className="flex flex-col sm:flex-row items-start gap-4 mb-6 sm:mb-8">
               <motion.img 

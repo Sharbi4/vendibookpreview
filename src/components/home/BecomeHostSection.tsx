@@ -23,13 +23,13 @@ const BecomeHostSection = () => {
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.6 }}
         >
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary rounded-full mb-6">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest bg-foreground/10 text-foreground rounded-full mb-6">
             For Owners
           </span>
           
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 leading-tight">
             Your idle truck is{' '}
-            <span className="gradient-text-warm">losing you money.</span>
+            <span className="text-muted-foreground">losing you money.</span>
           </h2>
           
           <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">
@@ -47,7 +47,7 @@ const BecomeHostSection = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: 0.1 + i * 0.08 }}
               >
-                <item.icon className="w-4 h-4 text-primary" />
+                <item.icon className="w-4 h-4 text-foreground/50" />
                 {item.text}
               </motion.div>
             ))}
@@ -63,7 +63,7 @@ const BecomeHostSection = () => {
           >
             <div className="text-left">
               <p className="text-xs text-muted-foreground">Average monthly earnings</p>
-              <p className="text-2xl font-bold gradient-text-warm">$2,847</p>
+              <p className="text-2xl font-bold text-foreground">$2,847</p>
             </div>
           </motion.div>
 
@@ -71,9 +71,10 @@ const BecomeHostSection = () => {
             <Button 
               asChild 
               size="lg" 
-              className="rounded-full px-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 gap-2"
+              variant="glass-cta"
+              className="rounded-full px-10"
             >
-              <Link to="/list">
+              <Link to="/list" className="flex items-center gap-2">
                 List Your Asset
                 <ArrowRight className="h-4 w-4" />
               </Link>

@@ -41,7 +41,7 @@ const KitchenHero = () => {
   return (
     <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-background">
       {/* Subtle animated background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-amber-500/5" aria-hidden="true" />
+      <div className="absolute inset-0 bg-gradient-to-br from-foreground/[0.03] via-background to-foreground/[0.02]" aria-hidden="true" />
 
       <div className="container relative z-10 py-20 md:py-28">
         <motion.div 
@@ -50,14 +50,14 @@ const KitchenHero = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <Badge variant="outline" className="mb-6 px-4 py-2 text-sm font-medium border-primary/30 bg-primary/5">
+          <Badge variant="outline" className="mb-6 px-4 py-2 text-sm font-medium border-foreground/20 bg-foreground/5">
             <ChefHat className="h-4 w-4 mr-2 inline" />
             For Commercial Kitchens
           </Badge>
           
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground mb-6">
             Your kitchen.{' '}
-            <span className="bg-gradient-to-r from-primary via-amber-500 to-primary bg-clip-text text-transparent">
+            <span className="text-muted-foreground">
               Fully booked.
             </span>
           </h1>
@@ -67,7 +67,7 @@ const KitchenHero = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-            <Button asChild size="lg" variant="dark-shine" className="h-14 px-8 text-lg">
+            <Button asChild size="lg" variant="glass-cta" className="h-14 px-8 text-lg">
               <Link to="/list?category=ghost_kitchen">
                 List Your Kitchen
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -82,11 +82,11 @@ const KitchenHero = () => {
 
           <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
+              <CheckCircle2 className="h-4 w-4 text-foreground/50" />
               Free to list
             </span>
             <span className="flex items-center gap-1.5">
-              <DollarSign className="h-4 w-4 text-green-500" />
+              <DollarSign className="h-4 w-4 text-foreground/50" />
               $2M+ host earnings
             </span>
           </div>
@@ -158,10 +158,10 @@ const ValueGrid = () => {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
             >
-              <Card className="h-full border-2 border-border shadow-lg bg-card hover:shadow-xl hover:border-primary/30 transition-all">
+              <Card className="h-full border-2 border-border shadow-lg bg-card/80 backdrop-blur-xl hover:shadow-xl hover:border-foreground/20 transition-all">
                 <CardContent className="p-8">
-                  <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mb-6">
-                    <item.icon className="h-7 w-7 text-primary-foreground" />
+                  <div className="w-14 h-14 rounded-2xl bg-foreground flex items-center justify-center mb-6">
+                    <item.icon className="h-7 w-7 text-background" />
                   </div>
                   <h3 className="text-xl font-semibold text-foreground mb-3">{item.title}</h3>
                   <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
@@ -218,7 +218,7 @@ const QRSignageSection = () => {
                       </div>
                       {/* Scan Line Animation */}
                       <motion.div
-                        className="absolute left-0 right-0 h-0.5 bg-primary"
+                        className="absolute left-0 right-0 h-0.5 bg-foreground/60"
                         initial={{ top: 0 }}
                         animate={{ top: ['0%', '100%', '0%'] }}
                         transition={{ 
@@ -230,10 +230,10 @@ const QRSignageSection = () => {
                       />
                     </div>
                     {/* Corner Brackets */}
-                    <div className="absolute -top-2 -left-2 w-6 h-6 border-t-4 border-l-4 border-primary rounded-tl-lg" />
-                    <div className="absolute -top-2 -right-2 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-lg" />
-                    <div className="absolute -bottom-2 -left-2 w-6 h-6 border-b-4 border-l-4 border-primary rounded-bl-lg" />
-                    <div className="absolute -bottom-2 -right-2 w-6 h-6 border-b-4 border-r-4 border-primary rounded-br-lg" />
+                    <div className="absolute -top-2 -left-2 w-6 h-6 border-t-4 border-l-4 border-foreground/40 rounded-tl-lg" />
+                    <div className="absolute -top-2 -right-2 w-6 h-6 border-t-4 border-r-4 border-foreground/40 rounded-tr-lg" />
+                    <div className="absolute -bottom-2 -left-2 w-6 h-6 border-b-4 border-l-4 border-foreground/40 rounded-bl-lg" />
+                    <div className="absolute -bottom-2 -right-2 w-6 h-6 border-b-4 border-r-4 border-foreground/40 rounded-br-lg" />
                   </motion.div>
                   
                   <p className="mt-6 text-sm font-medium text-foreground text-center">Scan to Book</p>
@@ -250,8 +250,8 @@ const QRSignageSection = () => {
                 transition={{ delay: 0.3 }}
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <div className="w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center">
+                    <CheckCircle2 className="h-4 w-4 text-foreground/60" />
                   </div>
                   <div>
                     <p className="text-xs font-medium text-foreground">New Lead!</p>
@@ -269,7 +269,7 @@ const QRSignageSection = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <Badge variant="outline" className="mb-4 px-3 py-1.5 text-xs font-medium border-primary/30 bg-primary/5 text-primary">
+            <Badge variant="outline" className="mb-4 px-3 py-1.5 text-xs font-medium border-foreground/20 bg-foreground/5 text-foreground">
               <QrCode className="h-3.5 w-3.5 mr-1.5 inline" />
               Free Signage
             </Badge>
@@ -300,8 +300,8 @@ const QRSignageSection = () => {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
                 >
-                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                  <div className="w-6 h-6 rounded-full bg-foreground/10 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle2 className="h-4 w-4 text-foreground/50" />
                   </div>
                   {item}
                 </motion.li>
@@ -334,7 +334,7 @@ const ComplianceFeature = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <Badge variant="outline" className="mb-4 px-3 py-1.5 text-xs font-medium border-green-500/30 bg-green-500/5 text-green-600">
+            <Badge variant="outline" className="mb-4 px-3 py-1.5 text-xs font-medium border-foreground/20 bg-foreground/5 text-foreground">
               <Shield className="h-3.5 w-3.5 mr-1.5 inline" />
               Safety First
             </Badge>
@@ -360,8 +360,8 @@ const ComplianceFeature = () => {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
                 >
-                  <div className="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                   <div className="w-6 h-6 rounded-full bg-foreground/10 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle2 className="h-4 w-4 text-foreground/50" />
                   </div>
                   {req}
                 </motion.li>
@@ -380,15 +380,15 @@ const ComplianceFeature = () => {
               {/* Header */}
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                    <Lock className="h-5 w-5 text-primary-foreground" />
+                  <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center">
+                    <Lock className="h-5 w-5 text-background" />
                   </div>
                   <div>
                     <p className="font-semibold text-foreground">Document Vault</p>
                     <p className="text-sm text-muted-foreground">3 of 3 verified</p>
                   </div>
                 </div>
-                <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
+                <Badge className="bg-foreground/10 text-foreground/70 border-foreground/15">
                   Verified
                 </Badge>
               </div>
@@ -405,19 +405,19 @@ const ComplianceFeature = () => {
                       <FileCheck className="h-5 w-5 text-muted-foreground" />
                       <span className="text-sm font-medium text-foreground">{doc.name}</span>
                     </div>
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    <CheckCircle2 className="h-5 w-5 text-foreground/40" />
                   </div>
                 ))}
               </div>
 
               {/* Action button */}
-              <Button className="w-full" variant="dark-shine">
+              <Button className="w-full" variant="glass-cta">
                 Approve Booking
               </Button>
 
               {/* Decorative blurred background elements */}
-              <div className="absolute -top-20 -right-20 w-40 h-40 bg-green-500/20 rounded-full blur-3xl" aria-hidden="true" />
-              <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-primary/20 rounded-full blur-3xl" aria-hidden="true" />
+              <div className="absolute -top-20 -right-20 w-40 h-40 bg-foreground/[0.05] rounded-full blur-3xl" aria-hidden="true" />
+              <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-foreground/[0.03] rounded-full blur-3xl" aria-hidden="true" />
             </div>
           </motion.div>
         </div>
@@ -444,7 +444,7 @@ const RevenuePreview = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <Badge variant="outline" className="mb-4 px-3 py-1.5 text-xs font-medium border-amber-500/30 bg-amber-500/5 text-amber-600">
+          <Badge variant="outline" className="mb-4 px-3 py-1.5 text-xs font-medium border-foreground/20 bg-foreground/5 text-foreground">
             Revenue Potential
           </Badge>
           
@@ -466,14 +466,14 @@ const RevenuePreview = () => {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
               >
-                <item.icon className="h-8 w-8 text-primary mx-auto mb-3" />
+                <item.icon className="h-8 w-8 text-foreground/60 mx-auto mb-3" />
                 <h4 className="font-semibold text-foreground mb-1">{item.title}</h4>
                 <p className="text-sm text-muted-foreground">{item.desc}</p>
               </motion.div>
             ))}
           </div>
 
-          <Button asChild size="lg" variant="dark-shine" className="h-14 px-8 text-lg">
+          <Button asChild size="lg" variant="glass-cta" className="h-14 px-8 text-lg">
             <Link to="/list?category=ghost_kitchen">
               Start Earning
             </Link>
@@ -482,8 +482,8 @@ const RevenuePreview = () => {
       </div>
 
       {/* Ambient Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-3xl" aria-hidden="true" />
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-amber-500/10 rounded-full blur-3xl" aria-hidden="true" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-foreground/[0.04] rounded-full blur-3xl" aria-hidden="true" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-foreground/[0.03] rounded-full blur-3xl" aria-hidden="true" />
     </section>
   );
 };
