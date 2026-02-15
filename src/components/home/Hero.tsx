@@ -77,11 +77,10 @@ const Hero = () => {
           </p>
         </div>
 
-        {/* Two glassmorphic cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-5 max-w-5xl mx-auto animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'backwards' }}>
-          {/* Left: Browse card (wider) */}
+        {/* Search card */}
+        <div className="max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'backwards' }}>
           <div
-            className="lg:col-span-3 rounded-2xl border border-white/20 p-5 sm:p-6 shadow-2xl"
+            className="rounded-2xl border border-white/20 p-5 sm:p-6 shadow-2xl"
             style={{
               background: 'rgba(0, 0, 0, 0.45)',
               backdropFilter: 'blur(24px) saturate(180%)',
@@ -214,62 +213,6 @@ const Hero = () => {
             >
               <Search className="w-4 h-4 mr-2" />
               Search the Marketplace
-            </Button>
-          </div>
-
-          {/* Right: Concierge card */}
-          <div
-            className="lg:col-span-2 rounded-2xl border border-white/20 p-5 sm:p-6 shadow-2xl flex flex-col"
-            style={{
-              background: 'rgba(0, 0, 0, 0.45)',
-              backdropFilter: 'blur(24px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-            }}
-          >
-            {/* Card header */}
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-white font-semibold text-lg">Let Us Match You</h2>
-                <p className="text-white/60 text-xs">Done-for-you concierge service</p>
-              </div>
-            </div>
-
-            <h3 className="text-white font-bold text-xl mb-3">Don't have time to search?</h3>
-            <p className="text-white/70 text-sm leading-relaxed mb-5">
-              Our experts will manually find the best deal for your specific needs. Tell us what you're looking for, and we'll do the legwork.
-            </p>
-
-            {/* Benefits */}
-            <div className="space-y-3 mb-6 flex-1">
-              {[
-                'Personalized asset recommendations',
-                'Price negotiation on your behalf',
-                'No sign-up required',
-              ].map((benefit) => (
-                <div key={benefit} className="flex items-center gap-2.5 text-sm text-white/80">
-                  <Sparkles className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                  <span>{benefit}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Match Me CTA */}
-            <Button
-              onClick={() => {
-                // Open Zendesk chat or navigate to concierge
-                if (window.zE) {
-                  try { window.zE('messenger', 'open'); } catch { /* noop */ }
-                } else {
-                  navigate('/concierge');
-                }
-              }}
-              className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold text-sm shadow-lg shadow-primary/30"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              Match Me
             </Button>
           </div>
         </div>
