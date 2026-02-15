@@ -84,7 +84,11 @@ const saveRecentSearch = (query: string) => {
   }
 };
 
-const Header = () => {
+interface HeaderProps {
+  hideSearch?: boolean;
+}
+
+const Header = ({ hideSearch = false }: HeaderProps) => {
   const { t } = useTranslation();
   
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -283,7 +287,7 @@ const Header = () => {
         </Link>
 
         {/* Mobile Expandable Search */}
-        <div 
+        {!hideSearch && <div 
           className={`md:hidden flex items-center transition-all duration-300 ease-in-out ${
             isMobileSearchOpen 
               ? 'flex-1 mx-0' 
@@ -372,18 +376,20 @@ const Header = () => {
               <span className="truncate">{t('common.search')}</span>
             </button>
           )}
-        </div>
+        </div>}
 
         {/* Centered Search - Desktop */}
-        <div className="hidden md:flex flex-1 justify-center max-w-2xl mx-6">
-          <button
-            onClick={() => navigate('/search')}
-            className="w-full flex items-center gap-4 px-6 py-3.5 rounded-full border border-border bg-secondary/50 hover:bg-secondary text-muted-foreground text-base font-medium shadow-sm transition-all duration-200 group"
-          >
-            <Search className="h-5 w-5 text-primary transition-transform duration-200 group-hover:scale-105" />
-            <span className="text-muted-foreground group-hover:text-foreground transition-colors">{t('header.searchPlaceholder')}</span>
-          </button>
-        </div>
+        {!hideSearch && (
+          <div className="hidden md:flex flex-1 justify-center max-w-2xl mx-6">
+            <button
+              onClick={() => navigate('/search')}
+              className="w-full flex items-center gap-4 px-6 py-3.5 rounded-full border border-border bg-secondary/50 hover:bg-secondary text-muted-foreground text-base font-medium shadow-sm transition-all duration-200 group"
+            >
+              <Search className="h-5 w-5 text-primary transition-transform duration-200 group-hover:scale-105" />
+              <span className="text-muted-foreground group-hover:text-foreground transition-colors">{t('header.searchPlaceholder')}</span>
+            </button>
+          </div>
+        )}
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-3">

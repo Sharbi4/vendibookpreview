@@ -457,7 +457,7 @@ const Search = () => {
         canonical="/search"
       />
       <JsonLd schema={[itemListSchema, breadcrumbSchema]} />
-      <Header />
+      <Header hideSearch />
       
       <main className="flex-1">
       {/* Spacer - logo/tagline removed */}
