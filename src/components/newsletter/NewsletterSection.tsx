@@ -120,36 +120,35 @@ const NewsletterSection = ({ variant = 'default', source = 'section' }: Newslett
 
   return (
     <section className="py-16 md:py-20 relative overflow-hidden">
-      {/* Orange gradient background - #FF5124 based with subtle hints */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#FF5124] via-[#FF6B3D] to-[#FF7D4D]" />
+      {/* Neutral dark background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-foreground via-foreground/95 to-foreground" />
       
       {/* Decorative curved lines */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Large curved decorative lines */}
-        <svg className="absolute right-0 top-0 h-full w-1/2 opacity-30" viewBox="0 0 400 400" fill="none">
+        <svg className="absolute right-0 top-0 h-full w-1/2 opacity-10" viewBox="0 0 400 400" fill="none">
           <circle cx="400" cy="200" r="300" stroke="white" strokeWidth="2" fill="none" />
           <circle cx="400" cy="200" r="250" stroke="white" strokeWidth="1.5" fill="none" />
           <circle cx="400" cy="200" r="200" stroke="white" strokeWidth="1" fill="none" />
           <circle cx="400" cy="200" r="150" stroke="white" strokeWidth="0.5" fill="none" />
         </svg>
-        {/* Additional glow effects - orange themed */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#FF5124]/25 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3" />
+        {/* Subtle neutral glow effects */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-white/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3" />
       </div>
       
       <div className="container relative z-10">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-2xl md:text-4xl font-bold mb-3 text-white">
+          <h2 className="text-2xl md:text-4xl font-bold mb-3 text-background">
             Subscribe to our email
           </h2>
-          <h3 className="text-xl md:text-2xl font-bold mb-8 text-white">
+          <h3 className="text-xl md:text-2xl font-bold mb-8 text-background">
             newsletter for food entrepreneurs!
           </h3>
 
           {isSuccess ? (
             <div className="flex items-center justify-center gap-3 py-4">
-              <CheckCircle className="h-6 w-6 text-white" />
-              <span className="text-lg font-medium text-white">Thanks for subscribing!</span>
+              <CheckCircle className="h-6 w-6 text-background" />
+              <span className="text-lg font-medium text-background">Thanks for subscribing!</span>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-0 max-w-lg mx-auto">
@@ -167,8 +166,8 @@ const NewsletterSection = ({ variant = 'default', source = 'section' }: Newslett
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="h-14 px-8 rounded-r-full rounded-l-none sm:rounded-l-none text-white font-semibold text-base shadow-lg"
-                style={{ backgroundColor: '#FF5124' }}
+                variant="gradient"
+                className="h-14 px-8 rounded-r-full rounded-l-none sm:rounded-l-none text-base shadow-lg"
               >
                 {isSubmitting ? (
                   <>
@@ -182,9 +181,9 @@ const NewsletterSection = ({ variant = 'default', source = 'section' }: Newslett
             </form>
           )}
 
-          <p className="text-xs text-white/70 mt-6">
+          <p className="text-xs text-background/70 mt-6">
             No spam, unsubscribe anytime.{' '}
-            <a href="/privacy" className="underline hover:text-white">
+            <a href="/privacy" className="underline hover:text-background">
               Privacy Policy
             </a>
           </p>
