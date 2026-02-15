@@ -78,6 +78,7 @@ Deno.serve(async (req) => {
         case 'get_booking_info':
         case 'get_required_documents':
         case 'lookup_document_help':
+        case 'send_booking_link':
           result = await handleToolCall(supabase, fnName, args);
           break;
         default:
@@ -125,6 +126,8 @@ async function handleToolCall(supabase: any, fnName: string, args: any) {
       return await getRequiredDocuments(supabase, args);
     case 'lookup_document_help':
       return await lookupDocumentHelp(args);
+    case 'send_booking_link':
+      return await sendBookingLink(supabase, args);
     default:
       return { error: `Unknown function: ${fnName}` };
   }
@@ -712,6 +715,177 @@ async function lookupDocumentHelp(args: any) {
     return {
       document_type,
       message: `I had trouble searching right now. Try Googling: "${query}"`,
+    };
+  }
+}
+
+// --- Send Booking Link via SMS + Email ---
+
+async function sendBookingLink(supabase: any, args: any) {
+  const { listing_id, phone, email, name, start_date, end_date } = args;
+  
+  if (!listing_id) return { error: 'listing_id is required' };
+  if (!phone && !email) return { error: 'At least a phone number or email is required to send the booking link' };
+
+  // Get listing info for the message
+  const { data: listing } = await supabase
+    .from('listings')
+    .select('title, category, city, state, price_daily, price_weekly, price_monthly, deposit_amount, cover_image_url')
+    .eq('id', listing_id)
+    .maybeSingle();
+
+  if (!listing) return { error: 'Listing not found' };
+
+  const bookingUrl = `https://vendibookpreview.lovable.app/listing/${listing_id}`;
+  const location = [listing.city, listing.state].filter(Boolean).join(', ');
+  const dateRange = start_date && end_date ? `${start_date} to ${end_date}` : '';
+  
+  const results: { sms?: string; email?: string } = {};
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+
+  // Send SMS via Zendesk ticket (which triggers SMS)
+  if (phone) {
+    try {
+      const smsBody = `Hi${name ? ' ' + name : ''}! 🚚 Here's the listing you asked about on Vendibook:\n\n` +
+        `📋 ${listing.title}\n` +
+        (location ? `📍 ${location}\n` : '') +
+        (listing.price_daily ? `💰 $${listing.price_daily}/day\n` : '') +
+        (dateRange ? `📅 ${dateRange}\n` : '') +
+        `\n👉 Book now: ${bookingUrl}\n\n` +
+        `Questions? Reply to this text or call us!`;
+
+      // Use schedule-callback to create a Zendesk ticket with the SMS content
+      const response = await fetch(`${supabaseUrl}/functions/v1/schedule-callback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${anonKey}`,
+        },
+        body: JSON.stringify({
+          name: (name || 'Vendi Caller').trim(),
+          phone: phone.trim(),
+          email: email?.trim() || undefined,
+          source: 'voice-assistant-booking-link',
+          preferredTime: 'N/A - Booking link sent',
+          preferredContact: 'text',
+          restaurantName: `Booking Link: ${listing.title}`,
+          notes: smsBody,
+        }),
+      });
+
+      if (response.ok) {
+        results.sms = 'sent';
+      } else {
+        results.sms = 'failed';
+      }
+    } catch (err) {
+      console.error('SMS send error:', err);
+      results.sms = 'failed';
+    }
+  }
+
+  // Send email via Resend
+  if (email) {
+    try {
+      const resendKey = Deno.env.get('RESEND_API_KEY');
+      if (!resendKey) {
+        results.email = 'not_configured';
+      } else {
+        const categoryLabels: Record<string, string> = {
+          food_truck: 'Food Truck',
+          food_trailer: 'Food Trailer',
+          ghost_kitchen: 'Shared Kitchen',
+          vendor_space: 'Vendor Space',
+        };
+
+        const emailHtml = `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+            <div style="background: linear-gradient(135deg, #FF5124, #FF7A52); padding: 32px 24px; text-align: center; border-radius: 12px 12px 0 0;">
+              <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/logo.png" alt="Vendibook" style="height: 48px; margin-bottom: 16px;" />
+              <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 700;">Your Booking Link is Ready! 🎉</h1>
+            </div>
+            
+            <div style="padding: 32px 24px;">
+              <p style="font-size: 16px; color: #333; margin-bottom: 24px;">
+                Hi${name ? ' ' + name : ''}! Thanks for chatting with Vendi. Here's the listing you were interested in:
+              </p>
+              
+              <div style="border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
+                ${listing.cover_image_url ? `<img src="${listing.cover_image_url}" alt="${listing.title}" style="width: 100%; height: 200px; object-fit: cover;" />` : ''}
+                <div style="padding: 20px;">
+                  <h2 style="margin: 0 0 8px; font-size: 20px; color: #111;">${listing.title}</h2>
+                  <p style="margin: 0 0 4px; color: #666; font-size: 14px;">${categoryLabels[listing.category] || listing.category}${location ? ' • ' + location : ''}</p>
+                  ${listing.price_daily ? `<p style="margin: 8px 0 0; font-size: 18px; font-weight: 700; color: #FF5124;">$${listing.price_daily}/day</p>` : ''}
+                  ${listing.deposit_amount ? `<p style="margin: 4px 0 0; font-size: 13px; color: #888;">Refundable deposit: $${listing.deposit_amount}</p>` : ''}
+                  ${dateRange ? `<p style="margin: 8px 0 0; font-size: 14px; color: #555;">📅 ${dateRange}</p>` : ''}
+                </div>
+              </div>
+              
+              <a href="${bookingUrl}" style="display: block; background: #FF5124; color: white; text-align: center; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 600; margin-bottom: 24px;">
+                View Listing & Book Now →
+              </a>
+              
+              <div style="background: #f9fafb; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                <p style="margin: 0; font-size: 14px; color: #555;">
+                  <strong>💡 Quick tip:</strong> Your card will be authorized now and only charged if approved. No surprises!
+                </p>
+              </div>
+              
+              <p style="font-size: 13px; color: #999; text-align: center;">
+                Need help? Reply to this email or talk to Vendi anytime on <a href="https://vendibookpreview.lovable.app" style="color: #FF5124;">vendibook.com</a>
+              </p>
+            </div>
+          </div>
+        `;
+
+        const emailResponse = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'Vendibook <noreply@updates.vendibook.com>',
+            to: [email.trim()],
+            subject: `Your Booking Link: ${listing.title} 🚚`,
+            html: emailHtml,
+          }),
+        });
+
+        if (emailResponse.ok) {
+          results.email = 'sent';
+        } else {
+          const errData = await emailResponse.json();
+          console.error('Email send error:', errData);
+          results.email = 'failed';
+        }
+      }
+    } catch (err) {
+      console.error('Email send error:', err);
+      results.email = 'failed';
+    }
+  }
+
+  const sentMethods = [];
+  if (results.sms === 'sent') sentMethods.push('text message');
+  if (results.email === 'sent') sentMethods.push('email');
+
+  if (sentMethods.length > 0) {
+    return {
+      success: true,
+      sms_status: results.sms || 'not_requested',
+      email_status: results.email || 'not_requested',
+      message: `I've sent the booking link for "${listing.title}" via ${sentMethods.join(' and ')}! Just click the link when you're ready to complete your booking. Your card will only be authorized — you won't be charged unless the host approves.`,
+      booking_url: bookingUrl,
+    };
+  } else {
+    return {
+      success: false,
+      sms_status: results.sms || 'not_requested',
+      email_status: results.email || 'not_requested',
+      message: `I had trouble sending the link, but you can book directly at: ${bookingUrl}`,
+      booking_url: bookingUrl,
     };
   }
 }
