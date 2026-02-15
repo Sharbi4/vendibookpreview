@@ -282,7 +282,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           <img 
             src={vendibookLogo} 
             alt="Vendibook" 
-            className="h-9 w-auto"
+            className="h-8 w-auto"
           />
         </Link>
 
