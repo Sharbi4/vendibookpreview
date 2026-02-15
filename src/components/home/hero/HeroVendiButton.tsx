@@ -9,7 +9,9 @@ const HeroVendiButton = () => (
     animate={{ opacity: 1 }}
     transition={{ delay: 0.8 }}
   >
-    <span className="text-[11px] text-muted-foreground/40">or</span>
+    <div className="w-8 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+    <div className="w-1.5 h-1.5 rounded-full bg-primary/40 shadow-[0_0_6px_hsl(var(--primary)/0.4)]" />
+    <div className="w-8 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
     <button
       onClick={() => {
         // Trigger the floating Vendi voice button
