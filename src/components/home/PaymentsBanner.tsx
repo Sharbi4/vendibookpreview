@@ -1,47 +1,35 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import affirmLogo from '@/assets/affirm-logo.png';
 import afterpayLogo from '@/assets/afterpay-logo.png';
 
 const PaymentsBanner = () => {
   return (
-    <section className="py-10 bg-gradient-to-r from-secondary via-primary/10 to-secondary border-y border-border relative overflow-hidden">
-      {/* Subtle decorative element */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none" aria-hidden="true" />
-      
-      <div className="container relative z-10">
+    <section className="py-8 border-y border-border/50">
+      <div className="container">
         <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
-          <div className="text-center md:text-left">
-            <p className="text-lg md:text-xl font-bold text-foreground mb-1">
-              Now accepting flexible payments
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Let buyers pay over time — you get paid upfront
-            </p>
-          </div>
-          <div className="flex items-center gap-8">
+          <p className="text-sm text-muted-foreground text-center md:text-left">
+            <span className="font-medium text-foreground">Flexible payments</span> — buyers pay over time, you get paid upfront
+          </p>
+          <div className="flex items-center gap-6">
             <img 
               src={affirmLogo} 
               alt="Affirm" 
-              width={80}
-              height={28}
-              className="h-7 md:h-9 w-auto object-contain invert brightness-0 dark:invert dark:brightness-100 opacity-90 hover:opacity-100 transition-opacity" 
+              className="h-6 w-auto object-contain invert brightness-0 dark:invert dark:brightness-100 opacity-60 hover:opacity-90 transition-opacity" 
             />
             <img 
               src={afterpayLogo} 
               alt="Afterpay" 
-              width={70}
-              height={24}
-              className="h-6 md:h-7 w-auto object-contain invert brightness-0 dark:invert dark:brightness-100 opacity-90 hover:opacity-100 transition-opacity" 
+              className="h-5 w-auto object-contain invert brightness-0 dark:invert dark:brightness-100 opacity-60 hover:opacity-90 transition-opacity" 
             />
           </div>
-          <Button variant="dark-shine" size="sm" className="gap-2 px-6" asChild>
-            <Link to="/payments">
-              Learn more
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
+          <Link 
+            to="/payments" 
+            className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1 transition-colors"
+          >
+            Learn more
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
       </div>
     </section>

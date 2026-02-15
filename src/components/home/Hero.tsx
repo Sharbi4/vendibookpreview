@@ -1,32 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Calendar as CalendarIcon, ChevronDown, Sparkles, Navigation, ShoppingCart, Home } from 'lucide-react';
+import { Search, MapPin, Navigation, ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { DateRange } from 'react-day-picker';
-import heroImage from '@/assets/hero-food-truck.jpg';
+import { motion } from 'framer-motion';
 import vendibookLogo from '@/assets/vendibook-logo.png';
-import { useAuth } from '@/contexts/AuthContext';
 
 const Hero = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [mode, setMode] = useState<'rent' | 'buy'>('rent');
   const [location, setLocation] = useState('');
-  const [category, setCategory] = useState('');
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (location) params.set('q', location);
-    if (category) params.set('category', category);
-    if (mode === 'buy') params.set('mode', 'sale');
-    if (mode === 'rent') params.set('mode', 'rent');
-    if (dateRange?.from) params.set('start', format(dateRange.from, 'yyyy-MM-dd'));
-    if (dateRange?.to) params.set('end', format(dateRange.to, 'yyyy-MM-dd'));
     navigate(`/search?${params.toString()}`);
   };
 
@@ -54,167 +39,148 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative min-h-[85vh] md:min-h-[80vh] flex items-center overflow-hidden">
-      {/* Background image */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${heroImage})` }}
-      />
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black/50" />
-      {/* Warm gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
+    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-background">
+      {/* Subtle radial glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-primary/[0.06] rounded-full blur-[120px]" />
+      <div className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-primary/[0.04] rounded-full blur-[100px]" />
+      
+      {/* Fine grid overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:60px_60px]" />
 
-      <div className="container relative z-10 max-w-6xl mx-auto px-4 py-12 md:py-20">
-        {/* Headline */}
-        <div className="text-center mb-8 md:mb-12 animate-fade-in">
-          <img src={vendibookLogo} alt="Vendibook" className="h-48 sm:h-60 md:h-72 w-auto mx-auto mb-5" style={{ filter: 'drop-shadow(0 0 40px rgba(255,81,36,0.35)) drop-shadow(0 0 80px rgba(255,184,0,0.2))' }} />
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-4">
-            Rent it. Buy it. Find your spot.
-          </h1>
-          <p className="text-base sm:text-lg md:text-xl text-white/85 max-w-2xl mx-auto leading-relaxed">
-            From turnkey rentals and trucks for sale to premium food truck parks—launch your food business this weekend with verified assets and spaces.
-          </p>
-        </div>
+      <div className="container relative z-10 max-w-4xl mx-auto px-5 py-20 md:py-28">
+        <div className="text-center">
+          {/* Logo */}
+          <motion.img
+            src={vendibookLogo}
+            alt="Vendibook"
+            className="h-20 sm:h-24 w-auto mx-auto mb-8"
+            style={{ filter: 'drop-shadow(0 0 30px rgba(255,81,36,0.2))' }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          />
 
-        {/* Search card */}
-        <div className="max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'backwards' }}>
-          <div
-            className="rounded-2xl border border-white/20 p-5 sm:p-6 shadow-2xl"
-            style={{
-              background: 'rgba(0, 0, 0, 0.45)',
-              backdropFilter: 'blur(24px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-            }}
+          {/* Headline — OpenAI style: massive, clean, no fluff */}
+          <motion.h1
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground leading-[1.08] tracking-tight mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
           >
-            {/* Card header */}
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
-                <Search className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <h2 className="text-white font-semibold text-lg">Browse</h2>
-                <p className="text-white/60 text-xs">Search our verified marketplace</p>
-              </div>
-            </div>
+            The marketplace for
+            <br />
+            <span className="gradient-text-warm">mobile food business.</span>
+          </motion.h1>
 
-            {/* Rent / Buy toggle */}
-            <div className="flex gap-2 mb-5">
-              <button
-                onClick={() => setMode('rent')}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  mode === 'rent'
-                    ? 'bg-white/20 text-white border border-white/30'
-                    : 'text-white/60 hover:text-white/80 border border-transparent'
-                }`}
-              >
-                <Home className="w-3.5 h-3.5" />
-                Rent
-              </button>
-              <button
-                onClick={() => setMode('buy')}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  mode === 'buy'
-                    ? 'bg-white/20 text-white border border-white/30'
-                    : 'text-white/60 hover:text-white/80 border border-transparent'
-                }`}
-              >
-                <ShoppingCart className="w-3.5 h-3.5" />
-                Buy
-              </button>
-            </div>
+          {/* Sub — concise value prop */}
+          <motion.p
+            className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            Buy trucks, rent trailers, find vendor spaces — verified assets, instant booking, flexible payments.
+          </motion.p>
 
-            {/* Location input */}
-            <div className="mb-4">
-              <label className="text-[10px] uppercase tracking-widest text-white/50 font-semibold mb-1.5 block">Location</label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+          {/* Search bar — single input, maximum simplicity */}
+          <motion.div
+            className="max-w-xl mx-auto mb-10"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-2xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative flex items-center bg-card border border-border rounded-2xl overflow-hidden transition-all duration-300 group-hover:border-primary/30">
+                <MapPin className="absolute left-4 w-5 h-5 text-muted-foreground" />
                 <input
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  placeholder="City, Zip, or current location"
-                  className="w-full h-11 pl-10 pr-10 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/40 text-sm focus:outline-none focus:border-white/40 focus:bg-white/15 transition-all"
+                  placeholder="Search by city, zip, or keyword…"
+                  className="w-full h-14 pl-12 pr-24 bg-transparent text-foreground placeholder:text-muted-foreground text-base focus:outline-none"
                 />
-                <button
-                  onClick={handleGeolocation}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
-                  aria-label="Use current location"
-                >
-                  <Navigation className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Type + Dates row */}
-            <div className={`grid ${mode === 'rent' ? 'grid-cols-2' : 'grid-cols-1'} gap-3 mb-5`}>
-              <div>
-                <label className="text-[10px] uppercase tracking-widest text-white/50 font-semibold mb-1.5 block">Type</label>
-                <div className="relative">
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full h-11 px-3 pr-8 rounded-xl bg-white/10 border border-white/15 text-white text-sm focus:outline-none focus:border-white/40 appearance-none cursor-pointer"
+                <div className="absolute right-2 flex items-center gap-1">
+                  <button
+                    onClick={handleGeolocation}
+                    className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent"
+                    aria-label="Use current location"
                   >
-                    <option value="" className="bg-gray-900">Everything</option>
-                    <option value="food_truck" className="bg-gray-900">Food Trucks</option>
-                    <option value="food_trailer" className="bg-gray-900">Food Trailers</option>
-                    <option value="commercial_kitchen" className="bg-gray-900">Shared Kitchens</option>
-                    <option value="vendor_space" className="bg-gray-900">Vendor Spaces</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
+                    <Navigation className="w-4 h-4" />
+                  </button>
+                  <Button
+                    onClick={handleSearch}
+                    size="sm"
+                    className="rounded-xl h-10 px-5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+                  >
+                    <Search className="w-4 h-4 mr-1.5" />
+                    Search
+                  </Button>
                 </div>
               </div>
-              {mode === 'rent' && (
-                <div>
-                  <label className="text-[10px] uppercase tracking-widest text-white/50 font-semibold mb-1.5 block">Dates</label>
-                  <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                    <PopoverTrigger asChild>
-                      <button
-                        className="w-full h-11 px-3 rounded-xl bg-white/10 border border-white/15 text-sm text-left flex items-center gap-2 hover:border-white/30 transition-colors"
-                      >
-                        <CalendarIcon className="w-3.5 h-3.5 text-white/40" />
-                        {dateRange?.from ? (
-                          <span className="text-white">
-                            {format(dateRange.from, 'MMM d')}
-                            {dateRange.to ? ` - ${format(dateRange.to, 'MMM d')}` : ''}
-                          </span>
-                        ) : (
-                          <span className="text-white/40">Add dates</span>
-                        )}
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 z-[60]" align="start">
-                      <Calendar
-                        mode="range"
-                        selected={dateRange}
-                        onSelect={(range) => {
-                          setDateRange(range);
-                          if (range?.from && range?.to) {
-                            setIsCalendarOpen(false);
-                          }
-                        }}
-                        numberOfMonths={2}
-                        disabled={(date) => date < new Date()}
-                        className={cn('p-3 pointer-events-auto')}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              )}
             </div>
+          </motion.div>
 
-            {/* Search CTA */}
+          {/* Dual CTA — reduce friction for BOTH sides */}
+          <motion.div
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
             <Button
-              onClick={handleSearch}
-              className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold text-sm shadow-lg shadow-primary/30"
+              variant="outline"
+              size="lg"
+              onClick={() => navigate('/search?mode=rent')}
+              className="rounded-full px-8 border-border hover:border-primary/40 hover:bg-primary/5 text-foreground gap-2 transition-all"
             >
-              <Search className="w-4 h-4 mr-2" />
-              Search the Marketplace
+              Browse Rentals
+              <ArrowRight className="w-4 h-4" />
             </Button>
-          </div>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => navigate('/search?mode=sale')}
+              className="rounded-full px-8 border-border hover:border-primary/40 hover:bg-primary/5 text-foreground gap-2 transition-all"
+            >
+              Shop Trucks for Sale
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+            <Button
+              size="lg"
+              onClick={() => navigate('/list')}
+              className="rounded-full px-8 bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-lg shadow-primary/20 transition-all"
+            >
+              <Sparkles className="w-4 h-4" />
+              List for Free
+            </Button>
+          </motion.div>
+
+          {/* Trust signals — minimal, clean */}
+          <motion.div
+            className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+              Verified listings
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+              Secure payments
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+              Instant booking
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+              Buy now, pay later
+            </span>
+          </motion.div>
         </div>
       </div>
     </section>
