@@ -1,11 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Navigation, ArrowRight, Sparkles, Home, ShoppingCart, Wand2 } from 'lucide-react';
+import { Search, MapPin, Navigation, ArrowRight, Sparkles, Home, ShoppingCart, Wand2, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useScribe } from '@elevenlabs/react';
 
 const AI_PLACEHOLDERS = [
   'I need a taco truck in Miami this weekend',
@@ -24,8 +25,46 @@ const Hero = () => {
   const [isAIParsing, setIsAIParsing] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isConnectingMic, setIsConnectingMic] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const scribe = useScribe({
+    modelId: 'scribe_v2_realtime',
+    commitStrategy: 'vad' as any,
+    onCommittedTranscript: (data: any) => {
+      if (data.text?.trim()) {
+        setLocation((prev) => (prev ? prev + ' ' : '') + data.text.trim());
+      }
+    },
+  });
+
+  const toggleVoiceSearch = useCallback(async () => {
+    if (isRecording) {
+      scribe.disconnect();
+      setIsRecording(false);
+      return;
+    }
+
+    setIsConnectingMic(true);
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      const { data, error } = await supabase.functions.invoke('elevenlabs-scribe-token');
+      if (error || !data?.token) throw new Error('Failed to get voice token');
+
+      await scribe.connect({
+        token: data.token,
+        microphone: { echoCancellation: true, noiseSuppression: true },
+      });
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Voice search error:', err);
+      toast({ title: 'Could not start voice search', description: 'Please check microphone permissions', variant: 'destructive' });
+    } finally {
+      setIsConnectingMic(false);
+    }
+  }, [isRecording, scribe, toast]);
 
   // Rotate placeholders
   useEffect(() => {
@@ -242,6 +281,18 @@ const Hero = () => {
                   )}
                 </div>
                 <div className="absolute right-2 flex items-center gap-1">
+                  <button
+                    onClick={toggleVoiceSearch}
+                    disabled={isConnectingMic}
+                    className={`p-2 rounded-lg transition-colors ${
+                      isRecording
+                        ? 'text-red-500 bg-red-500/10 hover:bg-red-500/20 animate-pulse'
+                        : 'text-muted-foreground hover:text-primary hover:bg-accent'
+                    } disabled:opacity-50`}
+                    aria-label={isRecording ? 'Stop voice search' : 'Voice search'}
+                  >
+                    {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </button>
                   <button
                     onClick={handleGeolocation}
                     disabled={isLocating}
