@@ -164,24 +164,24 @@ const HowItWorks = () => {
         <motion.div
           animate={{ x: [0, 60, -40, 0], y: [0, -50, 30, 0], scale: [1, 1.2, 0.9, 1] }}
           transition={{ repeat: Infinity, duration: 18, ease: 'easeInOut' }}
-          className="absolute -top-40 -left-40 w-[700px] h-[700px] rounded-full bg-[hsl(14,100%,57%)]/[0.04] blur-[150px]"
+          className="absolute -top-40 -left-40 w-[700px] h-[700px] rounded-full bg-primary/[0.06] blur-[150px]"
         />
         <motion.div
           animate={{ x: [0, -50, 60, 0], y: [0, 40, -40, 0], scale: [1, 0.85, 1.2, 1] }}
           transition={{ repeat: Infinity, duration: 22, ease: 'easeInOut' }}
-          className="absolute top-1/4 -right-32 w-[800px] h-[800px] rounded-full bg-[hsl(40,100%,49%)]/[0.03] blur-[170px]"
+          className="absolute top-1/4 -right-32 w-[800px] h-[800px] rounded-full bg-[hsl(40,100%,49%)]/[0.04] blur-[170px]"
         />
         <motion.div
           animate={{ x: [0, 30, -40, 0], y: [0, -30, 50, 0] }}
           transition={{ repeat: Infinity, duration: 16, ease: 'easeInOut' }}
-          className="absolute bottom-0 left-1/3 w-[600px] h-[600px] rounded-full bg-[hsl(14,80%,50%)]/[0.03] blur-[130px]"
+          className="absolute bottom-0 left-1/3 w-[600px] h-[600px] rounded-full bg-primary/[0.04] blur-[130px]"
         />
       </div>
 
       {/* ══ HEADER ══ */}
       <header className="sticky top-0 z-50 w-full">
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(14,100%,57%)] via-[hsl(20,90%,50%)] to-[hsl(40,100%,49%)]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary via-[hsl(20,90%,50%)] to-[hsl(40,100%,49%)]" />
           <div className="absolute inset-0 hp2-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent" />
           <div className="absolute inset-0 backdrop-blur-md bg-black/5" />
           <div className="relative max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
@@ -220,22 +220,22 @@ const HowItWorks = () => {
                 Choose your path and we'll show you exactly how it works.
               </p>
 
-              {/* Role Selection Cards — Glass */}
+              {/* Role Selection Cards — Dark Glass */}
               <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
                 <motion.button
                   onClick={() => handleRoleSelect('buyer')}
                   className={`p-6 rounded-2xl text-left transition-all backdrop-blur-xl border ${
                     selectedRole === 'buyer'
-                      ? 'bg-white/80 border-[hsl(14,100%,57%)]/40 shadow-xl shadow-[hsl(14,100%,57%)]/10 ring-2 ring-[hsl(14,100%,57%)]/20'
-                      : 'bg-white/50 border-white/60 hover:bg-white/70 hover:shadow-lg'
+                      ? 'bg-card/90 border-primary/40 shadow-xl shadow-primary/10 ring-2 ring-primary/20'
+                      : 'bg-card/60 border-border hover:bg-card/80 hover:shadow-lg'
                   }`}
                   whileHover={shouldReduceMotion ? {} : { y: -4 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
-                    selectedRole === 'buyer' ? 'bg-gradient-to-br from-[hsl(14,100%,57%)] to-[hsl(40,100%,49%)]' : 'bg-foreground/10'
+                    selectedRole === 'buyer' ? 'bg-gradient-to-br from-primary to-[hsl(40,100%,49%)]' : 'bg-muted'
                   }`}>
-                    <Search className={`h-6 w-6 ${selectedRole === 'buyer' ? 'text-white' : 'text-foreground/60'}`} />
+                    <Search className={`h-6 w-6 ${selectedRole === 'buyer' ? 'text-white' : 'text-muted-foreground'}`} />
                   </div>
                   <h2 className="text-xl font-bold text-foreground mb-2">Buy or Rent</h2>
                   <p className="text-sm text-muted-foreground">Find food trucks, trailers, kitchens, and Vendor Spaces.</p>
@@ -245,16 +245,16 @@ const HowItWorks = () => {
                   onClick={() => handleRoleSelect('seller')}
                   className={`p-6 rounded-2xl text-left transition-all backdrop-blur-xl border ${
                     selectedRole === 'seller'
-                      ? 'bg-white/80 border-[hsl(14,100%,57%)]/40 shadow-xl shadow-[hsl(14,100%,57%)]/10 ring-2 ring-[hsl(14,100%,57%)]/20'
-                      : 'bg-white/50 border-white/60 hover:bg-white/70 hover:shadow-lg'
+                      ? 'bg-card/90 border-primary/40 shadow-xl shadow-primary/10 ring-2 ring-primary/20'
+                      : 'bg-card/60 border-border hover:bg-card/80 hover:shadow-lg'
                   }`}
                   whileHover={shouldReduceMotion ? {} : { y: -4 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
-                    selectedRole === 'seller' ? 'bg-gradient-to-br from-[hsl(14,100%,57%)] to-[hsl(40,100%,49%)]' : 'bg-foreground/10'
+                    selectedRole === 'seller' ? 'bg-gradient-to-br from-primary to-[hsl(40,100%,49%)]' : 'bg-muted'
                   }`}>
-                    <PlusCircle className={`h-6 w-6 ${selectedRole === 'seller' ? 'text-white' : 'text-foreground/60'}`} />
+                    <PlusCircle className={`h-6 w-6 ${selectedRole === 'seller' ? 'text-white' : 'text-muted-foreground'}`} />
                   </div>
                   <h2 className="text-xl font-bold text-foreground mb-2">Sell or Host</h2>
                   <p className="text-sm text-muted-foreground">Sell your assets, rent out equipment, or list your space.</p>
@@ -273,7 +273,7 @@ const HowItWorks = () => {
                   { icon: CreditCard, label: 'Secure Payments' },
                   { icon: Truck, label: 'Nationwide Shipping' },
                 ].map((badge) => (
-                  <div key={badge.label} className="flex items-center gap-1.5 bg-white/40 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/50">
+                  <div key={badge.label} className="flex items-center gap-1.5 bg-card/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border">
                     <badge.icon className="h-4 w-4" />
                     <span>{badge.label}</span>
                   </div>
@@ -317,13 +317,13 @@ const HowItWorks = () => {
                           viewport={{ once: true }}
                           transition={{ delay: index * 0.1 }}
                           whileHover={{ y: -4 }}
-                          className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-[hsl(14,100%,57%)]/10 hover:border-[hsl(14,100%,57%)]/30 transition-all p-5"
+                          className="rounded-2xl bg-card/80 backdrop-blur-xl border border-border shadow-lg hover:shadow-xl hover:border-primary/30 transition-all p-5"
                         >
                           <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[hsl(14,100%,57%)] to-[hsl(40,100%,49%)] flex items-center justify-center text-white font-bold text-sm">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-[hsl(40,100%,49%)] flex items-center justify-center text-white font-bold text-sm">
                               {step.step}
                             </div>
-                            <Icon className="h-5 w-5 text-foreground/50" />
+                            <Icon className="h-5 w-5 text-muted-foreground" />
                           </div>
                           <h3 className="font-semibold text-foreground mb-2">{step.title}</h3>
                           <p className="text-sm text-muted-foreground">{step.description}</p>
@@ -361,10 +361,10 @@ const HowItWorks = () => {
                           viewport={{ once: true }}
                           transition={{ delay: index * 0.1 }}
                           whileHover={{ y: -4 }}
-                          className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-[hsl(14,100%,57%)]/10 hover:border-[hsl(14,100%,57%)]/30 transition-all p-6"
+                          className="rounded-2xl bg-card/80 backdrop-blur-xl border border-border shadow-lg hover:shadow-xl hover:border-primary/30 transition-all p-6"
                         >
                           <motion.div 
-                            className="w-12 h-12 rounded-xl bg-gradient-to-br from-[hsl(14,100%,57%)] to-[hsl(40,100%,49%)] flex items-center justify-center mb-4"
+                            className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-[hsl(40,100%,49%)] flex items-center justify-center mb-4"
                             whileHover={{ scale: 1.1, rotate: 5 }}
                             transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                           >
@@ -375,7 +375,7 @@ const HowItWorks = () => {
                           <ul className="space-y-2 text-sm text-muted-foreground mb-6">
                             {option.features.map((feature, i) => (
                               <li key={i} className="flex items-center gap-2">
-                                <CheckCircle2 className="h-4 w-4 text-[hsl(14,100%,57%)] shrink-0" />
+                                <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
                                 {feature}
                               </li>
                             ))}
@@ -390,7 +390,7 @@ const HowItWorks = () => {
 
                   <div className="text-center mt-10">
                     <p className="text-sm text-muted-foreground mb-3">Ready to jump in?</p>
-                    <Button size="lg" className="gap-2 rounded-xl bg-white/70 backdrop-blur border border-white/60 text-foreground hover:bg-white/90 shadow-lg" asChild>
+                    <Button size="lg" className="gap-2 rounded-xl bg-card/80 backdrop-blur border border-border text-foreground hover:bg-card shadow-lg" asChild>
                       <Link to="/list">Create Free Listing Now <ArrowRight className="h-4 w-4" /></Link>
                     </Button>
                   </div>
@@ -409,8 +409,8 @@ const HowItWorks = () => {
                     { icon: CreditCard, title: 'Secure Payments', desc: 'Funds held in escrow until transaction is complete.' },
                     { icon: Package, title: 'Nationwide Freight', desc: 'Buy or sell to anyone in the 48 contiguous states.' },
                   ].map((item) => (
-                    <div key={item.title} className="flex gap-4 p-4 rounded-2xl bg-white/50 backdrop-blur-xl border border-white/60 shadow-sm">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[hsl(14,100%,57%)]/15 to-[hsl(40,100%,49%)]/15 flex items-center justify-center shrink-0">
+                    <div key={item.title} className="flex gap-4 p-4 rounded-2xl bg-card/80 backdrop-blur-xl border border-border shadow-sm">
+                      <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
                         <item.icon className="h-5 w-5 text-foreground" />
                       </div>
                       <div>
@@ -427,8 +427,8 @@ const HowItWorks = () => {
             <section className="py-12 md:py-16">
               <div className="max-w-4xl mx-auto px-4">
                 <div className="text-center mb-10">
-                  <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur border border-white/60 text-foreground px-3 py-1.5 rounded-full text-sm font-medium mb-4">
-                    <Star className="h-4 w-4 text-[hsl(14,100%,57%)]" />
+                  <div className="inline-flex items-center gap-2 bg-card/80 backdrop-blur border border-border text-foreground px-3 py-1.5 rounded-full text-sm font-medium mb-4">
+                    <Star className="h-4 w-4 text-primary" />
                     Trusted by Entrepreneurs
                   </div>
                   <h2 className="text-2xl md:text-3xl font-bold text-foreground">What Users Are Saying</h2>
@@ -443,29 +443,29 @@ const HowItWorks = () => {
                       viewport={{ once: true }}
                       transition={{ delay: index * 0.08 }}
                       whileHover={{ y: -4 }}
-                      className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5 p-5 transition-all"
+                      className="rounded-2xl bg-card/80 backdrop-blur-xl border border-border shadow-lg p-5 transition-all"
                     >
                       <div className="flex items-center gap-3 mb-3">
-                        <Avatar className="h-9 w-9 border-2 border-[hsl(14,100%,57%)]/20">
-                          <AvatarFallback className="bg-gradient-to-br from-[hsl(14,100%,57%)]/20 to-[hsl(40,100%,49%)]/20 text-foreground font-semibold text-xs">
+                        <Avatar className="h-9 w-9 border-2 border-primary/20">
+                          <AvatarFallback className="bg-primary/15 text-foreground font-semibold text-xs">
                             {testimonial.name.split(' ').map(n => n[0]).join('')}
                           </AvatarFallback>
                         </Avatar>
                         <div>
                           <div className="flex items-center gap-1.5">
                             <span className="font-semibold text-foreground text-sm">{testimonial.name}</span>
-                            <CheckCircle2 className="h-3.5 w-3.5 text-[hsl(14,100%,57%)]" />
+                            <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
                           </div>
                           <p className="text-xs text-muted-foreground">{testimonial.role} • {testimonial.location}</p>
                         </div>
                       </div>
                       <div className="flex gap-0.5 mb-2">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="h-3 w-3 fill-[hsl(14,100%,57%)] text-[hsl(14,100%,57%)]" />
+                          <Star key={i} className="h-3 w-3 fill-primary text-primary" />
                         ))}
                       </div>
                       <div className="relative">
-                        <Quote className="absolute -top-0.5 -left-0.5 h-5 w-5 text-[hsl(14,100%,57%)]/10" />
+                        <Quote className="absolute -top-0.5 -left-0.5 h-5 w-5 text-primary/15" />
                         <p className="text-muted-foreground text-sm leading-relaxed pl-2">{testimonial.text}</p>
                       </div>
                     </motion.div>
@@ -478,7 +478,7 @@ const HowItWorks = () => {
             <section className="py-12 md:py-16">
               <div className="max-w-3xl mx-auto px-4">
                 <div className="text-center mb-10">
-                  <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur border border-white/60 text-foreground px-3 py-1.5 rounded-full text-sm font-medium mb-4">
+                  <div className="inline-flex items-center gap-2 bg-card/80 backdrop-blur border border-border text-foreground px-3 py-1.5 rounded-full text-sm font-medium mb-4">
                     <HelpCircle className="h-4 w-4" />
                     {selectedRole === 'buyer' ? 'Buyer FAQs' : 'Seller FAQs'}
                   </div>
@@ -496,7 +496,7 @@ const HowItWorks = () => {
                     >
                       <AccordionItem 
                         value={`item-${index}`} 
-                        className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-xl px-5 data-[state=open]:border-[hsl(14,100%,57%)]/30 data-[state=open]:bg-white/70 transition-colors shadow-sm"
+                        className="bg-card/80 backdrop-blur-xl border border-border rounded-xl px-5 data-[state=open]:border-primary/30 data-[state=open]:bg-card transition-colors shadow-sm"
                       >
                         <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-4">
                           {faq.question}
@@ -516,7 +516,7 @@ const HowItWorks = () => {
                   viewport={{ once: true }}
                 >
                   <p className="text-sm text-muted-foreground mb-3">Still have questions?</p>
-                  <Button className="gap-2 rounded-xl bg-white/70 backdrop-blur border border-white/60 text-foreground hover:bg-white/90 shadow-sm" asChild>
+                  <Button className="gap-2 rounded-xl bg-card/80 backdrop-blur border border-border text-foreground hover:bg-card shadow-sm" asChild>
                     <Link to="/help">Visit Help Center <ArrowRight className="h-4 w-4" /></Link>
                   </Button>
                 </motion.div>
@@ -527,7 +527,7 @@ const HowItWorks = () => {
             <section className="py-16 md:py-20">
               <div className="max-w-2xl mx-auto px-4">
                 <motion.div
-                  className="rounded-3xl bg-gradient-to-br from-[hsl(14,100%,57%)] via-[hsl(20,90%,50%)] to-[hsl(40,100%,49%)] p-10 md:p-14 text-center text-white shadow-2xl shadow-[hsl(14,100%,57%)]/20"
+                  className="rounded-3xl bg-gradient-to-br from-primary via-[hsl(20,90%,50%)] to-[hsl(40,100%,49%)] p-10 md:p-14 text-center text-white shadow-2xl shadow-primary/20"
                   initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -586,7 +586,7 @@ const HowItWorks = () => {
         {selectedRole === 'none' && (
           <section className="py-12 md:py-16">
             <div className="max-w-2xl mx-auto text-center px-4">
-              <p className="text-muted-foreground bg-white/40 backdrop-blur-xl border border-white/60 rounded-2xl py-8 px-6 shadow-sm">
+              <p className="text-muted-foreground bg-card/60 backdrop-blur-xl border border-border rounded-2xl py-8 px-6 shadow-sm">
                 Select an option above to see how Vendibook works for you.
               </p>
             </div>

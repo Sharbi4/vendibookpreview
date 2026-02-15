@@ -465,7 +465,7 @@ const Search = () => {
           <img
             src={vendibookLogo}
             alt="Vendibook"
-            className="h-20 sm:h-28 w-auto mb-2"
+            className="h-20 sm:h-28 w-auto mb-2 invert"
           />
           <p className="text-sm sm:text-base text-muted-foreground font-medium">
             The Marketplace for Food Business
