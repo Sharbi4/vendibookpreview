@@ -295,38 +295,44 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         </div>
 
         {/* Amenities Icons Overlay */}
-        {!compact && (
-          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              {displayAmenities.length > 0 && (
-                <TooltipProvider delayDuration={200}>
-                  {displayAmenities.map((amenityId) => {
-                    const amenity = popularAmenityIcons[amenityId];
-                    if (!amenity) return null;
-                    const IconComponent = amenity.icon;
-                    return (
-                      <Tooltip key={amenityId}>
-                        <TooltipTrigger asChild>
-                          <div className="w-7 h-7 bg-background/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm">
-                            <IconComponent className="h-3.5 w-3.5 text-foreground" />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="text-xs">
-                          {amenity.label}
-                        </TooltipContent>
-                      </Tooltip>
-                    );
-                  })}
-                  {remainingAmenitiesCount > 0 && (
-                    <div className="w-7 h-7 bg-background/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm text-xs font-medium text-muted-foreground">
-                      +{remainingAmenitiesCount}
-                    </div>
-                  )}
-                </TooltipProvider>
-              )}
-            </div>
-            
-            {/* Calendar & Quick Book Buttons */}
+        <div className={cn("absolute left-3 right-3 flex items-center justify-between", compact ? "bottom-2" : "bottom-3")}>
+          <div className="flex items-center gap-1">
+            {displayAmenities.length > 0 && (
+              <TooltipProvider delayDuration={200}>
+                {displayAmenities.map((amenityId) => {
+                  const amenity = popularAmenityIcons[amenityId];
+                  if (!amenity) return null;
+                  const IconComponent = amenity.icon;
+                  return (
+                    <Tooltip key={amenityId}>
+                      <TooltipTrigger asChild>
+                        <div className={cn(
+                          "bg-background/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm",
+                          compact ? "w-6 h-6" : "w-7 h-7"
+                        )}>
+                          <IconComponent className={cn(compact ? "h-3 w-3" : "h-3.5 w-3.5", "text-foreground")} />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">
+                        {amenity.label}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+                {remainingAmenitiesCount > 0 && (
+                  <div className={cn(
+                    "bg-background/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm text-xs font-medium text-muted-foreground",
+                    compact ? "w-6 h-6" : "w-7 h-7"
+                  )}>
+                    +{remainingAmenitiesCount}
+                  </div>
+                )}
+              </TooltipProvider>
+            )}
+          </div>
+          
+          {/* Calendar & Quick Book Buttons */}
+          {!compact && (
             <div className="flex items-center gap-1.5">
               {/* View Availability Button for Rentals */}
               {listing.mode === 'rent' && (
@@ -366,8 +372,8 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
                 </Button>
               )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
         </div>
 
       {/* Content - Apple/OpenAI Cleanliness */}
