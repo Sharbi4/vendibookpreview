@@ -26,21 +26,24 @@ const StorefrontFeaturedListing = ({ listing, hostName }: StorefrontFeaturedList
       transition={{ delay: 0.15, type: 'spring', stiffness: 200, damping: 24 }}
       className="relative overflow-hidden rounded-2xl"
     >
-      {/* Animated grey-to-orange gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(0,0%,92%)] via-[hsl(0,0%,88%)] to-[hsl(0,0%,85%)] dark:from-[hsl(0,0%,14%)] dark:via-[hsl(0,0%,12%)] dark:to-[hsl(0,0%,10%)]" />
+      {/* Dark base with subtle radiance */}
+      <div className="absolute inset-0 bg-card/90" />
       <motion.div
-        className="absolute inset-0 opacity-40"
+        className="absolute inset-0 opacity-30"
         animate={{
           background: [
-            'linear-gradient(135deg, hsl(14,100%,57%,0.15) 0%, hsl(40,100%,49%,0.1) 50%, transparent 100%)',
-            'linear-gradient(225deg, hsl(40,100%,49%,0.15) 0%, hsl(14,100%,57%,0.1) 50%, transparent 100%)',
-            'linear-gradient(135deg, hsl(14,100%,57%,0.15) 0%, hsl(40,100%,49%,0.1) 50%, transparent 100%)',
+            'linear-gradient(135deg, hsl(14,100%,57%,0.12) 0%, hsl(40,100%,49%,0.08) 50%, transparent 100%)',
+            'linear-gradient(225deg, hsl(40,100%,49%,0.12) 0%, hsl(14,100%,57%,0.08) 50%, transparent 100%)',
+            'linear-gradient(135deg, hsl(14,100%,57%,0.12) 0%, hsl(40,100%,49%,0.08) 50%, transparent 100%)',
           ],
         }}
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
       />
-      {/* Clear glass overlay */}
-      <div className="absolute inset-0 backdrop-blur-sm bg-white/5 dark:bg-white/[0.02]" />
+      {/* Radiance glow */}
+      <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-primary/8 blur-[80px]" />
+      <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-foreground/5 blur-[60px]" />
+      {/* Border */}
+      <div className="absolute inset-0 border border-border/60 rounded-2xl" />
       
       <div className="relative p-6 md:p-8">
         <div className="flex items-center gap-2 mb-4">

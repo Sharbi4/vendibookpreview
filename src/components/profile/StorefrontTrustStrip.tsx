@@ -28,32 +28,32 @@ const StorefrontTrustStrip = ({
       icon: ShieldCheck,
       label: isVerified ? 'Verified ID' : 'Unverified',
       value: isVerified ? '✓' : '—',
-      accent: isVerified ? 'text-emerald-600' : 'text-muted-foreground',
-      bg: isVerified ? 'bg-emerald-500/10' : 'bg-muted/50',
+      accent: isVerified ? 'text-emerald-400' : 'text-muted-foreground',
+      bg: isVerified ? 'bg-emerald-500/15' : 'bg-muted/50',
       show: true,
     },
     {
       icon: Star,
       label: `${totalReviews || 0} reviews`,
       value: averageRating ? averageRating.toFixed(1) : '—',
-      accent: 'text-amber-600',
-      bg: 'bg-amber-500/10',
+      accent: 'text-amber-400',
+      bg: 'bg-amber-500/15',
       show: (totalReviews || 0) > 0,
     },
     {
       icon: Calendar,
       label: 'Completed',
       value: completedBookings.toString(),
-      accent: 'text-blue-600',
-      bg: 'bg-blue-500/10',
+      accent: 'text-blue-400',
+      bg: 'bg-blue-500/15',
       show: completedBookings > 0,
     },
     {
       icon: Clock,
       label: 'Responds in',
       value: responseTime || '—',
-      accent: 'text-violet-600',
-      bg: 'bg-violet-500/10',
+      accent: 'text-violet-400',
+      bg: 'bg-violet-500/15',
       show: !!responseTime,
     },
     {
@@ -61,7 +61,7 @@ const StorefrontTrustStrip = ({
       label: isSuperhost ? 'Superhost' : 'Top Rated',
       value: '★',
       accent: 'text-primary',
-      bg: 'bg-primary/10',
+      bg: 'bg-primary/15',
       show: isTopRated || isSuperhost,
     },
   ].filter(item => item.show);
@@ -86,7 +86,7 @@ const StorefrontTrustStrip = ({
               whileHover={{ y: -4, scale: 1.03 }}
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-xl min-w-fit",
-                "bg-white/40 dark:bg-white/[0.06] backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-sm hover:shadow-md transition-all"
+                "bg-card/80 backdrop-blur-xl border border-border/60 shadow-sm hover:shadow-md hover:shadow-foreground/5 transition-all"
               )}
             >
               <div className={cn("p-2 rounded-lg", item.bg)}>

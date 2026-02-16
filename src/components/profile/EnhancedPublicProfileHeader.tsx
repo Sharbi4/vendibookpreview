@@ -317,7 +317,10 @@ const EnhancedPublicProfileHeader = ({
 
       {/* Glass card container for profile info - STRONGER BORDERS */}
       <div className="container pt-28 md:pt-36 pb-6 md:pb-8 relative">
-        <div className="rounded-2xl p-6 md:p-8 border border-white/20 dark:border-white/10 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.12)] bg-white/40 dark:bg-white/[0.06] backdrop-blur-2xl">
+        <div className="rounded-2xl p-6 md:p-8 border border-border/60 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.3)] bg-card/80 backdrop-blur-2xl relative overflow-hidden">
+          {/* Radiance glow */}
+          <div className="absolute -top-20 -left-20 w-60 h-60 rounded-full bg-foreground/5 blur-[100px] pointer-events-none" />
+          <div className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-primary/5 blur-[80px] pointer-events-none" />
         <div className="flex flex-col md:flex-row items-center md:items-start gap-5">
           {/* Enhanced Avatar with upload support for own profile */}
           <motion.div 
@@ -447,8 +450,8 @@ const EnhancedPublicProfileHeader = ({
                         className={cn(
                           'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border shadow-sm',
                           profile.identity_verified
-                            ? 'bg-white/50 dark:bg-white/10 backdrop-blur-xl text-foreground border-white/30 dark:border-white/15'
-                            : 'bg-white/30 dark:bg-white/5 backdrop-blur-sm text-muted-foreground border-white/20 dark:border-white/10'
+                            ? 'bg-secondary/80 backdrop-blur-xl text-foreground border-border/60'
+                            : 'bg-secondary/50 backdrop-blur-sm text-muted-foreground border-border/40'
                         )}
                       >
                         {profile.identity_verified ? (
@@ -473,10 +476,10 @@ const EnhancedPublicProfileHeader = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <motion.div whileHover={{ scale: 1.05 }}>
-                          <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 rounded-full shadow-sm bg-white/40 dark:bg-white/[0.06] backdrop-blur-xl border-white/20 dark:border-white/10">
-                            <Clock className="h-3.5 w-3.5" />
-                            ~{responseTime}
-                          </Badge>
+                           <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 rounded-full shadow-sm bg-secondary/80 backdrop-blur-xl border-border/60">
+                             <Clock className="h-3.5 w-3.5" />
+                             ~{responseTime}
+                           </Badge>
                         </motion.div>
                       </TooltipTrigger>
                       <TooltipContent>Average response time</TooltipContent>
@@ -490,9 +493,9 @@ const EnhancedPublicProfileHeader = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <motion.div whileHover={{ scale: 1.05 }}>
-                          <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 rounded-full shadow-sm bg-white/40 dark:bg-white/[0.06] backdrop-blur-xl border-white/20 dark:border-white/10">
-                            <Calendar className="h-3.5 w-3.5" />
-                            {completedBookings} booked
+                           <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 rounded-full shadow-sm bg-secondary/80 backdrop-blur-xl border-border/60">
+                             <Calendar className="h-3.5 w-3.5" />
+                             {completedBookings} booked
                           </Badge>
                         </motion.div>
                       </TooltipTrigger>
@@ -507,8 +510,8 @@ const EnhancedPublicProfileHeader = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <motion.div whileHover={{ scale: 1.05 }}>
-                          <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 rounded-full shadow-sm bg-white/40 dark:bg-white/[0.06] backdrop-blur-xl border-white/20 dark:border-white/10">
-                            <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                           <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 rounded-full shadow-sm bg-secondary/80 backdrop-blur-xl border-border/60">
+                             <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
                             {stats.averageRating.toFixed(1)} ({stats.totalReviewsReceived})
                           </Badge>
                         </motion.div>
@@ -523,7 +526,7 @@ const EnhancedPublicProfileHeader = ({
                 {/* Host Badge */}
                 {isHost && (
                   <motion.div variants={badgeVariants}>
-                    <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 rounded-full bg-white/40 dark:bg-white/[0.06] backdrop-blur-xl border-white/20 dark:border-white/10">
+                    <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 rounded-full bg-secondary/80 backdrop-blur-xl border-border/60">
                       <Zap className="h-3.5 w-3.5 text-primary" />
                       Host
                     </Badge>
@@ -611,7 +614,7 @@ const EnhancedPublicProfileHeader = ({
                   <Button 
                     variant="outline" 
                     onClick={onViewListings}
-                    className="w-full rounded-xl bg-white/40 dark:bg-white/[0.06] backdrop-blur-xl border border-white/20 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/10"
+                    className="w-full rounded-xl bg-secondary text-foreground border border-border/60 hover:bg-accent"
                   >
                     View Listings ({stats?.totalListings || 0})
                   </Button>
