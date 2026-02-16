@@ -224,6 +224,7 @@ export const generateProductSchema = (listing: {
   host_name?: string | null;
   average_rating?: number | null;
   review_count?: number;
+  reviews?: Array<{ rating: number; review_text?: string | null; reviewer_name?: string; created_at: string }>;
   length_inches?: number | null;
   width_inches?: number | null;
   height_inches?: number | null;
@@ -305,6 +306,25 @@ export const generateProductSchema = (listing: {
       worstRating: '1',
       reviewCount: listing.review_count.toString(),
     };
+  }
+
+  // Add individual reviews for Google rich results
+  if (listing.reviews && listing.reviews.length > 0) {
+    schema.review = listing.reviews.slice(0, 5).map(r => ({
+      '@type': 'Review',
+      author: {
+        '@type': 'Person',
+        name: r.reviewer_name || 'Vendibook User',
+      },
+      datePublished: r.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+      reviewRating: {
+        '@type': 'Rating',
+        ratingValue: r.rating.toString(),
+        bestRating: '5',
+        worstRating: '1',
+      },
+      ...(r.review_text ? { reviewBody: r.review_text.slice(0, 500) } : {}),
+    }));
   }
 
   // Add additionalProperty for specs
