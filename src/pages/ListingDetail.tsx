@@ -39,7 +39,7 @@ import { RentalBookingWidget } from '@/components/listing-detail/RentalBookingWi
 import { BookingWidget } from '@/components/listing-detail/BookingWidget';
 import OwnerBanner from '@/components/listing-detail/OwnerBanner';
 import { useListing } from '@/hooks/useListing';
-import { useListingAverageRating } from '@/hooks/useReviews';
+import { useListingAverageRating, useListingReviews } from '@/hooks/useReviews';
 import { useTrackListingView } from '@/hooks/useListingAnalytics';
 import { useAuth } from '@/contexts/AuthContext';
 import { CATEGORY_LABELS } from '@/types/listing';
@@ -59,6 +59,7 @@ const ListingDetail = () => {
   // Track page views with Google Analytics
   usePageTracking();
   const { data: ratingData } = useListingAverageRating(id);
+  const { data: reviews } = useListingReviews(id);
   const { trackView } = useTrackListingView();
 
   // Check if user is the owner of this listing
@@ -119,12 +120,13 @@ const ListingDetail = () => {
       host_name: host?.full_name || host?.display_name || host?.business_name,
       average_rating: ratingData?.average,
       review_count: ratingData?.count,
+      reviews: reviews || [],
       length_inches: listing.length_inches,
       width_inches: listing.width_inches,
       height_inches: listing.height_inches,
       weight_lbs: listing.weight_lbs,
     });
-  }, [listing, host, ratingData, isPhysicalLocation]);
+  }, [listing, host, ratingData, reviews, isPhysicalLocation]);
 
   const breadcrumbSchema = useMemo(() => {
     if (!listing) return null;

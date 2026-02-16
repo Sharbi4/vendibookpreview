@@ -32,7 +32,7 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function generateProductSchema(listing: any) {
+function generateProductSchema(listing: any, reviews: any[] = []) {
   const categoryLabel = CATEGORY_LABELS[listing.category] || "Mobile Food Asset";
   const isRental = listing.mode === "rent";
   const modeLabel = isRental ? "for Rent" : "for Sale";
@@ -78,6 +78,32 @@ function generateProductSchema(listing: any) {
       seller: { "@type": "Organization", name: "Vendibook Host" },
     },
   };
+
+  // Add aggregateRating if reviews exist
+  if (reviews.length > 0) {
+    const avg = reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length;
+    schema.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: (Math.round(avg * 10) / 10).toFixed(1),
+      bestRating: "5",
+      worstRating: "1",
+      reviewCount: reviews.length.toString(),
+    };
+
+    // Add individual review objects (up to 5)
+    schema.review = reviews.slice(0, 5).map((r: any) => ({
+      "@type": "Review",
+      author: { "@type": "Person", name: r.reviewer_display_name || "Vendibook User" },
+      datePublished: r.created_at?.split("T")[0] || new Date().toISOString().split("T")[0],
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: r.rating.toString(),
+        bestRating: "5",
+        worstRating: "1",
+      },
+      ...(r.review_text ? { reviewBody: r.review_text.slice(0, 500) } : {}),
+    }));
+  }
 
   if (isRental) {
     schema.offers.priceSpecification = {
@@ -213,12 +239,12 @@ function generateFAQSchema(listing: any) {
   };
 }
 
-function buildListingHTML(listing: any): string {
+function buildListingHTML(listing: any, reviews: any[] = []): string {
   const isPhysical = PHYSICAL_CATEGORIES.includes(listing.category);
 
   const schemas: object[] = [];
   if (isPhysical) schemas.push(generateLocalBusinessSchema(listing));
-  else schemas.push(generateProductSchema(listing));
+  else schemas.push(generateProductSchema(listing, reviews));
   schemas.push(generateBreadcrumbSchema(listing));
   schemas.push(generateFAQSchema(listing));
 
@@ -337,18 +363,25 @@ serve(async (req) => {
     const listingMatch = path.match(/^\/listing\/([a-f0-9-]{36})$/i);
     if (listingMatch) {
       const listingId = listingMatch[1];
-      const { data: listing, error } = await supabase
-        .from("listings")
-        .select("*")
-        .eq("id", listingId)
-        .eq("status", "published")
-        .single();
+      
+      // Fetch listing and reviews in parallel
+      const [listingResult, reviewsResult] = await Promise.all([
+        supabase
+          .from("listings")
+          .select("*")
+          .eq("id", listingId)
+          .eq("status", "published")
+          .single(),
+        supabase
+          .rpc("get_listing_reviews_safe", { p_listing_id: listingId }),
+      ]);
 
-      if (error || !listing) {
+      if (listingResult.error || !listingResult.data) {
         return new Response("Not Found", { status: 404, headers: corsHeaders });
       }
 
-      const html = buildListingHTML(listing);
+      const reviews = reviewsResult.data || [];
+      const html = buildListingHTML(listingResult.data, reviews);
       return new Response(html, {
         headers: {
           ...corsHeaders,
