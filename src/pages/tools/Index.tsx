@@ -212,7 +212,7 @@ const ToolsIndex = () => {
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" className="border-background/20 text-background hover:bg-background/10 hover:text-background" asChild>
+                <Button size="lg" variant="outline" className="border-background/30 bg-transparent text-background hover:bg-background/10 hover:text-background" asChild>
                   <Link to="/search">Browse Listings</Link>
                 </Button>
               </div>
