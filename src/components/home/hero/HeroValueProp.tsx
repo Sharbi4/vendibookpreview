@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,15 @@ import HeroSearchInput from './HeroSearchInput';
 import HeroTrustSignals from './HeroTrustSignals';
 import HeroVendiButton from './HeroVendiButton';
 import { useHeroSearch } from './useHeroSearch';
+
+// Preload the logo as early as possible
+if (typeof document !== 'undefined') {
+  const link = document.createElement('link');
+  link.rel = 'preload';
+  link.as = 'image';
+  link.href = vendibookLogo;
+  document.head.appendChild(link);
+}
 
 const HeroValueProp = () => {
   const navigate = useNavigate();
@@ -30,6 +40,9 @@ const HeroValueProp = () => {
             <img
               src={vendibookLogo}
               alt="Vendibook"
+              fetchPriority="high"
+              loading="eager"
+              decoding="sync"
               className="relative h-44 sm:h-52 md:h-60 lg:h-72 w-auto"
               style={{ filter: 'drop-shadow(0 0 40px rgba(255,255,255,0.15))' }}
             />
