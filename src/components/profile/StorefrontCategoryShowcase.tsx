@@ -43,7 +43,7 @@ const StorefrontCategoryShowcase = ({ listings, hostName }: StorefrontCategorySh
   }, {} as Record<string, Listing[]>);
 
   const categoryEntries = Object.entries(categories);
-  if (categoryEntries.length <= 1) return null; // Only show if host has multiple categories
+  if (categoryEntries.length <= 1) return null;
 
   return (
     <motion.section
@@ -51,12 +51,11 @@ const StorefrontCategoryShowcase = ({ listings, hostName }: StorefrontCategorySh
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
     >
-      {/* Warm gradient background band */}
       <div className="relative rounded-2xl overflow-hidden">
-        {/* Clean grey base with clear glass morph */}
-        <div className="absolute inset-0 bg-[hsl(0,0%,92%)] dark:bg-[hsl(0,0%,12%)]" />
-        <div className="absolute inset-0 backdrop-blur-xl bg-white/30 dark:bg-white/[0.04]" />
-        <div className="absolute inset-0 border border-white/20 dark:border-white/10 rounded-2xl" />
+        {/* Dark base with radiance */}
+        <div className="absolute inset-0 bg-card/90" />
+        <div className="absolute -top-16 right-1/4 w-48 h-48 rounded-full bg-foreground/5 blur-[80px]" />
+        <div className="absolute inset-0 border border-border/60 rounded-2xl" />
         
         <div className="relative p-6">
           <h3 className="text-lg font-semibold text-foreground mb-1">What {hostName} Offers</h3>
@@ -82,7 +81,7 @@ const StorefrontCategoryShowcase = ({ listings, hostName }: StorefrontCategorySh
                   whileHover={{ y: -6, scale: 1.03 }}
                   className={cn(
                     "relative rounded-xl overflow-hidden cursor-pointer group",
-                    "border border-border/50 shadow-sm hover:shadow-lg transition-all duration-300"
+                    "border border-border/50 shadow-sm hover:shadow-lg hover:shadow-foreground/5 transition-all duration-300"
                   )}
                 >
                   {/* Background */}
@@ -91,7 +90,7 @@ const StorefrontCategoryShowcase = ({ listings, hostName }: StorefrontCategorySh
                   {/* Cover image hint */}
                   {coverImage && (
                     <div className="absolute inset-0">
-                      <img src={coverImage} alt="" className="w-full h-full object-cover opacity-15 group-hover:opacity-25 transition-opacity" />
+                      <img src={coverImage} alt="" className="w-full h-full object-cover opacity-10 group-hover:opacity-20 transition-opacity" />
                     </div>
                   )}
 
