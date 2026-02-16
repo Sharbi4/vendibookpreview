@@ -457,6 +457,22 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         )}
       </div>
       </Link>
+
+      {/* Buy Now / Book Now CTA */}
+      <div className="px-4 pb-3 pt-0">
+        <Link
+          to={`/listing/${listing.id}`}
+          onClick={(e) => e.stopPropagation()}
+          className={cn(
+            "block w-full text-center text-sm font-semibold py-2 rounded-xl transition-all duration-200",
+            listing.mode === 'sale'
+              ? "bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/20"
+              : "bg-primary/15 text-primary hover:bg-primary/25 border border-primary/20"
+          )}
+        >
+          {listing.mode === 'sale' ? 'Buy Now' : 'Book Now'}
+        </Link>
+      </div>
       
       {/* Availability Calendar Modal */}
       {listing.mode === 'rent' && (
