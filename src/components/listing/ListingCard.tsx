@@ -185,12 +185,21 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   const modeLabel = listing.mode === 'rent' ? 'For Rent' : 'For Sale';
   const modeColor = listing.mode === 'rent' ? 'bg-primary' : 'bg-emerald-500';
 
-  // Build consistent location: City, State Zip
+  // Build consistent location: City, State — never show full street address on cards
   const raw = listing as any;
   const locationParts = [raw.city, raw.state].filter(Boolean);
-  const location = locationParts.length > 0 
-    ? locationParts.join(', ') + (raw.postal_code ? ` ${raw.postal_code}` : '')
-    : listing.address || 'United States';
+  let location: string;
+  if (locationParts.length > 0) {
+    location = locationParts.join(', ') + (raw.postal_code ? ` ${raw.postal_code}` : '');
+  } else if (listing.address) {
+    // Fallback: extract city/state from address string (last 2 parts), never show street
+    const addrParts = listing.address.split(',').map(s => s.trim());
+    location = addrParts.length >= 2 
+      ? addrParts.slice(-2).join(', ')
+      : addrParts[addrParts.length - 1] || 'United States';
+  } else {
+    location = 'United States';
+  }
 
   // Get displayable amenities (max 3 to leave room for Quick Book button)
   const maxAmenities = compact ? 2 : 3;
