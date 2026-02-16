@@ -10,7 +10,7 @@ const HeroBackground = () => (
       className="absolute inset-0 w-full h-full object-cover"
     />
     {/* Dark overlay with gradient */}
-    <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-background" />
+    <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/80 to-background" />
   </>
 );
 
