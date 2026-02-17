@@ -7,8 +7,8 @@ const HeroBackground = () => (
     
     {/* Subtle animated gradient orbs */}
     <motion.div
-      className="absolute w-[40rem] h-[40rem] rounded-full opacity-20"
-      style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.3), transparent 60%)', filter: 'blur(120px)' }}
+      className="absolute w-[50rem] h-[50rem] rounded-full"
+      style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.07) 0%, rgba(180,180,200,0.04) 40%, transparent 60%)', filter: 'blur(80px)' }}
       animate={{
         x: ['-20%', '30%', '-10%', '-20%'],
         y: ['-10%', '20%', '-15%', '-10%'],
@@ -16,8 +16,8 @@ const HeroBackground = () => (
       transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
     />
     <motion.div
-      className="absolute w-[30rem] h-[30rem] rounded-full opacity-15"
-      style={{ background: 'radial-gradient(circle, hsl(var(--foreground) / 0.1), transparent 60%)', filter: 'blur(100px)' }}
+      className="absolute w-[35rem] h-[35rem] rounded-full"
+      style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(160,160,180,0.03) 40%, transparent 60%)', filter: 'blur(70px)' }}
       animate={{
         x: ['40%', '-10%', '30%', '40%'],
         y: ['10%', '-10%', '25%', '10%'],
