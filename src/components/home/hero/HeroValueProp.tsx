@@ -36,7 +36,7 @@ const HeroValueProp = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="absolute inset-0 scale-150 rounded-full blur-[100px] sm:blur-[140px]" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(200,200,210,0.06) 50%, transparent 70%)' }} />
+            <div className="absolute -inset-8 scale-[2] rounded-full blur-[80px] sm:blur-[110px]" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(220,220,230,0.12) 40%, transparent 65%)' }} />
             <img
               src={vendibookLogo}
               alt="Vendibook"
