@@ -53,7 +53,7 @@ const HeroValueProp = () => {
               loading="eager"
               decoding="sync"
               className="relative h-44 sm:h-52 md:h-60 lg:h-72 w-auto"
-              style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.5)) drop-shadow(0 0 35px rgba(255,255,255,0.08)) drop-shadow(0 0 8px rgba(255,120,50,0.1))' }}
+              style={{ filter: 'drop-shadow(0 3px 12px rgba(0,0,0,0.4)) drop-shadow(0 0 20px rgba(255,255,255,0.05))' }}
             />
           </motion.div>
 
