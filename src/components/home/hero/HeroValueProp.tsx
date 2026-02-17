@@ -29,8 +29,8 @@ const HeroValueProp = () => {
 
       {/* Logo glow — uses box-shadow to avoid overflow clip */}
       <motion.div
-        className="absolute z-[1] top-[25%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.10) 30%, rgba(255,255,255,0.03) 55%, transparent 70%)' }}
+        className="absolute z-[1] top-[25%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.14) 25%, rgba(255,255,255,0.05) 50%, transparent 70%)' }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 2, delay: 0.3 }}
