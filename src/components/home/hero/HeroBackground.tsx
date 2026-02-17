@@ -4,29 +4,49 @@ const HeroBackground = () => (
   <>
     {/* Solid dark base */}
     <div className="absolute inset-0 bg-background" />
-    
-    {/* Subtle animated gradient orbs */}
-    <motion.div
-      className="absolute w-[50rem] h-[50rem] rounded-full"
-      style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.07) 0%, rgba(180,180,200,0.04) 40%, transparent 60%)', filter: 'blur(80px)' }}
-      animate={{
-        x: ['-20%', '30%', '-10%', '-20%'],
-        y: ['-10%', '20%', '-15%', '-10%'],
+
+    {/* Subtle grid pattern */}
+    <div
+      className="absolute inset-0 opacity-[0.04]"
+      style={{
+        backgroundImage: `linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)`,
+        backgroundSize: '60px 60px',
       }}
-      transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-    />
-    <motion.div
-      className="absolute w-[35rem] h-[35rem] rounded-full"
-      style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(160,160,180,0.03) 40%, transparent 60%)', filter: 'blur(70px)' }}
-      animate={{
-        x: ['40%', '-10%', '30%', '40%'],
-        y: ['10%', '-10%', '25%', '10%'],
-      }}
-      transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
     />
 
-    {/* Subtle grain/noise overlay */}
-    <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }} />
+    {/* Radial fade so grid fades at edges */}
+    <div
+      className="absolute inset-0"
+      style={{
+        background: 'radial-gradient(ellipse 70% 60% at 50% 45%, transparent 0%, hsl(var(--background)) 100%)',
+      }}
+    />
+
+    {/* Slow-moving ambient light */}
+    <motion.div
+      className="absolute w-[60rem] h-[60rem] rounded-full"
+      style={{
+        background: 'radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 50%)',
+        filter: 'blur(60px)',
+      }}
+      animate={{
+        x: ['-15%', '25%', '-5%', '-15%'],
+        y: ['-10%', '15%', '-10%', '-10%'],
+      }}
+      transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut' }}
+    />
+    <motion.div
+      className="absolute w-[40rem] h-[40rem] rounded-full"
+      style={{
+        background: 'radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 50%)',
+        filter: 'blur(50px)',
+      }}
+      animate={{
+        x: ['30%', '-15%', '20%', '30%'],
+        y: ['5%', '-10%', '15%', '5%'],
+      }}
+      transition={{ duration: 30, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
+    />
   </>
 );
 

@@ -29,27 +29,22 @@ const HeroValueProp = () => {
 
       <div className="container relative z-10 max-w-4xl mx-auto px-5 pt-10 pb-6 sm:py-20 md:py-28">
         <div className="text-center flex flex-col items-center gap-0">
-          {/* Logo with morphing blob */}
+          {/* Logo */}
           <motion.div
-            className="relative mb-4 sm:mb-6 w-52 h-52 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 flex items-center justify-center"
+            className="relative mb-4 sm:mb-6"
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           >
-            {/* Outer iridescent blob */}
-            <div className="blob-outer absolute inset-0" style={{ opacity: 0.6 }} />
-            {/* Inner blob */}
-            <div className="blob-inner absolute inset-3 flex items-center justify-center" style={{ background: 'linear-gradient(160deg, rgba(30,30,35,0.95), rgba(20,20,25,0.98), rgba(30,30,35,0.92))' }} />
-            {/* Soft glow behind logo */}
-            <div className="absolute inset-0 scale-150 rounded-full blur-[80px]" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%)' }} />
+            <div className="absolute inset-0 scale-[2] rounded-full blur-[100px] sm:blur-[130px]" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(200,200,210,0.08) 40%, transparent 65%)' }} />
             <img
               src={vendibookLogo}
               alt="Vendibook"
               fetchPriority="high"
               loading="eager"
               decoding="sync"
-              className="relative z-10 w-[70%] h-auto object-contain"
-              style={{ filter: 'drop-shadow(0 0 30px rgba(255,255,255,0.1))' }}
+              className="relative h-44 sm:h-52 md:h-60 lg:h-72 w-auto"
+              style={{ filter: 'drop-shadow(0 0 40px rgba(255,255,255,0.12))' }}
             />
           </motion.div>
 
