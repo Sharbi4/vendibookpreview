@@ -36,7 +36,7 @@ const HeroValueProp = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="absolute inset-0 scale-110 rounded-full bg-foreground/15 blur-[100px] sm:blur-[130px]" />
+            <div className="absolute inset-0 scale-125 rounded-full bg-primary/20 blur-[80px] sm:blur-[120px]" />
             <img
               src={vendibookLogo}
               alt="Vendibook"
