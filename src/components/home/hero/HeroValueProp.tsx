@@ -32,11 +32,17 @@ const HeroValueProp = () => {
           {/* Logo */}
           <motion.div
             className="relative mb-4 sm:mb-6"
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="absolute inset-0 scale-[2] rounded-full blur-[100px] sm:blur-[130px]" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(200,200,210,0.08) 40%, transparent 65%)' }} />
+            <motion.div
+              className="absolute inset-0 scale-[2.5] rounded-full blur-[100px] sm:blur-[140px]"
+              style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.22) 0%, rgba(200,200,215,0.1) 35%, transparent 60%)' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1.8, delay: 0.3 }}
+            />
             <img
               src={vendibookLogo}
               alt="Vendibook"
@@ -44,7 +50,7 @@ const HeroValueProp = () => {
               loading="eager"
               decoding="sync"
               className="relative h-44 sm:h-52 md:h-60 lg:h-72 w-auto"
-              style={{ filter: 'drop-shadow(0 0 40px rgba(255,255,255,0.12))' }}
+              style={{ filter: 'drop-shadow(0 0 50px rgba(255,255,255,0.15))' }}
             />
           </motion.div>
 
