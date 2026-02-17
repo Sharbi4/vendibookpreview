@@ -24,11 +24,21 @@ const HeroValueProp = () => {
   const search = useHeroSearch();
 
   return (
-    <section className="relative min-h-[92svh] sm:min-h-[92vh] flex items-center justify-center overflow-hidden bg-background">
+    <section className="relative min-h-[92svh] sm:min-h-[92vh] flex items-center justify-center bg-background" style={{ overflow: 'clip' }}>
       <HeroBackground />
+
+      {/* Logo glow — uses box-shadow to avoid overflow clip */}
+      <motion.div
+        className="absolute z-[1] top-[25%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.10) 30%, rgba(255,255,255,0.03) 55%, transparent 70%)' }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 2, delay: 0.3 }}
+      />
 
       <div className="container relative z-10 max-w-4xl mx-auto px-5 pt-10 pb-6 sm:py-20 md:py-28">
         <div className="text-center flex flex-col items-center gap-0">
+
           {/* Logo */}
           <motion.div
             className="relative mb-4 sm:mb-6"
@@ -36,13 +46,6 @@ const HeroValueProp = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
           >
-            <motion.div
-              className="absolute inset-0 scale-[2.5] rounded-full blur-[100px] sm:blur-[140px]"
-              style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.22) 0%, rgba(200,200,215,0.1) 35%, transparent 60%)' }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1.8, delay: 0.3 }}
-            />
             <img
               src={vendibookLogo}
               alt="Vendibook"
