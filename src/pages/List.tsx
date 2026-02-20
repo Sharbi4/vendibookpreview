@@ -55,10 +55,10 @@ const ListHero = ({ onStart }: { onStart: () => void }) => (
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button size="lg" variant="dark-shine" onClick={onStart} className="text-base sm:text-lg px-8 py-6 h-auto shadow-xl rounded-xl w-full sm:w-auto">
-            Create Step-by-Step
+            Continue
           </Button>
         </div>
-        <p className="mt-4 text-sm text-muted-foreground max-w-md mx-auto">Always free to list • Use our step-by-step wizard to go live in minutes</p>
+        <p className="mt-4 text-sm text-muted-foreground max-w-md mx-auto">Step 1 of 3 • takes ~2 minutes • save anytime</p>
       </motion.div>
     </div>
   </section>
