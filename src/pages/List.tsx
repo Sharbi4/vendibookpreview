@@ -57,15 +57,8 @@ const ListHero = ({ onStart }: { onStart: () => void }) => (
           <Button size="lg" variant="dark-shine" onClick={onStart} className="text-base sm:text-lg px-8 py-6 h-auto shadow-xl rounded-xl w-full sm:w-auto">
             Create Step-by-Step
           </Button>
-          <Button size="lg" variant="gradient" onClick={() => {
-            // Trigger the Vendi voice agent by dispatching a custom event
-            window.dispatchEvent(new CustomEvent('start-vendi-call'));
-          }} className="text-base sm:text-lg px-8 py-6 h-auto shadow-xl rounded-xl w-full sm:w-auto">
-            <Bot className="h-5 w-5 mr-2" />
-            Set Up with Vendi
-          </Button>
         </div>
-        <p className="mt-4 text-sm text-muted-foreground max-w-md mx-auto">Always free to list • Use our wizard or let Vendi walk you through it by voice</p>
+        <p className="mt-4 text-sm text-muted-foreground max-w-md mx-auto">Always free to list • Use our step-by-step wizard to go live in minutes</p>
       </motion.div>
     </div>
   </section>
@@ -269,7 +262,7 @@ const ListingBuildAnimation = () => {
 
 const HowItWorks = () => {
   const steps = [
-    { icon: Bot, label: 'Create with AI', desc: 'Talk to Vendi or use our step-by-step wizard. Your listing is written, optimized, and ready in under a minute.' },
+    { icon: Sparkles, label: 'Create Your Listing', desc: 'Use our step-by-step wizard to build a professional listing. Pick a category, add photos, set your price — done in minutes.' },
     { icon: Store, label: 'Go Live', desc: 'Publish a professional storefront. Choose to rent or sell. Accept card payments online or cash in person.' },
     { icon: Share2, label: 'Share & Grow', desc: 'Use the built-in Share Kit to post to social media, generate QR codes, and track who\'s clicking.' },
     { icon: Wallet, label: 'Get Paid', desc: 'Online payments are held in escrow and released securely. Cash payments are handled directly between you and your customer.' },
@@ -383,7 +376,7 @@ const RentOrSell = () => (
 
 const ToolsGrid = () => {
   const features = [
-    { icon: Bot, label: 'AI Listing Creator', desc: 'Talk to Vendi by voice or use the step-by-step wizard. Your listing is written and optimized in under a minute.' },
+    { icon: Sparkles, label: 'Listing Wizard', desc: 'Use the step-by-step wizard to build a professional listing. Pick a category, add photos, and go live in minutes.' },
     { icon: Search, label: 'Built-In SEO', desc: 'Every listing is optimized for Google. Your storefront gets indexed so buyers and renters find you.' },
     { icon: Share2, label: 'Share Kit', desc: 'Generate social media captions, QR codes, and branded graphics. Track every click.' },
     { icon: QrCode, label: 'Free Signage & QR', desc: 'We send you professional signage. Walk-ins scan the QR code to book or buy instantly.' },
@@ -527,24 +520,6 @@ const ListPage: React.FC = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
-
-          {/* AI Create CTA */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.01 }}
-            className="mb-6 rounded-2xl border border-white/20 bg-foreground/90 backdrop-blur-xl p-4 sm:p-5 flex items-center gap-4 cursor-pointer hover:bg-foreground/95 transition-all shadow-2xl shadow-black/20"
-            onClick={() => window.dispatchEvent(new CustomEvent('start-vendi-call'))}
-          >
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0 shadow-lg shadow-primary/30">
-              <Sparkles className="h-5 w-5 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-background">Set Up with Vendi — by voice</h3>
-              <p className="text-xs text-background/60 mt-0.5">Talk to Vendi and she'll walk you through creating your listing step by step. Just speak naturally.</p>
-            </div>
-            <ArrowRight className="h-5 w-5 text-background/50 shrink-0 hidden sm:block" />
-          </motion.div>
 
           <QuickStartWizard />
         </div>
