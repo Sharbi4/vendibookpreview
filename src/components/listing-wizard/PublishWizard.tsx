@@ -1868,7 +1868,7 @@ export const PublishWizard: React.FC = () => {
                     )}
                   </div>
 
-                  <Button onClick={saveStep} disabled={isSaving || allPhotos.length < 3}>
+                  <Button onClick={isGuestDraft && !user ? handleDetailsSave : saveStep} disabled={isSaving || allPhotos.length < 3}>
                     {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                     Continue
                     <ChevronRight className="w-4 h-4 ml-2" />
