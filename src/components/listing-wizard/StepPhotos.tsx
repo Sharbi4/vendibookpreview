@@ -29,7 +29,7 @@ interface StepPhotosProps {
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'];
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
 
 export const StepPhotos: React.FC<StepPhotosProps> = ({
@@ -120,8 +120,10 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
 
   // Validate and process a single image file
   const validateImageFile = useCallback((file: File): { valid: boolean; error?: string } => {
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      return { valid: false, error: `Invalid format: ${file.type.split('/')[1] || 'unknown'}. Use JPG, PNG, or WebP.` };
+    // Accept any image type - some browsers/devices report non-standard MIME types (e.g., HEIC on iOS)
+    // Also accept empty type as some browsers don't set it correctly
+    if (file.type && !file.type.startsWith('image/') && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      return { valid: false, error: `Invalid format: ${file.type.split('/')[1] || 'unknown'}. Use JPG, PNG, WebP, or HEIC.` };
     }
     if (file.size > MAX_IMAGE_SIZE) {
       const sizeMB = (file.size / 1024 / 1024).toFixed(1);
@@ -433,9 +435,7 @@ export const StepPhotos: React.FC<StepPhotosProps> = ({
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
-          onClick={(e) => { 
-            e.preventDefault();
-            e.stopPropagation();
+          onClick={() => { 
             imageInputRef.current?.click(); 
           }}
           className={cn(
