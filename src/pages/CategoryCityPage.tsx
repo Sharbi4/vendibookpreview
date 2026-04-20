@@ -5,6 +5,7 @@ import { Loader2, MapPin, ArrowRight } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
+import ExitIntentCapture from '@/components/ExitIntentCapture';
 import JsonLd, { generateItemListSchema, generateCityCategoryBreadcrumbSchema, generateCityCategoryFAQSchema } from '@/components/JsonLd';
 import { Button } from '@/components/ui/button';
 import {
@@ -151,6 +152,7 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
     <div className="min-h-screen flex flex-col bg-background">
       <SEO title={seoTitle} description={metaDescription} canonical={canonicalPath} />
       <JsonLd schema={[itemListSchema, breadcrumbSchema, faqSchema]} />
+      <ExitIntentCapture category={dbCategory || undefined} city={city.name} />
       <Header />
 
       <main className="flex-1">

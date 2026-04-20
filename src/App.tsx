@@ -70,6 +70,7 @@ const Transactions = lazy(() => import("./pages/Transactions"));
 
 const Install = lazy(() => import("./pages/Install"));
 const VendorLots = lazy(() => import("./pages/VendorLots"));
+const Wanted = lazy(() => import("./pages/Wanted"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const VendiAISuite = lazy(() => import("./pages/VendiAISuite"));
@@ -237,6 +238,7 @@ const AnimatedRoutes = () => {
           <Route path="/install" element={<PageTransition><Install /></PageTransition>} />
           <Route path="/vendor-spaces" element={<PageTransition><VendorLots /></PageTransition>} />
           <Route path="/vendor-lots" element={<PageTransition><VendorLots /></PageTransition>} />
+          <Route path="/wanted" element={<PageTransition><Wanted /></PageTransition>} />
           <Route path="/faq" element={<PageTransition><FAQ /></PageTransition>} />
           <Route path="/signage-request" element={<PageTransition><SignageRequest /></PageTransition>} />
           <Route path="/unsubscribe" element={<PageTransition><Unsubscribe /></PageTransition>} />
