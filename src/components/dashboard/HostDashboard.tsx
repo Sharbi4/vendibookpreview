@@ -443,6 +443,25 @@ const HostDashboard = () => {
         </div>
       )}
 
+      {/* Tab Content: Insights (AI health scores + analytics suite) */}
+      {activeTab === 'insights' && (
+        <div className="space-y-6">
+          <ListingInsightsPanel />
+          <div className="grid lg:grid-cols-2 gap-4">
+            <ConversionFunnel days={30} />
+            <RevenueChart />
+            <TrafficSourcesCard days={30} />
+            <CompetitorPricingCard />
+          </div>
+        </div>
+      )}
+
+      {/* Tab Content: Promote (boost, AI copy, SEO, share) */}
+      {activeTab === 'promote' && <PromotionHub />}
+
+      {/* Tab Content: Kitchen Pro (slot calendar, heatmap, equipment) */}
+      {activeTab === 'kitchen' && hasGhostKitchen && <KitchenProSuite />}
+
       {/* Stripe Connect Modal */}
       <StripeConnectModal
         open={showStripeModal}
