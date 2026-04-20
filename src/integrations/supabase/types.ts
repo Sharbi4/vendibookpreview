@@ -724,6 +724,90 @@ export type Database = {
           },
         ]
       }
+      listing_ai_insights: {
+        Row: {
+          competitor_summary: Json | null
+          created_at: string
+          expires_at: string
+          generated_at: string
+          health_score: number
+          host_id: string
+          id: string
+          listing_id: string
+          model_used: string
+          recommendations: Json
+        }
+        Insert: {
+          competitor_summary?: Json | null
+          created_at?: string
+          expires_at?: string
+          generated_at?: string
+          health_score: number
+          host_id: string
+          id?: string
+          listing_id: string
+          model_used?: string
+          recommendations?: Json
+        }
+        Update: {
+          competitor_summary?: Json | null
+          created_at?: string
+          expires_at?: string
+          generated_at?: string
+          health_score?: number
+          host_id?: string
+          id?: string
+          listing_id?: string
+          model_used?: string
+          recommendations?: Json
+        }
+        Relationships: []
+      }
+      listing_analytics_daily: {
+        Row: {
+          bookings: number
+          created_at: string
+          date: string
+          host_id: string
+          id: string
+          inquiries: number
+          listing_id: string
+          revenue: number
+          source_breakdown: Json
+          unique_viewers: number
+          updated_at: string
+          views: number
+        }
+        Insert: {
+          bookings?: number
+          created_at?: string
+          date: string
+          host_id: string
+          id?: string
+          inquiries?: number
+          listing_id: string
+          revenue?: number
+          source_breakdown?: Json
+          unique_viewers?: number
+          updated_at?: string
+          views?: number
+        }
+        Update: {
+          bookings?: number
+          created_at?: string
+          date?: string
+          host_id?: string
+          id?: string
+          inquiries?: number
+          listing_id?: string
+          revenue?: number
+          source_breakdown?: Json
+          unique_viewers?: number
+          updated_at?: string
+          views?: number
+        }
+        Relationships: []
+      }
       listing_blocked_dates: {
         Row: {
           blocked_date: string
@@ -1694,6 +1778,48 @@ export type Database = {
           is_active?: boolean
           max_uses?: number | null
           min_purchase_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      promotion_assets: {
+        Row: {
+          asset_type: string
+          channel: string
+          content: Json
+          created_at: string
+          host_id: string
+          id: string
+          is_active: boolean
+          listing_id: string
+          performance_metrics: Json | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          asset_type: string
+          channel: string
+          content?: Json
+          created_at?: string
+          host_id: string
+          id?: string
+          is_active?: boolean
+          listing_id: string
+          performance_metrics?: Json | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          asset_type?: string
+          channel?: string
+          content?: Json
+          created_at?: string
+          host_id?: string
+          id?: string
+          is_active?: boolean
+          listing_id?: string
+          performance_metrics?: Json | null
+          title?: string | null
           updated_at?: string
         }
         Relationships: []
