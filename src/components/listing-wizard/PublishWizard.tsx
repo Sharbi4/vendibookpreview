@@ -3935,6 +3935,17 @@ export const PublishWizard: React.FC = () => {
                     </label>
                   </div>
                 </div>
+
+                {/* Featured charge notice */}
+                {featuredEnabled && !((listing as any)?.featured_at) && (
+                  <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300 flex items-start gap-2">
+                    <Star className="w-4 h-4 mt-0.5 shrink-0" />
+                    <div>
+                      You'll be redirected to Stripe to pay <strong>$30</strong> for the Featured add-on.
+                      Your listing publishes automatically the moment payment clears.
+                    </div>
+                  </div>
+                )}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
