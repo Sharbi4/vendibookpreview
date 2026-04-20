@@ -99,7 +99,7 @@ export const OnboardingChecklist = ({
                 className={cn(
                   'shrink-0 w-7 h-7 rounded-full flex items-center justify-center',
                   step.done
-                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                    ? 'bg-primary/15 text-primary'
                     : 'bg-muted text-muted-foreground'
                 )}
               >

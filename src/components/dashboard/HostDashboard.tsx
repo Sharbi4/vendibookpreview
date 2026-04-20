@@ -208,7 +208,7 @@ const HostDashboard = () => {
           isStripeConnected={isConnected}
           isIdentityVerified={isVerified}
           hasPublishedListing={stats.published > 0}
-          hasFirstBooking={(bookingStats.total ?? 0) > 0 || (revenueAnalytics?.totalRevenue ?? 0) > 0}
+          hasFirstBooking={(bookingStats.total ?? 0) > 0 || (revenueAnalytics?.revenueThisMonth ?? 0) > 0}
           onConnectStripe={handleConnectStripe}
         />
       )}
