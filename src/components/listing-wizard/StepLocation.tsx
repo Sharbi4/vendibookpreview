@@ -1,16 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { MapPin, Truck, Package, Info, Building2, Phone, CheckCircle2, Loader2, Navigation } from 'lucide-react';
+import { MapPin, Truck, Package, Info, Building2, Phone, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { ListingFormData, FulfillmentType } from '@/types/listing';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
-import { LocationMapPreview } from './LocationMapPreview';
 import { GpsLocationButton } from './GpsLocationButton';
-import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
-import { useJsApiLoader } from '@react-google-maps/api';
-import { GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_LOADER_ID } from '@/lib/googleMapsLoader';
+import { supabase } from '@/integrations/supabase/client';
 
 interface StepLocationProps {
   formData: ListingFormData;
@@ -27,7 +24,7 @@ const fulfillmentOptions: { value: FulfillmentType; label: string; icon: React.R
   { value: 'both', label: 'Pickup + Delivery', icon: <Package className="w-5 h-5" />, description: 'Offer both options' },
 ];
 
-// ZIP code → City/State lookup overlay
+// ZIP code → City/State lookup using server-side geocode (no client API key restrictions)
 const ZipCodeLookup: React.FC<{
   zipCode: string;
   onZipCodeChange: (zip: string) => void;
@@ -36,72 +33,55 @@ const ZipCodeLookup: React.FC<{
   onCityStateConfirmed: (city: string, state: string) => void;
   onCoordinatesChange: (coords: { lat: number; lng: number } | null) => void;
 }> = ({ zipCode, onZipCodeChange, city, state, onCityStateConfirmed, onCoordinatesChange }) => {
-  const { apiKey } = useGoogleMapsToken();
   const [isLooking, setIsLooking] = useState(false);
   const [lookupCity, setLookupCity] = useState(city || '');
   const [lookupState, setLookupState] = useState(state || '');
   const [confirmed, setConfirmed] = useState(!!(city && state));
   const [error, setError] = useState<string | null>(null);
 
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: apiKey || '',
-    id: GOOGLE_MAPS_LOADER_ID,
-    libraries: GOOGLE_MAPS_LIBRARIES,
-  });
-
   const lookupZip = useCallback(async (zip: string) => {
-    if (zip.length < 5 || !isLoaded || !apiKey) return;
-    
+    if (zip.length < 5) return;
+
     setIsLooking(true);
     setError(null);
     setConfirmed(false);
 
     try {
-      const geocoder = new google.maps.Geocoder();
-      const result = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
-        geocoder.geocode({ address: `${zip}, USA` }, (results, status) => {
-          if (status === 'OK' && results && results.length > 0) {
-            resolve(results);
-          } else {
-            reject(new Error('ZIP code not found'));
-          }
-        });
+      const { data, error: fnError } = await supabase.functions.invoke('geocode-location', {
+        body: { query: zip, limit: 1 },
       });
 
-      const components = result[0].address_components;
-      const cityComp = components.find(c => c.types.includes('locality') || c.types.includes('sublocality'));
-      const stateComp = components.find(c => c.types.includes('administrative_area_level_1'));
-      const countryComp = components.find(c => c.types.includes('country'));
+      if (fnError) throw fnError;
 
-      if (countryComp?.short_name !== 'US') {
-        setError('ZIP code must be in the United States');
+      const result = data?.results?.[0];
+      if (!result) {
+        setError("We couldn't find that ZIP code. Double-check the digits or try a nearby ZIP.");
         return;
       }
 
-      const foundCity = cityComp?.long_name || '';
-      const foundState = stateComp?.short_name || '';
+      const foundCity = (result.city || result.text || '').trim();
+      const foundState = (result.state || result.context || '').trim();
+      const [lng, lat] = result.center || [];
 
       if (!foundCity || !foundState) {
-        setError('Could not determine city/state from this ZIP code');
+        setError("We found the ZIP but couldn't read the city/state. Try a nearby ZIP code.");
         return;
       }
 
       setLookupCity(foundCity);
       setLookupState(foundState);
-
-      // Get coordinates
-      const location = result[0].geometry.location;
-      onCoordinatesChange({ lat: location.lat(), lng: location.lng() });
-
-      // Auto-confirm
+      if (typeof lat === 'number' && typeof lng === 'number') {
+        onCoordinatesChange({ lat, lng });
+      }
       onCityStateConfirmed(foundCity, foundState);
       setConfirmed(true);
-    } catch {
-      setError('Invalid ZIP code. Please try again.');
+    } catch (err) {
+      console.error('[ZipCodeLookup] lookup failed:', err);
+      setError("We're having trouble looking up that ZIP. Please try again in a moment.");
     } finally {
       setIsLooking(false);
     }
-  }, [isLoaded, apiKey, onCityStateConfirmed, onCoordinatesChange]);
+  }, [onCityStateConfirmed, onCoordinatesChange]);
 
   useEffect(() => {
     if (zipCode.length === 5) {
@@ -115,55 +95,81 @@ const ZipCodeLookup: React.FC<{
     }
   }, [zipCode, lookupZip]);
 
+  const handleRetry = () => lookupZip(zipCode);
+
   return (
     <div className="space-y-4">
       {/* ZIP Code Input */}
       <div className="space-y-2">
         <Label className="text-base font-medium text-foreground">ZIP Code *</Label>
-        <div className="relative max-w-[200px]">
+        <div className="relative max-w-[220px]">
           <Input
             type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             maxLength={5}
             value={zipCode}
             onChange={(e) => {
               const val = e.target.value.replace(/\D/g, '').slice(0, 5);
               onZipCodeChange(val);
             }}
-            placeholder="Enter ZIP"
+            placeholder="e.g. 78701"
             className={cn(
-              "text-xl font-semibold tracking-wider text-center",
-              confirmed && "border-foreground focus-visible:ring-foreground"
+              "text-xl font-semibold tracking-[0.3em] text-center h-12",
+              confirmed && "border-emerald-500 focus-visible:ring-emerald-500",
+              error && "border-destructive focus-visible:ring-destructive"
             )}
+            autoComplete="postal-code"
           />
           {isLooking && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
               <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
             </div>
           )}
+          {confirmed && !isLooking && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            </div>
+          )}
         </div>
+        <p className="text-xs text-muted-foreground">
+          5-digit US ZIP — we'll auto-fill your city and state.
+        </p>
       </div>
 
-      {/* Error */}
+      {/* Error with retry */}
       {error && (
-        <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-          <p className="text-sm text-destructive">{error}</p>
+        <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm text-destructive">{error}</p>
+            {zipCode.length === 5 && (
+              <button
+                type="button"
+                onClick={handleRetry}
+                className="mt-1 text-xs font-medium text-destructive underline underline-offset-2 hover:no-underline"
+              >
+                Try again
+              </button>
+            )}
+          </div>
         </div>
       )}
 
-      {/* City/State Confirmation Overlay */}
+      {/* City/State Confirmation */}
       {confirmed && lookupCity && lookupState && (
-        <div className="p-4 rounded-xl bg-muted/50 border border-foreground animate-in fade-in-50 slide-in-from-top-2 duration-300">
+        <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/30 animate-in fade-in-50 slide-in-from-top-2 duration-300">
           <div className="flex items-start gap-3">
-            <CheckCircle2 className="w-5 h-5 text-foreground mt-0.5 shrink-0" />
+            <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
             <div>
               <p className="text-sm font-medium text-foreground">
-                Based on your ZIP code, your listing is in:
+                Got it — your listing will appear in:
               </p>
               <p className="text-lg font-bold text-foreground mt-1">
                 {lookupCity}, {lookupState}
               </p>
               <p className="text-xs text-muted-foreground mt-2">
-                Your full address will be collected in the next step and kept private until a booking is confirmed.
+                Your full address stays private until a booking is confirmed. Only the city/state shows publicly.
               </p>
             </div>
           </div>
