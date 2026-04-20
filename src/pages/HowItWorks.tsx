@@ -1,580 +1,338 @@
 import { useState, useEffect } from 'react';
-import Header from '@/components/layout/Header';
-import AppDropdownMenu from '@/components/layout/AppDropdownMenu';
 import { Link, useSearchParams } from 'react-router-dom';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import {
+  Search,
   ShieldCheck,
   CreditCard,
-  Truck,
-  ArrowRight,
-  DollarSign,
-  MapPin,
-  CheckCircle2,
-  CalendarDays,
-  FileCheck,
-  Package,
-  Star,
-  Quote,
-  HelpCircle,
-  Search,
-  PlusCircle,
-  MessageSquare,
   Handshake,
+  MessageSquare,
+  Calendar,
+  Camera,
+  DollarSign,
+  Truck,
+  FileCheck,
+  ArrowRight,
+  Sparkles,
+  Star,
+  CheckCircle2,
+  Clock,
+  Users,
+  TrendingUp,
+  MapPin,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import vendibookFavicon from '@/assets/vendibook-favicon.png';
-import vendibookLogo from '@/assets/vendibook-logo.png';
+import AnimatedHeroScene from '@/components/howitworks/AnimatedHeroScene';
+import ScrollWalkthrough, { WalkthroughStep } from '@/components/howitworks/ScrollWalkthrough';
+import ValuePillars, { Pillar } from '@/components/howitworks/ValuePillars';
 
-type UserRole = 'none' | 'buyer' | 'seller';
+type Role = 'rent' | 'buy' | 'host' | 'sell';
 
-const testimonials = [
-  {
-    name: "Marcus J.",
-    role: "Food Truck Owner",
-    location: "Atlanta, GA",
-    text: "Sold my trailer in 2 weeks. The buyer financing made it easy for them to pay.",
-    rating: 5,
-    forRole: 'seller' as const,
+const roleConfig: Record<Role, {
+  label: string;
+  blurb: string;
+  cta: { label: string; href: string };
+  steps: WalkthroughStep[];
+  pillars: Pillar[];
+  faqs: { q: string; a: string }[];
+}> = {
+  rent: {
+    label: 'Rent equipment',
+    blurb: 'Browse food trucks, trailers, commercial kitchens, and vendor spaces by city. Book by the hour, day, or month.',
+    cta: { label: 'Browse rentals', href: '/search?mode=rent' },
+    steps: [
+      { number: 1, title: 'Search by city & date', description: 'Filter by location, dates, asset type, and price. Every listing shows verified-host status, real photos, and live availability.', icon: Search, mock: 'search' },
+      { number: 2, title: 'Compare verified listings', description: 'Inspect specs, amenities, and reviews. All hosts pass Stripe Identity verification before they can list.', icon: ShieldCheck, mock: 'listing' },
+      { number: 3, title: 'Message the host', description: 'Ask about availability, equipment, or access instructions. Most hosts reply within an hour.', icon: MessageSquare, mock: 'message' },
+      { number: 4, title: 'Book & pay securely', description: 'Pay by card, ACH, Affirm, Klarna, or Afterpay. Funds are held in escrow — released to the host after handoff.', icon: CreditCard, mock: 'payment' },
+      { number: 5, title: 'Pick up or get it delivered', description: 'Coordinate pickup, on-site setup, or nationwide freight shipping. Hosts share access details once payment clears.', icon: Truck, mock: 'truck' },
+    ],
+    pillars: [
+      { icon: ShieldCheck, title: 'Verified hosts only', description: 'Identity-verified via Stripe before any listing goes live.' },
+      { icon: CreditCard, title: 'Escrow protection', description: 'Funds are held until you confirm the equipment is as described.' },
+      { icon: Clock, title: 'Fast host replies', description: 'Most renters get a response within an hour during business hours.' },
+      { icon: MapPin, title: 'Coast-to-coast inventory', description: 'Trucks, trailers, kitchens, and vendor spaces in every major US city.' },
+    ],
+    faqs: [
+      { q: 'How do I know the listing is real?', a: 'Every host completes Stripe Identity verification before publishing. You\'ll see a verified badge on their profile and listings.' },
+      { q: 'What payment methods can I use?', a: 'Card, ACH (for $5K+), Apple/Google Pay, Affirm and Klarna ($35–$30K), and Afterpay (up to $4K). Funds are held in escrow.' },
+      { q: 'Can I inspect before paying?', a: 'Yes. Message the host directly to schedule an in-person inspection before booking.' },
+      { q: 'What if the equipment isn\'t as described?', a: 'Open a dispute within 24 hours of handoff. We hold funds and mediate until resolved.' },
+    ],
   },
-  {
-    name: "Sarah C.",
-    role: "Kitchen Host",
-    location: "Houston, TX",
-    text: "Love that Vendibook verifies all my renters. No more chasing documents myself.",
-    rating: 5,
-    forRole: 'seller' as const,
+  buy: {
+    label: 'Buy a truck or trailer',
+    blurb: 'Shop verified food trucks, trailers, and commercial kitchen equipment with secure escrow payments and optional buyer financing.',
+    cta: { label: 'Browse for sale', href: '/search?mode=sale' },
+    steps: [
+      { number: 1, title: 'Find your asset', description: 'Search by city, build, condition, and price. See full specs, multiple photos, and seller history.', icon: Search, mock: 'search' },
+      { number: 2, title: 'Verify the seller', description: 'Every seller is identity-verified. Review their profile, response rate, and past sales before reaching out.', icon: ShieldCheck, mock: 'verified' },
+      { number: 3, title: 'Negotiate or make an offer', description: 'Send the asking price, submit a counter-offer, or message the seller to negotiate terms directly.', icon: MessageSquare, mock: 'message' },
+      { number: 4, title: 'Pay securely with escrow', description: 'Pay in full or finance with Affirm/Afterpay/Klarna. We hold the money until you confirm receipt.', icon: CreditCard, mock: 'payment' },
+      { number: 5, title: 'Pickup or nationwide freight', description: 'Pick up locally or use Vendibook freight ($4.50/mile) for door-to-door delivery anywhere in the US.', icon: Truck, mock: 'truck' },
+    ],
+    pillars: [
+      { icon: ShieldCheck, title: 'Verified sellers', description: 'Identity verification + sales history visible on every profile.' },
+      { icon: CreditCard, title: 'Buyer financing', description: 'Affirm, Klarna, and Afterpay let buyers spread payments over time.' },
+      { icon: Truck, title: 'Nationwide freight', description: 'Optional door-to-door delivery — calculated automatically at checkout.' },
+      { icon: CheckCircle2, title: 'Money-back protection', description: 'Funds stay in escrow until you confirm the asset arrives as described.' },
+    ],
+    faqs: [
+      { q: 'How does buyer financing work?', a: 'At checkout, choose Affirm or Klarna for $35–$30K, or Afterpay up to $4K. Soft credit check, instant decision, monthly payments.' },
+      { q: 'Can I get freight shipping?', a: 'Yes — sellers can opt into Vendibook Freight. We calculate $4.50/mile automatically and add it to checkout.' },
+      { q: 'What if the truck isn\'t as advertised?', a: 'You have 24 hours after delivery to confirm. Open a dispute and we\'ll hold funds while we investigate.' },
+      { q: 'Are inspections allowed before purchase?', a: 'Absolutely. Most serious buyers schedule an in-person inspection — message the seller to coordinate.' },
+    ],
   },
-  {
-    name: "Elena R.",
-    role: "Food Truck Buyer",
-    location: "Denver, CO",
-    text: "Found my dream truck and paid with Affirm. The escrow gave me peace of mind.",
-    rating: 5,
-    forRole: 'buyer' as const,
+  host: {
+    label: 'Host / rent out',
+    blurb: 'Turn your truck, trailer, kitchen, or parking lot into recurring income. Set your rates, control your calendar, get paid in 24 hours.',
+    cta: { label: 'List for rent', href: '/list?mode=rent' },
+    steps: [
+      { number: 1, title: 'Create your listing', description: 'Add photos, write a description, set hourly/daily/weekly/monthly rates. Our wizard takes about 8 minutes.', icon: Camera, mock: 'photo' },
+      { number: 2, title: 'Set your availability', description: 'Block dates, define operating hours, set buffer time between rentals. Smart calendar prevents double-bookings.', icon: Calendar, mock: 'calendar' },
+      { number: 3, title: 'Define document requirements', description: 'Require business license, insurance, or health permits before approval. We collect and verify them automatically.', icon: FileCheck, mock: 'docs' },
+      { number: 4, title: 'Approve booking requests', description: 'Review verified renter profiles. Accept with one tap — or enable Instant Book for faster turnover.', icon: MessageSquare, mock: 'message' },
+      { number: 5, title: 'Get paid automatically', description: 'Funds release to your bank 24 hours after the rental ends. Track everything from your host dashboard.', icon: DollarSign, mock: 'payout' },
+    ],
+    pillars: [
+      { icon: ShieldCheck, title: 'Verified renters only', description: 'Every renter passes ID verification before they can request to book.' },
+      { icon: DollarSign, title: '24-hour payouts', description: 'Direct deposit to your bank within 24 hours of rental completion.' },
+      { icon: FileCheck, title: 'Automated docs', description: 'We collect, verify, and store insurance + permit documents for you.' },
+      { icon: TrendingUp, title: 'AI price optimization', description: 'Vendi suggests rates based on local demand to maximize earnings.' },
+    ],
+    faqs: [
+      { q: 'How much does it cost to list?', a: 'Listing is free. We take a 12.9% platform fee only when you complete a booking. No subscriptions, no upfront cost.' },
+      { q: 'How fast do I get paid?', a: 'Funds are released to your bank account 24 hours after the rental ends and the renter confirms.' },
+      { q: 'What if a renter damages my equipment?', a: 'Require a security deposit at the listing level. We collect it at booking and release/refund based on damage reports.' },
+      { q: 'Can I list multiple assets?', a: 'Yes — many top hosts manage 4+ listings from a single dashboard. No limit.' },
+    ],
   },
-];
-
-const buyerFaqs = [
-  {
-    question: "How do I know the listing is legitimate?",
-    answer: "All sellers on Vendibook complete identity verification through Stripe. You'll see a verified badge on their profile.",
+  sell: {
+    label: 'Sell a truck/trailer',
+    blurb: 'List your food truck, trailer, or equipment for sale. Reach verified buyers nationwide. Free to list, escrow protection included.',
+    cta: { label: 'List for sale', href: '/list?mode=sale' },
+    steps: [
+      { number: 1, title: 'List with great photos', description: 'Upload high-res photos, write specs, set asking price. Listings with 8+ photos sell 3x faster.', icon: Camera, mock: 'photo' },
+      { number: 2, title: 'Receive offers', description: 'Verified buyers send full-price purchases or counter-offers. Review, negotiate, or accept with one click.', icon: MessageSquare, mock: 'message' },
+      { number: 3, title: 'Accept payment securely', description: 'Buyer pays via card, ACH, or financing. Funds are held in escrow — protecting both parties.', icon: CreditCard, mock: 'payment' },
+      { number: 4, title: 'Coordinate handoff', description: 'Local pickup or use Vendibook Freight for nationwide delivery. We handle logistics quotes automatically.', icon: Truck, mock: 'truck' },
+      { number: 5, title: 'Get paid', description: 'Once the buyer confirms receipt, funds release to your bank instantly. Track everything in your dashboard.', icon: DollarSign, mock: 'payout' },
+    ],
+    pillars: [
+      { icon: Users, title: 'Verified buyers', description: 'Every buyer is identity-verified — no spam, no tire-kickers.' },
+      { icon: CreditCard, title: 'Buyer financing built-in', description: 'Affirm, Klarna, Afterpay expand your buyer pool overnight.' },
+      { icon: ShieldCheck, title: 'Escrow protection', description: 'Funds held until handoff confirmed — fraud protection both ways.' },
+      { icon: DollarSign, title: 'No upfront fees', description: 'Free to list. Pay a small fee only when the sale completes.' },
+    ],
+    faqs: [
+      { q: 'How much does selling cost?', a: 'Free to list. We charge a small platform fee (typically under 10%) only after the sale closes.' },
+      { q: 'Can buyers finance?', a: 'Yes — buyers can finance with Affirm/Klarna ($35–$30K) or Afterpay (up to $4K). You still get paid in full at close.' },
+      { q: 'Do you handle shipping?', a: 'Vendibook Freight covers door-to-door US delivery at $4.50/mile, calculated and quoted automatically at checkout.' },
+      { q: 'How long until I get paid?', a: 'Funds release immediately once the buyer confirms receipt — typically same-day for local pickup, 2–5 days for freight.' },
+    ],
   },
-  {
-    question: "How do payments work when I buy?",
-    answer: "You can pay with card, Affirm, or Afterpay. Funds are held in escrow and only released to the seller after you confirm receipt.",
-  },
-  {
-    question: "What if I'm not satisfied with my purchase?",
-    answer: "Contact us within 24 hours of receiving your asset. We'll help mediate and can hold funds until the issue is resolved.",
-  },
-  {
-    question: "Can I inspect before buying?",
-    answer: "Yes! You can message sellers directly to schedule an in-person inspection before committing to purchase.",
-  },
-];
-
-const sellerFaqs = [
-  {
-    question: "How much does it cost to list?",
-    answer: "Creating a listing is completely free. We only charge a small platform fee when you make a sale or complete a rental booking.",
-  },
-  {
-    question: "How long does it take to get verified?",
-    answer: "Identity verification typically takes just 2-3 minutes using our Stripe-powered verification system. You'll need a valid government ID.",
-  },
-  {
-    question: "How do I get paid?",
-    answer: "Payments are deposited directly to your bank account. For sales, funds release after buyer confirmation. For rentals, 24 hours after the booking ends.",
-  },
-  {
-    question: "What documents do renters need?",
-    answer: "You choose the requirements: business licenses, insurance certificates, health permits, and more. We collect and verify them before approval.",
-  },
-];
-
-const buyerSteps = [
-  { step: 1, icon: Search, title: "Find Your Asset", description: "Browse verified food trucks, trailers, commercial kitchens, and Vendor Spaces nationwide." },
-  { step: 2, icon: MessageSquare, title: "Verify & Connect", description: "All sellers are identity-verified. Message them to ask questions or schedule an inspection." },
-  { step: 3, icon: CreditCard, title: "Secure Checkout", description: "Pay safely with card, Affirm, or Afterpay. Funds are held in escrow until you confirm." },
-  { step: 4, icon: Handshake, title: "Complete Transaction", description: "Pickup, delivery, or nationwide freight. Confirm when satisfied to release payment." },
-];
-
-const sellerPathOptions = [
-  { icon: MapPin, title: "List a Vendor Space", description: "Turn your parking lot or space into passive income for food vendors.", link: "/vendor-spaces", features: ["Hourly or daily bookings", "Define amenities & rules", "Zero hassle setup"] },
-  { icon: CalendarDays, title: "Rent Out a Commercial Kitchen", description: "Monetize your kitchen space with verified, document-compliant renters.", link: "/rent-my-commercial-kitchen", features: ["Identity-verified renters", "Automated document collection", "Flexible scheduling"] },
-  { icon: DollarSign, title: "Sell a Food Truck or Trailer", description: "List your vehicle for sale with secure payments and optional buyer financing.", link: "/sell-my-food-truck", features: ["Buyer financing with Affirm/Afterpay", "Optional nationwide freight", "Secure escrow payments"] },
-];
+};
 
 const HowItWorks = () => {
-  const shouldReduceMotion = useReducedMotion();
+  const reduce = useReducedMotion();
   const [searchParams, setSearchParams] = useSearchParams();
-  
-  const [selectedRole, setSelectedRole] = useState<UserRole>(() => {
-    const urlRole = searchParams.get('role');
-    return (urlRole === 'buyer' || urlRole === 'seller') ? urlRole : 'none';
-  });
+  const initialRole = (searchParams.get('role') as Role) || 'rent';
+  const [role, setRole] = useState<Role>(
+    ['rent', 'buy', 'host', 'sell'].includes(initialRole) ? initialRole : 'rent'
+  );
 
   useEffect(() => {
-    if (selectedRole === 'none') {
-      searchParams.delete('role');
-    } else {
-      searchParams.set('role', selectedRole);
-    }
-    setSearchParams(searchParams, { replace: true });
-  }, [selectedRole, searchParams, setSearchParams]);
+    const next = new URLSearchParams(searchParams);
+    next.set('role', role);
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role]);
 
-  const handleRoleSelect = (role: UserRole) => {
-    setSelectedRole(role);
-    setTimeout(() => {
-      document.getElementById('role-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-  };
-
-  const handleBackToSelection = () => {
-    setSelectedRole('none');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const relevantTestimonials = testimonials.filter(t => 
-    selectedRole === 'none' || t.forRole === selectedRole
-  ).slice(0, 3);
-
-  const relevantFaqs = selectedRole === 'buyer' ? buyerFaqs : sellerFaqs;
+  const config = roleConfig[role];
 
   return (
-    <div className="min-h-screen relative overflow-x-hidden">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO
-        title="How It Works | Vendibook - Buy, Sell & Rent Mobile Food Assets"
-        description="Learn how to buy, sell, or rent food trucks, trailers, commercial kitchens, and Vendor Spaces on Vendibook."
+        title="How Vendibook Works | Rent, Buy, Host & Sell Food Trucks"
+        description="Vendibook is the marketplace for food trucks, trailers, commercial kitchens, and vendor spaces. Verified users, escrow payments, nationwide delivery. See exactly how it works."
       />
 
-      {/* ══ FULL-PAGE GRADIENT BACKGROUND ══ */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-background" />
-        <motion.div
-          animate={{ x: [0, 60, -40, 0], y: [0, -50, 30, 0], scale: [1, 1.2, 0.9, 1] }}
-          transition={{ repeat: Infinity, duration: 18, ease: 'easeInOut' }}
-          className="absolute -top-40 -left-40 w-[700px] h-[700px] rounded-full bg-foreground/[0.03] blur-[150px]"
-        />
-        <motion.div
-          animate={{ x: [0, -50, 60, 0], y: [0, 40, -40, 0], scale: [1, 0.85, 1.2, 1] }}
-          transition={{ repeat: Infinity, duration: 22, ease: 'easeInOut' }}
-          className="absolute top-1/4 -right-32 w-[800px] h-[800px] rounded-full bg-foreground/[0.02] blur-[170px]"
-        />
-        <motion.div
-          animate={{ x: [0, 30, -40, 0], y: [0, -30, 50, 0] }}
-          transition={{ repeat: Infinity, duration: 16, ease: 'easeInOut' }}
-          className="absolute bottom-0 left-1/3 w-[600px] h-[600px] rounded-full bg-foreground/[0.02] blur-[130px]"
-        />
-      </div>
-
-      {/* ══ HEADER ══ */}
       <Header />
 
-      {/* ══ MAIN CONTENT ══ */}
-      <main className="relative z-10">
-        {/* ══ HERO — ROLE SELECTION ══ */}
-        <section className="py-16 md:py-24">
-          <div className="max-w-3xl mx-auto px-4 text-center">
-            <motion.div
-              initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-4 tracking-tight">
-                What would you like to do?
-              </h1>
-              <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">
-                Choose your path and we'll show you exactly how it works.
-              </p>
-
-              {/* Role Selection Cards — Dark Glass */}
-              <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                <motion.button
-                  onClick={() => handleRoleSelect('buyer')}
-                  className={`p-6 rounded-2xl text-left transition-all backdrop-blur-xl border ${
-                    selectedRole === 'buyer'
-                      ? 'bg-card/90 border-foreground/20 shadow-xl shadow-foreground/5 ring-2 ring-foreground/10'
-                      : 'bg-card/60 border-border hover:bg-card/80 hover:shadow-lg'
-                  }`}
-                  whileHover={shouldReduceMotion ? {} : { y: -4 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
-                    selectedRole === 'buyer' ? 'bg-foreground' : 'bg-muted'
-                  }`}>
-                    <Search className={`h-6 w-6 ${selectedRole === 'buyer' ? 'text-background' : 'text-muted-foreground'}`} />
-                  </div>
-                  <h2 className="text-xl font-bold text-foreground mb-2">Buy or Rent</h2>
-                  <p className="text-sm text-muted-foreground">Find food trucks, trailers, kitchens, and Vendor Spaces.</p>
-                </motion.button>
-
-                <motion.button
-                  onClick={() => handleRoleSelect('seller')}
-                  className={`p-6 rounded-2xl text-left transition-all backdrop-blur-xl border ${
-                    selectedRole === 'seller'
-                      ? 'bg-card/90 border-foreground/20 shadow-xl shadow-foreground/5 ring-2 ring-foreground/10'
-                      : 'bg-card/60 border-border hover:bg-card/80 hover:shadow-lg'
-                  }`}
-                  whileHover={shouldReduceMotion ? {} : { y: -4 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
-                    selectedRole === 'seller' ? 'bg-foreground' : 'bg-muted'
-                  }`}>
-                    <PlusCircle className={`h-6 w-6 ${selectedRole === 'seller' ? 'text-background' : 'text-muted-foreground'}`} />
-                  </div>
-                  <h2 className="text-xl font-bold text-foreground mb-2">Sell or Host</h2>
-                  <p className="text-sm text-muted-foreground">Sell your assets, rent out equipment, or list your space.</p>
-                </motion.button>
-              </div>
-
-              {/* Trust Badges */}
-              <motion.div 
-                className="flex flex-wrap justify-center gap-4 mt-10 text-sm text-muted-foreground"
-                initial={shouldReduceMotion ? {} : { opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
+      <main className="flex-1">
+        {/* HERO — illustrated */}
+        <section className="relative pt-16 pb-12 md:pt-24 md:pb-16 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-foreground/[0.03] via-background to-background" />
+          <div className="container max-w-6xl mx-auto px-4 relative z-10">
+            <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
+              <motion.div
+                initial={reduce ? undefined : { opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
               >
-                {[
-                  { icon: ShieldCheck, label: 'Verified Users' },
-                  { icon: CreditCard, label: 'Secure Payments' },
-                  { icon: Truck, label: 'Nationwide Shipping' },
-                ].map((badge) => (
-                  <div key={badge.label} className="flex items-center gap-1.5 bg-card/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border">
-                    <badge.icon className="h-4 w-4" />
-                    <span>{badge.label}</span>
-                  </div>
-                ))}
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-foreground/5 border border-border text-xs font-medium text-foreground mb-4">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  The marketplace for mobile food
+                </div>
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-5 leading-[1.05]">
+                  Rent, buy, host, or sell —<br className="hidden md:block" /> all in one place.
+                </h1>
+                <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl leading-relaxed">
+                  Vendibook connects verified buyers, renters, hosts, and sellers of food trucks, trailers, commercial kitchens, and vendor spaces. Secure payments, automated documents, nationwide delivery.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Button size="lg" variant="glass-cta" className="rounded-full" asChild>
+                    <Link to="/search">
+                      Browse listings <ArrowRight className="ml-1.5 w-4 h-4" />
+                    </Link>
+                  </Button>
+                  <Button size="lg" variant="outline" className="rounded-full" asChild>
+                    <Link to="/list">List your asset</Link>
+                  </Button>
+                </div>
               </motion.div>
-            </motion.div>
+
+              <motion.div
+                initial={reduce ? undefined : { opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="relative"
+              >
+                <AnimatedHeroScene variant="marketplace" />
+              </motion.div>
+            </div>
           </div>
         </section>
 
-        {/* ══ CONDITIONAL CONTENT ══ */}
-        {selectedRole !== 'none' && (
-          <div id="role-content">
-            <div className="max-w-5xl mx-auto px-4 pt-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleBackToSelection}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                ← Choose a different path
-              </Button>
+        {/* ROLE TABS */}
+        <section className="sticky top-16 z-30 bg-background/80 backdrop-blur-xl border-y border-border">
+          <div className="container max-w-6xl mx-auto px-4">
+            <div className="flex gap-1 overflow-x-auto scrollbar-hide py-2 -mx-4 px-4">
+              {(Object.keys(roleConfig) as Role[]).map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setRole(r)}
+                  className={`relative whitespace-nowrap px-4 md:px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${
+                    role === r ? 'text-background' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {role === r && (
+                    <motion.div
+                      layoutId="role-pill"
+                      className="absolute inset-0 bg-foreground rounded-full"
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                  <span className="relative">{roleConfig[r].label}</span>
+                </button>
+              ))}
             </div>
-
-            {/* ══ BUYER WALKTHROUGH ══ */}
-            {selectedRole === 'buyer' && (
-              <section className="py-12 md:py-16">
-                <div className="max-w-4xl mx-auto px-4">
-                  <div className="text-center mb-12">
-                    <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">How Buying & Renting Works</h2>
-                    <p className="text-muted-foreground max-w-xl mx-auto">Find verified listings, pay securely, and complete your transaction with confidence.</p>
-                  </div>
-
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
-                    {buyerSteps.map((step, index) => {
-                      const Icon = step.icon;
-                      return (
-                        <motion.div
-                          key={step.step}
-                          initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ delay: index * 0.1 }}
-                          whileHover={{ y: -4 }}
-                          className="rounded-2xl bg-card/80 backdrop-blur-xl border border-border shadow-lg hover:shadow-xl hover:border-primary/30 transition-all p-5"
-                        >
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center text-background font-bold text-sm">
-                              {step.step}
-                            </div>
-                            <Icon className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                          <h3 className="font-semibold text-foreground mb-2">{step.title}</h3>
-                          <p className="text-sm text-muted-foreground">{step.description}</p>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="text-center">
-                    <Button size="lg" variant="glass-cta" className="gap-2 rounded-xl" asChild>
-                      <Link to="/">Start Browsing <ArrowRight className="h-4 w-4" /></Link>
-                    </Button>
-                  </div>
-                </div>
-              </section>
-            )}
-
-            {/* ══ SELLER PATH OPTIONS ══ */}
-            {selectedRole === 'seller' && (
-              <section className="py-12 md:py-16">
-                <div className="max-w-5xl mx-auto px-4">
-                  <div className="text-center mb-12">
-                    <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Choose Your Listing Type</h2>
-                    <p className="text-muted-foreground max-w-xl mx-auto">Each path has a dedicated guide to help you get started quickly.</p>
-                  </div>
-
-                  <div className="grid md:grid-cols-3 gap-5">
-                    {sellerPathOptions.map((option, index) => {
-                      const Icon = option.icon;
-                      return (
-                        <motion.div
-                          key={option.title}
-                          initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ delay: index * 0.1 }}
-                          whileHover={{ y: -4 }}
-                          className="rounded-2xl bg-card/80 backdrop-blur-xl border border-border shadow-lg hover:shadow-xl hover:border-foreground/20 transition-all p-6"
-                        >
-                          <motion.div 
-                            className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center mb-4"
-                            whileHover={{ scale: 1.1, rotate: 5 }}
-                            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                          >
-                            <Icon className="h-6 w-6 text-background" />
-                          </motion.div>
-                          <h3 className="text-lg font-bold text-foreground mb-2">{option.title}</h3>
-                          <p className="text-sm text-muted-foreground mb-4">{option.description}</p>
-                          <ul className="space-y-2 text-sm text-muted-foreground mb-6">
-                            {option.features.map((feature, i) => (
-                              <li key={i} className="flex items-center gap-2">
-                                <CheckCircle2 className="h-4 w-4 text-foreground/60 shrink-0" />
-                                {feature}
-                              </li>
-                            ))}
-                          </ul>
-                          <Button variant="glass-cta" className="w-full gap-2 rounded-xl" asChild>
-                            <Link to={option.link}>Learn More <ArrowRight className="h-4 w-4" /></Link>
-                          </Button>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="text-center mt-10">
-                    <p className="text-sm text-muted-foreground mb-3">Ready to jump in?</p>
-                    <Button size="lg" className="gap-2 rounded-xl bg-card/80 backdrop-blur border border-border text-foreground hover:bg-card shadow-lg" asChild>
-                      <Link to="/list">Create Free Listing Now <ArrowRight className="h-4 w-4" /></Link>
-                    </Button>
-                  </div>
-                </div>
-              </section>
-            )}
-
-            {/* ══ WHY VENDIBOOK ══ */}
-            <section className="py-12 md:py-16">
-              <div className="max-w-4xl mx-auto px-4">
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-10">Why Choose Vendibook</h2>
-                <div className="grid sm:grid-cols-2 gap-5">
-                  {[
-                    { icon: ShieldCheck, title: 'Verified Users', desc: 'Identity verification reduces fraud and builds trust.' },
-                    { icon: FileCheck, title: 'Document Review', desc: 'We verify renter documents so you don\'t have to.' },
-                    { icon: CreditCard, title: 'Secure Payments', desc: 'Funds held in escrow until transaction is complete.' },
-                    { icon: Package, title: 'Nationwide Freight', desc: 'Buy or sell to anyone in the 48 contiguous states.' },
-                  ].map((item) => (
-                    <div key={item.title} className="flex gap-4 p-4 rounded-2xl bg-card/80 backdrop-blur-xl border border-border shadow-sm">
-                      <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center shrink-0">
-                        <item.icon className="h-5 w-5 text-foreground/70" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground mb-1">{item.title}</h3>
-                        <p className="text-sm text-muted-foreground">{item.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            {/* ══ TESTIMONIALS ══ */}
-            <section className="py-12 md:py-16">
-              <div className="max-w-4xl mx-auto px-4">
-                <div className="text-center mb-10">
-                  <div className="inline-flex items-center gap-2 bg-card/80 backdrop-blur border border-border text-foreground px-3 py-1.5 rounded-full text-sm font-medium mb-4">
-                    <Star className="h-4 w-4 text-foreground/60" />
-                    Trusted by Entrepreneurs
-                  </div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground">What Users Are Saying</h2>
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-5">
-                  {relevantTestimonials.map((testimonial, index) => (
-                    <motion.div
-                      key={index}
-                      initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: index * 0.08 }}
-                      whileHover={{ y: -4 }}
-                      className="rounded-2xl bg-card/80 backdrop-blur-xl border border-border shadow-lg p-5 transition-all"
-                    >
-                      <div className="flex items-center gap-3 mb-3">
-                        <Avatar className="h-9 w-9 border-2 border-foreground/15">
-                          <AvatarFallback className="bg-foreground/10 text-foreground font-semibold text-xs">
-                            {testimonial.name.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-semibold text-foreground text-sm">{testimonial.name}</span>
-                            <CheckCircle2 className="h-3.5 w-3.5 text-foreground/50" />
-                          </div>
-                          <p className="text-xs text-muted-foreground">{testimonial.role} • {testimonial.location}</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-0.5 mb-2">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="h-3 w-3 fill-foreground/40 text-foreground/40" />
-                        ))}
-                      </div>
-                      <div className="relative">
-                        <Quote className="absolute -top-0.5 -left-0.5 h-5 w-5 text-foreground/10" />
-                        <p className="text-muted-foreground text-sm leading-relaxed pl-2">{testimonial.text}</p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            {/* ══ FAQ ══ */}
-            <section className="py-12 md:py-16">
-              <div className="max-w-3xl mx-auto px-4">
-                <div className="text-center mb-10">
-                  <div className="inline-flex items-center gap-2 bg-card/80 backdrop-blur border border-border text-foreground px-3 py-1.5 rounded-full text-sm font-medium mb-4">
-                    <HelpCircle className="h-4 w-4" />
-                    {selectedRole === 'buyer' ? 'Buyer FAQs' : 'Seller FAQs'}
-                  </div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground">Frequently Asked Questions</h2>
-                </div>
-
-                <Accordion type="single" collapsible className="w-full space-y-3">
-                  {relevantFaqs.map((faq, index) => (
-                    <motion.div
-                      key={index}
-                      initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-                      <AccordionItem 
-                        value={`item-${index}`} 
-                        className="bg-card/80 backdrop-blur-xl border border-border rounded-xl px-5 data-[state=open]:border-foreground/20 data-[state=open]:bg-card transition-colors shadow-sm"
-                      >
-                        <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-4">
-                          {faq.question}
-                        </AccordionTrigger>
-                        <AccordionContent className="text-muted-foreground pb-4">
-                          {faq.answer}
-                        </AccordionContent>
-                      </AccordionItem>
-                    </motion.div>
-                  ))}
-                </Accordion>
-
-                <motion.div 
-                  className="text-center mt-8"
-                  initial={shouldReduceMotion ? {} : { opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                >
-                  <p className="text-sm text-muted-foreground mb-3">Still have questions?</p>
-                  <Button className="gap-2 rounded-xl bg-card/80 backdrop-blur border border-border text-foreground hover:bg-card shadow-sm" asChild>
-                    <Link to="/help">Visit Help Center <ArrowRight className="h-4 w-4" /></Link>
-                  </Button>
-                </motion.div>
-              </div>
-            </section>
-
-            {/* ══ FINAL CTA ══ */}
-            <section className="py-16 md:py-20">
-              <div className="max-w-2xl mx-auto px-4">
-                <motion.div
-                  className="rounded-3xl bg-foreground p-10 md:p-14 text-center text-background shadow-2xl relative overflow-hidden"
-                  initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                >
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                    {selectedRole === 'buyer' ? 'Find Your Next Asset' : 'Start Earning Today'}
-                  </h2>
-                  <p className="text-lg opacity-80 mb-8">
-                    {selectedRole === 'buyer' 
-                      ? 'Browse verified listings from trusted sellers across the country.'
-                      : 'Create your first listing in under 5 minutes. No monthly fees.'}
-                  </p>
-                  
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Button 
-                      size="lg" 
-                      className="gap-2 px-8 h-12 text-base bg-background text-foreground hover:bg-background/90 rounded-xl shadow-xl"
-                      asChild
-                    >
-                      <Link to={selectedRole === 'buyer' ? '/' : '/list'}>
-                        {selectedRole === 'buyer' ? 'Browse Listings' : 'Create Free Listing'}
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button 
-                      size="lg" 
-                      variant="outline"
-                      className="gap-2 px-8 h-12 text-base border-background/30 text-background hover:bg-background/10 rounded-xl"
-                      asChild
-                    >
-                      <Link to="/contact">Talk to Us</Link>
-                    </Button>
-                  </div>
-                  
-                  <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm opacity-80">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4" />
-                      {selectedRole === 'buyer' ? 'All sellers verified' : 'No credit card required'}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4" />
-                      Secure payments
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4" />
-                      {selectedRole === 'buyer' ? 'Escrow protection' : 'Setup in minutes'}
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-            </section>
           </div>
-        )}
+        </section>
 
-        {/* ══ PLACEHOLDER ══ */}
-        {selectedRole === 'none' && (
-          <section className="py-12 md:py-16">
-            <div className="max-w-2xl mx-auto text-center px-4">
-              <p className="text-muted-foreground bg-card/60 backdrop-blur-xl border border-border rounded-2xl py-8 px-6 shadow-sm">
-                Select an option above to see how Vendibook works for you.
-              </p>
+        {/* INTRO COPY */}
+        <AnimatePresence mode="wait">
+          <motion.section
+            key={role}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25 }}
+            className="py-10 md:py-14"
+          >
+            <div className="container max-w-3xl mx-auto px-4 text-center">
+              <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-3">{config.label}, the Vendibook way</h2>
+              <p className="text-base md:text-lg text-muted-foreground leading-relaxed">{config.blurb}</p>
             </div>
-          </section>
-        )}
+          </motion.section>
+        </AnimatePresence>
+
+        {/* SCROLL WALKTHROUGH */}
+        <ScrollWalkthrough
+          key={role + '-walk'}
+          steps={config.steps}
+          tone={role === 'host' ? 'host' : role === 'sell' ? 'seller' : 'neutral'}
+        />
+
+        {/* VALUE PILLARS */}
+        <ValuePillars
+          pillars={config.pillars}
+          tone={role === 'host' ? 'host' : role === 'sell' ? 'seller' : 'neutral'}
+        />
+
+        {/* SOCIAL PROOF STRIP */}
+        <section className="py-10 border-y border-border bg-card/40">
+          <div className="container max-w-5xl mx-auto px-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+              {[
+                { v: '12k+', l: 'Verified users' },
+                { v: '$4.2M', l: 'Transacted' },
+                { v: '47 states', l: 'Active inventory' },
+                { v: '4.9★', l: 'Average rating' },
+              ].map((s) => (
+                <div key={s.l}>
+                  <div className="text-2xl md:text-3xl font-bold text-foreground">{s.v}</div>
+                  <div className="text-xs md:text-sm text-muted-foreground mt-1">{s.l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="py-16 md:py-20">
+          <div className="container max-w-3xl mx-auto px-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8 text-center">Common questions</h2>
+            <Accordion type="single" collapsible className="w-full">
+              {config.faqs.map((faq, i) => (
+                <AccordionItem key={i} value={`item-${i}`} className="border-border">
+                  <AccordionTrigger className="text-left text-foreground hover:no-underline">
+                    {faq.q}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground leading-relaxed">
+                    {faq.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </section>
+
+        {/* FINAL CTA */}
+        <section className="py-16 md:py-20">
+          <div className="container max-w-4xl mx-auto px-4">
+            <div className="relative bg-foreground text-background rounded-3xl p-8 md:p-14 text-center overflow-hidden">
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/[0.05] to-transparent" style={{ animation: 'shimmer-sweep 5s ease-in-out infinite' }} />
+              </div>
+              <h2 className="relative text-3xl md:text-4xl font-bold mb-3">Ready to {role === 'host' ? 'host' : role === 'sell' ? 'sell' : role === 'buy' ? 'buy' : 'rent'}?</h2>
+              <p className="relative text-base md:text-lg opacity-80 mb-7 max-w-xl mx-auto">
+                Join thousands of operators using Vendibook to grow their food business.
+              </p>
+              <div className="relative flex flex-wrap gap-3 justify-center">
+                <Button size="lg" variant="secondary" className="rounded-full" asChild>
+                  <Link to={config.cta.href}>{config.cta.label} <ArrowRight className="ml-1.5 w-4 h-4" /></Link>
+                </Button>
+                <Button size="lg" variant="outline" className="rounded-full bg-transparent border-background/30 text-background hover:bg-background/10 hover:text-background" asChild>
+                  <Link to="/contact">Talk to us</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
-      <div className="relative z-10">
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 };
