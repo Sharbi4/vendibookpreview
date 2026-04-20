@@ -118,9 +118,17 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
 
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [linkCopied, setLinkCopied] = useState(false);
+  const [captionCopied, setCaptionCopied] = useState(false);
   const [emailLinkCopied, setEmailLinkCopied] = useState(false);
+  const [smsLinkCopied, setSmsLinkCopied] = useState(false);
+  const [captionVariant, setCaptionVariant] = useState(0);
+  const [shareWithImageBusy, setShareWithImageBusy] = useState(false);
 
-  const listingUrl = `${window.location.origin}/listing/${listing.id}`;
+  const baseUrl = `${window.location.origin}/listing/${listing.id}`;
+  // UTM-tagged links per channel for analytics attribution
+  const withUtm = useCallback((src: string, medium = 'social') =>
+    `${baseUrl}?utm_source=${src}&utm_medium=${medium}&utm_campaign=host_share`, [baseUrl]);
+  const listingUrl = baseUrl;
   const prettyUrl = listingUrl.replace(/^https?:\/\//, '');
   const categoryLabel = CATEGORY_LABELS[listing.category] || listing.category;
   const city = listing.address?.split(',')[0]?.trim() || '';
@@ -131,10 +139,31 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const priceLabel = listing.mode === 'sale'
     ? 'For sale'
     : listing.priceDaily ? '/ day' : '/ week';
+  const priceText = price ? `$${price.toLocaleString()}${listing.mode === 'sale' ? '' : ` ${priceLabel}`}` : '';
 
-  const shareText = listing.mode === 'sale'
-    ? `🚚 ${categoryLabel} for sale${city ? ` in ${city}` : ''}: ${listing.title}`
-    : `📅 Now booking on Vendibook${city ? ` in ${city}` : ''}: ${listing.title}`;
+  // Multiple AI-style caption variants — rotates with "Regenerate"
+  const captionVariants = [
+    listing.mode === 'sale'
+      ? `🚚 For sale${city ? ` in ${city}` : ''}: ${listing.title}${priceText ? ` — ${priceText}` : ''}.\n\nDM me or grab full details here 👇`
+      : `📅 Now booking on Vendibook${city ? ` in ${city}` : ''}: ${listing.title}${priceText ? ` — ${priceText}` : ''}.\n\nReserve your spot 👇`,
+    listing.mode === 'sale'
+      ? `Just listed: ${listing.title}${city ? ` (${city})` : ''}. ${priceText ? `Asking ${priceText}. ` : ''}Serious buyers only — link below.`
+      : `Open dates available 🗓️ ${listing.title}${city ? ` · ${city}` : ''}.${priceText ? ` From ${priceText}.` : ''} Book direct, no fees:`,
+    listing.mode === 'sale'
+      ? `🔥 ${categoryLabel} alert${city ? ` — ${city}` : ''}!\n${listing.title}${priceText ? `\n${priceText}` : ''}\nTap link to see full specs & photos.`
+      : `Looking for a ${categoryLabel.toLowerCase()}${city ? ` in ${city}` : ''}? I just opened bookings for ${listing.title}.${priceText ? ` ${priceText}.` : ''} Lock your date here:`,
+  ];
+  const currentCaption = captionVariants[captionVariant % captionVariants.length];
+  const shareText = currentCaption;
+
+  // Hashtags optimized for discovery
+  const hashtags = [
+    'vendibook',
+    listing.mode === 'sale' ? 'forsale' : 'booknow',
+    categoryLabel.toLowerCase().replace(/\s+/g, ''),
+    city ? city.toLowerCase().replace(/\s+/g, '') : '',
+    'smallbusiness',
+  ].filter(Boolean);
 
   useEffect(() => {
     trackShareKitViewed();
@@ -145,7 +174,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     }).then(setQrCodeDataUrl).catch(console.error);
   }, [listingUrl]);
 
-  const copy = async (text: string, setFlag: (b: boolean) => void, msg: string) => {
+  const copy = useCallback(async (text: string, setFlag: (b: boolean) => void, msg: string) => {
     try {
       await navigator.clipboard.writeText(text);
       setFlag(true);
@@ -155,15 +184,27 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     } catch {
       toast({ title: 'Failed to copy', variant: 'destructive' });
     }
-  };
+  }, [toast]);
 
   const handleCopyLink = () => copy(listingUrl, setLinkCopied, 'Link copied!');
+  const handleCopyCaption = () => {
+    const fullCaption = `${currentCaption}\n\n${listingUrl}\n\n${hashtags.map(h => `#${h}`).join(' ')}`;
+    copy(fullCaption, setCaptionCopied, 'Caption + link + hashtags copied!');
+  };
   const handleCopyEmailLink = () => copy(listingUrl, setEmailLinkCopied, 'Link copied for email!');
+  const handleCopySmsLink = () => {
+    const sms = `${listing.title} — book now: ${withUtm('sms', 'message')}`;
+    copy(sms, setSmsLinkCopied, 'SMS message copied!');
+  };
 
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({ title: listing.title, text: shareText, url: listingUrl });
+        await navigator.share({
+          title: listing.title,
+          text: currentCaption,
+          url: withUtm('native', 'share'),
+        });
         trackShareLinkCopied();
       } catch {
         // user cancelled
@@ -171,6 +212,85 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     } else {
       handleCopyLink();
     }
+  };
+
+  // Share with image attached via Web Share API Level 2 (mobile Safari/Chrome)
+  const handleShareWithImage = async () => {
+    setShareWithImageBusy(true);
+    try {
+      const blob = await generateShareImageBlob(listing, city);
+      const file = new File([blob], `vendibook-${listing.id}.png`, { type: 'image/png' });
+      const shareData: ShareData = {
+        title: listing.title,
+        text: currentCaption,
+        url: withUtm('native', 'share-image'),
+        files: [file],
+      };
+      // Feature-detect file share
+      if (navigator.canShare?.({ files: [file] }) && navigator.share) {
+        await navigator.share(shareData);
+        trackShareImageDownloaded();
+        toast({ title: 'Shared with image!' });
+      } else {
+        // Fallback: copy caption + download image so user can attach manually
+        await navigator.clipboard.writeText(`${currentCaption}\n\n${listingUrl}`);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `vendibook-${listing.id}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast({
+          title: 'Image saved + caption copied',
+          description: 'Open Instagram, paste the caption & attach the image.',
+        });
+      }
+    } catch (e) {
+      console.error(e);
+      toast({ title: 'Share cancelled', variant: 'destructive' });
+    } finally {
+      setShareWithImageBusy(false);
+    }
+  };
+
+  const openShare = (platform: string) => {
+    const url = withUtm(platform);
+    const u = encodeURIComponent(url);
+    const t = encodeURIComponent(currentCaption);
+    const tagsString = hashtags.map(h => `#${h}`).join(' ');
+    const tWithTags = encodeURIComponent(`${currentCaption}\n\n${tagsString}`);
+    const img = listing.coverImageUrl ? encodeURIComponent(listing.coverImageUrl) : '';
+
+    const urls: Record<string, string> = {
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${u}&quote=${t}`,
+      x: `https://twitter.com/intent/tweet?text=${tWithTags}&url=${u}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${u}`,
+      whatsapp: `https://wa.me/?text=${t}%20${u}`,
+      telegram: `https://t.me/share/url?url=${u}&text=${t}`,
+      reddit: `https://www.reddit.com/submit?url=${u}&title=${encodeURIComponent(listing.title)}`,
+      pinterest: `https://pinterest.com/pin/create/button/?url=${u}&description=${t}${img ? `&media=${img}` : ''}`,
+      email: `mailto:?subject=${encodeURIComponent(listing.title)}&body=${t}%0A%0A${u}`,
+      sms: `sms:?&body=${t}%20${u}`,
+    };
+
+    // Instagram has no web share — copy caption + open app
+    if (platform === 'instagram') {
+      navigator.clipboard.writeText(`${currentCaption}\n\n${listingUrl}\n\n${tagsString}`).catch(() => {});
+      toast({
+        title: 'Caption copied!',
+        description: 'Opening Instagram — paste it on your post or story.',
+      });
+      window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    window.open(urls[platform], '_blank', 'noopener,noreferrer');
+    trackShareLinkCopied();
+  };
+
+  const regenerateCaption = () => {
+    setCaptionVariant(v => v + 1);
+    toast({ title: 'New caption generated' });
   };
 
   const openShare = (platform: string) => {
