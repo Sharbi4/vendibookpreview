@@ -293,6 +293,88 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     toast({ title: 'New caption generated' });
   };
 
+// Generates a 1080x1080 branded PNG blob for Web Share API file attachment
+const generateShareImageBlob = (
+  listing: ShareKitListing,
+  city: string,
+): Promise<Blob> => new Promise((resolve, reject) => {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return reject(new Error('No canvas context'));
+  canvas.width = 1080;
+  canvas.height = 1080;
+
+  const draw = (coverImg?: HTMLImageElement) => {
+    // Background
+    if (coverImg) {
+      // Cover image with dark gradient overlay
+      ctx.drawImage(coverImg, 0, 0, 1080, 1080);
+      const grad = ctx.createLinearGradient(0, 540, 0, 1080);
+      grad.addColorStop(0, 'rgba(0,0,0,0.1)');
+      grad.addColorStop(1, 'rgba(0,0,0,0.92)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1080, 1080);
+    } else {
+      ctx.fillStyle = '#1A1A1A';
+      ctx.fillRect(0, 0, 1080, 1080);
+    }
+
+    // Top accent
+    ctx.fillStyle = '#FF5124';
+    ctx.fillRect(0, 0, 1080, 8);
+
+    // Badge pill (top-left)
+    ctx.fillStyle = '#FF5124';
+    const badgeText = listing.mode === 'sale' ? 'FOR SALE' : 'NOW BOOKING';
+    ctx.font = 'bold 26px system-ui, -apple-system, sans-serif';
+    const badgeWidth = ctx.measureText(badgeText).width + 48;
+    ctx.beginPath();
+    (ctx as any).roundRect?.(48, 60, badgeWidth, 56, 28);
+    if (!(ctx as any).roundRect) ctx.rect(48, 60, badgeWidth, 56);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(badgeText, 72, 88);
+
+    // Bottom title block
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 56px system-ui, -apple-system, sans-serif';
+    const titleLines = wrapText(ctx, listing.title, 980, 2);
+    titleLines.forEach((line, i) => ctx.fillText(line, 50, 820 + i * 64));
+
+    if (city) {
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.font = '32px system-ui, -apple-system, sans-serif';
+      ctx.fillText(`📍 ${city}`, 50, 820 + titleLines.length * 64 + 36);
+    }
+
+    // CTA bottom
+    ctx.fillStyle = '#FF5124';
+    ctx.fillRect(0, 1020, 1080, 60);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`vendibook.com/listing/${listing.id.slice(0, 8)}`, 540, 1056);
+
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error('Blob conversion failed'));
+    }, 'image/png');
+  };
+
+  if (listing.coverImageUrl) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => draw(img);
+    img.onerror = () => draw(); // fallback to dark background
+    img.src = listing.coverImageUrl;
+  } else {
+    draw();
+  }
+});
+
 
 
   const handleDownloadNowBooking = () => {
