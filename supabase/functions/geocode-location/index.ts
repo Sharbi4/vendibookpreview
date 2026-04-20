@@ -41,57 +41,137 @@ const parseLatLngQuery = (query: string): { lat: number; lng: number } | null =>
   return null;
 };
 
+const buildJsonResponse = (payload: unknown, status = 200) =>
+  new Response(JSON.stringify(payload), {
+    status,
+    headers: { "Content-Type": "application/json", ...corsHeaders },
+  });
+
+const lookupZipWithZippopotam = async (zip: string): Promise<GeocodeResult[]> => {
+  const response = await fetch(`https://api.zippopotam.us/us/${zip}`);
+
+  if (response.status === 404) {
+    return [];
+  }
+
+  if (!response.ok) {
+    throw new Error(`ZIP lookup failed with status ${response.status}`);
+  }
+
+  const payload = await response.json();
+  const place = payload?.places?.[0];
+  if (!place) {
+    return [];
+  }
+
+  const lat = Number(place.latitude);
+  const lng = Number(place.longitude);
+  const city = place["place name"] || "";
+  const state = place["state abbreviation"] || place.state || "";
+  const placeName = `${city}, ${state} ${zip}`.trim();
+
+  return [{
+    id: `zip:${zip}`,
+    placeName,
+    center: [lng, lat],
+    text: city || zip,
+    context: state,
+    city,
+    state,
+  }];
+};
+
 const handler = async (req: Request): Promise<Response> => {
   console.log("geocode-location function called");
 
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
-    
-    if (!GOOGLE_MAPS_API_KEY) {
-      console.error("GOOGLE_MAPS_API_KEY not configured");
-      return new Response(
-        JSON.stringify({ error: "Google Maps API key not configured" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
     const { query, limit = 5 }: GeocodeRequest = await req.json();
 
     if (!query || query.trim().length < 2) {
-      return new Response(
-        JSON.stringify({ results: [] }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      return buildJsonResponse({ results: [] });
     }
 
-    console.log("Geocoding query:", query);
+    const trimmedQuery = query.trim();
+    const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
+    const zipMatch = trimmedQuery.match(/^(\d{5})$/);
 
-    // If the query looks like coordinates, use Reverse Geocoding.
-    const latLng = parseLatLngQuery(query);
+    console.log("Geocoding query:", trimmedQuery);
+
+    if (zipMatch) {
+      const zip = zipMatch[1];
+
+      if (GOOGLE_MAPS_API_KEY) {
+        try {
+          const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${zip},+USA&key=${GOOGLE_MAPS_API_KEY}`;
+          const geoRes = await fetch(geoUrl);
+
+          if (geoRes.ok) {
+            const geoData = await geoRes.json();
+            if (geoData.status === "OK" && geoData.results?.length) {
+              const r = geoData.results[0];
+              const comps = r.address_components || [];
+              const cityComp = comps.find((c: any) => c.types.includes("locality") || c.types.includes("sublocality") || c.types.includes("postal_town"));
+              const stateComp = comps.find((c: any) => c.types.includes("administrative_area_level_1"));
+              const loc = r.geometry?.location;
+
+              return buildJsonResponse({
+                results: [{
+                  id: `zip:${zip}`,
+                  placeName: r.formatted_address || `${zip}, USA`,
+                  center: [loc?.lng || 0, loc?.lat || 0],
+                  text: cityComp?.long_name || zip,
+                  context: stateComp?.short_name || "",
+                  city: cityComp?.long_name || "",
+                  state: stateComp?.short_name || "",
+                } satisfies GeocodeResult],
+              });
+            }
+
+            if (geoData.status !== "ZERO_RESULTS") {
+              console.warn("Google ZIP lookup unavailable, using fallback:", geoData.status, geoData.error_message);
+            }
+          } else {
+            console.warn("Google ZIP lookup HTTP error, using fallback:", geoRes.status);
+          }
+        } catch (error) {
+          console.warn("Google ZIP lookup threw, using fallback:", error);
+        }
+      } else {
+        console.warn("GOOGLE_MAPS_API_KEY missing, using ZIP fallback service");
+      }
+
+      try {
+        const fallbackResults = await lookupZipWithZippopotam(zip);
+        return buildJsonResponse({ results: fallbackResults });
+      } catch (error) {
+        console.error("ZIP fallback lookup failed:", error);
+        return buildJsonResponse({ error: "ZIP lookup failed" }, 500);
+      }
+    }
+
+    if (!GOOGLE_MAPS_API_KEY) {
+      console.error("GOOGLE_MAPS_API_KEY not configured for non-ZIP geocoding");
+      return buildJsonResponse({ error: "Google Maps API key not configured" }, 500);
+    }
+
+    const latLng = parseLatLngQuery(trimmedQuery);
     if (latLng) {
       const reverseUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.lat},${latLng.lng}&key=${GOOGLE_MAPS_API_KEY}`;
       const reverseRes = await fetch(reverseUrl);
 
       if (!reverseRes.ok) {
         console.error("Google Reverse Geocode API error:", reverseRes.status, await reverseRes.text());
-        return new Response(
-          JSON.stringify({ error: "Geocoding service error" }),
-          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
+        return buildJsonResponse({ error: "Geocoding service error" }, 500);
       }
 
       const reverseData = await reverseRes.json();
       if (reverseData.status !== "OK" && reverseData.status !== "ZERO_RESULTS") {
         console.error("Google Reverse Geocode API status error:", reverseData.status, reverseData.error_message);
-        return new Response(
-          JSON.stringify({ error: reverseData.error_message || "Geocoding failed" }),
-          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
+        return buildJsonResponse({ error: reverseData.error_message || "Geocoding failed" }, 500);
       }
 
       const first = reverseData.results?.[0];
@@ -107,83 +187,30 @@ const handler = async (req: Request): Promise<Response> => {
           }]
         : [];
 
-      console.log(`Found ${results.length} results for "${query}" (reverse geocode)`);
-
-      return new Response(
-        JSON.stringify({ results }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      console.log(`Found ${results.length} results for "${trimmedQuery}" (reverse geocode)`);
+      return buildJsonResponse({ results });
     }
 
-    // If query looks like a US ZIP code (5 digits), use Geocoding API directly
-    const zipMatch = query.trim().match(/^(\d{5})$/);
-    if (zipMatch) {
-      const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${zipMatch[1]},+USA&key=${GOOGLE_MAPS_API_KEY}`;
-      const geoRes = await fetch(geoUrl);
-      if (!geoRes.ok) {
-        return new Response(
-          JSON.stringify({ error: "Geocoding service error" }),
-          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
-      }
-      const geoData = await geoRes.json();
-      if (geoData.status !== "OK" || !geoData.results?.length) {
-        return new Response(
-          JSON.stringify({ results: [] }),
-          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
-      }
-      const r = geoData.results[0];
-      const comps = r.address_components || [];
-      const cityComp = comps.find((c: any) => c.types.includes('locality') || c.types.includes('sublocality'));
-      const stateComp = comps.find((c: any) => c.types.includes('administrative_area_level_1'));
-      const loc = r.geometry?.location;
-      const results: GeocodeResult[] = [{
-        id: `zip:${zipMatch[1]}`,
-        placeName: r.formatted_address || `${zipMatch[1]}, USA`,
-        center: [loc?.lng || 0, loc?.lat || 0],
-        text: cityComp?.long_name || zipMatch[1],
-        context: stateComp?.short_name || '',
-        city: cityComp?.long_name || '',
-        state: stateComp?.short_name || '',
-      }];
-      return new Response(
-        JSON.stringify({ results }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    // Call Google Places Autocomplete API
-    const encodedQuery = encodeURIComponent(query.trim());
+    const encodedQuery = encodeURIComponent(trimmedQuery);
     const googleUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodedQuery}&key=${GOOGLE_MAPS_API_KEY}&components=country:us&types=geocode`;
 
     const response = await fetch(googleUrl);
-    
     if (!response.ok) {
       console.error("Google API error:", response.status, await response.text());
-      return new Response(
-        JSON.stringify({ error: "Geocoding service error" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      return buildJsonResponse({ error: "Geocoding service error" }, 500);
     }
 
     const data = await response.json();
-    
     if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
       console.error("Google API status error:", data.status, data.error_message);
-      return new Response(
-        JSON.stringify({ error: data.error_message || "Geocoding failed" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      return buildJsonResponse({ error: data.error_message || "Geocoding failed" }, 500);
     }
 
-    // Get details for each prediction to get coordinates
     const predictions = data.predictions?.slice(0, limit) || [];
     const results: GeocodeResult[] = [];
 
     for (const prediction of predictions) {
       try {
-        // Get place details to get coordinates
         const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${prediction.place_id}&fields=geometry,formatted_address&key=${GOOGLE_MAPS_API_KEY}`;
         const detailsResponse = await fetch(detailsUrl);
         const detailsData = await detailsResponse.json();
@@ -194,7 +221,7 @@ const handler = async (req: Request): Promise<Response> => {
             results.push({
               id: prediction.place_id,
               placeName: detailsData.result.formatted_address || prediction.description,
-              center: [location.lng, location.lat], // [lng, lat] to match expected format
+              center: [location.lng, location.lat],
               text: prediction.structured_formatting?.main_text || prediction.description.split(',')[0],
               context: prediction.structured_formatting?.secondary_text || prediction.description.split(',').slice(1).join(',').trim(),
             });
@@ -205,18 +232,11 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    console.log(`Found ${results.length} results for "${query}"`);
-
-    return new Response(
-      JSON.stringify({ results }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    console.log(`Found ${results.length} results for "${trimmedQuery}"`);
+    return buildJsonResponse({ results });
   } catch (error: any) {
     console.error("Error in geocode-location function:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return buildJsonResponse({ error: error.message }, 500);
   }
 };
 

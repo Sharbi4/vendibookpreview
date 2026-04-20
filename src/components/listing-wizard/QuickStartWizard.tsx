@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Truck, Store, Building2, MapPin, Tag, ShoppingBag, MapPinned, Loader2, Check, CheckCircle2 } from 'lucide-react';
+import { Truck, Store, Building2, MapPin, Tag, ShoppingBag, MapPinned, Loader2, Check, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -56,25 +56,37 @@ export const QuickStartWizard: React.FC = () => {
   const [isLookingUpZip, setIsLookingUpZip] = useState(false);
   const [zipError, setZipError] = useState<string | null>(null);
   const [zipConfirmed, setZipConfirmed] = useState(false);
+  const [createdListingId, setCreatedListingId] = useState<string | null>(null);
 
   const lookupZipCode = useCallback(async (zip: string) => {
-    if (zip.length < 5) return;
+    if (zip.length !== 5) return;
+
     setIsLookingUpZip(true);
     setZipError(null);
     setZipConfirmed(false);
+
     try {
-      // Use Google Geocoding API directly via edge function for ZIP lookup
       const { data: geoData, error } = await supabase.functions.invoke('geocode-location', {
-        body: { query: `${zip}`, limit: 1 },
+        body: { query: zip, limit: 1 },
       });
+
       if (error) throw error;
-      if (!geoData?.results?.length) { setZipError('ZIP code not found'); return; }
-      const result = geoData.results[0];
-      // Use city/state from the response (returned by ZIP geocoding)
-      const city = result.city || '';
-      const state = result.state || '';
-      if (!city || !state) { setZipError('Could not determine city/state from this ZIP code'); return; }
-      const [lng, lat] = result.center;
+
+      const result = geoData?.results?.[0];
+      if (!result) {
+        setZipError("We couldn't find that ZIP code. Double-check the digits or try a nearby ZIP.");
+        return;
+      }
+
+      const city = (result.city || result.text || '').trim();
+      const state = (result.state || result.context || '').trim();
+      const [lng, lat] = Array.isArray(result.center) ? result.center : [];
+
+      if (!city || !state || typeof lat !== 'number' || typeof lng !== 'number') {
+        setZipError("We found the ZIP, but couldn't confirm the city/state. Try a nearby ZIP code.");
+        return;
+      }
+
       setData(prev => ({
         ...prev,
         city,
@@ -84,8 +96,9 @@ export const QuickStartWizard: React.FC = () => {
         location: `${city}, ${state}`,
       }));
       setZipConfirmed(true);
-    } catch {
-      setZipError('Invalid ZIP code. Please try again.');
+    } catch (error) {
+      console.error('[QuickStartWizard] ZIP lookup failed:', error);
+      setZipError("We're having trouble looking up that ZIP right now. Please try again.");
     } finally {
       setIsLookingUpZip(false);
     }
@@ -93,21 +106,27 @@ export const QuickStartWizard: React.FC = () => {
 
   const handleZipChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\D/g, '').slice(0, 5);
-    setData(prev => ({ ...prev, zipCode: val }));
+
+    setData(prev => ({
+      ...prev,
+      zipCode: val,
+      ...(val.length < 5
+        ? { city: '', state: '', latitude: null, longitude: null, location: '' }
+        : {}),
+    }));
+
     if (val.length < 5) {
       setZipConfirmed(false);
-      setData(prev => ({ ...prev, city: '', state: '', latitude: null, longitude: null }));
       setZipError(null);
     }
   }, []);
 
   useEffect(() => {
     if (data.zipCode.length === 5) {
-      const timer = setTimeout(() => lookupZipCode(data.zipCode), 300);
-      return () => clearTimeout(timer);
+      const timer = window.setTimeout(() => lookupZipCode(data.zipCode), 300);
+      return () => window.clearTimeout(timer);
     }
   }, [data.zipCode, lookupZipCode]);
-  const [createdListingId, setCreatedListingId] = useState<string | null>(null);
 
   const handleCategorySelect = (category: ListingCategory) => {
     setData(prev => ({ ...prev, category }));
@@ -406,66 +425,97 @@ export const QuickStartWizard: React.FC = () => {
       {step === 'location' && (
         <div className="space-y-6">
           <div className="relative overflow-hidden rounded-2xl border-0 shadow-xl bg-card/80 backdrop-blur-sm">
-            {/* Header */}
             <div className="relative bg-muted/30 border-b border-border px-4 sm:px-6 py-4 sm:py-5">
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Where is it located?</h1>
-              <p className="text-sm sm:text-base text-muted-foreground">Enter your ZIP code and we'll confirm your city and state.</p>
-            </div>
-            {/* Content */}
-            <div className="relative bg-card p-4 sm:p-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="zipCode" className="font-medium text-sm sm:text-base">ZIP Code *</Label>
-                  <div className="relative max-w-[200px]">
-                    <Input
-                      id="zipCode"
-                      type="text"
-                      maxLength={5}
-                      value={data.zipCode}
-                      onChange={handleZipChange}
-                      placeholder="Enter ZIP"
-                      className={cn(
-                        "text-xl font-semibold tracking-wider text-center h-12",
-                        zipConfirmed && "border-emerald-500 focus-visible:ring-emerald-500"
-                      )}
-                    />
-                    {isLookingUpZip && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Where is it located?</h1>
+                  <p className="text-sm sm:text-base text-muted-foreground">Start with your ZIP code and we’ll instantly place the listing in the right market.</p>
                 </div>
+                <div className="hidden sm:flex items-center gap-2 rounded-full border border-border bg-background/70 px-3 py-1.5 text-xs text-muted-foreground">
+                  <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  Takes about 2 seconds
+                </div>
+              </div>
+            </div>
 
-                {/* Error */}
-                {zipError && (
-                  <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-                    <p className="text-sm text-destructive">{zipError}</p>
+            <div className="relative bg-card p-4 sm:p-6">
+              <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-start">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="zipCode" className="font-medium text-sm sm:text-base">ZIP Code *</Label>
+                    <div className="relative max-w-[220px]">
+                      <Input
+                        id="zipCode"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        autoComplete="postal-code"
+                        maxLength={5}
+                        value={data.zipCode}
+                        onChange={handleZipChange}
+                        placeholder="e.g. 85714"
+                        className={cn(
+                          "h-12 text-xl font-semibold tracking-[0.3em] text-center",
+                          zipConfirmed && "border-emerald-500 focus-visible:ring-emerald-500",
+                          zipError && "border-destructive focus-visible:ring-destructive"
+                        )}
+                      />
+                      {isLookingUpZip && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                        </div>
+                      )}
+                      {zipConfirmed && !isLookingUpZip && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Use the 5-digit ZIP where the truck, trailer, kitchen, or space is based.</p>
                   </div>
-                )}
 
-                {/* City/State Confirmation Overlay */}
-                {zipConfirmed && data.city && data.state && (
-                  <div className="p-4 rounded-xl bg-muted/50 border border-foreground animate-in fade-in-50 slide-in-from-top-2 duration-300">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-foreground mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
-                          Based on your ZIP code, your listing is in:
-                        </p>
-                        <p className="text-lg font-bold text-foreground mt-1">
-                          {data.city}, {data.state}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Your full address will be collected later and kept private until a booking is confirmed.
-                        </p>
+                  {zipError && (
+                    <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-3">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                        <div className="space-y-2">
+                          <p className="text-sm text-destructive">{zipError}</p>
+                          {data.zipCode.length === 5 && (
+                            <Button type="button" variant="link" className="h-auto p-0 text-destructive" onClick={() => lookupZipCode(data.zipCode)}>
+                              Try again
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+
+                  {zipConfirmed && data.city && data.state && (
+                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 animate-in fade-in-50 slide-in-from-top-2 duration-300">
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Your listing will appear in</p>
+                          <p className="mt-1 text-lg font-bold text-foreground">{data.city}, {data.state}</p>
+                          <p className="mt-2 text-xs text-muted-foreground">Your exact street address stays private and gets added later in the full setup.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-2xl border border-border bg-muted/30 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">What happens next</p>
+                  <ol className="mt-3 space-y-3 text-sm text-muted-foreground">
+                    <li><span className="font-medium text-foreground">1.</span> We place your listing in the right city.</li>
+                    <li><span className="font-medium text-foreground">2.</span> You finish pricing, photos, and details.</li>
+                    <li><span className="font-medium text-foreground">3.</span> Your exact address stays private until booking is confirmed.</li>
+                  </ol>
+                </div>
               </div>
             </div>
           </div>
+
           <div className="flex flex-col gap-3 pt-2">
             <div className="flex items-center gap-2 sm:gap-3">
               <Button variant="ghost" onClick={() => setStep('mode')} size="sm" className="text-xs sm:text-sm">
