@@ -630,25 +630,29 @@ const Search = () => {
             </div>
 
             {/* Row 2: Results count + Sort + View toggle + Save Search */}
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <p className="text-sm text-muted-foreground truncate">
-                {isLoadingListings ? (
-                  'Loading...'
-                ) : (
-                  <>
-                    <span className="font-semibold text-foreground">{totalCount}</span>
-                    {' '}result{totalCount !== 1 ? 's' : ''}
-                    {searchQuery && (
-                      <span className="hidden sm:inline"> for "<span className="text-foreground">{searchQuery}</span>"</span>
-                    )}
-                    {totalPages > 1 && (
-                      <span className="hidden sm:inline text-muted-foreground"> • Page {page} of {totalPages}</span>
-                    )}
-                  </>
-                )}
-              </p>
-              <div className="flex items-center gap-2 shrink-0">
-                {/* Save Search Button */}
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <p className="text-sm text-muted-foreground truncate">
+                  {isLoadingListings ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                      Searching marketplace…
+                    </span>
+                  ) : (
+                    <>
+                      <span className="font-bold text-foreground tabular-nums">{totalCount.toLocaleString()}</span>
+                      {' '}listing{totalCount !== 1 ? 's' : ''}
+                      {searchQuery && (
+                        <span className="hidden sm:inline"> matching <span className="font-medium text-foreground">"{searchQuery}"</span></span>
+                      )}
+                      {totalPages > 1 && (
+                        <span className="hidden md:inline text-muted-foreground/70"> · pg {page}/{totalPages}</span>
+                      )}
+                    </>
+                  )}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <SaveSearchButton
                   category={category !== 'all' ? category : undefined}
                   mode={mode !== 'all' ? mode : undefined}
@@ -659,31 +663,38 @@ const Search = () => {
                   instantBookOnly={instantBookOnly}
                   amenities={selectedAmenities}
                 />
-                
-                {/* View Toggle - Enhanced */}
-                <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'map' | 'split')} className="bg-card border border-border rounded-xl p-0.5 shadow-sm">
-                  <ToggleGroupItem value="split" aria-label="Split view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+
+                <ToggleGroup
+                  type="single"
+                  value={viewMode}
+                  onValueChange={(value) => value && setViewMode(value as 'grid' | 'map' | 'split')}
+                  className="bg-card/80 backdrop-blur-sm border border-border/60 rounded-xl p-0.5 shadow-sm"
+                >
+                  <ToggleGroupItem value="split" aria-label="Split view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
                     <Columns className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="grid" aria-label="Grid view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                  <ToggleGroupItem value="grid" aria-label="Grid view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
                     <LayoutGrid className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="map" aria-label="Map view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                  <ToggleGroupItem value="map" aria-label="Map view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
                     <Map className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
                 </ToggleGroup>
 
-                <select
-                  value={sortBy}
-                  onChange={(e) => handleSortChange(e.target.value)}
-                  className="text-xs border border-border rounded-xl px-3 py-2 bg-card shadow-sm hover:bg-muted/50 transition-colors cursor-pointer"
-                >
-                  <option value="newest">Newest</option>
-                  {searchQuery.trim() && <option value="relevance">Relevance</option>}
-                  <option value="price_low">Price: Low</option>
-                  <option value="price_high">Price: High</option>
-                  {locationCoords && <option value="distance">Distance</option>}
-                </select>
+                <div className="relative">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => handleSortChange(e.target.value)}
+                    className="appearance-none text-xs font-medium border border-border/60 rounded-xl pl-3 pr-7 py-2 h-9 bg-card/80 backdrop-blur-sm shadow-sm hover:bg-muted/50 hover:border-border transition-all cursor-pointer focus:outline-none focus:border-primary/60"
+                  >
+                    <option value="newest">Newest</option>
+                    {searchQuery.trim() && <option value="relevance">Relevance</option>}
+                    <option value="price_low">Price: Low → High</option>
+                    <option value="price_high">Price: High → Low</option>
+                    {locationCoords && <option value="distance">Distance</option>}
+                  </select>
+                  <svg className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </div>
               </div>
             </div>
           </div>
