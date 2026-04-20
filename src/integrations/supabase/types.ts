@@ -2296,7 +2296,7 @@ export type Database = {
       }
       get_host_avg_response_time: {
         Args: { host_user_id: string }
-        Returns: unknown
+        Returns: string
       }
       get_host_verification_status: {
         Args: { host_ids: string[] }
