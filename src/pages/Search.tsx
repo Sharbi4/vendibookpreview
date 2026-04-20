@@ -496,41 +496,85 @@ const Search = () => {
       <main className="flex-1">
       {/* Spacer - logo/tagline removed */}
 
-        {/* Search Header - Enhanced styling matching Contact page */}
-        <div className="relative border-b border-border/40" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%)' }}>
-          {/* Subtle bottom gradient glow line */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[2px] bg-gradient-to-r from-transparent via-primary/20 to-transparent blur-sm" />
-          <div className="container py-4">
-            {/* Row 1: Search + Filters */}
-            <div className="flex gap-3">
-              <div className="relative flex-1">
-                <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Search trucks, trailers, kitchens..."
-                  value={searchQuery}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-10 h-11 text-sm rounded-xl border-border/60 focus:border-primary shadow-sm"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => handleSearch('')}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
+        {/* Search Header — Premium hero with layered gradients */}
+        <div className="relative border-b border-border/40 overflow-hidden">
+          {/* Layered ambient background */}
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.04] via-background to-background" />
+          <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+          <div className="absolute -top-20 right-0 w-80 h-80 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+          {/* Grid texture */}
+          <div
+            className="absolute inset-0 opacity-[0.015] pointer-events-none"
+            style={{
+              backgroundImage: 'linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)',
+              backgroundSize: '32px 32px',
+            }}
+          />
+          {/* Bottom glow line */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[2px] bg-gradient-to-r from-transparent via-primary/25 to-transparent blur-sm" />
+
+          <div className="container relative py-5 sm:py-6">
+            {/* Title row — micro headline + live result chip */}
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-foreground flex items-center justify-center shadow-sm">
+                  <SearchIcon className="h-4 w-4 text-background" />
+                </div>
+                <div>
+                  <h1 className="text-base sm:text-lg font-semibold text-foreground leading-tight">
+                    {category !== 'all' ? CATEGORY_LABELS[category] : 'Browse the marketplace'}
+                  </h1>
+                  <p className="text-[11px] sm:text-xs text-muted-foreground leading-tight">
+                    {locationText ? `Near ${locationText}` : 'Trucks, trailers, kitchens & vendor spaces nationwide'}
+                  </p>
+                </div>
               </div>
-              
-              {/* Filter Button - Enhanced */}
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border/60 bg-card/80 backdrop-blur-sm">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                </span>
+                <span className="text-[11px] font-medium text-muted-foreground">
+                  <span className="text-foreground font-semibold">{totalCount}</span> live
+                </span>
+              </div>
+            </div>
+
+            {/* Row 1: Premium search input + filters */}
+            <div className="flex gap-2 sm:gap-3">
+              <div className="relative flex-1 group">
+                {/* Glow halo on focus */}
+                <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 opacity-0 group-focus-within:opacity-100 blur-sm transition-opacity pointer-events-none" />
+                <div className="relative flex items-center bg-card/90 backdrop-blur-md border border-border/60 rounded-2xl shadow-sm group-focus-within:border-primary/60 group-focus-within:shadow-md transition-all">
+                  <SearchIcon className="absolute left-4 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <Input
+                    type="text"
+                    placeholder="Search trucks, trailers, kitchens, locations…"
+                    value={searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="pl-11 pr-10 h-12 text-sm rounded-2xl border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => handleSearch('')}
+                      className="absolute right-3.5 h-6 w-6 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="Clear search"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Filter Button */}
               <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="dark-shine" size="default" className="rounded-xl relative shrink-0 h-11 px-5">
+                  <Button variant="dark-shine" size="default" className="rounded-2xl relative shrink-0 h-12 px-4 sm:px-5 shadow-sm">
                     <SlidersHorizontal className="h-4 w-4 sm:mr-2" />
                     <span className="hidden sm:inline">Filters</span>
                     {activeFiltersCount > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 h-5 w-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center font-medium shadow-lg">
+                      <span className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center font-bold shadow-lg ring-2 ring-background">
                         {activeFiltersCount}
                       </span>
                     )}
@@ -586,25 +630,29 @@ const Search = () => {
             </div>
 
             {/* Row 2: Results count + Sort + View toggle + Save Search */}
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <p className="text-sm text-muted-foreground truncate">
-                {isLoadingListings ? (
-                  'Loading...'
-                ) : (
-                  <>
-                    <span className="font-semibold text-foreground">{totalCount}</span>
-                    {' '}result{totalCount !== 1 ? 's' : ''}
-                    {searchQuery && (
-                      <span className="hidden sm:inline"> for "<span className="text-foreground">{searchQuery}</span>"</span>
-                    )}
-                    {totalPages > 1 && (
-                      <span className="hidden sm:inline text-muted-foreground"> • Page {page} of {totalPages}</span>
-                    )}
-                  </>
-                )}
-              </p>
-              <div className="flex items-center gap-2 shrink-0">
-                {/* Save Search Button */}
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <p className="text-sm text-muted-foreground truncate">
+                  {isLoadingListings ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                      Searching marketplace…
+                    </span>
+                  ) : (
+                    <>
+                      <span className="font-bold text-foreground tabular-nums">{totalCount.toLocaleString()}</span>
+                      {' '}listing{totalCount !== 1 ? 's' : ''}
+                      {searchQuery && (
+                        <span className="hidden sm:inline"> matching <span className="font-medium text-foreground">"{searchQuery}"</span></span>
+                      )}
+                      {totalPages > 1 && (
+                        <span className="hidden md:inline text-muted-foreground/70"> · pg {page}/{totalPages}</span>
+                      )}
+                    </>
+                  )}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <SaveSearchButton
                   category={category !== 'all' ? category : undefined}
                   mode={mode !== 'all' ? mode : undefined}
@@ -615,31 +663,38 @@ const Search = () => {
                   instantBookOnly={instantBookOnly}
                   amenities={selectedAmenities}
                 />
-                
-                {/* View Toggle - Enhanced */}
-                <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'map' | 'split')} className="bg-card border border-border rounded-xl p-0.5 shadow-sm">
-                  <ToggleGroupItem value="split" aria-label="Split view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+
+                <ToggleGroup
+                  type="single"
+                  value={viewMode}
+                  onValueChange={(value) => value && setViewMode(value as 'grid' | 'map' | 'split')}
+                  className="bg-card/80 backdrop-blur-sm border border-border/60 rounded-xl p-0.5 shadow-sm"
+                >
+                  <ToggleGroupItem value="split" aria-label="Split view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
                     <Columns className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="grid" aria-label="Grid view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                  <ToggleGroupItem value="grid" aria-label="Grid view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
                     <LayoutGrid className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="map" aria-label="Map view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                  <ToggleGroupItem value="map" aria-label="Map view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
                     <Map className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
                 </ToggleGroup>
 
-                <select
-                  value={sortBy}
-                  onChange={(e) => handleSortChange(e.target.value)}
-                  className="text-xs border border-border rounded-xl px-3 py-2 bg-card shadow-sm hover:bg-muted/50 transition-colors cursor-pointer"
-                >
-                  <option value="newest">Newest</option>
-                  {searchQuery.trim() && <option value="relevance">Relevance</option>}
-                  <option value="price_low">Price: Low</option>
-                  <option value="price_high">Price: High</option>
-                  {locationCoords && <option value="distance">Distance</option>}
-                </select>
+                <div className="relative">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => handleSortChange(e.target.value)}
+                    className="appearance-none text-xs font-medium border border-border/60 rounded-xl pl-3 pr-7 py-2 h-9 bg-card/80 backdrop-blur-sm shadow-sm hover:bg-muted/50 hover:border-border transition-all cursor-pointer focus:outline-none focus:border-primary/60"
+                  >
+                    <option value="newest">Newest</option>
+                    {searchQuery.trim() && <option value="relevance">Relevance</option>}
+                    <option value="price_low">Price: Low → High</option>
+                    <option value="price_high">Price: High → Low</option>
+                    {locationCoords && <option value="distance">Distance</option>}
+                  </select>
+                  <svg className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </div>
               </div>
             </div>
           </div>
