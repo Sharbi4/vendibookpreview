@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { CompactStatCard } from './CompactStatCard';
 import { CompactInsights } from './CompactInsights';
 import { NextBestAction } from './NextBestAction';
+import { OnboardingChecklist } from './OnboardingChecklist';
 import StripeNotificationBubble from './StripeNotificationBubble';
 import HostListingCard from './HostListingCard';
 import BookingRequestsSection from './BookingRequestsSection';
@@ -198,6 +199,17 @@ const HostDashboard = () => {
           pendingRequests={bookingStats.pending}
           pendingOffers={pendingOffers.length}
           firstName={profile?.full_name?.split(' ')[0]}
+        />
+      )}
+
+      {/* Onboarding Checklist - Activation progress */}
+      {activeTab === 'overview' && !stripeLoading && (
+        <OnboardingChecklist
+          isStripeConnected={isConnected}
+          isIdentityVerified={isVerified}
+          hasPublishedListing={stats.published > 0}
+          hasFirstBooking={(bookingStats.total ?? 0) > 0 || (revenueAnalytics?.totalRevenue ?? 0) > 0}
+          onConnectStripe={handleConnectStripe}
         />
       )}
       {/* Key Metrics Row - Airbnb Minimal Style */}
