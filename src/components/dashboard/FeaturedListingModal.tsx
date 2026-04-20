@@ -103,8 +103,8 @@ export const FeaturedListingModal = ({
 
         <div className="border-t pt-4">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-muted-foreground">One-time fee</span>
-            <span className="text-2xl font-bold text-foreground">$25</span>
+            <span className="text-muted-foreground">One-time fee · 30 days</span>
+            <span className="text-2xl font-bold text-foreground">$30</span>
           </div>
           <Button
             variant="dark-shine"
