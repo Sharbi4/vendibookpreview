@@ -1,4 +1,4 @@
-// Day-7 inactive host re-engagement email sender
+// Day-7 inactive host re-engagement email sender.
 // Triggered by cron daily; finds hosts whose listings have been inactive for 7+ days
 // and sends a personalized re-engagement email with optimization tips.
 
