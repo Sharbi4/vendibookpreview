@@ -1,16 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { MapPin, Truck, Package, Info, Building2, Phone, CheckCircle2, Loader2, Navigation } from 'lucide-react';
+import { MapPin, Truck, Package, Info, Building2, Phone, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { ListingFormData, FulfillmentType } from '@/types/listing';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
-import { LocationMapPreview } from './LocationMapPreview';
 import { GpsLocationButton } from './GpsLocationButton';
-import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
-import { useJsApiLoader } from '@react-google-maps/api';
-import { GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_LOADER_ID } from '@/lib/googleMapsLoader';
+import { supabase } from '@/integrations/supabase/client';
 
 interface StepLocationProps {
   formData: ListingFormData;
