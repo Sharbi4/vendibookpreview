@@ -1,8 +1,9 @@
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Truck, Eye, Loader2, Calendar, BarChart3, DollarSign, HandCoins, ExternalLink, Grid3X3, List, LayoutGrid, HelpCircle, Settings, Shield, MessageSquare } from 'lucide-react';
+import { Plus, Truck, Eye, Loader2, Calendar, BarChart3, DollarSign, HandCoins, ExternalLink, Grid3X3, List, LayoutGrid, HelpCircle, Settings, Shield, MessageSquare, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CompactStatCard } from './CompactStatCard';
 import { CompactInsights } from './CompactInsights';
+import { NextBestAction } from './NextBestAction';
 import StripeNotificationBubble from './StripeNotificationBubble';
 import HostListingCard from './HostListingCard';
 import BookingRequestsSection from './BookingRequestsSection';
@@ -23,10 +24,17 @@ import { useRevenueAnalytics } from '@/hooks/useRevenueAnalytics';
 import { useHostOffers } from '@/hooks/useHostOffers';
 import { useAuth } from '@/contexts/AuthContext';
 import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectModal';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { useMemo, useState } from 'react';
 
 const HostDashboard = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, isVerified } = useAuth();
   const [searchParams] = useSearchParams();
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing, updateListingPrice } = useHostListings();
   const { stats: bookingStats } = useHostBookings();
@@ -86,103 +94,112 @@ const HostDashboard = () => {
         />
       )}
 
-      {/* Dashboard Header - Dark Shine Design */}
-      <div className="p-6 rounded-2xl bg-card border border-border shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center">
-              <LayoutGrid className="h-6 w-6 text-background" />
+      {/* Stripe Status - Top priority (blocks payouts) */}
+      {!isConnected && !stripeLoading && (
+        <StripeNotificationBubble
+          isConnected={isConnected}
+          isLoading={stripeLoading}
+          onConnect={handleConnectStripe}
+          isConnecting={isConnecting}
+        />
+      )}
+
+      {/* Dashboard Header - Slim, 3 primary actions + overflow */}
+      <div className="p-5 sm:p-6 rounded-2xl bg-card border border-border shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-11 h-11 rounded-xl bg-foreground flex items-center justify-center shrink-0">
+              <LayoutGrid className="h-5 w-5 text-background" />
             </div>
-            <div>
-              <h2 className="text-xl font-semibold text-foreground">Hello, {profile?.full_name?.split(' ')[0] || 'there'}!</h2>
-              <p className="text-sm text-muted-foreground">
-                {userType === 'seller' ? 'Manage your sales pipeline.' : 'Manage fleet availability and revenue.'}
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground truncate">
+                Welcome back, {profile?.full_name?.split(' ')[0] || 'there'}
+              </h2>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                {bookingStats.pending > 0
+                  ? `You have ${bookingStats.pending} pending request${bookingStats.pending > 1 ? 's' : ''} — quick replies boost bookings 40%.`
+                  : pendingOffers.length > 0
+                  ? `${pendingOffers.length} offer${pendingOffers.length > 1 ? 's' : ''} waiting on your reply.`
+                  : draftListings.length > 0
+                  ? `${draftListings.length} draft${draftListings.length > 1 ? 's' : ''} ready to publish.`
+                  : userType === 'seller'
+                  ? 'Manage your sales pipeline.'
+                  : 'Manage availability and revenue.'}
               </p>
             </div>
           </div>
-          
-          {/* Action Buttons - Even Row Layout with Dark Shine */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-            <Link 
-              to="/host/bookings"
-              className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
-            >
-              <Calendar className="h-4 w-4" />
-              Bookings
-            </Link>
-            <Link 
-              to="/host/reporting"
-              className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
-            >
-              <BarChart3 className="h-4 w-4" />
-              Reporting
-            </Link>
-            <Link 
-              to="/host/listings"
-              className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
-            >
-              <Grid3X3 className="h-4 w-4" />
-              Listings
-            </Link>
-            <Link 
-              to={`/profile/${user?.id}`}
-              className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Storefront
-            </Link>
-            <Link 
-              to="/list?start=true"
-              className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
-            >
-              <Plus className="h-4 w-4" />
-              Add a Listing
-            </Link>
-            <Link 
-              to="/help"
-              className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
-            >
-              <HelpCircle className="h-4 w-4" />
-              Support
-            </Link>
-            <Link 
-              to="/messages"
-              className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
-            >
-              <MessageSquare className="h-4 w-4" />
-              Inbox
-            </Link>
-            <Link 
-              to="/account"
-              className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
-            >
-              <Settings className="h-4 w-4" />
-              My Account
-            </Link>
-            <Link 
-              to="/verify-identity"
-              className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-foreground text-background text-sm font-medium border border-foreground hover:bg-foreground/80 transition-all duration-200"
-            >
-              <Shield className="h-4 w-4" />
-              Verify ID
-            </Link>
+
+          {/* 3 primary actions + overflow */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Button asChild variant="dark-shine" size="sm" className="h-10 rounded-xl px-3 sm:px-4">
+              <Link to="/list?start=true">
+                <Plus className="h-4 w-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Add Listing</span>
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="h-10 rounded-xl px-3 sm:px-4">
+              <Link to="/host/bookings">
+                <Calendar className="h-4 w-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Bookings</span>
+                {bookingStats.pending > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1">
+                    {bookingStats.pending}
+                  </span>
+                )}
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="h-10 rounded-xl px-3 sm:px-4">
+              <Link to="/messages">
+                <MessageSquare className="h-4 w-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Inbox</span>
+              </Link>
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl">
+                  <MoreHorizontal className="h-4 w-4" />
+                  <span className="sr-only">More actions</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem asChild>
+                  <Link to="/host/listings"><Grid3X3 className="h-4 w-4 mr-2" />My Listings</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/host/reporting"><BarChart3 className="h-4 w-4 mr-2" />Reporting</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to={`/profile/${user?.id}`}><ExternalLink className="h-4 w-4 mr-2" />My Storefront</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/verify-identity"><Shield className="h-4 w-4 mr-2" />Verify ID</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/account"><Settings className="h-4 w-4 mr-2" />Account Settings</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/help"><HelpCircle className="h-4 w-4 mr-2" />Support</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-        </div>
-        
-        {/* Stripe Status - Inline */}
-        <div className="mt-4 pt-4 border-t border-border">
-          <StripeNotificationBubble 
-            isConnected={isConnected}
-            isLoading={stripeLoading}
-            onConnect={handleConnectStripe}
-            isConnecting={isConnecting}
-          />
         </div>
       </div>
 
-
-
-
+      {/* Next Best Action - Contextual guidance */}
+      {activeTab === 'overview' && (
+        <NextBestAction
+          publishedListings={stats.published}
+          draftListings={draftListings.length}
+          isStripeConnected={isConnected}
+          isIdentityVerified={isVerified}
+          pendingRequests={bookingStats.pending}
+          pendingOffers={pendingOffers.length}
+          firstName={profile?.full_name?.split(' ')[0]}
+        />
+      )}
       {/* Key Metrics Row - Airbnb Minimal Style */}
       <div className={`grid grid-cols-2 gap-4 ${userType === 'hybrid' ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
         <CompactStatCard 

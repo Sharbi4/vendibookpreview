@@ -8,6 +8,7 @@ import HeroBackground from './HeroBackground';
 import HeroSearchInput from './HeroSearchInput';
 import HeroTrustSignals from './HeroTrustSignals';
 import HeroVendiButton from './HeroVendiButton';
+import HeroPopularSearches from './HeroPopularSearches';
 import { useHeroSearch } from './useHeroSearch';
 
 // Preload the logo as early as possible
@@ -86,6 +87,7 @@ const HeroValueProp = () => {
           >
             <HeroSearchInput {...search} />
             <HeroVendiButton />
+            <HeroPopularSearches />
           </motion.div>
 
           {/* Single CTA */}
