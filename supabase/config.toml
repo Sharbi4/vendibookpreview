@@ -200,3 +200,13 @@ verify_jwt = false
 
 [functions.firecrawl-market-research]
 verify_jwt = false
+
+[functions.generate-listing-insights]
+verify_jwt = true
+
+[functions.generate-ad-copy]
+verify_jwt = true
+
+[functions.analytics-rollup]
+verify_jwt = false
+
