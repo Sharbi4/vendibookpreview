@@ -1,0 +1,155 @@
+import { useEffect, useRef, useState } from "react";
+import { Loader2, Sparkles, Wand2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from "sonner";
+
+interface Clip {
+  version: number;
+  title: string;
+  category_label: string;
+  mode_label: string;
+  city?: string | null;
+  state?: string | null;
+  poster?: string | null;
+  photos: string[];
+  duration_seconds: number;
+}
+
+interface Props {
+  listingId: string;
+  buttonClassName?: string;
+}
+
+/**
+ * Generate-and-play "auto promo video" — 15s Ken Burns slideshow with title
+ * overlay. The clip descriptor is generated server-side; the actual
+ * animation runs here in the DOM (fast, free to re-watch, easy to share via
+ * screen capture).
+ */
+export function PromoVideoPlayer({ listingId, buttonClassName }: Props) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [clip, setClip] = useState<Clip | null>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const timerRef = useRef<number | null>(null);
+
+  const handleGenerate = async () => {
+    setLoading(true);
+    try {
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-listing-video`;
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ listing_id: listingId }),
+      });
+      const j = await resp.json();
+      if (!resp.ok) {
+        if (resp.status === 402) toast.error("AI credits exhausted. Please add funds.");
+        else if (resp.status === 429) toast.error("Busy — try again in a moment.");
+        else toast.error(j.error || "Couldn't generate promo video.");
+        setLoading(false);
+        return;
+      }
+      setClip(j.clip as Clip);
+      setActiveIdx(0);
+      setOpen(true);
+    } catch (e) {
+      console.error(e);
+      toast.error("Couldn't generate promo video.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Slide auto-advance while open
+  useEffect(() => {
+    if (!open || !clip) return;
+    const total = clip.photos.length + (clip.poster ? 1 : 0);
+    const slideMs = (clip.duration_seconds * 1000) / Math.max(total, 1);
+    timerRef.current = window.setTimeout(() => {
+      setActiveIdx((i) => (i + 1) % total);
+    }, slideMs);
+    return () => {
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+    };
+  }, [open, clip, activeIdx]);
+
+  const slides = clip
+    ? [...(clip.poster ? [clip.poster] : []), ...clip.photos]
+    : [];
+
+  return (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={handleGenerate}
+        disabled={loading}
+        className={buttonClassName}
+      >
+        {loading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Sparkles className="mr-2 h-4 w-4 text-primary" />
+        )}
+        Auto-generate promo video
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl p-0 overflow-hidden">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Auto-generated promo video</DialogTitle>
+          </DialogHeader>
+          {clip && (
+            <div className="relative aspect-video w-full bg-black">
+              {slides.map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover transition-all duration-1000"
+                  style={{
+                    opacity: i === activeIdx ? 1 : 0,
+                    transform:
+                      i === activeIdx
+                        ? "scale(1.08) translateX(-1%)"
+                        : "scale(1) translateX(0)",
+                    transitionProperty: "opacity, transform",
+                    transitionDuration: i === activeIdx ? "4500ms" : "1000ms",
+                    transitionTimingFunction: "ease-out",
+                  }}
+                />
+              ))}
+              {/* Overlay */}
+              <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-5 text-white">
+                <div className="text-xs uppercase tracking-widest opacity-80">
+                  {clip.category_label} · {clip.mode_label}
+                  {clip.city ? ` · ${clip.city}` : ""}
+                </div>
+                <div className="mt-1 text-xl font-semibold leading-tight">
+                  {clip.title}
+                </div>
+                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-0.5 text-xs backdrop-blur">
+                  <Wand2 className="h-3 w-3" /> Generated by Vendibook AI
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="flex items-center justify-between gap-2 px-4 py-3 text-xs text-muted-foreground">
+            <span>15-second auto-promo · Screen-record to share</span>
+            <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+export default PromoVideoPlayer;
