@@ -45,6 +45,7 @@ import { AuthGateModal } from './AuthGateModal';
 import { getGuestDraft, clearGuestDraft } from '@/lib/guestDraft';
 import { cn } from '@/lib/utils';
 import { FreightSettingsCard } from '@/components/freight';
+import { FeaturedListingCard } from './FeaturedListingCard';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import stripeIcon from '@/assets/stripe-icon.png';
 import {
@@ -1484,7 +1485,7 @@ export const PublishWizard: React.FC = () => {
         return; // Exit early - webhook will handle publishing after payment
       }
 
-      // If Featured Listing is enabled and not already paid for, redirect to checkout for the $25 fee.
+      // If Featured Listing is enabled and not already paid for, redirect to checkout for the $30 fee.
       // This works for both rental and sale listings.
       const listingAlreadyFeatured = !!(listing as any).featured_at;
       if (featuredEnabled && !listingAlreadyFeatured) {
@@ -3869,6 +3870,15 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Featured Listing upsell — final publish step (highest-conversion placement) */}
+                  {canPublish && !((listing as any)?.featured_at) && (
+                    <FeaturedListingCard
+                      enabled={featuredEnabled}
+                      onEnabledChange={setFeaturedEnabled}
+                    />
+                  )}
+
+
                   <div className="flex flex-wrap gap-3">
                     <Button variant="dark-shine" onClick={() => setStep('stripe')}>Back</Button>
                     <Button
@@ -3925,6 +3935,17 @@ export const PublishWizard: React.FC = () => {
                     </label>
                   </div>
                 </div>
+
+                {/* Featured charge notice */}
+                {featuredEnabled && !((listing as any)?.featured_at) && (
+                  <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300 flex items-start gap-2">
+                    <Star className="w-4 h-4 mt-0.5 shrink-0" />
+                    <div>
+                      You'll be redirected to Stripe to pay <strong>$30</strong> for the Featured add-on.
+                      Your listing publishes automatically the moment payment clears.
+                    </div>
+                  </div>
+                )}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>

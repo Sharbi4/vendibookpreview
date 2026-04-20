@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, TrendingUp, CheckCircle2, Eye, Zap, Crown } from 'lucide-react';
+import { Star, TrendingUp, CheckCircle2, Eye, Zap, Crown, Sparkles, MapPin, BarChart3 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -9,80 +9,60 @@ interface FeaturedListingCardProps {
   onEnabledChange: (enabled: boolean) => void;
 }
 
-const FEATURED_LISTING_FEE = 25;
+export const FEATURED_LISTING_FEE = 30;
 
 export const FeaturedListingCard: React.FC<FeaturedListingCardProps> = ({
   enabled,
   onEnabledChange,
 }) => {
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Star className="w-5 h-5 text-amber-500" />
-        <h3 className="text-lg font-semibold">Featured Listing</h3>
-        <Badge variant="secondary" className="ml-2 text-xs font-medium">
-          Optional
-        </Badge>
-      </div>
+    <div
+      className={`relative overflow-hidden rounded-2xl border transition-all ${
+        enabled
+          ? 'border-amber-400/60 bg-gradient-to-br from-amber-500/[0.08] via-background to-background shadow-[0_0_0_1px_rgba(251,191,36,0.25),0_8px_40px_-12px_rgba(251,191,36,0.45)]'
+          : 'border-border bg-card hover:border-amber-400/40'
+      }`}
+    >
+      {/* Decorative glow */}
+      {enabled && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-amber-400/20 blur-3xl"
+        />
+      )}
 
-      <div className={`rounded-xl border-2 p-4 transition-all ${
-        enabled 
-          ? 'border-amber-500 bg-amber-500/5' 
-          : 'border-border bg-card hover:border-amber-500/50'
-      }`}>
+      <div className="relative p-5 sm:p-6">
+        {/* Header row */}
         <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 space-y-3">
-            <div className="flex items-center gap-3">
-              <div className={`p-2.5 rounded-xl ${enabled ? 'bg-amber-500/20' : 'bg-muted'}`}>
-                <Crown className={`w-5 h-5 ${enabled ? 'text-amber-500' : 'text-muted-foreground'}`} />
-              </div>
-              <div>
-                <Label 
-                  htmlFor="featured_listing_toggle" 
+          <div className="flex items-center gap-3">
+            <div
+              className={`p-2.5 rounded-xl transition-colors ${
+                enabled ? 'bg-amber-500/20' : 'bg-muted'
+              }`}
+            >
+              <Crown
+                className={`w-5 h-5 ${enabled ? 'text-amber-500' : 'text-muted-foreground'}`}
+              />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <Label
+                  htmlFor="featured_listing_toggle"
                   className="text-base font-semibold cursor-pointer"
                 >
-                  Boost Your Visibility
+                  Feature this listing
                 </Label>
-                <p className="text-sm text-muted-foreground">
-                  Get priority placement and more views
-                </p>
+                <Badge
+                  variant="secondary"
+                  className="text-[10px] font-medium uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border-0"
+                >
+                  Recommended
+                </Badge>
               </div>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Premium placement for 30 days · up to 3× more views
+              </p>
             </div>
-
-            {/* Benefits */}
-            <div className="grid sm:grid-cols-2 gap-2 mt-3">
-              <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-                <span>Top of search results</span>
-              </div>
-              <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-                <span>Featured badge on listing</span>
-              </div>
-              <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-                <span>Homepage spotlight</span>
-              </div>
-              <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-                <span>3x more visibility</span>
-              </div>
-            </div>
-
-            {/* Price tag */}
-            <div className="flex items-center gap-2 pt-2">
-              <span className="text-2xl font-bold text-foreground">${FEATURED_LISTING_FEE}</span>
-              <span className="text-sm text-muted-foreground">one-time • 30 days</span>
-            </div>
-
-            {enabled && (
-              <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg mt-2">
-                <TrendingUp className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-                <div className="text-sm text-amber-700 dark:text-amber-300">
-                  <strong>Great choice!</strong> Featured listings get up to 3x more views and inquiries compared to standard listings.
-                </div>
-              </div>
-            )}
           </div>
 
           <Switch
@@ -92,38 +72,65 @@ export const FeaturedListingCard: React.FC<FeaturedListingCardProps> = ({
           />
         </div>
 
-        {/* What's included */}
+        {/* Price */}
+        <div className="mt-5 flex items-baseline gap-2">
+          <span className="text-3xl font-bold text-foreground">${FEATURED_LISTING_FEE}</span>
+          <span className="text-sm text-muted-foreground">one-time · 30 days · no auto-renew</span>
+        </div>
+
+        {/* Benefits grid */}
+        <div className="mt-5 grid sm:grid-cols-2 gap-3">
+          <Benefit
+            icon={<Sparkles className="w-4 h-4 text-amber-500" />}
+            title="Top of search & homepage"
+            desc="Pinned above standard listings everywhere shoppers browse."
+          />
+          <Benefit
+            icon={<Star className="w-4 h-4 text-amber-500" />}
+            title="Featured badge & glow"
+            desc="Standout card styling that catches the eye instantly."
+          />
+          <Benefit
+            icon={<MapPin className="w-4 h-4 text-amber-500" />}
+            title="Priority on category & map"
+            desc="Boosted in category pages and pinned on the search map."
+          />
+          <Benefit
+            icon={<BarChart3 className="w-4 h-4 text-amber-500" />}
+            title="Weekly boost report"
+            desc="See exactly how many extra views and inquiries you got."
+          />
+        </div>
+
+        {/* Confirmation banner when enabled */}
         {enabled && (
-          <div className="mt-4 pt-4 border-t border-border/50">
-            <div className="flex items-center gap-2 text-sm font-medium text-foreground mb-3">
-              <Zap className="w-4 h-4" />
-              What you get
-            </div>
-            <div className="grid sm:grid-cols-2 gap-3 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-amber-500" />
-                <span>Priority in all search results</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 text-amber-500" />
-                <span>"Featured" badge displayed</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-amber-500" />
-                <span>Included in featured carousel</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Crown className="w-4 h-4 text-amber-500" />
-                <span>30 days of premium placement</span>
-              </div>
+          <div className="mt-5 flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
+            <TrendingUp className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+            <div className="text-sm text-amber-700 dark:text-amber-300">
+              <strong>Great choice.</strong> You'll be redirected to secure checkout after you tap{' '}
+              <span className="font-semibold">Publish</span>. Your listing goes live the moment payment clears.
             </div>
           </div>
         )}
-      </div>
 
-      <p className="text-xs text-muted-foreground">
-        Featured status lasts for 30 days from purchase. Renew anytime from your dashboard.
-      </p>
+        <p className="mt-4 text-xs text-muted-foreground">
+          Powered by Stripe · Cancel or skip anytime before publishing.
+        </p>
+      </div>
     </div>
   );
 };
+
+const Benefit: React.FC<{ icon: React.ReactNode; title: string; desc: string }> = ({
+  icon,
+  title,
+  desc,
+}) => (
+  <div className="flex items-start gap-2.5">
+    <div className="mt-0.5 shrink-0">{icon}</div>
+    <div>
+      <div className="text-sm font-medium text-foreground leading-tight">{title}</div>
+      <div className="text-xs text-muted-foreground mt-0.5 leading-snug">{desc}</div>
+    </div>
+  </div>
+);
