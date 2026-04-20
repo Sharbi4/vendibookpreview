@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import QRCode from 'qrcode';
@@ -14,6 +14,11 @@ import {
   TrendingUp,
   MapPin,
   MessageCircle,
+  MessageSquare,
+  Send,
+  Image as ImageIcon,
+  Wand2,
+  Camera,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -86,6 +91,26 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
   </svg>
 );
+const InstagramIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+  </svg>
+);
+const PinterestIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345-.09.375-.293 1.199-.334 1.363-.052.225-.172.271-.398.165-1.501-.7-2.439-2.889-2.439-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.357-.631-2.748-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z" />
+  </svg>
+);
+const RedditIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 01-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 01.042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 014.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 01.14-.197.35.35 0 01.238-.042l2.906.617a1.214 1.214 0 011.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 00-.231.094.33.33 0 000 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 00.029-.463.33.33 0 00-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 00-.232-.095z" />
+  </svg>
+);
+const TelegramIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0a12 12 0 00-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 01.171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+  </svg>
+);
 
 export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const navigate = useNavigate();
@@ -93,9 +118,17 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
 
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [linkCopied, setLinkCopied] = useState(false);
+  const [captionCopied, setCaptionCopied] = useState(false);
   const [emailLinkCopied, setEmailLinkCopied] = useState(false);
+  const [smsLinkCopied, setSmsLinkCopied] = useState(false);
+  const [captionVariant, setCaptionVariant] = useState(0);
+  const [shareWithImageBusy, setShareWithImageBusy] = useState(false);
 
-  const listingUrl = `${window.location.origin}/listing/${listing.id}`;
+  const baseUrl = `${window.location.origin}/listing/${listing.id}`;
+  // UTM-tagged links per channel for analytics attribution
+  const withUtm = useCallback((src: string, medium = 'social') =>
+    `${baseUrl}?utm_source=${src}&utm_medium=${medium}&utm_campaign=host_share`, [baseUrl]);
+  const listingUrl = baseUrl;
   const prettyUrl = listingUrl.replace(/^https?:\/\//, '');
   const categoryLabel = CATEGORY_LABELS[listing.category] || listing.category;
   const city = listing.address?.split(',')[0]?.trim() || '';
@@ -106,10 +139,31 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const priceLabel = listing.mode === 'sale'
     ? 'For sale'
     : listing.priceDaily ? '/ day' : '/ week';
+  const priceText = price ? `$${price.toLocaleString()}${listing.mode === 'sale' ? '' : ` ${priceLabel}`}` : '';
 
-  const shareText = listing.mode === 'sale'
-    ? `🚚 ${categoryLabel} for sale${city ? ` in ${city}` : ''}: ${listing.title}`
-    : `📅 Now booking on Vendibook${city ? ` in ${city}` : ''}: ${listing.title}`;
+  // Multiple AI-style caption variants — rotates with "Regenerate"
+  const captionVariants = [
+    listing.mode === 'sale'
+      ? `🚚 For sale${city ? ` in ${city}` : ''}: ${listing.title}${priceText ? ` — ${priceText}` : ''}.\n\nDM me or grab full details here 👇`
+      : `📅 Now booking on Vendibook${city ? ` in ${city}` : ''}: ${listing.title}${priceText ? ` — ${priceText}` : ''}.\n\nReserve your spot 👇`,
+    listing.mode === 'sale'
+      ? `Just listed: ${listing.title}${city ? ` (${city})` : ''}. ${priceText ? `Asking ${priceText}. ` : ''}Serious buyers only — link below.`
+      : `Open dates available 🗓️ ${listing.title}${city ? ` · ${city}` : ''}.${priceText ? ` From ${priceText}.` : ''} Book direct, no fees:`,
+    listing.mode === 'sale'
+      ? `🔥 ${categoryLabel} alert${city ? ` — ${city}` : ''}!\n${listing.title}${priceText ? `\n${priceText}` : ''}\nTap link to see full specs & photos.`
+      : `Looking for a ${categoryLabel.toLowerCase()}${city ? ` in ${city}` : ''}? I just opened bookings for ${listing.title}.${priceText ? ` ${priceText}.` : ''} Lock your date here:`,
+  ];
+  const currentCaption = captionVariants[captionVariant % captionVariants.length];
+  const shareText = currentCaption;
+
+  // Hashtags optimized for discovery
+  const hashtags = [
+    'vendibook',
+    listing.mode === 'sale' ? 'forsale' : 'booknow',
+    categoryLabel.toLowerCase().replace(/\s+/g, ''),
+    city ? city.toLowerCase().replace(/\s+/g, '') : '',
+    'smallbusiness',
+  ].filter(Boolean);
 
   useEffect(() => {
     trackShareKitViewed();
@@ -120,7 +174,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     }).then(setQrCodeDataUrl).catch(console.error);
   }, [listingUrl]);
 
-  const copy = async (text: string, setFlag: (b: boolean) => void, msg: string) => {
+  const copy = useCallback(async (text: string, setFlag: (b: boolean) => void, msg: string) => {
     try {
       await navigator.clipboard.writeText(text);
       setFlag(true);
@@ -130,15 +184,27 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     } catch {
       toast({ title: 'Failed to copy', variant: 'destructive' });
     }
-  };
+  }, [toast]);
 
   const handleCopyLink = () => copy(listingUrl, setLinkCopied, 'Link copied!');
+  const handleCopyCaption = () => {
+    const fullCaption = `${currentCaption}\n\n${listingUrl}\n\n${hashtags.map(h => `#${h}`).join(' ')}`;
+    copy(fullCaption, setCaptionCopied, 'Caption + link + hashtags copied!');
+  };
   const handleCopyEmailLink = () => copy(listingUrl, setEmailLinkCopied, 'Link copied for email!');
+  const handleCopySmsLink = () => {
+    const sms = `${listing.title} — book now: ${withUtm('sms', 'message')}`;
+    copy(sms, setSmsLinkCopied, 'SMS message copied!');
+  };
 
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({ title: listing.title, text: shareText, url: listingUrl });
+        await navigator.share({
+          title: listing.title,
+          text: currentCaption,
+          url: withUtm('native', 'share'),
+        });
         trackShareLinkCopied();
       } catch {
         // user cancelled
@@ -148,17 +214,168 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     }
   };
 
+  // Share with image attached via Web Share API Level 2 (mobile Safari/Chrome)
+  const handleShareWithImage = async () => {
+    setShareWithImageBusy(true);
+    try {
+      const blob = await generateShareImageBlob(listing, city);
+      const file = new File([blob], `vendibook-${listing.id}.png`, { type: 'image/png' });
+      const shareData: ShareData = {
+        title: listing.title,
+        text: currentCaption,
+        url: withUtm('native', 'share-image'),
+        files: [file],
+      };
+      // Feature-detect file share
+      if (navigator.canShare?.({ files: [file] }) && navigator.share) {
+        await navigator.share(shareData);
+        trackShareImageDownloaded();
+        toast({ title: 'Shared with image!' });
+      } else {
+        // Fallback: copy caption + download image so user can attach manually
+        await navigator.clipboard.writeText(`${currentCaption}\n\n${listingUrl}`);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `vendibook-${listing.id}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast({
+          title: 'Image saved + caption copied',
+          description: 'Open Instagram, paste the caption & attach the image.',
+        });
+      }
+    } catch (e) {
+      console.error(e);
+      toast({ title: 'Share cancelled', variant: 'destructive' });
+    } finally {
+      setShareWithImageBusy(false);
+    }
+  };
+
   const openShare = (platform: string) => {
-    const u = encodeURIComponent(listingUrl);
-    const t = encodeURIComponent(shareText);
+    const url = withUtm(platform);
+    const u = encodeURIComponent(url);
+    const t = encodeURIComponent(currentCaption);
+    const tagsString = hashtags.map(h => `#${h}`).join(' ');
+    const tWithTags = encodeURIComponent(`${currentCaption}\n\n${tagsString}`);
+    const img = listing.coverImageUrl ? encodeURIComponent(listing.coverImageUrl) : '';
+
     const urls: Record<string, string> = {
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${u}`,
-      x: `https://twitter.com/intent/tweet?text=${t}&url=${u}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${u}&quote=${t}`,
+      x: `https://twitter.com/intent/tweet?text=${tWithTags}&url=${u}`,
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${u}`,
       whatsapp: `https://wa.me/?text=${t}%20${u}`,
+      telegram: `https://t.me/share/url?url=${u}&text=${t}`,
+      reddit: `https://www.reddit.com/submit?url=${u}&title=${encodeURIComponent(listing.title)}`,
+      pinterest: `https://pinterest.com/pin/create/button/?url=${u}&description=${t}${img ? `&media=${img}` : ''}`,
+      email: `mailto:?subject=${encodeURIComponent(listing.title)}&body=${t}%0A%0A${u}`,
+      sms: `sms:?&body=${t}%20${u}`,
     };
+
+    // Instagram has no web share — copy caption + open app
+    if (platform === 'instagram') {
+      navigator.clipboard.writeText(`${currentCaption}\n\n${listingUrl}\n\n${tagsString}`).catch(() => {});
+      toast({
+        title: 'Caption copied!',
+        description: 'Opening Instagram — paste it on your post or story.',
+      });
+      window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+      return;
+    }
+
     window.open(urls[platform], '_blank', 'noopener,noreferrer');
+    trackShareLinkCopied();
   };
+
+  const regenerateCaption = () => {
+    setCaptionVariant(v => v + 1);
+    toast({ title: 'New caption generated' });
+  };
+
+// Generates a 1080x1080 branded PNG blob for Web Share API file attachment
+const generateShareImageBlob = (
+  listing: ShareKitListing,
+  city: string,
+): Promise<Blob> => new Promise((resolve, reject) => {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return reject(new Error('No canvas context'));
+  canvas.width = 1080;
+  canvas.height = 1080;
+
+  const draw = (coverImg?: HTMLImageElement) => {
+    // Background
+    if (coverImg) {
+      // Cover image with dark gradient overlay
+      ctx.drawImage(coverImg, 0, 0, 1080, 1080);
+      const grad = ctx.createLinearGradient(0, 540, 0, 1080);
+      grad.addColorStop(0, 'rgba(0,0,0,0.1)');
+      grad.addColorStop(1, 'rgba(0,0,0,0.92)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1080, 1080);
+    } else {
+      ctx.fillStyle = '#1A1A1A';
+      ctx.fillRect(0, 0, 1080, 1080);
+    }
+
+    // Top accent
+    ctx.fillStyle = '#FF5124';
+    ctx.fillRect(0, 0, 1080, 8);
+
+    // Badge pill (top-left)
+    ctx.fillStyle = '#FF5124';
+    const badgeText = listing.mode === 'sale' ? 'FOR SALE' : 'NOW BOOKING';
+    ctx.font = 'bold 26px system-ui, -apple-system, sans-serif';
+    const badgeWidth = ctx.measureText(badgeText).width + 48;
+    ctx.beginPath();
+    (ctx as any).roundRect?.(48, 60, badgeWidth, 56, 28);
+    if (!(ctx as any).roundRect) ctx.rect(48, 60, badgeWidth, 56);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(badgeText, 72, 88);
+
+    // Bottom title block
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 56px system-ui, -apple-system, sans-serif';
+    const titleLines = wrapText(ctx, listing.title, 980, 2);
+    titleLines.forEach((line, i) => ctx.fillText(line, 50, 820 + i * 64));
+
+    if (city) {
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.font = '32px system-ui, -apple-system, sans-serif';
+      ctx.fillText(`📍 ${city}`, 50, 820 + titleLines.length * 64 + 36);
+    }
+
+    // CTA bottom
+    ctx.fillStyle = '#FF5124';
+    ctx.fillRect(0, 1020, 1080, 60);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`vendibook.com/listing/${listing.id.slice(0, 8)}`, 540, 1056);
+
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error('Blob conversion failed'));
+    }, 'image/png');
+  };
+
+  if (listing.coverImageUrl) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => draw(img);
+    img.onerror = () => draw(); // fallback to dark background
+    img.src = listing.coverImageUrl;
+  } else {
+    draw();
+  }
+});
+
+
 
   const handleDownloadNowBooking = () => {
     const canvas = document.createElement('canvas');
@@ -282,10 +499,14 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   };
 
   const socialButtons = [
+    { id: 'instagram', label: 'Instagram', Icon: InstagramIcon, color: 'hover:text-[#E4405F]' },
     { id: 'facebook', label: 'Facebook', Icon: FacebookIcon, color: 'hover:text-[#1877F2]' },
     { id: 'x', label: 'X', Icon: XIcon, color: 'hover:text-foreground' },
-    { id: 'linkedin', label: 'LinkedIn', Icon: LinkedInIcon, color: 'hover:text-[#0A66C2]' },
     { id: 'whatsapp', label: 'WhatsApp', Icon: WhatsAppIcon, color: 'hover:text-[#25D366]' },
+    { id: 'linkedin', label: 'LinkedIn', Icon: LinkedInIcon, color: 'hover:text-[#0A66C2]' },
+    { id: 'telegram', label: 'Telegram', Icon: TelegramIcon, color: 'hover:text-[#0088cc]' },
+    { id: 'pinterest', label: 'Pinterest', Icon: PinterestIcon, color: 'hover:text-[#E60023]' },
+    { id: 'reddit', label: 'Reddit', Icon: RedditIcon, color: 'hover:text-[#FF4500]' },
   ];
 
   return (
@@ -379,31 +600,94 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
 
         {/* SOCIAL ROW */}
         <div>
-          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Share to
-          </label>
-          <div className="mt-2 flex items-center gap-2">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Share to
+            </label>
+            <button
+              onClick={handleNativeShare}
+              className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
+            >
+              <Share2 className="w-3 h-3" /> More
+            </button>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
             {socialButtons.map(({ id, label, Icon, color }) => (
               <button
                 key={id}
                 onClick={() => openShare(id)}
                 aria-label={`Share to ${label}`}
                 className={cn(
-                  'flex-1 h-12 rounded-xl border bg-background text-muted-foreground flex items-center justify-center transition-all hover:border-foreground/20 hover:bg-muted/50 active:scale-95',
+                  'h-14 rounded-xl border bg-background text-muted-foreground flex flex-col items-center justify-center gap-1 transition-all hover:border-foreground/20 hover:bg-muted/50 active:scale-95',
                   color
                 )}
               >
                 <Icon className="w-5 h-5" />
+                <span className="text-[9px] font-medium">{label}</span>
               </button>
             ))}
+          </div>
+
+          {/* Quick channels: SMS / Email */}
+          <div className="grid grid-cols-2 gap-2 mt-2">
             <button
-              onClick={handleNativeShare}
-              aria-label="More share options"
-              className="flex-1 h-12 rounded-xl border bg-background text-muted-foreground flex items-center justify-center transition-all hover:border-foreground/20 hover:bg-muted/50 hover:text-foreground active:scale-95"
+              onClick={() => openShare('sms')}
+              className="h-11 rounded-xl border bg-background text-foreground/80 flex items-center justify-center gap-2 text-sm font-medium hover:bg-muted/50 active:scale-95 transition-all"
             >
-              <Share2 className="w-5 h-5" />
+              <MessageSquare className="w-4 h-4" /> SMS
+            </button>
+            <button
+              onClick={() => openShare('email')}
+              className="h-11 rounded-xl border bg-background text-foreground/80 flex items-center justify-center gap-2 text-sm font-medium hover:bg-muted/50 active:scale-95 transition-all"
+            >
+              <Send className="w-4 h-4" /> Email
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* SMART CAPTION (AI-style) */}
+      <div className="rounded-2xl border bg-card p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Wand2 className="w-4 h-4 text-primary" />
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Smart caption
+            </label>
+          </div>
+          <button
+            onClick={regenerateCaption}
+            className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
+          >
+            <Sparkles className="w-3 h-3" /> Regenerate
+          </button>
+        </div>
+        <div className="px-3.5 py-3 bg-muted/60 rounded-xl text-sm text-foreground/90 whitespace-pre-line leading-relaxed">
+          {currentCaption}
+        </div>
+        <div className="text-[11px] text-muted-foreground">
+          {hashtags.map(h => `#${h}`).join(' ')}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            onClick={handleCopyCaption}
+            variant="outline"
+            className={cn('rounded-xl', captionCopied && 'bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-500')}
+          >
+            {captionCopied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+            {captionCopied ? 'Copied' : 'Copy caption'}
+          </Button>
+          <Button
+            onClick={handleShareWithImage}
+            disabled={shareWithImageBusy}
+            className="rounded-xl"
+          >
+            {shareWithImageBusy ? (
+              <><Camera className="w-4 h-4 mr-2 animate-pulse" /> Preparing…</>
+            ) : (
+              <><ImageIcon className="w-4 h-4 mr-2" /> Share with image</>
+            )}
+          </Button>
         </div>
       </div>
 
