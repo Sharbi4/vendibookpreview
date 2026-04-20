@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
+import { useDashboardPersona } from '@/hooks/useDashboardPersona';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import HostDashboard from '@/components/dashboard/HostDashboard';
 import ShopperDashboard from '@/components/dashboard/ShopperDashboard';
@@ -18,28 +19,41 @@ const Dashboard = () => {
 
   usePageTracking();
 
-  // URL-based mode detection with localStorage persistence
+  // Auto-detect persona from listing activity (Pro vs Shopper)
+  const { persona, isLoading: personaLoading, override, setOverride } = useDashboardPersona();
+  const autoMode: 'host' | 'shopper' = persona === 'shopper' ? 'shopper' : 'host';
+
+  // Resolution priority: explicit URL ?view= > saved override > auto-detected persona
   const urlView = searchParams.get('view');
   const savedMode = localStorage.getItem(DASHBOARD_MODE_KEY) as 'host' | 'shopper' | null;
-  
-  // Priority: URL param > saved preference > default (shopper)
-  const currentMode = urlView === 'host' ? 'host' : urlView === 'shopper' ? 'shopper' : (savedMode || 'shopper');
-  const isHost = hasRole('host');
+  const currentMode: 'host' | 'shopper' =
+    urlView === 'host' || urlView === 'shopper'
+      ? (urlView as 'host' | 'shopper')
+      : (savedMode || autoMode);
 
-  // Restore saved mode on initial load if no URL param specified
+  const isHost = hasRole('host') || persona !== 'shopper';
+
+  // Sync URL with resolved mode (deep-linkable, persists across reloads)
   useEffect(() => {
-    if (!urlView && savedMode) {
-      setSearchParams({ view: savedMode }, { replace: true });
+    if (!urlView && !personaLoading) {
+      const tab = searchParams.get('tab');
+      const next = new URLSearchParams();
+      next.set('view', currentMode);
+      if (tab) next.set('tab', tab);
+      setSearchParams(next, { replace: true });
     }
-  }, [urlView, savedMode, setSearchParams]);
+  }, [urlView, personaLoading, currentMode, searchParams, setSearchParams]);
 
   const handleModeChange = (newMode: 'host' | 'shopper') => {
-    // Save to localStorage for persistence across sessions
     localStorage.setItem(DASHBOARD_MODE_KEY, newMode);
-    setSearchParams({ view: newMode });
+    // Persist as a persona override so the auto-detect logic respects user choice
+    setOverride(newMode === 'host' ? (persona === 'shopper' ? 'pro' : persona) : 'shopper');
+    const next = new URLSearchParams(searchParams);
+    next.set('view', newMode);
+    setSearchParams(next);
   };
 
-  // Check for onboarding on mount
+  // Onboarding tour
   useEffect(() => {
     const hasSeen = localStorage.getItem('vendibook_dashboard_onboarding_v1');
     if (!hasSeen && !isLoading && user) {
@@ -59,7 +73,7 @@ const Dashboard = () => {
     }
   }, [user, isLoading, navigate]);
 
-  if (isLoading) {
+  if (isLoading || personaLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -73,17 +87,16 @@ const Dashboard = () => {
   if (!user) return null;
 
   return (
-    <DashboardLayout 
-      mode={currentMode} 
+    <DashboardLayout
+      mode={currentMode}
       onModeChange={handleModeChange}
       isHost={isHost}
     >
       {currentMode === 'host' ? <HostDashboard /> : <ShopperDashboard />}
 
-      {/* Dashboard Onboarding Tour */}
       {showOnboarding && (
-        <DashboardOnboarding 
-          mode={currentMode} 
+        <DashboardOnboarding
+          mode={currentMode}
           onComplete={handleOnboardingComplete}
         />
       )}
