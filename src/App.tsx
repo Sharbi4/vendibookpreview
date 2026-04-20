@@ -17,6 +17,7 @@ import { Loader2 } from "lucide-react";
 import GoogleOneTap from "@/components/auth/GoogleOneTap";
 import VoiceAssistantButton from "@/components/VoiceAssistantButton";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
+const LiveActivityFeed = lazy(() => import("@/components/social-proof/LiveActivityFeed").then(m => ({ default: m.LiveActivityFeed })));
 import { toast } from "sonner";
 
 

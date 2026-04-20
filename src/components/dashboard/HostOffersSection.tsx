@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useHostOffers, HostOffer } from '@/hooks/useHostOffers';
+import { NegotiationCoach } from './NegotiationCoach';
 
 interface OfferCardProps {
   offer: HostOffer;
@@ -179,6 +180,15 @@ const OfferCard = ({ offer, onAccept, onDecline, onCounter, isResponding }: Offe
                   <MessageSquare className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-muted-foreground line-clamp-2">{offer.message}</p>
                 </div>
+              )}
+
+              {/* AI Negotiation Coach */}
+              {isPending && !isExpired && (
+                <NegotiationCoach
+                  offerId={offer.id}
+                  onUseCounter={(amt) => { setCounterAmount(String(amt)); setShowCounterModal(true); }}
+                  className="mt-2"
+                />
               )}
 
               {/* Actions */}
