@@ -293,17 +293,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     toast({ title: 'New caption generated' });
   };
 
-  const openShare = (platform: string) => {
-    const u = encodeURIComponent(listingUrl);
-    const t = encodeURIComponent(shareText);
-    const urls: Record<string, string> = {
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${u}`,
-      x: `https://twitter.com/intent/tweet?text=${t}&url=${u}`,
-      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${u}`,
-      whatsapp: `https://wa.me/?text=${t}%20${u}`,
-    };
-    window.open(urls[platform], '_blank', 'noopener,noreferrer');
-  };
+
 
   const handleDownloadNowBooking = () => {
     const canvas = document.createElement('canvas');
