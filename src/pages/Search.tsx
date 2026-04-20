@@ -107,7 +107,8 @@ const Search = () => {
   const [verifiedHostsOnly, setVerifiedHostsOnly] = useState(searchParams.get('verified') === 'true');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
-  const [viewMode, setViewMode] = useState<'grid' | 'map' | 'split'>('split');
+  const [viewMode, setViewMode] = useState<'grid' | 'map' | 'split' | 'list'>('split');
+  const [hoveredListingId, setHoveredListingId] = useState<string | null>(null);
   const [page, setPage] = useState(initialPage);
 
   // Google Maps API key for map view
