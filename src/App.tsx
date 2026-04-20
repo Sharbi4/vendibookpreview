@@ -355,6 +355,9 @@ const AppContent = () => {
       <VoiceAssistantButton />
       <AnimatedRoutes />
       <MobileBottomNav />
+      <Suspense fallback={null}>
+        <LiveActivityFeed />
+      </Suspense>
     </>
   );
 };
