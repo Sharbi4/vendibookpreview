@@ -100,11 +100,14 @@ export type Database = {
           email: string | null
           end_date: string | null
           id: string
+          is_public: boolean
+          matched_listing_id: string | null
           notes: string | null
           phone: string | null
           start_date: string | null
           state: string | null
           status: string | null
+          title: string | null
           updated_at: string
           user_id: string | null
         }
@@ -119,11 +122,14 @@ export type Database = {
           email?: string | null
           end_date?: string | null
           id?: string
+          is_public?: boolean
+          matched_listing_id?: string | null
           notes?: string | null
           phone?: string | null
           start_date?: string | null
           state?: string | null
           status?: string | null
+          title?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -138,15 +144,26 @@ export type Database = {
           email?: string | null
           end_date?: string | null
           id?: string
+          is_public?: boolean
+          matched_listing_id?: string | null
           notes?: string | null
           phone?: string | null
           start_date?: string | null
           state?: string | null
           status?: string | null
+          title?: string | null
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "asset_requests_matched_listing_id_fkey"
+            columns: ["matched_listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       availability_alerts: {
         Row: {
@@ -2405,11 +2422,14 @@ export type Database = {
           email: string | null
           end_date: string | null
           id: string
+          is_public: boolean
+          matched_listing_id: string | null
           notes: string | null
           phone: string | null
           start_date: string | null
           state: string | null
           status: string | null
+          title: string | null
           updated_at: string
           user_id: string | null
         }[]
@@ -2503,11 +2523,14 @@ export type Database = {
           email: string | null
           end_date: string | null
           id: string
+          is_public: boolean
+          matched_listing_id: string | null
           notes: string | null
           phone: string | null
           start_date: string | null
           state: string | null
           status: string | null
+          title: string | null
           updated_at: string
           user_id: string | null
         }

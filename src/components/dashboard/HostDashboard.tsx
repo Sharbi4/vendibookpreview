@@ -21,6 +21,7 @@ import { ConversionFunnel } from '@/components/analytics/ConversionFunnel';
 import { RevenueChart } from '@/components/analytics/RevenueChart';
 import { TrafficSourcesCard } from '@/components/analytics/TrafficSourcesCard';
 import { CompetitorPricingCard } from '@/components/analytics/CompetitorPricingCard';
+import { DemandHeatmap } from './DemandHeatmap';
 import { useDashboardPersona } from '@/hooks/useDashboardPersona';
 
 import ActionRequiredBanner from './ActionRequiredBanner';
@@ -447,6 +448,7 @@ const HostDashboard = () => {
       {activeTab === 'insights' && (
         <div className="space-y-6">
           <ListingInsightsPanel />
+          <DemandHeatmap />
           <div className="grid lg:grid-cols-2 gap-4">
             <ConversionFunnel days={30} />
             <RevenueChart />
