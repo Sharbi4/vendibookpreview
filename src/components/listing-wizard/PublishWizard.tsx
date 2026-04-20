@@ -45,6 +45,7 @@ import { AuthGateModal } from './AuthGateModal';
 import { getGuestDraft, clearGuestDraft } from '@/lib/guestDraft';
 import { cn } from '@/lib/utils';
 import { FreightSettingsCard } from '@/components/freight';
+import { FeaturedListingCard } from './FeaturedListingCard';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import stripeIcon from '@/assets/stripe-icon.png';
 import {
@@ -1484,7 +1485,7 @@ export const PublishWizard: React.FC = () => {
         return; // Exit early - webhook will handle publishing after payment
       }
 
-      // If Featured Listing is enabled and not already paid for, redirect to checkout for the $25 fee.
+      // If Featured Listing is enabled and not already paid for, redirect to checkout for the $30 fee.
       // This works for both rental and sale listings.
       const listingAlreadyFeatured = !!(listing as any).featured_at;
       if (featuredEnabled && !listingAlreadyFeatured) {
@@ -3868,6 +3869,15 @@ export const PublishWizard: React.FC = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Featured Listing upsell — final publish step (highest-conversion placement) */}
+                  {canPublish && !((listing as any)?.featured_at) && (
+                    <FeaturedListingCard
+                      enabled={featuredEnabled}
+                      onEnabledChange={setFeaturedEnabled}
+                    />
+                  )}
+
 
                   <div className="flex flex-wrap gap-3">
                     <Button variant="dark-shine" onClick={() => setStep('stripe')}>Back</Button>
