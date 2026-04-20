@@ -92,8 +92,12 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
     );
   }
 
-  const seoTitle = `${categoryLabel} ${modeLabel} in ${city.name}, ${city.stateCode} | Vendibook`;
-  const metaDescription = `Browse ${categoryLabel.toLowerCase()} ${modeLabel.toLowerCase()} in ${city.name}, ${city.stateCode}. Book instantly on Vendibook — the marketplace for food trucks, trailers, kitchens, and vendor spaces.`;
+  const seoTitle = mode === 'buy'
+    ? `${categoryLabel} for Sale in ${city.name}, ${city.stateCode} | Used & New | Vendibook`
+    : `${categoryLabel} for Rent in ${city.name}, ${city.stateCode} | Daily, Weekly, Monthly | Vendibook`;
+  const metaDescription = mode === 'buy'
+    ? `Buy ${categoryLabel.toLowerCase()} in ${city.name}, ${city.stateCode}. Browse verified used and new listings from local sellers. Financing & inspection support. List price, photos, specs upfront.`
+    : `Rent ${categoryLabel.toLowerCase()} in ${city.name}, ${city.stateCode} by the day, week, or month. Instant booking, verified hosts, transparent pricing — start serving in days, not months.`;
   const canonicalPath = `/${mode}/${categorySlug}/${cityStateSlug}`;
 
   const seoIntro = city.seoIntros?.[dbCategory] || '';
