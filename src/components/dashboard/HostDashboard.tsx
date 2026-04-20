@@ -34,7 +34,7 @@ import {
 import { useMemo, useState } from 'react';
 
 const HostDashboard = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, isVerified } = useAuth();
   const [searchParams] = useSearchParams();
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing, updateListingPrice } = useHostListings();
   const { stats: bookingStats } = useHostBookings();
