@@ -22,6 +22,7 @@ import { RevenueChart } from '@/components/analytics/RevenueChart';
 import { TrafficSourcesCard } from '@/components/analytics/TrafficSourcesCard';
 import { CompetitorPricingCard } from '@/components/analytics/CompetitorPricingCard';
 import { DemandHeatmap } from './DemandHeatmap';
+import { PredictiveBookingCard } from './PredictiveBookingCard';
 import { useDashboardPersona } from '@/hooks/useDashboardPersona';
 
 import ActionRequiredBanner from './ActionRequiredBanner';
@@ -306,6 +307,8 @@ const HostDashboard = () => {
               <HostOffersSection />
             </div>
             <div className="space-y-6">
+              {/* Predictive Booking Insights (AI) */}
+              <PredictiveBookingCard />
               {/* Quick Analytics */}
               <CompactInsights />
             </div>
