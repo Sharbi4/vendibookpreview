@@ -1,176 +1,178 @@
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { 
-  ArrowRight, 
-  Camera, 
-  Package, 
-  DollarSign, 
-  Shield, 
-  CheckCircle2,
-  Truck,
-  Users,
-  Star,
-  Clock,
-  Zap,
+import { motion, useReducedMotion } from 'framer-motion';
+import {
+  Camera,
+  MessageSquare,
   CreditCard,
-  MessageSquare
+  Truck,
+  DollarSign,
+  Users,
+  ShieldCheck,
+  ArrowRight,
+  Sparkles,
+  CheckCircle2,
+  Package,
+  Star,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import SEO from '@/components/SEO';
+import AnimatedHeroScene from '@/components/howitworks/AnimatedHeroScene';
+import ScrollWalkthrough, { WalkthroughStep } from '@/components/howitworks/ScrollWalkthrough';
+import ValuePillars, { Pillar } from '@/components/howitworks/ValuePillars';
 
-const steps = [
-  {
-    step: 1,
-    title: 'List Your Asset',
-    description: 'Upload high-quality photos, set your asking price, and provide detailed specifications of your food truck or equipment.',
-    icon: Camera,
-    color: 'bg-foreground/80',
-  },
-  {
-    step: 2,
-    title: 'Receive Offers',
-    description: 'Interested buyers can make offers directly through the platform. Review, negotiate, or accept with one click.',
-    icon: MessageSquare,
-    color: 'bg-foreground/70',
-  },
-  {
-    step: 3,
-    title: 'Secure Transaction',
-    description: 'Once you accept an offer, the buyer pays through our secure escrow system. Funds are held until delivery is confirmed.',
-    icon: CreditCard,
-    color: 'bg-foreground/60',
-  },
-  {
-    step: 4,
-    title: 'Complete the Sale',
-    description: 'Coordinate handoff with the buyer. Once they confirm receipt, your payment is released instantly.',
-    icon: DollarSign,
-    color: 'bg-foreground',
-  },
+const steps: WalkthroughStep[] = [
+  { number: 1, title: 'List with great photos', description: 'Upload high-res photos, write specs, set asking price. Listings with 8+ photos sell 3x faster.', icon: Camera, mock: 'photo' },
+  { number: 2, title: 'Receive offers from verified buyers', description: 'Verified buyers send full-price purchases or counter-offers. Review, negotiate, or accept with one click.', icon: MessageSquare, mock: 'message' },
+  { number: 3, title: 'Accept payment securely', description: 'Buyer pays via card, ACH, or financing. Funds are held in escrow — protecting both parties.', icon: CreditCard, mock: 'payment' },
+  { number: 4, title: 'Coordinate handoff', description: 'Local pickup or use Vendibook Freight ($4.50/mile) for nationwide delivery. We handle logistics quotes automatically.', icon: Truck, mock: 'truck' },
+  { number: 5, title: 'Get paid', description: 'Once the buyer confirms receipt, funds release to your bank instantly. Track everything in your dashboard.', icon: DollarSign, mock: 'payout' },
 ];
 
-const benefits = [
-  { icon: Shield, title: 'Buyer Protection', description: 'Escrow payments protect both parties' },
-  { icon: Zap, title: 'Fast Payouts', description: 'Get paid as soon as the sale completes' },
-  { icon: Users, title: 'Verified Buyers', description: 'All buyers are identity verified' },
-  { icon: Star, title: 'No Upfront Fees', description: 'Free to list, pay only when you sell' },
+const pillars: Pillar[] = [
+  { icon: Users, title: 'Verified buyers', description: 'Every buyer is identity-verified — no spam, no tire-kickers.' },
+  { icon: CreditCard, title: 'Buyer financing built-in', description: 'Affirm, Klarna, and Afterpay expand your buyer pool overnight.' },
+  { icon: ShieldCheck, title: 'Escrow protection', description: 'Funds held until handoff is confirmed — fraud protection both ways.' },
+  { icon: DollarSign, title: 'No upfront fees', description: 'Free to list. Pay only when the sale completes.' },
+];
+
+const faqs = [
+  { q: 'How much does selling cost?', a: 'Free to list. We charge a small platform fee (typically under 10%) only after the sale closes successfully.' },
+  { q: 'Can buyers finance my asset?', a: 'Yes — buyers can finance with Affirm/Klarna ($35–$30K) or Afterpay (up to $4K). You still get paid in full at close.' },
+  { q: 'Do you handle freight shipping?', a: 'Vendibook Freight covers door-to-door US delivery at $4.50/mile, calculated and quoted automatically at checkout.' },
+  { q: 'How long until I get paid?', a: 'Funds release immediately once the buyer confirms receipt — typically same-day for local pickup, 2–5 days for freight.' },
+  { q: 'What if a buyer backs out?', a: 'Once a buyer pays, funds are locked in escrow. They can\'t back out without a valid dispute, and we mediate every case.' },
+  { q: 'Can I list multiple items?', a: 'Yes — list as many trucks, trailers, or pieces of equipment as you have. Manage everything from one dashboard.' },
 ];
 
 const HowItWorksSeller = () => {
+  const reduce = useReducedMotion();
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO
+        title="How to Sell on Vendibook | Sell Your Food Truck, Trailer, or Equipment"
+        description="Sell your food truck, trailer, or commercial kitchen equipment to verified buyers nationwide. Free to list, escrow protection, buyer financing. See exactly how it works."
+      />
       <Header />
-      
+
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="py-16 md:py-24 bg-background">
-          <div className="container max-w-5xl text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-foreground/10 text-foreground text-sm font-medium mb-6">
-                <Package className="h-4 w-4" />
-                For Sellers
-              </div>
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
-                Sell Your Food Truck or Equipment
-              </h1>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-                Reach thousands of verified buyers looking for food trucks, trailers, and commercial kitchen equipment.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" variant="glass-cta" className="rounded-full" asChild>
-                  <Link to="/list">
-                    List for Sale
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" className="rounded-full" asChild>
-                  <Link to="/how-it-works-host">
-                    I Want to Rent Instead
-                  </Link>
-                </Button>
-              </div>
-            </motion.div>
+        {/* HERO */}
+        <section className="relative pt-16 pb-12 md:pt-24 md:pb-16 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-amber-500/[0.04] via-background to-background" />
+          <div className="container max-w-6xl mx-auto px-4 relative z-10">
+            <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
+              <motion.div
+                initial={reduce ? undefined : { opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-medium text-amber-700 dark:text-amber-400 mb-4">
+                  <Package className="w-3.5 h-3.5" />
+                  For sellers
+                </div>
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-5 leading-[1.05]">
+                  Sell to buyers who are ready to write the check.
+                </h1>
+                <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl leading-relaxed">
+                  Reach thousands of verified buyers looking for food trucks, trailers, and commercial kitchen equipment. Free to list, secure escrow, optional nationwide freight.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Button size="lg" variant="glass-cta" className="rounded-full" asChild>
+                    <Link to="/list?mode=sale">
+                      List for sale <ArrowRight className="ml-1.5 w-4 h-4" />
+                    </Link>
+                  </Button>
+                  <Button size="lg" variant="outline" className="rounded-full" asChild>
+                    <Link to="/how-it-works-host">I want to rent instead</Link>
+                  </Button>
+                </div>
+                <div className="flex items-center gap-5 mt-7 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-amber-500" /> Free to list</div>
+                  <div className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-amber-500" /> Buyer financing</div>
+                  <div className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-amber-500" /> Nationwide freight</div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={reduce ? undefined : { opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+              >
+                <AnimatedHeroScene variant="seller" />
+              </motion.div>
+            </div>
           </div>
         </section>
 
-        {/* Steps Section */}
-        <section className="py-16 md:py-20">
-          <div className="container max-w-5xl">
-            <h2 className="text-3xl font-bold text-center mb-12">How Selling Works</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {steps.map((step, index) => (
-                <motion.div
-                  key={step.step}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                   <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-shadow bg-card/80 backdrop-blur-xl">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className={`${step.color} text-background p-3 rounded-xl`}>
-                          <step.icon className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Step {step.step}</div>
-                          <h3 className="text-lg font-semibold mb-2">{step.title}</h3>
-                          <p className="text-muted-foreground">{step.description}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+        {/* INTRO */}
+        <section className="py-10 md:py-14">
+          <div className="container max-w-3xl mx-auto px-4 text-center">
+            <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-3">From listing to sold in 5 steps</h2>
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+              Reach more buyers, close faster, and get paid securely — without dealing with no-shows or scams.
+            </p>
+          </div>
+        </section>
+
+        {/* WALKTHROUGH */}
+        <ScrollWalkthrough steps={steps} tone="seller" />
+
+        {/* PILLARS */}
+        <ValuePillars pillars={pillars} tone="seller" />
+
+        {/* PROOF */}
+        <section className="py-10 border-y border-border bg-card/40">
+          <div className="container max-w-5xl mx-auto px-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+              {[
+                { v: '14 days', l: 'Avg time to sell' },
+                { v: '3x', l: 'Faster with 8+ photos' },
+                { v: '47 states', l: 'Buyer reach' },
+                { v: '$0', l: 'Upfront cost' },
+              ].map((s) => (
+                <div key={s.l}>
+                  <div className="text-2xl md:text-3xl font-bold text-foreground">{s.v}</div>
+                  <div className="text-xs md:text-sm text-muted-foreground mt-1">{s.l}</div>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Benefits Section */}
-        <section className="py-16 md:py-20 bg-muted/30">
-          <div className="container max-w-5xl">
-            <h2 className="text-3xl font-bold text-center mb-12">Why Sell on Vendibook?</h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {benefits.map((benefit, index) => (
-                <motion.div
-                  key={benefit.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  className="text-center"
-                >
-                  <div className="w-14 h-14 rounded-2xl bg-foreground/10 text-foreground flex items-center justify-center mx-auto mb-4">
-                    <benefit.icon className="h-7 w-7" />
-                  </div>
-                  <h3 className="font-semibold mb-2">{benefit.title}</h3>
-                  <p className="text-sm text-muted-foreground">{benefit.description}</p>
-                </motion.div>
+        {/* FAQ */}
+        <section className="py-16 md:py-20">
+          <div className="container max-w-3xl mx-auto px-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8 text-center">Seller FAQs</h2>
+            <Accordion type="single" collapsible>
+              {faqs.map((f, i) => (
+                <AccordionItem key={i} value={`q-${i}`} className="border-border">
+                  <AccordionTrigger className="text-left text-foreground hover:no-underline">{f.q}</AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground leading-relaxed">{f.a}</AccordionContent>
+                </AccordionItem>
               ))}
-            </div>
+            </Accordion>
           </div>
         </section>
 
-        {/* CTA Section */}
+        {/* CTA */}
         <section className="py-16 md:py-20">
-          <div className="container max-w-3xl text-center">
-            <div className="bg-foreground rounded-3xl p-8 md:p-12 text-background relative overflow-hidden">
-              <div className="absolute inset-0 pointer-events-none overflow-hidden"><div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/[0.05] to-transparent" style={{ animation: 'shimmer-sweep 5s ease-in-out infinite' }} /></div>
-              <h2 className="text-3xl font-bold mb-4">Ready to Sell?</h2>
-              <p className="text-lg opacity-90 mb-8">
-                List your food truck or equipment today. No upfront fees - you only pay when you make a sale.
-              </p>
-              <Button size="lg" variant="secondary" className="rounded-full" asChild>
-                <Link to="/list">
-                  Create Your Listing
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
+          <div className="container max-w-4xl mx-auto px-4">
+            <div className="relative bg-foreground text-background rounded-3xl p-8 md:p-14 text-center overflow-hidden">
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/[0.05] to-transparent" style={{ animation: 'shimmer-sweep 5s ease-in-out infinite' }} />
+              </div>
+              <h2 className="relative text-3xl md:text-4xl font-bold mb-3">Ready to sell?</h2>
+              <p className="relative text-base md:text-lg opacity-80 mb-7 max-w-xl mx-auto">No upfront fees. You only pay when the sale completes.</p>
+              <Button size="lg" variant="secondary" className="relative rounded-full" asChild>
+                <Link to="/list?mode=sale">Create your listing <ArrowRight className="ml-1.5 w-4 h-4" /></Link>
               </Button>
             </div>
           </div>
