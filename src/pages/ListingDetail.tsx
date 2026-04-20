@@ -305,9 +305,20 @@ const ListingDetail = () => {
       )}
       <Header />
 
+      {/* Commercial product bar — Amazon/Best Buy style */}
+      <CommercialProductBar
+        listingId={listing.id}
+        category={listing.category}
+        mode={listing.mode as 'rent' | 'sale'}
+        title={listing.title}
+        rating={ratingData?.average}
+        reviewCount={ratingData?.count}
+        onShare={handleShare}
+      />
+
       <main className="flex-1">
         {/* Photo Gallery - Full bleed on mobile, contained on desktop */}
-        <div className="md:container md:pt-6">
+        <div className="md:container md:pt-4">
           <div className="md:px-0">
             <EnhancedPhotoGallery images={images} videos={videos} title={listing.title} />
           </div>
