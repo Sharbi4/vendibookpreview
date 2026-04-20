@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import QRCode from 'qrcode';
@@ -14,6 +14,11 @@ import {
   TrendingUp,
   MapPin,
   MessageCircle,
+  MessageSquare,
+  Send,
+  Image as ImageIcon,
+  Wand2,
+  Camera,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
