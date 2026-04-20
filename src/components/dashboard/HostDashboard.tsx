@@ -1,8 +1,9 @@
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Truck, Eye, Loader2, Calendar, BarChart3, DollarSign, HandCoins, ExternalLink, Grid3X3, List, LayoutGrid, HelpCircle, Settings, Shield, MessageSquare } from 'lucide-react';
+import { Plus, Truck, Eye, Loader2, Calendar, BarChart3, DollarSign, HandCoins, ExternalLink, Grid3X3, List, LayoutGrid, HelpCircle, Settings, Shield, MessageSquare, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CompactStatCard } from './CompactStatCard';
 import { CompactInsights } from './CompactInsights';
+import { NextBestAction } from './NextBestAction';
 import StripeNotificationBubble from './StripeNotificationBubble';
 import HostListingCard from './HostListingCard';
 import BookingRequestsSection from './BookingRequestsSection';
@@ -23,6 +24,13 @@ import { useRevenueAnalytics } from '@/hooks/useRevenueAnalytics';
 import { useHostOffers } from '@/hooks/useHostOffers';
 import { useAuth } from '@/contexts/AuthContext';
 import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectModal';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { useMemo, useState } from 'react';
 
 const HostDashboard = () => {
