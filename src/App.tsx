@@ -16,6 +16,7 @@ import { AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import GoogleOneTap from "@/components/auth/GoogleOneTap";
 import VoiceAssistantButton from "@/components/VoiceAssistantButton";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { toast } from "sonner";
 
 
@@ -347,6 +348,7 @@ const AppContent = () => {
       <GoogleOneTap />
       <VoiceAssistantButton />
       <AnimatedRoutes />
+      <MobileBottomNav />
     </>
   );
 };
