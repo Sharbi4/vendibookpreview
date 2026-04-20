@@ -628,7 +628,7 @@ export const CATEGORY_LABELS: Record<ListingCategory, string> = {
   food_trailer: 'Food Trailer',
   ghost_kitchen: 'Shared Kitchen',
   vendor_space: 'Vendor Space',
-  vendor_lot: 'Vendor Space', // Legacy alias
+  vendor_lot: 'Vendor Lot', // Legacy alias - kept distinct to avoid duplicate UI labels
 };
 
 export const MODE_LABELS: Record<ListingMode, string> = {
