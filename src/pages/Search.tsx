@@ -573,6 +573,18 @@ const Search = () => {
               </Sheet>
             </div>
 
+            {/* Airbnb-style category pill strip */}
+            <div className="mt-3 -mx-1">
+              <CategoryPillStrip
+                activeCategory={category}
+                onCategoryChange={handleCategoryChange}
+                instantBookOnly={instantBookOnly}
+                onInstantBookToggle={handleInstantBookChange}
+                verifiedHostsOnly={verifiedHostsOnly}
+                onVerifiedToggle={handleVerifiedHostsChange}
+              />
+            </div>
+
             {/* Row 2: Results count + Sort + View toggle + Save Search */}
             <div className="mt-3 flex items-center justify-between gap-3">
               <p className="text-sm text-muted-foreground truncate">
@@ -1102,7 +1114,9 @@ const FilterContent = ({
             />
             <span>All</span>
           </label>
-          {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
+          {Object.entries(CATEGORY_LABELS)
+            .filter(([key]) => key !== 'vendor_lot')
+            .map(([key, label]) => (
             <label 
               key={key} 
               className={cn(
