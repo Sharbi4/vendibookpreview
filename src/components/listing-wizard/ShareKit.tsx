@@ -499,10 +499,14 @@ const generateShareImageBlob = (
   };
 
   const socialButtons = [
+    { id: 'instagram', label: 'Instagram', Icon: InstagramIcon, color: 'hover:text-[#E4405F]' },
     { id: 'facebook', label: 'Facebook', Icon: FacebookIcon, color: 'hover:text-[#1877F2]' },
     { id: 'x', label: 'X', Icon: XIcon, color: 'hover:text-foreground' },
-    { id: 'linkedin', label: 'LinkedIn', Icon: LinkedInIcon, color: 'hover:text-[#0A66C2]' },
     { id: 'whatsapp', label: 'WhatsApp', Icon: WhatsAppIcon, color: 'hover:text-[#25D366]' },
+    { id: 'linkedin', label: 'LinkedIn', Icon: LinkedInIcon, color: 'hover:text-[#0A66C2]' },
+    { id: 'telegram', label: 'Telegram', Icon: TelegramIcon, color: 'hover:text-[#0088cc]' },
+    { id: 'pinterest', label: 'Pinterest', Icon: PinterestIcon, color: 'hover:text-[#E60023]' },
+    { id: 'reddit', label: 'Reddit', Icon: RedditIcon, color: 'hover:text-[#FF4500]' },
   ];
 
   return (
