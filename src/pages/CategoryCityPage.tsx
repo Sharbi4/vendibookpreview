@@ -5,7 +5,7 @@ import { Loader2, MapPin, ArrowRight } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
-import JsonLd, { generateItemListSchema, generateCityCategoryBreadcrumbSchema } from '@/components/JsonLd';
+import JsonLd, { generateItemListSchema, generateCityCategoryBreadcrumbSchema, generateCityCategoryFAQSchema } from '@/components/JsonLd';
 import { Button } from '@/components/ui/button';
 import {
   Breadcrumb,
@@ -92,8 +92,12 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
     );
   }
 
-  const seoTitle = `${categoryLabel} ${modeLabel} in ${city.name}, ${city.stateCode} | Vendibook`;
-  const metaDescription = `Browse ${categoryLabel.toLowerCase()} ${modeLabel.toLowerCase()} in ${city.name}, ${city.stateCode}. Book instantly on Vendibook — the marketplace for food trucks, trailers, kitchens, and vendor spaces.`;
+  const seoTitle = mode === 'buy'
+    ? `${categoryLabel} for Sale in ${city.name}, ${city.stateCode} | Used & New | Vendibook`
+    : `${categoryLabel} for Rent in ${city.name}, ${city.stateCode} | Daily, Weekly, Monthly | Vendibook`;
+  const metaDescription = mode === 'buy'
+    ? `Buy ${categoryLabel.toLowerCase()} in ${city.name}, ${city.stateCode}. Browse verified used and new listings from local sellers. Financing & inspection support. List price, photos, specs upfront.`
+    : `Rent ${categoryLabel.toLowerCase()} in ${city.name}, ${city.stateCode} by the day, week, or month. Instant booking, verified hosts, transparent pricing — start serving in days, not months.`;
   const canonicalPath = `/${mode}/${categorySlug}/${cityStateSlug}`;
 
   const seoIntro = city.seoIntros?.[dbCategory] || '';
@@ -135,11 +139,18 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
   );
 
   const breadcrumbSchema = generateCityCategoryBreadcrumbSchema(mode, categorySlug!, categoryLabel, cityStateSlug!, city.name, city.stateCode);
+  const faqSchema = generateCityCategoryFAQSchema(city.name, city.stateCode, categoryLabel, mode);
+
+  // 6 high-intent FAQs surfaced in the UI (mirrors the JSON-LD)
+  const faqs = (faqSchema.mainEntity as any[]).map((m) => ({
+    q: m.name as string,
+    a: m.acceptedAnswer.text as string,
+  }));
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO title={seoTitle} description={metaDescription} canonical={canonicalPath} />
-      <JsonLd schema={[itemListSchema, breadcrumbSchema]} />
+      <JsonLd schema={[itemListSchema, breadcrumbSchema, faqSchema]} />
       <Header />
 
       <main className="flex-1">
@@ -294,6 +305,27 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
                 >
                   {c.name}, {c.stateCode}
                 </Link>
+              ))}
+            </div>
+          </section>
+
+          {/* FAQ Section — visible content matching FAQPage JSON-LD for rich results */}
+          <section className="space-y-4 pt-6 border-t border-border">
+            <h2 className="text-xl md:text-2xl font-semibold text-foreground">
+              {categoryLabel} {modeLabel} in {city.name} — FAQs
+            </h2>
+            <div className="space-y-3">
+              {faqs.map((f, i) => (
+                <details
+                  key={i}
+                  className="group rounded-xl border border-border bg-card p-4 open:shadow-sm transition-shadow"
+                >
+                  <summary className="cursor-pointer list-none flex items-start justify-between gap-4 font-medium text-foreground">
+                    <span>{f.q}</span>
+                    <span className="text-muted-foreground group-open:rotate-180 transition-transform shrink-0">▾</span>
+                  </summary>
+                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{f.a}</p>
+                </details>
               ))}
             </div>
           </section>
