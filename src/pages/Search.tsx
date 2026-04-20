@@ -18,6 +18,7 @@ import GetAlertsCard from '@/components/search/GetAlertsCard';
 import RequestAssetCTA from '@/components/search/RequestAssetCTA';
 import MobileStickyBar from '@/components/search/MobileStickyBar';
 import SaveSearchButton from '@/components/search/SaveSearchButton';
+import { CategoryPillStrip } from '@/components/search/CategoryPillStrip';
 import { CategoryInfoModal } from '@/components/categories/CategoryGuide';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
