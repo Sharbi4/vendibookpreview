@@ -496,41 +496,85 @@ const Search = () => {
       <main className="flex-1">
       {/* Spacer - logo/tagline removed */}
 
-        {/* Search Header - Enhanced styling matching Contact page */}
-        <div className="relative border-b border-border/40" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%)' }}>
-          {/* Subtle bottom gradient glow line */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[2px] bg-gradient-to-r from-transparent via-primary/20 to-transparent blur-sm" />
-          <div className="container py-4">
-            {/* Row 1: Search + Filters */}
-            <div className="flex gap-3">
-              <div className="relative flex-1">
-                <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Search trucks, trailers, kitchens..."
-                  value={searchQuery}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-10 h-11 text-sm rounded-xl border-border/60 focus:border-primary shadow-sm"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => handleSearch('')}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
+        {/* Search Header — Premium hero with layered gradients */}
+        <div className="relative border-b border-border/40 overflow-hidden">
+          {/* Layered ambient background */}
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.04] via-background to-background" />
+          <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+          <div className="absolute -top-20 right-0 w-80 h-80 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+          {/* Grid texture */}
+          <div
+            className="absolute inset-0 opacity-[0.015] pointer-events-none"
+            style={{
+              backgroundImage: 'linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)',
+              backgroundSize: '32px 32px',
+            }}
+          />
+          {/* Bottom glow line */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[2px] bg-gradient-to-r from-transparent via-primary/25 to-transparent blur-sm" />
+
+          <div className="container relative py-5 sm:py-6">
+            {/* Title row — micro headline + live result chip */}
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-foreground flex items-center justify-center shadow-sm">
+                  <SearchIcon className="h-4 w-4 text-background" />
+                </div>
+                <div>
+                  <h1 className="text-base sm:text-lg font-semibold text-foreground leading-tight">
+                    {category !== 'all' ? CATEGORY_LABELS[category] : 'Browse the marketplace'}
+                  </h1>
+                  <p className="text-[11px] sm:text-xs text-muted-foreground leading-tight">
+                    {locationText ? `Near ${locationText}` : 'Trucks, trailers, kitchens & vendor spaces nationwide'}
+                  </p>
+                </div>
               </div>
-              
-              {/* Filter Button - Enhanced */}
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border/60 bg-card/80 backdrop-blur-sm">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                </span>
+                <span className="text-[11px] font-medium text-muted-foreground">
+                  <span className="text-foreground font-semibold">{totalCount}</span> live
+                </span>
+              </div>
+            </div>
+
+            {/* Row 1: Premium search input + filters */}
+            <div className="flex gap-2 sm:gap-3">
+              <div className="relative flex-1 group">
+                {/* Glow halo on focus */}
+                <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 opacity-0 group-focus-within:opacity-100 blur-sm transition-opacity pointer-events-none" />
+                <div className="relative flex items-center bg-card/90 backdrop-blur-md border border-border/60 rounded-2xl shadow-sm group-focus-within:border-primary/60 group-focus-within:shadow-md transition-all">
+                  <SearchIcon className="absolute left-4 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <Input
+                    type="text"
+                    placeholder="Search trucks, trailers, kitchens, locations…"
+                    value={searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="pl-11 pr-10 h-12 text-sm rounded-2xl border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => handleSearch('')}
+                      className="absolute right-3.5 h-6 w-6 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="Clear search"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Filter Button */}
               <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="dark-shine" size="default" className="rounded-xl relative shrink-0 h-11 px-5">
+                  <Button variant="dark-shine" size="default" className="rounded-2xl relative shrink-0 h-12 px-4 sm:px-5 shadow-sm">
                     <SlidersHorizontal className="h-4 w-4 sm:mr-2" />
                     <span className="hidden sm:inline">Filters</span>
                     {activeFiltersCount > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 h-5 w-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center font-medium shadow-lg">
+                      <span className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center font-bold shadow-lg ring-2 ring-background">
                         {activeFiltersCount}
                       </span>
                     )}
