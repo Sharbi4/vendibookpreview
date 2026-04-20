@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Mail, Send, Eye, Loader2, CheckCircle2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/useAuth';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Header from '@/components/layout/Header';
@@ -13,16 +13,29 @@ import Header from '@/components/layout/Header';
 export default function AdminDigest() {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
-  const { isAdmin, isLoading: roleLoading } = useUserRole();
-  const [preview, setPreview] = useState<{ subject: string; html: string; listingCount: number; cityCounts: { city: string; count: number }[] } | null>(null);
+
+  const { data: isAdmin = false, isLoading: roleLoading } = useQuery({
+    queryKey: ['is-admin', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return false;
+      const { data } = await supabase.rpc('is_admin', { user_id: user.id });
+      return !!data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const [preview, setPreview] = useState<{ subject: string; html: string; listingCount: number } | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [sending, setSending] = useState(false);
 
-  if (authLoading || roleLoading) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  useEffect(() => {
+    if (!authLoading && !user) navigate('/auth');
+    if (!authLoading && !roleLoading && user && !isAdmin) navigate('/');
+  }, [authLoading, roleLoading, user, isAdmin, navigate]);
+
+  if (authLoading || roleLoading || !user || !isAdmin) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
   }
-  if (!user) { navigate('/auth'); return null; }
-  if (!isAdmin) { navigate('/'); return null; }
 
   const loadPreview = async () => {
     setLoadingPreview(true);
@@ -60,7 +73,7 @@ export default function AdminDigest() {
             <Mail className="h-7 w-7 text-primary" />
             <h1 className="text-3xl font-bold text-foreground">Marketplace Digest</h1>
           </div>
-          <p className="text-muted-foreground">Auto-generated email of new listings & trending cities. Sent via Resend Broadcasts every 2 days.</p>
+          <p className="text-muted-foreground">Auto-generated email of new listings & trending cities. Sent via Resend Broadcasts every 2 days at 10am ET.</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 mb-6">
@@ -73,7 +86,7 @@ export default function AdminDigest() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1"><CheckCircle2 className="h-4 w-4 text-emerald-500" />Status</div>
-              <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600">Active</Badge>
+              <Badge variant="secondary">Active</Badge>
             </CardContent>
           </Card>
           <Card>
@@ -85,9 +98,7 @@ export default function AdminDigest() {
         </div>
 
         <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Manual controls</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Manual controls</CardTitle></CardHeader>
           <CardContent className="flex flex-wrap gap-3">
             <Button variant="outline" onClick={loadPreview} disabled={loadingPreview}>
               {loadingPreview ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Eye className="h-4 w-4 mr-2" />}
@@ -110,7 +121,7 @@ export default function AdminDigest() {
               <p className="text-sm text-muted-foreground mt-1">Subject: <span className="font-medium text-foreground">{preview.subject}</span></p>
             </CardHeader>
             <CardContent>
-              <iframe srcDoc={preview.html} title="Digest preview" className="w-full h-[700px] border border-border rounded-lg bg-white" />
+              <iframe srcDoc={preview.html} title="Digest preview" className="w-full h-[700px] border border-border rounded-lg" />
             </CardContent>
           </Card>
         )}
