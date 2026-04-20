@@ -32,6 +32,9 @@ import { ListingEventsSection } from '@/components/storefront';
 import ListingLocationMap from '@/components/listing-detail/ListingLocationMap';
 import RelatedListings from '@/components/listing-detail/RelatedListings';
 import { TechSpecsGrid } from '@/components/listing-detail/TechSpecsGrid';
+import CommercialProductBar from '@/components/listing-detail/CommercialProductBar';
+import SellerTrustPanel from '@/components/listing-detail/SellerTrustPanel';
+import KeySpecsStrip from '@/components/listing-detail/KeySpecsStrip';
 
 import { VendorSlotAvailability } from '@/components/listing-detail/VendorSlotAvailability';
 import { WeeklyHoursDisplay } from '@/components/listing-detail/WeeklyHoursDisplay';
