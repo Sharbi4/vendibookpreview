@@ -51,6 +51,7 @@ const HostDashboard = () => {
   const { analytics, isLoading: analyticsLoading } = useListingAnalytics();
   const { analytics: revenueAnalytics, isLoading: revenueLoading } = useRevenueAnalytics();
   const { pendingOffers } = useHostOffers();
+  const { hasGhostKitchen } = useDashboardPersona();
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
