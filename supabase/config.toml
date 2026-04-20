@@ -210,3 +210,12 @@ verify_jwt = true
 [functions.analytics-rollup]
 verify_jwt = false
 
+[functions.vendi-vision]
+verify_jwt = false
+
+[functions.ai-negotiation-coach]
+verify_jwt = false
+
+[functions.predictive-booking-insights]
+verify_jwt = false
+
