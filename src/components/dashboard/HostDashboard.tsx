@@ -14,6 +14,14 @@ import { EnhancedAnalytics } from './EnhancedAnalytics';
 import { RevenueAnalyticsCard } from './RevenueAnalyticsCard';
 import { HostOffersSection } from './HostOffersSection';
 import HostOnboardingWizard from './HostOnboardingWizard';
+import { ListingInsightsPanel } from './ListingInsightsPanel';
+import { PromotionHub } from './PromotionHub';
+import { KitchenProSuite } from './KitchenProSuite';
+import { ConversionFunnel } from '@/components/analytics/ConversionFunnel';
+import { RevenueChart } from '@/components/analytics/RevenueChart';
+import { TrafficSourcesCard } from '@/components/analytics/TrafficSourcesCard';
+import { CompetitorPricingCard } from '@/components/analytics/CompetitorPricingCard';
+import { useDashboardPersona } from '@/hooks/useDashboardPersona';
 
 import ActionRequiredBanner from './ActionRequiredBanner';
 import { OperationsTable } from './OperationsTable';
@@ -43,6 +51,7 @@ const HostDashboard = () => {
   const { analytics, isLoading: analyticsLoading } = useListingAnalytics();
   const { analytics: revenueAnalytics, isLoading: revenueLoading } = useRevenueAnalytics();
   const { pendingOffers } = useHostOffers();
+  const { hasGhostKitchen } = useDashboardPersona();
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
@@ -433,6 +442,25 @@ const HostDashboard = () => {
 
         </div>
       )}
+
+      {/* Tab Content: Insights (AI health scores + analytics suite) */}
+      {activeTab === 'insights' && (
+        <div className="space-y-6">
+          <ListingInsightsPanel />
+          <div className="grid lg:grid-cols-2 gap-4">
+            <ConversionFunnel days={30} />
+            <RevenueChart />
+            <TrafficSourcesCard days={30} />
+            <CompetitorPricingCard />
+          </div>
+        </div>
+      )}
+
+      {/* Tab Content: Promote (boost, AI copy, SEO, share) */}
+      {activeTab === 'promote' && <PromotionHub />}
+
+      {/* Tab Content: Kitchen Pro (slot calendar, heatmap, equipment) */}
+      {activeTab === 'kitchen' && hasGhostKitchen && <KitchenProSuite />}
 
       {/* Stripe Connect Modal */}
       <StripeConnectModal

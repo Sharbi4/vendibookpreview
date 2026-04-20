@@ -13,8 +13,12 @@ import {
   Truck,
   User,
   Search,
-  Shield
+  Shield,
+  Sparkles,
+  Megaphone,
+  ChefHat
 } from 'lucide-react';
+import { useDashboardPersona } from '@/hooks/useDashboardPersona';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -39,11 +43,18 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { count: unreadMessageCount } = useUnreadMessageCount();
 
-  // Airbnb-style Navigation Config based on mode
+  const { hasGhostKitchen } = useDashboardPersona();
+
+  // Unified Pro Dashboard nav with conditional Kitchen tab
   const navigation = mode === 'host' ? [
     { title: 'Overview', icon: LayoutGrid, href: '/dashboard?view=host', tab: null },
     { title: 'Listings', icon: Truck, href: '/host/listings', tab: null },
     { title: 'Booking Manager', icon: CalendarDays, href: '/host/bookings', tab: null },
+    { title: 'Insights', icon: Sparkles, href: '/dashboard?view=host&tab=insights', tab: 'insights' },
+    { title: 'Promote', icon: Megaphone, href: '/dashboard?view=host&tab=promote', tab: 'promote' },
+    ...(hasGhostKitchen
+      ? [{ title: 'Kitchen Pro', icon: ChefHat, href: '/dashboard?view=host&tab=kitchen', tab: 'kitchen' }]
+      : []),
     { title: 'Reporting', icon: BarChart3, href: '/host/reporting', tab: null },
     { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null },
   ] : [
