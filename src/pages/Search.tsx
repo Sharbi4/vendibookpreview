@@ -821,92 +821,81 @@ const Search = () => {
                 </div>
               )}
 
-              {/* Split View - Half Map, Half List */}
+              {/* Split View — Airbnb-style: scrollable cards left, sticky full-viewport map right */}
               {viewMode === 'split' && (
-                <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6">
-                  {/* Map Side - Sticky on desktop, fixed height on mobile */}
-                  <div className="lg:order-2 h-[300px] lg:h-auto lg:sticky lg:top-24 lg:self-start rounded-xl overflow-hidden border border-border shadow-lg z-10">
-                    <div className="h-full lg:h-[calc(100vh-140px)]">
-                    <SearchResultsMap
-                      listings={listings}
-                      mapToken={mapToken}
-                      isLoading={isMapTokenLoading}
-                      error={mapTokenError}
-                      userLocation={locationCoords}
-                      searchRadius={searchRadius}
-                      onListingClick={() => {
-                        // Preview shows on click, button navigates to listing
-                      }}
-                    />
+                <div className="flex flex-col lg:grid lg:grid-cols-[1fr_1.1fr] xl:grid-cols-[1fr_1.2fr] gap-4 lg:gap-6">
+                  <div className="lg:order-2 h-[280px] lg:h-auto lg:sticky lg:top-20 lg:self-start rounded-2xl overflow-hidden border border-border/60 shadow-lg z-10 relative">
+                    <div className="h-full lg:h-[calc(100vh-110px)] relative">
+                      <SearchResultsMap
+                        listings={listings}
+                        mapToken={mapToken}
+                        isLoading={isMapTokenLoading}
+                        error={mapTokenError}
+                        userLocation={locationCoords}
+                        searchRadius={searchRadius}
+                        onListingClick={() => {}}
+                      />
+                      <div className="absolute bottom-3 left-3 z-20 px-2.5 py-1 rounded-full bg-background/95 backdrop-blur-md border border-border/60 shadow-sm text-[11px] font-medium">
+                        <span className="font-bold">{listings.length}</span> on map
+                      </div>
                     </div>
                   </div>
-                  {/* List Side */}
-                  <div className="lg:order-1">
-                    <div className="space-y-4">
+                  <div className="lg:order-1 lg:max-h-[calc(100vh-110px)] lg:overflow-y-auto lg:pr-2 lg:-mr-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {listings.length > 0 ? (
-                        <>
-                          {listings.map((listing) => {
-                            return (
-                              <div key={listing.id} className="relative">
-                                <ListingCard 
-                                  listing={listing} 
-                                  hostVerified={listing.host_verified ?? false}
-                                  showQuickBook
-                                  onQuickBook={handleQuickBook}
-                                  canDeliverToUser={listing.can_deliver ?? false}
-                                  compact
-                                />
-                                {listing.distance_miles !== null && listing.distance_miles !== undefined && (
-                                  <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 z-10">
-                                    <Navigation className="h-3 w-3" />
-                                    {listing.distance_miles < 1 ? '< 1' : Math.round(listing.distance_miles)} mi
-                                  </div>
-                                )}
+                        listings.map((listing) => (
+                          <div
+                            key={listing.id}
+                            className={cn(
+                              "relative group rounded-2xl transition-all duration-200",
+                              hoveredListingId === listing.id && "ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.01]"
+                            )}
+                            onMouseEnter={() => setHoveredListingId(listing.id)}
+                            onMouseLeave={() => setHoveredListingId(null)}
+                          >
+                            <ListingCard
+                              listing={listing}
+                              hostVerified={listing.host_verified ?? false}
+                              showQuickBook
+                              onQuickBook={handleQuickBook}
+                              canDeliverToUser={listing.can_deliver ?? false}
+                              compact
+                            />
+                            {listing.distance_miles !== null && listing.distance_miles !== undefined && (
+                              <div className="absolute top-3 left-3 bg-background/95 backdrop-blur-sm px-2 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1 z-10 shadow-sm border border-border/40">
+                                <Navigation className="h-3 w-3" />
+                                {listing.distance_miles < 1 ? '< 1' : Math.round(listing.distance_miles)} mi
                               </div>
-                            );
-                          })}
-                        </>
+                            )}
+                          </div>
+                        ))
                       ) : (
-                        <EmptyStateEmailCapture 
-                          onClearFilters={clearFilters}
-                          category={category !== 'all' ? category : undefined}
-                          mode={mode !== 'all' ? mode : undefined}
-                          locationText={searchQuery || locationText}
-                        />
+                        <div className="col-span-full">
+                          <EmptyStateEmailCapture
+                            onClearFilters={clearFilters}
+                            category={category !== 'all' ? category : undefined}
+                            mode={mode !== 'all' ? mode : undefined}
+                            locationText={searchQuery || locationText}
+                          />
+                        </div>
                       )}
                     </div>
-                    
-                    {/* Pagination for split view */}
                     {totalPages > 1 && (
-                      <div className="mt-8">
+                      <div className="mt-8 mb-4">
                         <Pagination>
                           <PaginationContent>
                             <PaginationItem>
-                              <PaginationPrevious 
-                                onClick={() => page > 1 && handlePageChange(page - 1)}
-                                className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                              />
+                              <PaginationPrevious onClick={() => page > 1 && handlePageChange(page - 1)} className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
                             </PaginationItem>
                             {getPageNumbers().map((pageNum, idx) => (
                               <PaginationItem key={idx}>
-                                {pageNum === 'ellipsis' ? (
-                                  <span className="px-3 py-2">...</span>
-                                ) : (
-                                  <PaginationLink
-                                    onClick={() => handlePageChange(pageNum)}
-                                    isActive={page === pageNum}
-                                    className="cursor-pointer"
-                                  >
-                                    {pageNum}
-                                  </PaginationLink>
+                                {pageNum === 'ellipsis' ? <span className="px-3 py-2">...</span> : (
+                                  <PaginationLink onClick={() => handlePageChange(pageNum)} isActive={page === pageNum} className="cursor-pointer">{pageNum}</PaginationLink>
                                 )}
                               </PaginationItem>
                             ))}
                             <PaginationItem>
-                              <PaginationNext 
-                                onClick={() => page < totalPages && handlePageChange(page + 1)}
-                                className={page >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                              />
+                              <PaginationNext onClick={() => page < totalPages && handlePageChange(page + 1)} className={page >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
                             </PaginationItem>
                           </PaginationContent>
                         </Pagination>
@@ -916,9 +905,65 @@ const Search = () => {
                 </div>
               )}
 
-              {/* Map View */}
+              {/* List View — compact horizontal rows */}
+              {viewMode === 'list' && (
+                <>
+                  {listings.length > 0 ? (
+                    <div className="space-y-3">
+                      {listings.map((listing) => (
+                        <div key={listing.id} className="relative">
+                          <ListingCard
+                            listing={listing}
+                            hostVerified={listing.host_verified ?? false}
+                            showQuickBook
+                            onQuickBook={handleQuickBook}
+                            canDeliverToUser={listing.can_deliver ?? false}
+                            compact
+                          />
+                          {listing.distance_miles !== null && listing.distance_miles !== undefined && (
+                            <div className="absolute top-3 left-3 bg-background/95 backdrop-blur-sm px-2 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1 z-10 shadow-sm border border-border/40">
+                              <Navigation className="h-3 w-3" />
+                              {listing.distance_miles < 1 ? '< 1' : Math.round(listing.distance_miles)} mi
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyStateEmailCapture
+                      onClearFilters={clearFilters}
+                      category={category !== 'all' ? category : undefined}
+                      mode={mode !== 'all' ? mode : undefined}
+                      locationText={searchQuery || locationText}
+                    />
+                  )}
+                  {totalPages > 1 && (
+                    <div className="mt-8">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious onClick={() => page > 1 && handlePageChange(page - 1)} className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
+                          </PaginationItem>
+                          {getPageNumbers().map((pageNum, idx) => (
+                            <PaginationItem key={idx}>
+                              {pageNum === 'ellipsis' ? <span className="px-3 py-2">...</span> : (
+                                <PaginationLink onClick={() => handlePageChange(pageNum)} isActive={page === pageNum} className="cursor-pointer">{pageNum}</PaginationLink>
+                              )}
+                            </PaginationItem>
+                          ))}
+                          <PaginationItem>
+                            <PaginationNext onClick={() => page < totalPages && handlePageChange(page + 1)} className={page >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Map View — full immersive */}
               {viewMode === 'map' && (
-                <div className="h-[600px] rounded-xl overflow-hidden border border-border">
+                <div className="h-[calc(100vh-200px)] min-h-[500px] rounded-2xl overflow-hidden border border-border/60 shadow-lg relative">
                   <SearchResultsMap
                     listings={listings}
                     mapToken={mapToken}
@@ -930,6 +975,15 @@ const Search = () => {
                       window.location.href = `/listing/${listing.id}`;
                     }}
                   />
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
+                    <button
+                      onClick={() => setViewMode('split')}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-foreground text-background text-sm font-semibold shadow-2xl hover:scale-105 active:scale-95 transition-transform"
+                    >
+                      <Rows3 className="h-4 w-4" />
+                      Show list
+                    </button>
+                  </div>
                 </div>
               )}
 
