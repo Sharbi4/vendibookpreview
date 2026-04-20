@@ -207,6 +207,89 @@ export const generateCityServiceSchema = (
   };
 };
 
+/**
+ * FAQ schema specifically built for city+category landing pages.
+ * Returns 6 high-intent questions optimized for "People Also Ask" boxes.
+ */
+export const generateCityCategoryFAQSchema = (
+  city: string,
+  state: string,
+  categoryLabel: string,
+  mode: 'rent' | 'buy' | 'sale',
+) => {
+  const isRent = mode === 'rent';
+  const singular = categoryLabel.endsWith('s') ? categoryLabel.slice(0, -1) : categoryLabel;
+  const lowerLabel = categoryLabel.toLowerCase();
+  const lowerSingular = singular.toLowerCase();
+
+  const faqs = isRent
+    ? [
+        {
+          q: `How much does it cost to rent a ${lowerSingular} in ${city}, ${state}?`,
+          a: `${city} ${lowerSingular} rentals on Vendibook typically range from $200–$500 per day, with weekly and monthly discounts available. Pricing varies by size, equipment, and host. Browse live ${city} listings for current rates.`,
+        },
+        {
+          q: `Do I need a license to operate a ${lowerSingular} in ${city}?`,
+          a: `Yes — operating a ${lowerSingular} in ${city}, ${state} requires a mobile food vendor permit, food handler certification, and (in most cases) a business license. Vendibook hosts can guide you through local ${state} requirements.`,
+        },
+        {
+          q: `Can I book a ${lowerSingular} in ${city} instantly?`,
+          a: `Many ${city} listings on Vendibook support Instant Book, allowing you to reserve a ${lowerSingular} immediately without waiting for host approval. Look for the ⚡ Instant badge on listings.`,
+        },
+        {
+          q: `What\'s included when I rent a ${lowerSingular} in ${city}?`,
+          a: `Most ${city} rentals include the fully-equipped ${lowerSingular}, basic kitchen equipment, propane/utility hookup guidance, and host support. Specific inclusions vary — check each listing for details on equipment, generators, and delivery options.`,
+        },
+        {
+          q: `Can ${city} ${lowerLabel} be delivered to my event location?`,
+          a: `Yes — many Vendibook hosts in ${city}, ${state} offer delivery within a defined radius for an additional fee. Filter by "delivery available" or message the host directly to arrange transport.`,
+        },
+        {
+          q: `Is renting cheaper than buying a ${lowerSingular} in ${city}?`,
+          a: `For most new operators in ${city}, renting is dramatically cheaper than buying. A new ${lowerSingular} costs $50K–$150K+ to purchase, while Vendibook rentals start under $300/day — letting you test concepts and locations before committing.`,
+        },
+      ]
+    : [
+        {
+          q: `How much does a ${lowerSingular} cost to buy in ${city}, ${state}?`,
+          a: `${city} ${lowerSingular}s for sale on Vendibook range from $15,000 for used trailers to $150,000+ for fully-equipped new builds. Browse current ${city} listings to see live pricing and condition reports.`,
+        },
+        {
+          q: `Where can I find used ${lowerLabel} for sale in ${city}?`,
+          a: `Vendibook lists verified used and new ${lowerLabel} for sale in ${city}, ${state} directly from owners and dealers. Each listing shows photos, equipment specs, mileage (where applicable), and seller contact details.`,
+        },
+        {
+          q: `What financing options are available for buying a ${lowerSingular}?`,
+          a: `Many ${city} buyers finance through SBA loans, equipment financing, or seller financing. Vendibook also supports Affirm and Klarna for qualifying purchases up to $30,000. Contact the seller directly to discuss financing.`,
+        },
+        {
+          q: `Can I inspect a ${lowerSingular} before buying in ${city}?`,
+          a: `Yes — every Vendibook listing in ${city} allows you to message the seller and arrange an in-person inspection before purchase. We strongly recommend a third-party inspection for any ${lowerSingular} purchase over $20K.`,
+        },
+        {
+          q: `Do ${city} ${lowerLabel} for sale come with permits?`,
+          a: `Permits are typically tied to the operator, not the ${lowerSingular} itself. After buying in ${city}, you\'ll need to apply for ${state} mobile food permits, health inspections, and a business license. The seller can often share their permit history to streamline your application.`,
+        },
+        {
+          q: `Should I buy or rent a ${lowerSingular} in ${city}?`,
+          a: `Buy if you\'ve validated demand and plan to operate full-time in ${city}, ${state}. Rent first if you\'re testing a concept, location, or need short-term capacity. Vendibook offers both options — start with a rental and convert to ownership when you\'re ready.`,
+        },
+      ];
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: f.a,
+      },
+    })),
+  };
+};
+
 // Product schema for Google Shopping - supports both rentals and sales
 export const generateProductSchema = (listing: {
   id: string;
