@@ -600,31 +600,94 @@ const generateShareImageBlob = (
 
         {/* SOCIAL ROW */}
         <div>
-          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Share to
-          </label>
-          <div className="mt-2 flex items-center gap-2">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Share to
+            </label>
+            <button
+              onClick={handleNativeShare}
+              className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
+            >
+              <Share2 className="w-3 h-3" /> More
+            </button>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
             {socialButtons.map(({ id, label, Icon, color }) => (
               <button
                 key={id}
                 onClick={() => openShare(id)}
                 aria-label={`Share to ${label}`}
                 className={cn(
-                  'flex-1 h-12 rounded-xl border bg-background text-muted-foreground flex items-center justify-center transition-all hover:border-foreground/20 hover:bg-muted/50 active:scale-95',
+                  'h-14 rounded-xl border bg-background text-muted-foreground flex flex-col items-center justify-center gap-1 transition-all hover:border-foreground/20 hover:bg-muted/50 active:scale-95',
                   color
                 )}
               >
                 <Icon className="w-5 h-5" />
+                <span className="text-[9px] font-medium">{label}</span>
               </button>
             ))}
+          </div>
+
+          {/* Quick channels: SMS / Email */}
+          <div className="grid grid-cols-2 gap-2 mt-2">
             <button
-              onClick={handleNativeShare}
-              aria-label="More share options"
-              className="flex-1 h-12 rounded-xl border bg-background text-muted-foreground flex items-center justify-center transition-all hover:border-foreground/20 hover:bg-muted/50 hover:text-foreground active:scale-95"
+              onClick={() => openShare('sms')}
+              className="h-11 rounded-xl border bg-background text-foreground/80 flex items-center justify-center gap-2 text-sm font-medium hover:bg-muted/50 active:scale-95 transition-all"
             >
-              <Share2 className="w-5 h-5" />
+              <MessageSquare className="w-4 h-4" /> SMS
+            </button>
+            <button
+              onClick={() => openShare('email')}
+              className="h-11 rounded-xl border bg-background text-foreground/80 flex items-center justify-center gap-2 text-sm font-medium hover:bg-muted/50 active:scale-95 transition-all"
+            >
+              <Send className="w-4 h-4" /> Email
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* SMART CAPTION (AI-style) */}
+      <div className="rounded-2xl border bg-card p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Wand2 className="w-4 h-4 text-primary" />
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Smart caption
+            </label>
+          </div>
+          <button
+            onClick={regenerateCaption}
+            className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
+          >
+            <Sparkles className="w-3 h-3" /> Regenerate
+          </button>
+        </div>
+        <div className="px-3.5 py-3 bg-muted/60 rounded-xl text-sm text-foreground/90 whitespace-pre-line leading-relaxed">
+          {currentCaption}
+        </div>
+        <div className="text-[11px] text-muted-foreground">
+          {hashtags.map(h => `#${h}`).join(' ')}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            onClick={handleCopyCaption}
+            variant="outline"
+            className={cn('rounded-xl', captionCopied && 'bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-500')}
+          >
+            {captionCopied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+            {captionCopied ? 'Copied' : 'Copy caption'}
+          </Button>
+          <Button
+            onClick={handleShareWithImage}
+            disabled={shareWithImageBusy}
+            className="rounded-xl"
+          >
+            {shareWithImageBusy ? (
+              <><Camera className="w-4 h-4 mr-2 animate-pulse" /> Preparing…</>
+            ) : (
+              <><ImageIcon className="w-4 h-4 mr-2" /> Share with image</>
+            )}
+          </Button>
         </div>
       </div>
 
