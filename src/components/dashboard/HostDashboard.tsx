@@ -14,6 +14,14 @@ import { EnhancedAnalytics } from './EnhancedAnalytics';
 import { RevenueAnalyticsCard } from './RevenueAnalyticsCard';
 import { HostOffersSection } from './HostOffersSection';
 import HostOnboardingWizard from './HostOnboardingWizard';
+import { ListingInsightsPanel } from './ListingInsightsPanel';
+import { PromotionHub } from './PromotionHub';
+import { KitchenProSuite } from './KitchenProSuite';
+import { ConversionFunnel } from '@/components/analytics/ConversionFunnel';
+import { RevenueChart } from '@/components/analytics/RevenueChart';
+import { TrafficSourcesCard } from '@/components/analytics/TrafficSourcesCard';
+import { CompetitorPricingCard } from '@/components/analytics/CompetitorPricingCard';
+import { useDashboardPersona } from '@/hooks/useDashboardPersona';
 
 import ActionRequiredBanner from './ActionRequiredBanner';
 import { OperationsTable } from './OperationsTable';
