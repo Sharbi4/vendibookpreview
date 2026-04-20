@@ -32,6 +32,9 @@ import { ListingEventsSection } from '@/components/storefront';
 import ListingLocationMap from '@/components/listing-detail/ListingLocationMap';
 import RelatedListings from '@/components/listing-detail/RelatedListings';
 import { TechSpecsGrid } from '@/components/listing-detail/TechSpecsGrid';
+import CommercialProductBar from '@/components/listing-detail/CommercialProductBar';
+import SellerTrustPanel from '@/components/listing-detail/SellerTrustPanel';
+import KeySpecsStrip from '@/components/listing-detail/KeySpecsStrip';
 
 import { VendorSlotAvailability } from '@/components/listing-detail/VendorSlotAvailability';
 import { WeeklyHoursDisplay } from '@/components/listing-detail/WeeklyHoursDisplay';
@@ -302,9 +305,20 @@ const ListingDetail = () => {
       )}
       <Header />
 
+      {/* Commercial product bar — Amazon/Best Buy style */}
+      <CommercialProductBar
+        listingId={listing.id}
+        category={listing.category}
+        mode={listing.mode as 'rent' | 'sale'}
+        title={listing.title}
+        rating={ratingData?.average}
+        reviewCount={ratingData?.count}
+        onShare={handleShare}
+      />
+
       <main className="flex-1">
         {/* Photo Gallery - Full bleed on mobile, contained on desktop */}
-        <div className="md:container md:pt-6">
+        <div className="md:container md:pt-4">
           <div className="md:px-0">
             <EnhancedPhotoGallery images={images} videos={videos} title={listing.title} />
           </div>
@@ -387,6 +401,16 @@ const ListingDetail = () => {
                   )}
                 </div>
 
+                {/* Key specs at-a-glance — commercial style */}
+                <KeySpecsStrip
+                  category={listing.category}
+                  mode={listing.mode as 'rent' | 'sale'}
+                  fulfillmentType={listing.fulfillment_type}
+                  instantBook={listing.instant_book || false}
+                  deliveryFee={listing.delivery_fee}
+                  inStock={listing.status === 'published'}
+                />
+
                 {/* Action Buttons Row */}
                 <div className="flex items-center gap-2">
                   <Button 
@@ -442,7 +466,21 @@ const ListingDetail = () => {
                 {/* Divider */}
                 <div className="border-t border-border" />
 
-                {/* Host/Seller Section */}
+                {/* Seller Trust Panel — Why buy from this seller */}
+                <SellerTrustPanel
+                  hostId={listing.host_id}
+                  hostName={host ? getPublicDisplayName(host) : null}
+                  isVerified={host?.identity_verified || false}
+                  memberSince={host?.created_at}
+                  lastActiveAt={host?.last_active_at}
+                  city={listing.city || (host as any)?.public_city}
+                  state={listing.state || (host as any)?.public_state}
+                  averageRating={ratingData?.average}
+                  reviewCount={ratingData?.count}
+                  isRental={isRental}
+                />
+
+                {/* Host/Seller Detailed Section */}
                 <EnhancedHostCard
                   hostId={listing.host_id}
                   listingId={listing.id}
