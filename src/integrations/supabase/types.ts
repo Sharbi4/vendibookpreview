@@ -2229,6 +2229,105 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          get_amount: number
+          give_amount: number
+          id: string
+          is_active: boolean
+          total_earned: number
+          total_qualified: number
+          total_referred: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          get_amount?: number
+          give_amount?: number
+          id?: string
+          is_active?: boolean
+          total_earned?: number
+          total_qualified?: number
+          total_referred?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          get_amount?: number
+          give_amount?: number
+          id?: string
+          is_active?: boolean
+          total_earned?: number
+          total_qualified?: number
+          total_referred?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          qualified_at: string | null
+          qualifying_entity_id: string | null
+          qualifying_event: string | null
+          referred_reward_amount: number | null
+          referred_reward_payout_id: string | null
+          referred_reward_status: string | null
+          referred_user_id: string
+          referrer_id: string
+          referrer_reward_amount: number | null
+          referrer_reward_payout_id: string | null
+          referrer_reward_status: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          qualified_at?: string | null
+          qualifying_entity_id?: string | null
+          qualifying_event?: string | null
+          referred_reward_amount?: number | null
+          referred_reward_payout_id?: string | null
+          referred_reward_status?: string | null
+          referred_user_id: string
+          referrer_id: string
+          referrer_reward_amount?: number | null
+          referrer_reward_payout_id?: string | null
+          referrer_reward_status?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          qualified_at?: string | null
+          qualifying_entity_id?: string | null
+          qualifying_event?: string | null
+          referred_reward_amount?: number | null
+          referred_reward_payout_id?: string | null
+          referred_reward_status?: string | null
+          referred_user_id?: string
+          referrer_id?: string
+          referrer_reward_amount?: number | null
+          referrer_reward_payout_id?: string | null
+          referrer_reward_status?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           booking_id: string
@@ -2585,6 +2684,99 @@ export type Database = {
           radius_miles?: number | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      share_events: {
+        Row: {
+          caption: string | null
+          channel: string
+          content_type: string
+          created_at: string
+          entity_id: string | null
+          id: string
+          metadata: Json | null
+          session_id: string | null
+          share_url: string | null
+          user_id: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          caption?: string | null
+          channel: string
+          content_type: string
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          share_url?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          caption?: string | null
+          channel?: string
+          content_type?: string
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          share_url?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: []
+      }
+      share_templates: {
+        Row: {
+          caption: string
+          channel: string
+          created_at: string
+          cta_text: string | null
+          generated_by_model: string | null
+          hashtags: string[] | null
+          id: string
+          listing_id: string | null
+          performance_score: number | null
+          updated_at: string
+          use_count: number
+          variant: string
+        }
+        Insert: {
+          caption: string
+          channel: string
+          created_at?: string
+          cta_text?: string | null
+          generated_by_model?: string | null
+          hashtags?: string[] | null
+          id?: string
+          listing_id?: string | null
+          performance_score?: number | null
+          updated_at?: string
+          use_count?: number
+          variant?: string
+        }
+        Update: {
+          caption?: string
+          channel?: string
+          created_at?: string
+          cta_text?: string | null
+          generated_by_model?: string | null
+          hashtags?: string[] | null
+          id?: string
+          listing_id?: string | null
+          performance_score?: number | null
+          updated_at?: string
+          use_count?: number
+          variant?: string
         }
         Relationships: []
       }
@@ -2976,6 +3168,15 @@ export type Database = {
       }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_fast_responder: { Args: { host_user_id: string }; Returns: boolean }
+      lookup_referral_code: {
+        Args: { p_code: string }
+        Returns: {
+          code: string
+          get_amount: number
+          give_amount: number
+          owner_id: string
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
