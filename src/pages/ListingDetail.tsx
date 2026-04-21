@@ -527,8 +527,12 @@ const ListingDetail = () => {
               <div className="border-t border-border" />
 
               {/* About Section */}
-              <div className="space-y-2">
-                <h2 className="text-lg font-semibold text-foreground">About this listing</h2>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <h2 className="text-lg font-semibold text-foreground">About this listing</h2>
+                  <PromoVideoPlayer listingId={listing.id} />
+                </div>
+                <AudioListingPlayer listingId={listing.id} />
                 <CollapsibleDescription description={listing.description} />
               </div>
 
