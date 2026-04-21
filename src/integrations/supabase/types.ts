@@ -828,6 +828,75 @@ export type Database = {
           },
         ]
       }
+      feedback_email_sent: {
+        Row: {
+          context_id: string
+          context_type: string
+          id: string
+          recipient_email: string
+          sent_at: string
+        }
+        Insert: {
+          context_id: string
+          context_type: string
+          id?: string
+          recipient_email: string
+          sent_at?: string
+        }
+        Update: {
+          context_id?: string
+          context_type?: string
+          id?: string
+          recipient_email?: string
+          sent_at?: string
+        }
+        Relationships: []
+      }
+      feedback_submissions: {
+        Row: {
+          context_id: string | null
+          context_type: string
+          created_at: string
+          email: string | null
+          id: string
+          message: string | null
+          metadata: Json | null
+          nps: number | null
+          rating: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          user_id: string | null
+        }
+        Insert: {
+          context_id?: string | null
+          context_type: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          nps?: number | null
+          rating?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          context_id?: string | null
+          context_type?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          nps?: number | null
+          rating?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       listing_ai_insights: {
         Row: {
           competitor_summary: Json | null

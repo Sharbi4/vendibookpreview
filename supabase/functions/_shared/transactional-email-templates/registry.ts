@@ -33,6 +33,7 @@ import { template as hostDailyDigest } from './host-daily-digest.tsx'
 import { template as shopperDailyDigest } from './shopper-daily-digest.tsx'
 import { template as sellerDailyDigest } from './seller-daily-digest.tsx'
 import { template as adminDailyDigest } from './admin-daily-digest.tsx'
+import { template as feedbackRequest } from './feedback-request.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcome,
@@ -59,4 +60,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'shopper-daily-digest': shopperDailyDigest,
   'seller-daily-digest': sellerDailyDigest,
   'admin-daily-digest': adminDailyDigest,
+  'feedback-request': feedbackRequest,
 }
