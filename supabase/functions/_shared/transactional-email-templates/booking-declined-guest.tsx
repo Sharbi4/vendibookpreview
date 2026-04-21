@@ -1,0 +1,27 @@
+import * as React from 'npm:react@18.3.1'
+import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import type { TemplateEntry } from './registry.ts'
+import { s, SITE_URL } from './_styles.ts'
+
+interface Props { shopperName?: string; listingTitle?: string; reason?: string }
+
+const E = ({ shopperName, listingTitle, reason }: Props) => (
+  <Html lang="en" dir="ltr"><Head /><Preview>Update on your booking request</Preview>
+    <Body style={s.main}><Container style={s.container}>
+      <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+      <Section style={s.card}>
+        <Text style={s.smallHeader}>BOOKING UPDATE</Text>
+        <Heading style={s.h1}>{shopperName ? `${shopperName}, ` : ''}your request wasn't accepted.</Heading>
+        <Text style={s.lede}>The host couldn't accommodate {listingTitle ? `“${listingTitle}”` : 'your booking'} this time. Don't worry — there are dozens of similar listings nearby.</Text>
+        {reason ? <Section style={s.accentRow}><Text style={s.accentLabel}>HOST NOTE</Text><Text style={s.accentValuePlain}>{reason}</Text></Section> : null}
+        <Section style={s.ctaWrap}><Button href={`${SITE_URL}/search`} style={s.button}>Browse alternatives</Button></Section>
+      </Section>
+    </Container></Body></Html>
+)
+
+export const template = {
+  component: E,
+  subject: () => `Your booking request was declined`,
+  displayName: 'Booking declined (guest)',
+  previewData: { shopperName: 'Jordan', listingTitle: 'Demo Truck', reason: 'Already booked for those dates.' },
+} satisfies TemplateEntry
