@@ -21,6 +21,8 @@ import MessageHostForm from '@/components/messaging/MessageHostForm';
 import ReviewsSection from '@/components/reviews/ReviewsSection';
 import RequirementsModal from '@/components/listing-detail/RequirementsModal';
 import CollapsibleDescription from '@/components/listing-detail/CollapsibleDescription';
+import AudioListingPlayer from '@/components/listing/AudioListingPlayer';
+import PromoVideoPlayer from '@/components/listing/PromoVideoPlayer';
 import EnhancedQuickHighlights from '@/components/listing-detail/EnhancedQuickHighlights';
 import PricingSection from '@/components/listing-detail/PricingSection';
 import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
@@ -525,8 +527,12 @@ const ListingDetail = () => {
               <div className="border-t border-border" />
 
               {/* About Section */}
-              <div className="space-y-2">
-                <h2 className="text-lg font-semibold text-foreground">About this listing</h2>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <h2 className="text-lg font-semibold text-foreground">About this listing</h2>
+                  <PromoVideoPlayer listingId={listing.id} />
+                </div>
+                <AudioListingPlayer listingId={listing.id} />
                 <CollapsibleDescription description={listing.description} />
               </div>
 

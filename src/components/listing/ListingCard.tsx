@@ -208,7 +208,8 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   const remainingAmenitiesCount = (listing.amenities?.length || 0) - displayAmenities.length;
 
   return (
-    <div 
+    <div
+      data-listing-id={listing.id}
       className="rounded-2xl border border-white/15 hover:-translate-y-1 transition-all duration-300 ease-out flex flex-col overflow-hidden h-full group shadow-2xl shadow-black/30"
       style={{
         background: 'rgba(255, 255, 255, 0.06)',

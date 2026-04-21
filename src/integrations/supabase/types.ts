@@ -780,6 +780,47 @@ export type Database = {
         }
         Relationships: []
       }
+      listing_ai_media: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          listing_id: string
+          media_type: string
+          source_hash: string | null
+          url: string
+          voice_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          listing_id: string
+          media_type: string
+          source_hash?: string | null
+          url: string
+          voice_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          listing_id?: string
+          media_type?: string
+          source_hash?: string | null
+          url?: string
+          voice_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_ai_media_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_analytics_daily: {
         Row: {
           bookings: number
