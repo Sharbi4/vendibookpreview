@@ -2987,6 +2987,39 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_verification_codes: {
+        Row: {
+          attempts: number
+          code_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          phone_number: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone_number: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone_number?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
@@ -3297,6 +3330,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_referral_counter: {
+        Args: { p_owner_id: string }
+        Returns: undefined
       }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_fast_responder: { Args: { host_user_id: string }; Returns: boolean }
