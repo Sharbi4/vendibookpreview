@@ -70,6 +70,7 @@ interface SearchResponse {
 }
 
 const Search = () => {
+  usePredictivePrefetch();
   const [searchParams, setSearchParams] = useSearchParams();
   
   // Track page views with Google Analytics
