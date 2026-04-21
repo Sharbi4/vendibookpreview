@@ -18,7 +18,8 @@ const SITE_URL = 'https://vendibook.com'
 const RECIPIENT = 'user@example.test'
 const CONFIRMATION_URL = 'https://vendibook.com/confirm?token=sample'
 
-const AUTH_TEMPLATES = [
+// deno-lint-ignore no-explicit-any
+const AUTH_TEMPLATES: Array<{ name: string; component: any; props: Record<string, any> }> = [
   { name: 'signup', component: SignupEmail, props: { siteName: SITE_NAME, siteUrl: SITE_URL, recipient: RECIPIENT, confirmationUrl: CONFIRMATION_URL } },
   { name: 'invite', component: InviteEmail, props: { siteName: SITE_NAME, siteUrl: SITE_URL, confirmationUrl: CONFIRMATION_URL } },
   { name: 'magiclink', component: MagicLinkEmail, props: { siteName: SITE_NAME, confirmationUrl: CONFIRMATION_URL } },
