@@ -29,4 +29,12 @@ export const s = {
   good: { color: '#10b981', fontWeight: 600 } as const,
   warn: { color: '#f59e0b', fontWeight: 600 } as const,
   bad: { color: '#ef4444', fontWeight: 600 } as const,
+  kicker: { fontSize: '10px', letterSpacing: '0.28em', color: '#FF5124', fontWeight: 700, margin: '0 0 14px' } as const,
+  detailGrid: { backgroundColor: '#141414', border: '1px solid #232323', borderRadius: '12px', padding: '20px 22px', margin: '0 0 28px' } as const,
+  detailLabel: { fontSize: '10px', letterSpacing: '0.2em', color: '#737373', fontWeight: 600, margin: '0 0 4px' } as const,
+  detailValue: { fontSize: '15px', color: '#fafafa', fontWeight: 500, margin: 0 } as const,
+  detailValueOrange: { fontSize: '20px', color: '#FF5124', fontWeight: 600, margin: 0, letterSpacing: '-0.01em' } as const,
+  detailSub: { fontSize: '13px', color: '#737373', margin: '4px 0 0' } as const,
+  detailMono: { fontSize: '13px', color: '#d4d4d4', margin: 0, fontFamily: 'monospace', letterSpacing: '0.05em' } as const,
+  hrThin: { borderColor: '#232323', margin: '14px 0' } as const,
 }
