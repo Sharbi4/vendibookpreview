@@ -83,6 +83,7 @@ Deno.serve(async (req) => {
     }
 
     const body = `Your Vendibook verification code is ${code}. Reply STOP to opt out, HELP for help. Msg & data rates may apply.`;
+    const statusCallbackUrl = `${SUPABASE_URL}/functions/v1/twilio-status-callback`;
     const twResp = await fetch(`${GATEWAY_URL}/Messages.json`, {
       method: "POST",
       headers: {
@@ -90,7 +91,12 @@ Deno.serve(async (req) => {
         "X-Connection-Api-Key": TWILIO_API_KEY,
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: new URLSearchParams({ To: phone, From: TWILIO_FROM, Body: body }),
+      body: new URLSearchParams({
+        To: phone,
+        From: TWILIO_FROM,
+        Body: body,
+        StatusCallback: statusCallbackUrl,
+      }),
     });
     const twData = await twResp.json();
     if (!twResp.ok) {
