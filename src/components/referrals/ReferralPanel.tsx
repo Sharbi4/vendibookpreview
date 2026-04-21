@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Gift, Copy, Share2, Facebook, Twitter, MessageCircle, Mail, Sparkles } from "lucide-react";
+import { Gift, Copy, Share2, Facebook, Twitter, MessageCircle, Mail, ExternalLink } from "lucide-react";
 import { useReferralCode, useMyReferrals, buildReferralUrl } from "@/hooks/useReferral";
 import { useShareKit } from "@/hooks/useShareKit";
 import { toast } from "sonner";
@@ -56,17 +56,21 @@ export const ReferralPanel = () => {
           </Button>
         </div>
 
+        <Button variant="outline" size="sm" onClick={() => { window.open(link, "_blank", "noopener"); toast.success("Opened your referral link"); }} className="w-full">
+          <ExternalLink className="h-4 w-4 mr-1" /> Test your link in a new tab
+        </Button>
+
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-2">
-          <Button variant="outline" size="sm" onClick={() => share("facebook", link, defaultCaption)}>
+          <Button variant="outline" size="sm" onClick={() => { share("facebook", link, defaultCaption); toast.success("Opened Facebook"); }}>
             <Facebook className="h-4 w-4 mr-1" /> FB
           </Button>
-          <Button variant="outline" size="sm" onClick={() => share("x", link, defaultCaption)}>
+          <Button variant="outline" size="sm" onClick={() => { share("x", link, defaultCaption); toast.success("Opened X"); }}>
             <Twitter className="h-4 w-4 mr-1" /> X
           </Button>
-          <Button variant="outline" size="sm" onClick={() => share("sms", link, defaultCaption)}>
+          <Button variant="outline" size="sm" onClick={() => { share("sms", link, defaultCaption); toast.success("Opened SMS"); }}>
             <MessageCircle className="h-4 w-4 mr-1" /> SMS
           </Button>
-          <Button variant="outline" size="sm" onClick={() => share("email", link, defaultCaption)}>
+          <Button variant="outline" size="sm" onClick={() => { share("email", link, defaultCaption); toast.success("Opened email"); }}>
             <Mail className="h-4 w-4 mr-1" /> Email
           </Button>
           <Button variant="outline" size="sm" onClick={() => share("native", link, defaultCaption)}>

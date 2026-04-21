@@ -71,12 +71,8 @@ Deno.serve(async (req) => {
 
     if (insErr) throw insErr;
 
-    // Bump counter
-    await admin.rpc("noop_bump", {}).catch(() => null);
-    await admin
-      .from("referral_codes")
-      .update({ total_referred: (await admin.from("referral_codes").select("total_referred").eq("user_id", ref.owner_id).single()).data?.total_referred + 1 || 1 })
-      .eq("user_id", ref.owner_id);
+    // Atomic counter bump
+    await admin.rpc("increment_referral_counter", { p_owner_id: ref.owner_id });
 
     return new Response(JSON.stringify({ ok: true, referral_id: created.id, status: "pending" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
