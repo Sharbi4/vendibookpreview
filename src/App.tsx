@@ -162,6 +162,7 @@ const AnimatedRoutes = () => {
   return (
     <AnimatePresence mode="wait" initial={false}>
       <Suspense fallback={<PageLoader />} key={location.pathname}>
+        <ReferralCapture />
         <Routes location={location}>
           <Route path="/" element={<PageTransition><Index /></PageTransition>} />
           <Route path="/browse" element={<PageTransition><Browse /></PageTransition>} />
