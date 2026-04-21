@@ -294,7 +294,7 @@ serve(async (req) => {
                 </p>
                 
                 <div style="text-align: center;">
-                  <a href="https://vendibookpreview.lovable.app/admin" style="display: inline-block; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">Review in Admin Panel</a>
+                  <a href="https://vendibook.com/admin" style="display: inline-block; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">Review in Admin Panel</a>
                 </div>
               </div>
               
@@ -366,7 +366,7 @@ serve(async (req) => {
                 </p>
                 
                 <div style="text-align: center;">
-                  <a href="https://vendibookpreview.lovable.app/dashboard" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Your Booking</a>
+                  <a href="https://vendibook.com/dashboard" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Your Booking</a>
                 </div>
               </div>
               
@@ -435,7 +435,7 @@ serve(async (req) => {
                 </p>
                 
                 <div style="text-align: center;">
-                  <a href="https://vendibookpreview.lovable.app/dashboard" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Dashboard</a>
+                  <a href="https://vendibook.com/dashboard" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Dashboard</a>
                 </div>
               </div>
               
