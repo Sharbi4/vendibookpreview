@@ -414,7 +414,7 @@ const handler = async (req: Request): Promise<Response> => {
             <!-- CTA Button -->
             ${totalItems > 0 ? `
               <div style="text-align: center; margin: 32px 0;">
-                <a href="https://vendibookpreview.lovable.app/admin" 
+                <a href="https://vendibook.com/admin" 
                    style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
                   Go to Admin Dashboard
                 </a>

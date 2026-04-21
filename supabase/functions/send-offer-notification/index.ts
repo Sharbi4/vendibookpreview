@@ -156,7 +156,7 @@ serve(async (req: Request): Promise<Response> => {
         </p>
         
         <div style="text-align: center; margin-top: 24px;">
-          <a href="https://vendibookpreview.lovable.app/dashboard" 
+          <a href="https://vendibook.com/dashboard" 
              style="display: inline-block; background-color: #1a1a1a; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">
             Review Offer
           </a>
@@ -185,7 +185,7 @@ serve(async (req: Request): Promise<Response> => {
         </p>
         
         <div style="text-align: center;">
-          <a href="https://vendibookpreview.lovable.app/checkout/${offer.listing_id}" 
+          <a href="https://vendibook.com/checkout/${offer.listing_id}" 
              style="display: inline-block; background-color: #10b981; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">
             Complete Purchase
           </a>
@@ -218,7 +218,7 @@ serve(async (req: Request): Promise<Response> => {
         </p>
         
         <div style="text-align: center;">
-          <a href="https://vendibookpreview.lovable.app/listing/${offer.listing_id}" 
+          <a href="https://vendibook.com/listing/${offer.listing_id}" 
              style="display: inline-block; background-color: #1a1a1a; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">
             View Listing
           </a>
@@ -256,7 +256,7 @@ serve(async (req: Request): Promise<Response> => {
         </p>
         
         <div style="text-align: center; margin-top: 24px;">
-          <a href="https://vendibookpreview.lovable.app/dashboard" 
+          <a href="https://vendibook.com/dashboard" 
              style="display: inline-block; background-color: #3b82f6; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">
             Review Counter-Offer
           </a>
@@ -284,7 +284,7 @@ serve(async (req: Request): Promise<Response> => {
         </p>
         
         <div style="text-align: center;">
-          <a href="https://vendibookpreview.lovable.app/dashboard" 
+          <a href="https://vendibook.com/dashboard" 
              style="display: inline-block; background-color: #1a1a1a; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">
             View Dashboard
           </a>
@@ -314,7 +314,7 @@ serve(async (req: Request): Promise<Response> => {
         </p>
         
         <div style="text-align: center;">
-          <a href="https://vendibookpreview.lovable.app/dashboard" 
+          <a href="https://vendibook.com/dashboard" 
              style="display: inline-block; background-color: #1a1a1a; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">
             View Dashboard
           </a>

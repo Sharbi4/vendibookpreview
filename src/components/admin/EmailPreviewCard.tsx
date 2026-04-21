@@ -183,7 +183,7 @@ const emailTemplates = {
         description: 'Sent when user requests password reset',
         sampleData: {
           userName: 'John Smith',
-          resetLink: 'https://vendibookpreview.lovable.app/reset-password?token=example',
+          resetLink: 'https://vendibook.com/reset-password?token=example',
         },
       },
       {
@@ -267,7 +267,7 @@ const emailTemplates = {
 
 // Generate HTML for each template
 const generateEmailHtml = (templateId: string, data: Record<string, unknown>): string => {
-  const logoUrl = 'https://vendibookpreview.lovable.app/images/vendibook-email-logo.png';
+  const logoUrl = 'https://vendibook.com/images/vendibook-email-logo.png';
   
   const baseStyles = `
     font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -295,7 +295,7 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
       <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
         <!-- Logo Header -->
         <div style="text-align: center; margin-bottom: 24px;">
-          <a href="https://vendibookpreview.lovable.app" style="display: inline-block; background-color: #ffffff; padding: 16px 24px; border-radius: 12px;">
+          <a href="https://vendibook.com" style="display: inline-block; background-color: #ffffff; padding: 16px 24px; border-radius: 12px;">
             <img src="${logoUrl}" alt="VendiBook" style="max-width: 360px; height: auto;" />
           </a>
         </div>
@@ -329,7 +329,7 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
           Please review and respond to this request as soon as possible.
         </p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://vendibookpreview.lovable.app/dashboard" 
+          <a href="https://vendibook.com/dashboard" 
              style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
             View Booking Request
           </a>
@@ -354,7 +354,7 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
           The host will review your request and respond soon. We'll notify you once they respond.
         </p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://vendibookpreview.lovable.app/dashboard" 
+          <a href="https://vendibook.com/dashboard" 
              style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
             View Booking Status
           </a>
@@ -382,7 +382,7 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
           </div>
         ` : ''}
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://vendibookpreview.lovable.app/dashboard" 
+          <a href="https://vendibook.com/dashboard" 
              style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
             View Booking Details
           </a>
@@ -411,7 +411,7 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
           Don't worry! There are plenty of other great options available. Browse more listings on VendiBook.
         </p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://vendibookpreview.lovable.app/browse" 
+          <a href="https://vendibook.com/browse" 
              style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
             Browse Listings
           </a>
@@ -445,7 +445,7 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
           <p style="color: #166534; margin: 0;">${data.address || data.deliveryAddress || 'Address provided after booking'}</p>
         </div>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://vendibookpreview.lovable.app/dashboard" 
+          <a href="https://vendibook.com/dashboard" 
              style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
             View Booking
           </a>
@@ -540,7 +540,7 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
           </ul>
         </div>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://vendibookpreview.lovable.app/${isHost ? 'dashboard' : 'browse'}" 
+          <a href="https://vendibook.com/${isHost ? 'dashboard' : 'browse'}" 
              style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
             ${isHost ? 'Go to Dashboard' : 'Browse Listings'}
           </a>
@@ -582,7 +582,7 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
           </p>
         </div>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://vendibookpreview.lovable.app/dashboard" 
+          <a href="https://vendibook.com/dashboard" 
              style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
             Complete Setup
           </a>
@@ -616,7 +616,7 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
           Please upload a new document that addresses the issue above.
         </p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://vendibookpreview.lovable.app/dashboard" 
+          <a href="https://vendibook.com/dashboard" 
              style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
             Upload New Document
           </a>
@@ -639,7 +639,7 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
           </p>
         </div>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://vendibookpreview.lovable.app/dashboard" 
+          <a href="https://vendibook.com/dashboard" 
              style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
             Upload Documents
           </a>
@@ -657,7 +657,7 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
           <p style="color: #1a1a1a; margin: 0; font-style: italic;">"${data.messagePreview}"</p>
         </div>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://vendibookpreview.lovable.app/messages" 
+          <a href="https://vendibook.com/messages" 
              style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
             View Message
           </a>
@@ -679,7 +679,7 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
           </p>
         </div>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://vendibookpreview.lovable.app/dashboard" 
+          <a href="https://vendibook.com/dashboard" 
              style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
             View Requests
           </a>
@@ -702,7 +702,7 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
           Finish and publish your listings to start receiving bookings!
         </p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://vendibookpreview.lovable.app/dashboard" 
+          <a href="https://vendibook.com/dashboard" 
              style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
             Complete Listings
           </a>

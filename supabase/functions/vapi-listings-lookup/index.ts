@@ -189,7 +189,7 @@ async function searchListings(supabase: any, args: any) {
       fulfillment: l.fulfillment_type,
       amenities: l.amenities?.slice(0, 5),
       highlights: l.highlights?.slice(0, 3),
-      url: `https://vendibookpreview.lovable.app/listing/${l.id}`,
+      url: `https://vendibook.com/listing/${l.id}`,
     })),
   };
 }
@@ -248,7 +248,7 @@ async function getListingDetails(supabase: any, args: any) {
         reviewer: r.reviewer_display_name,
       })),
     },
-    url: `https://vendibookpreview.lovable.app/listing/${data.id}`,
+    url: `https://vendibook.com/listing/${data.id}`,
   };
 }
 
@@ -408,7 +408,7 @@ async function createListingDraft(supabase: any, args: any) {
     status: data.status,
     draft_token: guest_draft_token,
     message: `Draft listing "${data.title}" created with all details! The user just needs to add photos and connect Stripe to publish.`,
-    url: `https://vendibookpreview.lovable.app/create-listing/${data.id}`,
+    url: `https://vendibook.com/create-listing/${data.id}`,
   };
 }
 
@@ -573,7 +573,7 @@ async function getBookingInfo(supabase: any, args: any) {
       description: d.description,
     })),
     has_required_documents: (docs || []).some((d: any) => d.is_required),
-    booking_url: `https://vendibookpreview.lovable.app/listing/${listing.id}`,
+    booking_url: `https://vendibook.com/listing/${listing.id}`,
     message: listing.instant_book
       ? `This listing supports Instant Book — you can reserve it right away on the website!`
       : `This listing requires host approval. Submit a booking request and the host will respond.`,
@@ -740,7 +740,7 @@ async function sendBookingLink(supabase: any, args: any) {
 
   if (!listing) return { error: 'Listing not found' };
 
-  const bookingUrl = `https://vendibookpreview.lovable.app/listing/${listing_id}`;
+  const bookingUrl = `https://vendibook.com/listing/${listing_id}`;
   const location = [listing.city, listing.state].filter(Boolean).join(', ');
   const dateRange = start_date && end_date ? `${start_date} to ${end_date}` : '';
   
@@ -837,7 +837,7 @@ async function sendBookingLink(supabase: any, args: any) {
               </div>
               
               <p style="font-size: 13px; color: #999; text-align: center;">
-                Need help? Reply to this email or talk to Vendi anytime on <a href="https://vendibookpreview.lovable.app" style="color: #FF5124;">vendibook.com</a>
+                Need help? Reply to this email or talk to Vendi anytime on <a href="https://vendibook.com" style="color: #FF5124;">vendibook.com</a>
               </p>
             </div>
           </div>
