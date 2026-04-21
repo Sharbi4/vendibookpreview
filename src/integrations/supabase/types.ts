@@ -1913,6 +1913,93 @@ export type Database = {
           },
         ]
       }
+      orchestration_decisions: {
+        Row: {
+          chosen_channel: string | null
+          created_at: string
+          entity_id: string | null
+          event_type: string
+          id: string
+          outcome: Json
+          payload: Json
+          priority: string | null
+          rationale: string | null
+          suppressed: boolean
+          suppression_reason: string | null
+          user_id: string
+        }
+        Insert: {
+          chosen_channel?: string | null
+          created_at?: string
+          entity_id?: string | null
+          event_type: string
+          id?: string
+          outcome?: Json
+          payload?: Json
+          priority?: string | null
+          rationale?: string | null
+          suppressed?: boolean
+          suppression_reason?: string | null
+          user_id: string
+        }
+        Update: {
+          chosen_channel?: string | null
+          created_at?: string
+          entity_id?: string | null
+          event_type?: string
+          id?: string
+          outcome?: Json
+          payload?: Json
+          priority?: string | null
+          rationale?: string | null
+          suppressed?: boolean
+          suppression_reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      orchestration_rules: {
+        Row: {
+          audience_filter: Json
+          cooldown_minutes: number
+          created_at: string
+          default_channel: string
+          enabled: boolean
+          event_type: string
+          id: string
+          priority: string
+          respect_quiet_hours: boolean
+          template_hint: string | null
+          updated_at: string
+        }
+        Insert: {
+          audience_filter?: Json
+          cooldown_minutes?: number
+          created_at?: string
+          default_channel?: string
+          enabled?: boolean
+          event_type: string
+          id?: string
+          priority?: string
+          respect_quiet_hours?: boolean
+          template_hint?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audience_filter?: Json
+          cooldown_minutes?: number
+          created_at?: string
+          default_channel?: string
+          enabled?: boolean
+          event_type?: string
+          id?: string
+          priority?: string
+          respect_quiet_hours?: boolean
+          template_hint?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address1: string | null
@@ -2921,6 +3008,51 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      user_journey_state: {
+        Row: {
+          bookings_as_guest: number
+          bookings_as_host: number
+          created_at: string
+          last_login_at: string | null
+          last_touched_at: string
+          listings_count: number
+          published_count: number
+          segment_tags: string[]
+          signals: Json
+          stage: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bookings_as_guest?: number
+          bookings_as_host?: number
+          created_at?: string
+          last_login_at?: string | null
+          last_touched_at?: string
+          listings_count?: number
+          published_count?: number
+          segment_tags?: string[]
+          signals?: Json
+          stage?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bookings_as_guest?: number
+          bookings_as_host?: number
+          created_at?: string
+          last_login_at?: string | null
+          last_touched_at?: string
+          listings_count?: number
+          published_count?: number
+          segment_tags?: string[]
+          signals?: Json
+          stage?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
