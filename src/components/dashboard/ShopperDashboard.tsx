@@ -7,6 +7,8 @@ import BuyerSalesSection from './BuyerSalesSection';
 import { BuyerOffersSection } from './BuyerOffersSection';
 import { DiscoveryHeroCard, DiscoveryGrid } from './DiscoveryGrid';
 import BecomeHostCard from './BecomeHostCard';
+import { ReferralPanel } from '@/components/referrals/ReferralPanel';
+import { SmsOptInPrompt } from '@/components/comms/SmsOptInPrompt';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 import { useAuth } from '@/contexts/AuthContext';
 const ShopperDashboard = () => {
@@ -38,6 +40,8 @@ const ShopperDashboard = () => {
 
   return (
     <div className="space-y-8">
+      <SmsOptInPrompt />
+      <ReferralPanel />
       {/* Hero Browse CTA - Airbnb minimal style */}
       <div className="rounded-xl border border-border p-6 bg-card">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
