@@ -26,6 +26,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
+import { ConciergeInbox } from '@/components/concierge/ConciergeInbox';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import AppDropdownMenu from './AppDropdownMenu';
 
@@ -258,6 +259,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             </div>
           )}
           <div className="flex items-center gap-2">
+            {user && <ConciergeInbox userId={user.id} />}
             <NotificationCenter />
             <AppDropdownMenu variant="light" />
           </div>
@@ -303,6 +305,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
               </div>
             )}
             <div className="flex items-center gap-3">
+              {user && <ConciergeInbox userId={user.id} />}
               <NotificationCenter />
               <AppDropdownMenu variant="light" />
             </div>

@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Truck, Store, Eye, EyeOff, Loader2, Mail, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { triggerOrchestrator } from '@/lib/orchestrator';
 import { z } from 'zod';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 import { trackSignupCompleted, trackLoginAttempt, trackLoginSuccess, trackLoginError, trackSignupAttempt, trackSignupError, trackPasswordResetRequest } from '@/lib/analytics';
@@ -255,6 +256,18 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
           } else {
             trackSignupConversion({ method: 'email', user_type: 'shopper' });
           }
+
+          // Fire AI orchestrator for welcome message (fire-and-forget)
+          try {
+            const { data: { user: newUser } } = await supabase.auth.getUser();
+            if (newUser?.id) {
+              triggerOrchestrator({
+                user_id: newUser.id,
+                event_type: 'user_signup',
+                payload: { role: selectedRole, first_name: trimmedFirstName },
+              });
+            }
+          } catch {}
           
           toast({
             title: 'Check your email!',
