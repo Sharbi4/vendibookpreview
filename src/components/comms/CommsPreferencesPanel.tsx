@@ -232,7 +232,7 @@ export const CommsPreferencesPanel = () => {
           )}
 
           {subscription?.verified && (
-            <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+            <p className="text-xs text-primary flex items-center gap-1">
               <Phone className="h-3 w-3" /> Phone verified
             </p>
           )}
