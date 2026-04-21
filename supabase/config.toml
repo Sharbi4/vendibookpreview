@@ -155,6 +155,8 @@ project_id = "nbrehbwfsmedbelzntqs"
     verify_jwt = false
   [functions.send-daily-digests]
     verify_jwt = false
+  [functions.send-feedback-requests]
+    verify_jwt = false
   [functions.seo-prerender]
     verify_jwt = false
   [functions.stripe-webhook]
