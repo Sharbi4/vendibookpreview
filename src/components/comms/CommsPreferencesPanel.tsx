@@ -60,9 +60,61 @@ export const CommsPreferencesPanel = () => {
       });
   }, [user?.id]);
 
+  const [step, setStep] = useState<"idle" | "code">("idle");
+  const [otp, setOtp] = useState("");
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+
+  const sendVerification = async () => {
+    if (!phone.trim()) {
+      toast.error("Enter your mobile number first");
+      return;
+    }
+    setSendingOtp(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-sms-verification", {
+        body: { phone_number: phone.trim() },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+      toast.success("Verification code sent");
+      setStep("code");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to send code");
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    if (otp.length !== 6) return;
+    setVerifyingOtp(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-sms-otp", { body: { code: otp } });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+      toast.success("Phone verified ✓");
+      setStep("idle");
+      setOtp("");
+      save({
+        phone_number: phone.trim(),
+        opted_in: true,
+        accepts_transactional: acceptsTransactional,
+        accepts_alerts: acceptsAlerts,
+        accepts_marketing: acceptsMarketing,
+      });
+    } catch (e: any) {
+      toast.error(e.message === "incorrect_code" ? "Wrong code" : (e.message || "Verification failed"));
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
   const saveSms = () => {
     if (optedIn && !phone.trim()) {
       toast.error("Enter your mobile number to enable SMS");
+      return;
+    }
+    if (optedIn && !subscription?.verified) {
+      sendVerification();
       return;
     }
     save({
@@ -157,8 +209,36 @@ export const CommsPreferencesPanel = () => {
             disabled={!optedIn}
           />
 
-          <Button onClick={saveSms} disabled={isSaving} className="w-full sm:w-auto">
-            {isSaving ? "Saving…" : "Save SMS preferences"}
+          {step === "code" && (
+            <div className="space-y-2 rounded-md border border-primary/30 bg-primary/5 p-3">
+              <Label htmlFor="otp-code">Enter the 6-digit code we just texted to {phone}</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="otp-code"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  className="font-mono tracking-[0.4em] text-center"
+                />
+                <Button onClick={verifyOtp} disabled={verifyingOtp || otp.length !== 6}>
+                  {verifyingOtp ? "…" : "Verify"}
+                </Button>
+              </div>
+              <button onClick={sendVerification} disabled={sendingOtp} className="text-xs text-muted-foreground hover:text-foreground underline">
+                {sendingOtp ? "Resending…" : "Resend code"}
+              </button>
+            </div>
+          )}
+
+          {subscription?.verified && (
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+              <Phone className="h-3 w-3" /> Phone verified
+            </p>
+          )}
+
+          <Button onClick={saveSms} disabled={isSaving || sendingOtp} className="w-full sm:w-auto">
+            {isSaving ? "Saving…" : (optedIn && !subscription?.verified ? "Verify & enable SMS" : "Save SMS preferences")}
           </Button>
         </CardContent>
       </Card>
