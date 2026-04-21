@@ -219,3 +219,9 @@ verify_jwt = false
 [functions.predictive-booking-insights]
 verify_jwt = false
 
+[functions.listing-narration]
+verify_jwt = false
+
+[functions.generate-listing-video]
+verify_jwt = false
+

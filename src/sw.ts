@@ -3,7 +3,7 @@
 import { clientsClaim } from 'workbox-core';
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
-import { CacheFirst, NetworkFirst } from 'workbox-strategies';
+import { CacheFirst, NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 
 declare let self: ServiceWorkerGlobalScope & {
@@ -43,6 +43,37 @@ registerRoute(
       new ExpirationPlugin({
         maxEntries: 10,
         maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+      }),
+    ],
+  })
+);
+
+// Offline-first listing pages — serve cached HTML when offline
+registerRoute(
+  ({ url, request }) =>
+    request.mode === 'navigate' && /^\/listing\/[a-f0-9-]{36}$/i.test(url.pathname),
+  new StaleWhileRevalidate({
+    cacheName: 'listing-pages',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 60,
+        maxAgeSeconds: 60 * 60 * 24 * 7, // 1 week
+      }),
+    ],
+  })
+);
+
+// Cache listing images aggressively (CacheFirst — images don't change)
+registerRoute(
+  ({ url, request }) =>
+    request.destination === 'image' &&
+    (url.hostname.endsWith('supabase.co') || url.pathname.startsWith('/lovable-uploads/')),
+  new CacheFirst({
+    cacheName: 'listing-images',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 250,
+        maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
       }),
     ],
   })

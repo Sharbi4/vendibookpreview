@@ -386,7 +386,14 @@ serve(async (req) => {
         headers: {
           ...corsHeaders,
           "Content-Type": "text/html; charset=utf-8",
-          "Cache-Control": "public, max-age=3600, s-maxage=86400",
+          // Aggressive edge caching: 1h browser, 24h CDN, 7d stale-while-revalidate.
+          // Sub-100ms TTFB after first warm hit.
+          "Cache-Control":
+            "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+          "CDN-Cache-Control": "public, max-age=86400",
+          "Vercel-CDN-Cache-Control": "public, max-age=86400",
+          "Surrogate-Control": "public, max-age=86400",
+          Vary: "Accept-Encoding",
         },
       });
     }
