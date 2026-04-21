@@ -497,7 +497,25 @@ serve(async (req) => {
               }
             }
 
-            // Send booking notification to host - this is the ONLY place where
+            // Send SMS confirmation to shopper (if opted in + verified)
+            try {
+              const startStr = bookingData?.start_date
+                ? new Date(bookingData.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                : "your dates";
+              const smsBody = `VendiBook: Booking confirmed for "${listingTitle}" starting ${startStr}. View: https://vendibook.com/dashboard?booking=${bookingId}. Reply STOP to opt out.`;
+              await supabaseClient.functions.invoke("send-sms", {
+                body: {
+                  user_id: bookingData?.shopper_id,
+                  template_name: "booking_confirmed",
+                  body: smsBody,
+                  category: "transactional",
+                  metadata: { booking_id: bookingId },
+                },
+              });
+              logStep("SMS confirmation sent to shopper (if subscribed)", { shopperId: bookingData?.shopper_id });
+            } catch (smsError) {
+              logStep("WARNING: Failed to send SMS confirmation", { error: String(smsError) });
+            }
             // the host receives notification about new booking requests (after payment confirmed)
             try {
               await supabaseClient.functions.invoke("send-booking-notification", {

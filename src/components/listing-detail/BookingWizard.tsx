@@ -122,7 +122,7 @@ const BookingWizard = ({
   const [message, setMessage] = useState(draft?.message || '');
   const [userInfo, setUserInfo] = useState<BookingUserInfo | null>(null);
 
-  // Save draft when form state changes
+  // Save draft when form state changes (local + remote for cron-driven recovery emails)
   useEffect(() => {
     if (!draftLoaded) return;
     saveDraft({
@@ -132,7 +132,30 @@ const BookingWizard = ({
       deliveryAddress,
       message,
     });
-  }, [startDate, endDate, fulfillmentSelected, deliveryAddress, message, saveDraft, draftLoaded]);
+    // Persist to DB so the abandonment cron can find it (only once we have meaningful data + a logged-in user)
+    if (user && startDate && endDate && !isOwner) {
+      supabase
+        .from('booking_drafts')
+        .upsert(
+          {
+            user_id: user.id,
+            listing_id: listingId,
+            email: user.email || '',
+            start_date: format(startDate, 'yyyy-MM-dd'),
+            end_date: format(endDate, 'yyyy-MM-dd'),
+            total_price: fees.customerTotal,
+            updated_at: new Date().toISOString(),
+            email_2h_sent_at: null,
+            email_24h_sent_at: null,
+            completed_at: null,
+          },
+          { onConflict: 'user_id,listing_id' }
+        )
+        .then(({ error }) => {
+          if (error) console.warn('booking_drafts upsert failed:', error.message);
+        });
+    }
+  }, [startDate, endDate, fulfillmentSelected, deliveryAddress, message, saveDraft, draftLoaded, user, isOwner, listingId]);
 
   const isMobileAsset = category === 'food_truck' || category === 'food_trailer';
   
@@ -324,6 +347,17 @@ const BookingWizard = ({
       trackFormSubmitConversion({ form_type: 'booking_request', listing_id: listingId });
       trackRequestSubmitted(listingId, instantBook);
       clearDraft(); // Clear saved draft on successful submission
+      // Mark DB draft as completed so abandonment cron skips it
+      if (user) {
+        supabase
+          .from('booking_drafts')
+          .update({ completed_at: new Date().toISOString() })
+          .eq('user_id', user.id)
+          .eq('listing_id', listingId)
+          .then(({ error }) => {
+            if (error) console.warn('booking_drafts complete update failed:', error.message);
+          });
+      }
       setBookingComplete(true);
     } catch (error) {
       if (checkoutWindow) checkoutWindow.close();

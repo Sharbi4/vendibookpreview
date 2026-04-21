@@ -34,8 +34,10 @@ import { template as shopperDailyDigest } from './shopper-daily-digest.tsx'
 import { template as sellerDailyDigest } from './seller-daily-digest.tsx'
 import { template as adminDailyDigest } from './admin-daily-digest.tsx'
 import { template as feedbackRequest } from './feedback-request.tsx'
+import { template as bookingAbandoned } from './booking-abandoned.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
+  'booking-abandoned': bookingAbandoned,
   'welcome': welcome,
   'booking-confirmation': bookingConfirmation,
   'payment-receipt': paymentReceipt,

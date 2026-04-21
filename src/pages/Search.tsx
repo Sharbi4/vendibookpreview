@@ -14,6 +14,7 @@ import DateRangeFilter from '@/components/search/DateRangeFilter';
 import { LocationSearchInput } from '@/components/search/LocationSearchInput';
 import { RadiusFilter } from '@/components/search/RadiusFilter';
 import SearchResultsMap from '@/components/search/SearchResultsMap';
+import SmartNoResults from '@/components/search/SmartNoResults';
 import { EmptyStateEmailCapture } from '@/components/search/EmptyStateEmailCapture';
 import GetAlertsCard from '@/components/search/GetAlertsCard';
 import RequestAssetCTA from '@/components/search/RequestAssetCTA';
@@ -873,7 +874,8 @@ const Search = () => {
                         ))
                       ) : (
                         <div className="col-span-full">
-                          <EmptyStateEmailCapture
+                          <SmartNoResults
+                            searchParams={searchRequestParams}
                             onClearFilters={clearFilters}
                             category={category !== 'all' ? category : undefined}
                             mode={mode !== 'all' ? mode : undefined}
@@ -932,7 +934,8 @@ const Search = () => {
                       ))}
                     </div>
                   ) : (
-                    <EmptyStateEmailCapture
+                    <SmartNoResults
+                      searchParams={searchRequestParams}
                       onClearFilters={clearFilters}
                       category={category !== 'all' ? category : undefined}
                       mode={mode !== 'all' ? mode : undefined}
@@ -1021,7 +1024,8 @@ const Search = () => {
                       ))}
                     </div>
                   ) : (
-                    <EmptyStateEmailCapture 
+                    <SmartNoResults
+                      searchParams={searchRequestParams}
                       onClearFilters={clearFilters}
                       category={category !== 'all' ? category : undefined}
                       mode={mode !== 'all' ? mode : undefined}

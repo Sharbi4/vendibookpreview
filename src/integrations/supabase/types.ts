@@ -254,6 +254,57 @@ export type Database = {
           },
         ]
       }
+      booking_drafts: {
+        Row: {
+          abandoned_at: string | null
+          completed_at: string | null
+          created_at: string
+          email: string
+          email_24h_sent_at: string | null
+          email_2h_sent_at: string | null
+          end_date: string | null
+          id: string
+          listing_id: string
+          recovery_token: string
+          start_date: string | null
+          total_price: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          abandoned_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          email: string
+          email_24h_sent_at?: string | null
+          email_2h_sent_at?: string | null
+          end_date?: string | null
+          id?: string
+          listing_id: string
+          recovery_token?: string
+          start_date?: string | null
+          total_price?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          abandoned_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          email?: string
+          email_24h_sent_at?: string | null
+          email_2h_sent_at?: string | null
+          end_date?: string | null
+          id?: string
+          listing_id?: string
+          recovery_token?: string
+          start_date?: string | null
+          total_price?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       booking_messages: {
         Row: {
           attachment_name: string | null
