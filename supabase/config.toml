@@ -27,6 +27,8 @@ project_id = "nbrehbwfsmedbelzntqs"
     verify_jwt = false
   [functions.complete-ended-bookings]
     verify_jwt = false
+  [functions.concierge-orchestrator]
+    verify_jwt = false
   [functions.confirm-sale]
     verify_jwt = false
   [functions.create-checkout]
