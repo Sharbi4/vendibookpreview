@@ -1824,6 +1824,9 @@ export type Database = {
           pinned_listing_id: string | null
           public_city: string | null
           public_state: string | null
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          quiet_hours_timezone: string | null
           shop_policies: Json | null
           state: string | null
           stripe_account_id: string | null
@@ -1858,6 +1861,9 @@ export type Database = {
           pinned_listing_id?: string | null
           public_city?: string | null
           public_state?: string | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          quiet_hours_timezone?: string | null
           shop_policies?: Json | null
           state?: string | null
           stripe_account_id?: string | null
@@ -1892,6 +1898,9 @@ export type Database = {
           pinned_listing_id?: string | null
           public_city?: string | null
           public_state?: string | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          quiet_hours_timezone?: string | null
           shop_policies?: Json | null
           state?: string | null
           stripe_account_id?: string | null
@@ -2463,6 +2472,126 @@ export type Database = {
           radius_miles?: number | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      sms_inbound_messages: {
+        Row: {
+          action_taken: string | null
+          body: string
+          created_at: string
+          from_phone: string
+          id: string
+          matched_user_id: string | null
+          raw_payload: Json | null
+          to_phone: string
+          twilio_message_sid: string | null
+        }
+        Insert: {
+          action_taken?: string | null
+          body: string
+          created_at?: string
+          from_phone: string
+          id?: string
+          matched_user_id?: string | null
+          raw_payload?: Json | null
+          to_phone: string
+          twilio_message_sid?: string | null
+        }
+        Update: {
+          action_taken?: string | null
+          body?: string
+          created_at?: string
+          from_phone?: string
+          id?: string
+          matched_user_id?: string | null
+          raw_payload?: Json | null
+          to_phone?: string
+          twilio_message_sid?: string | null
+        }
+        Relationships: []
+      }
+      sms_send_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          message_body: string
+          metadata: Json | null
+          recipient_phone: string
+          status: string
+          template_name: string
+          twilio_message_sid: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_body: string
+          metadata?: Json | null
+          recipient_phone: string
+          status: string
+          template_name: string
+          twilio_message_sid?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_body?: string
+          metadata?: Json | null
+          recipient_phone?: string
+          status?: string
+          template_name?: string
+          twilio_message_sid?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      sms_subscriptions: {
+        Row: {
+          accepts_alerts: boolean
+          accepts_marketing: boolean
+          accepts_transactional: boolean
+          created_at: string
+          id: string
+          opted_in: boolean
+          opted_out_at: string | null
+          phone_number: string
+          updated_at: string
+          user_id: string
+          verified: boolean
+          verified_at: string | null
+        }
+        Insert: {
+          accepts_alerts?: boolean
+          accepts_marketing?: boolean
+          accepts_transactional?: boolean
+          created_at?: string
+          id?: string
+          opted_in?: boolean
+          opted_out_at?: string | null
+          phone_number: string
+          updated_at?: string
+          user_id: string
+          verified?: boolean
+          verified_at?: string | null
+        }
+        Update: {
+          accepts_alerts?: boolean
+          accepts_marketing?: boolean
+          accepts_transactional?: boolean
+          created_at?: string
+          id?: string
+          opted_in?: boolean
+          opted_out_at?: string | null
+          phone_number?: string
+          updated_at?: string
+          user_id?: string
+          verified?: boolean
+          verified_at?: string | null
         }
         Relationships: []
       }
