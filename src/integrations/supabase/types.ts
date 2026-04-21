@@ -496,6 +496,119 @@ export type Database = {
           },
         ]
       }
+      concierge_events: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          event_type: string
+          id: string
+          payload: Json | null
+          processed_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          event_type: string
+          id?: string
+          payload?: Json | null
+          processed_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          processed_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      concierge_messages: {
+        Row: {
+          actions: Json | null
+          content: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          read_at: string | null
+          sender_role: string
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          actions?: Json | null
+          content: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          read_at?: string | null
+          sender_role: string
+          thread_id: string
+          user_id: string
+        }
+        Update: {
+          actions?: Json | null
+          content?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          read_at?: string | null
+          sender_role?: string
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "concierge_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "concierge_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      concierge_threads: {
+        Row: {
+          context: Json | null
+          created_at: string
+          id: string
+          last_message_at: string | null
+          priority: string
+          status: string
+          topic: string
+          unread_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          priority?: string
+          status?: string
+          topic: string
+          unread_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          priority?: string
+          status?: string
+          topic?: string
+          unread_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contest_entries: {
         Row: {
           created_at: string
