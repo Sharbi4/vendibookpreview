@@ -97,6 +97,15 @@ export const MakeOfferModal = ({
         },
       });
 
+      // AI Orchestrator: route the right channel to the seller
+      const { triggerOrchestrator } = await import('@/lib/orchestrator');
+      triggerOrchestrator({
+        user_id: sellerId,
+        event_type: 'offer_received',
+        entity_id: offer.id,
+        payload: { listing_title: listingTitle, amount, message: message.trim() || null },
+      });
+
       toast({
         title: 'Offer sent!',
         description: 'The seller will be notified of your offer.',

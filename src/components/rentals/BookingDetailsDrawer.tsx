@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { triggerOrchestrator } from '@/lib/orchestrator';
 import {
   User,
   Calendar,
@@ -95,6 +96,16 @@ const BookingDetailsDrawer = ({
         .eq('id', booking.id);
 
       if (error) throw error;
+
+      // Notify the shopper via AI Orchestrator
+      if (booking.shopper_id) {
+        triggerOrchestrator({
+          user_id: booking.shopper_id,
+          event_type: 'booking_confirmed',
+          entity_id: booking.id,
+          payload: { listing_title: listing?.title, total_price: booking.total_price },
+        });
+      }
 
       toast({
         title: 'Booking approved',
