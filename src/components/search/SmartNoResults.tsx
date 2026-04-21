@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import ListingCard from '@/components/listings/ListingCard';
+import ListingCard from '@/components/listing/ListingCard';
 import { EmptyStateEmailCapture } from './EmptyStateEmailCapture';
 
 interface SmartNoResultsProps {
