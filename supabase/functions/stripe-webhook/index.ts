@@ -1009,6 +1009,7 @@ serve(async (req) => {
               logStep("WARNING: Orchestrator trigger failed (rental payout)", { error: String(orchErr) });
             }
           }
+        } else if (saleTransactionId) {
           // Handle escrow sale payout
           const { data: saleTransaction } = await supabaseClient
             .from("sale_transactions")
