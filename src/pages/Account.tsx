@@ -23,6 +23,7 @@ import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { useQueryClient } from '@tanstack/react-query';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { CommsPreferencesPanel } from '@/components/comms/CommsPreferencesPanel';
 
 // Visibility badge component
 const VisibilityBadge = ({ isPublic }: { isPublic: boolean }) => (
