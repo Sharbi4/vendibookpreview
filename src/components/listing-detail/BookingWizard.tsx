@@ -347,6 +347,17 @@ const BookingWizard = ({
       trackFormSubmitConversion({ form_type: 'booking_request', listing_id: listingId });
       trackRequestSubmitted(listingId, instantBook);
       clearDraft(); // Clear saved draft on successful submission
+      // Mark DB draft as completed so abandonment cron skips it
+      if (user) {
+        supabase
+          .from('booking_drafts')
+          .update({ completed_at: new Date().toISOString() })
+          .eq('user_id', user.id)
+          .eq('listing_id', listingId)
+          .then(({ error }) => {
+            if (error) console.warn('booking_drafts complete update failed:', error.message);
+          });
+      }
       setBookingComplete(true);
     } catch (error) {
       if (checkoutWindow) checkoutWindow.close();
