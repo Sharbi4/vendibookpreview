@@ -1344,6 +1344,9 @@ const Account = () => {
             </CardContent>
           </Card>
 
+                  {/* Vendi Comms Preferences */}
+                  <CommsPreferencesPanel />
+
                   {/* Notification Preferences Link */}
                   <Card className="rounded-2xl border border-border shadow-sm bg-card cursor-pointer hover:bg-muted/50 transition-all" onClick={() => navigate('/notification-preferences')}>
                     <CardHeader>
