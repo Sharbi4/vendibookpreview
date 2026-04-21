@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,8 @@ import { useSmsSubscription } from "@/hooks/useSmsSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const DISMISS_KEY = "vb_sms_opt_dismissed_v1";
+const DISMISS_KEY = "vb_sms_opt_dismissed_until_v2";
+const DISMISS_DURATION_MS = 1000 * 60 * 60 * 12;
 
 /**
  * Two-step TCPA-compliant SMS opt-in:
@@ -26,17 +27,40 @@ export const SmsOptInPrompt = () => {
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
 
+  const needsVerification = useMemo(
+    () => !!user?.id && !!subscription && (!subscription.verified || !subscription.opted_in),
+    [user?.id, subscription]
+  );
+
   useEffect(() => {
-    if (!user?.id) return;
-    if (subscription === undefined) return;
-    if (subscription?.verified && subscription?.opted_in) return;
-    if (localStorage.getItem(DISMISS_KEY)) return;
-    const t = setTimeout(() => setOpen(true), 8000);
+    if (subscription?.phone_number) {
+      setPhone(subscription.phone_number);
+    }
+
+    if (subscription?.phone_number && subscription.opted_in && !subscription.verified) {
+      setStep("code");
+    }
+  }, [subscription?.phone_number, subscription?.opted_in, subscription?.verified]);
+
+  useEffect(() => {
+    if (!user?.id || subscription === undefined) return;
+    if (!needsVerification) {
+      setOpen(false);
+      return;
+    }
+
+    const dismissedUntil = Number(localStorage.getItem(DISMISS_KEY) || 0);
+    if (dismissedUntil > Date.now()) return;
+
+    const delay = subscription?.phone_number && subscription?.opted_in && !subscription?.verified ? 1200 : 8000;
+    const t = setTimeout(() => setOpen(true), delay);
     return () => clearTimeout(t);
-  }, [user?.id, subscription]);
+  }, [user?.id, subscription, needsVerification]);
 
   const dismiss = () => {
-    localStorage.setItem(DISMISS_KEY, "1");
+    if (!subscription?.verified) {
+      localStorage.setItem(DISMISS_KEY, String(Date.now() + DISMISS_DURATION_MS));
+    }
     setOpen(false);
   };
 
@@ -50,6 +74,7 @@ export const SmsOptInPrompt = () => {
       if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
       toast.success("Code sent! Check your phone.");
       setStep("code");
+      setOpen(true);
     } catch (e: any) {
       toast.error(e.message || "Failed to send code");
     } finally {
@@ -64,7 +89,7 @@ export const SmsOptInPrompt = () => {
       const { data, error } = await supabase.functions.invoke("verify-sms-otp", { body: { code } });
       if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
       toast.success("Phone verified! You'll get instant SMS alerts.");
-      localStorage.setItem(DISMISS_KEY, "1");
+      localStorage.removeItem(DISMISS_KEY);
       setOpen(false);
     } catch (e: any) {
       toast.error(e.message === "incorrect_code" ? "Wrong code — try again" : (e.message || "Verification failed"));
@@ -72,6 +97,8 @@ export const SmsOptInPrompt = () => {
       setVerifying(false);
     }
   };
+
+  if (!user?.id || subscription === undefined || !needsVerification) return null;
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) dismiss(); }}>
@@ -116,9 +143,14 @@ export const SmsOptInPrompt = () => {
               onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
               className="text-center text-2xl tracking-[0.5em] font-mono"
             />
-            <button onClick={() => { setStep("phone"); setCode(""); }} className="text-xs text-muted-foreground hover:text-foreground underline">
-              Wrong number? Edit it
-            </button>
+            <div className="flex items-center justify-between gap-3">
+              <button onClick={() => { setStep("phone"); setCode(""); }} className="text-xs text-muted-foreground hover:text-foreground underline">
+                Wrong number? Edit it
+              </button>
+              <button onClick={sendCode} disabled={sending} className="text-xs text-muted-foreground hover:text-foreground underline disabled:opacity-50">
+                {sending ? "Resending…" : "Resend code"}
+              </button>
+            </div>
           </div>
         )}
 
