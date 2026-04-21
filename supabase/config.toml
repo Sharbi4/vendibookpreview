@@ -147,6 +147,10 @@ project_id = "nbrehbwfsmedbelzntqs"
     verify_jwt = false
   [functions.send-sale-notification]
     verify_jwt = false
+  [functions.send-sms]
+    verify_jwt = false
+  [functions.twilio-inbound-webhook]
+    verify_jwt = false
   [functions.send-stripe-onboarding-reminder]
     verify_jwt = false
   [functions.send-welcome-email]
