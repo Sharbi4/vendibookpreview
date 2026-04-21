@@ -266,6 +266,10 @@ const AdminDashboard = () => {
               <Globe className="h-4 w-4 mr-1" />
               Research
             </TabsTrigger>
+            <Link to="/admin/orchestration" className="inline-flex items-center px-3 py-1.5 text-sm rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+              <Sparkles className="h-4 w-4 mr-1" />
+              AI Orchestration
+            </Link>
           </TabsList>
 
           {/* Concierge Tab */}
