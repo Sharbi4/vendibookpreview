@@ -367,6 +367,17 @@ const BookingForm = ({
       // NOTE: Do NOT send booking notification here - notifications are sent
       // ONLY after payment is confirmed via the stripe-webhook function
 
+      // AI Orchestrator: notify the host of the new booking request (non-blocking)
+      try {
+        const { triggerOrchestrator } = await import('@/lib/orchestrator');
+        triggerOrchestrator({
+          user_id: hostId,
+          event_type: 'booking_request_received',
+          entity_id: bookingResult.id,
+          payload: { listing_id: listingId, total_price: fees.customerTotal },
+        });
+      } catch {}
+
       // Track conversion for booking request
       trackFormSubmitConversion({ form_type: 'booking_request', listing_id: listingId });
       trackRequestSubmitted(listingId, false);

@@ -29,4 +29,8 @@ export type OrchestratorEvent =
   | "payout_received"
   | "referral_redeemed"
   | "listing_low_views"
-  | "search_no_results";
+  | "search_no_results"
+  | "offer_received"
+  | "offer_accepted"
+  | "offer_declined"
+  | "message_received";
