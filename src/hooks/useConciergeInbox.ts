@@ -102,7 +102,7 @@ export const useConciergeMessages = (threadId: string | undefined) => {
         .eq("thread_id", threadId)
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return (data ?? []) as ConciergeMessage[];
+      return (data ?? []) as unknown as ConciergeMessage[];
     },
     enabled: !!threadId,
   });
