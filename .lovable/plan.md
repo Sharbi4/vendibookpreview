@@ -1,71 +1,62 @@
 
 
-# Dynamic Share Kit Modal for Host Dashboard Listings
+## Make Referrals + SMS Actually Work
 
-## Overview
-Add a "Share" button to each listing card on the host dashboard that opens a polished, Airbnb-style modal populated with that listing's real data. The modal consolidates link sharing, auto-generated captions, social quick-share buttons, QR code generation, a mini listing preview, and a psychology nudge -- all in one place.
+Three real bugs are blocking the flows you tested. Here's what I'll fix.
 
-## What Gets Built
+### 1. SMS verification is missing entirely (root cause of "no confirmation text")
 
-### 1. New Component: `ShareKitModal`
-A new `src/components/dashboard/ShareKitModal.tsx` component that receives a listing object and renders inside a Radix Dialog (existing `Dialog` component from the UI library).
+**The bug:** When you entered your phone in the opt-in prompt, it saved `verified = false`. The `send-sms` function refuses to send to any subscription where `verified` is false — so no confirmation SMS, and no future alerts will ever reach you.
 
-**Sections inside the modal (top to bottom):**
+**Fix:**
+- New edge function **`send-sms-verification`** — generates a 6-digit OTP, stores it (hashed, 10-min expiry) in a new `sms_verification_codes` table, and sends it via Twilio: *"Your Vendibook code is 123456. Reply STOP to opt out."*
+- New edge function **`verify-sms-otp`** — accepts the code, marks `sms_subscriptions.verified = true` on success, increments attempt counter, locks after 5 fails.
+- Rewrite **`SmsOptInPrompt.tsx`** as a 2-step flow:
+  1. Phone + TCPA consent → triggers `send-sms-verification`
+  2. 6-digit code input → triggers `verify-sms-otp` → success toast
+- Same 2-step flow exposed in `CommsPreferencesPanel` so users can re-verify if they change number.
 
-- **Header**: "Promote Your Listing" title + "Get more bookings and visibility by sharing your listing." subtitle
-- **Share Link**: Pretty URL (`vendibook.com/share/listing/{id}`) displayed in a mono-font box with "Copy Link" and "Open Listing" buttons
-- **Auto-Generated Caption**: Dynamic text based on listing mode:
-  - Rent: Emoji + "Now Booking in {City, State}" + title + price/day + booking link
-  - Sale: Emoji + "Food Truck for Sale in {City, State}" + title + price + link
-  - Buttons: "Copy Caption" and "Copy Caption + Link"
-- **Quick Share Buttons**: Facebook, LinkedIn, X (Twitter), and SMS -- each opens the native share intent URL in a new tab. Uses existing SVG icon patterns from `BuiltInShareKit.tsx`
-- **QR Code**: Generated dynamically using the existing `qrcode` package (already installed). Shows QR image inline with a "Download QR" button and helper text
-- **Listing Preview Card**: Mini card showing cover image thumbnail, title, city/state, price, and Instant Book badge if enabled
-- **Psychology Boost**: Bottom banner with "Listings shared within the first 24 hours get significantly more visibility." and a "Copy Everything and Close" CTA that copies caption + link and closes the modal
-- **UTM Toggle** (optional): Appends `?utm_source=host_share&utm_medium=dashboard&utm_campaign=listing_{id}` to the share URL when enabled
+### 2. Referral redemption counter bug
 
-### 2. Modify: `HostListingCard`
-Add a "Share" button (using the `Share2` icon from lucide-react) in the actions row, positioned after the "Edit" button and before the "Availability"/"Boost" buttons. Clicking it opens `ShareKitModal` with the listing data. The button only shows for published listings.
+**The bug:** `redeem-referral/index.ts` line 76-79 has a broken nested-await that double-reads `total_referred` and can write `NaN` or `1` regardless of true count. Functionally referrals still get inserted, but the dashboard stat is wrong.
 
-### 3. Data Flow
-The modal receives the full listing object (already available in `HostListingCard` as `Tables<'listings'>`). It extracts:
-- `title`, `mode`, `category`
-- `city`, `state` (new columns from the recent migration)
-- `price_daily`, `price_weekly`, `price_sale`
-- `instant_book`
-- `cover_image_url`
-- `id`
+**Fix:**
+- Add SQL function `increment_referral_counter(p_owner_id uuid)` that does `UPDATE referral_codes SET total_referred = total_referred + 1` atomically.
+- Replace the broken block in `redeem-referral` with a single `admin.rpc("increment_referral_counter", ...)` call.
 
-No additional database queries needed.
+### 3. Share links — verify they work + add per-user attribution
 
-### 4. Analytics Tracking
-Uses the existing `trackEventToDb` function to log:
-- `share_kit_opened` -- when modal opens
-- `share_link_copied` -- copy link click
-- `share_caption_copied` -- copy caption click
-- `share_qr_downloaded` -- QR download
-- `share_social_click` -- with `{ platform }` metadata
-- `share_everything_copied` -- "Copy Everything" CTA
+**Status:** Codes ARE individualized (DB trigger generates one per user on signup, backfilled for existing users). `buildReferralUrl` correctly stamps `?ref={your_code}&utm_source=referral`. `<ReferralCapture />` is mounted in `App.tsx` and stores the code in localStorage, then auto-redeems on login.
 
----
+**What I'll add:**
+- A small **"Test your link"** button in `ReferralPanel` that opens your own link in a new tab so you can visually confirm `?ref=YOURCODE` is appended.
+- Make the `share()` SMS/Email/FB/X buttons log to `share_events` (already wired) AND show a toast confirming which channel fired.
+- Verify the FB sharer + X intent URLs render correctly (they do — standard endpoints).
 
-## Technical Details
+### 4. End-to-end test I'll run after the build
 
-### Files to Create
-- `src/components/dashboard/ShareKitModal.tsx` -- the full modal component
+1. Open referral panel → confirm code shows + matches `referral_codes` row in DB.
+2. Click "Test your link" → confirm URL has correct `?ref=`.
+3. Open SMS opt-in → enter phone → confirm Twilio API call fires + verification row created.
+4. Enter the 6-digit code → confirm `verified = true`.
+5. Trigger a test SMS via `send-sms` → confirm it now sends (no more `skipped_not_subscribed`).
 
-### Files to Modify
-- `src/components/dashboard/HostListingCard.tsx` -- add Share button + state for modal open/close, import `ShareKitModal`
+### Files
 
-### Existing Patterns Reused
-- `Dialog` / `DialogContent` / `DialogHeader` from `@/components/ui/dialog` for the modal shell
-- `QRCode.toDataURL()` from the `qrcode` package (same pattern as `ShareKit.tsx`)
-- Social icon SVGs from `BuiltInShareKit.tsx` (TikTok, Instagram, Facebook, X) plus adding LinkedIn and SMS
-- `trackEventToDb` from `@/hooks/useAnalyticsEvents`
-- Pretty share URL format: `https://vendibook.com/share/listing/{id}` (already routed in App.tsx)
-- Button styling: `h-9 rounded-xl` to match existing action buttons
-- Vendibook orange accent (`#FF5124`) for primary CTAs
+**New:**
+- `supabase/functions/send-sms-verification/index.ts`
+- `supabase/functions/verify-sms-otp/index.ts`
+- Migration: `sms_verification_codes` table + `increment_referral_counter()` RPC
 
-### No New Dependencies
-Everything needed is already installed (`qrcode`, `@radix-ui/react-dialog`, `lucide-react`, `framer-motion`).
+**Edited:**
+- `supabase/functions/redeem-referral/index.ts` (fix counter)
+- `src/components/comms/SmsOptInPrompt.tsx` (2-step flow)
+- `src/components/comms/CommsPreferencesPanel.tsx` (re-verify section)
+- `src/components/referrals/ReferralPanel.tsx` (Test link button + toast on share)
+- `supabase/config.toml` (register new functions)
+
+### Notes
+- Twilio connector is already linked (`TWILIO_API_KEY` + `TWILIO_FROM_NUMBER` are set), so no new secrets needed.
+- OTP table will have RLS: users can only read/insert their own codes; service role does the verification check.
+- No changes to existing referral DB schema — codes stay individualized as they are.
 
