@@ -21,6 +21,8 @@ import MessageHostForm from '@/components/messaging/MessageHostForm';
 import ReviewsSection from '@/components/reviews/ReviewsSection';
 import RequirementsModal from '@/components/listing-detail/RequirementsModal';
 import CollapsibleDescription from '@/components/listing-detail/CollapsibleDescription';
+import AudioListingPlayer from '@/components/listing/AudioListingPlayer';
+import PromoVideoPlayer from '@/components/listing/PromoVideoPlayer';
 import EnhancedQuickHighlights from '@/components/listing-detail/EnhancedQuickHighlights';
 import PricingSection from '@/components/listing-detail/PricingSection';
 import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
