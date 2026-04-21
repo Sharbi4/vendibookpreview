@@ -85,6 +85,8 @@ project_id = "nbrehbwfsmedbelzntqs"
     verify_jwt = false
   [functions.optimize-description]
     verify_jwt = false
+  [functions.orchestrator-route]
+    verify_jwt = false
   [functions.predictive-booking-insights]
     verify_jwt = false
   [functions.process-email-queue]
