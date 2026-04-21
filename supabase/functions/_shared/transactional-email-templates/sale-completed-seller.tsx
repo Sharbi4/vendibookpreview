@@ -1,0 +1,29 @@
+import * as React from 'npm:react@18.3.1'
+import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import type { TemplateEntry } from './registry.ts'
+import { s, SITE_URL } from './_styles.ts'
+
+interface Props { sellerName?: string; listingTitle?: string; salePrice?: number; buyerName?: string; orderNumber?: string }
+
+const E = ({ sellerName, listingTitle, salePrice, buyerName, orderNumber }: Props) => (
+  <Html lang="en" dir="ltr"><Head /><Preview>Sale completed 🎉</Preview>
+    <Body style={s.main}><Container style={s.container}>
+      <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+      <Section style={s.card}>
+        <Text style={s.smallHeader}>SALE COMPLETED</Text>
+        <Heading style={s.h1}>{sellerName ? `${sellerName}, ` : ''}your sale closed.</Heading>
+        <Text style={s.lede}>{listingTitle ? `“${listingTitle}”` : 'Your listing'} sold to {buyerName || 'the buyer'}.</Text>
+        {salePrice ? <Section style={s.accentRow}><Text style={s.accentLabel}>SALE PRICE</Text><Text style={s.accentValue}>${salePrice.toLocaleString()}</Text></Section> : null}
+        {orderNumber ? <Section style={s.accentRow}><Text style={s.accentLabel}>ORDER</Text><Text style={s.accentValuePlain}>{orderNumber}</Text></Section> : null}
+        <Text style={s.text}>Funds are released to your Stripe account after fulfillment confirmation.</Text>
+        <Section style={s.ctaWrap}><Button href={`${SITE_URL}/dashboard`} style={s.button}>View transaction</Button></Section>
+      </Section>
+    </Container></Body></Html>
+)
+
+export const template = {
+  component: E,
+  subject: (d: any) => d?.salePrice ? `Sold: $${Number(d.salePrice).toLocaleString()}` : 'Your sale completed',
+  displayName: 'Sale completed (seller)',
+  previewData: { sellerName: 'Sam', listingTitle: 'Demo Truck', salePrice: 40000, buyerName: 'Pat', orderNumber: 'VB-12345678' },
+} satisfies TemplateEntry
