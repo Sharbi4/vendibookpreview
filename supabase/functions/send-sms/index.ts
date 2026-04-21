@@ -153,7 +153,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Send via Twilio gateway
+    // Send via Twilio gateway with delivery status callback
+    const statusCallbackUrl = `${SUPABASE_URL}/functions/v1/twilio-status-callback`;
     const twilioResp = await fetch(`${GATEWAY_URL}/Messages.json`, {
       method: "POST",
       headers: {
@@ -161,7 +162,12 @@ Deno.serve(async (req) => {
         "X-Connection-Api-Key": TWILIO_API_KEY,
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: new URLSearchParams({ To: recipient, From: TWILIO_FROM_NUMBER, Body: body }),
+      body: new URLSearchParams({
+        To: recipient,
+        From: TWILIO_FROM_NUMBER,
+        Body: body,
+        StatusCallback: statusCallbackUrl,
+      }),
     });
 
     const twilioData = await twilioResp.json();
