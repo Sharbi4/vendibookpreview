@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { triggerOrchestrator } from '@/lib/orchestrator';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Listing = Tables<'listings'>;
@@ -59,6 +60,17 @@ export const useHostListings = () => {
       setListings(prev => 
         prev.map(l => l.id === id ? { ...l, ...updates } : l)
       );
+
+      // Fire AI orchestrator on publish (fire-and-forget)
+      if (status === 'published' && user?.id) {
+        const listing = listings.find(l => l.id === id);
+        triggerOrchestrator({
+          user_id: user.id,
+          event_type: 'listing_published',
+          entity_id: id,
+          payload: { title: listing?.title, category: listing?.category, city: listing?.city },
+        });
+      }
 
       toast({
         title: 'Success',

@@ -15,6 +15,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
+import { ConciergeInbox } from '@/components/concierge/ConciergeInbox';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import MobileMenu from './MobileMenu';
@@ -422,6 +423,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           )}
           {user ? (
             <>
+              <ConciergeInbox userId={user.id} />
               <NotificationCenter />
               <AppDropdownMenu variant="light" />
             </>
@@ -449,6 +451,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           >
             {t('common.learnMore')}
           </Link>
+          {user && <ConciergeInbox userId={user.id} />}
           {user && <NotificationCenter />}
           <AppDropdownMenu variant="light" />
           <div className="hidden sm:block">
