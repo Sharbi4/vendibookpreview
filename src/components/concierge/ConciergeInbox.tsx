@@ -1,11 +1,15 @@
 import { useState } from "react";
-import { Sparkles, Bell } from "lucide-react";
+import { Sparkles, Bell, Send, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
 import { useConciergeInbox, useConciergeMessages, type ConciergeAction } from "@/hooks/useConciergeInbox";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface Props {
   userId: string | undefined;
@@ -20,11 +24,31 @@ export const ConciergeInbox = ({ userId }: Props) => {
   const { threads, totalUnread, markRead } = useConciergeInbox(userId);
   const [activeId, setActiveId] = useState<string | null>(null);
   const { data: messages = [] } = useConciergeMessages(activeId ?? undefined);
+  const [reply, setReply] = useState("");
+  const [sending, setSending] = useState(false);
+  const qc = useQueryClient();
 
   const handleAction = (a: ConciergeAction) => {
     if (a.kind === "link" && a.url) window.location.assign(a.url);
     if (a.kind === "share" && a.url && navigator.share) {
       navigator.share({ url: a.url, title: "Vendibook" }).catch(() => {});
+    }
+  };
+
+  const sendReply = async () => {
+    if (!activeId || !reply.trim()) return;
+    setSending(true);
+    try {
+      const { error } = await supabase.functions.invoke("concierge-reply", {
+        body: { thread_id: activeId, content: reply.trim() },
+      });
+      if (error) throw error;
+      setReply("");
+      qc.invalidateQueries({ queryKey: ["concierge-messages", activeId] });
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to send");
+    } finally {
+      setSending(false);
     }
   };
 
@@ -47,10 +71,9 @@ export const ConciergeInbox = ({ userId }: Props) => {
           </SheetTitle>
         </SheetHeader>
 
-        <div className="flex-1 grid grid-rows-[auto_1fr] overflow-hidden">
-          {/* Threads list */}
+        <div className="flex-1 grid grid-rows-[auto_1fr_auto] overflow-hidden">
           {!activeId ? (
-            <ScrollArea className="row-span-2">
+            <ScrollArea className="row-span-3">
               <div className="divide-y">
                 {threads.length === 0 ? (
                   <div className="p-8 text-center text-sm text-muted-foreground">
@@ -90,7 +113,7 @@ export const ConciergeInbox = ({ userId }: Props) => {
                 <div className="space-y-4">
                   {messages.map((m) => (
                     <div key={m.id} className="space-y-2">
-                      <div className={`rounded-lg p-3 text-sm ${m.sender_role === "ai" ? "bg-primary/5 border border-primary/10" : "bg-muted"}`}>
+                      <div className={`rounded-lg p-3 text-sm ${m.sender_role === "ai" ? "bg-primary/5 border border-primary/10" : "bg-muted ml-8"}`}>
                         {m.content}
                       </div>
                       {m.actions?.length > 0 && (
@@ -109,6 +132,24 @@ export const ConciergeInbox = ({ userId }: Props) => {
                   ))}
                 </div>
               </ScrollArea>
+              <div className="border-t p-3 flex items-end gap-2">
+                <Textarea
+                  value={reply}
+                  onChange={(e) => setReply(e.target.value)}
+                  placeholder="Reply to Vendi…"
+                  rows={1}
+                  className="min-h-[40px] resize-none"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      sendReply();
+                    }
+                  }}
+                />
+                <Button size="icon" onClick={sendReply} disabled={sending || !reply.trim()}>
+                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </Button>
+              </div>
             </>
           )}
         </div>
