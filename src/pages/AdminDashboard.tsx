@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History, Zap, Headphones, Mail, Users, FileSpreadsheet, Globe } from 'lucide-react';
+import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History, Zap, Headphones, Mail, Users, FileSpreadsheet, Globe, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminTransactions } from '@/hooks/useAdminTransactions';
 import { useAdminPendingDocuments, useAdminDocumentStats } from '@/hooks/useAdminDocumentReview';
@@ -265,6 +266,10 @@ const AdminDashboard = () => {
               <Globe className="h-4 w-4 mr-1" />
               Research
             </TabsTrigger>
+            <Link to="/admin/orchestration" className="inline-flex items-center px-3 py-1.5 text-sm rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+              <Sparkles className="h-4 w-4 mr-1" />
+              AI Orchestration
+            </Link>
           </TabsList>
 
           {/* Concierge Tab */}

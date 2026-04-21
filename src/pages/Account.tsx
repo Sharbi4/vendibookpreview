@@ -23,6 +23,7 @@ import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { useQueryClient } from '@tanstack/react-query';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { CommsPreferencesPanel } from '@/components/comms/CommsPreferencesPanel';
 
 // Visibility badge component
 const VisibilityBadge = ({ isPublic }: { isPublic: boolean }) => (
@@ -1343,6 +1344,9 @@ const Account = () => {
               </div>
             </CardContent>
           </Card>
+
+                  {/* Vendi Comms Preferences */}
+                  <CommsPreferencesPanel />
 
                   {/* Notification Preferences Link */}
                   <Card className="rounded-2xl border border-border shadow-sm bg-card cursor-pointer hover:bg-muted/50 transition-all" onClick={() => navigate('/notification-preferences')}>

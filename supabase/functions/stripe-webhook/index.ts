@@ -981,6 +981,33 @@ serve(async (req) => {
                 logStep("WARNING: Failed to send rental payout notification", { error: String(emailError) });
               }
             }
+
+            // Fire orchestrator event for payout received
+            try {
+              await fetch(
+                `${Deno.env.get("SUPABASE_URL")}/functions/v1/concierge-orchestrator`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                  },
+                  body: JSON.stringify({
+                    user_id: hostId,
+                    event_type: "payout_received",
+                    entity_id: bookingId,
+                    payload: {
+                      amount: payoutAmount,
+                      listing_title: listingTitle,
+                      transfer_id: transfer.id,
+                      transaction_type: "rental",
+                    },
+                  }),
+                }
+              );
+            } catch (orchErr) {
+              logStep("WARNING: Orchestrator trigger failed (rental payout)", { error: String(orchErr) });
+            }
           }
         } else if (saleTransactionId) {
           // Handle escrow sale payout
