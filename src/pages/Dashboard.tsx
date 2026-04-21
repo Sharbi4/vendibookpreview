@@ -7,6 +7,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import HostDashboard from '@/components/dashboard/HostDashboard';
 import ShopperDashboard from '@/components/dashboard/ShopperDashboard';
 import DashboardOnboarding from '@/components/onboarding/DashboardOnboarding';
+import { SmsOptInPrompt } from '@/components/comms/SmsOptInPrompt';
 import { Loader2 } from 'lucide-react';
 
 const DASHBOARD_MODE_KEY = 'vendibook_dashboard_mode';
@@ -92,6 +93,7 @@ const Dashboard = () => {
       onModeChange={handleModeChange}
       isHost={isHost}
     >
+      <SmsOptInPrompt />
       {currentMode === 'host' ? <HostDashboard /> : <ShopperDashboard />}
 
       {showOnboarding && (
