@@ -292,10 +292,40 @@ Deno.serve(async (req) => {
   )
 
   // Resolve subject — supports static string or dynamic function
-  const resolvedSubject =
+  let resolvedSubject =
     typeof template.subject === 'function'
       ? template.subject(templateData)
       : template.subject
+
+  // Optional AI-personalized subject line via Lovable AI Gateway.
+  // Caller opts in by setting templateData.aiSubject = true. Falls back silently.
+  if (templateData?.aiSubject === true) {
+    try {
+      const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
+      if (LOVABLE_API_KEY) {
+        const ctx = JSON.stringify(templateData).slice(0, 800)
+        const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash-lite',
+            messages: [
+              { role: 'system', content: 'You write concise, high-open-rate email subject lines for Vendibook (a marketplace for food trucks, trailers, ghost kitchens, and vendor lots). Max 55 chars. No emoji unless natural. No clickbait. Reply with ONLY the subject line, no quotes.' },
+              { role: 'user', content: `Template: ${templateName}\nFallback subject: ${resolvedSubject}\nContext (JSON): ${ctx}\n\nWrite a better, personalized subject line.` },
+            ],
+          }),
+          signal: AbortSignal.timeout(4000),
+        })
+        if (r.ok) {
+          const j = await r.json()
+          const ai = j?.choices?.[0]?.message?.content?.trim()?.replace(/^["']|["']$/g, '')
+          if (ai && ai.length > 3 && ai.length < 120) resolvedSubject = ai
+        }
+      }
+    } catch (e) {
+      console.warn('AI subject generation skipped:', e instanceof Error ? e.message : e)
+    }
+  }
 
   // 5. Enqueue the pre-rendered email for async processing by the dispatcher.
   // The dispatcher (process-email-queue) handles sending, retries, and rate-limit backoff.
