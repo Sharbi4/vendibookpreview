@@ -38,6 +38,10 @@ const SEO = ({
   canonical,
   type = 'website',
   image = DEFAULT_IMAGE,
+  ogTitle,
+  ogDescription,
+  twitterTitle,
+  twitterDescription,
   article,
   product,
   noindex = false,
@@ -45,6 +49,10 @@ const SEO = ({
   const fullTitle = title.includes('Vendibook') ? title : `${title} | Vendibook`;
   const canonicalUrl = canonical ? `${BASE_URL}${canonical}` : BASE_URL;
   const imageUrl = image.startsWith('http') ? image : `${BASE_URL}${image}`;
+  const ogTitleFinal = ogTitle || fullTitle;
+  const ogDescriptionFinal = ogDescription || description;
+  const twitterTitleFinal = twitterTitle || ogTitleFinal;
+  const twitterDescriptionFinal = twitterDescription || ogDescriptionFinal;
 
   useEffect(() => {
     // Update document title
