@@ -831,8 +831,9 @@ const StartupGuide = () => {
   return (
     <>
       <SEO
-        title="Food Truck Startup Guide 2026: Complete Checklist, Costs & Permits | Vendibook"
-        description="Launch your food truck business with our comprehensive 2026 startup guide. Covers $15K-$175K startup costs, permits, equipment, kitchen layouts, menu engineering, and hidden risks. 60+ checklist items for food trucks, trailers, and shared kitchens."
+        title="Food Truck Startup Guide 2026: Costs, Permits & Free Checklist"
+        description="Start your food truck in 2026 from $15K. Free 60-step checklist, permit guide, and verified trucks for sale or rent — ship nationwide, pay over time with Affirm or Afterpay."
+        canonical="/tools/startup-guide"
       />
       {/* Article Schema for Google Search */}
       <JsonLd
