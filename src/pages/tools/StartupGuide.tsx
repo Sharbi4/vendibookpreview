@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import affirmLogo from '@/assets/affirm-logo.png';
+import afterpayLogo from '@/assets/afterpay-logo.png';
+import { X, ShoppingBag, Search as SearchIcon, Truck as TruckIcon } from 'lucide-react';
 import JsonLd from '@/components/JsonLd';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
