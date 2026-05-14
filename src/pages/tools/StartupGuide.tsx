@@ -987,6 +987,31 @@ const StartupGuide = () => {
           "mainEntity": [
             {
               "@type": "Question",
+              "name": "How much does it cost to start a food truck in 2026?",
+              "acceptedAnswer": { "@type": "Answer", "text": "In 2026, food truck startup costs typically range from $15,000 for a budget DIY trailer setup to $175,000+ for a fully custom build. A realistic mid-range budget is $50,000–$90,000, covering the vehicle ($15K–$100K), buildout and equipment ($20K–$60K), permits and licenses ($2K–$5K), wrap and branding ($2.5K–$5K), insurance down payment, initial inventory, and a 2–3 month cash reserve." }
+            },
+            {
+              "@type": "Question",
+              "name": "Is it cheaper to start with a food trailer?",
+              "acceptedAnswer": { "@type": "Answer", "text": "Yes — food trailers usually run $30,000–$100,000 versus $50,000–$175,000 for a self-propelled food truck, and you get more kitchen square footage per dollar. The trade-off is mobility: trailers need a heavy-duty tow vehicle and are harder to maneuver in tight urban streets, so they're best for fixed lots, festivals, and catering rather than daily street vending." }
+            },
+            {
+              "@type": "Question",
+              "name": "Do food trucks need a commissary kitchen?",
+              "acceptedAnswer": { "@type": "Answer", "text": "Most U.S. cities require food trucks to have a commissary or shared commercial kitchen agreement to obtain a mobile food vendor permit. The commissary is your licensed home base for bulk prep, ingredient storage, water refill, wastewater disposal, and overnight parking. Expect to pay $400–$1,500/month for shared commissary access." }
+            },
+            {
+              "@type": "Question",
+              "name": "How much can a food truck make?",
+              "acceptedAnswer": { "@type": "Answer", "text": "Average food trucks generate $250,000–$500,000 in annual revenue with 6–9% net profit margins after food, labor, fuel, insurance, and commissary costs. Top operators in high-traffic markets can exceed $1M per year. Most trucks take 18–24 months to reach consistent profitability, and location quality is the single biggest revenue lever." }
+            },
+            {
+              "@type": "Question",
+              "name": "Should I rent or buy a food truck?",
+              "acceptedAnswer": { "@type": "Answer", "text": "Renting a food truck is the lower-risk way to validate your concept, menu, and locations without a six-figure investment. Buying makes sense once you have proven sales, a steady route, and want to build long-term equity. Many founders start by renting a truck or commissary kitchen, then buy a used or turnkey truck on a marketplace like Vendibook once demand is clear." }
+            },
+            {
+              "@type": "Question",
               "name": "How much does it cost to start a food truck?",
               "acceptedAnswer": { "@type": "Answer", "text": "Food truck startup costs range from $15,000-$25,000 for a budget DIY setup (used trailer, basic equipment) to $175,000+ for a premium custom build. Key expenses include vehicle ($5K-$100K), buildout ($5K-$60K), equipment ($5K-$45K), permits ($2K-$5K), and initial inventory ($2K-$5K). Monthly operating costs run $3,000-$8,000 including commissary, fuel, insurance, and supplies." }
             },
