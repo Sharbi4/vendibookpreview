@@ -58,8 +58,9 @@ const HowItWorksHost = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SEO
-        title="How to Host on Vendibook | Rent Out Your Food Truck or Kitchen"
-        description="Turn your food truck, trailer, commercial kitchen, or vendor space into recurring income. Free to list, verified renters, 24-hour payouts. See how it works."
+        title="Host on Vendibook: Earn from Your Truck or Kitchen"
+        description="Free to list. Verified renters, 24-hour payouts, and full damage protection. Turn your truck, trailer, kitchen, or vendor space into recurring income."
+        canonical="/how-it-works-host"
       />
       <Header />
 
