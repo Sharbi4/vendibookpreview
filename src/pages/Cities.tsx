@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, MapPin, ShieldCheck, CreditCard, FileText, Headphones } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import SEO from '@/components/SEO';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
