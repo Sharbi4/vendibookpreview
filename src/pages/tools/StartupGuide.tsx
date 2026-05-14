@@ -1157,41 +1157,35 @@ const StartupGuide = () => {
           </div>
         </section>
 
-        {/* Skip-the-build CTA Banner */}
+        {/* Above-the-fold CTA: marketplace bridge */}
         <section className="px-4 pt-4">
-          <div className="container mx-auto max-w-6xl">
-            <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-800 text-white p-6 md:p-8 shadow-xl">
-              <div className="absolute -right-16 -top-16 w-64 h-64 bg-[#FF5124]/20 rounded-full blur-3xl pointer-events-none" />
-              <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6 justify-between">
-                <div className="max-w-xl">
-                  <Badge className="mb-3 bg-[#FF5124]/20 text-[#FF8B6E] border-[#FF5124]/30">Skip the 6-month build</Badge>
-                  <h2 className="text-2xl md:text-3xl font-bold mb-2">Buy or rent a turnkey truck on Vendibook</h2>
-                  <p className="text-sm md:text-base text-zinc-300">
-                    Browse verified food trucks, trailers, and kitchens. Ship nationwide and pay over time with{' '}
-                    <span className="font-semibold text-white">Affirm</span> or{' '}
-                    <span className="font-semibold text-white">Afterpay</span> — start serving in weeks, not months.
+          <div className="container mx-auto max-w-5xl">
+            <div className="rounded-2xl border border-[#ff5124]/20 bg-white dark:bg-card p-6 md:p-8 shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center gap-6 justify-between">
+                <div className="max-w-2xl">
+                  <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">
+                    Ready to compare real food trucks, trailers, and kitchens?
+                  </h2>
+                  <p className="text-sm md:text-base text-muted-foreground">
+                    Vendibook helps food entrepreneurs browse food trucks, food trailers, commissary kitchens, shared kitchens, and vendor spaces. You can compare options, contact sellers or hosts, and find flexible ways to launch without starting from scratch.
                   </p>
-                  <div className="flex items-center gap-4 mt-4 opacity-90">
-                    <img src={affirmLogo} alt="Affirm financing" className="h-5 w-auto invert" />
-                    <img src={afterpayLogo} alt="Afterpay" className="h-4 w-auto invert" />
-                    <span className="text-xs text-zinc-400 hidden sm:inline">Nationwide shipping available</span>
-                  </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-                  <Button asChild size="lg" className="bg-[#FF5124] hover:bg-[#FF6A40] text-white border-0 shadow-lg gap-2">
-                    <Link to="/search?category=food_truck">
-                      <SearchIcon className="h-4 w-4" />
-                      Browse Trucks
+                  <Button asChild size="lg" className="bg-[#ff5124] hover:bg-[#e8431a] text-white border-0 rounded-full px-6">
+                    <Link to="/search?category=food_truck" aria-label="Browse food trucks for sale and rent on Vendibook">
+                      Browse Food Trucks
                     </Link>
                   </Button>
-                  <Button asChild size="lg" variant="outline" className="border-zinc-600 bg-white/5 hover:bg-white/10 text-white gap-2">
-                    <Link to="/payments">
-                      <ShoppingBag className="h-4 w-4" />
-                      How financing works
+                  <Button asChild size="lg" variant="outline" className="rounded-full px-6 border-[#ff5124]/40 text-foreground hover:bg-[#ff5124]/5">
+                    <Link to="/search?category=ghost_kitchen" aria-label="Find commercial and shared kitchens on Vendibook">
+                      Find Commercial Kitchens
                     </Link>
                   </Button>
                 </div>
               </div>
+              <p className="text-xs text-muted-foreground mt-4">
+                Some marketplace purchases may support flexible payment options such as Affirm, Afterpay, or Klarna, depending on eligibility and checkout availability.
+              </p>
             </div>
           </div>
         </section>
