@@ -61,7 +61,7 @@ const HeroSearchInput = ({
               <AnimatePresence mode="wait">
                 <motion.span
                   key={placeholderIndex}
-                  className="text-muted-foreground/40 text-[16px] sm:text-sm truncate"
+                  className="text-muted-foreground text-[16px] sm:text-sm truncate"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
