@@ -576,7 +576,6 @@ const RentMyCommercialKitchen = () => {
       <SEO
         title="Rent Out Your Commercial Kitchen | Vendibook"
         description="Turn restaurant downtime into profit. Rent your commercial kitchen to vetted ghost brands & caterers. We handle paperwork, payments, and screening."
-      />
         canonical="/rent-my-commercial-kitchen"
       />
       <JsonLd schema={[faqSchema, serviceSchema]} />
