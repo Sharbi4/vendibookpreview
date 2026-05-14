@@ -163,8 +163,9 @@ const HowItWorks = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SEO
-        title="How Vendibook Works | Rent, Buy, Host & Sell Food Trucks"
-        description="Vendibook is the marketplace for food trucks, trailers, commercial kitchens, and vendor spaces. Verified users, escrow payments, nationwide delivery. See exactly how it works."
+        title="How Vendibook Works: Rent, Buy, Host & Sell"
+        description="See how Vendibook works in 60 seconds: verified users, secure escrow payments, nationwide delivery, and 24/7 support for food trucks & kitchens."
+        canonical="/how-it-works"
       />
 
       <Header />
