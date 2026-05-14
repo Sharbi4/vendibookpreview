@@ -288,6 +288,7 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
           src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
           font-weight: 300;
           font-style: normal;
+          font-display: swap;
         }
       </style>
     </head>

@@ -77,13 +77,14 @@ const SupplySection = () => {
               A safe way to <span className="text-muted-foreground">sell or rent</span> your food truck.
             </h2>
             <div className="flex flex-col sm:flex-row items-start gap-4 mb-6 sm:mb-8">
-              <motion.img 
-                src={trailerCafecito} 
-                alt="Coffee food trailer" 
-                className="w-full sm:w-24 md:w-32 h-32 sm:h-24 md:h-32 rounded-xl object-cover shadow-lg flex-shrink-0 border-2 border-border"
-                loading="lazy"
-                whileHover={shouldReduceMotion ? {} : { scale: 1.02 }}
-              />
+                <motion.img 
+                  src={trailerCafecito} 
+                  alt="Coffee food trailer" 
+                  width={261}
+                  height={261}
+                  className="w-full sm:w-24 md:w-32 h-32 sm:h-24 md:h-32 rounded-xl object-cover shadow-lg flex-shrink-0 border-2 border-border"
+                  whileHover={shouldReduceMotion ? {} : { scale: 1.02 }}
+                />
               <p className="text-base sm:text-lg text-muted-foreground">
                 We built VendiBook to support the food truck community. Whether you're selling your truck, renting it out, or looking for a vendor spot—we've got your back.
               </p>
