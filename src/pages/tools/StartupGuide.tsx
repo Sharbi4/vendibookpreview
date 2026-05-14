@@ -1958,38 +1958,42 @@ const StartupGuide = () => {
           </div>
         </section>
 
-        {/* CTA Section */}
+        {/* Final CTA */}
         <section className="py-16 px-4">
-          <div className="container mx-auto max-w-4xl text-center">
-            <h2 className="text-2xl font-bold mb-4">Ready to Find Your Perfect Truck or Trailer?</h2>
-            <p className="text-muted-foreground mb-8">
-              Browse listings from verified sellers and start your food business journey today.
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Button asChild size="lg" className="bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 hover:from-zinc-800 hover:via-zinc-700 hover:to-zinc-800 text-white border border-zinc-700 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 gap-2">
-                <Link to="/search?category=food_truck">
-                  <Truck className="h-5 w-5" />
-                  Browse Food Trucks
-                </Link>
-              </Button>
-              <Button asChild size="lg" className="bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 hover:from-zinc-800 hover:via-zinc-700 hover:to-zinc-800 text-white border border-zinc-700 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 gap-2">
-                <Link to="/search?category=food_trailer">
-                  <Car className="h-5 w-5" />
-                  Browse Trailers
-                </Link>
-              </Button>
-              <Button asChild size="lg" className="bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 hover:from-zinc-800 hover:via-zinc-700 hover:to-zinc-800 text-white border border-zinc-700 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 gap-2">
-                <Link to="/search?category=ghost_kitchen">
-                  <Building2 className="h-5 w-5" />
-                  Find Kitchens
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="gap-2">
-                <Link to="/tools/permit-path">
-                  <FileCheck className="h-5 w-5" />
-                  Get Permit Checklist
-                </Link>
-              </Button>
+          <div className="container mx-auto max-w-5xl">
+            <div className="rounded-2xl border border-[#ff5124]/20 bg-white dark:bg-card p-8 md:p-10 shadow-sm text-center">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+                Start with the right food business setup.
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto mb-7">
+                Whether you need a food truck, trailer, shared kitchen, commissary kitchen, or vendor space, Vendibook helps you find the food business infrastructure to launch or grow.
+              </p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <Button asChild size="lg" className="bg-[#ff5124] hover:bg-[#e8431a] text-white border-0 rounded-full px-7">
+                  <Link to="/search" aria-label="Search the Vendibook marketplace for food trucks, trailers, kitchens, and vendor spaces">
+                    Search Vendibook
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="rounded-full px-7 border-[#ff5124]/40 text-foreground hover:bg-[#ff5124]/5">
+                  <Link to="/host" aria-label="List a food truck, trailer, or commercial kitchen on Vendibook">
+                    List on Vendibook
+                  </Link>
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 justify-center text-xs text-muted-foreground mt-6">
+                <Link to="/search?category=food_truck" className="hover:text-[#ff5124] underline-offset-2 hover:underline">Food trucks for sale & rent</Link>
+                <span aria-hidden="true">·</span>
+                <Link to="/search?category=food_trailer" className="hover:text-[#ff5124] underline-offset-2 hover:underline">Food trailers</Link>
+                <span aria-hidden="true">·</span>
+                <Link to="/search?category=ghost_kitchen" className="hover:text-[#ff5124] underline-offset-2 hover:underline">Commercial & shared kitchens</Link>
+                <span aria-hidden="true">·</span>
+                <Link to="/search?category=vendor_lot" className="hover:text-[#ff5124] underline-offset-2 hover:underline">Vendor spaces</Link>
+                <span aria-hidden="true">·</span>
+                <Link to="/host" className="hover:text-[#ff5124] underline-offset-2 hover:underline">List a food truck or kitchen</Link>
+              </div>
+              <p className="text-xs text-muted-foreground mt-4 max-w-xl mx-auto">
+                Some marketplace purchases may support flexible payment options such as Affirm, Afterpay, Klarna, or other available methods, depending on eligibility and checkout availability.
+              </p>
             </div>
           </div>
         </section>
