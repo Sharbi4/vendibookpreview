@@ -1065,8 +1065,9 @@ const StartupGuide = () => {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to="/" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
-                      <Home className="h-4 w-4" />
+                    <Link to="/" aria-label="Vendibook home" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                      <Home className="h-4 w-4" aria-hidden="true" />
+                      <span className="sr-only">Home</span>
                     </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
