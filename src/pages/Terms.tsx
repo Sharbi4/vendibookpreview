@@ -1,9 +1,15 @@
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import SEO from '@/components/SEO';
 
 const Terms = () => {
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Terms of Service"
+        description="Read the Vendibook Terms of Service governing rentals, sales, payments, and host obligations on our food truck marketplace."
+        canonical="/terms"
+      />
       <Header />
       
       <main className="flex-1 py-12">

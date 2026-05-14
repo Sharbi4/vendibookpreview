@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import SEO from '@/components/SEO';
 import { Shield, Cookie, Eye, Lock, Mail, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -12,6 +13,11 @@ const Privacy = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO
+        title="Privacy Policy"
+        description="How Vendibook collects, uses, and protects your personal information across our food truck and shared kitchen marketplace."
+        canonical="/privacy"
+      />
       <Header />
       
       <main className="flex-1 container py-12 max-w-4xl">
