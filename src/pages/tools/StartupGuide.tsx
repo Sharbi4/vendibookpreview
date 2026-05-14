@@ -1,9 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import affirmLogo from '@/assets/affirm-logo.png';
-import afterpayLogo from '@/assets/afterpay-logo.png';
-import { X, ShoppingBag, Search as SearchIcon, Truck as TruckIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 import JsonLd from '@/components/JsonLd';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -810,34 +807,9 @@ Most trucks need 5,000-10,000W. Underpowered generators cause:
 const StartupGuide = () => {
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [expandedSection, setExpandedSection] = useState<string | null>('setup');
-  const [showSteerPopup, setShowSteerPopup] = useState(false);
 
   // Track page views with Google Analytics
   usePageTracking();
-
-  // Steering popup: trigger once per session after the user scrolls ~40% down the page
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (sessionStorage.getItem('vb_startup_steer_seen') === '1') return;
-    let fired = false;
-    const onScroll = () => {
-      if (fired) return;
-      const scrolled = window.scrollY + window.innerHeight;
-      const threshold = document.documentElement.scrollHeight * 0.4;
-      if (scrolled >= threshold) {
-        fired = true;
-        setShowSteerPopup(true);
-        sessionStorage.setItem('vb_startup_steer_seen', '1');
-        window.removeEventListener('scroll', onScroll);
-      }
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    const timer = window.setTimeout(onScroll, 45000); // fallback: 45s
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.clearTimeout(timer);
-    };
-  }, []);
 
 
   const toggleItem = (itemId: string) => {
@@ -860,9 +832,13 @@ const StartupGuide = () => {
   return (
     <>
       <SEO
-        title="Food Truck Startup Guide 2026: Costs, Permits & Free Checklist"
-        description="Start your food truck in 2026 from $15K. Free 60-step checklist, permit guide, and verified trucks for sale or rent — ship nationwide, pay over time with Affirm or Afterpay."
+        title="Food Truck Startup Costs 2026: Full Price Breakdown + Profit Guide"
+        description="See how much it costs to start a food truck in 2026, including truck prices, permits, equipment, commissary kitchens, insurance, startup budget, and profit potential."
         canonical="/tools/startup-guide"
+        ogTitle="Food Truck Startup Costs 2026: Full Price Breakdown | Vendibook"
+        ogDescription="Planning to start a food truck? Compare real startup costs for trucks, trailers, permits, commissary kitchens, insurance, equipment, and launch expenses."
+        twitterTitle="Food Truck Startup Costs 2026"
+        twitterDescription="A practical guide to food truck startup costs, including trucks, trailers, permits, equipment, kitchens, insurance, and profit potential."
       />
       {/* Article Schema for Google Search */}
       <JsonLd
@@ -983,6 +959,31 @@ const StartupGuide = () => {
           "mainEntity": [
             {
               "@type": "Question",
+              "name": "How much does it cost to start a food truck in 2026?",
+              "acceptedAnswer": { "@type": "Answer", "text": "In 2026, food truck startup costs typically range from $15,000 for a budget DIY trailer setup to $175,000+ for a fully custom build. A realistic mid-range budget is $50,000–$90,000, covering the vehicle ($15K–$100K), buildout and equipment ($20K–$60K), permits and licenses ($2K–$5K), wrap and branding ($2.5K–$5K), insurance down payment, initial inventory, and a 2–3 month cash reserve." }
+            },
+            {
+              "@type": "Question",
+              "name": "Is it cheaper to start with a food trailer?",
+              "acceptedAnswer": { "@type": "Answer", "text": "Yes — food trailers usually run $30,000–$100,000 versus $50,000–$175,000 for a self-propelled food truck, and you get more kitchen square footage per dollar. The trade-off is mobility: trailers need a heavy-duty tow vehicle and are harder to maneuver in tight urban streets, so they're best for fixed lots, festivals, and catering rather than daily street vending." }
+            },
+            {
+              "@type": "Question",
+              "name": "Do food trucks need a commissary kitchen?",
+              "acceptedAnswer": { "@type": "Answer", "text": "Most U.S. cities require food trucks to have a commissary or shared commercial kitchen agreement to obtain a mobile food vendor permit. The commissary is your licensed home base for bulk prep, ingredient storage, water refill, wastewater disposal, and overnight parking. Expect to pay $400–$1,500/month for shared commissary access." }
+            },
+            {
+              "@type": "Question",
+              "name": "How much can a food truck make?",
+              "acceptedAnswer": { "@type": "Answer", "text": "Average food trucks generate $250,000–$500,000 in annual revenue with 6–9% net profit margins after food, labor, fuel, insurance, and commissary costs. Top operators in high-traffic markets can exceed $1M per year. Most trucks take 18–24 months to reach consistent profitability, and location quality is the single biggest revenue lever." }
+            },
+            {
+              "@type": "Question",
+              "name": "Should I rent or buy a food truck?",
+              "acceptedAnswer": { "@type": "Answer", "text": "Renting a food truck is the lower-risk way to validate your concept, menu, and locations without a six-figure investment. Buying makes sense once you have proven sales, a steady route, and want to build long-term equity. Many founders start by renting a truck or commissary kitchen, then buy a used or turnkey truck on a marketplace like Vendibook once demand is clear." }
+            },
+            {
+              "@type": "Question",
               "name": "How much does it cost to start a food truck?",
               "acceptedAnswer": { "@type": "Answer", "text": "Food truck startup costs range from $15,000-$25,000 for a budget DIY setup (used trailer, basic equipment) to $175,000+ for a premium custom build. Key expenses include vehicle ($5K-$100K), buildout ($5K-$60K), equipment ($5K-$45K), permits ($2K-$5K), and initial inventory ($2K-$5K). Monthly operating costs run $3,000-$8,000 including commissary, fuel, insurance, and supplies." }
             },
@@ -1064,8 +1065,9 @@ const StartupGuide = () => {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to="/" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
-                      <Home className="h-4 w-4" />
+                    <Link to="/" aria-label="Vendibook home" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                      <Home className="h-4 w-4" aria-hidden="true" />
+                      <span className="sr-only">Home</span>
                     </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
@@ -1128,41 +1130,35 @@ const StartupGuide = () => {
           </div>
         </section>
 
-        {/* Skip-the-build CTA Banner */}
+        {/* Above-the-fold CTA: marketplace bridge */}
         <section className="px-4 pt-4">
-          <div className="container mx-auto max-w-6xl">
-            <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-800 text-white p-6 md:p-8 shadow-xl">
-              <div className="absolute -right-16 -top-16 w-64 h-64 bg-[#FF5124]/20 rounded-full blur-3xl pointer-events-none" />
-              <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6 justify-between">
-                <div className="max-w-xl">
-                  <Badge className="mb-3 bg-[#FF5124]/20 text-[#FF8B6E] border-[#FF5124]/30">Skip the 6-month build</Badge>
-                  <h2 className="text-2xl md:text-3xl font-bold mb-2">Buy or rent a turnkey truck on Vendibook</h2>
-                  <p className="text-sm md:text-base text-zinc-300">
-                    Browse verified food trucks, trailers, and kitchens. Ship nationwide and pay over time with{' '}
-                    <span className="font-semibold text-white">Affirm</span> or{' '}
-                    <span className="font-semibold text-white">Afterpay</span> — start serving in weeks, not months.
+          <div className="container mx-auto max-w-5xl">
+            <div className="rounded-2xl border border-[#ff5124]/20 bg-white dark:bg-card p-6 md:p-8 shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center gap-6 justify-between">
+                <div className="max-w-2xl">
+                  <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">
+                    Ready to compare real food trucks, trailers, and kitchens?
+                  </h2>
+                  <p className="text-sm md:text-base text-muted-foreground">
+                    Vendibook helps food entrepreneurs browse food trucks, food trailers, commissary kitchens, shared kitchens, and vendor spaces. You can compare options, contact sellers or hosts, and find flexible ways to launch without starting from scratch.
                   </p>
-                  <div className="flex items-center gap-4 mt-4 opacity-90">
-                    <img src={affirmLogo} alt="Affirm financing" className="h-5 w-auto invert" />
-                    <img src={afterpayLogo} alt="Afterpay" className="h-4 w-auto invert" />
-                    <span className="text-xs text-zinc-400 hidden sm:inline">Nationwide shipping available</span>
-                  </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-                  <Button asChild size="lg" className="bg-[#FF5124] hover:bg-[#FF6A40] text-white border-0 shadow-lg gap-2">
-                    <Link to="/search?category=food_truck">
-                      <SearchIcon className="h-4 w-4" />
-                      Browse Trucks
+                  <Button asChild size="lg" className="bg-[#ff5124] hover:bg-[#e8431a] text-white border-0 rounded-full px-6">
+                    <Link to="/search?category=food_truck" aria-label="Browse food trucks for sale and rent on Vendibook">
+                      Browse Food Trucks
                     </Link>
                   </Button>
-                  <Button asChild size="lg" variant="outline" className="border-zinc-600 bg-white/5 hover:bg-white/10 text-white gap-2">
-                    <Link to="/payments">
-                      <ShoppingBag className="h-4 w-4" />
-                      How financing works
+                  <Button asChild size="lg" variant="outline" className="rounded-full px-6 border-[#ff5124]/40 text-foreground hover:bg-[#ff5124]/5">
+                    <Link to="/search?category=ghost_kitchen" aria-label="Find commercial and shared kitchens on Vendibook">
+                      Find Commercial Kitchens
                     </Link>
                   </Button>
                 </div>
               </div>
+              <p className="text-xs text-muted-foreground mt-4">
+                Some marketplace purchases may support flexible payment options such as Affirm, Afterpay, or Klarna, depending on eligibility and checkout availability.
+              </p>
             </div>
           </div>
         </section>
@@ -1670,6 +1666,40 @@ const StartupGuide = () => {
           </div>
         </section>
 
+        {/* Mid-article CTA: alternatives to upfront buildout */}
+        <section className="py-10 px-4">
+          <div className="container mx-auto max-w-5xl">
+            <div className="rounded-2xl border border-[#ff5124]/20 bg-white dark:bg-card p-6 md:p-8 shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-start gap-6 justify-between">
+                <div className="max-w-2xl">
+                  <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">
+                    Buying everything upfront is not your only option.
+                  </h2>
+                  <p className="text-sm md:text-base text-muted-foreground">
+                    Many food entrepreneurs start by renting a commissary kitchen, booking vendor space, testing with a trailer, or finding a used truck before investing in a full buildout. Vendibook makes it easy to compare{' '}
+                    <Link to="/search?category=food_truck" className="text-[#ff5124] underline-offset-2 hover:underline">food trucks</Link>,{' '}
+                    <Link to="/search?category=food_trailer" className="text-[#ff5124] underline-offset-2 hover:underline">food trailers</Link>,{' '}
+                    <Link to="/search?category=ghost_kitchen" className="text-[#ff5124] underline-offset-2 hover:underline">commercial and shared kitchens</Link>, and{' '}
+                    <Link to="/search?category=vendor_lot" className="text-[#ff5124] underline-offset-2 hover:underline">vendor spaces</Link> in one place.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                  <Button asChild size="lg" className="bg-[#ff5124] hover:bg-[#e8431a] text-white border-0 rounded-full px-6">
+                    <Link to="/search" aria-label="Browse the Vendibook marketplace for food trucks, trailers, kitchens, and vendor spaces">
+                      Browse Marketplace
+                    </Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="rounded-full px-6 border-[#ff5124]/40 text-foreground hover:bg-[#ff5124]/5">
+                    <Link to="/host" aria-label="List your food truck or commercial kitchen on Vendibook">
+                      List Your Truck or Kitchen
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Hidden Risks / Silent Killers */}
         <section className="py-12 px-4">
           <div className="container mx-auto max-w-6xl">
@@ -1901,38 +1931,42 @@ const StartupGuide = () => {
           </div>
         </section>
 
-        {/* CTA Section */}
+        {/* Final CTA */}
         <section className="py-16 px-4">
-          <div className="container mx-auto max-w-4xl text-center">
-            <h2 className="text-2xl font-bold mb-4">Ready to Find Your Perfect Truck or Trailer?</h2>
-            <p className="text-muted-foreground mb-8">
-              Browse listings from verified sellers and start your food business journey today.
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Button asChild size="lg" className="bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 hover:from-zinc-800 hover:via-zinc-700 hover:to-zinc-800 text-white border border-zinc-700 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 gap-2">
-                <Link to="/search?category=food_truck">
-                  <Truck className="h-5 w-5" />
-                  Browse Food Trucks
-                </Link>
-              </Button>
-              <Button asChild size="lg" className="bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 hover:from-zinc-800 hover:via-zinc-700 hover:to-zinc-800 text-white border border-zinc-700 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 gap-2">
-                <Link to="/search?category=food_trailer">
-                  <Car className="h-5 w-5" />
-                  Browse Trailers
-                </Link>
-              </Button>
-              <Button asChild size="lg" className="bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 hover:from-zinc-800 hover:via-zinc-700 hover:to-zinc-800 text-white border border-zinc-700 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 gap-2">
-                <Link to="/search?category=ghost_kitchen">
-                  <Building2 className="h-5 w-5" />
-                  Find Kitchens
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="gap-2">
-                <Link to="/tools/permit-path">
-                  <FileCheck className="h-5 w-5" />
-                  Get Permit Checklist
-                </Link>
-              </Button>
+          <div className="container mx-auto max-w-5xl">
+            <div className="rounded-2xl border border-[#ff5124]/20 bg-white dark:bg-card p-8 md:p-10 shadow-sm text-center">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+                Start with the right food business setup.
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto mb-7">
+                Whether you need a food truck, trailer, shared kitchen, commissary kitchen, or vendor space, Vendibook helps you find the food business infrastructure to launch or grow.
+              </p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <Button asChild size="lg" className="bg-[#ff5124] hover:bg-[#e8431a] text-white border-0 rounded-full px-7">
+                  <Link to="/search" aria-label="Search the Vendibook marketplace for food trucks, trailers, kitchens, and vendor spaces">
+                    Search Vendibook
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="rounded-full px-7 border-[#ff5124]/40 text-foreground hover:bg-[#ff5124]/5">
+                  <Link to="/host" aria-label="List a food truck, trailer, or commercial kitchen on Vendibook">
+                    List on Vendibook
+                  </Link>
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 justify-center text-xs text-muted-foreground mt-6">
+                <Link to="/search?category=food_truck" className="hover:text-[#ff5124] underline-offset-2 hover:underline">Food trucks for sale & rent</Link>
+                <span aria-hidden="true">·</span>
+                <Link to="/search?category=food_trailer" className="hover:text-[#ff5124] underline-offset-2 hover:underline">Food trailers</Link>
+                <span aria-hidden="true">·</span>
+                <Link to="/search?category=ghost_kitchen" className="hover:text-[#ff5124] underline-offset-2 hover:underline">Commercial & shared kitchens</Link>
+                <span aria-hidden="true">·</span>
+                <Link to="/search?category=vendor_lot" className="hover:text-[#ff5124] underline-offset-2 hover:underline">Vendor spaces</Link>
+                <span aria-hidden="true">·</span>
+                <Link to="/host" className="hover:text-[#ff5124] underline-offset-2 hover:underline">List a food truck or kitchen</Link>
+              </div>
+              <p className="text-xs text-muted-foreground mt-4 max-w-xl mx-auto">
+                Some marketplace purchases may support flexible payment options such as Affirm, Afterpay, Klarna, or other available methods, depending on eligibility and checkout availability.
+              </p>
             </div>
           </div>
         </section>
@@ -1940,65 +1974,6 @@ const StartupGuide = () => {
         <ToolCrossLinks currentTool="startup-guide" />
       </main>
       
-      {/* Steering popup: nudges readers toward buying/renting on Vendibook */}
-      <AnimatePresence>
-        {showSteerPopup && (
-          <motion.div
-            key="steer-popup"
-            initial={{ opacity: 0, y: 24, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 24, scale: 0.96 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-md"
-          >
-            <div className="relative rounded-2xl border border-border/60 bg-zinc-900 text-white shadow-2xl overflow-hidden">
-              <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#FF5124]/20 rounded-full blur-2xl pointer-events-none" />
-              <button
-                type="button"
-                onClick={() => setShowSteerPopup(false)}
-                aria-label="Dismiss"
-                className="absolute top-2.5 right-2.5 z-10 p-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition"
-              >
-                <X className="h-4 w-4" />
-              </button>
-              <div className="relative z-[1] p-5">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-[#FF5124]/20 flex items-center justify-center">
-                    <TruckIcon className="h-4 w-4 text-[#FF8B6E]" />
-                  </div>
-                  <p className="text-xs uppercase tracking-wide text-[#FF8B6E] font-semibold">Shortcut</p>
-                </div>
-                <h3 className="text-lg font-bold leading-tight mb-1">
-                  Don't build from scratch — buy a ready-to-roll truck.
-                </h3>
-                <p className="text-sm text-zinc-300 mb-4">
-                  Search verified listings on Vendibook, get it shipped to your city, and finance it with{' '}
-                  <span className="font-semibold text-white">Affirm</span> or{' '}
-                  <span className="font-semibold text-white">Afterpay</span>.
-                </p>
-                <div className="flex items-center gap-3 mb-4 opacity-90">
-                  <img src={affirmLogo} alt="Affirm" className="h-4 w-auto invert" />
-                  <img src={afterpayLogo} alt="Afterpay" className="h-3.5 w-auto invert" />
-                </div>
-                <div className="flex gap-2">
-                  <Button asChild size="sm" className="bg-[#FF5124] hover:bg-[#FF6A40] text-white border-0 flex-1 gap-1.5">
-                    <Link to="/search?category=food_truck" onClick={() => setShowSteerPopup(false)}>
-                      <SearchIcon className="h-3.5 w-3.5" />
-                      Browse trucks
-                    </Link>
-                  </Button>
-                  <Button asChild size="sm" variant="outline" className="border-zinc-600 bg-white/5 hover:bg-white/10 text-white flex-1">
-                    <Link to="/payments" onClick={() => setShowSteerPopup(false)}>
-                      Financing
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <NewsletterPopup />
       <Footer />
     </>

@@ -6,6 +6,10 @@ interface SEOProps {
   canonical?: string;
   type?: 'website' | 'article' | 'product';
   image?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
   article?: {
     publishedTime?: string;
     modifiedTime?: string;
@@ -34,6 +38,10 @@ const SEO = ({
   canonical,
   type = 'website',
   image = DEFAULT_IMAGE,
+  ogTitle,
+  ogDescription,
+  twitterTitle,
+  twitterDescription,
   article,
   product,
   noindex = false,
@@ -41,6 +49,10 @@ const SEO = ({
   const fullTitle = title.includes('Vendibook') ? title : `${title} | Vendibook`;
   const canonicalUrl = canonical ? `${BASE_URL}${canonical}` : BASE_URL;
   const imageUrl = image.startsWith('http') ? image : `${BASE_URL}${image}`;
+  const ogTitleFinal = ogTitle || fullTitle;
+  const ogDescriptionFinal = ogDescription || description;
+  const twitterTitleFinal = twitterTitle || ogTitleFinal;
+  const twitterDescriptionFinal = twitterDescription || ogDescriptionFinal;
 
   useEffect(() => {
     // Update document title
@@ -79,8 +91,8 @@ const SEO = ({
     // Open Graph
     setMeta('og:type', type, true);
     setMeta('og:url', canonicalUrl, true);
-    setMeta('og:title', fullTitle, true);
-    setMeta('og:description', description, true);
+    setMeta('og:title', ogTitleFinal, true);
+    setMeta('og:description', ogDescriptionFinal, true);
     setMeta('og:image', imageUrl, true);
     setMeta('og:site_name', SITE_NAME, true);
     setMeta('og:locale', 'en_US', true);
@@ -88,8 +100,8 @@ const SEO = ({
     // Twitter
     setMeta('twitter:card', 'summary_large_image');
     setMeta('twitter:url', canonicalUrl);
-    setMeta('twitter:title', fullTitle);
-    setMeta('twitter:description', description);
+    setMeta('twitter:title', twitterTitleFinal);
+    setMeta('twitter:description', twitterDescriptionFinal);
     setMeta('twitter:image', imageUrl);
 
     // Article-specific meta (for blog posts, help articles, etc.)
@@ -126,7 +138,7 @@ const SEO = ({
     return () => {
       document.title = 'Vendibook | Food Truck & Mobile Vendor Marketplace';
     };
-  }, [fullTitle, description, canonicalUrl, type, imageUrl, article, product, noindex]);
+  }, [fullTitle, description, canonicalUrl, type, imageUrl, ogTitleFinal, ogDescriptionFinal, twitterTitleFinal, twitterDescriptionFinal, article, product, noindex]);
 
   return null;
 };
