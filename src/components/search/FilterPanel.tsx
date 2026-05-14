@@ -150,7 +150,7 @@ export const FilterPanel = ({ filters, onChange, onApply, onClear, autoApply = f
                     onChange={(e) => onChange({ ...filters, minPrice: e.target.value })}
                     className="h-9 text-sm rounded-lg"
                   />
-                  <span className="text-gray-400 text-xs">to</span>
+                  <span className="text-muted-foreground text-xs">to</span>
                   <Input
                     type="number"
                     placeholder="Max"
