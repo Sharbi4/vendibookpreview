@@ -574,8 +574,9 @@ const RentMyCommercialKitchen = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Rent Your Commercial Kitchen: Turn Downtime Into Profit | Vendibook"
-        description="Monetize your restaurant's unused hours. Safely rent your commercial kitchen to vetted ghost brands and caterers. We handle the paperwork, payments, and screening."
+        title="Rent Out Your Commercial Kitchen | Vendibook"
+        description="Turn restaurant downtime into profit. Rent your commercial kitchen to vetted ghost brands & caterers. We handle paperwork, payments, and screening."
+      />
         canonical="/rent-my-commercial-kitchen"
       />
       <JsonLd schema={[faqSchema, serviceSchema]} />
