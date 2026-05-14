@@ -62,8 +62,8 @@ const PricingCalculator = () => {
   return (
     <>
       <SEO
-        title="Transparent Pricing Calculator | Vendibook Fees Explained"
-        description="See exactly what you'll pay and receive when selling or renting on Vendibook. No hidden fees, no surprises — just transparent pricing for food trucks, trailers, and more."
+        title="Vendibook Fees Calculator — See Exact Costs"
+        description="Calculate your exact payout or buyer cost before you list. 12.9% buyer fee, $0 host fees, no surprises. Try the calculator free."
         canonical="https://vendibook.com/pricing-calculator"
       />
       <JsonLd schema={[faqSchema, breadcrumbSchema]} />
