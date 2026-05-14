@@ -50,6 +50,8 @@ const HeroValueProp = () => {
             <img
               src={vendibookLogo}
               alt="Vendibook"
+              width={1536}
+              height={1024}
               fetchPriority="high"
               loading="eager"
               decoding="sync"
