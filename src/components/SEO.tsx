@@ -91,8 +91,8 @@ const SEO = ({
     // Open Graph
     setMeta('og:type', type, true);
     setMeta('og:url', canonicalUrl, true);
-    setMeta('og:title', fullTitle, true);
-    setMeta('og:description', description, true);
+    setMeta('og:title', ogTitleFinal, true);
+    setMeta('og:description', ogDescriptionFinal, true);
     setMeta('og:image', imageUrl, true);
     setMeta('og:site_name', SITE_NAME, true);
     setMeta('og:locale', 'en_US', true);
@@ -100,8 +100,8 @@ const SEO = ({
     // Twitter
     setMeta('twitter:card', 'summary_large_image');
     setMeta('twitter:url', canonicalUrl);
-    setMeta('twitter:title', fullTitle);
-    setMeta('twitter:description', description);
+    setMeta('twitter:title', twitterTitleFinal);
+    setMeta('twitter:description', twitterDescriptionFinal);
     setMeta('twitter:image', imageUrl);
 
     // Article-specific meta (for blog posts, help articles, etc.)
