@@ -71,7 +71,7 @@ const HeroSearchFirst = () => {
               <button
                 key={item.label}
                 onClick={() => navigate(`/search?mode=${item.mode}&category=${item.cat}`)}
-                className="px-3 py-1.5 rounded-full text-[11px] border border-border/50 hover:border-primary/30 text-muted-foreground/50 hover:text-muted-foreground bg-transparent hover:bg-white/[0.03] transition-all"
+                className="px-3 py-1.5 rounded-full text-[11px] border border-border/50 hover:border-primary/30 text-muted-foreground hover:text-foreground bg-transparent hover:bg-white/[0.03] transition-all"
               >
                 {item.label}
               </button>
