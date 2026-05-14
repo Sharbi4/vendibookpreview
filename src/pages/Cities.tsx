@@ -59,6 +59,11 @@ const Cities = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Cities — Browse Food Truck & Kitchen Listings"
+        description="Find food trucks, food trailers, shared kitchens, and vendor spaces across our launch markets. Browse listings city by city."
+        canonical="/cities"
+      />
       <Header />
       
       <main>
