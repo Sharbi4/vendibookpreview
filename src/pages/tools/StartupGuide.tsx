@@ -2001,65 +2001,6 @@ const StartupGuide = () => {
         <ToolCrossLinks currentTool="startup-guide" />
       </main>
       
-      {/* Steering popup: nudges readers toward buying/renting on Vendibook */}
-      <AnimatePresence>
-        {showSteerPopup && (
-          <motion.div
-            key="steer-popup"
-            initial={{ opacity: 0, y: 24, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 24, scale: 0.96 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-md"
-          >
-            <div className="relative rounded-2xl border border-border/60 bg-zinc-900 text-white shadow-2xl overflow-hidden">
-              <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#FF5124]/20 rounded-full blur-2xl pointer-events-none" />
-              <button
-                type="button"
-                onClick={() => setShowSteerPopup(false)}
-                aria-label="Dismiss"
-                className="absolute top-2.5 right-2.5 z-10 p-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition"
-              >
-                <X className="h-4 w-4" />
-              </button>
-              <div className="relative z-[1] p-5">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-[#FF5124]/20 flex items-center justify-center">
-                    <TruckIcon className="h-4 w-4 text-[#FF8B6E]" />
-                  </div>
-                  <p className="text-xs uppercase tracking-wide text-[#FF8B6E] font-semibold">Shortcut</p>
-                </div>
-                <h3 className="text-lg font-bold leading-tight mb-1">
-                  Don't build from scratch — buy a ready-to-roll truck.
-                </h3>
-                <p className="text-sm text-zinc-300 mb-4">
-                  Search verified listings on Vendibook, get it shipped to your city, and finance it with{' '}
-                  <span className="font-semibold text-white">Affirm</span> or{' '}
-                  <span className="font-semibold text-white">Afterpay</span>.
-                </p>
-                <div className="flex items-center gap-3 mb-4 opacity-90">
-                  <img src={affirmLogo} alt="Affirm" className="h-4 w-auto invert" />
-                  <img src={afterpayLogo} alt="Afterpay" className="h-3.5 w-auto invert" />
-                </div>
-                <div className="flex gap-2">
-                  <Button asChild size="sm" className="bg-[#FF5124] hover:bg-[#FF6A40] text-white border-0 flex-1 gap-1.5">
-                    <Link to="/search?category=food_truck" onClick={() => setShowSteerPopup(false)}>
-                      <SearchIcon className="h-3.5 w-3.5" />
-                      Browse trucks
-                    </Link>
-                  </Button>
-                  <Button asChild size="sm" variant="outline" className="border-zinc-600 bg-white/5 hover:bg-white/10 text-white flex-1">
-                    <Link to="/payments" onClick={() => setShowSteerPopup(false)}>
-                      Financing
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <NewsletterPopup />
       <Footer />
     </>
