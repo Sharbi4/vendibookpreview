@@ -60,8 +60,8 @@ const Cities = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Cities — Browse Food Truck & Kitchen Listings"
-        description="Find food trucks, food trailers, shared kitchens, and vendor spaces across our launch markets. Browse listings city by city."
+        title="Food Trucks & Kitchens by City | Vendibook"
+        description="Browse verified food trucks, trailers, shared kitchens & vendor spaces in your city. Real-time availability, instant booking, and 24/7 support."
         canonical="/cities"
       />
       <Header />
