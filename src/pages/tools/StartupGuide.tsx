@@ -810,9 +810,35 @@ Most trucks need 5,000-10,000W. Underpowered generators cause:
 const StartupGuide = () => {
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [expandedSection, setExpandedSection] = useState<string | null>('setup');
-  
+  const [showSteerPopup, setShowSteerPopup] = useState(false);
+
   // Track page views with Google Analytics
   usePageTracking();
+
+  // Steering popup: trigger once per session after the user scrolls ~40% down the page
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (sessionStorage.getItem('vb_startup_steer_seen') === '1') return;
+    let fired = false;
+    const onScroll = () => {
+      if (fired) return;
+      const scrolled = window.scrollY + window.innerHeight;
+      const threshold = document.documentElement.scrollHeight * 0.4;
+      if (scrolled >= threshold) {
+        fired = true;
+        setShowSteerPopup(true);
+        sessionStorage.setItem('vb_startup_steer_seen', '1');
+        window.removeEventListener('scroll', onScroll);
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    const timer = window.setTimeout(onScroll, 45000); // fallback: 45s
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.clearTimeout(timer);
+    };
+  }, []);
+
 
   const toggleItem = (itemId: string) => {
     setCheckedItems(prev => ({ ...prev, [itemId]: !prev[itemId] }));
