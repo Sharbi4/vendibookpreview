@@ -16,8 +16,8 @@ const HeroTrustSignals = () => (
     transition={{ duration: 0.5, delay: 0.7 }}
   >
     {SIGNALS.map(({ icon: Icon, text }) => (
-      <span key={text} className="flex items-center gap-1.5 text-[11px] text-muted-foreground/50">
-        <Icon className="w-3 h-3 text-foreground/40" />
+      <span key={text} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <Icon className="w-3 h-3 text-muted-foreground" />
         {text}
       </span>
     ))}
