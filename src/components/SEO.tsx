@@ -6,6 +6,10 @@ interface SEOProps {
   canonical?: string;
   type?: 'website' | 'article' | 'product';
   image?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
   article?: {
     publishedTime?: string;
     modifiedTime?: string;
