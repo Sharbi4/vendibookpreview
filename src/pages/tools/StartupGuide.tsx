@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import affirmLogo from '@/assets/affirm-logo.png';
+import afterpayLogo from '@/assets/afterpay-logo.png';
+import { X, ShoppingBag, Search as SearchIcon, Truck as TruckIcon } from 'lucide-react';
 import JsonLd from '@/components/JsonLd';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -807,9 +810,35 @@ Most trucks need 5,000-10,000W. Underpowered generators cause:
 const StartupGuide = () => {
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [expandedSection, setExpandedSection] = useState<string | null>('setup');
-  
+  const [showSteerPopup, setShowSteerPopup] = useState(false);
+
   // Track page views with Google Analytics
   usePageTracking();
+
+  // Steering popup: trigger once per session after the user scrolls ~40% down the page
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (sessionStorage.getItem('vb_startup_steer_seen') === '1') return;
+    let fired = false;
+    const onScroll = () => {
+      if (fired) return;
+      const scrolled = window.scrollY + window.innerHeight;
+      const threshold = document.documentElement.scrollHeight * 0.4;
+      if (scrolled >= threshold) {
+        fired = true;
+        setShowSteerPopup(true);
+        sessionStorage.setItem('vb_startup_steer_seen', '1');
+        window.removeEventListener('scroll', onScroll);
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    const timer = window.setTimeout(onScroll, 45000); // fallback: 45s
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.clearTimeout(timer);
+    };
+  }, []);
+
 
   const toggleItem = (itemId: string) => {
     setCheckedItems(prev => ({ ...prev, [itemId]: !prev[itemId] }));
@@ -831,8 +860,9 @@ const StartupGuide = () => {
   return (
     <>
       <SEO
-        title="Food Truck Startup Guide 2026: Complete Checklist, Costs & Permits | Vendibook"
-        description="Launch your food truck business with our comprehensive 2026 startup guide. Covers $15K-$175K startup costs, permits, equipment, kitchen layouts, menu engineering, and hidden risks. 60+ checklist items for food trucks, trailers, and shared kitchens."
+        title="Food Truck Startup Guide 2026: Costs, Permits & Free Checklist"
+        description="Start your food truck in 2026 from $15K. Free 60-step checklist, permit guide, and verified trucks for sale or rent — ship nationwide, pay over time with Affirm or Afterpay."
+        canonical="/tools/startup-guide"
       />
       {/* Article Schema for Google Search */}
       <JsonLd
@@ -1095,6 +1125,45 @@ const StartupGuide = () => {
                 </CardContent>
               </Card>
             </motion.div>
+          </div>
+        </section>
+
+        {/* Skip-the-build CTA Banner */}
+        <section className="px-4 pt-4">
+          <div className="container mx-auto max-w-6xl">
+            <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-800 text-white p-6 md:p-8 shadow-xl">
+              <div className="absolute -right-16 -top-16 w-64 h-64 bg-[#FF5124]/20 rounded-full blur-3xl pointer-events-none" />
+              <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6 justify-between">
+                <div className="max-w-xl">
+                  <Badge className="mb-3 bg-[#FF5124]/20 text-[#FF8B6E] border-[#FF5124]/30">Skip the 6-month build</Badge>
+                  <h2 className="text-2xl md:text-3xl font-bold mb-2">Buy or rent a turnkey truck on Vendibook</h2>
+                  <p className="text-sm md:text-base text-zinc-300">
+                    Browse verified food trucks, trailers, and kitchens. Ship nationwide and pay over time with{' '}
+                    <span className="font-semibold text-white">Affirm</span> or{' '}
+                    <span className="font-semibold text-white">Afterpay</span> — start serving in weeks, not months.
+                  </p>
+                  <div className="flex items-center gap-4 mt-4 opacity-90">
+                    <img src={affirmLogo} alt="Affirm financing" className="h-5 w-auto invert" />
+                    <img src={afterpayLogo} alt="Afterpay" className="h-4 w-auto invert" />
+                    <span className="text-xs text-zinc-400 hidden sm:inline">Nationwide shipping available</span>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                  <Button asChild size="lg" className="bg-[#FF5124] hover:bg-[#FF6A40] text-white border-0 shadow-lg gap-2">
+                    <Link to="/search?category=food_truck">
+                      <SearchIcon className="h-4 w-4" />
+                      Browse Trucks
+                    </Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="border-zinc-600 bg-white/5 hover:bg-white/10 text-white gap-2">
+                    <Link to="/payments">
+                      <ShoppingBag className="h-4 w-4" />
+                      How financing works
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -1871,6 +1940,65 @@ const StartupGuide = () => {
         <ToolCrossLinks currentTool="startup-guide" />
       </main>
       
+      {/* Steering popup: nudges readers toward buying/renting on Vendibook */}
+      <AnimatePresence>
+        {showSteerPopup && (
+          <motion.div
+            key="steer-popup"
+            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.96 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-md"
+          >
+            <div className="relative rounded-2xl border border-border/60 bg-zinc-900 text-white shadow-2xl overflow-hidden">
+              <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#FF5124]/20 rounded-full blur-2xl pointer-events-none" />
+              <button
+                type="button"
+                onClick={() => setShowSteerPopup(false)}
+                aria-label="Dismiss"
+                className="absolute top-2.5 right-2.5 z-10 p-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <div className="relative z-[1] p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-[#FF5124]/20 flex items-center justify-center">
+                    <TruckIcon className="h-4 w-4 text-[#FF8B6E]" />
+                  </div>
+                  <p className="text-xs uppercase tracking-wide text-[#FF8B6E] font-semibold">Shortcut</p>
+                </div>
+                <h3 className="text-lg font-bold leading-tight mb-1">
+                  Don't build from scratch — buy a ready-to-roll truck.
+                </h3>
+                <p className="text-sm text-zinc-300 mb-4">
+                  Search verified listings on Vendibook, get it shipped to your city, and finance it with{' '}
+                  <span className="font-semibold text-white">Affirm</span> or{' '}
+                  <span className="font-semibold text-white">Afterpay</span>.
+                </p>
+                <div className="flex items-center gap-3 mb-4 opacity-90">
+                  <img src={affirmLogo} alt="Affirm" className="h-4 w-auto invert" />
+                  <img src={afterpayLogo} alt="Afterpay" className="h-3.5 w-auto invert" />
+                </div>
+                <div className="flex gap-2">
+                  <Button asChild size="sm" className="bg-[#FF5124] hover:bg-[#FF6A40] text-white border-0 flex-1 gap-1.5">
+                    <Link to="/search?category=food_truck" onClick={() => setShowSteerPopup(false)}>
+                      <SearchIcon className="h-3.5 w-3.5" />
+                      Browse trucks
+                    </Link>
+                  </Button>
+                  <Button asChild size="sm" variant="outline" className="border-zinc-600 bg-white/5 hover:bg-white/10 text-white flex-1">
+                    <Link to="/payments" onClick={() => setShowSteerPopup(false)}>
+                      Financing
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <NewsletterPopup />
       <Footer />
     </>
