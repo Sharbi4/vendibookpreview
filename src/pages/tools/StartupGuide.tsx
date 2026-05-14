@@ -1693,6 +1693,40 @@ const StartupGuide = () => {
           </div>
         </section>
 
+        {/* Mid-article CTA: alternatives to upfront buildout */}
+        <section className="py-10 px-4">
+          <div className="container mx-auto max-w-5xl">
+            <div className="rounded-2xl border border-[#ff5124]/20 bg-white dark:bg-card p-6 md:p-8 shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-start gap-6 justify-between">
+                <div className="max-w-2xl">
+                  <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">
+                    Buying everything upfront is not your only option.
+                  </h2>
+                  <p className="text-sm md:text-base text-muted-foreground">
+                    Many food entrepreneurs start by renting a commissary kitchen, booking vendor space, testing with a trailer, or finding a used truck before investing in a full buildout. Vendibook makes it easy to compare{' '}
+                    <Link to="/search?category=food_truck" className="text-[#ff5124] underline-offset-2 hover:underline">food trucks</Link>,{' '}
+                    <Link to="/search?category=food_trailer" className="text-[#ff5124] underline-offset-2 hover:underline">food trailers</Link>,{' '}
+                    <Link to="/search?category=ghost_kitchen" className="text-[#ff5124] underline-offset-2 hover:underline">commercial and shared kitchens</Link>, and{' '}
+                    <Link to="/search?category=vendor_lot" className="text-[#ff5124] underline-offset-2 hover:underline">vendor spaces</Link> in one place.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                  <Button asChild size="lg" className="bg-[#ff5124] hover:bg-[#e8431a] text-white border-0 rounded-full px-6">
+                    <Link to="/search" aria-label="Browse the Vendibook marketplace for food trucks, trailers, kitchens, and vendor spaces">
+                      Browse Marketplace
+                    </Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="rounded-full px-6 border-[#ff5124]/40 text-foreground hover:bg-[#ff5124]/5">
+                    <Link to="/host" aria-label="List your food truck or commercial kitchen on Vendibook">
+                      List Your Truck or Kitchen
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Hidden Risks / Silent Killers */}
         <section className="py-12 px-4">
           <div className="container mx-auto max-w-6xl">
