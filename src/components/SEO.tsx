@@ -138,7 +138,7 @@ const SEO = ({
     return () => {
       document.title = 'Vendibook | Food Truck & Mobile Vendor Marketplace';
     };
-  }, [fullTitle, description, canonicalUrl, type, imageUrl, article, product, noindex]);
+  }, [fullTitle, description, canonicalUrl, type, imageUrl, ogTitleFinal, ogDescriptionFinal, twitterTitleFinal, twitterDescriptionFinal, article, product, noindex]);
 
   return null;
 };
