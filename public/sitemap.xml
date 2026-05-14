@@ -4,9 +4,9 @@
     <loc>https://vendibook.com/sitemap_pages.xml</loc>
   </sitemap>
   <sitemap>
-    <loc>https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/generate-sitemap?type=listings</loc>
+    <loc>https://vendibook.com/sitemap-listings.xml</loc>
   </sitemap>
   <sitemap>
-    <loc>https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/generate-sitemap?type=locations</loc>
+    <loc>https://vendibook.com/sitemap-locations.xml</loc>
   </sitemap>
 </sitemapindex>

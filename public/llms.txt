@@ -1,0 +1,25 @@
+# Vendibook
+
+> The marketplace for mobile food vendors — buy or rent food trucks, food trailers, shared/commercial kitchens, and vendor spaces across the United States.
+
+Vendibook connects food entrepreneurs with verified hosts. Every listing supports secure payments, identity verification, document workflows, and 24/7 support. Rentals and sales are protected by our checkout, dispute resolution, and host payout system.
+
+## Pages
+
+- [Home](/): Search and browse food trucks, trailers, kitchens, and vendor spaces.
+- [Browse](/browse): Filtered marketplace search across all categories.
+- [Cities](/cities): Listings by city and launch market.
+- [Become a Host](/become-a-host): List your truck, trailer, kitchen, or vendor space.
+- [How It Works (Hosts)](/how-it-works-host): Host onboarding, payouts, and protections.
+- [How It Works (Sellers)](/how-it-works-seller): Selling a food truck or trailer on Vendibook.
+- [Pricing Calculator](/pricing-calculator): Estimate fees and payouts.
+- [Kitchen Earnings Calculator](/kitchen-earnings-calculator): Project earnings as a kitchen host.
+- [Vendi AI Suite](/vendi-ai-suite): AI tools for listing creation and matching.
+- [Blog](/blog): Guides for mobile food vendors.
+- [Help](/help): Support articles and contact options.
+
+## Optional
+
+- [Privacy Policy](/privacy): How we handle data.
+- [Terms of Service](/terms): Marketplace terms.
+- [California Privacy](/california-privacy): CCPA disclosures.
