@@ -31,7 +31,7 @@ const Browse = () => {
     <div className="min-h-screen flex flex-col">
       <SEO 
         title="Browse Food Trucks, Trailers & Kitchens | Vendibook"
-        description="Find verified food trucks, trailers, shared kitchens, and Vendor Spaces. Book or buy with confidence—requirements upfront, secure workflows, and 24/7 support."
+        description="Search verified food trucks, trailers, shared kitchens & vendor spaces. Filter by city, price, instant book. Secure checkout, 24/7 support."
         type="website"
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ 
