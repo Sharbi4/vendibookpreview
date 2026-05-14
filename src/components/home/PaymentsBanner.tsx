@@ -15,11 +15,15 @@ const PaymentsBanner = () => {
             <img 
               src={affirmLogo} 
               alt="Affirm" 
+              width={1286}
+              height={513}
               className="h-6 w-auto object-contain invert brightness-0 dark:invert dark:brightness-100 opacity-60 hover:opacity-90 transition-opacity" 
             />
             <img 
               src={afterpayLogo} 
               alt="Afterpay" 
+              width={1920}
+              height={668}
               className="h-5 w-auto object-contain invert brightness-0 dark:invert dark:brightness-100 opacity-60 hover:opacity-90 transition-opacity" 
             />
           </div>
