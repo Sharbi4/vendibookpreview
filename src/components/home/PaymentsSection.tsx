@@ -89,7 +89,9 @@ const PaymentsSection = () => {
                 <img 
                   src="/stripe-badge.png" 
                   alt="Powered by Stripe" 
-                  className="h-8 opacity-70"
+                  width={120}
+                  height={32}
+                  className="h-8 w-auto opacity-70"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                   }}
