@@ -65,8 +65,8 @@ const KitchenEarningsCalculator = () => {
   return (
     <>
       <SEO
-        title="Commercial Kitchen Rental Earnings Calculator | How Much Can You Make?"
-        description="Calculate how much you could earn renting out your commercial kitchen. Get AI-powered pricing estimates for hourly, daily, weekly, and monthly rentals."
+        title="Kitchen Rental Earnings Calculator | Vendibook"
+        description="See how much your commercial kitchen can earn. AI-powered estimates for hourly, daily, weekly & monthly rentals. Free, instant results."
         canonical="https://vendibook.com/kitchen-earnings-calculator"
       />
       <JsonLd schema={[faqSchema, breadcrumbSchema]} />

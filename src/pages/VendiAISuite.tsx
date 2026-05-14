@@ -18,8 +18,9 @@ const VendiAISuite = () => {
   return (
     <>
       <SEO
-        title="Host Operating System | Vendibook"
-        description="Free tools to launch and legalize your food truck business. Access our Startup Guide and Regulations Hub."
+        title="Free AI Tools for Food Truck Owners | Vendibook"
+        description="Launch and legalize your food truck with free AI tools: pricing, permits, listing copy, and a step-by-step startup guide. Built for mobile food vendors."
+        canonical="/vendi-ai-suite"
       />
       <Header />
 

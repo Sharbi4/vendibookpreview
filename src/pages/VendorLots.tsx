@@ -342,8 +342,9 @@ const VendorLots = () => {
   return (
     <>
       <SEO
-        title="List Your Vendor Space | Earn Money Renting to Food Trucks"
-        description="Turn your empty parking lot into passive income. List your space on VendiBook and let food trucks book and pay instantly. Free QR signage, automated insurance verification, and more."
+        title="List Your Vendor Space — Earn Passive Income | Vendibook"
+        description="Turn empty parking into passive income. Food trucks book & pay instantly. Free QR signage, automated insurance, instant payouts."
+        canonical="/vendor-spaces"
       />
       
       <div className="min-h-screen flex flex-col bg-background">

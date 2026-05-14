@@ -158,8 +158,8 @@ const SellMyFoodTruck = () => {
   return (
     <>
       <SEO
-        title="Sell My Food Truck | List & Sell on Vendibook"
-        description="Sell your food truck faster with verified buyers, secure checkout, and simple next steps. Get a price estimate with our calculator or AI pricing suggestions."
+        title="Sell My Food Truck — Get Top Dollar | Vendibook"
+        description="Sell faster with verified buyers, secure escrow checkout, and free AI pricing. List your food truck in minutes — zero listing fees."
         canonical="https://vendibook.com/sell-my-food-truck"
         type="website"
       />

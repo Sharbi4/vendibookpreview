@@ -30,8 +30,8 @@ const StartFoodBusiness = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Launch Your Food Business | Vendibook"
-        description="Start your food business today. Find food trucks, trailers, commercial kitchens, and vendor spaces. Sign up free and browse verified listings."
+        title="Start a Food Business in 2026 | Vendibook"
+        description="Launch your food business this month. Find verified food trucks, trailers, kitchens & vendor spaces. Sign up free — no fees to browse."
         type="website"
       />
 

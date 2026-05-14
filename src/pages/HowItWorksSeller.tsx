@@ -58,8 +58,9 @@ const HowItWorksSeller = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SEO
-        title="How to Sell on Vendibook | Sell Your Food Truck, Trailer, or Equipment"
-        description="Sell your food truck, trailer, or commercial kitchen equipment to verified buyers nationwide. Free to list, escrow protection, buyer financing. See exactly how it works."
+        title="Sell a Food Truck or Trailer Fast | Vendibook"
+        description="List free, reach verified buyers nationwide, and close with escrow protection & buyer financing. See how selling on Vendibook works—step by step."
+        canonical="/how-it-works-seller"
       />
       <Header />
 
