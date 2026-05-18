@@ -72,7 +72,7 @@ const FAQS = [
 ];
 
 export default function FoodTruckStartupCosts2026() {
-  usePageTracking('Food Truck Startup Costs 2026 — Pillar');
+  usePageTracking();
 
   const [tier, setTier] = useState<keyof typeof CITY_MULT>('tier3');
   const [condition, setCondition] = useState<'low' | 'typical' | 'high'>('typical');
