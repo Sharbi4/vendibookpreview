@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Truck, Store, Eye, EyeOff, Loader2, Mail, ArrowLeft } from 'lucide-react';
+import { Truck, Store, Eye, EyeOff, Loader2, Mail, ArrowLeft, CheckCircle2, Shield, BadgeCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { triggerOrchestrator } from '@/lib/orchestrator';
 import { z } from 'zod';
