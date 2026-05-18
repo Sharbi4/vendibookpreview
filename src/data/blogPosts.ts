@@ -1577,6 +1577,82 @@ Vendibook listings include information about local permit requirements to help y
     readingTime: 12,
     featured: true,
   },
+  {
+    slug: 'food-truck-financing-options',
+    title: 'Food Truck Financing in 2026: Loans, Leases & How to Qualify',
+    description: 'Complete 2026 guide to financing a food truck or trailer — SBA loans, equipment leases, in-house financing, and credit-score requirements. Real rates and lender options.',
+    excerpt: 'Most food trucks cost $50k–$175k. Few first-time operators have that in cash. This is the 2026 playbook for financing a food truck or trailer — what lenders actually look for, what rates to expect, and which programs work for sub-650 credit.',
+    image: '/images/blog/food-truck-financing-options.png',
+    content: `
+<p class="text-lg text-muted-foreground mb-6"><em>By the Vendibook Team — updated for 2026</em></p>
+
+<p class="text-lg mb-6">A turnkey food truck in 2026 runs <strong>$50,000 to $175,000</strong>. A custom build can clear $250k. Almost nobody pays cash. The question isn't <em>whether</em> to finance — it's <strong>how</strong>.</p>
+
+<p class="mb-8">This is the practical 2026 guide to <strong>financing a food truck or trailer</strong>: every option, what it actually costs, and how to qualify.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">The 6 Real Food Truck Financing Options</h2>
+
+<h3 class="text-xl font-semibold mt-8 mb-3">1. SBA 7(a) Loan</h3>
+<p class="mb-4">Up to $5M, 10-year terms, rates ~10.5–13% in 2026. Best for established operators with 680+ credit and 2 years of business history. Slow (45–90 days), paperwork-heavy, but the cheapest money you'll find.</p>
+
+<h3 class="text-xl font-semibold mt-8 mb-3">2. Equipment Financing</h3>
+<p class="mb-4">The truck itself is the collateral, so approval is easier. Expect 8–18% APR over 3–7 years. Most common path for first-time owners. Lenders include Crest Capital, Balboa, and Smarter Finance USA.</p>
+
+<h3 class="text-xl font-semibold mt-8 mb-3">3. Equipment Lease</h3>
+<p class="mb-4">Lower monthly payment, but you don't own the truck until you exercise the buyout. Useful if cash flow is tight in year one. Watch for fair-market-value vs. $1 buyout structures — the latter is essentially a loan.</p>
+
+<h3 class="text-xl font-semibold mt-8 mb-3">4. Business Line of Credit</h3>
+<p class="mb-4">Revolving credit for working capital — not the truck itself. Use it for fuel, ingredients, slow weeks, and unexpected repairs. Bluevine, Fundbox, and your local bank all offer them.</p>
+
+<h3 class="text-xl font-semibold mt-8 mb-3">5. In-House Seller Financing</h3>
+<p class="mb-4">When you buy a used truck directly from the operator, some sellers will carry the note. 20–40% down, 2–4 year payoff, rates 9–14%. Faster than a bank, easier to qualify, and a strong negotiation tool.</p>
+
+<h3 class="text-xl font-semibold mt-8 mb-3">6. Rollover for Business Startups (ROBS)</h3>
+<p class="mb-4">Use your 401(k) to fund the business without early-withdrawal penalties. Works, but adds compliance overhead. Talk to a CPA before going this route.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">What Lenders Actually Look At in 2026</h2>
+<ul class="list-disc pl-6 mb-6 space-y-2">
+  <li><strong>Credit score:</strong> 650+ for most equipment lenders, 680+ for SBA</li>
+  <li><strong>Down payment:</strong> 10–25% on equipment loans, 10% on SBA</li>
+  <li><strong>Time in business:</strong> Startups CAN qualify, but expect higher rates</li>
+  <li><strong>Business plan + projections:</strong> Required for SBA, helpful everywhere</li>
+  <li><strong>Collateral:</strong> The truck usually counts; some lenders want more</li>
+</ul>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Financing a Food Trailer vs. a Truck</h2>
+<p class="mb-6">Trailers are typically cheaper ($25k–$80k turnkey), which means smaller loans and easier approvals. Most equipment lenders treat trailers the same as trucks for financing purposes — same rate sheets, same terms.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Food Cart Financing Options</h2>
+<p class="mb-6">Carts and kiosks ($5k–$25k) are too small for most equipment lenders. Best paths: personal loan, business credit card, or seller financing. Some Vendibook sellers offer payment plans directly through the marketplace.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Realistic Monthly Payment Examples (2026)</h2>
+<ul class="list-disc pl-6 mb-6 space-y-2">
+  <li>$60k truck, 10% down, 5 yr @ 12% → <strong>$1,201/mo</strong></li>
+  <li>$100k truck, 15% down, 7 yr @ 11% → <strong>$1,455/mo</strong></li>
+  <li>$40k trailer, 20% down, 5 yr @ 10% → <strong>$680/mo</strong></li>
+</ul>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">How to Get Approved Faster</h2>
+<ol class="list-decimal pl-6 mb-6 space-y-2">
+  <li>Pull your business and personal credit before applying</li>
+  <li>Have 6 months of bank statements ready</li>
+  <li>Write a 1-page revenue projection (events, daily ops, catering)</li>
+  <li>Get the truck's VIN, year, and condition report from the seller</li>
+  <li>Apply to 2–3 lenders the same week so hard pulls cluster</li>
+</ol>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Next Steps</h2>
+<p class="mb-4">Most Vendibook sellers will share full specs and history before you apply for financing — which makes the lender's job (and yours) much easier. <a href="/search?type=for-sale" class="text-primary underline">Browse food trucks for sale</a> or <a href="/tools/food-truck-startup-costs-2026" class="text-primary underline">run your full startup cost projection</a> first.</p>
+`,
+    author: 'Vendibook Team',
+    authorRole: 'Founders & Finance',
+    datePublished: '2026-04-15',
+    dateModified: '2026-05-18',
+    category: 'business-tips',
+    tags: ['food truck financing', 'food truck loans', 'finance a food truck', 'food trailer financing', 'sba loan food truck', 'equipment financing', 'food cart financing'],
+    readingTime: 9,
+    featured: true,
+  },
 ];
 
 // Helper to sort posts by date (most recent first)
