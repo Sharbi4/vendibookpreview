@@ -627,6 +627,48 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
               </>
             )}
           </div>
+
+          {/* Learn More Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="mt-8 pt-6 border-t border-border/50"
+          >
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-4">
+              Learn more about Vendibook
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+              <div className="flex items-start gap-2.5">
+                <BadgeCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Verified users</p>
+                  <p className="text-xs text-muted-foreground">Every user is ID-verified</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Free to list</p>
+                  <p className="text-xs text-muted-foreground">No upfront costs ever</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <Shield className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Secure payments</p>
+                  <p className="text-xs text-muted-foreground">Escrow-protected transactions</p>
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/how-it-works')}
+              className="text-sm text-primary font-medium hover:underline"
+            >
+              See how Vendibook works →
+            </button>
+          </motion.div>
         </motion.div>
       </div>
     </div>
