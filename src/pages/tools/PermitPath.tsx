@@ -111,8 +111,8 @@ const PermitPath = () => {
   return (
     <>
       <SEO
-        title="Vendi PermitPath | License & Permit Finder for Food Trucks | Vendibook"
-        description="Find all licenses, permits, and compliance requirements for your mobile food business. Mapped to your city and setup. Avoid compliance mistakes."
+        title="Food Truck Permits & Licenses Lookup by City (2026) — Free Tool"
+        description="Free 2026 food truck permit & license finder. Get every health permit, business license, fire inspection, and commissary rule for your city in seconds."
         canonical="/tools/permitpath"
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageJsonLd) }} />
