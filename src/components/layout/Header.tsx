@@ -394,12 +394,16 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-3">
-          <Link 
-            to="/how-it-works" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {t('common.learnMore')}
-          </Link>
+          {!user && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="rounded-full border-primary/30 text-primary hover:bg-primary/10 hover:text-primary"
+              onClick={() => navigate('/auth?mode=signup')}
+            >
+              Sign up for free
+            </Button>
+          )}
           {!user && (
             <Link 
               to="/become-a-host" 
