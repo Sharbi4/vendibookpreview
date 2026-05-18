@@ -394,12 +394,16 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-3">
-          <Link 
-            to="/how-it-works" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {t('common.learnMore')}
-          </Link>
+          {!user && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="rounded-full border-primary/30 text-primary hover:bg-primary/10 hover:text-primary"
+              onClick={() => navigate('/auth?mode=signup')}
+            >
+              Sign up for free
+            </Button>
+          )}
           {!user && (
             <Link 
               to="/become-a-host" 
@@ -445,12 +449,14 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
 
         {/* Mobile & Tablet Actions - hide when search is open */}
         <div className={`flex lg:hidden items-center gap-1 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}> 
-          <Link
-            to="/how-it-works"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
-          >
-            {t('common.learnMore')}
-          </Link>
+          {!user && (
+            <button
+              onClick={() => navigate('/auth?mode=signup')}
+              className="text-sm font-medium text-primary hover:text-primary/80 transition-colors px-2"
+            >
+              Sign up for free
+            </button>
+          )}
           {user && <ConciergeInbox userId={user.id} />}
           {user && <NotificationCenter />}
           <AppDropdownMenu variant="light" />
