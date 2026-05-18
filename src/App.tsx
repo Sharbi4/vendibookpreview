@@ -228,6 +228,7 @@ const AnimatedRoutes = () => {
           <Route path="/tools/market-radar" element={<PageTransition><MarketRadar /></PageTransition>} />
           <Route path="/tools/marketing-studio" element={<PageTransition><MarketingStudio /></PageTransition>} />
           <Route path="/tools/startup-guide" element={<PageTransition><StartupGuide /></PageTransition>} />
+          <Route path="/tools/food-truck-startup-costs-2026" element={<PageTransition><FoodTruckStartupCosts2026 /></PageTransition>} />
           <Route path="/tools/regulations-hub" element={<PageTransition><RegulationsHub /></PageTransition>} />
           
           {/* Redirect old /ai-tools route to /tools */}
