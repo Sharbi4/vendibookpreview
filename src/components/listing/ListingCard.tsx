@@ -210,12 +210,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   return (
     <div
       data-listing-id={listing.id}
-      className="rounded-2xl border border-white/15 hover:-translate-y-1 transition-all duration-300 ease-out flex flex-col overflow-hidden h-full group shadow-2xl shadow-black/30"
-      style={{
-        background: 'rgba(255, 255, 255, 0.06)',
-        backdropFilter: 'blur(20px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-      }}
+      className="rounded-2xl border border-white/15 hover:-translate-y-1 transition-all duration-300 ease-out flex flex-col overflow-hidden h-full group shadow-2xl shadow-black/30 bg-white/[0.04]"
     >
       <Link 
         to={`/listing/${listing.id}`} 
