@@ -1130,6 +1130,72 @@ const StartupGuide = () => {
           </div>
         </section>
 
+        {/* At-a-glance 2026 cost table — appears high for SEO snippet + user scanability */}
+        <section className="px-4 pt-2">
+          <div className="container mx-auto max-w-5xl">
+            <div className="rounded-2xl border bg-card p-5 md:p-7 shadow-sm">
+              <h2 className="text-xl md:text-2xl font-bold mb-1">Food truck startup costs at a glance (2026)</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Typical ranges most U.S. operators see. Treat these as planning estimates — your market, build quality, and city permits will shift the final number.
+              </p>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Startup item</TableHead>
+                      <TableHead>Typical 2026 range</TableHead>
+                      <TableHead className="hidden md:table-cell">Notes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell className="font-medium">Used food truck</TableCell>
+                      <TableCell>$25,000–$100,000+</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">Custom builds run higher</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Food trailer</TableCell>
+                      <TableCell>$10,000–$60,000+</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">More kitchen space per dollar</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Commissary / shared kitchen</TableCell>
+                      <TableCell>$300–$2,500 / month</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">Required in most U.S. cities</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Permits & licenses</TableCell>
+                      <TableCell>$500–$5,000+</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">Health, fire, mobile vendor</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Insurance</TableCell>
+                      <TableCell>$100–$500 / month</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">Auto + general liability</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Equipment & buildout</TableCell>
+                      <TableCell>$2,000–$20,000+</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">Hood, fryer, fridge, sinks</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+                <Link to="/tools/food-truck-startup-costs-2026" className="text-primary hover:underline font-medium">
+                  See the full 2026 cost calculator →
+                </Link>
+                <Link to="/search?category=food_truck" className="text-primary hover:underline">Browse food trucks</Link>
+                <Link to="/search?category=food_trailer" className="text-primary hover:underline">Browse food trailers</Link>
+                <Link to="/search?category=ghost_kitchen" className="text-primary hover:underline">Browse shared kitchens</Link>
+                <Link to="/sell-my-food-truck" className="text-primary hover:underline">Sell a food truck</Link>
+                <Link to="/tools/permitpath" className="text-primary hover:underline">Check permits (PermitPath)</Link>
+                <Link to="/houston" className="text-primary hover:underline">Houston food trucks</Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Above-the-fold CTA: marketplace bridge */}
         <section className="px-4 pt-4">
           <div className="container mx-auto max-w-5xl">
