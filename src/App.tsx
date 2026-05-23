@@ -305,6 +305,15 @@ const AnimatedRoutes = () => {
             />
           ))}
 
+          {/* SEO city/category landing pages — crawlable, city-filtered listing grids */}
+          {CITY_CATEGORY_CONFIGS.map((cfg) => (
+            <Route
+              key={cfg.path}
+              path={cfg.path}
+              element={<PageTransition><CategoryIndex config={cfg} /></PageTransition>}
+            />
+          ))}
+
           {/* Cities hub page */}
           <Route path="/cities" element={<PageTransition><Cities /></PageTransition>} />
           
