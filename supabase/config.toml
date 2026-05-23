@@ -73,6 +73,8 @@ project_id = "nbrehbwfsmedbelzntqs"
     verify_jwt = false
   [functions.geocode-location]
     verify_jwt = false
+  [functions.google-merchant-feed]
+    verify_jwt = false
   [functions.get-checkout-session]
     verify_jwt = false
   [functions.get-mapbox-token]
