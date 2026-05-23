@@ -24,6 +24,8 @@ export interface CategoryIndexConfig {
   path: string;
   category: CategoryKey;
   mode: ModeFilter;
+  /** Optional city filter — when set, listings are restricted to this city. */
+  city?: { name: string; stateCode: string };
   h1: string;
   title: string;
   description: string;
@@ -44,6 +46,7 @@ interface ListingRow {
   category: string;
   city: string | null;
   state: string | null;
+  address: string | null;
 }
 
 const formatPrice = (l: ListingRow): string => {
@@ -69,7 +72,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       setLoading(true);
       let q = supabase
         .from('listings')
-        .select('id, title, description, cover_image_url, price_daily, price_weekly, price_sale, mode, category, city, state')
+        .select('id, title, description, cover_image_url, price_daily, price_weekly, price_sale, mode, category, city, state, address')
         .eq('status', 'published')
         .eq('category', config.category as any)
         .not('published_at', 'is', null)
@@ -77,6 +80,9 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
         .order('updated_at', { ascending: false })
         .limit(48);
       if (config.mode !== 'any') q = q.eq('mode', config.mode);
+      if (config.city) {
+        q = q.or(`city.ilike.${config.city.name},address.ilike.%${config.city.name}%`);
+      }
       const { data } = await q;
       if (!cancelled) {
         setListings((data as any) || []);
@@ -84,7 +90,8 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       }
     })();
     return () => { cancelled = true; };
-  }, [config.category, config.mode]);
+  }, [config.category, config.mode, config.city?.name]);
+
 
   const canonical = config.path;
   const totalListings = listings.length;
