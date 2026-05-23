@@ -55,6 +55,7 @@ import SEO from '@/components/SEO';
 import JsonLd, { generateProductSchema, generateListingBreadcrumbSchema, generateListingLocalBusinessSchema, generateListingFAQSchema } from '@/components/JsonLd';
 import { getPublicDisplayName } from '@/lib/displayName';
 import { formatLastActive } from '@/hooks/useActivityTracker';
+import { resolveListingBrand, getBrandFieldLabel } from '@/lib/resolveListingBrand';
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -125,6 +126,10 @@ const ListingDetail = () => {
       address: listing.address,
       status: listing.status,
       host_name: host?.full_name || host?.display_name || host?.business_name,
+      host_business_name: host?.business_name,
+      brand: (listing as any).brand ?? null,
+      make: (listing as any).make ?? null,
+      manufacturer: (listing as any).manufacturer ?? null,
       average_rating: ratingData?.average,
       review_count: ratingData?.count,
       reviews: reviews || [],
@@ -509,6 +514,66 @@ const ListingDetail = () => {
                 weightLbs={listing.weight_lbs}
                 amenities={listing.amenities}
               />
+
+              {/* Listing Details — visible schema-matching info for Google compliance */}
+              <div className="space-y-3">
+                <h2 className="text-lg font-semibold text-foreground">Listing Details</h2>
+                <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                  <div>
+                    <dt className="text-muted-foreground">{getBrandFieldLabel(listing.category)}</dt>
+                    <dd className="font-medium text-foreground">
+                      {resolveListingBrand({
+                        category: listing.category,
+                        brand: (listing as any).brand,
+                        make: (listing as any).make,
+                        manufacturer: (listing as any).manufacturer,
+                        host_business_name: host?.business_name,
+                        host_display_name: host?.full_name || host?.display_name,
+                      })}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Category</dt>
+                    <dd className="font-medium text-foreground">{categoryLabel}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Listing Type</dt>
+                    <dd className="font-medium text-foreground">{isRental ? 'For Rent' : 'For Sale'}</dd>
+                  </div>
+                  {!isRental && (
+                    <div>
+                      <dt className="text-muted-foreground">Condition</dt>
+                      <dd className="font-medium text-foreground capitalize">
+                        {(listing as any).condition || 'Used'}
+                      </dd>
+                    </div>
+                  )}
+                  {locationShort && (
+                    <div>
+                      <dt className="text-muted-foreground">Location</dt>
+                      <dd className="font-medium text-foreground">{locationShort}</dd>
+                    </div>
+                  )}
+                  {!isRental && ['food_truck', 'food_trailer'].includes(listing.category) && (
+                    <div className="col-span-2">
+                      <dt className="text-muted-foreground">Pickup & Transfer</dt>
+                      <dd className="text-foreground">
+                        Pickup, delivery, or transfer details are coordinated directly with the seller and may vary by listing.
+                      </dd>
+                    </div>
+                  )}
+                  {!isRental && (
+                    <div className="col-span-2">
+                      <dt className="text-muted-foreground">Return Policy</dt>
+                      <dd className="text-foreground">
+                        All asset sales are final. Review listing details and confirm terms with the seller before purchase.
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+
+              <div className="border-t border-border" />
 
               {/* Quick Highlights - Clean grid */}
               <EnhancedQuickHighlights

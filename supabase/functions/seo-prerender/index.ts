@@ -23,6 +23,39 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const PHYSICAL_CATEGORIES = ["ghost_kitchen", "vendor_lot", "vendor_space"];
 
+// Brand fallback logic — mirrors src/lib/resolveListingBrand.ts
+const INVALID_BRAND_VALUES = new Set([
+  "", "n/a", "na", "unknown", "undefined", "null", "none", "other", "test", "-", "—",
+]);
+
+function resolveListingBrand(listing: any): string {
+  const sanitize = (v: string | null | undefined): string | null => {
+    if (!v) return null;
+    const t = v.trim();
+    if (t.length === 0 || INVALID_BRAND_VALUES.has(t.toLowerCase())) return null;
+    return t.slice(0, 100);
+  };
+
+  const brand = sanitize(listing.brand);
+  if (brand) return brand;
+  const make = sanitize(listing.make);
+  if (make) return make;
+  const manufacturer = sanitize(listing.manufacturer);
+  if (manufacturer) return manufacturer;
+  // host business name from profiles join
+  const hostBiz = sanitize(listing.host_business_name);
+  if (hostBiz) return hostBiz;
+
+  switch (listing.category) {
+    case "food_truck": return "Custom Food Truck";
+    case "food_trailer": return "Custom Food Trailer";
+    case "ghost_kitchen": return "Shared Kitchen";
+    case "vendor_lot":
+    case "vendor_space": return "Vendor Space";
+    default: return "Commercial Food Business Asset";
+  }
+}
+
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -54,6 +87,47 @@ function generateProductSchema(listing: any, reviews: any[] = []) {
     ? [listing.cover_image_url]
     : [`${SITE_URL}/placeholder.svg`];
 
+  const availability = listing.status === "published"
+    ? "https://schema.org/InStock"
+    : "https://schema.org/OutOfStock";
+  const itemCondition = listing.condition === "new"
+    ? "https://schema.org/NewCondition"
+    : listing.condition === "refurbished"
+    ? "https://schema.org/RefurbishedCondition"
+    : "https://schema.org/UsedCondition";
+
+  const offerBase: Record<string, any> = {
+    "@type": "Offer",
+    url: `${SITE_URL}/listing/${listing.id}`,
+    priceCurrency: "USD",
+    price: price.toString(),
+    priceValidUntil: new Date(Date.now() + 90 * 86400000).toISOString().split("T")[0],
+    availability,
+    itemCondition,
+    seller: { "@type": "Organization", name: "Vendibook Host" },
+  };
+
+  // Add return policy and shipping for sale listings
+  if (!isRental) {
+    offerBase.hasMerchantReturnPolicy = {
+      "@type": "MerchantReturnPolicy",
+      applicableCountry: "US",
+      returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+      merchantReturnLink: `${SITE_URL}/terms`,
+    };
+    if (["food_truck", "food_trailer"].includes(listing.category)) {
+      offerBase.shippingDetails = {
+        "@type": "OfferShippingDetails",
+        shippingDestination: { "@type": "DefinedRegion", addressCountry: "US" },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 14, unitCode: "DAY" },
+          transitTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 21, unitCode: "DAY" },
+        },
+      };
+    }
+  }
+
   const schema: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -63,20 +137,9 @@ function generateProductSchema(listing: any, reviews: any[] = []) {
     image: images,
     sku: listing.id,
     mpn: listing.id,
-    brand: { "@type": "Brand", name: "Vendibook" },
+    brand: { "@type": "Brand", name: resolveListingBrand(listing) },
     category: `Commercial Kitchen Equipment > ${categoryLabel}`,
-    offers: {
-      "@type": "Offer",
-      url: `${SITE_URL}/listing/${listing.id}`,
-      priceCurrency: "USD",
-      price: price.toString(),
-      priceValidUntil: new Date(Date.now() + 90 * 86400000).toISOString().split("T")[0],
-      availability: listing.status === "published"
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
-      itemCondition: "https://schema.org/UsedCondition",
-      seller: { "@type": "Organization", name: "Vendibook Host" },
-    },
+    offers: offerBase,
   };
 
   // Add aggregateRating if reviews exist
@@ -318,6 +381,10 @@ function buildListingHTML(listing: any, reviews: any[] = []): string {
   <h1>${escapeHtml(listing.title)}</h1>
   <p>${escapeHtml(`${categoryLabel} ${modeLabel}${locationShort ? ` in ${locationShort}` : ""}`)}</p>
   ${priceText ? `<p>Price: ${escapeHtml(priceText)}</p>` : ""}
+  <p>Brand: ${escapeHtml(resolveListingBrand(listing))}</p>
+  ${!isRental ? `<p>Condition: ${escapeHtml(listing.condition || "Used")}</p>` : ""}
+  ${!isRental ? `<p>Return Policy: All asset sales are final. Review listing details and confirm terms with the seller before purchase.</p>` : ""}
+  ${!isRental && ["food_truck", "food_trailer"].includes(listing.category) ? `<p>Pickup &amp; Transfer: Coordinated directly with the seller.</p>` : ""}
   <p>${escapeHtml((listing.description || "").slice(0, 500))}</p>
   <p><a href="${canonicalUrl}">View on Vendibook</a></p>
 </body>

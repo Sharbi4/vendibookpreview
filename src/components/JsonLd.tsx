@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { resolveListingBrand } from '@/lib/resolveListingBrand';
 
 interface JsonLdProps {
   schema: object | object[];
@@ -306,6 +307,10 @@ export const generateProductSchema = (listing: {
   address?: string | null;
   status: string;
   host_name?: string | null;
+  host_business_name?: string | null;
+  brand?: string | null;
+  make?: string | null;
+  manufacturer?: string | null;
   average_rating?: number | null;
   review_count?: number;
   reviews?: Array<{ rating: number; review_text?: string | null; reviewer_name?: string; created_at: string }>;
@@ -414,7 +419,7 @@ export const generateProductSchema = (listing: {
       };
     }
   } else {
-    // Sale: single Offer with sale price + priceValidUntil
+    // Sale: single Offer with sale price + priceValidUntil + return policy + shipping
     offers = {
       '@type': 'Offer',
       url: listingUrl,
@@ -426,6 +431,36 @@ export const generateProductSchema = (listing: {
       businessFunction: 'http://purl.org/goodrelations/v1#Sell',
       validFrom: today,
       seller: sellerOrg,
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'US',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
+        merchantReturnLink: 'https://vendibook.com/terms',
+      },
+      ...((['food_truck', 'food_trailer'].includes(listing.category)) ? {
+        shippingDetails: {
+          '@type': 'OfferShippingDetails',
+          shippingDestination: {
+            '@type': 'DefinedRegion',
+            addressCountry: 'US',
+          },
+          deliveryTime: {
+            '@type': 'ShippingDeliveryTime',
+            handlingTime: {
+              '@type': 'QuantitativeValue',
+              minValue: 1,
+              maxValue: 14,
+              unitCode: 'DAY',
+            },
+            transitTime: {
+              '@type': 'QuantitativeValue',
+              minValue: 1,
+              maxValue: 21,
+              unitCode: 'DAY',
+            },
+          },
+        },
+      } : {}),
     };
   }
 
@@ -440,7 +475,14 @@ export const generateProductSchema = (listing: {
     mpn: listing.id,
     brand: {
       '@type': 'Brand',
-      name: 'Vendibook',
+      name: resolveListingBrand({
+        category: listing.category,
+        brand: listing.brand,
+        make: listing.make,
+        manufacturer: listing.manufacturer,
+        host_business_name: listing.host_business_name,
+        host_display_name: listing.host_name,
+      }),
     },
     category: `Commercial Kitchen Equipment > ${categoryLabel}`,
     offers,

@@ -9,8 +9,8 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "predev": "npx tsx scripts/generate-sitemaps.ts",
-    "prebuild": "npx tsx scripts/generate-sitemaps.ts"
+    "predev": "npx tsx scripts/generate-sitemaps.ts && npx tsx scripts/generate-merchant-feed.ts",
+    "prebuild": "npx tsx scripts/generate-sitemaps.ts && npx tsx scripts/generate-merchant-feed.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.1",
