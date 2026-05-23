@@ -832,13 +832,13 @@ const StartupGuide = () => {
   return (
     <>
       <SEO
-        title="Food Truck Startup Costs 2026: Full Price Breakdown + Profit Guide"
-        description="See how much it costs to start a food truck in 2026, including truck prices, permits, equipment, commissary kitchens, insurance, startup budget, and profit potential."
+        title="How to Start a Food Truck in 2026: Costs, Permits & Checklist"
+        description="Real food truck startup costs for 2026: trucks $15K–$100K, trailers $10K–$60K, permits $500–$5K, commissary $300–$2,500/mo. Full checklist + cost table."
         canonical="/tools/startup-guide"
-        ogTitle="Food Truck Startup Costs 2026: Full Price Breakdown | Vendibook"
-        ogDescription="Planning to start a food truck? Compare real startup costs for trucks, trailers, permits, commissary kitchens, insurance, equipment, and launch expenses."
-        twitterTitle="Food Truck Startup Costs 2026"
-        twitterDescription="A practical guide to food truck startup costs, including trucks, trailers, permits, equipment, kitchens, insurance, and profit potential."
+        ogTitle="Food Truck Startup Cost & Step-by-Step Guide 2026 | Vendibook"
+        ogDescription="See real 2026 food truck startup costs, permits, commissary kitchens, equipment, and a full launch checklist — plus trucks, trailers & kitchens to browse now."
+        twitterTitle="How to Start a Food Truck in 2026: Costs, Permits & Checklist"
+        twitterDescription="2026 food truck startup costs, permits, equipment, commissary kitchens, and a full launch checklist."
       />
       {/* Article Schema for Google Search */}
       <JsonLd
@@ -1090,13 +1090,13 @@ const StartupGuide = () => {
               className="text-center"
             >
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-                Complete Startup Blueprint
+                Updated for 2026 · Costs, Permits & Checklist
               </div>
               <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                Food Truck Startup Guide
+                How to Start a Food Truck in 2026: Costs, Permits & Checklist
               </h1>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-                The complete 2024 blueprint for launching a profitable food truck, trailer, or mobile food business. Covers costs, permits, equipment, and the hidden risks that cause 60% to fail.
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+                Starting a food truck in 2026 means planning for the truck or trailer, permits, a commissary kitchen, insurance, equipment, and launch costs. This guide breaks down the real startup costs, the common hidden expenses, and the steps to get legally operating — plus the trucks, trailers, and kitchens you can browse on Vendibook today.
               </p>
 
               {/* Darkshine CTA */}
@@ -1127,6 +1127,72 @@ const StartupGuide = () => {
                 </CardContent>
               </Card>
             </motion.div>
+          </div>
+        </section>
+
+        {/* At-a-glance 2026 cost table — appears high for SEO snippet + user scanability */}
+        <section className="px-4 pt-2">
+          <div className="container mx-auto max-w-5xl">
+            <div className="rounded-2xl border bg-card p-5 md:p-7 shadow-sm">
+              <h2 className="text-xl md:text-2xl font-bold mb-1">Food truck startup costs at a glance (2026)</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Typical ranges most U.S. operators see. Treat these as planning estimates — your market, build quality, and city permits will shift the final number.
+              </p>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Startup item</TableHead>
+                      <TableHead>Typical 2026 range</TableHead>
+                      <TableHead className="hidden md:table-cell">Notes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell className="font-medium">Used food truck</TableCell>
+                      <TableCell>$25,000–$100,000+</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">Custom builds run higher</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Food trailer</TableCell>
+                      <TableCell>$10,000–$60,000+</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">More kitchen space per dollar</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Commissary / shared kitchen</TableCell>
+                      <TableCell>$300–$2,500 / month</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">Required in most U.S. cities</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Permits & licenses</TableCell>
+                      <TableCell>$500–$5,000+</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">Health, fire, mobile vendor</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Insurance</TableCell>
+                      <TableCell>$100–$500 / month</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">Auto + general liability</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Equipment & buildout</TableCell>
+                      <TableCell>$2,000–$20,000+</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">Hood, fryer, fridge, sinks</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+                <Link to="/tools/food-truck-startup-costs-2026" className="text-primary hover:underline font-medium">
+                  See the full 2026 cost calculator →
+                </Link>
+                <Link to="/search?category=food_truck" className="text-primary hover:underline">Browse food trucks</Link>
+                <Link to="/search?category=food_trailer" className="text-primary hover:underline">Browse food trailers</Link>
+                <Link to="/search?category=ghost_kitchen" className="text-primary hover:underline">Browse shared kitchens</Link>
+                <Link to="/sell-my-food-truck" className="text-primary hover:underline">Sell a food truck</Link>
+                <Link to="/tools/permitpath" className="text-primary hover:underline">Check permits (PermitPath)</Link>
+                <Link to="/houston" className="text-primary hover:underline">Houston food trucks</Link>
+              </div>
+            </div>
           </div>
         </section>
 
