@@ -111,6 +111,7 @@ const SignageRequest = lazy(() => import("./pages/SignageRequest"));
 const StartFoodBusiness = lazy(() => import("./pages/StartFoodBusiness"));
 const Homepage2 = lazy(() => import("./pages/Homepage2"));
 const CategoryCityPage = lazy(() => import("./pages/CategoryCityPage"));
+const CategoryIndex = lazy(() => import("./pages/CategoryIndex"));
 
 // City landing pages - direct imports since they're lightweight wrappers
 import {
