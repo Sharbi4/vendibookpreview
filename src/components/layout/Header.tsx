@@ -273,7 +273,18 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
 
   return (
     <>
-    <header className="sticky top-0 z-50 w-full border-b border-border/30 shadow-sm" style={{ background: 'hsla(0, 0%, 8%, 0.55)', backdropFilter: 'blur(24px) saturate(200%)', WebkitBackdropFilter: 'blur(24px) saturate(200%)' }}>
+    <header
+      className="sticky top-0 z-50 w-full border-b border-border/30 shadow-sm"
+      style={{
+        // Near-opaque charcoal instead of backdrop-filter: blur(24px).
+        // backdrop-filter over animated/scrolling content re-samples every frame
+        // and causes flicker / graphic tearing during scroll on many GPUs.
+        background: 'hsla(0, 0%, 8%, 0.96)',
+        // Promote to its own compositor layer so scroll repaints don't drag the header.
+        transform: 'translateZ(0)',
+        willChange: 'transform',
+      }}
+    >
       <div className="container max-w-7xl mx-auto px-4 flex h-16 items-center justify-between">
         {/* Logo - hide when mobile search is open */}
         <Link 
