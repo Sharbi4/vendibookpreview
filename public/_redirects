@@ -8,4 +8,7 @@
 # Google Merchant Center product feed (XML variant via edge function, TSV is static)
 /google-merchant-feed.xml   https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/google-merchant-feed   200
 
+# Serve static TSV feed directly (no redirect)
+/google-merchant-feed.tsv   /google-merchant-feed.tsv   200
+
 /*    /index.html   200
