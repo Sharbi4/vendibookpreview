@@ -832,13 +832,13 @@ const StartupGuide = () => {
   return (
     <>
       <SEO
-        title="Food Truck Startup Costs 2026: Full Price Breakdown + Profit Guide"
-        description="See how much it costs to start a food truck in 2026, including truck prices, permits, equipment, commissary kitchens, insurance, startup budget, and profit potential."
+        title="How to Start a Food Truck in 2026: Costs, Permits & Checklist"
+        description="Real food truck startup costs for 2026: trucks $15K–$100K, trailers $10K–$60K, permits $500–$5K, commissary $300–$2,500/mo. Full checklist + cost table."
         canonical="/tools/startup-guide"
-        ogTitle="Food Truck Startup Costs 2026: Full Price Breakdown | Vendibook"
-        ogDescription="Planning to start a food truck? Compare real startup costs for trucks, trailers, permits, commissary kitchens, insurance, equipment, and launch expenses."
-        twitterTitle="Food Truck Startup Costs 2026"
-        twitterDescription="A practical guide to food truck startup costs, including trucks, trailers, permits, equipment, kitchens, insurance, and profit potential."
+        ogTitle="Food Truck Startup Cost & Step-by-Step Guide 2026 | Vendibook"
+        ogDescription="See real 2026 food truck startup costs, permits, commissary kitchens, equipment, and a full launch checklist — plus trucks, trailers & kitchens to browse now."
+        twitterTitle="How to Start a Food Truck in 2026: Costs, Permits & Checklist"
+        twitterDescription="2026 food truck startup costs, permits, equipment, commissary kitchens, and a full launch checklist."
       />
       {/* Article Schema for Google Search */}
       <JsonLd
