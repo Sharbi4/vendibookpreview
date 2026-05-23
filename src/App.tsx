@@ -295,6 +295,15 @@ const AnimatedRoutes = () => {
           <Route path="/rent/:categorySlug/:cityStateSlug" element={<PageTransition><CategoryCityPage mode="rent" /></PageTransition>} />
           <Route path="/buy/:categorySlug/:cityStateSlug" element={<PageTransition><CategoryCityPage mode="buy" /></PageTransition>} />
 
+          {/* SEO category index pages — crawlable listing grids */}
+          {CATEGORY_INDEX_CONFIGS.map((cfg) => (
+            <Route
+              key={cfg.path}
+              path={cfg.path}
+              element={<PageTransition><CategoryIndex config={cfg} /></PageTransition>}
+            />
+          ))}
+
           {/* Cities hub page */}
           <Route path="/cities" element={<PageTransition><Cities /></PageTransition>} />
           
