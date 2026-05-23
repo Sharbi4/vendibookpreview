@@ -113,6 +113,7 @@ const Homepage2 = lazy(() => import("./pages/Homepage2"));
 const CategoryCityPage = lazy(() => import("./pages/CategoryCityPage"));
 const CategoryIndex = lazy(() => import("./pages/CategoryIndex"));
 import { CATEGORY_INDEX_CONFIGS } from "./data/categoryIndexConfigs";
+import { CITY_CATEGORY_CONFIGS } from "./data/cityCategoryConfigs";
 
 // City landing pages - direct imports since they're lightweight wrappers
 import {
@@ -298,6 +299,15 @@ const AnimatedRoutes = () => {
 
           {/* SEO category index pages — crawlable listing grids */}
           {CATEGORY_INDEX_CONFIGS.map((cfg) => (
+            <Route
+              key={cfg.path}
+              path={cfg.path}
+              element={<PageTransition><CategoryIndex config={cfg} /></PageTransition>}
+            />
+          ))}
+
+          {/* SEO city/category landing pages — crawlable, city-filtered listing grids */}
+          {CITY_CATEGORY_CONFIGS.map((cfg) => (
             <Route
               key={cfg.path}
               path={cfg.path}
