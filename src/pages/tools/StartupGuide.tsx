@@ -1196,6 +1196,108 @@ const StartupGuide = () => {
           </div>
         </section>
 
+        {/* Start with the assets you need — marketplace listing cards */}
+        <section className="px-4 pt-8 pb-4">
+          <div className="container mx-auto max-w-5xl">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl md:text-3xl font-bold">Start with the assets you need</h2>
+              <p className="text-muted-foreground text-sm md:text-base mt-2 max-w-2xl mx-auto">
+                Skip the multi-month custom build. Browse real food trucks, trailers, and shared kitchens already operating on Vendibook.
+              </p>
+            </div>
+            <div className="grid gap-5 md:grid-cols-3">
+              {[
+                {
+                  title: 'Food Trucks',
+                  desc: 'Browse food trucks for rent or sale and compare options before buying or launching.',
+                  img: '/src/assets/hero-food-truck.jpg',
+                  alt: 'Food truck parked for mobile food business launch',
+                  href: '/search?category=food_truck',
+                  cta: 'Browse Food Trucks',
+                },
+                {
+                  title: 'Food Trailers',
+                  desc: 'Compare commercial food trailers — more kitchen square footage per dollar than a self-propelled truck.',
+                  img: '/src/assets/trailer-orange-grill.jpg',
+                  alt: 'Commercial food trailer used for startup food business',
+                  href: '/search?category=food_trailer',
+                  cta: 'Browse Food Trailers',
+                },
+                {
+                  title: 'Shared Kitchens',
+                  desc: 'Find commissary kitchen access for prep, storage, and the mobile vendor permit your city requires.',
+                  img: '/src/assets/concierge-kitchen.jpg',
+                  alt: 'Shared kitchen space for food truck prep and commissary use',
+                  href: '/search?category=ghost_kitchen',
+                  cta: 'Find Shared Kitchens',
+                },
+              ].map((card) => (
+                <Card key={card.title} className="overflow-hidden border hover:border-[#ff5124]/40 transition-colors">
+                  <div className="aspect-[16/10] overflow-hidden bg-muted">
+                    <img
+                      src={card.img}
+                      alt={card.alt}
+                      loading="lazy"
+                      width={640}
+                      height={400}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <CardContent className="p-5">
+                    <h3 className="text-lg font-semibold mb-1">{card.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">{card.desc}</p>
+                    <Button asChild className="w-full bg-[#ff5124] hover:bg-[#e8431a] text-white border-0">
+                      <Link to={card.href}>{card.cta} <ArrowRight className="h-4 w-4 ml-2" /></Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* The 7 Steps to Start a Food Truck — visual infographic-style */}
+        <section className="px-4 py-10">
+          <div className="container mx-auto max-w-5xl">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold">The 7 steps to start a food truck</h2>
+              <p className="text-muted-foreground text-sm md:text-base mt-2">A simple roadmap from concept to first service window.</p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                { n: 1, title: 'Choose your business model', desc: 'Truck, trailer, or shared kitchen — pick what fits your menu, mobility, and budget.', icon: Target, link: { href: '/tools/concept-lab', label: 'Explore Concept Lab' } },
+                { n: 2, title: 'Estimate startup costs', desc: 'Use real ranges for vehicle, buildout, permits, insurance, and a cash reserve.', icon: Calculator, link: { href: '/tools/food-truck-startup-costs-2026', label: 'Open cost calculator' } },
+                { n: 3, title: 'Find a truck, trailer, or kitchen', desc: 'Browse Vendibook to rent or buy what you need without a months-long custom build.', icon: Truck, link: { href: '/search?category=food_truck', label: 'Browse trucks & trailers' } },
+                { n: 4, title: 'Check permit requirements', desc: 'Every city differs. Look up mobile vendor, health, and fire permits before you commit.', icon: FileCheck, link: { href: '/tools/permitpath', label: 'Use PermitPath' } },
+                { n: 5, title: 'Get insurance & documents', desc: 'Commercial auto, general liability, food handler cards, and your commissary agreement.', icon: ShieldCheck },
+                { n: 6, title: 'Prepare menu & equipment', desc: 'Focus your menu, source NSF equipment, and dial in your buildout and workflow.', icon: ChefHat },
+                { n: 7, title: 'Launch, market, and book', desc: 'Wrap the truck, set up socials, and book your first events. Selling later? List on Vendibook.', icon: Megaphone, link: { href: '/sell-my-food-truck', label: 'Sell my food truck' } },
+              ].map((step) => {
+                const Icon = step.icon;
+                return (
+                  <Card key={step.n} className="border hover:border-[#ff5124]/40 transition-colors">
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="h-10 w-10 rounded-full bg-[#ff5124] text-white font-bold flex items-center justify-center shrink-0">
+                          {step.n}
+                        </div>
+                        <Icon className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+                      </div>
+                      <h3 className="font-semibold mb-1">{step.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-3">{step.desc}</p>
+                      {step.link && (
+                        <Link to={step.link.href} className="text-sm text-[#ff5124] hover:underline font-medium">
+                          {step.link.label} →
+                        </Link>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
         {/* Above-the-fold CTA: marketplace bridge */}
         <section className="px-4 pt-4">
           <div className="container mx-auto max-w-5xl">
