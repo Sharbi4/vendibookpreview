@@ -266,6 +266,42 @@ export function CitySupplyPage({ city, assetType }: CitySupplyPageProps) {
           </div>
         </section>
 
+        {/* Local SEO: city-specific marketplace sections */}
+        {!assetType && (
+          <section className="py-16 bg-background">
+            <div className="container mx-auto px-4 max-w-5xl">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 text-center">
+                Food trucks, trailers & kitchens in {city.name}
+              </h2>
+              <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">
+                Whether you're launching a new concept or scaling, find the mobile food assets {city.name} operators rely on.
+              </p>
+              <div className="grid gap-5 md:grid-cols-2">
+                {[
+                  { title: `Rent a food truck in ${city.name}`, desc: `Browse food trucks available for short-term and long-term rental across ${city.name}, ${city.state}.`, href: `/search?category=food_truck&city=${city.slug}`, cta: 'Browse food trucks' },
+                  { title: `Buy a food truck in ${city.name}`, desc: `Compare used and turnkey food trucks for sale from verified ${city.name} sellers.`, href: `/search?category=food_truck&intent=sale&city=${city.slug}`, cta: 'Shop food trucks for sale' },
+                  { title: `Shared kitchens & commissaries in ${city.name}`, desc: `Find commissary kitchen access, prep space, and shared commercial kitchens required for mobile vendor permits.`, href: `/search?category=ghost_kitchen&city=${city.slug}`, cta: 'Find shared kitchens' },
+                  { title: `List your ${city.name} food truck or kitchen`, desc: `Reach buyers and renters across ${city.state}. Free to list — pay only when a booking completes.`, href: '/list', cta: 'Start a listing' },
+                  { title: `${city.name} food business startup resources`, desc: `Permit checklists, startup cost ranges, and step-by-step guides for launching a mobile food business.`, href: '/tools/startup-guide', cta: 'Open the startup guide' },
+                  { title: `Food truck permits in ${city.name}`, desc: `Look up local mobile vendor permit requirements, fees, and inspections with PermitPath.`, href: '/tools/permitpath', cta: 'Check permits' },
+                ].map((block) => (
+                  <Card key={block.title} className="bg-card border hover:border-foreground/20 transition-colors">
+                    <CardContent className="p-6">
+                      <h3 className="text-lg font-semibold text-foreground mb-2">{block.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-4">{block.desc}</p>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={block.href}>{block.cta} <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+
+
         {/* FAQ */}
         <section className="py-16 bg-muted/30">
           <div className="container mx-auto px-4">
