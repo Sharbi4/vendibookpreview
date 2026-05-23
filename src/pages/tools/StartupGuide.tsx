@@ -77,6 +77,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
+import heroFoodTruck from '@/assets/hero-food-truck.jpg';
+import trailerOrangeGrill from '@/assets/trailer-orange-grill.jpg';
+import conciergeKitchen from '@/assets/concierge-kitchen.jpg';
 
 // Industry stats
 const INDUSTRY_STATS = {
