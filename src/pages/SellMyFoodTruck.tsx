@@ -158,10 +158,14 @@ const SellMyFoodTruck = () => {
   return (
     <>
       <SEO
-        title="Sell My Food Truck Fast (2026) — Verified Buyers, Zero Listing Fees"
-        description="Sell your food truck or trailer in 2026 with verified buyers, escrow-secured checkout, free AI pricing, and zero listing fees. Post in minutes, get paid fast."
+        title="Sell My Food Truck Online | List Your Food Truck on Vendibook"
+        description="List your food truck or food trailer on Vendibook and reach buyers, renters, and mobile food entrepreneurs looking for commercial food assets."
         canonical="/sell-my-food-truck"
         type="website"
+        ogTitle="Sell My Food Truck Online | List Your Food Truck on Vendibook"
+        ogDescription="List your food truck or trailer on Vendibook — reach verified buyers and renters in 2026 with zero listing fees and escrow-secured checkout."
+        twitterTitle="Sell My Food Truck Online — List on Vendibook"
+        twitterDescription="Reach buyers, renters, and mobile food entrepreneurs. Free to list, escrow-secured checkout."
       />
       <JsonLd schema={[faqSchema, breadcrumbSchema, howToSchema, serviceSchema]} />
       
