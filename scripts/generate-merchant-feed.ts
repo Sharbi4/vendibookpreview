@@ -133,12 +133,40 @@ function buildMerchantFeed(listings: SaleListing[]): { tsv: string; stats: { tot
     "title",
     "description",
     "availability",
+    "availability date",
+    "expiration date",
     "link",
-    "image_link",
+    "mobile link",
+    "image link",
     "price",
-    "identifier_exists",
+    "sale price",
+    "sale price effective date",
+    "identifier exists",
+    "gtin",
+    "mpn",
     "brand",
+    "product highlight",
+    "product detail",
+    "additional image link",
     "condition",
+    "adult",
+    "color",
+    "size",
+    "size type",
+    "size system",
+    "gender",
+    "material",
+    "pattern",
+    "age group",
+    "multipack",
+    "is bundle",
+    "unit pricing measure",
+    "unit pricing base measure",
+    "energy efficiency class",
+    "min energy efficiency class",
+    "min energy efficiency class",
+    "item group id",
+    "sell on google quantity",
   ].join("\t");
 
   const exclusionReasons: Map<string, number> = new Map();
@@ -211,12 +239,40 @@ function buildMerchantFeed(listings: SaleListing[]): { tsv: string; stats: { tot
         sanitizeTsvField(title.slice(0, 150)),                      // title (max 150 chars)
         cleanDescription,                                           // description
         "in_stock",                                                 // availability
+        "",                                                         // availability date
+        "",                                                         // expiration date
         `${BASE_URL}/listing/${l.id}`,                              // link
-        l.cover_image_url || "",                                    // image_link
-        `${Number(l.price_sale).toFixed(2)} USD`,                   // price (format: 45000.00 USD)
-        "no",                                                       // identifier_exists (no GTIN/MPN for custom food trucks)
+        "",                                                         // mobile link
+        l.cover_image_url || "",                                    // image link
+        `${Number(l.price_sale).toFixed(2)} USD`,                   // price
+        "",                                                         // sale price
+        "",                                                         // sale price effective date
+        "no",                                                       // identifier exists
+        "",                                                         // gtin
+        "",                                                         // mpn
         sanitizeTsvField(brandName),                                // brand
-        condition,                                                  // condition (required for used/refurbished)
+        "",                                                         // product highlight
+        "",                                                         // product detail
+        "",                                                         // additional image link
+        condition,                                                  // condition
+        "",                                                         // adult
+        "",                                                         // color
+        "",                                                         // size
+        "",                                                         // size type
+        "",                                                         // size system
+        "",                                                         // gender
+        "",                                                         // material
+        "",                                                         // pattern
+        "",                                                         // age group
+        "",                                                         // multipack
+        "",                                                         // is bundle
+        "",                                                         // unit pricing measure
+        "",                                                         // unit pricing base measure
+        "",                                                         // energy efficiency class
+        "",                                                         // min energy efficiency class
+        "",                                                         // min energy efficiency class
+        "",                                                         // item group id
+        "1",                                                        // sell on google quantity
       ];
 
       return cols.join("\t");
@@ -247,7 +303,15 @@ function validateFeed(tsv: string): { valid: boolean; errors: string[] } {
   }
 
   const header = lines[0].split("\t");
-  const expectedHeader = ["id", "title", "description", "availability", "link", "image_link", "price", "identifier_exists", "brand", "condition"];
+  const expectedHeader = [
+    "id", "title", "description", "availability", "availability date", "expiration date",
+    "link", "mobile link", "image link", "price", "sale price", "sale price effective date",
+    "identifier exists", "gtin", "mpn", "brand", "product highlight", "product detail",
+    "additional image link", "condition", "adult", "color", "size", "size type", "size system",
+    "gender", "material", "pattern", "age group", "multipack", "is bundle",
+    "unit pricing measure", "unit pricing base measure", "energy efficiency class",
+    "min energy efficiency class", "min energy efficiency class", "item group id", "sell on google quantity",
+  ];
 
   if (header.length !== expectedHeader.length) {
     errors.push(`Header column count mismatch: expected ${expectedHeader.length}, got ${header.length}`);
@@ -267,7 +331,17 @@ function validateFeed(tsv: string): { valid: boolean; errors: string[] } {
       continue;
     }
 
-    const [id, title, description, availability, link, imageLink, price, identifierExists, brand, condition] = cols;
+    // Extract key fields by index for validation
+    const id = cols[0];
+    const title = cols[1];
+    const description = cols[2];
+    const availability = cols[3];
+    const link = cols[6];
+    const imageLink = cols[8];
+    const price = cols[9];
+    const identifierExists = cols[12];
+    const brand = cols[15];
+    const condition = cols[19];
 
     // Check for tabs or line breaks in fields
     if (id.includes("\t") || title.includes("\t") || description.includes("\t") || link.includes("\t") || imageLink.includes("\t") || brand.includes("\t")) {
@@ -356,7 +430,7 @@ async function main() {
       mkdirSync(resolve("public"), { recursive: true });
       writeFileSync(
         resolve("public/google-merchant-feed.tsv"),
-        "id\ttitle\tdescription\tavailability\tlink\timage_link\tprice\tidentifier_exists\tbrand\tcondition\n",
+        "id\ttitle\tdescription\tavailability\tavailability date\texpiration date\tlink\tmobile link\timage link\tprice\tsale price\tsale price effective date\tidentifier exists\tgtin\tmpn\tbrand\tproduct highlight\tproduct detail\tadditional image link\tcondition\tadult\tcolor\tsize\tsize type\tsize system\tgender\tmaterial\tpattern\tage group\tmultipack\tis bundle\tunit pricing measure\tunit pricing base measure\tenergy efficiency class\tmin energy efficiency class\tmin energy efficiency class\titem group id\tsell on google quantity\n",
       );
       console.log("[merchant-feed] wrote empty feed (header only)");
     } catch {

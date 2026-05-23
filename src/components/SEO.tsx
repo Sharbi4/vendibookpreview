@@ -20,6 +20,10 @@ interface SEOProps {
   product?: {
     price?: number;
     currency?: string;
+    availability?: 'in_stock' | 'out_of_stock' | 'preorder';
+    condition?: 'new' | 'used' | 'refurbished';
+    brand?: string;
+    retailerItemId?: string;
   };
   noindex?: boolean;
 }
@@ -131,6 +135,18 @@ const SEO = ({
       if (product.price) {
         setMeta('product:price:amount', product.price.toString(), true);
         setMeta('product:price:currency', product.currency || 'USD', true);
+      }
+      if (product.availability) {
+        setMeta('product:availability', product.availability, true);
+      }
+      if (product.condition) {
+        setMeta('product:condition', product.condition, true);
+      }
+      if (product.brand) {
+        setMeta('product:brand', product.brand, true);
+      }
+      if (product.retailerItemId) {
+        setMeta('product:retailer_item_id', product.retailerItemId, true);
       }
     }
 

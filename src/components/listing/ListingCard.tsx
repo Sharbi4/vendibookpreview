@@ -224,8 +224,9 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         )}>
           <img
             src={listing.cover_image_url || listing.image_urls[0] || '/placeholder.svg'}
-            alt={listing.title}
+            alt={`${listing.title} - ${listing.category === 'food_truck' ? 'Food Truck' : listing.category === 'food_trailer' ? 'Food Trailer' : listing.category === 'ghost_kitchen' ? 'Shared Kitchen' : 'Vendor Space'} ${listing.mode === 'rent' ? 'for Rent' : 'for Sale'}`}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"
+            loading="lazy"
           />
         
         {/* Mode Badge */}

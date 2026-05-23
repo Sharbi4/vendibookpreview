@@ -292,6 +292,19 @@ const ListingDetail = () => {
     ? (listing.price_daily || listing.price_weekly || undefined)
     : (listing.price_sale || undefined);
 
+  // Resolve brand for OG meta
+  const listingBrand = resolveListingBrand({
+    category: listing.category,
+    brand: (listing as any).brand ?? null,
+    make: (listing as any).make ?? null,
+    manufacturer: (listing as any).manufacturer ?? null,
+    host_business_name: host?.business_name ?? null,
+    host_display_name: host?.display_name ?? host?.full_name ?? null,
+  });
+
+  // Resolve condition for OG meta
+  const listingCondition = ((listing as any).condition as 'new' | 'used' | 'refurbished') || 'used';
+
   // Build comprehensive JSON-LD schemas array
   const schemas: object[] = [];
   if (productSchema) schemas.push(productSchema);
@@ -307,7 +320,14 @@ const ListingDetail = () => {
         canonical={`/listing/${listing.id}`}
         image={listing.cover_image_url || undefined}
         type="product"
-        product={listingPrice ? { price: listingPrice, currency: 'USD' } : undefined}
+        product={listingPrice ? {
+          price: listingPrice,
+          currency: 'USD',
+          availability: listing.status === 'published' ? 'in_stock' : 'out_of_stock',
+          condition: listingCondition,
+          brand: listingBrand,
+          retailerItemId: listing.id,
+        } : undefined}
       />
       {schemas.length > 0 && (
         <JsonLd schema={schemas} />

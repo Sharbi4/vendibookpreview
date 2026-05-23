@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
       throw error;
     }
 
-    const HEADER = "id\ttitle\tdescription\tavailability\tlink\timage_link\tprice\tidentifier_exists\tbrand\tcondition";
+    const HEADER = "id\ttitle\tdescription\tavailability\tavailability date\texpiration date\tlink\tmobile link\timage link\tprice\tsale price\tsale price effective date\tidentifier exists\tgtin\tmpn\tbrand\tproduct highlight\tproduct detail\tadditional image link\tcondition\tadult\tcolor\tsize\tsize type\tsize system\tgender\tmaterial\tpattern\tage group\tmultipack\tis bundle\tunit pricing measure\tunit pricing base measure\tenergy efficiency class\tmin energy efficiency class\tmin energy efficiency class\titem group id\tsell on google quantity";
 
     const rows = (listings || [])
       .filter((l: any) => l.title && l.description && l.description.length >= 20)
@@ -91,16 +91,44 @@ Deno.serve(async (req) => {
         const cleanDescription = sanitizeTsvField(removeEmojis(description).slice(0, 5000));
 
         const cols = [
-          sanitizeTsvField(l.id),
-          sanitizeTsvField(title.slice(0, 150)),
-          cleanDescription,
-          "in_stock",
-          `${SITE_URL}/listing/${l.id}`,
-          l.cover_image_url || "",
-          `${Number(l.price_sale).toFixed(2)} USD`,
-          "no",
-          sanitizeTsvField(brandName),
-          condition,
+          sanitizeTsvField(l.id),                                     // id
+          sanitizeTsvField(title.slice(0, 150)),                      // title
+          cleanDescription,                                           // description
+          "in_stock",                                                 // availability
+          "",                                                         // availability date
+          "",                                                         // expiration date
+          `${SITE_URL}/listing/${l.id}`,                              // link
+          "",                                                         // mobile link
+          l.cover_image_url || "",                                    // image link
+          `${Number(l.price_sale).toFixed(2)} USD`,                   // price
+          "",                                                         // sale price
+          "",                                                         // sale price effective date
+          "no",                                                       // identifier exists
+          "",                                                         // gtin
+          "",                                                         // mpn
+          sanitizeTsvField(brandName),                                // brand
+          "",                                                         // product highlight
+          "",                                                         // product detail
+          "",                                                         // additional image link
+          condition,                                                  // condition
+          "",                                                         // adult
+          "",                                                         // color
+          "",                                                         // size
+          "",                                                         // size type
+          "",                                                         // size system
+          "",                                                         // gender
+          "",                                                         // material
+          "",                                                         // pattern
+          "",                                                         // age group
+          "",                                                         // multipack
+          "",                                                         // is bundle
+          "",                                                         // unit pricing measure
+          "",                                                         // unit pricing base measure
+          "",                                                         // energy efficiency class
+          "",                                                         // min energy efficiency class
+          "",                                                         // min energy efficiency class
+          "",                                                         // item group id
+          "1",                                                        // sell on google quantity
         ];
 
         return cols.join("\t");

@@ -283,7 +283,7 @@ const PhotoGallery = ({ images, videos = [], title }: PhotoGalleryProps) => {
                           </div>
                         </>
                       ) : (
-                        <img src={item.url} alt="" className="w-full h-full object-cover" />
+                        <img src={item.url} alt={`${title} - photo ${idx + 1}`} className="w-full h-full object-cover" />
                       )}
                     </button>
                   ))}

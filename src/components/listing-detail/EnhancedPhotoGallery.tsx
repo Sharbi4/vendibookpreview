@@ -455,7 +455,7 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
                           </div>
                         </>
                       ) : (
-                        <img src={item.url} alt="" className="w-full h-full object-cover" />
+                        <img src={item.url} alt={`${title} - photo ${idx + 1}`} className="w-full h-full object-cover" />
                       )}
                     </motion.button>
                   ))}

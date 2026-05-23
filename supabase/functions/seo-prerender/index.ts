@@ -328,7 +328,11 @@ function buildListingHTML(listing: any, reviews: any[] = []): string {
   <meta property="og:site_name" content="Vendibook" />
   ${!isPhysical && priceText ? `
   <meta property="product:price:amount" content="${String(listing.price_sale || listing.price_daily || listing.price_weekly || 0)}" />
-  <meta property="product:price:currency" content="USD" />` : ""}
+  <meta property="product:price:currency" content="USD" />
+  <meta property="product:availability" content="${listing.status === "published" ? "in_stock" : "out_of_stock"}" />
+  <meta property="product:condition" content="${listing.condition === "new" ? "new" : listing.condition === "refurbished" ? "refurbished" : "used"}" />
+  <meta property="product:brand" content="${escapeHtml(resolveListingBrand(listing))}" />
+  <meta property="product:retailer_item_id" content="${listing.id}" />` : ""}
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
