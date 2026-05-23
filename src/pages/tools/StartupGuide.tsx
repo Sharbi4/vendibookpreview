@@ -1213,7 +1213,7 @@ const StartupGuide = () => {
                 {
                   title: 'Food Trucks',
                   desc: 'Browse food trucks for rent or sale and compare options before buying or launching.',
-                  img: '/src/assets/hero-food-truck.jpg',
+                  img: heroFoodTruck,
                   alt: 'Food truck parked for mobile food business launch',
                   href: '/search?category=food_truck',
                   cta: 'Browse Food Trucks',
@@ -1221,7 +1221,7 @@ const StartupGuide = () => {
                 {
                   title: 'Food Trailers',
                   desc: 'Compare commercial food trailers — more kitchen square footage per dollar than a self-propelled truck.',
-                  img: '/src/assets/trailer-orange-grill.jpg',
+                  img: trailerOrangeGrill,
                   alt: 'Commercial food trailer used for startup food business',
                   href: '/search?category=food_trailer',
                   cta: 'Browse Food Trailers',
@@ -1229,7 +1229,7 @@ const StartupGuide = () => {
                 {
                   title: 'Shared Kitchens',
                   desc: 'Find commissary kitchen access for prep, storage, and the mobile vendor permit your city requires.',
-                  img: '/src/assets/concierge-kitchen.jpg',
+                  img: conciergeKitchen,
                   alt: 'Shared kitchen space for food truck prep and commissary use',
                   href: '/search?category=ghost_kitchen',
                   cta: 'Find Shared Kitchens',
