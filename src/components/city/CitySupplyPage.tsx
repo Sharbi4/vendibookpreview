@@ -80,8 +80,26 @@ export function CitySupplyPage({ city, assetType }: CitySupplyPageProps) {
     ? `List your ${ASSET_TYPES[assetType].label.toLowerCase()} in ${city.name}`
     : city.supplyHeadline;
 
+  const assetLabel = assetType ? ASSET_TYPES[assetType].label.toLowerCase() : null;
+  const seoTitle = assetType
+    ? `${ASSET_TYPES[assetType].label}s in ${city.name} | List & Rent on Vendibook`
+    : `Food Trucks, Trailers & Shared Kitchens in ${city.name} | Vendibook`;
+  const seoDescription = assetType
+    ? `Browse and list ${assetLabel}s in ${city.name}, ${city.state}. Rent, buy, or list mobile food assets on Vendibook.`
+    : `Browse food trucks, trailers, shared kitchens, and vendor spaces in ${city.name}. Rent, buy, or list mobile food assets on Vendibook.`;
+  const canonicalPath = assetType ? `/${city.slug}/list-${assetType}` : `/${city.slug}`;
+
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        canonical={canonicalPath}
+        ogTitle={seoTitle}
+        ogDescription={seoDescription}
+        twitterTitle={seoTitle}
+        twitterDescription={seoDescription}
+      />
       <Header />
       
       <main>
