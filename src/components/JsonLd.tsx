@@ -299,6 +299,7 @@ export const generateProductSchema = (listing: {
   mode: 'rent' | 'sale';
   price_daily?: number | null;
   price_weekly?: number | null;
+  price_monthly?: number | null;
   price_sale?: number | null;
   cover_image_url?: string | null;
   image_urls?: string[];
@@ -312,6 +313,7 @@ export const generateProductSchema = (listing: {
   width_inches?: number | null;
   height_inches?: number | null;
   weight_lbs?: number | null;
+  condition?: 'new' | 'used' | 'refurbished' | null;
 }) => {
   const categoryLabels: Record<string, string> = {
     food_truck: 'Food Truck',
