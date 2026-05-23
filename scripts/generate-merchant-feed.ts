@@ -63,6 +63,19 @@ function stripHtml(text: string): string {
   return text.replace(/<[^>]*>/g, "");
 }
 
+// Strict TSV sanitization: remove tabs, line breaks, control characters
+function sanitizeTsvField(val: string): string {
+  if (!val) return "";
+  // Remove tabs and line breaks
+  let cleaned = val.replace(/[\t\r\n]/g, " ");
+  // Remove control characters (except common whitespace)
+  cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+  // Collapse multiple spaces
+  cleaned = cleaned.replace(/\s+/g, " ");
+  // Trim
+  return cleaned.trim();
+}
+
 function sanitizeBrand(val: string | null | undefined): string | null {
   if (!val) return null;
   const trimmed = val.trim();
@@ -125,7 +138,6 @@ function buildMerchantFeed(listings: SaleListing[]): { tsv: string; stats: { tot
     "price",
     "condition",
     "brand",
-    "product_type",
   ].join("\t");
 
   const exclusionReasons: Map<string, number> = new Map();
@@ -184,33 +196,25 @@ function buildMerchantFeed(listings: SaleListing[]): { tsv: string; stats: { tot
 
       // Build clean title: "{{title}} - {{Category}} for Sale in {{city, state}}"
       // Remove emojis, limit to 150 chars
-      const cleanTitle = removeEmojis(l.title);
+      const cleanTitle = removeEmojis(l.title || "");
       const title = location
         ? `${cleanTitle} - ${categoryLabel} for Sale in ${location}`
         : `${cleanTitle} - ${categoryLabel} for Sale`;
 
-      // Clean description: remove HTML, remove emojis, remove excessive whitespace, max 5000 chars
+      // Clean description: remove HTML, remove emojis, sanitize for TSV
       const description = stripHtml(l.description || "");
-      const cleanDescription = removeEmojis(description)
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 5000);
-
-      const productType = l.category === "food_truck"
-        ? "Food Trucks > Food Trucks for Sale"
-        : "Food Trailers > Food Trailers for Sale";
+      const cleanDescription = sanitizeTsvField(removeEmojis(description).slice(0, 5000));
 
       const cols = [
-        l.id,                                                       // id
-        tsvEscape(title.slice(0, 150)),                             // title (max 150 chars)
-        tsvEscape(cleanDescription),                                 // description
+        sanitizeTsvField(l.id),                                     // id
+        sanitizeTsvField(title.slice(0, 150)),                      // title (max 150 chars)
+        cleanDescription,                                           // description
         `${BASE_URL}/listing/${l.id}`,                              // link
-        l.cover_image_url,                                          // image_link
+        l.cover_image_url || "",                                    // image_link
         "in_stock",                                                 // availability
         `${Number(l.price_sale).toFixed(2)} USD`,                   // price (format: 45000.00 USD)
         condition,                                                  // condition
-        tsvEscape(brandName),                                       // brand
-        productType,                                                // product_type
+        sanitizeTsvField(brandName),                                // brand
       ];
 
       return cols.join("\t");
@@ -241,7 +245,7 @@ function validateFeed(tsv: string): { valid: boolean; errors: string[] } {
   }
 
   const header = lines[0].split("\t");
-  const expectedHeader = ["id", "title", "description", "link", "image_link", "availability", "price", "condition", "brand", "product_type"];
+  const expectedHeader = ["id", "title", "description", "link", "image_link", "availability", "price", "condition", "brand"];
 
   if (header.length !== expectedHeader.length) {
     errors.push(`Header column count mismatch: expected ${expectedHeader.length}, got ${header.length}`);
@@ -262,6 +266,14 @@ function validateFeed(tsv: string): { valid: boolean; errors: string[] } {
     }
 
     const [id, title, description, link, imageLink, availability, price, condition, brand] = cols;
+
+    // Check for tabs or line breaks in fields
+    if (id.includes("\t") || title.includes("\t") || description.includes("\t") || link.includes("\t") || imageLink.includes("\t") || brand.includes("\t")) {
+      errors.push(`Row ${i}: contains tab character in field`);
+    }
+    if (id.includes("\n") || title.includes("\n") || description.includes("\n") || link.includes("\n") || imageLink.includes("\n") || brand.includes("\n")) {
+      errors.push(`Row ${i}: contains line break in field`);
+    }
 
     // Check required fields
     if (!id || !title || !description || !link || !imageLink || !availability || !price || !condition || !brand) {
@@ -337,7 +349,7 @@ async function main() {
       mkdirSync(resolve("public"), { recursive: true });
       writeFileSync(
         resolve("public/google-merchant-feed.tsv"),
-        "id\ttitle\tdescription\tlink\timage_link\tavailability\tprice\tcondition\tbrand\tproduct_type\n",
+        "id\ttitle\tdescription\tlink\timage_link\tavailability\tprice\tcondition\tbrand\n",
       );
       console.log("[merchant-feed] wrote empty feed (header only)");
     } catch {
