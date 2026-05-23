@@ -335,28 +335,106 @@ export const generateProductSchema = (listing: {
     ? `${categoryLabel} ${modeLabel} in ${locationShort} - ${listing.title}`
     : `${categoryLabel} ${modeLabel} - ${listing.title}`;
   
-  // Determine price and availability
-  const price = isRental 
-    ? (listing.price_daily || listing.price_weekly || 0)
-    : (listing.price_sale || 0);
-  
-  const priceLabel = isRental
-    ? (listing.price_daily ? '/day' : '/week')
-    : '';
+  // Availability for Google rich results
+  const isAvailable = listing.status === 'published';
+  const availability = isAvailable
+    ? 'https://schema.org/InStock'
+    : 'https://schema.org/OutOfStock';
+
+  // itemCondition: Google requires a schema.org Condition URL
+  const conditionMap: Record<string, string> = {
+    new: 'https://schema.org/NewCondition',
+    used: 'https://schema.org/UsedCondition',
+    refurbished: 'https://schema.org/RefurbishedCondition',
+  };
+  const itemCondition = conditionMap[listing.condition || 'used'] || 'https://schema.org/UsedCondition';
 
   // Build image array
-  const images = listing.image_urls?.length 
-    ? listing.image_urls 
+  const images = listing.image_urls?.length
+    ? listing.image_urls
     : (listing.cover_image_url ? [listing.cover_image_url] : ['https://vendibook.com/placeholder.svg']);
 
-  // city/state already extracted above for seoName
+  const today = new Date().toISOString().split('T')[0];
+  const validThrough = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const sellerOrg = {
+    '@type': 'Organization',
+    name: listing.host_name || 'Vendibook Host',
+  };
+  const listingUrl = `https://vendibook.com/listing/${listing.id}`;
+
+  // Build offers — different shape for rent vs sale per Google guidelines
+  let offers: any;
+  if (isRental) {
+    // Rental: one Offer per pricing tier (daily / weekly / monthly).
+    // businessFunction = LeaseOut signals rental intent to Google.
+    const tiers: Array<{ price: number; unitCode: 'DAY' | 'WK' | 'MON'; unitText: string }> = [];
+    if (listing.price_daily) tiers.push({ price: listing.price_daily, unitCode: 'DAY', unitText: 'per day' });
+    if (listing.price_weekly) tiers.push({ price: listing.price_weekly, unitCode: 'WK', unitText: 'per week' });
+    if (listing.price_monthly) tiers.push({ price: listing.price_monthly, unitCode: 'MON', unitText: 'per month' });
+
+    const buildRentOffer = (tier: { price: number; unitCode: string; unitText: string }) => ({
+      '@type': 'Offer',
+      url: listingUrl,
+      priceCurrency: 'USD',
+      price: tier.price.toString(),
+      availability,
+      itemCondition,
+      businessFunction: 'http://purl.org/goodrelations/v1#LeaseOut',
+      validFrom: today,
+      seller: sellerOrg,
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price: tier.price.toString(),
+        priceCurrency: 'USD',
+        unitCode: tier.unitCode,
+        unitText: tier.unitText,
+        referenceQuantity: {
+          '@type': 'QuantitativeValue',
+          value: '1',
+          unitCode: tier.unitCode,
+        },
+      },
+    });
+
+    if (tiers.length <= 1) {
+      offers = buildRentOffer(tiers[0] ?? { price: 0, unitCode: 'DAY', unitText: 'per day' });
+    } else {
+      const prices = tiers.map(t => t.price);
+      offers = {
+        '@type': 'AggregateOffer',
+        url: listingUrl,
+        priceCurrency: 'USD',
+        lowPrice: Math.min(...prices).toString(),
+        highPrice: Math.max(...prices).toString(),
+        offerCount: tiers.length.toString(),
+        availability,
+        itemCondition,
+        seller: sellerOrg,
+        offers: tiers.map(buildRentOffer),
+      };
+    }
+  } else {
+    // Sale: single Offer with sale price + priceValidUntil
+    offers = {
+      '@type': 'Offer',
+      url: listingUrl,
+      priceCurrency: 'USD',
+      price: (listing.price_sale || 0).toString(),
+      priceValidUntil: validThrough,
+      availability,
+      itemCondition,
+      businessFunction: 'http://purl.org/goodrelations/v1#Sell',
+      validFrom: today,
+      seller: sellerOrg,
+    };
+  }
 
   const schema: Record<string, any> = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: seoName,
     description: listing.description?.slice(0, 5000) || `${categoryLabel} ${isRental ? 'for rent' : 'for sale'}`,
-    url: `https://vendibook.com/listing/${listing.id}`,
+    url: listingUrl,
     image: images,
     sku: listing.id,
     mpn: listing.id,
@@ -365,21 +443,7 @@ export const generateProductSchema = (listing: {
       name: 'Vendibook',
     },
     category: `Commercial Kitchen Equipment > ${categoryLabel}`,
-    offers: {
-      '@type': 'Offer',
-      url: `https://vendibook.com/listing/${listing.id}`,
-      priceCurrency: 'USD',
-      price: price.toString(),
-      priceValidUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      availability: listing.status === 'published' 
-        ? 'https://schema.org/InStock' 
-        : 'https://schema.org/OutOfStock',
-      itemCondition: 'https://schema.org/UsedCondition',
-      seller: {
-        '@type': 'Organization',
-        name: listing.host_name || 'Vendibook Host',
-      },
-    },
+    offers,
   };
 
   // Add aggregate rating if available
@@ -412,7 +476,7 @@ export const generateProductSchema = (listing: {
     }));
   }
 
-  // Add additionalProperty for specs
+  // additionalProperty for specs
   const additionalProperties: Array<{ '@type': string; name: string; value: string }> = [];
   if (listing.length_inches) {
     additionalProperties.push({ '@type': 'PropertyValue', name: 'Length', value: `${Math.floor(listing.length_inches / 12)}ft ${listing.length_inches % 12}in` });
@@ -430,27 +494,19 @@ export const generateProductSchema = (listing: {
     schema.additionalProperty = additionalProperties;
   }
 
-  // Add rental-specific fields using extended offer
-  if (isRental) {
-    schema.offers.priceSpecification = {
-      '@type': 'UnitPriceSpecification',
-      price: price.toString(),
-      priceCurrency: 'USD',
-      unitCode: listing.price_daily ? 'DAY' : 'WK',
-      unitText: listing.price_daily ? 'per day' : 'per week',
-    };
-  }
-
-  // Add location if available
+  // Attach areaServed at the offer level so it travels with each pricing tier
   if (city && state) {
-    schema.offers.areaServed = {
+    const areaServed = {
       '@type': 'City',
       name: city,
-      containedInPlace: {
-        '@type': 'State',
-        name: state,
-      },
+      containedInPlace: { '@type': 'State', name: state },
     };
+    if (offers['@type'] === 'AggregateOffer') {
+      offers.areaServed = areaServed;
+      offers.offers?.forEach((o: any) => { o.areaServed = areaServed; });
+    } else {
+      offers.areaServed = areaServed;
+    }
   }
 
   return schema;
