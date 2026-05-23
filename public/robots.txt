@@ -1,3 +1,24 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /messages
+Disallow: /checkout
+Disallow: /book
+Disallow: /account
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /create-listing
+Disallow: /list
+Disallow: /host/
+Disallow: /notification-preferences
+Disallow: /favorites
+Disallow: /transactions
+Disallow: /identity-verification
+Disallow: /verification-complete
+Disallow: /unsubscribe
+Disallow: /email-unsubscribe
+
 User-agent: Googlebot
 Allow: /
 
@@ -8,9 +29,6 @@ User-agent: Twitterbot
 Allow: /
 
 User-agent: facebookexternalhit
-Allow: /
-
-User-agent: *
 Allow: /
 
 Sitemap: https://vendibook.com/sitemap.xml
