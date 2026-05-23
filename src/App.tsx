@@ -111,6 +111,8 @@ const SignageRequest = lazy(() => import("./pages/SignageRequest"));
 const StartFoodBusiness = lazy(() => import("./pages/StartFoodBusiness"));
 const Homepage2 = lazy(() => import("./pages/Homepage2"));
 const CategoryCityPage = lazy(() => import("./pages/CategoryCityPage"));
+const CategoryIndex = lazy(() => import("./pages/CategoryIndex"));
+import { CATEGORY_INDEX_CONFIGS } from "./data/categoryIndexConfigs";
 
 // City landing pages - direct imports since they're lightweight wrappers
 import {
@@ -293,6 +295,15 @@ const AnimatedRoutes = () => {
           {/* Programmatic SEO: category + city + mode pages */}
           <Route path="/rent/:categorySlug/:cityStateSlug" element={<PageTransition><CategoryCityPage mode="rent" /></PageTransition>} />
           <Route path="/buy/:categorySlug/:cityStateSlug" element={<PageTransition><CategoryCityPage mode="buy" /></PageTransition>} />
+
+          {/* SEO category index pages — crawlable listing grids */}
+          {CATEGORY_INDEX_CONFIGS.map((cfg) => (
+            <Route
+              key={cfg.path}
+              path={cfg.path}
+              element={<PageTransition><CategoryIndex config={cfg} /></PageTransition>}
+            />
+          ))}
 
           {/* Cities hub page */}
           <Route path="/cities" element={<PageTransition><Cities /></PageTransition>} />
