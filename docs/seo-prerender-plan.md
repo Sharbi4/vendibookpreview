@@ -97,11 +97,27 @@ The current Vite app structure ports cleanly: routes become `app/` segments, `re
 
 ---
 
+## Current status (updated 2026-05-23)
+
+### ✅ Activated: Social crawler prerendering via /share/listing/:id
+
+The `_redirects` file now proxies `/share/listing/:id` to the `seo-prerender` edge function:
+```
+/share/listing/:id   https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/seo-prerender?path=/listing/:id   200
+```
+
+This means:
+- When users share a listing (share button generates `https://vendibook.com/share/listing/{id}`), social crawlers (Facebook, Twitter, LinkedIn, Slack, Discord, WhatsApp) now receive full OG tags, JSON-LD, and per-listing metadata.
+- Human visitors hitting `/share/listing/:id` are redirected to `/listing/:id` via the JS redirect in the prerendered HTML.
+
+### ⏳ Remaining: Googlebot prerendering via Cloudflare Worker
+
+For Googlebot hitting `/listing/:id` directly (from sitemaps or internal links), a Cloudflare Worker is needed. The Worker source is ready at `workers/seo-prerender-router.ts`.
+
 ## Recommended sequence
 
-1. **Now:** Verify `seo-prerender` works in production by hitting it directly:
-   `https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/seo-prerender?path=/listing/<real-listing-id>`
-2. **This week:** Deploy Option A (Cloudflare Worker). This activates the prerender for every crawler with zero code changes in the React app.
+1. ~~**Now:** Verify `seo-prerender` works in production by hitting it directly~~ ✅ Done — social share route is wired.
+2. **This week:** Deploy the Cloudflare Worker from `workers/seo-prerender-router.ts`. This activates the prerender for Googlebot on `/listing/:id` with zero further code changes.
 3. **Within 30 days:** Watch Google Search Console URL Inspection for 3–5 listing URLs. Expect to see "Page is indexed" replace "Crawled — currently not indexed."
 4. **Defer Option D** unless social previews remain a recurring complaint.
 

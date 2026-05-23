@@ -1,0 +1,6 @@
+name = "vendibook-seo-prerender"
+main = "seo-prerender-router.ts"
+compatibility_date = "2024-01-01"
+
+# Attach to your vendibook.com domain route:
+# routes = [{ pattern = "vendibook.com/*", zone_name = "vendibook.com" }]

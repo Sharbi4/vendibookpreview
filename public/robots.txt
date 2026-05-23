@@ -32,3 +32,6 @@ User-agent: facebookexternalhit
 Allow: /
 
 Sitemap: https://vendibook.com/sitemap.xml
+Sitemap: https://vendibook.com/sitemap_pages.xml
+Sitemap: https://vendibook.com/sitemap-listings.xml
+Sitemap: https://vendibook.com/sitemap-locations.xml

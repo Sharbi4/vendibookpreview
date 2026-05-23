@@ -235,4 +235,40 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
       { href: '/rent-my-commercial-kitchen', label: 'Rent out my kitchen' },
     ],
   },
+  // VENDOR SPACES
+  {
+    path: '/vendor-spaces',
+    category: 'vendor_space',
+    mode: 'any',
+    h1: 'Vendor Spaces for Rent',
+    title: 'Vendor Spaces for Rent | Prime Vending Locations | Vendibook',
+    description:
+      'Find vendor spaces and vending locations for rent on Vendibook. Brewery patios, food parks, event venues, and high-traffic lots from verified property owners.',
+    intro:
+      'Browse vendor spaces and prime vending locations available for food trucks, trailers, and mobile vendors. Filter by city, availability, and lot features — book directly with verified property owners.',
+    faqs: [
+      {
+        q: 'What is a vendor space on Vendibook?',
+        a: 'A vendor space is a pre-approved location where mobile food vendors can park and operate — such as brewery patios, office park lots, food truck parks, and event venues. Hosts list available spots with pricing, hours, and amenities.',
+      },
+      {
+        q: 'How much does a vendor space cost?',
+        a: 'Vendor space pricing varies by location and market. Expect $50–$200/day for single-day spots, or $500–$2,000/month for recurring weekly slots in high-traffic areas.',
+      },
+      {
+        q: 'Do I need a permit to use a vendor space?',
+        a: 'Most vendor spaces are on private property with pre-approved vending rights, but you still need your city mobile food vendor permit and health certifications. The host can advise on local requirements.',
+      },
+      {
+        q: 'Can I book a vendor space for a single day?',
+        a: 'Yes — many Vendibook vendor spaces support daily booking for events, pop-ups, or one-off vending. Look for listings with daily pricing and instant booking.',
+      },
+    ],
+    related: [
+      { href: '/food-trucks', label: 'Food trucks' },
+      { href: '/food-trailers', label: 'Food trailers' },
+      { href: '/shared-kitchens', label: 'Shared kitchens' },
+      { href: '/sell-my-food-truck', label: 'Sell my food truck' },
+    ],
+  },
 ];
