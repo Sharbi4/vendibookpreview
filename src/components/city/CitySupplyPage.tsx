@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/accordion';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import SEO from '@/components/SEO';
 import type { CityData } from '@/data/cityData';
 import { ASSET_TYPES } from '@/data/cityData';
 import { trackEvent } from '@/lib/analytics';
