@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveListingBrand } from "../_shared/resolveListingBrand.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,34 +17,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   food_trailer: "Food Trailer",
 };
 
-const INVALID_BRAND_VALUES = new Set([
-  "", "n/a", "na", "unknown", "undefined", "null", "none", "other", "test", "-", "—",
-]);
-
-function resolveListingBrand(listing: any): string {
-  const sanitize = (v: string | null | undefined): string | null => {
-    if (!v) return null;
-    const t = v.trim();
-    if (t.length === 0 || INVALID_BRAND_VALUES.has(t.toLowerCase())) return null;
-    return t.slice(0, 100);
-  };
-
-  const brand = sanitize(listing.brand);
-  if (brand) return brand;
-  const make = sanitize(listing.make);
-  if (make) return make;
-  const manufacturer = sanitize(listing.manufacturer);
-  if (manufacturer) return manufacturer;
-  const hostBiz = sanitize(listing.host_business_name);
-  if (hostBiz) return hostBiz;
-
-  switch (listing.category) {
-    case "food_truck": return "Custom Food Truck";
-    case "food_trailer": return "Custom Food Trailer";
-    default: return "Commercial Food Business Asset";
-  }
-}
-
 function escapeXml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -60,9 +33,11 @@ Deno.serve(async (req) => {
 
   try {
     // Only include sale listings for food_truck and food_trailer with price and image
+    // Note: condition, brand, make, manufacturer may not exist in DB yet — omit from select
+    // to avoid PostgREST 400 errors; resolveListingBrand handles nulls gracefully.
     const { data: listings, error } = await supabase
       .from("listings")
-      .select("id, title, description, cover_image_url, price_sale, category, mode, city, state, condition, brand, make, manufacturer, updated_at")
+      .select("id, title, description, cover_image_url, price_sale, category, mode, city, state, updated_at")
       .eq("status", "published")
       .eq("mode", "sale")
       .in("category", ["food_truck", "food_trailer"])

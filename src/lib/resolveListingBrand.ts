@@ -6,6 +6,9 @@
  * - Never claim Vendibook is the brand unless Vendibook actually owns/manufactures the item.
  * - Sanitize output: no "N/A", "unknown", "undefined", "null", or empty strings.
  * - The resolved brand should also be visible somewhere on the listing page.
+ *
+ * NOTE: Core logic is mirrored in supabase/functions/_shared/resolveListingBrand.ts for edge functions.
+ * When updating the core fallback logic here, also update the shared module to keep them in sync.
  */
 
 export interface BrandInput {

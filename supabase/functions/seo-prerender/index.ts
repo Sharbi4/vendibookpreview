@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveListingBrand } from "../_shared/resolveListingBrand.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,39 +23,6 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const PHYSICAL_CATEGORIES = ["ghost_kitchen", "vendor_lot", "vendor_space"];
-
-// Brand fallback logic — mirrors src/lib/resolveListingBrand.ts
-const INVALID_BRAND_VALUES = new Set([
-  "", "n/a", "na", "unknown", "undefined", "null", "none", "other", "test", "-", "—",
-]);
-
-function resolveListingBrand(listing: any): string {
-  const sanitize = (v: string | null | undefined): string | null => {
-    if (!v) return null;
-    const t = v.trim();
-    if (t.length === 0 || INVALID_BRAND_VALUES.has(t.toLowerCase())) return null;
-    return t.slice(0, 100);
-  };
-
-  const brand = sanitize(listing.brand);
-  if (brand) return brand;
-  const make = sanitize(listing.make);
-  if (make) return make;
-  const manufacturer = sanitize(listing.manufacturer);
-  if (manufacturer) return manufacturer;
-  // host business name from profiles join
-  const hostBiz = sanitize(listing.host_business_name);
-  if (hostBiz) return hostBiz;
-
-  switch (listing.category) {
-    case "food_truck": return "Custom Food Truck";
-    case "food_trailer": return "Custom Food Trailer";
-    case "ghost_kitchen": return "Shared Kitchen";
-    case "vendor_lot":
-    case "vendor_space": return "Vendor Space";
-    default: return "Commercial Food Business Asset";
-  }
-}
 
 function escapeHtml(str: string): string {
   return str
