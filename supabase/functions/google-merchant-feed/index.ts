@@ -17,13 +17,34 @@ const CATEGORY_LABELS: Record<string, string> = {
   food_trailer: "Food Trailer",
 };
 
-function escapeXml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
+const INVALID_BRAND_VALUES = new Set([
+  "", "n/a", "na", "unknown", "undefined", "null", "none", "other", "test", "-", "—",
+]);
+
+function sanitizeBrand(val: string | null | undefined): string | null {
+  if (!val) return null;
+  const trimmed = val.trim();
+  if (trimmed.length === 0 || INVALID_BRAND_VALUES.has(trimmed.toLowerCase())) return null;
+  return trimmed.slice(0, 100);
+}
+
+// Remove emojis from text
+function removeEmojis(text: string): string {
+  return text.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, "");
+}
+
+// Remove HTML tags from text
+function stripHtml(text: string): string {
+  return text.replace(/<[^>]*>/g, "");
+}
+
+// Strict TSV sanitization: remove tabs, line breaks, control characters
+function sanitizeTsvField(val: string): string {
+  if (!val) return "";
+  let cleaned = val.replace(/[\t\r\n]/g, " ");
+  cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+  cleaned = cleaned.replace(/\s+/g, " ");
+  return cleaned.trim();
 }
 
 Deno.serve(async (req) => {
@@ -33,8 +54,6 @@ Deno.serve(async (req) => {
 
   try {
     // Only include sale listings for food_truck and food_trailer with price and image
-    // Note: condition, brand, make, manufacturer may not exist in DB yet — omit from select
-    // to avoid PostgREST 400 errors; resolveListingBrand handles nulls gracefully.
     const { data: listings, error } = await supabase
       .from("listings")
       .select("id, title, description, cover_image_url, price_sale, category, mode, city, state, updated_at")
@@ -53,46 +72,44 @@ Deno.serve(async (req) => {
       throw error;
     }
 
-    const items = (listings || [])
+    const HEADER = "id\ttitle\tdescription\tlink\timage_link\tavailability\tprice\tbrand\tidentifier_exists";
+
+    const rows = (listings || [])
       .filter((l: any) => l.title && l.description && l.description.length >= 20)
       .map((l: any) => {
         const categoryLabel = CATEGORY_LABELS[l.category] || "Mobile Food Asset";
-        const condition = l.condition === "new" ? "new" : l.condition === "refurbished" ? "refurbished" : "used";
         const location = [l.city, l.state].filter(Boolean).join(", ");
         const brandName = resolveListingBrand(l);
+        
+        const cleanTitle = removeEmojis(l.title || "");
         const title = location
-          ? `${l.title} - ${categoryLabel} for Sale in ${location}`
-          : `${l.title} - ${categoryLabel} for Sale`;
+          ? `${cleanTitle} - ${categoryLabel} for Sale in ${location}`
+          : `${cleanTitle} - ${categoryLabel} for Sale`;
 
-        return `  <item>
-    <g:id>${escapeXml(l.id)}</g:id>
-    <g:title>${escapeXml(title.slice(0, 150))}</g:title>
-    <g:description>${escapeXml((l.description || "").slice(0, 5000))}</g:description>
-    <g:link>${SITE_URL}/listing/${l.id}</g:link>
-    <g:image_link>${escapeXml(l.cover_image_url)}</g:image_link>
-    <g:availability>in_stock</g:availability>
-    <g:price>${Number(l.price_sale).toFixed(2)} USD</g:price>
-    <g:condition>${condition}</g:condition>
-    <g:brand>${escapeXml(brandName)}</g:brand>
-    <g:google_product_category>Business &amp; Industrial &gt; Food Service &gt; Food Service Equipment</g:google_product_category>
-    <g:product_type>Commercial Kitchen Equipment &gt; ${escapeXml(categoryLabel)}</g:product_type>
-  </item>`;
+        const description = stripHtml(l.description || "");
+        const cleanDescription = sanitizeTsvField(removeEmojis(description).slice(0, 5000));
+
+        const cols = [
+          sanitizeTsvField(l.id),
+          sanitizeTsvField(title.slice(0, 150)),
+          cleanDescription,
+          `${SITE_URL}/listing/${l.id}`,
+          l.cover_image_url || "",
+          "in_stock",
+          `${Number(l.price_sale).toFixed(2)} USD`,
+          sanitizeTsvField(brandName),
+          "no",
+        ];
+
+        return cols.join("\t");
       });
 
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
-<channel>
-  <title>Vendibook - Food Trucks &amp; Trailers for Sale</title>
-  <link>${SITE_URL}</link>
-  <description>Marketplace listings for food trucks and food trailers for sale on Vendibook.</description>
-${items.join("\n")}
-</channel>
-</rss>`;
+    const tsv = [HEADER, ...rows].join("\n") + "\n";
 
-    return new Response(xml, {
+    return new Response(tsv, {
       headers: {
         ...corsHeaders,
-        "Content-Type": "application/xml; charset=utf-8",
+        "Content-Type": "text/tab-separated-values; charset=utf-8",
         "Cache-Control": "public, max-age=3600, s-maxage=86400",
       },
     });

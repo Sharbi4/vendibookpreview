@@ -5,7 +5,7 @@
 # SEO prerender: serve full HTML (OG tags + JSON-LD) to social crawlers on share URLs
 /share/listing/:id   https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/seo-prerender?path=/listing/:id   200
 
-# Google Merchant Center product feed (XML variant via edge function, TSV is static)
-/google-merchant-feed.xml   https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/google-merchant-feed   200
+# Google Merchant Center product feed (served via edge function)
+/google-merchant-feed.tsv   https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/google-merchant-feed   200
 
 /*    /index.html   200
