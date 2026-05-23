@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
       throw error;
     }
 
-    const HEADER = "id\ttitle\tdescription\tlink\timage_link\tavailability\tprice\tbrand\tidentifier_exists";
+    const HEADER = "id\ttitle\tdescription\tavailability\tlink\timage_link\tprice\tidentifier_exists\tbrand\tcondition";
 
     const rows = (listings || [])
       .filter((l: any) => l.title && l.description && l.description.length >= 20)
@@ -80,6 +80,7 @@ Deno.serve(async (req) => {
         const categoryLabel = CATEGORY_LABELS[l.category] || "Mobile Food Asset";
         const location = [l.city, l.state].filter(Boolean).join(", ");
         const brandName = resolveListingBrand(l);
+        const condition = l.condition === "new" ? "new" : l.condition === "refurbished" ? "refurbished" : "used";
         
         const cleanTitle = removeEmojis(l.title || "");
         const title = location
@@ -93,12 +94,13 @@ Deno.serve(async (req) => {
           sanitizeTsvField(l.id),
           sanitizeTsvField(title.slice(0, 150)),
           cleanDescription,
+          "in_stock",
           `${SITE_URL}/listing/${l.id}`,
           l.cover_image_url || "",
-          "in_stock",
           `${Number(l.price_sale).toFixed(2)} USD`,
-          sanitizeTsvField(brandName),
           "no",
+          sanitizeTsvField(brandName),
+          condition,
         ];
 
         return cols.join("\t");

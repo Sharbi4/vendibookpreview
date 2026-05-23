@@ -132,12 +132,13 @@ function buildMerchantFeed(listings: SaleListing[]): { tsv: string; stats: { tot
     "id",
     "title",
     "description",
+    "availability",
     "link",
     "image_link",
-    "availability",
     "price",
-    "brand",
     "identifier_exists",
+    "brand",
+    "condition",
   ].join("\t");
 
   const exclusionReasons: Map<string, number> = new Map();
@@ -192,6 +193,7 @@ function buildMerchantFeed(listings: SaleListing[]): { tsv: string; stats: { tot
       const categoryLabel = l.category === "food_truck" ? "Food Truck" : "Food Trailer";
       const location = [l.city, l.state].filter(Boolean).join(", ");
       const brandName = resolveListingBrand(l);
+      const condition = l.condition === "new" ? "new" : l.condition === "refurbished" ? "refurbished" : "used";
 
       // Build clean title: "{{title}} - {{Category}} for Sale in {{city, state}}"
       // Remove emojis, limit to 150 chars
@@ -208,12 +210,13 @@ function buildMerchantFeed(listings: SaleListing[]): { tsv: string; stats: { tot
         sanitizeTsvField(l.id),                                     // id
         sanitizeTsvField(title.slice(0, 150)),                      // title (max 150 chars)
         cleanDescription,                                           // description
+        "in_stock",                                                 // availability
         `${BASE_URL}/listing/${l.id}`,                              // link
         l.cover_image_url || "",                                    // image_link
-        "in_stock",                                                 // availability
         `${Number(l.price_sale).toFixed(2)} USD`,                   // price (format: 45000.00 USD)
-        sanitizeTsvField(brandName),                                // brand
         "no",                                                       // identifier_exists (no GTIN/MPN for custom food trucks)
+        sanitizeTsvField(brandName),                                // brand
+        condition,                                                  // condition (required for used/refurbished)
       ];
 
       return cols.join("\t");
@@ -244,7 +247,7 @@ function validateFeed(tsv: string): { valid: boolean; errors: string[] } {
   }
 
   const header = lines[0].split("\t");
-  const expectedHeader = ["id", "title", "description", "link", "image_link", "availability", "price", "brand", "identifier_exists"];
+  const expectedHeader = ["id", "title", "description", "availability", "link", "image_link", "price", "identifier_exists", "brand", "condition"];
 
   if (header.length !== expectedHeader.length) {
     errors.push(`Header column count mismatch: expected ${expectedHeader.length}, got ${header.length}`);
@@ -264,7 +267,7 @@ function validateFeed(tsv: string): { valid: boolean; errors: string[] } {
       continue;
     }
 
-    const [id, title, description, link, imageLink, availability, price, brand, identifierExists] = cols;
+    const [id, title, description, availability, link, imageLink, price, identifierExists, brand, condition] = cols;
 
     // Check for tabs or line breaks in fields
     if (id.includes("\t") || title.includes("\t") || description.includes("\t") || link.includes("\t") || imageLink.includes("\t") || brand.includes("\t")) {
@@ -275,7 +278,7 @@ function validateFeed(tsv: string): { valid: boolean; errors: string[] } {
     }
 
     // Check required fields
-    if (!id || !title || !description || !link || !imageLink || !availability || !price || !brand || !identifierExists) {
+    if (!id || !title || !description || !availability || !link || !imageLink || !price || !identifierExists || !brand || !condition) {
       errors.push(`Row ${i}: missing required field(s)`);
     }
 
@@ -292,6 +295,11 @@ function validateFeed(tsv: string): { valid: boolean; errors: string[] } {
     // Validate identifier_exists
     if (!["yes", "no"].includes(identifierExists)) {
       errors.push(`Row ${i}: invalid identifier_exists "${identifierExists}"`);
+    }
+
+    // Validate condition
+    if (!["new", "used", "refurbished"].includes(condition)) {
+      errors.push(`Row ${i}: invalid condition "${condition}"`);
     }
 
     // Validate link format
@@ -348,7 +356,7 @@ async function main() {
       mkdirSync(resolve("public"), { recursive: true });
       writeFileSync(
         resolve("public/google-merchant-feed.tsv"),
-        "id\ttitle\tdescription\tlink\timage_link\tavailability\tprice\tbrand\tidentifier_exists\n",
+        "id\ttitle\tdescription\tavailability\tlink\timage_link\tprice\tidentifier_exists\tbrand\tcondition\n",
       );
       console.log("[merchant-feed] wrote empty feed (header only)");
     } catch {
