@@ -44,9 +44,24 @@ interface SaleListing {
   updated_at: string | null;
 }
 
+interface ExclusionReason {
+  reason: string;
+  count: number;
+}
+
 const INVALID_BRAND_VALUES = new Set([
   "", "n/a", "na", "unknown", "undefined", "null", "none", "other", "test", "-", "—",
 ]);
+
+// Remove emojis from text
+function removeEmojis(text: string): string {
+  return text.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, "");
+}
+
+// Remove HTML tags from text
+function stripHtml(text: string): string {
+  return text.replace(/<[^>]*>/g, "");
+}
 
 function sanitizeBrand(val: string | null | undefined): string | null {
   if (!val) return null;
@@ -99,7 +114,7 @@ async function fetchSaleListings(): Promise<SaleListing[]> {
   })) as SaleListing[];
 }
 
-function buildMerchantFeed(listings: SaleListing[]): string {
+function buildMerchantFeed(listings: SaleListing[]): { tsv: string; stats: { total: number; eligible: number; excluded: number; reasons: ExclusionReason[] } } {
   const HEADER = [
     "id",
     "title",
@@ -111,18 +126,54 @@ function buildMerchantFeed(listings: SaleListing[]): string {
     "condition",
     "brand",
     "product_type",
-    "google_product_category",
-    "custom_label_0",
-    "custom_label_1",
   ].join("\t");
+
+  const exclusionReasons: Map<string, number> = new Map();
+  const trackExclusion = (reason: string) => {
+    exclusionReasons.set(reason, (exclusionReasons.get(reason) || 0) + 1);
+  };
 
   const rows = listings
     .filter((l) => {
-      // Final eligibility checks
-      if (!l.title || !l.description || !l.price_sale || !l.cover_image_url) return false;
-      if (l.price_sale <= 0) return false;
-      if (l.description.length < 20) return false;
-      if (!/^https?:\/\//i.test(l.cover_image_url)) return false;
+      // Strict eligibility checks with reason tracking
+      if (!l.title) {
+        trackExclusion("Missing title");
+        return false;
+      }
+      if (!l.description) {
+        trackExclusion("Missing description");
+        return false;
+      }
+      if (!l.price_sale) {
+        trackExclusion("Missing price");
+        return false;
+      }
+      if (!l.cover_image_url) {
+        trackExclusion("Missing image");
+        return false;
+      }
+      if (l.price_sale <= 0) {
+        trackExclusion("Invalid price (<= 0)");
+        return false;
+      }
+      if (l.description.length < 20) {
+        trackExclusion("Description too short (< 20 chars)");
+        return false;
+      }
+      if (!/^https?:\/\//i.test(l.cover_image_url)) {
+        trackExclusion("Invalid image URL (not https)");
+        return false;
+      }
+      // Exclude rentals (should be filtered by query, but double-check)
+      if (l.mode !== "sale") {
+        trackExclusion("Not a sale listing");
+        return false;
+      }
+      // Exclude wrong categories
+      if (l.category !== "food_truck" && l.category !== "food_trailer") {
+        trackExclusion("Invalid category (not food_truck or food_trailer)");
+        return false;
+      }
       return true;
     })
     .map((l) => {
@@ -131,13 +182,16 @@ function buildMerchantFeed(listings: SaleListing[]): string {
       const condition = l.condition === "new" ? "new" : l.condition === "refurbished" ? "refurbished" : "used";
       const brandName = resolveListingBrand(l);
 
-      // Build rich title: "{{title}} - {{Category}} for Sale in {{city, state}}"
+      // Build clean title: "{{title}} - {{Category}} for Sale in {{city, state}}"
+      // Remove emojis, limit to 150 chars
+      const cleanTitle = removeEmojis(l.title);
       const title = location
-        ? `${l.title} - ${categoryLabel} for Sale in ${location}`
-        : `${l.title} - ${categoryLabel} for Sale`;
+        ? `${cleanTitle} - ${categoryLabel} for Sale in ${location}`
+        : `${cleanTitle} - ${categoryLabel} for Sale`;
 
-      // Clean description: remove excessive whitespace, max 5000 chars
-      const description = (l.description || "")
+      // Clean description: remove HTML, remove emojis, remove excessive whitespace, max 5000 chars
+      const description = stripHtml(l.description || "");
+      const cleanDescription = removeEmojis(description)
         .replace(/\s+/g, " ")
         .trim()
         .slice(0, 5000);
@@ -148,39 +202,133 @@ function buildMerchantFeed(listings: SaleListing[]): string {
 
       const cols = [
         l.id,                                                       // id
-        tsvEscape(title.slice(0, 150)),                             // title
-        tsvEscape(description),                                     // description
+        tsvEscape(title.slice(0, 150)),                             // title (max 150 chars)
+        tsvEscape(cleanDescription),                                 // description
         `${BASE_URL}/listing/${l.id}`,                              // link
         l.cover_image_url,                                          // image_link
         "in_stock",                                                 // availability
-        `${Number(l.price_sale).toFixed(2)} USD`,                   // price
+        `${Number(l.price_sale).toFixed(2)} USD`,                   // price (format: 45000.00 USD)
         condition,                                                  // condition
         tsvEscape(brandName),                                       // brand
         productType,                                                // product_type
-        "Business & Industrial > Food Service > Food Service Equipment", // google_product_category
-        l.category === "food_truck" ? "food-truck" : "food-trailer", // custom_label_0
-        location || "US",                                           // custom_label_1
       ];
 
       return cols.join("\t");
     });
 
-  return [HEADER, ...rows].join("\n") + "\n";
+  const tsv = [HEADER, ...rows].join("\n") + "\n";
+
+  const reasons: ExclusionReason[] = Array.from(exclusionReasons.entries()).map(([reason, count]) => ({ reason, count }));
+
+  return {
+    tsv,
+    stats: {
+      total: listings.length,
+      eligible: rows.length,
+      excluded: listings.length - rows.length,
+      reasons,
+    },
+  };
+}
+
+function validateFeed(tsv: string): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  const lines = tsv.split("\n").filter(line => line.trim());
+
+  if (lines.length < 1) {
+    errors.push("Feed is empty");
+    return { valid: false, errors };
+  }
+
+  const header = lines[0].split("\t");
+  const expectedHeader = ["id", "title", "description", "link", "image_link", "availability", "price", "condition", "brand", "product_type"];
+
+  if (header.length !== expectedHeader.length) {
+    errors.push(`Header column count mismatch: expected ${expectedHeader.length}, got ${header.length}`);
+  }
+
+  for (let i = 0; i < expectedHeader.length; i++) {
+    if (header[i] !== expectedHeader[i]) {
+      errors.push(`Header column ${i} mismatch: expected "${expectedHeader[i]}", got "${header[i]}"`);
+    }
+  }
+
+  // Validate data rows
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split("\t");
+    if (cols.length !== header.length) {
+      errors.push(`Row ${i} column count mismatch: expected ${header.length}, got ${cols.length}`);
+      continue;
+    }
+
+    const [id, title, description, link, imageLink, availability, price, condition, brand] = cols;
+
+    // Check required fields
+    if (!id || !title || !description || !link || !imageLink || !availability || !price || !condition || !brand) {
+      errors.push(`Row ${i}: missing required field(s)`);
+    }
+
+    // Validate price format: 45000.00 USD
+    if (!/^\d+\.\d{2} USD$/.test(price)) {
+      errors.push(`Row ${i}: invalid price format "${price}" (expected "45000.00 USD")`);
+    }
+
+    // Validate availability
+    if (!["in_stock", "out_of_stock", "preorder", "backorder"].includes(availability)) {
+      errors.push(`Row ${i}: invalid availability "${availability}"`);
+    }
+
+    // Validate condition
+    if (!["new", "used", "refurbished"].includes(condition)) {
+      errors.push(`Row ${i}: invalid condition "${condition}"`);
+    }
+
+    // Validate link format
+    if (!link.startsWith("https://vendibook.com/listing/")) {
+      errors.push(`Row ${i}: invalid link format "${link}"`);
+    }
+
+    // Validate image link format
+    if (!imageLink.startsWith("https://")) {
+      errors.push(`Row ${i}: invalid image link format "${imageLink}"`);
+    }
+  }
+
+  return { valid: errors.length === 0, errors };
 }
 
 async function main() {
   try {
     const listings = await fetchSaleListings();
-    const tsv = buildMerchantFeed(listings);
+    const { tsv, stats } = buildMerchantFeed(listings);
 
-    const eligibleCount = tsv.split("\n").length - 2; // minus header and trailing newline
+    // Validate the feed
+    const validation = validateFeed(tsv);
 
     mkdirSync(resolve("public"), { recursive: true });
     writeFileSync(resolve("public/google-merchant-feed.tsv"), tsv);
 
-    console.log(
-      `[merchant-feed] wrote google-merchant-feed.tsv (${eligibleCount} eligible sale listings)`,
-    );
+    // Feed report
+    console.log("\n=== Google Merchant Feed Report ===");
+    console.log(`Total listings checked: ${stats.total}`);
+    console.log(`Eligible listings included: ${stats.eligible}`);
+    console.log(`Excluded listings: ${stats.excluded}`);
+    if (stats.reasons.length > 0) {
+      console.log("\nExclusion reasons:");
+      stats.reasons.forEach(({ reason, count }) => {
+        console.log(`  - ${reason}: ${count}`);
+      });
+    }
+    console.log(`\nFeed path: public/google-merchant-feed.tsv`);
+    console.log(`Public URL: https://vendibook.com/google-merchant-feed.tsv`);
+
+    if (!validation.valid) {
+      console.log("\n=== Feed Validation Errors ===");
+      validation.errors.forEach(err => console.log(`  - ${err}`));
+    } else {
+      console.log("\n✓ Feed validation passed");
+    }
+    console.log("===================================\n");
   } catch (err) {
     // Never fail the build over merchant feed generation
     console.warn(`[merchant-feed] generation failed: ${(err as Error).message}`);
@@ -189,8 +337,9 @@ async function main() {
       mkdirSync(resolve("public"), { recursive: true });
       writeFileSync(
         resolve("public/google-merchant-feed.tsv"),
-        "id\ttitle\tdescription\tlink\timage_link\tavailability\tprice\tcondition\tbrand\tproduct_type\tgoogle_product_category\tcustom_label_0\tcustom_label_1\n",
+        "id\ttitle\tdescription\tlink\timage_link\tavailability\tprice\tcondition\tbrand\tproduct_type\n",
       );
+      console.log("[merchant-feed] wrote empty feed (header only)");
     } catch {
       /* ignore */
     }
