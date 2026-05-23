@@ -1090,13 +1090,13 @@ const StartupGuide = () => {
               className="text-center"
             >
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-                Complete Startup Blueprint
+                Updated for 2026 · Costs, Permits & Checklist
               </div>
               <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                Food Truck Startup Guide
+                How to Start a Food Truck in 2026: Costs, Permits & Checklist
               </h1>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-                The complete 2024 blueprint for launching a profitable food truck, trailer, or mobile food business. Covers costs, permits, equipment, and the hidden risks that cause 60% to fail.
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+                Starting a food truck in 2026 means planning for the truck or trailer, permits, a commissary kitchen, insurance, equipment, and launch costs. This guide breaks down the real startup costs, the common hidden expenses, and the steps to get legally operating — plus the trucks, trailers, and kitchens you can browse on Vendibook today.
               </p>
 
               {/* Darkshine CTA */}
