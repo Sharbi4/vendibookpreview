@@ -58,7 +58,7 @@ const SocialProofStrip = () => {
   ];
 
   return (
-    <div ref={ref} className="border-y border-border/30 bg-card/30 backdrop-blur-sm">
+    <div ref={ref} className="border-y border-border/30 bg-card/80">
       <div className="container py-6">
         <div className="flex items-center justify-center gap-8 sm:gap-16 md:gap-24">
           {items.map((item, i) => (

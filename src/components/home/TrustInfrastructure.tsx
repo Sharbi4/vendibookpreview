@@ -102,7 +102,7 @@ const TrustInfrastructure = () => {
             return (
               <motion.div
                 key={pillar.title}
-                className="group relative rounded-2xl p-5 sm:p-6 bg-card/40 backdrop-blur-sm border-2 border-border/40 hover:border-foreground/20 hover:bg-card/60 transition-all duration-300"
+                className="group relative rounded-2xl p-5 sm:p-6 bg-card/80 border-2 border-border/40 hover:border-foreground/20 hover:bg-card/60 transition-all duration-300"
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
@@ -129,7 +129,7 @@ const TrustInfrastructure = () => {
 
           {/* Featured Sign-up CTA — spans 2 cols on lg, sits beside Reviews & trust */}
           <motion.div
-            className="relative overflow-hidden rounded-2xl p-6 sm:p-8 sm:col-span-2 lg:col-span-2 border-2 border-primary/30 bg-card/60 backdrop-blur-sm group hover:border-primary/50 transition-all duration-300"
+            className="relative overflow-hidden rounded-2xl p-6 sm:p-8 sm:col-span-2 lg:col-span-2 border-2 border-primary/30 bg-card/90 group hover:border-primary/50 transition-all duration-300"
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}

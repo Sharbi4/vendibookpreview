@@ -152,7 +152,7 @@ export const LiveActivityFeed = () => {
       role="status"
       aria-live="polite"
     >
-      <div className="flex items-center gap-2.5 pl-1.5 pr-2.5 py-1.5 rounded-full bg-background/80 backdrop-blur-xl border-2 border-white/[0.10] shadow-[0_8px_32px_-8px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.03)]">
+      <div className="flex items-center gap-2.5 pl-1.5 pr-2.5 py-1.5 rounded-full bg-card border-2 border-white/[0.10] shadow-[0_8px_32px_-8px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.03)]" style={{ transform: 'translateZ(0)' }}>
         <div className={cn("relative w-7 h-7 rounded-full flex items-center justify-center border-2", colorClass)}>
           <Icon className="h-3 w-3" strokeWidth={2.25} />
           <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500 ring-[1.5px] ring-background animate-pulse" />
