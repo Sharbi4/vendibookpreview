@@ -1,5 +1,3 @@
-import { motion } from 'framer-motion';
-
 const HeroBackground = () => (
   <>
     {/* Solid dark base */}
@@ -18,48 +16,26 @@ const HeroBackground = () => (
     <div
       className="absolute inset-0"
       style={{
-        background: 'radial-gradient(ellipse 70% 60% at 50% 45%, transparent 0%, hsl(var(--background)) 100%)',
+        background:
+          'radial-gradient(ellipse 70% 60% at 50% 45%, transparent 0%, hsl(var(--background)) 100%)',
       }}
     />
 
-    {/* Refined warm glow — subtle, premium */}
-    <motion.div
+    {/*
+      NOTE: Previously this layer used multiple motion.div elements with
+      `filter: blur(60-80px)` animating x/y on infinite loops. Combined with
+      page scroll, those blurred layers re-rasterized every frame and caused
+      visible flicker / tearing on the homepage. Replaced with a single
+      static warm-glow gradient promoted to its own GPU layer.
+    */}
+    <div
       className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full pointer-events-none"
       style={{
-        background: 'radial-gradient(ellipse at center, rgba(255,81,36,0.035) 0%, rgba(255,186,8,0.012) 40%, transparent 70%)',
-        filter: 'blur(80px)',
+        background:
+          'radial-gradient(ellipse at center, rgba(255,81,36,0.04) 0%, rgba(255,186,8,0.015) 40%, transparent 70%)',
+        transform: 'translate3d(-50%, 0, 0)',
+        willChange: 'transform',
       }}
-      initial={{ opacity: 0, scale: 0.85 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 2.5, ease: 'easeOut' }}
-    />
-
-    {/* Slow ambient drift — warm */}
-    <motion.div
-      className="absolute w-[40rem] h-[40rem] rounded-full"
-      style={{
-        background: 'radial-gradient(circle, rgba(255,81,36,0.018) 0%, transparent 55%)',
-        filter: 'blur(70px)',
-      }}
-      animate={{
-        x: ['-10%', '15%', '-5%', '-10%'],
-        y: ['-5%', '10%', '-8%', '-5%'],
-      }}
-      transition={{ duration: 32, repeat: Infinity, ease: 'easeInOut' }}
-    />
-
-    {/* Slow ambient drift — cool */}
-    <motion.div
-      className="absolute w-[30rem] h-[30rem] rounded-full"
-      style={{
-        background: 'radial-gradient(circle, rgba(255,255,255,0.025) 0%, transparent 55%)',
-        filter: 'blur(60px)',
-      }}
-      animate={{
-        x: ['20%', '-15%', '12%', '20%'],
-        y: ['5%', '-10%', '8%', '5%'],
-      }}
-      transition={{ duration: 36, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
     />
   </>
 );

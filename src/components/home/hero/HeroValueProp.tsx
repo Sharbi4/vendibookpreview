@@ -31,7 +31,18 @@ const HeroValueProp = () => {
   const search = useHeroSearch();
 
   return (
-    <section className="relative min-h-[92svh] sm:min-h-[92vh] flex items-center justify-center bg-background py-12 sm:py-16 md:py-20" style={{ overflow: 'clip' }}>
+    <section
+      className="relative min-h-[92svh] sm:min-h-[92vh] flex items-center justify-center bg-background py-12 sm:py-16 md:py-20"
+      style={{
+        overflow: 'clip',
+        // Isolate hero into its own compositor layer so blurred decorative
+        // layers below don't re-rasterize against the scrolling page,
+        // which was causing flicker/tearing during scroll.
+        isolation: 'isolate',
+        contain: 'paint',
+        transform: 'translateZ(0)',
+      }}
+    >
       <HeroBackground />
 
       <div className="container relative z-10 max-w-5xl mx-auto px-4 sm:px-6">
@@ -100,7 +111,7 @@ const HeroValueProp = () => {
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.15 }}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] mb-6 sm:mb-8 backdrop-blur-sm"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/[0.08] mb-6 sm:mb-8"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
               <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/75">
@@ -165,8 +176,10 @@ const HeroValueProp = () => {
                 transition={{ duration: 1.6, delay: 0.5, ease: 'easeOut' }}
               />
 
-              {/* Layer 4 — subtle diagonal satin shimmer (slow drift) */}
-              <motion.div
+              {/* Layer 4 — static diagonal satin shimmer.
+                  Was an infinite x/opacity animation on a blurred layer, which
+                  combined with scrolling caused flicker/tearing. Now static. */}
+              <div
                 className="absolute z-0 pointer-events-none left-1/2 top-1/2"
                 style={{
                   width: '180%',
@@ -177,11 +190,6 @@ const HeroValueProp = () => {
                   filter: 'blur(12px)',
                   borderRadius: '50%',
                 }}
-                animate={{
-                  x: ['-2%', '2%', '-2%'],
-                  opacity: [0.6, 1, 0.6],
-                }}
-                transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
               />
               <img
                 src={vendibookLogo}
