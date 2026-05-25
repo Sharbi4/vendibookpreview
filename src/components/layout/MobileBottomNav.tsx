@@ -41,8 +41,15 @@ const MobileBottomNav = () => {
   return (
     <nav
       aria-label="Primary mobile navigation"
-      className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border"
+      style={{
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        // backdrop-blur on a fixed nav causes mobile scroll flicker (re-rasterizes
+        // every frame). Use near-opaque background + own GPU layer instead.
+        background: 'hsla(0, 0%, 8%, 0.97)',
+        transform: 'translateZ(0)',
+        willChange: 'transform',
+      }}
     >
       <ul className="grid grid-cols-5">
         {items.map(({ to, label, icon: Icon }) => (
