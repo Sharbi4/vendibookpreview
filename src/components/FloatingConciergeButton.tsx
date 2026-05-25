@@ -1,5 +1,5 @@
-import { MessageCircle } from 'lucide-react';
-import { useState } from 'react';
+import { MessageCircle, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import TicketFormDialog from './home/TicketFormDialog';
