@@ -112,7 +112,7 @@ const HeroValueProp = () => {
             >
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
               <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/75">
-                Verified <span className="text-foreground/30 mx-1">·</span> Insured <span className="text-foreground/30 mx-1">·</span> Built for food businesses
+                Rent, buy, host, or sell food trucks, trailers, shared kitchens, and vendor spaces
               </span>
             </motion.div>
 
@@ -244,7 +244,8 @@ const HeroValueProp = () => {
               </span>
             </motion.h1>
 
-            {/* Subheadline */}
+            {/* Subheadline — removed per request */}
+            {/*
             <motion.p
               className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-7 sm:mb-9 leading-relaxed"
               initial={{ opacity: 0, y: 12 }}
@@ -253,6 +254,7 @@ const HeroValueProp = () => {
             >
               Rent, buy, host, or sell food trucks, trailers, shared kitchens, and vendor spaces — with secure payments, document collection, and built-in booking tools.
             </motion.p>
+            */}
 
             {/* Search + Vendi */}
             <motion.div
