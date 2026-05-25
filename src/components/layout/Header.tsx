@@ -279,7 +279,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
         // Near-opaque charcoal instead of backdrop-filter: blur(24px).
         // backdrop-filter over animated/scrolling content re-samples every frame
         // and causes flicker / graphic tearing during scroll on many GPUs.
-        background: 'hsla(0, 0%, 8%, 0.96)',
+        background: 'hsl(0, 0%, 4%)',
         // Promote to its own compositor layer so scroll repaints don't drag the header.
         transform: 'translateZ(0)',
         willChange: 'transform',
