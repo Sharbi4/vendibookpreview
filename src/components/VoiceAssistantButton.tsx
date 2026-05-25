@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Phone, PhoneOff, MicOff, Mic, Loader2 } from 'lucide-react';
+import { Phone, PhoneOff, MicOff, Mic, Loader2, X, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVapiAssistant } from '@/hooks/useVapiAssistant';
 import { cn } from '@/lib/utils';
@@ -8,7 +8,15 @@ import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 const VoiceAssistantButton = () => {
   const { status, isMuted, volumeLevel, startCall, endCall, toggleMute, isConfigured } = useVapiAssistant();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('vendi-fab-minimized') === '1';
+  });
   const callStartRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem('vendi-fab-minimized', isMinimized ? '1' : '0');
+  }, [isMinimized]);
 
   // Track call start/end times
   useEffect(() => {
@@ -59,6 +67,20 @@ const VoiceAssistantButton = () => {
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className="fixed bottom-24 right-6 z-50 flex flex-col items-end gap-2"
     >
+      {/* Minimized chip */}
+      {isMinimized && isIdle ? (
+        <motion.button
+          onClick={() => setIsMinimized(false)}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.92 }}
+          aria-label="Show Talk to Vendi"
+          className="w-10 h-10 rounded-full bg-primary/90 text-primary-foreground flex items-center justify-center shadow-lg border-2 border-white/20 cursor-pointer outline-none"
+          title="Talk to Vendi"
+        >
+          <MessageSquare className="w-4 h-4" />
+        </motion.button>
+      ) : (
+      <>
       {/* Expanded controls */}
       <AnimatePresence>
         {isExpanded && isActive && (
@@ -108,12 +130,19 @@ const VoiceAssistantButton = () => {
             transition={{ delay: 0.4, duration: 0.4 }}
             className="absolute right-[60px] flex items-center pointer-events-none"
           >
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-md border-2 border-border/70 shadow-lg whitespace-nowrap">
+            <div className="pointer-events-auto flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-full bg-background/90 backdrop-blur-md border-2 border-border/70 shadow-lg whitespace-nowrap">
               <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground/80">
                 Concierge
               </span>
               <span className="text-[11px] text-muted-foreground">·</span>
               <span className="text-[11px] text-muted-foreground">Talk to Vendi</span>
+              <button
+                onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
+                aria-label="Minimize Talk to Vendi"
+                className="ml-1 flex items-center justify-center w-5 h-5 rounded-full hover:bg-muted transition-colors"
+              >
+                <X className="w-3 h-3 text-muted-foreground" />
+              </button>
             </div>
           </motion.div>
         )}
@@ -160,6 +189,8 @@ const VoiceAssistantButton = () => {
           )}
         </motion.button>
       </div>
+      </>
+      )}
     </motion.div>
   );
 };
