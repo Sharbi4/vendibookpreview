@@ -211,7 +211,7 @@ const HeroValueProp = () => {
                 fetchPriority="high"
                 loading="eager"
                 decoding="sync"
-                className="relative z-[1] h-40 sm:h-52 md:h-60 lg:h-72 w-auto"
+                className="relative z-[1] h-44 sm:h-56 md:h-64 lg:h-80 w-auto"
                 style={{
                   filter:
                     'drop-shadow(0 4px 16px rgba(0,0,0,0.6)) ' +

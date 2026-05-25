@@ -155,17 +155,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/67b22e91-5540-4c75-a1d7-8d60f04afc22</loc>
-    <lastmod>2026-05-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/924e1f23-b87d-4b7f-8ff9-30228d196180/67b22e91-5540-4c75-a1d7-8d60f04afc22/1768968387135-z71ey.jpg</image:loc>
-      <image:title>Hot dogs and burgers cart</image:title>
-      <image:caption>Hot dogs and burgers cart on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/779d5773-de60-4075-b92d-32387da86dd3</loc>
     <lastmod>2026-05-25</lastmod>
     <changefreq>weekly</changefreq>
@@ -185,6 +174,17 @@
       <image:loc>https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800</image:loc>
       <image:title>Asian Fusion Food Truck</image:title>
       <image:caption>Asian Fusion Food Truck in Los Angeles, CA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/67b22e91-5540-4c75-a1d7-8d60f04afc22</loc>
+    <lastmod>2026-05-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/924e1f23-b87d-4b7f-8ff9-30228d196180/67b22e91-5540-4c75-a1d7-8d60f04afc22/1768968387135-z71ey.jpg</image:loc>
+      <image:title>Hot dogs and burgers cart</image:title>
+      <image:caption>Hot dogs and burgers cart on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -694,17 +694,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/f60f584d-38db-4aa3-a7e0-2c5c65a82c82</loc>
-    <lastmod>2026-05-24</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/924e1f23-b87d-4b7f-8ff9-30228d196180/f60f584d-38db-4aa3-a7e0-2c5c65a82c82/1768963897142-rqp5ezd.jpg</image:loc>
-      <image:title>2023 Spartan food trailer</image:title>
-      <image:caption>2023 Spartan food trailer in Atlanta, GA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/05492ba1-7205-491b-aaf4-ccaaa071ee7d</loc>
     <lastmod>2026-05-25</lastmod>
     <changefreq>weekly</changefreq>
@@ -713,6 +702,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/924e1f23-b87d-4b7f-8ff9-30228d196180/05492ba1-7205-491b-aaf4-ccaaa071ee7d/1768968639494-8v03i6.jpg</image:loc>
       <image:title> 2025 food trailer</image:title>
       <image:caption> 2025 food trailer in Santa Cruz, CA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/f60f584d-38db-4aa3-a7e0-2c5c65a82c82</loc>
+    <lastmod>2026-05-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/924e1f23-b87d-4b7f-8ff9-30228d196180/f60f584d-38db-4aa3-a7e0-2c5c65a82c82/1768963897142-rqp5ezd.jpg</image:loc>
+      <image:title>2023 Spartan food trailer</image:title>
+      <image:caption>2023 Spartan food trailer in Atlanta, GA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
