@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Phone, PhoneOff, MicOff, Mic, Loader2 } from 'lucide-react';
+import { Phone, PhoneOff, MicOff, Mic, Loader2, X, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVapiAssistant } from '@/hooks/useVapiAssistant';
 import { cn } from '@/lib/utils';
@@ -8,7 +8,15 @@ import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 const VoiceAssistantButton = () => {
   const { status, isMuted, volumeLevel, startCall, endCall, toggleMute, isConfigured } = useVapiAssistant();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('vendi-fab-minimized') === '1';
+  });
   const callStartRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem('vendi-fab-minimized', isMinimized ? '1' : '0');
+  }, [isMinimized]);
 
   // Track call start/end times
   useEffect(() => {
