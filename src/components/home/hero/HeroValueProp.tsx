@@ -32,12 +32,9 @@ const HeroValueProp = () => {
 
   return (
     <section
-      className="relative min-h-[92svh] sm:min-h-[92vh] flex items-center justify-center bg-background py-12 sm:py-16 md:py-20"
+      className="relative flex items-center justify-center bg-background pt-3 sm:pt-4 md:pt-6 pb-12 sm:pb-16 md:pb-20"
       style={{
         overflow: 'clip',
-        // Isolate hero into its own compositor layer so blurred decorative
-        // layers below don't re-rasterize against the scrolling page,
-        // which was causing flicker/tearing during scroll.
         isolation: 'isolate',
         contain: 'paint',
         transform: 'translateZ(0)',
@@ -188,6 +185,21 @@ const HeroValueProp = () => {
                   background:
                     'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.05) 48%, rgba(255,220,180,0.06) 52%, transparent 70%)',
                   filter: 'blur(12px)',
+                  borderRadius: '50%',
+                }}
+              />
+
+              {/* Layer 5 — dark vignette pad directly behind logo so the
+                  wordmark reads clearly against the satin glow */}
+              <div
+                className="absolute z-0 pointer-events-none left-1/2 top-1/2"
+                style={{
+                  width: '130%',
+                  height: '120%',
+                  transform: 'translate(-50%, -50%)',
+                  background:
+                    'radial-gradient(ellipse 50% 45% at 50% 50%, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 35%, rgba(0,0,0,0.25) 60%, transparent 80%)',
+                  filter: 'blur(24px)',
                   borderRadius: '50%',
                 }}
               />
