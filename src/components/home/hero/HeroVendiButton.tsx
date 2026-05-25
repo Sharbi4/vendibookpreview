@@ -21,12 +21,12 @@ const HeroVendiButton = () => (
           if (vendiBtn) vendiBtn.click();
         }}
         className="relative inline-flex items-center gap-2.5 px-5 py-2.5 rounded-2xl text-sm font-medium transition-all duration-300 group cursor-pointer
-          bg-white/[0.04] backdrop-blur-xl
+          bg-white/[0.05]
            border-2 border-white/[0.12] hover:border-foreground/35
            text-muted-foreground hover:text-foreground
            shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_4px_24px_-4px_rgba(0,0,0,0.4)]
            hover:shadow-[0_0_0_1px_rgba(255,255,255,0.1),0_8px_32px_-4px_rgba(255,255,255,0.08)]
-          hover:bg-white/[0.06]"
+          hover:bg-white/[0.08]"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
