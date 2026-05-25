@@ -51,12 +51,12 @@ const HeroValueProp = () => {
           transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
           style={{
             background:
-              'linear-gradient(180deg, hsl(0 0% 13%) 0%, hsl(0 0% 11%) 35%, hsl(0 0% 9.5%) 65%, hsl(0 0% 12%) 100%), ' +
-              'radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255,255,255,0.06), transparent 70%)',
+              'linear-gradient(180deg, hsl(0 0% 7%) 0%, hsl(0 0% 5%) 35%, hsl(0 0% 4%) 65%, hsl(0 0% 6%) 100%), ' +
+              'radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255,255,255,0.04), transparent 70%)',
             boxShadow:
-              '0 1px 0 0 rgba(255,255,255,0.12) inset, ' +
-              '0 -1px 0 0 rgba(0,0,0,0.5) inset, ' +
-              '0 30px 80px -24px rgba(0,0,0,0.85), ' +
+              '0 1px 0 0 rgba(255,255,255,0.14) inset, ' +
+              '0 -1px 0 0 rgba(0,0,0,0.6) inset, ' +
+              '0 30px 80px -24px rgba(0,0,0,0.9), ' +
               '0 8px 24px -12px rgba(255,81,36,0.10)',
           }}
         >
