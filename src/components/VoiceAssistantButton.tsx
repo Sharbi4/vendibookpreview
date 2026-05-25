@@ -130,12 +130,19 @@ const VoiceAssistantButton = () => {
             transition={{ delay: 0.4, duration: 0.4 }}
             className="absolute right-[60px] flex items-center pointer-events-none"
           >
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-md border-2 border-border/70 shadow-lg whitespace-nowrap">
+            <div className="pointer-events-auto flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-full bg-background/90 backdrop-blur-md border-2 border-border/70 shadow-lg whitespace-nowrap">
               <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground/80">
                 Concierge
               </span>
               <span className="text-[11px] text-muted-foreground">·</span>
               <span className="text-[11px] text-muted-foreground">Talk to Vendi</span>
+              <button
+                onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
+                aria-label="Minimize Talk to Vendi"
+                className="ml-1 flex items-center justify-center w-5 h-5 rounded-full hover:bg-muted transition-colors"
+              >
+                <X className="w-3 h-3 text-muted-foreground" />
+              </button>
             </div>
           </motion.div>
         )}
