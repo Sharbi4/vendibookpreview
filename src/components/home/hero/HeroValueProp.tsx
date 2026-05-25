@@ -132,7 +132,7 @@ const HeroValueProp = () => {
                   height: '220%',
                   transform: 'translate(-50%, -50%)',
                   background:
-                    'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(255,255,255,0.18) 0%, rgba(255,220,180,0.12) 22%, rgba(255,81,36,0.08) 45%, transparent 75%)',
+                    'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(255,255,255,0.06) 0%, rgba(255,220,180,0.04) 22%, rgba(255,81,36,0.03) 45%, transparent 75%)',
                   filter: 'blur(50px)',
                 }}
                 initial={{ opacity: 0, scale: 0.85 }}
@@ -148,7 +148,7 @@ const HeroValueProp = () => {
                   height: '160%',
                   transform: 'translate(-50%, -50%)',
                   background:
-                    'radial-gradient(ellipse 50% 45% at 50% 50%, rgba(255,255,255,0.32) 0%, rgba(255,220,180,0.20) 25%, rgba(255,81,36,0.12) 50%, transparent 70%)',
+                    'radial-gradient(ellipse 50% 45% at 50% 50%, rgba(255,255,255,0.10) 0%, rgba(255,220,180,0.06) 25%, rgba(255,81,36,0.04) 50%, transparent 70%)',
                   filter: 'blur(28px)',
                 }}
                 initial={{ opacity: 0, scale: 0.85 }}
@@ -194,12 +194,12 @@ const HeroValueProp = () => {
               <div
                 className="absolute z-0 pointer-events-none left-1/2 top-1/2"
                 style={{
-                  width: '130%',
-                  height: '120%',
+                  width: '150%',
+                  height: '140%',
                   transform: 'translate(-50%, -50%)',
                   background:
-                    'radial-gradient(ellipse 50% 45% at 50% 50%, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 35%, rgba(0,0,0,0.25) 60%, transparent 80%)',
-                  filter: 'blur(24px)',
+                    'radial-gradient(ellipse 55% 50% at 50% 50%, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.82) 35%, rgba(0,0,0,0.5) 60%, transparent 82%)',
+                  filter: 'blur(20px)',
                   borderRadius: '50%',
                 }}
               />
