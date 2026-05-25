@@ -67,6 +67,20 @@ const VoiceAssistantButton = () => {
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className="fixed bottom-24 right-6 z-50 flex flex-col items-end gap-2"
     >
+      {/* Minimized chip */}
+      {isMinimized && isIdle ? (
+        <motion.button
+          onClick={() => setIsMinimized(false)}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.92 }}
+          aria-label="Show Talk to Vendi"
+          className="w-10 h-10 rounded-full bg-primary/90 text-primary-foreground flex items-center justify-center shadow-lg border-2 border-white/20 cursor-pointer outline-none"
+          title="Talk to Vendi"
+        >
+          <MessageSquare className="w-4 h-4" />
+        </motion.button>
+      ) : (
+      <>
       {/* Expanded controls */}
       <AnimatePresence>
         {isExpanded && isActive && (
