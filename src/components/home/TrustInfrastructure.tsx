@@ -14,6 +14,15 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import trustKitchen from '@/assets/home/trust-kitchen.jpg';
+import trustHandoff from '@/assets/home/trust-handoff.jpg';
+import trustVendorLot from '@/assets/home/trust-vendor-lot.jpg';
+
+const TRUST_PHOTOS = [
+  { src: trustKitchen, alt: 'Commercial commissary kitchen in operation', label: 'Commissary kitchens' },
+  { src: trustVendorLot, alt: 'Outdoor food vendor lot at golden hour', label: 'Vendor lots' },
+  { src: trustHandoff, alt: 'Food trailer hitched to a pickup truck', label: 'Trucks & trailers' },
+];
 
 const PILLARS = [
   {
@@ -94,6 +103,33 @@ const TrustInfrastructure = () => {
             Every transaction is backed by payments, documents, verification, and booking infrastructure — so you can move serious money with confidence.
           </p>
         </motion.div>
+
+        {/* Real photos strip */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-10 sm:mb-14">
+          {TRUST_PHOTOS.map((photo, i) => (
+            <motion.div
+              key={photo.label}
+              className="group relative overflow-hidden rounded-2xl border-2 border-border/50 aspect-[4/3] sm:aspect-[5/4]"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.6, delay: i * 0.08 }}
+            >
+              <img
+                src={photo.src}
+                alt={photo.alt}
+                loading="lazy"
+                width={1024}
+                height={768}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/30 to-transparent" />
+              <span className="absolute bottom-4 left-4 right-4 text-xs sm:text-sm font-semibold uppercase tracking-[0.14em] text-foreground/90">
+                {photo.label}
+              </span>
+            </motion.div>
+          ))}
+        </div>
 
         {/* Pillars grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
