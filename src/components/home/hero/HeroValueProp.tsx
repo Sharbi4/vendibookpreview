@@ -188,6 +188,21 @@ const HeroValueProp = () => {
                   borderRadius: '50%',
                 }}
               />
+
+              {/* Layer 5 — dark vignette pad directly behind logo so the
+                  wordmark reads clearly against the satin glow */}
+              <div
+                className="absolute z-0 pointer-events-none left-1/2 top-1/2"
+                style={{
+                  width: '130%',
+                  height: '120%',
+                  transform: 'translate(-50%, -50%)',
+                  background:
+                    'radial-gradient(ellipse 50% 45% at 50% 50%, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 35%, rgba(0,0,0,0.25) 60%, transparent 80%)',
+                  filter: 'blur(24px)',
+                  borderRadius: '50%',
+                }}
+              />
               <img
                 src={vendibookLogo}
                 alt="Vendibook"
