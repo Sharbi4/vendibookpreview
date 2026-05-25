@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, DollarSign, Shield, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import ownersFoodTruck from '@/assets/home/owners-food-truck.jpg';
 
 const benefits = [
   { icon: DollarSign, text: 'Built-in booking & calendar management' },
@@ -16,6 +17,25 @@ const BecomeHostSection = () => {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] rounded-full blur-[140px]" style={{ background: 'radial-gradient(ellipse, rgba(255,81,36,0.022) 0%, rgba(255,186,8,0.01) 40%, transparent 70%)' }} />
       
       <div className="container max-w-4xl mx-auto px-5 sm:px-6 relative z-10">
+        {/* Hero photo */}
+        <motion.div
+          className="relative mx-auto mb-10 max-w-3xl overflow-hidden rounded-3xl border-2 border-border/60 shadow-2xl shadow-black/40"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.7 }}
+        >
+          <img
+            src={ownersFoodTruck}
+            alt="Food truck serving customers at golden hour"
+            loading="lazy"
+            width={1280}
+            height={896}
+            className="w-full h-[240px] sm:h-[320px] md:h-[380px] object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent pointer-events-none" />
+        </motion.div>
+
         <motion.div
           className="text-center"
           initial={{ opacity: 0, y: 24 }}
@@ -26,6 +46,7 @@ const BecomeHostSection = () => {
           <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] bg-foreground/10 text-foreground/80 rounded-full mb-6 border-2 border-foreground/[0.12]">
             For Owners
           </span>
+          
           
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 leading-tight">
             Your idle truck is{' '}

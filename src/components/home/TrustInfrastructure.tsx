@@ -14,6 +14,15 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import trustKitchen from '@/assets/home/trust-kitchen.jpg';
+import trustHandoff from '@/assets/home/trust-handoff.jpg';
+import trustVendorLot from '@/assets/home/trust-vendor-lot.jpg';
+
+const TRUST_PHOTOS = [
+  { src: trustKitchen, alt: 'Commercial commissary kitchen in operation', label: 'Commissary kitchens' },
+  { src: trustVendorLot, alt: 'Outdoor food vendor lot at golden hour', label: 'Vendor lots' },
+  { src: trustHandoff, alt: 'Food trailer hitched to a pickup truck', label: 'Trucks & trailers' },
+];
 
 const PILLARS = [
   {
