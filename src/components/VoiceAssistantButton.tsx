@@ -182,6 +182,8 @@ const VoiceAssistantButton = () => {
           )}
         </motion.button>
       </div>
+      </>
+      )}
     </motion.div>
   );
 };
