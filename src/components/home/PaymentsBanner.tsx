@@ -5,7 +5,8 @@ import afterpayLogo from '@/assets/afterpay-logo.png';
 
 const PaymentsBanner = () => {
   return (
-    <section className="py-8 border-y border-border/50">
+    <section className="py-8 border-y border-border/30 relative">
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/[0.015] to-transparent pointer-events-none" />
       <div className="container">
         <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
           <p className="text-sm text-muted-foreground text-center md:text-left">

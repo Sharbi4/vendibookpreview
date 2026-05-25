@@ -8,9 +8,8 @@ const FinalCTA = () => {
   
   return (
     <section className="py-20 sm:py-28 relative overflow-hidden">
-      {/* Neutral aura glow */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-foreground/[0.04] rounded-full blur-[120px]" />
-      <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-foreground/[0.02] rounded-full blur-[100px]" />
+      {/* Subtle closing ambient */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] rounded-full blur-[160px]" style={{ background: 'radial-gradient(ellipse, rgba(255,81,36,0.025) 0%, rgba(255,186,8,0.012) 40%, transparent 70%)' }} />
       
       <div className="container max-w-3xl mx-auto px-5 sm:px-6 text-center relative z-10">
         <motion.div

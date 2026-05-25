@@ -22,6 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Lazy load below-the-fold components for faster initial load
 const ListingsSections = lazy(() => import('@/components/home/ListingsSections'));
+const TrustInfrastructure = lazy(() => import('@/components/home/TrustInfrastructure'));
 const BecomeHostSection = lazy(() => import('@/components/home/BecomeHostSection'));
 const FinalCTA = lazy(() => import('@/components/home/FinalCTA'));
 
@@ -88,16 +89,19 @@ const Index = () => {
           {/* 3. Listings - Rentals First, Then Sales */}
           <ListingsSections />
 
-          {/* 4. BNPL Banner */}
+          {/* 4. Trust Infrastructure — the structural proof */}
+          <TrustInfrastructure />
+
+          {/* 5. BNPL Banner */}
           <PaymentsBanner />
 
-          {/* 5. Concierge Service - Manual Matching */}
+          {/* 6. Concierge Service - Manual Matching */}
           <ConciergeSection />
           
-          {/* 6. Become a Host CTA (Dark themed) */}
+          {/* 7. Become a Host CTA (Dark themed) */}
           <BecomeHostSection />
           
-          {/* 7. Final CTA */}
+          {/* 8. Final CTA */}
           <FinalCTA />
         </Suspense>
       </main>

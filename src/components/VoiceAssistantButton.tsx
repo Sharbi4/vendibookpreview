@@ -98,50 +98,68 @@ const VoiceAssistantButton = () => {
         )}
       </AnimatePresence>
 
-      {/* Main button */}
-      <motion.button
-        onClick={handleMainClick}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className={cn(
-          'relative w-14 h-14 rounded-full flex items-center justify-center shadow-xl cursor-pointer border-none outline-none transition-all duration-300',
-          isIdle && 'bg-primary text-primary-foreground hover:bg-primary/90',
-          isConnecting && 'bg-primary/70 text-primary-foreground',
-          isActive && 'bg-emerald-600 text-white'
-        )}
-        style={isActive ? {
-          boxShadow: `0 0 ${glowIntensity}px ${glowIntensity / 2}px hsl(var(--primary) / 0.4)`,
-        } : undefined}
-        title={isIdle ? 'Talk to Vendi' : isActive ? 'Call controls' : 'Connecting...'}
-      >
-        {/* Pulse ring when active */}
-        {isActive && (
-          <motion.span
-            className="absolute inset-0 rounded-full border-2 border-green-400"
-            animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0, 0.6] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          />
+      {/* Concierge pill — combined button + label */}
+      <div className="relative flex items-center">
+        {/* Floating label (idle only) */}
+        {isIdle && (
+          <motion.div
+            initial={{ opacity: 0, x: 8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4, duration: 0.4 }}
+            className="absolute right-[60px] flex items-center pointer-events-none"
+          >
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-md border-2 border-border/70 shadow-lg whitespace-nowrap">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground/80">
+                Concierge
+              </span>
+              <span className="text-[11px] text-muted-foreground">·</span>
+              <span className="text-[11px] text-muted-foreground">Talk to Vendi</span>
+            </div>
+          </motion.div>
         )}
 
-        {isConnecting ? (
-          <Loader2 className="w-6 h-6 animate-spin" />
-        ) : isActive ? (
-          <Phone className="w-6 h-6" />
-        ) : (
-          <Phone className="w-6 h-6" />
-        )}
-      </motion.button>
-
-      {/* Label */}
-      {isIdle && (
-        <motion.span
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-xs font-medium text-muted-foreground bg-card px-2 py-0.5 rounded-full shadow-sm border border-border"
+        {/* Main button */}
+        <motion.button
+          onClick={handleMainClick}
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.94 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          className={cn(
+            'relative w-14 h-14 rounded-full flex items-center justify-center cursor-pointer border-2 outline-none transition-colors duration-300',
+            isIdle && 'bg-primary text-primary-foreground border-white/20 hover:bg-primary/90 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.5),0_0_0_1px_hsl(var(--primary)/0.3)]',
+            isConnecting && 'bg-primary/70 text-primary-foreground border-white/20',
+            isActive && 'bg-emerald-600 text-white border-white/20'
+          )}
+          style={isActive ? {
+            boxShadow: `0 0 ${glowIntensity}px ${glowIntensity / 2}px hsl(var(--primary) / 0.4)`,
+          } : undefined}
+          title={isIdle ? 'Talk to Vendi' : isActive ? 'Call controls' : 'Connecting...'}
         >
-          Talk to Vendi
-        </motion.span>
-      )}
+          {/* Soft idle pulse */}
+          {isIdle && (
+            <motion.span
+              className="absolute inset-0 rounded-full bg-primary/30 pointer-events-none"
+              animate={{ scale: [1, 1.25, 1], opacity: [0.4, 0, 0.4] }}
+              transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          )}
+
+          {/* Pulse ring when active */}
+          {isActive && (
+            <motion.span
+              className="absolute inset-0 rounded-full border-2 border-green-400 pointer-events-none"
+              animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0, 0.6] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          )}
+
+          {isConnecting ? (
+            <Loader2 className="w-6 h-6 animate-spin relative" />
+          ) : (
+            <Phone className="w-5 h-5 relative" />
+          )}
+        </motion.button>
+      </div>
     </motion.div>
   );
 };

@@ -15,10 +15,10 @@ type Event = {
 const FIRST_NAMES = ['Sarah', 'Mike', 'Jasmine', 'Carlos', 'Aisha', 'Tyler', 'Priya', 'Marcus', 'Elena', 'Ben', 'Nia', 'Diego', 'Maya', 'Sam', 'Rachel'];
 const ICONS = { booking: Calendar, view: Eye, favorite: Heart, inquiry: MessageSquare } as const;
 const COLORS = {
-  booking: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/30',
-  view: 'text-blue-500 bg-blue-500/10 border-blue-500/30',
-  favorite: 'text-rose-500 bg-rose-500/10 border-rose-500/30',
-  inquiry: 'text-amber-500 bg-amber-500/10 border-amber-500/30',
+  booking: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+  view: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+  favorite: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
+  inquiry: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
 };
 
 const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
@@ -145,30 +145,30 @@ export const LiveActivityFeed = () => {
   return (
     <div
       className={cn(
-        "fixed bottom-4 left-4 z-40 max-w-[calc(100vw-2rem)] sm:max-w-sm",
-        "transition-all duration-300",
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+        "fixed bottom-4 left-4 z-40 max-w-[calc(100vw-2rem)] sm:max-w-[320px]",
+        "transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
       )}
       role="status"
       aria-live="polite"
     >
-      <div className="flex items-center gap-2.5 pl-2 pr-3 py-2 rounded-full bg-background/95 backdrop-blur-md border border-border shadow-2xl">
-        <div className={cn("relative w-8 h-8 rounded-full flex items-center justify-center border", colorClass)}>
-          <Icon className="h-3.5 w-3.5" />
-          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-background animate-pulse" />
+      <div className="flex items-center gap-2.5 pl-1.5 pr-2.5 py-1.5 rounded-full bg-background/80 backdrop-blur-xl border-2 border-white/[0.10] shadow-[0_8px_32px_-8px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.03)]">
+        <div className={cn("relative w-7 h-7 rounded-full flex items-center justify-center border-2", colorClass)}>
+          <Icon className="h-3 w-3" strokeWidth={2.25} />
+          <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500 ring-[1.5px] ring-background animate-pulse" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-foreground truncate">{current.message}</p>
-          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-            <MapPin className="h-2.5 w-2.5" />
+          <p className="text-[11px] font-medium text-foreground/90 truncate leading-tight">{current.message}</p>
+          <div className="flex items-center gap-1 text-[9px] text-muted-foreground/70 mt-0.5">
+            <MapPin className="h-2 w-2" />
             <span className="truncate">{current.city}</span>
-            <span>·</span>
+            <span className="text-muted-foreground/40">·</span>
             <span>{timeAgo}</span>
           </div>
         </div>
         <button
           onClick={() => setHidden(true)}
-          className="text-muted-foreground hover:text-foreground text-xs px-1"
+          className="text-muted-foreground/50 hover:text-foreground/80 text-sm leading-none w-5 h-5 flex items-center justify-center rounded-full hover:bg-white/[0.06] transition-colors"
           aria-label="Dismiss"
         >
           ×

@@ -9,8 +9,8 @@ const ConciergeSection = () => {
 
   return (
     <section className="py-16 sm:py-24 relative overflow-hidden">
-      {/* Subtle neutral glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[400px] bg-foreground/[0.02] rounded-full blur-[100px]" />
+      {/* Subtle warm ambient */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[500px] rounded-full blur-[140px]" style={{ background: 'radial-gradient(ellipse, rgba(255,81,36,0.02) 0%, rgba(255,186,8,0.008) 40%, transparent 70%)' }} />
       
       <div className="container relative z-10">
         <motion.div
@@ -20,9 +20,9 @@ const ConciergeSection = () => {
           transition={{ duration: 0.6 }}
           className="max-w-3xl mx-auto"
         >
-          <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-8 sm:p-12 text-center">
+          <div className="rounded-2xl border-2 border-border/60 bg-card/40 backdrop-blur-xl p-8 sm:p-12 text-center shadow-2xl shadow-black/20">
             {/* Badge */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-foreground/10 border border-foreground/15 text-foreground text-[10px] font-semibold uppercase tracking-widest mb-6">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-foreground/10 border-2 border-foreground/20 text-foreground text-[10px] font-semibold uppercase tracking-widest mb-6">
               <Sparkles className="w-2.5 h-2.5" />
               Concierge
             </div>
@@ -39,7 +39,7 @@ const ConciergeSection = () => {
             {/* Trust pills */}
             <div className="flex flex-wrap justify-center gap-2 mb-8">
               {['Free service', 'Response in 2 hrs', 'No commitment'].map((text) => (
-                <span key={text} className="text-xs text-muted-foreground px-3 py-1.5 rounded-full bg-accent border border-border">
+                <span key={text} className="text-xs text-muted-foreground px-3 py-1.5 rounded-full bg-accent border-2 border-border/80">
                   {text}
                 </span>
               ))}

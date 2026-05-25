@@ -99,7 +99,7 @@ const MENU_MATRIX = [
     popularity: 'High', 
     icon: Star,
     color: 'text-yellow-500',
-    bgColor: 'bg-yellow-50 dark:bg-yellow-950/30',
+    bgColor: 'bg-yellow-950/30 border border-yellow-500/20',
     description: 'Flagship items that drive profit',
     action: 'Protect & Promote. Ensure ingredients are always in stock. Place in prime menu real estate (top right or center).'
   },
@@ -109,7 +109,7 @@ const MENU_MATRIX = [
     popularity: 'High',
     icon: Target,
     color: 'text-blue-500',
-    bgColor: 'bg-blue-50 dark:bg-blue-950/30',
+    bgColor: 'bg-blue-950/30 border border-blue-500/20',
     description: 'Traffic drivers with slim margins',
     action: 'Optimize. Slightly raise price, reduce portion, or swap expensive ingredients for cheaper alternatives.'
   },
@@ -119,7 +119,7 @@ const MENU_MATRIX = [
     popularity: 'Low',
     icon: HelpCircle,
     color: 'text-purple-500',
-    bgColor: 'bg-purple-50 dark:bg-purple-950/30',
+    bgColor: 'bg-purple-950/30 border border-purple-500/20',
     description: 'High-margin sleepers',
     action: 'Market or Rebrand. Use decoy pricing or run limited-time specials to drive trial.'
   },
@@ -129,7 +129,7 @@ const MENU_MATRIX = [
     popularity: 'Low',
     icon: XCircle,
     color: 'text-red-500',
-    bgColor: 'bg-red-50 dark:bg-red-950/30',
+    bgColor: 'bg-red-950/30 border border-red-500/20',
     description: 'Underperformers consuming resources',
     action: 'Eliminate. Remove to streamline operations and free up storage space.'
   }
@@ -1304,7 +1304,7 @@ const StartupGuide = () => {
         {/* Above-the-fold CTA: marketplace bridge */}
         <section className="px-4 pt-4">
           <div className="container mx-auto max-w-5xl">
-            <div className="rounded-2xl border border-[#ff5124]/20 bg-white dark:bg-card p-6 md:p-8 shadow-sm">
+            <div className="rounded-2xl border-2 border-[#ff5124]/30 bg-card p-6 md:p-8 shadow-xl">
               <div className="flex flex-col md:flex-row md:items-center gap-6 justify-between">
                 <div className="max-w-2xl">
                   <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">
@@ -1447,12 +1447,12 @@ const StartupGuide = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-[150px]">Feature</TableHead>
-                        <TableHead className="bg-orange-50 dark:bg-orange-950/30">
+                        <TableHead className="bg-orange-950/30">
                           <div className="flex items-center gap-2">
                             <Truck className="h-4 w-4" /> Food Truck
                           </div>
                         </TableHead>
-                        <TableHead className="bg-blue-50 dark:bg-blue-950/30">
+                        <TableHead className="bg-blue-950/30">
                           <div className="flex items-center gap-2">
                             <Car className="h-4 w-4" /> Food Trailer
                           </div>
@@ -1463,8 +1463,8 @@ const StartupGuide = () => {
                       {VEHICLE_COMPARISON.map((row, i) => (
                         <TableRow key={i}>
                           <TableCell className="font-medium">{row.feature}</TableCell>
-                          <TableCell className="bg-orange-50/50 dark:bg-orange-950/20">{row.truck}</TableCell>
-                          <TableCell className="bg-blue-50/50 dark:bg-blue-950/20">{row.trailer}</TableCell>
+                          <TableCell className="bg-orange-950/20">{row.truck}</TableCell>
+                          <TableCell className="bg-blue-950/20">{row.trailer}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -1586,7 +1586,7 @@ const StartupGuide = () => {
                         </CardContent>
                       </Card>
                       
-                      <Card className="bg-blue-50 dark:bg-blue-950/30">
+                      <Card className="bg-blue-950/30 border-blue-500/20">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm flex items-center gap-2">
                             <ArrowRight className="h-4 w-4" /> Workflow
@@ -1597,7 +1597,7 @@ const StartupGuide = () => {
                         </CardContent>
                       </Card>
 
-                      <Card className="bg-amber-50 dark:bg-amber-950/30">
+                      <Card className="bg-amber-950/30 border-amber-500/20">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm flex items-center gap-2">
                             <AlertTriangle className="h-4 w-4 text-amber-600" /> Warnings & Considerations
@@ -1747,7 +1747,7 @@ const StartupGuide = () => {
                           <div
                             key={item.id}
                             className={`flex items-center gap-3 p-3 rounded-lg transition-colors cursor-pointer hover:bg-muted/50 ${
-                              checkedItems[item.id] ? 'bg-green-50 dark:bg-green-950/20' : ''
+                              checkedItems[item.id] ? 'bg-green-950/20 border border-green-500/20' : ''
                             }`}
                             onClick={() => toggleItem(item.id)}
                           >
@@ -1840,7 +1840,7 @@ const StartupGuide = () => {
         {/* Mid-article CTA: alternatives to upfront buildout */}
         <section className="py-10 px-4">
           <div className="container mx-auto max-w-5xl">
-            <div className="rounded-2xl border border-[#ff5124]/20 bg-white dark:bg-card p-6 md:p-8 shadow-sm">
+            <div className="rounded-2xl border-2 border-[#ff5124]/30 bg-card p-6 md:p-8 shadow-xl">
               <div className="flex flex-col md:flex-row md:items-start gap-6 justify-between">
                 <div className="max-w-2xl">
                   <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">
@@ -1895,7 +1895,7 @@ const StartupGuide = () => {
                         <CardDescription>{risk.description}</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <Button variant="ghost" size="sm" className="w-full gap-1 group-hover:bg-red-50 dark:group-hover:bg-red-950/20">
+                        <Button variant="ghost" size="sm" className="w-full gap-1 group-hover:bg-red-950/20">
                           <Info className="h-4 w-4" />
                           Learn How to Avoid
                         </Button>
@@ -1911,7 +1911,7 @@ const StartupGuide = () => {
                       <DialogDescription>{risk.description}</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
-                      <Card className="bg-red-50 dark:bg-red-950/30 border-red-200">
+                      <Card className="bg-red-950/30 border-red-500/30">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm">What Can Go Wrong</CardTitle>
                         </CardHeader>
@@ -1927,7 +1927,7 @@ const StartupGuide = () => {
                         </CardContent>
                       </Card>
                       
-                      <Card className="bg-green-50 dark:bg-green-950/30 border-green-200">
+                      <Card className="bg-green-950/30 border-green-500/30">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -2105,7 +2105,7 @@ const StartupGuide = () => {
         {/* Final CTA */}
         <section className="py-16 px-4">
           <div className="container mx-auto max-w-5xl">
-            <div className="rounded-2xl border border-[#ff5124]/20 bg-white dark:bg-card p-8 md:p-10 shadow-sm text-center">
+            <div className="rounded-2xl border-2 border-[#ff5124]/30 bg-card p-8 md:p-10 shadow-xl text-center">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
                 Start with the right food business setup.
               </h2>

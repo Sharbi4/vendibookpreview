@@ -141,14 +141,21 @@ const ListingsSections = () => {
 
   return (
     <section className="py-10 sm:py-16 relative overflow-hidden bg-background">
-      <div className="absolute top-0 right-0 w-[400px] h-[300px] bg-foreground/[0.03] rounded-full blur-3xl" aria-hidden="true" />
+      <div className="absolute top-0 right-0 w-[500px] h-[400px] bg-foreground/[0.03] rounded-full blur-[100px]" aria-hidden="true" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[300px] bg-foreground/[0.02] rounded-full blur-[80px]" aria-hidden="true" />
       
       <div className="container px-4 sm:px-6 relative z-10">
         {/* Section header */}
-        <div className="text-center mb-8">
+        <motion.div
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.6 }}
+        >
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Discover Your Next Space</h2>
           <p className="text-muted-foreground text-sm">Browse verified food trucks, trailers, kitchens & vendor spaces</p>
-        </div>
+        </motion.div>
 
         {/* Tab bar */}
         <div className="flex items-center justify-center gap-1 mb-8">

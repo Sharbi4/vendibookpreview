@@ -210,7 +210,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   return (
     <div
       data-listing-id={listing.id}
-      className="rounded-2xl border border-white/15 hover:-translate-y-1 transition-all duration-300 ease-out flex flex-col overflow-hidden h-full group shadow-2xl shadow-black/30 bg-white/[0.04]"
+      className="relative rounded-2xl border-2 border-white/[0.10] hover:border-white/[0.22] hover:-translate-y-1.5 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col overflow-hidden h-full group shadow-xl shadow-black/40 hover:shadow-2xl hover:shadow-black/60 bg-card/60 backdrop-blur-sm"
     >
       <Link 
         to={`/listing/${listing.id}`} 
@@ -233,9 +233,9 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         <div className="absolute top-2 left-2 flex items-center gap-1.5">
           <Badge 
             className={cn(
-              "font-medium text-white border-0",
+              "font-semibold text-white border-0 uppercase tracking-[0.08em] backdrop-blur-md shadow-lg",
               modeColor,
-              compact ? "text-[10px] px-1.5 py-0.5" : "text-xs"
+              compact ? "text-[9px] px-2 py-0.5" : "text-[10px] px-2.5 py-1"
             )}
           >
             {modeLabel}
@@ -428,9 +428,9 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           {!compact && <RatingBadge listingId={listing.id} />}
         </div>
 
-        {/* Price - Premium Pill Badge Style */}
-        <div className="flex items-center gap-2 flex-wrap mt-auto pt-1">
-          <span className="bg-white/10 text-white text-sm font-bold px-3 py-1 rounded-full">
+        {/* Price - Editorial Premium */}
+        <div className="flex items-baseline gap-2 flex-wrap mt-auto pt-1">
+          <span className={cn("text-white font-bold tracking-tight", compact ? "text-base" : "text-lg")}>
             {price}
           </span>
           {showHourlyRate && (

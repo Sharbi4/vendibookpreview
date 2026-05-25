@@ -12,8 +12,8 @@ const benefits = [
 const BecomeHostSection = () => {
   return (
     <section className="py-16 sm:py-24 relative overflow-hidden">
-      {/* Subtle glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-foreground/[0.03] rounded-full blur-[100px]" />
+      {/* Subtle warm ambient */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] rounded-full blur-[140px]" style={{ background: 'radial-gradient(ellipse, rgba(255,81,36,0.022) 0%, rgba(255,186,8,0.01) 40%, transparent 70%)' }} />
       
       <div className="container max-w-4xl mx-auto px-5 sm:px-6 relative z-10">
         <motion.div
@@ -23,7 +23,7 @@ const BecomeHostSection = () => {
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.6 }}
         >
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest bg-foreground/10 text-foreground rounded-full mb-6">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] bg-foreground/10 text-foreground/80 rounded-full mb-6 border-2 border-foreground/[0.12]">
             For Owners
           </span>
           
@@ -41,7 +41,7 @@ const BecomeHostSection = () => {
             {benefits.map((item, i) => (
               <motion.div
                 key={i}
-                className="flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-card border border-border text-sm text-muted-foreground"
+                className="flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-card border-2 border-border/80 text-sm text-muted-foreground"
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -55,7 +55,7 @@ const BecomeHostSection = () => {
 
           {/* Earnings card */}
           <motion.div
-            className="inline-flex items-center gap-4 px-6 py-4 rounded-2xl bg-card border border-border mb-10"
+            className="inline-flex items-center gap-4 px-6 py-4 rounded-2xl bg-card/80 backdrop-blur-sm border-2 border-border/80 mb-10 shadow-lg shadow-black/20"
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
