@@ -9,7 +9,15 @@ const HIDDEN_ROUTES = ['/contact', '/help', '/faq'];
 const FloatingConciergeButton = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [isTicketOpen, setIsTicketOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('concierge-minimized') === '1';
+  });
   const location = useLocation();
+
+  useEffect(() => {
+    localStorage.setItem('concierge-minimized', isMinimized ? '1' : '0');
+  }, [isMinimized]);
 
   const isHiddenRoute = HIDDEN_ROUTES.some(route => 
     location.pathname === route || location.pathname.startsWith(`${route}/`)
