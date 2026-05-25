@@ -298,9 +298,6 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
               className="h-6 w-auto brightness-125"
             />
           </div>
-          <span className="ml-2 text-lg font-bold text-white tracking-tight hidden sm:block" style={{ textShadow: '0 0 12px rgba(255,255,255,0.15)' }}>
-            Vendibook
-          </span>
         </Link>
 
         {/* Mobile Expandable Search */}

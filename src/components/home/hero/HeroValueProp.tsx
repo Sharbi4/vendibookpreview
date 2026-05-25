@@ -32,12 +32,9 @@ const HeroValueProp = () => {
 
   return (
     <section
-      className="relative min-h-[92svh] sm:min-h-[92vh] flex items-center justify-center bg-background py-12 sm:py-16 md:py-20"
+      className="relative flex items-center justify-center bg-background pt-3 sm:pt-4 md:pt-6 pb-12 sm:pb-16 md:pb-20"
       style={{
         overflow: 'clip',
-        // Isolate hero into its own compositor layer so blurred decorative
-        // layers below don't re-rasterize against the scrolling page,
-        // which was causing flicker/tearing during scroll.
         isolation: 'isolate',
         contain: 'paint',
         transform: 'translateZ(0)',
