@@ -389,6 +389,7 @@ const AppContent = () => {
 
       <GoogleOneTap />
       <VoiceAssistantButton />
+      <VendiChatWidget />
       <AnimatedRoutes />
       <MobileBottomNav />
       <Suspense fallback={null}>
