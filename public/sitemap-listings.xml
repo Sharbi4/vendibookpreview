@@ -288,7 +288,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f</loc>
-    <lastmod>2026-05-25</lastmod>
+    <lastmod>2026-05-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -574,24 +574,13 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/2ee148f3-0b56-4739-86b1-b96208fcf1af</loc>
-    <lastmod>2026-05-21</lastmod>
+    <lastmod>2026-05-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://images.unsplash.com/photo-1619740455993-9e612b50c961?w=800</image:loc>
       <image:title>Compact Hot Dog Cart</image:title>
       <image:caption>Compact Hot Dog Cart in Phoenix, AZ on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/0127af0e-0787-42eb-8fa8-256cdc6ae88d</loc>
-    <lastmod>2026-05-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=800</image:loc>
-      <image:title>Starter Food Cart Business</image:title>
-      <image:caption>Starter Food Cart Business in Denver, CO on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -647,6 +636,17 @@
       <image:loc>https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800</image:loc>
       <image:title>Prime Downtown Vendor Lot</image:title>
       <image:caption>Prime Downtown Vendor Lot in Nashville, TN on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/0127af0e-0787-42eb-8fa8-256cdc6ae88d</loc>
+    <lastmod>2026-05-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=800</image:loc>
+      <image:title>Starter Food Cart Business</image:title>
+      <image:caption>Starter Food Cart Business in Denver, CO on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
