@@ -52,23 +52,21 @@ const HowItWorks = () => {
             return (
               <motion.div 
                 key={index} 
-                className="relative overflow-hidden text-center group p-6 rounded-xl border-2 border-foreground/15 sm:border-border bg-card sm:hover:border-foreground/20 cursor-default shadow-sm sm:shadow-none"
+                className="relative overflow-hidden text-center group p-6 rounded-xl border-2 border-foreground/15 sm:border-border bg-card sm:hover:border-foreground/30 cursor-default shadow-sm sm:shadow-none transition-all duration-200 ease-out sm:hover:-translate-y-1 sm:hover:shadow-lg will-change-transform"
                 initial={{ opacity: 0, y: 24, scale: 0.96 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, amount: 0.35 }}
                 transition={{ duration: 0.55, delay: index * 0.14, ease: [0.22, 1, 0.36, 1] }}
-                whileHover={{ y: -4, transition: { duration: 0.25, ease: 'easeOut' } }}
               >
                 {/* Active background — always visible on mobile, hover on desktop */}
-                <div className="absolute inset-0 bg-foreground/[0.04] sm:bg-foreground/[0.02] sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-foreground/[0.04] sm:bg-foreground/[0.02] sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200" />
                 
                 <motion.div 
-                  className="relative inline-flex items-center justify-center w-12 h-12 rounded-xl bg-foreground mb-3 shadow-md"
+                  className="relative inline-flex items-center justify-center w-12 h-12 rounded-xl bg-foreground mb-3 shadow-md transition-transform duration-200 ease-out sm:group-hover:scale-110 sm:group-hover:rotate-3 will-change-transform"
                   initial={{ scale: 0.4, rotate: -20, opacity: 0 }}
                   whileInView={{ scale: 1, rotate: 0, opacity: 1 }}
                   viewport={{ once: true, amount: 0.35 }}
                   transition={{ delay: index * 0.14 + 0.18, type: 'spring', stiffness: 220, damping: 14 }}
-                  whileHover={{ scale: 1.15, rotate: 3, transition: { duration: 0.3 } }}
                 >
                   <Icon className="h-5 w-5 text-background" strokeWidth={2} />
                 </motion.div>
