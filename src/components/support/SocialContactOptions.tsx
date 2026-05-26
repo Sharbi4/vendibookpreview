@@ -4,12 +4,12 @@ import { useMemo } from 'react';
 
 const SocialContactOptions = () => {
   const openZendeskChat = () => {
-    if (window.zE) {
-      try {
-        window.zE('messenger', 'open');
-      } catch (error) {
-        console.debug('Zendesk messenger open:', error);
-      }
+    // Trigger Vendi (Vapi) voice assistant
+    try {
+      localStorage.setItem('vendi-fab-minimized', '0');
+      window.dispatchEvent(new CustomEvent('start-vendi-call'));
+    } catch (error) {
+      console.debug('Vendi start error:', error);
     }
   };
 

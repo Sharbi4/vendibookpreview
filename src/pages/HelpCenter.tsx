@@ -186,12 +186,12 @@ const HelpCenter = () => {
 
   const openZendeskChat = () => {
     trackEventToDb('help_chat_click', 'engagement', { source: 'help_center' });
-    if (window.zE) {
-      try {
-        window.zE('messenger', 'open');
-      } catch (error) {
-        console.debug('Zendesk messenger open:', error);
-      }
+    // Trigger Vendi (Vapi) voice assistant
+    try {
+      localStorage.setItem('vendi-fab-minimized', '0');
+      window.dispatchEvent(new CustomEvent('start-vendi-call'));
+    } catch (error) {
+      console.debug('Vendi start error:', error);
     }
   };
 
