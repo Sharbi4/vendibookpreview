@@ -1,7 +1,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const VAPI_PRIVATE_KEY = Deno.env.get('VAPI_PRIVATE_KEY');
-const ASSISTANT_ID = '3896c198-a43b-4c5f-8f25-d3e77dc81dc6';
+const ASSISTANT_ID = '9dfe0a24-ce82-4e32-8889-3fc6a4afca89';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
