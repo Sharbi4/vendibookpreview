@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { motion, useScroll, useTransform, useReducedMotion, MotionValue } from 'framer-motion';
 import { LucideIcon, Search, ShieldCheck, CreditCard, Handshake, MessageSquare, Calendar, Camera, Truck, DollarSign, FileCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -27,13 +27,14 @@ interface ScrollWalkthroughProps {
 const ScrollWalkthrough = ({ steps, tone = 'neutral' }: ScrollWalkthroughProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
+  const [hoverIndex, setHoverIndex] = useState<number>(0);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
   });
 
-  // Active step index based on scroll progress
+  // Scroll-driven index for the left-side visual stage only
   const activeIndex = useTransform(scrollYProgress, [0, 1], [0, steps.length - 0.001]);
 
   return (
@@ -56,9 +57,20 @@ const ScrollWalkthrough = ({ steps, tone = 'neutral' }: ScrollWalkthroughProps) 
           </div>
 
           {/* RIGHT — step list */}
-          <div className="order-2 space-y-3 lg:space-y-2 max-h-[80vh] overflow-y-auto lg:overflow-visible scrollbar-hide">
+          <div
+            className="order-2 space-y-3 lg:space-y-2 max-h-[80vh] overflow-y-auto lg:overflow-visible scrollbar-hide"
+            onMouseLeave={() => setHoverIndex(-1)}
+          >
             {steps.map((step, i) => (
-              <StepText key={i} step={step} index={i} progress={activeIndex} tone={tone} reduce={!!reduce} />
+              <StepText
+                key={i}
+                step={step}
+                index={i}
+                isActive={hoverIndex === i}
+                onHover={() => setHoverIndex(i)}
+                tone={tone}
+                reduce={!!reduce}
+              />
             ))}
           </div>
         </div>
@@ -89,24 +101,18 @@ const ProgressBar = ({ index, progress, total }: { index: number; progress: Moti
 const StepText = ({
   step,
   index,
-  progress,
+  isActive,
+  onHover,
   tone,
   reduce,
 }: {
   step: WalkthroughStep;
   index: number;
-  progress: MotionValue<number>;
+  isActive: boolean;
+  onHover: () => void;
   tone: 'neutral' | 'host' | 'seller';
   reduce: boolean;
 }) => {
-  const opacity = useTransform(progress, (v) => {
-    const dist = Math.abs(v - index);
-    return Math.max(0.25, 1 - dist * 0.6);
-  });
-  const scale = useTransform(progress, (v) => {
-    const dist = Math.abs(v - index);
-    return Math.max(0.96, 1 - dist * 0.04);
-  });
   const Icon = step.icon;
   const accent =
     tone === 'host' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
@@ -115,8 +121,15 @@ const StepText = ({
 
   return (
     <motion.div
-      style={reduce ? undefined : { opacity, scale }}
-      className="rounded-2xl border border-border bg-card/60 backdrop-blur-xl p-5 md:p-6"
+      onMouseEnter={onHover}
+      onFocus={onHover}
+      tabIndex={0}
+      animate={reduce ? undefined : { scale: isActive ? 1 : 0.98, opacity: isActive ? 1 : 0.72 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+      className={cn(
+        'rounded-2xl border bg-card/60 backdrop-blur-xl p-5 md:p-6 cursor-default transition-colors duration-200 outline-none',
+        isActive ? 'border-foreground/40 shadow-lg' : 'border-border'
+      )}
     >
       <div className="flex items-start gap-4">
         <div className={cn('shrink-0 w-12 h-12 rounded-xl flex items-center justify-center', accent)}>
