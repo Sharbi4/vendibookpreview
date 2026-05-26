@@ -35,6 +35,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import HelpCenterSearch from '@/components/support/HelpCenterSearch';
+import RequestCallCard from '@/components/support/RequestCallCard';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 
@@ -498,6 +499,13 @@ const HelpCenter = () => {
                 </Collapsible>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* Request a Call from Support */}
+        <section className="py-8 md:py-10 border-t border-border">
+          <div className="container max-w-3xl">
+            <RequestCallCard />
           </div>
         </section>
 
