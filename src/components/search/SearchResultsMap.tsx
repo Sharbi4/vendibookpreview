@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, forwardRef, useCallback, memo } from 'react';
-import { GoogleMap, useJsApiLoader, MarkerF, Circle, InfoWindowF } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, MarkerF, Circle, InfoWindowF, MarkerClustererF } from '@react-google-maps/api';
 import { GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_LOADER_ID } from '@/lib/googleMapsLoader';
 import { Listing } from '@/types/listing';
 import { Skeleton } from '@/components/ui/skeleton';
