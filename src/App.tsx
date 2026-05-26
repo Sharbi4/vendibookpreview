@@ -387,7 +387,6 @@ const AppContent = () => {
       <CookieConsent />
 
       <GoogleOneTap />
-      <VoiceAssistantButton />
       <VendiChatWidget />
       <AnimatedRoutes />
       <MobileBottomNav />
