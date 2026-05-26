@@ -101,24 +101,18 @@ const ProgressBar = ({ index, progress, total }: { index: number; progress: Moti
 const StepText = ({
   step,
   index,
-  progress,
+  isActive,
+  onHover,
   tone,
   reduce,
 }: {
   step: WalkthroughStep;
   index: number;
-  progress: MotionValue<number>;
+  isActive: boolean;
+  onHover: () => void;
   tone: 'neutral' | 'host' | 'seller';
   reduce: boolean;
 }) => {
-  const opacity = useTransform(progress, (v) => {
-    const dist = Math.abs(v - index);
-    return Math.max(0.25, 1 - dist * 0.6);
-  });
-  const scale = useTransform(progress, (v) => {
-    const dist = Math.abs(v - index);
-    return Math.max(0.96, 1 - dist * 0.04);
-  });
   const Icon = step.icon;
   const accent =
     tone === 'host' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
@@ -127,8 +121,15 @@ const StepText = ({
 
   return (
     <motion.div
-      style={reduce ? undefined : { opacity, scale }}
-      className="rounded-2xl border border-border bg-card/60 backdrop-blur-xl p-5 md:p-6"
+      onMouseEnter={onHover}
+      onFocus={onHover}
+      tabIndex={0}
+      animate={reduce ? undefined : { scale: isActive ? 1 : 0.98, opacity: isActive ? 1 : 0.72 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+      className={cn(
+        'rounded-2xl border bg-card/60 backdrop-blur-xl p-5 md:p-6 cursor-default transition-colors duration-200 outline-none',
+        isActive ? 'border-foreground/40 shadow-lg' : 'border-border'
+      )}
     >
       <div className="flex items-start gap-4">
         <div className={cn('shrink-0 w-12 h-12 rounded-xl flex items-center justify-center', accent)}>
