@@ -27,13 +27,14 @@ interface ScrollWalkthroughProps {
 const ScrollWalkthrough = ({ steps, tone = 'neutral' }: ScrollWalkthroughProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
+  const [hoverIndex, setHoverIndex] = useState<number>(0);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
   });
 
-  // Active step index based on scroll progress
+  // Scroll-driven index for the left-side visual stage only
   const activeIndex = useTransform(scrollYProgress, [0, 1], [0, steps.length - 0.001]);
 
   return (
@@ -56,9 +57,20 @@ const ScrollWalkthrough = ({ steps, tone = 'neutral' }: ScrollWalkthroughProps) 
           </div>
 
           {/* RIGHT — step list */}
-          <div className="order-2 space-y-3 lg:space-y-2 max-h-[80vh] overflow-y-auto lg:overflow-visible scrollbar-hide">
+          <div
+            className="order-2 space-y-3 lg:space-y-2 max-h-[80vh] overflow-y-auto lg:overflow-visible scrollbar-hide"
+            onMouseLeave={() => setHoverIndex(-1)}
+          >
             {steps.map((step, i) => (
-              <StepText key={i} step={step} index={i} progress={activeIndex} tone={tone} reduce={!!reduce} />
+              <StepText
+                key={i}
+                step={step}
+                index={i}
+                isActive={hoverIndex === i}
+                onHover={() => setHoverIndex(i)}
+                tone={tone}
+                reduce={!!reduce}
+              />
             ))}
           </div>
         </div>
