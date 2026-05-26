@@ -52,18 +52,22 @@ const HowItWorks = () => {
             return (
               <motion.div 
                 key={index} 
-                className="relative overflow-hidden text-center group p-6 rounded-xl border-2 border-border hover:border-foreground/20 bg-card cursor-default"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.5, delay: index * 0.12 }}
+                className="relative overflow-hidden text-center group p-6 rounded-xl border-2 border-foreground/15 sm:border-border bg-card sm:hover:border-foreground/20 cursor-default shadow-sm sm:shadow-none"
+                initial={{ opacity: 0, y: 24, scale: 0.96 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, amount: 0.35 }}
+                transition={{ duration: 0.55, delay: index * 0.14, ease: [0.22, 1, 0.36, 1] }}
                 whileHover={{ y: -4, transition: { duration: 0.25, ease: 'easeOut' } }}
               >
-                {/* Animated background */}
-                <div className="absolute inset-0 bg-foreground/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                {/* Active background — always visible on mobile, hover on desktop */}
+                <div className="absolute inset-0 bg-foreground/[0.04] sm:bg-foreground/[0.02] sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300" />
                 
                 <motion.div 
                   className="relative inline-flex items-center justify-center w-12 h-12 rounded-xl bg-foreground mb-3 shadow-md"
+                  initial={{ scale: 0.4, rotate: -20, opacity: 0 }}
+                  whileInView={{ scale: 1, rotate: 0, opacity: 1 }}
+                  viewport={{ once: true, amount: 0.35 }}
+                  transition={{ delay: index * 0.14 + 0.18, type: 'spring', stiffness: 220, damping: 14 }}
                   whileHover={{ scale: 1.15, rotate: 3, transition: { duration: 0.3 } }}
                 >
                   <Icon className="h-5 w-5 text-background" strokeWidth={2} />
