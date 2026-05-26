@@ -79,18 +79,13 @@ const HeroRentalSearch = () => {
             transition={{ duration: 0.8, ease: 'easeOut' }}
             className="text-center mb-6 sm:mb-10 md:mb-14"
           >
-            {/* Slimy blob logo */}
+            {/* Logo */}
             <div className="relative mx-auto mb-4 sm:mb-6 w-52 h-52 sm:w-68 sm:h-68 md:w-80 md:h-80 flex items-center justify-center">
-              {/* Outer iridescent blob */}
-              <div className="blob-outer absolute inset-0" />
-              {/* Inner blob with logo */}
-              <div className="blob-inner absolute inset-3 flex items-center justify-center">
-                <img
-                  src={vendibookLogo}
-                  alt="Vendibook"
-                  className="w-[72%] h-auto object-contain drop-shadow-sm"
-                />
-              </div>
+              <img
+                src={vendibookLogo}
+                alt="Vendibook"
+                className="w-[72%] h-auto object-contain drop-shadow-sm"
+              />
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight tracking-tight mb-3 sm:mb-4">
               The Marketplace for <span className="gradient-text-warm">Food Business</span>
