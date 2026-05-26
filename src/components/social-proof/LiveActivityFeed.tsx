@@ -115,7 +115,7 @@ export const LiveActivityFeed = () => {
     return () => { cancelled = true; };
   }, []);
 
-  // Rotate active event every 4s with fade
+  // Rotate active event every 7.5s with fade
   useEffect(() => {
     if (events.length === 0) return;
     const tick = setInterval(() => {
@@ -123,8 +123,8 @@ export const LiveActivityFeed = () => {
       setTimeout(() => {
         setActiveIdx((i) => (i + 1) % events.length);
         setVisible(true);
-      }, 250);
-    }, 4500);
+      }, 400);
+    }, 7500);
     return () => clearInterval(tick);
   }, [events.length]);
 
