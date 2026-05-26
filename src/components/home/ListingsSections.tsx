@@ -50,7 +50,7 @@ const ListingsSections = () => {
         .eq('mode', 'sale')
         .not('title', 'ilike', 'Demo%')
         .order('published_at', { ascending: false })
-        .limit(6);
+        .limit(12);
       if (error) throw error;
       return data;
     },
