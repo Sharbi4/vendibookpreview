@@ -4,11 +4,8 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import { usePageTracking } from '@/hooks/usePageTracking';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Search,
+import {
   MessageCircle,
   ArrowRight,
   ShoppingCart,
@@ -22,13 +19,10 @@ import {
   CreditCard,
   RefreshCcw,
   FileCheck,
-  MapPin,
   Scale,
-  Clock,
   ChevronDown,
   ChevronUp,
   BookOpen,
-  Users,
   Send,
   Banknote,
   Package,
@@ -53,9 +47,8 @@ const intentLanes = [
   {
     id: 'rent',
     title: 'Rent / Book',
+    code: 'RENT_01',
     icon: Key,
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-50',
     tasks: [
       { label: 'How rentals work (end-to-end)', slug: 'rentals-end-to-end' },
       { label: 'Deposits & damage protection', slug: 'deposits-protection' },
@@ -66,9 +59,8 @@ const intentLanes = [
   {
     id: 'buy',
     title: 'Buy',
+    code: 'BUY_02',
     icon: ShoppingCart,
-    color: 'text-green-600',
-    bgColor: 'bg-green-50',
     tasks: [
       { label: 'How buying works (end-to-end)', slug: 'buying-end-to-end' },
       { label: 'Shipping / freight options', slug: 'shipping-freight' },
@@ -79,9 +71,8 @@ const intentLanes = [
   {
     id: 'list',
     title: 'List / Rent Out',
+    code: 'HOST_03',
     icon: Tag,
-    color: 'text-primary',
-    bgColor: 'bg-primary/10',
     tasks: [
       { label: 'Create a listing checklist', slug: 'host-listing-checklist' },
       { label: 'Stripe Connect setup (required)', slug: 'stripe-connect-setup' },
@@ -92,9 +83,8 @@ const intentLanes = [
   {
     id: 'sell',
     title: 'Sell',
+    code: 'SELL_04',
     icon: DollarSign,
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-50',
     tasks: [
       { label: 'Selling workflow (end-to-end)', slug: 'selling-end-to-end' },
       { label: 'Pricing guidance + comps', slug: 'pricing-guidance' },
@@ -164,30 +154,31 @@ const browseTopics = [
   ]},
 ];
 
-// Generate FAQ schema data for structured data
 const helpCenterFAQs = [
   { question: 'How do Vendibook rentals work?', answer: 'Vendibook connects you with verified hosts who rent out food trucks, trailers, and mobile kitchens. Browse listings, book securely through our platform, and enjoy protection through escrow payments and 24/7 support.' },
   { question: 'What should I inspect before renting a food truck?', answer: 'Check the refrigeration systems, propane connections, electrical systems, ventilation hood, fire suppression system, and overall cleanliness. Our pre-rental inspection guide covers everything in detail.' },
   { question: 'How do I start a shared kitchen?', answer: 'Start by selecting a facility, setting up commercial equipment (NSF-certified), obtaining health permits, and creating a delivery-optimized menu. Our launch checklist walks you through each step.' },
 ];
 
+/** Section label — small mono kicker */
+const Kicker = ({ children }: { children: React.ReactNode }) => (
+  <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-white/40 mb-3">
+    {children}
+  </div>
+);
+
 const HelpCenter = () => {
   const [openTopics, setOpenTopics] = useState<string[]>([]);
-  
-  // Track page views with Google Analytics
   usePageTracking();
 
   const toggleTopic = (title: string) => {
-    setOpenTopics(prev => 
-      prev.includes(title) 
-        ? prev.filter(t => t !== title)
-        : [...prev, title]
+    setOpenTopics(prev =>
+      prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]
     );
   };
 
   const openZendeskChat = () => {
     trackEventToDb('help_chat_click', 'engagement', { source: 'help_center' });
-    // Open Vendi chat (Vapi Chat API)
     try {
       window.dispatchEvent(new CustomEvent('open-vendi-chat'));
     } catch (error) {
@@ -195,30 +186,25 @@ const HelpCenter = () => {
     }
   };
 
-  // JSON-LD for FAQ Page
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     mainEntity: helpCenterFAQs.map((faq) => ({
       '@type': 'Question',
       name: faq.question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: faq.answer,
-      },
+      acceptedAnswer: { '@type': 'Answer', text: faq.answer },
     })),
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-[#08080a] text-white">
       <SEO
-        title="Help Center - Guides for Food Trucks, Trailers & Shared Kitchens"
-        description="Find answers fast. Guides for renting, buying, listing, and getting paid on Vendibook."
+        title="Help Center — Vendibook Support"
+        description="Request a call, search guides, or chat 24/7. Help for renting, buying, listing, and getting paid on Vendibook."
         canonical="/help"
         type="website"
       />
-      
-      {/* FAQ Schema */}
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
@@ -226,30 +212,52 @@ const HelpCenter = () => {
 
       <Header />
 
-      <main className="flex-1">
-        {/* Section 1: Top Utility Hero */}
-        <section className="bg-muted/30 border-b border-border py-8 md:py-12">
-          <div className="container max-w-6xl">
-            <div className="grid md:grid-cols-[1fr,320px] gap-6 items-start">
-              {/* Left: Search */}
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
-                  Find answers fast.
-                </h1>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Search guides or chat with Support (Zendesk) 24/7.
-                </p>
-                
-                {/* Search Bar */}
-                <HelpCenterSearch />
+      <main className="flex-1 relative">
+        {/* Page-wide satin aura */}
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[700px] overflow-hidden">
+          <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full bg-[radial-gradient(circle_at_center,hsl(var(--primary)/0.18),transparent_60%)] blur-3xl" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.04),transparent_55%)]" />
+        </div>
 
-                {/* Popular search chips */}
-                <div className="flex flex-wrap gap-2 mt-3">
+        {/* ===== HERO: Request a Call (TOP) ===== */}
+        <section className="relative pt-10 md:pt-16 pb-10 md:pb-14">
+          <div className="container max-w-5xl">
+            <div className="text-center mb-8 md:mb-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-md mb-5">
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60">
+                  Vendibook · Help Center
+                </span>
+              </div>
+              <h1 className="text-3xl md:text-5xl font-medium tracking-tight text-white">
+                Real help, the moment you need it.
+              </h1>
+              <p className="text-white/55 mt-3 max-w-xl mx-auto text-sm md:text-base">
+                Request an instant callback, search the knowledge base, or chat with our AI support agent.
+              </p>
+            </div>
+
+            <RequestCallCard />
+          </div>
+        </section>
+
+        {/* ===== Search + quick chat ===== */}
+        <section className="relative py-8 md:py-12 border-t border-white/[0.06]">
+          <div className="container max-w-5xl">
+            <div className="grid md:grid-cols-[1fr,300px] gap-6 items-start">
+              <div>
+                <Kicker>Knowledge Base</Kicker>
+                <h2 className="text-xl md:text-2xl font-medium tracking-tight text-white mb-4">
+                  Search guides, articles, and policies.
+                </h2>
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 backdrop-blur-md">
+                  <HelpCenterSearch />
+                </div>
+                <div className="flex flex-wrap gap-2 mt-4">
                   {popularSearches.map((chip) => (
                     <Link
                       key={chip.query}
                       to={`/faq?q=${encodeURIComponent(chip.query)}`}
-                      className="text-xs px-3 py-1.5 rounded-full bg-background border border-border hover:border-primary hover:text-primary transition-colors"
+                      className="text-[11px] px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-white/60 hover:text-white hover:border-white/25 transition-colors"
                     >
                       {chip.label}
                     </Link>
@@ -257,196 +265,198 @@ const HelpCenter = () => {
                 </div>
               </div>
 
-              {/* Right: Support Card */}
-              <Card className="bg-background border-2 border-primary/20">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2">
-                    <MessageCircle className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-base">Need help right now?</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-xs text-muted-foreground">
-                    Chat with our team 24/7 via Zendesk. For account, payouts, bookings, documents, and disputes.
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    <Button onClick={openZendeskChat} variant="dark-shine" size="sm" className="w-full">
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Chat with Support
-                    </Button>
-                    <Button asChild variant="outline" size="sm" className="w-full">
-                      <Link to="/contact">
-                        <Send className="h-4 w-4 mr-2" />
-                        Submit a Request
-                      </Link>
-                    </Button>
-                  </div>
-                  
-                  {/* Status indicators */}
-                  <div className="space-y-1.5 pt-1">
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <CheckCircle2 className="h-3 w-3 text-green-600" />
-                      <span>Average reply time: under 5 minutes</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Shield className="h-3 w-3 text-green-600" />
-                      <span>Secure payments via Stripe</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <FileCheck className="h-3 w-3 text-green-600" />
-                      <span>Document & identity verification</span>
-                    </div>
-                  </div>
-                  
-                  {/* Credibility line */}
-                  <p className="text-[10px] text-muted-foreground/70 pt-1 border-t border-border">
-                    Powered by Zendesk + Vendibook Support Desk APIs
-                  </p>
-                </CardContent>
-              </Card>
+              {/* Right: lightweight chat panel */}
+              <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent backdrop-blur-md p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/50">Online · 24/7</span>
+                </div>
+                <h3 className="text-base font-medium text-white">Prefer to type?</h3>
+                <p className="text-xs text-white/55 mt-1 mb-4">
+                  Chat with our AI support agent or submit a ticket — replies in under 5 minutes.
+                </p>
+                <div className="space-y-2">
+                  <Button
+                    onClick={openZendeskChat}
+                    className="w-full h-10 bg-white text-black hover:bg-white/90 font-medium"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Chat with Support
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full h-10 bg-transparent border-white/15 text-white hover:bg-white/5 hover:text-white"
+                  >
+                    <Link to="/contact">
+                      <Send className="h-4 w-4 mr-2" />
+                      Submit a Request
+                    </Link>
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Section 2: Intent-Based Start Here Lanes */}
-        <section className="py-8 md:py-10">
+        {/* ===== Intent lanes ===== */}
+        <section className="relative py-10 md:py-14 border-t border-white/[0.06]">
           <div className="container max-w-6xl">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Start here</h2>
+            <Kicker>Start here</Kicker>
+            <h2 className="text-xl md:text-2xl font-medium tracking-tight text-white mb-6">
+              What are you trying to do?
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {intentLanes.map((lane) => (
-                <Card key={lane.id} className="h-full hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center gap-2">
-                      <div className={`p-2 rounded-lg ${lane.bgColor}`}>
-                        <lane.icon className={`h-4 w-4 ${lane.color}`} />
-                      </div>
-                      <CardTitle className="text-sm font-semibold">{lane.title}</CardTitle>
+                <div
+                  key={lane.id}
+                  className="group relative rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-5 backdrop-blur-sm hover:border-white/20 transition-all overflow-hidden"
+                >
+                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent opacity-60" />
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-9 h-9 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center">
+                      <lane.icon className="h-4 w-4 text-white/80" />
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <ul className="space-y-1.5">
-                      {lane.tasks.map((task) => (
-                        <li key={task.slug}>
-                          <Link 
-                            to={`/help/${task.slug}`}
-                            className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-start gap-1.5"
-                          >
-                            <ArrowRight className="h-3 w-3 mt-0.5 shrink-0" />
-                            <span>{task.label}</span>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                    <Button asChild variant="dark-shine" size="sm" className="w-full h-8 text-xs">
-                      <Link to={lane.cta.href}>
-                        {lane.cta.label}
-                        <ArrowRight className="h-3 w-3 ml-1" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                    <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-white/30">{lane.code}</span>
+                  </div>
+                  <h3 className="text-base font-medium text-white tracking-tight mb-3">{lane.title}</h3>
+                  <ul className="space-y-1.5 mb-5">
+                    {lane.tasks.map((task) => (
+                      <li key={task.slug}>
+                        <Link
+                          to={`/help/${task.slug}`}
+                          className="text-xs text-white/55 hover:text-white transition-colors flex items-start gap-1.5"
+                        >
+                          <ArrowRight className="h-3 w-3 mt-0.5 shrink-0 text-white/30" />
+                          <span>{task.label}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    asChild
+                    size="sm"
+                    className="w-full h-9 bg-white/[0.06] hover:bg-primary border border-white/10 hover:border-primary text-white text-xs font-medium transition-all"
+                  >
+                    <Link to={lane.cta.href}>
+                      {lane.cta.label}
+                      <ArrowRight className="h-3 w-3 ml-1" />
+                    </Link>
+                  </Button>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Section 3: Guided Checklists */}
-        <section className="py-8 md:py-10 bg-muted/30">
+        {/* ===== Most-used guides ===== */}
+        <section className="relative py-10 md:py-14 border-t border-white/[0.06]">
           <div className="container max-w-6xl">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Most-used guides</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Kicker>Most-used guides</Kicker>
+            <h2 className="text-xl md:text-2xl font-medium tracking-tight text-white mb-6">
+              The fastest paths to a fix.
+            </h2>
+            <div className="rounded-2xl border border-white/10 overflow-hidden divide-y divide-white/[0.06] bg-white/[0.02]">
               {guidedChecklists.map((checklist) => (
                 <Link
                   key={checklist.slug}
                   to={`/help/${checklist.slug}`}
-                  className="flex items-center gap-3 p-3 bg-background rounded-lg border border-border hover:border-primary/50 hover:shadow-sm transition-all group"
+                  className="flex items-center gap-4 p-4 md:px-6 hover:bg-white/[0.04] transition-colors group"
                 >
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <checklist.icon className="h-4 w-4 text-primary" />
+                  <div className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/10 flex items-center justify-center">
+                    <checklist.icon className="h-4 w-4 text-white/70" />
                   </div>
-                  <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors flex-1">
+                  <span className="text-sm text-white/85 group-hover:text-white flex-1">
                     {checklist.label}
                   </span>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                  <ArrowRight className="h-4 w-4 text-white/30 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                 </Link>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Featured Resource: Regulations Hub */}
-        <section className="py-8 md:py-10">
+        {/* ===== Feature cards ===== */}
+        <section className="relative py-10 md:py-14 border-t border-white/[0.06]">
           <div className="container max-w-6xl">
-            <div className="grid md:grid-cols-2 gap-4">
-              {/* Startup Guide Card */}
-              <Card className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border-2 border-emerald-200 dark:border-emerald-800 overflow-hidden">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
-                      <ClipboardCheck className="h-5 w-5 text-white" />
-                    </div>
-                    <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
-                      Launch Checklist
-                    </Badge>
+            <div className="grid md:grid-cols-2 gap-5">
+              {/* Startup Guide */}
+              <div className="group relative rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] via-white/[0.02] to-transparent p-7 overflow-hidden">
+                <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+                <div className="relative">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">Launch Checklist</span>
                   </div>
-                  <h3 className="text-lg font-bold text-foreground mb-2">
+                  <h3 className="text-xl md:text-2xl font-medium tracking-tight text-white mb-2">
                     Food Business Startup Guide
                   </h3>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Complete checklist to launch your food truck, trailer, or shared kitchen. Covers setup, permits, equipment, costs, and hidden risks.
+                  <p className="text-sm text-white/55 leading-relaxed mb-5">
+                    Complete checklist to launch your food truck, trailer, or shared kitchen. Setup, permits, equipment, costs, and hidden risks.
                   </p>
-                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-4">
-                    <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-green-500" /> Step-by-step</span>
-                    <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-green-500" /> Cost breakdowns</span>
+                  <div className="flex flex-wrap gap-4 text-[11px] text-white/45 font-mono mb-6">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-emerald-400/70" /> Step-by-step
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-emerald-400/70" /> Cost breakdowns
+                    </span>
                   </div>
-                  <Button asChild size="sm" className="w-full gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700">
+                  <Button
+                    asChild
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+                  >
                     <Link to="/tools/startup-guide">
-                      <ClipboardCheck className="h-4 w-4" />
                       Open Startup Guide
-                      <ArrowRight className="h-4 w-4" />
+                      <ArrowRight className="h-4 w-4 ml-2" />
                     </Link>
                   </Button>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              {/* Regulations Hub Card */}
-              <Card className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-indigo-500/10 border-2 border-blue-200 dark:border-blue-800 overflow-hidden">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
-                      <Scale className="h-5 w-5 text-white" />
-                    </div>
-                    <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                      Compliance Guide
-                    </Badge>
+              {/* Regulations Hub */}
+              <div className="group relative rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.04] via-white/[0.02] to-transparent p-7 overflow-hidden">
+                <div className="absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-white/[0.04] blur-3xl pointer-events-none" />
+                <div className="relative">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/50">Compliance Guide</span>
                   </div>
-                  <h3 className="text-lg font-bold text-foreground mb-2">
+                  <h3 className="text-xl md:text-2xl font-medium tracking-tight text-white mb-2">
                     Regulations Hub
                   </h3>
-                  <p className="text-sm text-muted-foreground mb-3">
+                  <p className="text-sm text-white/55 leading-relaxed mb-5">
                     State-by-state mobile food regulations, ANSI certifications, cottage food laws, commissary resources, and shared kitchen compliance.
                   </p>
-                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-4">
-                    <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-green-500" /> 50 States</span>
-                    <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-green-500" /> City-specific</span>
+                  <div className="flex flex-wrap gap-4 text-[11px] text-white/45 font-mono mb-6">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-emerald-400/70" /> 50 States
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-emerald-400/70" /> City-specific
+                    </span>
                   </div>
-                  <Button asChild size="sm" className="w-full gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="bg-white/[0.04] border-white/15 text-white hover:bg-white/10 hover:text-white"
+                  >
                     <Link to="/tools/regulations-hub">
-                      <Scale className="h-4 w-4" />
                       Open Regulations Hub
-                      <ArrowRight className="h-4 w-4" />
+                      <ArrowRight className="h-4 w-4 ml-2" />
                     </Link>
                   </Button>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Section 4: Browse All Topics (Collapsed) */}
-        <section className="py-8 md:py-10">
+        {/* ===== Browse all topics ===== */}
+        <section className="relative py-10 md:py-14 border-t border-white/[0.06]">
           <div className="container max-w-6xl">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Browse all topics</h2>
+            <Kicker>Topic taxonomy</Kicker>
+            <h2 className="text-xl md:text-2xl font-medium tracking-tight text-white mb-6">
+              Browse all topics
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {browseTopics.map((topic) => (
                 <Collapsible
@@ -454,32 +464,32 @@ const HelpCenter = () => {
                   open={openTopics.includes(topic.title)}
                   onOpenChange={() => toggleTopic(topic.title)}
                 >
-                  <Card className="overflow-hidden">
-                    <CollapsibleTrigger className="w-full">
-                      <CardHeader className="py-3 px-4 hover:bg-muted/50 transition-colors cursor-pointer">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <topic.icon className="h-4 w-4 text-primary" />
-                            <CardTitle className="text-sm font-medium">{topic.title}</CardTitle>
+                  <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
+                    <CollapsibleTrigger className="w-full text-left">
+                      <div className="py-3.5 px-4 hover:bg-white/[0.04] transition-colors">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-3">
+                            <topic.icon className="h-4 w-4 text-white/60" />
+                            <span className="text-sm font-medium text-white/90">{topic.title}</span>
                           </div>
                           {openTopics.includes(topic.title) ? (
-                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                            <ChevronUp className="h-4 w-4 text-white/40" />
                           ) : (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            <ChevronDown className="h-4 w-4 text-white/40" />
                           )}
                         </div>
-                      </CardHeader>
+                      </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                      <CardContent className="py-2 px-4 border-t border-border">
+                      <div className="py-3 px-4 border-t border-white/[0.06]">
                         <ul className="space-y-1.5">
                           {topic.articles.map((article) => (
                             <li key={article.slug}>
                               <Link
                                 to={`/help/${article.slug}`}
-                                className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5 py-1"
+                                className="text-xs text-white/55 hover:text-white transition-colors flex items-center gap-1.5 py-1"
                               >
-                                <ArrowRight className="h-3 w-3" />
+                                <ArrowRight className="h-3 w-3 text-white/30" />
                                 {article.label}
                               </Link>
                             </li>
@@ -489,77 +499,64 @@ const HelpCenter = () => {
                           onClick={openZendeskChat}
                           variant="ghost"
                           size="sm"
-                          className="w-full mt-2 h-7 text-xs text-muted-foreground hover:text-primary"
+                          className="w-full mt-2 h-7 text-xs text-white/50 hover:text-white hover:bg-white/5"
                         >
                           Still stuck? Chat with support
                         </Button>
-                      </CardContent>
+                      </div>
                     </CollapsibleContent>
-                  </Card>
+                  </div>
                 </Collapsible>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Request a Call from Support */}
-        <section className="py-8 md:py-10 border-t border-border">
-          <div className="container max-w-3xl">
-            <RequestCallCard />
-          </div>
-        </section>
-
-        {/* Section 5: Bottom Conversion CTAs */}
-        <section className="py-8 md:py-10 bg-muted/30 border-t border-border">
+        {/* ===== Bottom CTAs ===== */}
+        <section className="relative py-12 md:py-16 border-t border-white/[0.06]">
           <div className="container max-w-6xl">
-            <div className="grid md:grid-cols-2 gap-4">
-              {/* For Hosts */}
-              <Card className="bg-background border-2 border-primary/20">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Banknote className="h-5 w-5 text-primary" />
-                    <Badge variant="secondary" className="text-xs">For Hosts</Badge>
-                  </div>
-                  <CardTitle className="text-base">Turn your truck, trailer, kitchen, or lot into income.</CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-wrap gap-2">
-                  <Button asChild variant="dark-shine" size="sm">
+            <div className="grid md:grid-cols-2 gap-5">
+              <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent p-7 backdrop-blur-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <Banknote className="h-4 w-4 text-primary" />
+                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/50">For Hosts</span>
+                </div>
+                <h3 className="text-lg md:text-xl font-medium text-white tracking-tight mb-5">
+                  Turn your truck, trailer, kitchen, or lot into income.
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     <Link to="/list">
                       List your asset
                       <ArrowRight className="h-4 w-4 ml-1" />
                     </Link>
                   </Button>
-                  <Button asChild variant="dark-shine" size="sm">
-                    <Link to="/host">
-                      Host playbook
-                    </Link>
+                  <Button asChild variant="outline" className="bg-white/[0.04] border-white/15 text-white hover:bg-white/10 hover:text-white">
+                    <Link to="/host">Host playbook</Link>
                   </Button>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              {/* For Renters/Buyers */}
-              <Card className="bg-background border-2 border-muted">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Package className="h-5 w-5 text-muted-foreground" />
-                    <Badge variant="secondary" className="text-xs">For Renters & Buyers</Badge>
-                  </div>
-                  <CardTitle className="text-base">Ready to book or buy?</CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-wrap gap-2">
-                  <Button asChild variant="dark-shine" size="sm">
+              <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent p-7 backdrop-blur-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <Package className="h-4 w-4 text-white/70" />
+                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/50">For Renters & Buyers</span>
+                </div>
+                <h3 className="text-lg md:text-xl font-medium text-white tracking-tight mb-5">
+                  Ready to book or buy?
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  <Button asChild className="bg-white text-black hover:bg-white/90">
                     <Link to="/search">
                       Browse listings
                       <ArrowRight className="h-4 w-4 ml-1" />
                     </Link>
                   </Button>
-                  <Button asChild variant="dark-shine" size="sm">
-                    <Link to="/how-it-works">
-                      How it works
-                    </Link>
+                  <Button asChild variant="outline" className="bg-white/[0.04] border-white/15 text-white hover:bg-white/10 hover:text-white">
+                    <Link to="/how-it-works">How it works</Link>
                   </Button>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -568,9 +565,8 @@ const HelpCenter = () => {
         <div className="md:hidden fixed bottom-4 right-4 z-40">
           <Button
             onClick={openZendeskChat}
-            variant="dark-shine"
             size="lg"
-            className="rounded-full h-14 w-14 shadow-lg"
+            className="rounded-full h-14 w-14 shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.6)] bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             <MessageCircle className="h-6 w-6" />
           </Button>
