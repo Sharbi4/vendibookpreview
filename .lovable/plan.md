@@ -1,62 +1,39 @@
+# Vendi Web Chat Agent — System Prompt
 
+I'll deliver a single ready-to-paste system prompt for the Vapi chat assistant (ID `3896c198-a43b-4c5f-8f25-d3e77dc81dc6`). You'll copy it into the Vapi dashboard → Assistant → Model → System Message. No code changes needed (the `vapi-chat` edge function already forwards messages to whatever prompt is configured on the assistant).
 
-## Make Referrals + SMS Actually Work
+The prompt is grounded in VendiBook's real rules pulled from project memory:
 
-Three real bugs are blocking the flows you tested. Here's what I'll fix.
+**Sourced facts baked in:**
+- Marketplace model: rent or buy vending machines, food trucks, kiosks, ATMs, commercial spaces, equipment
+- Commission: **12.9% buyer-paid**, cash transactions are free
+- Payouts: rentals 24h after start, sales 25 days after delivery
+- Refunds / disputes: admin mediation, Zendesk-backed
+- Privacy: exact address masked to 800m radius until booking confirmed / instant book
+- Stripe is source of truth — payment_status must be `paid` before host notified
+- Ownership rule: users cannot buy/rent/offer on their own listings
+- Identity: Stripe Identity verification badges
+- Contact: (725) 755-9598, support email handled through Zendesk
+- Cash flow: 4-step "Pay in Person" tracking
+- Negotiated offers, business-info booking step for commercial spaces, compliance docs, freight $4.50/mile, rental tiers (daily/weekly/monthly), QR signage fulfillment
 
-### 1. SMS verification is missing entirely (root cause of "no confirmation text")
+## Prompt sections (outline)
 
-**The bug:** When you entered your phone in the opt-in prompt, it saved `verified = false`. The `send-sms` function refuses to send to any subscription where `verified` is false — so no confirmation SMS, and no future alerts will ever reach you.
+1. **Identity & Role** — "You are Vendi, VendiBook's support concierge…" tone: warm, concise, on-brand (dark/Linear aesthetic — no emoji spam).
+2. **Scope** — answers how-it-works, payments, refunds, listings, bookings, account/auth, troubleshooting. Escalates legal, dispute decisions, or account-specific data to human support.
+3. **How VendiBook Works** — buyer flow, host flow, listing flow, instant-book vs request-to-book, location reveal rules.
+4. **Payments & Fees** — 12.9% buyer commission, cash = free, Stripe authorization wording standard, payout timelines.
+5. **Refunds & Disputes** — cancellation windows, refund routing via admin mediation, how to open a dispute, Zendesk ticket creation path.
+6. **Account / Identity / Trust** — Stripe Identity, verified badges, ownership restriction.
+7. **Common Troubleshooting** — checkout errors, "listing not visible," geocoding/address issues, Stripe onboarding `details_submitted` lag, document uploads (10MB / allowed types), HEIC support, mobile zoom (16px inputs), map not loading, voice chat vs text chat.
+8. **Escalation Rules** — when to hand off: payment failures with charge ID, identity disputes, suspected fraud, data deletion requests → direct to (725) 755-9598 or open Zendesk ticket; never invent policy.
+9. **Style Rules** — short paragraphs, markdown bullets, no fabricated pricing, never expose internal IDs, never claim to access user account data the chat doesn't actually have.
+10. **Safety** — refuse to give legal/tax/financial advice, no PII echo, no off-topic.
 
-**Fix:**
-- New edge function **`send-sms-verification`** — generates a 6-digit OTP, stores it (hashed, 10-min expiry) in a new `sms_verification_codes` table, and sends it via Twilio: *"Your Vendibook code is 123456. Reply STOP to opt out."*
-- New edge function **`verify-sms-otp`** — accepts the code, marks `sms_subscriptions.verified = true` on success, increments attempt counter, locks after 5 fails.
-- Rewrite **`SmsOptInPrompt.tsx`** as a 2-step flow:
-  1. Phone + TCPA consent → triggers `send-sms-verification`
-  2. 6-digit code input → triggers `verify-sms-otp` → success toast
-- Same 2-step flow exposed in `CommsPreferencesPanel` so users can re-verify if they change number.
+## Deliverable
 
-### 2. Referral redemption counter bug
+A single ~600-800 word system prompt formatted for direct paste into Vapi. After you approve I'll also save it to `mem://features/vendi-text-chat` so future edits stay in sync.
 
-**The bug:** `redeem-referral/index.ts` line 76-79 has a broken nested-await that double-reads `total_referred` and can write `NaN` or `1` regardless of true count. Functionally referrals still get inserted, but the dashboard stat is wrong.
+## Question before I write
 
-**Fix:**
-- Add SQL function `increment_referral_counter(p_owner_id uuid)` that does `UPDATE referral_codes SET total_referred = total_referred + 1` atomically.
-- Replace the broken block in `redeem-referral` with a single `admin.rpc("increment_referral_counter", ...)` call.
-
-### 3. Share links — verify they work + add per-user attribution
-
-**Status:** Codes ARE individualized (DB trigger generates one per user on signup, backfilled for existing users). `buildReferralUrl` correctly stamps `?ref={your_code}&utm_source=referral`. `<ReferralCapture />` is mounted in `App.tsx` and stores the code in localStorage, then auto-redeems on login.
-
-**What I'll add:**
-- A small **"Test your link"** button in `ReferralPanel` that opens your own link in a new tab so you can visually confirm `?ref=YOURCODE` is appended.
-- Make the `share()` SMS/Email/FB/X buttons log to `share_events` (already wired) AND show a toast confirming which channel fired.
-- Verify the FB sharer + X intent URLs render correctly (they do — standard endpoints).
-
-### 4. End-to-end test I'll run after the build
-
-1. Open referral panel → confirm code shows + matches `referral_codes` row in DB.
-2. Click "Test your link" → confirm URL has correct `?ref=`.
-3. Open SMS opt-in → enter phone → confirm Twilio API call fires + verification row created.
-4. Enter the 6-digit code → confirm `verified = true`.
-5. Trigger a test SMS via `send-sms` → confirm it now sends (no more `skipped_not_subscribed`).
-
-### Files
-
-**New:**
-- `supabase/functions/send-sms-verification/index.ts`
-- `supabase/functions/verify-sms-otp/index.ts`
-- Migration: `sms_verification_codes` table + `increment_referral_counter()` RPC
-
-**Edited:**
-- `supabase/functions/redeem-referral/index.ts` (fix counter)
-- `src/components/comms/SmsOptInPrompt.tsx` (2-step flow)
-- `src/components/comms/CommsPreferencesPanel.tsx` (re-verify section)
-- `src/components/referrals/ReferralPanel.tsx` (Test link button + toast on share)
-- `supabase/config.toml` (register new functions)
-
-### Notes
-- Twilio connector is already linked (`TWILIO_API_KEY` + `TWILIO_FROM_NUMBER` are set), so no new secrets needed.
-- OTP table will have RLS: users can only read/insert their own codes; service role does the verification check.
-- No changes to existing referral DB schema — codes stay individualized as they are.
-
+Do you want me to also include a short **FAQ knowledge block** inline (e.g., 10–15 Q&A pairs covering "How do I list?", "When do I get paid?", "How do refunds work?", "Why can't I see the address?") so the agent answers without needing tool calls? Recommend **yes** — it dramatically improves first-response accuracy for a text chat with no live data tools.
