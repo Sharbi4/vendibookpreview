@@ -4,12 +4,11 @@ import { useMemo } from 'react';
 
 const SocialContactOptions = () => {
   const openZendeskChat = () => {
-    // Trigger Vendi (Vapi) voice assistant
+    // Open Vendi chat (Vapi Chat API)
     try {
-      localStorage.setItem('vendi-fab-minimized', '0');
-      window.dispatchEvent(new CustomEvent('start-vendi-call'));
+      window.dispatchEvent(new CustomEvent('open-vendi-chat'));
     } catch (error) {
-      console.debug('Vendi start error:', error);
+      console.debug('Vendi chat open error:', error);
     }
   };
 
