@@ -139,32 +139,80 @@ const SearchResultsMapLoaded = forwardRef<
           </>
         )}
 
-        {/* Listing markers with price labels */}
-        {listingsWithCoords.map((listing) => (
-          <MarkerF
-            key={listing.id}
-            position={{ lat: listing.latitude!, lng: listing.longitude! }}
-            label={{
-              text: formatPrice(listing),
-              color: '#ffffff',
-              fontWeight: 'bold',
-              fontSize: '11px',
-            }}
-            icon={{
-              url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-                `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="36">
-                  <rect x="0" y="0" width="80" height="28" rx="14" fill="${selectedListing?.id === listing.id ? '#FF5722' : '#1a1a1a'}"/>
-                  <polygon points="35,28 40,36 45,28" fill="${selectedListing?.id === listing.id ? '#FF5722' : '#1a1a1a'}"/>
-                </svg>`
-              )}`,
-              scaledSize: new google.maps.Size(80, 36),
-              anchor: new google.maps.Point(40, 36),
-              labelOrigin: new google.maps.Point(40, 14),
-            }}
-            onClick={() => handleMarkerClick(listing)}
-            title={listing.title}
-          />
-        ))}
+        {/* Listing markers with price labels — clustered to prevent overlap */}
+        <MarkerClustererF
+          options={{
+            gridSize: 60,
+            maxZoom: 14,
+            averageCenter: true,
+            styles: [
+              {
+                url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+                  `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44"><circle cx="22" cy="22" r="20" fill="#FF5722" stroke="#ffffff" stroke-width="3"/></svg>`
+                )}`,
+                height: 44,
+                width: 44,
+                textColor: '#ffffff',
+                textSize: 13,
+                fontWeight: '700',
+                anchorText: [0, 0],
+              },
+              {
+                url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+                  `<svg xmlns="http://www.w3.org/2000/svg" width="54" height="54"><circle cx="27" cy="27" r="25" fill="#FF5722" stroke="#ffffff" stroke-width="3"/></svg>`
+                )}`,
+                height: 54,
+                width: 54,
+                textColor: '#ffffff',
+                textSize: 14,
+                fontWeight: '700',
+                anchorText: [0, 0],
+              },
+              {
+                url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+                  `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><circle cx="32" cy="32" r="30" fill="#FF5722" stroke="#ffffff" stroke-width="3"/></svg>`
+                )}`,
+                height: 64,
+                width: 64,
+                textColor: '#ffffff',
+                textSize: 15,
+                fontWeight: '700',
+                anchorText: [0, 0],
+              },
+            ],
+          }}
+        >
+          {(clusterer) => (
+            <>
+              {listingsWithCoords.map((listing) => (
+                <MarkerF
+                  key={listing.id}
+                  position={{ lat: listing.latitude!, lng: listing.longitude! }}
+                  clusterer={clusterer}
+                  label={{
+                    text: formatPrice(listing),
+                    color: '#ffffff',
+                    fontWeight: 'bold',
+                    fontSize: '11px',
+                  }}
+                  icon={{
+                    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+                      `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="36">
+                        <rect x="0" y="0" width="80" height="28" rx="14" fill="${selectedListing?.id === listing.id ? '#FF5722' : '#1a1a1a'}"/>
+                        <polygon points="35,28 40,36 45,28" fill="${selectedListing?.id === listing.id ? '#FF5722' : '#1a1a1a'}"/>
+                      </svg>`
+                    )}`,
+                    scaledSize: new google.maps.Size(80, 36),
+                    anchor: new google.maps.Point(40, 36),
+                    labelOrigin: new google.maps.Point(40, 14),
+                  }}
+                  onClick={() => handleMarkerClick(listing)}
+                  title={listing.title}
+                />
+              ))}
+            </>
+          )}
+        </MarkerClustererF>
 
         {/* Info window popup */}
         {selectedListing && selectedListing.latitude && selectedListing.longitude && (
