@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { motion, useScroll, useTransform, useReducedMotion, MotionValue } from 'framer-motion';
 import { LucideIcon, Search, ShieldCheck, CreditCard, Handshake, MessageSquare, Calendar, Camera, Truck, DollarSign, FileCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
