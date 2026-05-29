@@ -193,6 +193,11 @@ const ListingPublished: React.FC = () => {
       <div className="container max-w-2xl mx-auto px-4 py-12">
         <ShareKit listing={listing} onClose={handleClose} />
       </div>
+
+      {/* Post-publish: offer 30-day boost */}
+      {boostCandidate && (
+        <BoostListingPrompt listings={[boostCandidate]} userId={user?.id} />
+      )}
     </div>
   );
 };
