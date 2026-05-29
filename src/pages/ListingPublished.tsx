@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ShareKit, ShareKitListing } from '@/components/listing-wizard/ShareKit';
 import { ListingCategory, ListingMode } from '@/types/listing';
 import { useToast } from '@/hooks/use-toast';
+import BoostListingPrompt from '@/components/dashboard/BoostListingPrompt';
 
 const ListingPublished: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -18,6 +19,7 @@ const ListingPublished: React.FC = () => {
   const { user, isLoading: authLoading } = useAuth();
   
   const [listing, setListing] = useState<ShareKitListing | null>(null);
+  const [boostCandidate, setBoostCandidate] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,6 +94,17 @@ const ListingPublished: React.FC = () => {
           availableFrom: data.available_from,
           availableTo: data.available_to,
         });
+        setBoostCandidate({
+          id: data.id,
+          title: data.title,
+          status: data.status,
+          featured_enabled: (data as any).featured_enabled,
+          featured_expires_at: (data as any).featured_expires_at,
+        });
+        // Always offer boost right after a fresh publish — clear any prior suppression
+        if (user?.id) {
+          try { localStorage.removeItem(`vendi_boost_prompt_dismissed_${user.id}`); } catch {}
+        }
       } catch (err) {
         console.error('Error fetching listing:', err);
         setError('Failed to load listing');
@@ -180,6 +193,11 @@ const ListingPublished: React.FC = () => {
       <div className="container max-w-2xl mx-auto px-4 py-12">
         <ShareKit listing={listing} onClose={handleClose} />
       </div>
+
+      {/* Post-publish: offer 30-day boost */}
+      {boostCandidate && (
+        <BoostListingPrompt listings={[boostCandidate]} userId={user?.id} />
+      )}
     </div>
   );
 };
