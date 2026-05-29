@@ -159,20 +159,31 @@ serve(async (req) => {
           }
 
           const isFirstTimePublish = !existingListing.published_at;
+          const isDraft = existingListing.status !== 'published' || !existingListing.published_at;
           const now = new Date();
           const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
-          // Update listing with featured status and publish if needed
-          // GUARANTEE: paid boost = published + featured. Always.
-          const updateData: Record<string, unknown> = { 
-            status: 'published',
-            featured_enabled: true,
-            featured_at: now.toISOString(),
-            featured_expires_at: expiresAt.toISOString(),
-          };
-          if (isFirstTimePublish) {
-            updateData.published_at = now.toISOString();
-          }
+          // GUARANTEE: paid boost always sticks.
+          //  - If listing is already published: activate featured immediately.
+          //  - If listing is still a draft: store pending_featured_payment. The DB trigger
+          //    `trg_apply_pending_featured` will auto-activate the boost on publish.
+          const updateData: Record<string, unknown> = isDraft
+            ? {
+                pending_featured_payment: {
+                  source: 'stripe',
+                  payment_intent_id: paymentIntentId,
+                  session_id: session.id,
+                  amount: '$30.00',
+                  paid_at: now.toISOString(),
+                },
+              }
+            : {
+                status: 'published',
+                featured_enabled: true,
+                featured_at: now.toISOString(),
+                featured_expires_at: expiresAt.toISOString(),
+                ...(isFirstTimePublish ? { published_at: now.toISOString() } : {}),
+              };
 
           const { error: updateError } = await supabaseClient
             .from("listings")
