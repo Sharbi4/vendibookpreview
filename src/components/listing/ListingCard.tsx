@@ -143,10 +143,9 @@ const popularAmenityIcons: Record<string, { icon: React.ElementType; label: stri
 const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook, canDeliverToUser, distanceMiles, compact = false }: ListingCardProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
   
-  // Check if listing is featured (featured_enabled=true and featured_expires_at in the future)
-  const isFeatured = (listing as any).featured_enabled && 
-    (listing as any).featured_expires_at && 
-    new Date((listing as any).featured_expires_at) > new Date();
+  // Featured badge: dynamic, source of truth in src/lib/featured.ts
+  const isFeatured = isListingFeatured(listing as any);
+
 
   // Safely format price with proper null handling
   const formatListingPrice = () => {
