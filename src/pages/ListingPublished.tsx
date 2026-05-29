@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ShareKit, ShareKitListing } from '@/components/listing-wizard/ShareKit';
 import { ListingCategory, ListingMode } from '@/types/listing';
 import { useToast } from '@/hooks/use-toast';
+import BoostListingPrompt from '@/components/dashboard/BoostListingPrompt';
 
 const ListingPublished: React.FC = () => {
   const [searchParams] = useSearchParams();
