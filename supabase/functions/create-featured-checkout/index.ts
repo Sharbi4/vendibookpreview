@@ -68,11 +68,13 @@ serve(async (req) => {
       throw new Error("Unauthorized: You do not own this listing");
     }
 
-    // Boost can be purchased on draft OR published listings.
-    // For drafts, the webhook stores it as `pending_featured_payment` and a DB trigger
-    // auto-applies the boost the moment the listing transitions to `published`.
-    const isDraftPurchase = listing.status !== 'published' || !listing.published_at;
-    logStep("Listing verified", { listingId: listing.id, title: listing.title, isDraftPurchase });
+    // Boost can ONLY be purchased on PUBLISHED listings. Drafts must be
+    // published first — this avoids the historical "pending featured payment"
+    // edge cases where Stripe charged before the listing existed publicly.
+    if (listing.status !== 'published' || !listing.published_at) {
+      throw new Error("Your listing must be published before you can boost it. Please publish first, then boost.");
+    }
+    logStep("Listing verified", { listingId: listing.id, title: listing.title });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
