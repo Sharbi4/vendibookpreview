@@ -19,6 +19,7 @@ const ListingPublished: React.FC = () => {
   const { user, isLoading: authLoading } = useAuth();
   
   const [listing, setListing] = useState<ShareKitListing | null>(null);
+  const [boostCandidate, setBoostCandidate] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
