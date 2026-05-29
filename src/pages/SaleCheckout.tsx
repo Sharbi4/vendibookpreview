@@ -406,6 +406,20 @@ const SaleCheckout = () => {
           console.error('Failed to send notification:', notifError);
         }
 
+        // In-app notification for the seller — emails alone aren't enough; the bell badge
+        // needs to surface cash purchase requests immediately.
+        try {
+          await supabase.from('notifications').insert({
+            user_id: listing.host_id,
+            type: 'sale',
+            title: '💵 New Cash Purchase Request',
+            message: `${buyerInfo.firstName || 'A buyer'} wants to buy "${listing.title}" for $${priceSale.toFixed(2)} in cash. Review and confirm in your dashboard.`,
+            link: `/order-tracking/${txData.id}`,
+          });
+        } catch (notifError) {
+          console.error('Failed to create seller in-app notification:', notifError);
+        }
+
         trackFormSubmitConversion({ form_type: 'purchase_cash', listing_id: listingId });
         
         // Track Facebook CAPI Purchase event for cash

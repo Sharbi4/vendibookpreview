@@ -10,7 +10,7 @@ const corsHeaders = {
 
 interface NotificationRequest {
   booking_id: string;
-  event_type: "submitted" | "approved" | "declined" | "hold_released" | "hold_expired";
+  event_type: "submitted" | "approved" | "declined" | "hold_released" | "hold_expired" | "paid";
   host_response?: string;
   reason?: string;
 }
@@ -571,6 +571,50 @@ serve(async (req) => {
         message: `A booking request for ${listingTitle} expired without a response.`,
         link: "/dashboard",
       });
+    } else if (event_type === "paid") {
+      // Payment captured — booking is locked in. Notify host (the shopper already gets a payment receipt elsewhere).
+      if (host?.email && hostWantsBookingRequestEmail) {
+        emails.push({
+          to: host.email,
+          subject: `💰 Payment Received — Booking #${bookingRef} Confirmed`,
+          html: wrapEmailHtml(`
+            <div style="text-align: center; margin-bottom: 20px;">
+              <span style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: #ffffff; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                ✓ Payment Confirmed
+              </span>
+            </div>
+            <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">Payment Received — Booking Confirmed</h1>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+              Great news! Payment has been received for <strong>${listingTitle}</strong>. The booking is now fully confirmed.
+            </p>
+            <div style="background: #f0fdf4; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #10b981;">
+              <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
+              <p style="margin: 0 0 10px 0;"><strong>Guest:</strong> ${shopper?.full_name || "A shopper"}</p>
+              <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
+              <p style="margin: 0;"><strong>Amount Paid:</strong> $${booking.total_price}</p>
+            </div>
+            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
+              Your payout will be released 24 hours after the rental concludes.
+            </p>
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="${SITE_URL}/dashboard"
+                 style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                View Booking
+              </a>
+            </div>
+          `),
+        });
+      }
+
+      if (hostWantsBookingRequestInapp) {
+        inAppNotifications.push({
+          user_id: booking.host_id,
+          type: "booking_paid",
+          title: `💰 Payment Received — Booking #${bookingRef}`,
+          message: `${shopper?.full_name || "A guest"} paid $${booking.total_price} for ${listingTitle}. Your booking is confirmed.`,
+          link: "/dashboard",
+        });
+      }
     }
     
     // Create in-app notifications and send push notifications

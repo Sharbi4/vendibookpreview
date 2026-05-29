@@ -627,12 +627,12 @@ serve(async (req) => {
             } catch (smsError) {
               logStep("WARNING: Failed to send SMS confirmation", { error: String(smsError) });
             }
-            // the host receives notification about new booking requests (after payment confirmed)
+            // Notify the host that payment was received and the booking is confirmed.
             try {
               await supabaseClient.functions.invoke("send-booking-notification", {
-                body: { booking_id: bookingId, event_type: "submitted" },
+                body: { booking_id: bookingId, event_type: "paid" },
               });
-              logStep("Booking submitted notification sent to host (after payment)", { bookingId });
+              logStep("Payment-received notification sent to host", { bookingId });
             } catch (notifyError) {
               logStep("WARNING: Failed to send booking notification", { error: String(notifyError) });
             }
@@ -763,8 +763,8 @@ serve(async (req) => {
                   user_id: buyerId,
                   type: "purchase",
                   title: "Purchase Confirmed",
-                  message: `Your payment of $${amount.toFixed(2)} for "${listing?.title || 'item'}" has been confirmed. View your purchase in Transactions.`,
-                  link: "/transactions?tab=purchases",
+                  message: `Your payment of $${amount.toFixed(2)} for "${listing?.title || 'item'}" has been confirmed. View your purchase in your dashboard.`,
+                  link: `/order-tracking/${transactionId}`,
                 });
                 logStep("In-app notification created for buyer", { buyerId });
               } catch (notifError) {
@@ -776,9 +776,9 @@ serve(async (req) => {
                 await supabaseClient.from("notifications").insert({
                   user_id: sellerId,
                   type: "sale",
-                  title: "New Sale!",
-                  message: `Someone purchased "${listing?.title || 'your item'}" for $${amount.toFixed(2)}. View it in your Transactions.`,
-                  link: "/transactions?tab=purchases",
+                  title: "💰 New Sale!",
+                  message: `Someone purchased "${listing?.title || 'your item'}" for $${amount.toFixed(2)}. View it in your dashboard.`,
+                  link: `/order-tracking/${transactionId}`,
                 });
                 logStep("In-app notification created for seller", { sellerId });
               } catch (notifError) {
@@ -912,7 +912,17 @@ serve(async (req) => {
 
         const bookingId = paymentIntent.metadata?.booking_id;
         if (bookingId) {
-          // Update as backup in case checkout.session.completed didn't fire
+          // Update as backup in case checkout.session.completed didn't fire.
+          // We select the row first so we can detect whether this is the first time the booking
+          // transitioned to paid — if so, fire the full notification fan-out as a safety net.
+          const { data: priorBooking } = await supabaseClient
+            .from("booking_requests")
+            .select("payment_status")
+            .eq("id", bookingId)
+            .maybeSingle();
+
+          const wasUnpaid = priorBooking?.payment_status === "unpaid";
+
           const { error: updateError } = await supabaseClient
             .from("booking_requests")
             .update({
@@ -926,7 +936,20 @@ serve(async (req) => {
           if (updateError) {
             logStep("ERROR: Failed to update booking from payment_intent", { error: updateError.message });
           } else {
-            logStep("Booking updated from payment_intent.succeeded", { bookingId });
+            logStep("Booking updated from payment_intent.succeeded", { bookingId, wasUnpaid });
+
+            // Fallback notification fan-out — only runs when checkout.session.completed failed
+            // to deliver and this is the first time the booking flipped to paid.
+            if (wasUnpaid) {
+              try {
+                await supabaseClient.functions.invoke("send-booking-notification", {
+                  body: { booking_id: bookingId, event_type: "paid" },
+                });
+                logStep("Fallback payment-received notification sent", { bookingId });
+              } catch (notifyError) {
+                logStep("WARNING: Fallback booking notification failed", { error: String(notifyError) });
+              }
+            }
           }
         }
         break;
@@ -1111,6 +1134,19 @@ serve(async (req) => {
               }
             }
 
+            // In-app notification for successful rental payout
+            try {
+              await supabaseClient.from("notifications").insert({
+                user_id: hostId,
+                type: "payout",
+                title: "💸 Payout Sent",
+                message: `Your payout of $${payoutAmount.toFixed(2)} for "${listingTitle}" was sent to your bank.`,
+                link: "/dashboard",
+              });
+            } catch (notifErr) {
+              logStep("WARNING: Failed to create rental payout in-app notification", { error: String(notifErr) });
+            }
+
             // Fire orchestrator event for payout received
             try {
               await fetch(
@@ -1200,6 +1236,19 @@ serve(async (req) => {
               .eq("id", saleTransactionId);
 
             logStep("Sale transaction updated with payout completion", { saleTransactionId });
+
+            // In-app notification for successful sale payout
+            try {
+              await supabaseClient.from("notifications").insert({
+                user_id: sellerId,
+                type: "payout",
+                title: "💸 Payout Sent",
+                message: `Your payout of $${payoutAmount.toFixed(2)} for "${listingTitle}" was sent to your bank.`,
+                link: "/dashboard",
+              });
+            } catch (notifErr) {
+              logStep("WARNING: Failed to create sale payout in-app notification", { error: String(notifErr) });
+            }
           }
         } else {
           // Try to find by destination account
