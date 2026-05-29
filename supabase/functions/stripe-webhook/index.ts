@@ -239,11 +239,13 @@ serve(async (req) => {
                 await supabaseClient.from("notifications").insert({
                   user_id: existingListing.host_id,
                   type: "listing",
-                  title: "Featured Listing Activated! ⭐",
-                  message: `Your listing "${existingListing.title}" is now featured and will appear at the top of search results for 30 days.`,
+                  title: isDraft ? "Featured Boost Reserved ⭐" : "Featured Listing Activated! ⭐",
+                  message: isDraft
+                    ? `We received your $30 Featured Boost for "${existingListing.title}". It will automatically activate for 30 days the moment you publish your listing.`
+                    : `Your listing "${existingListing.title}" is now featured and will appear at the top of search results for 30 days.`,
                   link: `/listing/${listingId}`,
                 });
-                logStep("Featured notification created for host", { hostId: existingListing.host_id });
+                logStep("Featured notification created for host", { hostId: existingListing.host_id, isDraft });
               } catch (notifError) {
                 logStep("WARNING: Failed to create featured notification", { error: String(notifError) });
               }
