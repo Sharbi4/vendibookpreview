@@ -19,6 +19,7 @@ import {
 import SearchResultsMap from '@/components/search/SearchResultsMap';
 import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
 import { Listing } from '@/types/listing';
+import { isListingFeatured } from '@/lib/featured';
 
 const ITEMS_PER_PAGE = 8;
 
@@ -125,11 +126,10 @@ const FeaturedListings = () => {
   const sortedListings = useMemo(() => {
     let result = [...listings];
 
-    // Helper to check if a listing is featured (featured_enabled=true AND featured_expires_at in the future)
-    const isFeatured = (listing: any) => 
-      listing.featured_enabled && 
-      listing.featured_expires_at && 
-      new Date(listing.featured_expires_at) > new Date();
+    // Featured detection — shared source of truth in src/lib/featured.ts
+    const isFeatured = (listing: any) => isListingFeatured(listing);
+
+
 
     if (sortBy === 'nearest' && userLocation) {
       // Sort by distance but put featured listings first

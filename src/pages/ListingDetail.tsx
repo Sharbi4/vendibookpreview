@@ -56,6 +56,7 @@ import JsonLd, { generateProductSchema, generateListingBreadcrumbSchema, generat
 import { getPublicDisplayName } from '@/lib/displayName';
 import { formatLastActive } from '@/hooks/useActivityTracker';
 import { resolveListingBrand, getBrandFieldLabel } from '@/lib/resolveListingBrand';
+import { isListingFeatured } from '@/lib/featured';
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -256,9 +257,9 @@ const ListingDetail = () => {
   const isRental = listing.mode === 'rent';
   
   // Check if listing is featured (featured_enabled=true and featured_expires_at in the future)
-  const isFeatured = (listing as any).featured_enabled && 
-    (listing as any).featured_expires_at && 
-    new Date((listing as any).featured_expires_at) > new Date();
+  const isFeatured = isListingFeatured(listing as any);
+
+
 
   // Extract city/state from address for compact display
   const locationShort = location?.split(',').slice(-2).join(',').trim() || location;

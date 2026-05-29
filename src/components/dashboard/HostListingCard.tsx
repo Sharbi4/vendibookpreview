@@ -12,6 +12,7 @@ import type { Tables } from '@/integrations/supabase/types';
 import { Badge } from '@/components/ui/badge';
 import { FeaturedListingModal } from './FeaturedListingModal';
 import ShareKitModal from './ShareKitModal';
+import { isListingFeatured } from '@/lib/featured';
 
 type Listing = Tables<'listings'>;
 
@@ -57,7 +58,7 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
   
   const isSale = listing.mode === 'sale';
   const isPublished = listing.status === 'published';
-  const isFeatured = (listing as any).featured_enabled && (listing as any).featured_expires_at && new Date((listing as any).featured_expires_at) > new Date();
+  const isFeatured = isListingFeatured(listing as any);
   const hasNotary = (listing as any).proof_notary_enabled;
 
   const handleFeaturedClick = () => {
