@@ -129,10 +129,29 @@ serve(async (req) => {
       logStep("Warning: Failed to update booking", { error: updateError.message });
     }
 
-    // Send confirmation email
+    // Send confirmation email to shopper
     await supabaseClient.functions.invoke('send-booking-confirmation', {
       body: { booking_id },
     }).catch((e) => logStep("Warning: Failed to send confirmation", { error: e.message }));
+
+    // Notify the host that the auth-hold was successfully captured (email + in-app).
+    await supabaseClient.functions.invoke('send-booking-notification', {
+      body: { booking_id, event_type: 'paid' },
+    }).catch((e) => logStep("Warning: Failed to send host payment-received notification", { error: e.message }));
+
+    // In-app notification for the shopper confirming the booking is now locked in.
+    try {
+      const listingTitle = (booking as any).listing?.title || 'your booking';
+      await supabaseClient.from('notifications').insert({
+        user_id: booking.shopper_id,
+        type: 'booking_confirmed',
+        title: '✅ Booking Confirmed',
+        message: `Your payment for "${listingTitle}" has been captured. Your booking is locked in.`,
+        link: '/dashboard',
+      });
+    } catch (e) {
+      logStep("Warning: Failed to create shopper in-app notification", { error: String(e) });
+    }
 
     return new Response(
       JSON.stringify({ 

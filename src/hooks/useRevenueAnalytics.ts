@@ -39,8 +39,8 @@ export const useRevenueAnalytics = () => {
 
     setIsLoading(true);
     try {
-      // Fetch all sales where user is the seller
-      const { data: transactions, error } = await (supabase
+      // Fetch sales where user is the seller
+      const salesPromise = (supabase
         .from('sale_transactions' as any)
         .select(`
           id,
@@ -55,7 +55,41 @@ export const useRevenueAnalytics = () => {
         .eq('seller_id', user.id)
         .order('created_at', { ascending: false })) as any;
 
-      if (error) throw error;
+      // Fetch rental bookings where user is the host and payment is captured.
+      // Rentals collect 12.9% commission, so seller_payout = total_price * (1 - 0.129).
+      const rentalsPromise = supabase
+        .from('booking_requests')
+        .select('id, total_price, payment_status, paid_at, payout_processed_at, created_at, listing:listings(title)')
+        .eq('host_id', user.id)
+        .eq('payment_status', 'paid')
+        .order('created_at', { ascending: false });
+
+      const [{ data: salesData, error: salesError }, { data: rentalsData, error: rentalsError }] =
+        await Promise.all([salesPromise, rentalsPromise]);
+
+      if (salesError) throw salesError;
+      if (rentalsError) throw rentalsError;
+
+      // Normalize rentals into the same shape used downstream so all calculations stay unified.
+      const RENTAL_COMMISSION = 0.129;
+      const normalizedRentals = (rentalsData || []).map((r: any) => {
+        const amount = Number(r.total_price) || 0;
+        const platformFee = +(amount * RENTAL_COMMISSION).toFixed(2);
+        const sellerPayout = +(amount - platformFee).toFixed(2);
+        return {
+          id: r.id,
+          amount,
+          seller_payout: sellerPayout,
+          platform_fee: platformFee,
+          status: 'paid',
+          payout_completed_at: r.payout_processed_at,
+          created_at: r.paid_at || r.created_at,
+          listing: r.listing,
+        };
+      });
+
+      const transactions = [...(salesData || []), ...normalizedRentals]
+        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
       const completedTransactions = transactions?.filter(
         (t: any) => ['completed', 'buyer_confirmed', 'seller_confirmed', 'paid'].includes(t.status)
