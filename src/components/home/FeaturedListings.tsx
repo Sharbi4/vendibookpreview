@@ -19,6 +19,7 @@ import {
 import SearchResultsMap from '@/components/search/SearchResultsMap';
 import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
 import { Listing } from '@/types/listing';
+import { isListingFeatured } from '@/lib/featured';
 
 const ITEMS_PER_PAGE = 8;
 
