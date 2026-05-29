@@ -51,12 +51,12 @@ serve(async (req) => {
     // Verify the listing exists and belongs to this user
     const { data: listing, error: listingError } = await supabaseClient
       .from("listings")
-      .select("id, title, host_id, featured_enabled, status, mode")
+      .select("id, title, host_id, featured_enabled, status, mode, published_at")
       .eq("id", listing_id)
       .single();
 
     logStep("Listing query result", { 
-      listing: listing ? { id: listing.id, title: listing.title, mode: listing.mode } : null, 
+      listing: listing ? { id: listing.id, title: listing.title, mode: listing.mode, status: listing.status, published_at: listing.published_at } : null, 
       error: listingError?.message || null 
     });
 
@@ -66,6 +66,11 @@ serve(async (req) => {
 
     if (listing.host_id !== user.id) {
       throw new Error("Unauthorized: You do not own this listing");
+    }
+
+    // Block boost checkout on unpublished listings — boost only applies to live listings
+    if (listing.status !== 'published' || !listing.published_at) {
+      throw new Error("Your listing must be published before you can boost it. Please complete and publish your listing first.");
     }
 
     logStep("Listing verified", { listingId: listing.id, title: listing.title });
