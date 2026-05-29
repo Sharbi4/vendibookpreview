@@ -163,6 +163,7 @@ serve(async (req) => {
           const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
           // Update listing with featured status and publish if needed
+          // GUARANTEE: paid boost = published + featured. Always.
           const updateData: Record<string, unknown> = { 
             status: 'published',
             featured_enabled: true,
@@ -183,11 +184,46 @@ serve(async (req) => {
               error: updateError.message, 
               listingId 
             });
+            // Hard failure on a paid boost is critical — alert admin immediately
+            try {
+              await fetch(
+                `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-transactional-email`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+                  },
+                  body: JSON.stringify({
+                    templateName: 'featured-payment-admin-alert',
+                    recipientEmail: 'support@vendibook.com',
+                    idempotencyKey: `featured-admin-alert-fail-${session.id}`,
+                    templateData: {
+                      hostName: 'UNKNOWN',
+                      hostEmail: session.customer_details?.email || session.customer_email || '—',
+                      listingTitle: `⚠️ FAILED TO APPLY BOOST · listing ${listingId}`,
+                      listingId,
+                      amount: '$30.00',
+                      receiptId: paymentIntentId,
+                    },
+                  }),
+                }
+              );
+            } catch (alertErr) {
+              logStep("ERROR: Failed to send admin failure alert", { error: String(alertErr) });
+            }
           } else {
             logStep(`Listing ${isFirstTimePublish ? 'published and' : ''} marked as featured`, { listingId });
 
             if (existingListing) {
-              // Create notification for host
+              // Fetch host profile for emails
+              const { data: hostProfile } = await supabaseClient
+                .from("profiles")
+                .select("email, first_name, full_name")
+                .eq("id", existingListing.host_id)
+                .single();
+
+              // Create in-app notification for host
               try {
                 await supabaseClient.from("notifications").insert({
                   user_id: existingListing.host_id,
@@ -199,6 +235,68 @@ serve(async (req) => {
                 logStep("Featured notification created for host", { hostId: existingListing.host_id });
               } catch (notifError) {
                 logStep("WARNING: Failed to create featured notification", { error: String(notifError) });
+              }
+
+              // Send host-facing boost receipt email
+              if (hostProfile?.email) {
+                try {
+                  await fetch(
+                    `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-transactional-email`,
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+                      },
+                      body: JSON.stringify({
+                        templateName: 'featured-payment-receipt',
+                        recipientEmail: hostProfile.email,
+                        idempotencyKey: `featured-receipt-${session.id}`,
+                        templateData: {
+                          firstName: hostProfile.first_name || (hostProfile.full_name?.split(' ')[0]),
+                          listingTitle: existingListing.title,
+                          listingId,
+                          amount: '$30.00',
+                          expiresAt: expiresAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                          receiptId: paymentIntentId,
+                        },
+                      }),
+                    }
+                  );
+                  logStep("Boost receipt email sent to host", { email: hostProfile.email });
+                } catch (emailError) {
+                  logStep("WARNING: Failed to send boost receipt email", { error: String(emailError) });
+                }
+              }
+
+              // Send admin alert email — every paid boost generates an internal notification
+              try {
+                await fetch(
+                  `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-transactional-email`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+                    },
+                    body: JSON.stringify({
+                      templateName: 'featured-payment-admin-alert',
+                      recipientEmail: 'support@vendibook.com',
+                      idempotencyKey: `featured-admin-alert-${session.id}`,
+                      templateData: {
+                        hostName: hostProfile?.full_name || 'Unknown',
+                        hostEmail: hostProfile?.email || '—',
+                        listingTitle: existingListing.title,
+                        listingId,
+                        amount: '$30.00',
+                        receiptId: paymentIntentId,
+                      },
+                    }),
+                  }
+                );
+                logStep("Admin alert email sent for boost payment");
+              } catch (adminErr) {
+                logStep("WARNING: Failed to send admin alert email", { error: String(adminErr) });
               }
 
               // Trigger listing live email only for first-time publishes
