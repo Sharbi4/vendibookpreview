@@ -15,6 +15,7 @@ import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 import { trackListingCardClick } from '@/lib/analytics';
 import { AvailabilityCalendarModal } from '@/components/listing/AvailabilityCalendarModal';
 import { normalizeScheduleKeys } from '@/lib/scheduleUtils';
+import { isListingFeatured } from '@/lib/featured';
 
 // Types for hourly schedule
 interface TimeRange {
