@@ -1575,6 +1575,7 @@ export type Database = {
           mode: Database["public"]["Enums"]["listing_mode"]
           operating_hours_end: string | null
           operating_hours_start: string | null
+          pending_featured_payment: Json | null
           pickup_instructions: string | null
           pickup_location_text: string | null
           postal_code: string | null
@@ -1646,6 +1647,7 @@ export type Database = {
           mode: Database["public"]["Enums"]["listing_mode"]
           operating_hours_end?: string | null
           operating_hours_start?: string | null
+          pending_featured_payment?: Json | null
           pickup_instructions?: string | null
           pickup_location_text?: string | null
           postal_code?: string | null
@@ -1717,6 +1719,7 @@ export type Database = {
           mode?: Database["public"]["Enums"]["listing_mode"]
           operating_hours_end?: string | null
           operating_hours_start?: string | null
+          pending_featured_payment?: Json | null
           pickup_instructions?: string | null
           pickup_location_text?: string | null
           postal_code?: string | null

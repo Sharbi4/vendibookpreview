@@ -68,12 +68,11 @@ serve(async (req) => {
       throw new Error("Unauthorized: You do not own this listing");
     }
 
-    // Block boost checkout on unpublished listings — boost only applies to live listings
-    if (listing.status !== 'published' || !listing.published_at) {
-      throw new Error("Your listing must be published before you can boost it. Please complete and publish your listing first.");
-    }
-
-    logStep("Listing verified", { listingId: listing.id, title: listing.title });
+    // Boost can be purchased on draft OR published listings.
+    // For drafts, the webhook stores it as `pending_featured_payment` and a DB trigger
+    // auto-applies the boost the moment the listing transitions to `published`.
+    const isDraftPurchase = listing.status !== 'published' || !listing.published_at;
+    logStep("Listing verified", { listingId: listing.id, title: listing.title, isDraftPurchase });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
