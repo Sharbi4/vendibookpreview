@@ -341,7 +341,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       await sendEmail(RESEND_API_KEY, {
         from: "Vendibook <noreply@vendibook.com>",
-        to: ["support@vendibook.com"],
+        to: ["support@vendibook.com", "atlasmom421@gmail.com"],
         subject: emailSubject,
         html: emailHtml,
       });
