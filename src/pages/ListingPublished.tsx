@@ -94,6 +94,17 @@ const ListingPublished: React.FC = () => {
           availableFrom: data.available_from,
           availableTo: data.available_to,
         });
+        setBoostCandidate({
+          id: data.id,
+          title: data.title,
+          status: data.status,
+          featured_enabled: (data as any).featured_enabled,
+          featured_expires_at: (data as any).featured_expires_at,
+        });
+        // Always offer boost right after a fresh publish — clear any prior suppression
+        if (user?.id) {
+          try { localStorage.removeItem(`vendi_boost_prompt_dismissed_${user.id}`); } catch {}
+        }
       } catch (err) {
         console.error('Error fetching listing:', err);
         setError('Failed to load listing');
