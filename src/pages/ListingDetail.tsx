@@ -56,6 +56,7 @@ import JsonLd, { generateProductSchema, generateListingBreadcrumbSchema, generat
 import { getPublicDisplayName } from '@/lib/displayName';
 import { formatLastActive } from '@/hooks/useActivityTracker';
 import { resolveListingBrand, getBrandFieldLabel } from '@/lib/resolveListingBrand';
+import { isListingFeatured } from '@/lib/featured';
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
