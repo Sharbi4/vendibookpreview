@@ -257,9 +257,9 @@ const ListingDetail = () => {
   const isRental = listing.mode === 'rent';
   
   // Check if listing is featured (featured_enabled=true and featured_expires_at in the future)
-  const isFeatured = (listing as any).featured_enabled && 
-    (listing as any).featured_expires_at && 
-    new Date((listing as any).featured_expires_at) > new Date();
+  const isFeatured = isListingFeatured(listing as any);
+
+
 
   // Extract city/state from address for compact display
   const locationShort = location?.split(',').slice(-2).join(',').trim() || location;
