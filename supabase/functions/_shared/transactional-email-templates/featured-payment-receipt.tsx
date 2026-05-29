@@ -1,0 +1,100 @@
+import * as React from 'npm:react@18.3.1'
+import {
+  Body, Button, Container, Head, Heading, Hr, Html, Preview, Section, Text,
+} from 'npm:@react-email/components@0.0.22'
+import type { TemplateEntry } from './registry.ts'
+import { s, SITE_NAME, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
+
+interface FeaturedReceiptProps {
+  firstName?: string
+  listingTitle?: string
+  listingId?: string
+  amount?: string
+  expiresAt?: string
+  receiptId?: string
+}
+
+const FeaturedPaymentReceiptEmail = ({
+  firstName,
+  listingTitle,
+  listingId,
+  amount = '$30.00',
+  expiresAt,
+  receiptId,
+}: FeaturedReceiptProps) => (
+  <Html lang="en" dir="ltr">
+    <Head />
+    <Preview>Your boost is live — {listingTitle || 'your listing'} is now featured</Preview>
+    <Body style={s.main}>
+      <Container style={s.container}>
+        <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+        <Section style={s.card}>
+          <Text style={s.kicker}>BOOST ACTIVATED ⭐</Text>
+          <Heading style={s.h1}>
+            {firstName ? `You're featured, ${firstName}.` : "You're featured."}
+          </Heading>
+          <Text style={s.lede}>
+            Your boost payment was successful and your listing is now pinned to
+            the top of search results for the next 30 days.
+          </Text>
+
+          <Section style={s.detailGrid}>
+            <Text style={s.detailLabel}>LISTING</Text>
+            <Text style={s.detailValue}>{listingTitle || 'Your listing'}</Text>
+            <Hr style={s.hrThin} />
+            <Text style={s.detailLabel}>AMOUNT</Text>
+            <Text style={s.detailValueOrange}>{amount}</Text>
+            {expiresAt && (
+              <>
+                <Hr style={s.hrThin} />
+                <Text style={s.detailLabel}>FEATURED UNTIL</Text>
+                <Text style={s.detailValue}>{expiresAt}</Text>
+              </>
+            )}
+            {receiptId && (
+              <>
+                <Hr style={s.hrThin} />
+                <Text style={s.detailLabel}>RECEIPT</Text>
+                <Text style={s.detailMono}>{receiptId}</Text>
+              </>
+            )}
+          </Section>
+
+          {listingId && (
+            <Section style={s.ctaWrap}>
+              <Button href={`${SITE_URL}/listing/${listingId}`} style={s.button}>
+                View your live listing
+              </Button>
+            </Section>
+          )}
+
+          <Hr style={s.hr} />
+
+          <Text style={s.smallHeader}>WHAT HAPPENS NEXT</Text>
+          <Text style={s.listItem}>1. Your listing appears first in relevant searches.</Text>
+          <Text style={s.listItem}>2. You'll get a featured badge across the marketplace.</Text>
+          <Text style={s.listItem}>3. Boost ends automatically after 30 days — no auto-renewal.</Text>
+        </Section>
+
+        <Text style={s.footnote}>
+          Questions? Reply to this email or call {SUPPORT_PHONE}.
+        </Text>
+      </Container>
+    </Body>
+  </Html>
+)
+
+export const template = {
+  component: FeaturedPaymentReceiptEmail,
+  subject: (data: Record<string, any>) =>
+    `⭐ Boost activated for ${data?.listingTitle || 'your listing'}`,
+  displayName: 'Featured boost receipt',
+  previewData: {
+    firstName: 'Alex',
+    listingTitle: '2023 Food Trailer with Generator',
+    listingId: 'abc-123',
+    amount: '$30.00',
+    expiresAt: 'June 28, 2026',
+    receiptId: 'pi_3TWF84A6Qt4pF0fM1RXYc3H2',
+  },
+} satisfies TemplateEntry
