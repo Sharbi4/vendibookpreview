@@ -475,6 +475,11 @@ const HostDashboard = () => {
         onConnect={handleConnectStripe}
         isConnecting={isConnecting}
       />
+
+      {/* Auto-prompt to boost a published listing that isn't yet featured */}
+      {!isLoading && (
+        <BoostListingPrompt listings={listings as any} userId={user?.id} />
+      )}
     </div>
   );
 };
