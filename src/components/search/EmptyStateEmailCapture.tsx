@@ -61,37 +61,15 @@ export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFi
         console.error('DB alert error:', dbError);
       }
 
-      // Submit to Zendesk via edge function
-      try {
-        const modeLabel = mode === 'rent' ? 'Rental' : mode === 'sale' ? 'Purchase' : 'Rental/Purchase';
-        const categoryLabel = category ? category.replace(/_/g, ' ') : 'Any category';
-        
-        await supabase.functions.invoke('create-zendesk-ticket', {
-          body: {
-            requester_name: trimmedName,
-            requester_email: trimmedEmail,
-            requester_phone: trimmedPhone || undefined,
-            subject: `Availability Alert: ${modeLabel} near ${trimmedZip}`,
-            description: [
-              `A visitor wants to be notified about new listings.`,
-              ``,
-              `Name: ${trimmedName}`,
-              `Email: ${trimmedEmail}`,
-              `Phone: ${trimmedPhone || 'Not provided'}`,
-              `Zip Code / Area: ${trimmedZip}`,
-              `Interest: ${modeLabel}`,
-              `Category: ${categoryLabel}`,
-              ``,
-              `This lead came from the empty search results page.`,
-            ].join('\n'),
-            priority: 'normal',
-            type: 'task',
-            tags: ['availability-alert', 'lead', mode || 'any-mode'],
-          },
-        });
-      } catch (zendeskErr) {
-        // Non-blocking — DB save was the primary action
-        console.error('Zendesk ticket error:', zendeskErr);
+      // Trigger Vapi outbound follow-up call if phone provided
+      if (trimmedPhone) {
+        try {
+          await supabase.functions.invoke('vapi-outbound-call', {
+            body: { name: trimmedName, phone: trimmedPhone },
+          });
+        } catch (callErr) {
+          console.error('Vapi outbound call error:', callErr);
+        }
       }
 
       setIsSubmitted(true);
