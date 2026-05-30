@@ -213,11 +213,3 @@ export default function Feedback() {
     </div>
   );
 }
-
-        <Button onClick={submit} disabled={submitting} size="lg" className="w-full">
-          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit feedback"}
-        </Button>
-      </div>
-    </div>
-  );
-}
