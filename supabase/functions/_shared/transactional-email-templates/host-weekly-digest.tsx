@@ -14,9 +14,16 @@ interface Props {
   topListingId?: string
   aiInsight?: string
   tip?: string
+  referralProgram?: 'purchase' | 'supply' | 'rental' | null
 }
 
-const E = ({ hostName, weekLabel, views, inquiries, bookings, earnings, topListingTitle, topListingId, aiInsight, tip }: Props) => (
+const REFERRAL_COPY: Record<string, string> = {
+  purchase: 'Know a buyer? You could earn $500 when they complete their first purchase.',
+  supply: 'Know a seller? You could earn $150 when their first transaction clears.',
+  rental: 'Know a renter? You could earn $50 when they complete their first booking.',
+}
+
+const E = ({ hostName, weekLabel, views, inquiries, bookings, earnings, topListingTitle, topListingId, aiInsight, tip, referralProgram }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Your weekly Vendibook digest</Preview>
     <Body style={s.main}><Container style={s.container}>
       <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
