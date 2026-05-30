@@ -1,8 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -434,17 +432,31 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Send email to all admins
+    // Send digest to each admin individually (one transactional send per recipient)
     console.log(`Sending digest email to ${adminEmails.length} admin(s)...`);
-    
-    const emailResponse = await resend.emails.send({
-      from: "VendiBook <notifications@resend.dev>",
-      to: adminEmails as string[],
-      subject: `📊 Daily Admin Digest - ${totalItems} item${totalItems !== 1 ? 's' : ''} need attention`,
-      html: emailHtml,
-    });
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    const sendResults: any[] = [];
+    for (const adminEmail of adminEmails as string[]) {
+      const { error: emailError } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "admin-daily-digest",
+          recipientEmail: adminEmail,
+          idempotencyKey: `admin-digest-${adminEmail}-${dateStamp}`,
+          templateData: {
+            subject: `Daily Admin Digest — ${totalItems} item${totalItems !== 1 ? 's' : ''} need attention`,
+            summary: `${enrichedBookings.length} pending bookings, ${enrichedDocs.length} pending documents, ${enrichedDisputes.length} active disputes`,
+            pendingBookings: enrichedBookings,
+            pendingDocuments: enrichedDocs,
+            activeDisputes: enrichedDisputes,
+            totalItems,
+          },
+        },
+      });
+      sendResults.push({ admin: adminEmail, ok: !emailError, error: emailError?.message });
+    }
 
-    console.log("Email sent successfully:", emailResponse);
+    console.log("Digest dispatch complete:", sendResults);
+
 
     return new Response(
       JSON.stringify({
