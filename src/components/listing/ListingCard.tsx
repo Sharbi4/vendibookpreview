@@ -218,7 +218,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         className={cn("cursor-pointer block flex-1 flex flex-col", className)}
         onClick={() => {
           trackListingCardClick(listing.id, listing.category, 'listing_card');
-          trackLeadEvent('listing_card_click', { listing_id: listing.id, category: listing.category, city: listing.city || undefined });
+          trackLeadEvent('listing_card_click', { listing_id: listing.id, category: listing.category });
         }}
       >
         {/* Image Container - Turo Look */}
