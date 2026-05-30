@@ -54,6 +54,17 @@ const E = ({ hostName, weekLabel, views, inquiries, bookings, earnings, topListi
           </>
         ) : null}
 
+        {referralProgram ? (
+          <>
+            <Hr style={s.hr} />
+            <Text style={s.smallHeader}>REFER &amp; EARN</Text>
+            <Text style={s.text}>{REFERRAL_COPY[referralProgram]}</Text>
+            <Text style={s.text}>
+              <a href={`${SITE_URL}/referral/dashboard?source=email_weekly`} style={{ color: '#FF5124', textDecoration: 'underline' }}>See your referral dashboard →</a>
+            </Text>
+          </>
+        ) : null}
+
         <Section style={s.ctaWrap}><Button href={`${SITE_URL}/dashboard`} style={s.button}>Open dashboard</Button></Section>
       </Section>
     </Container></Body></Html>
