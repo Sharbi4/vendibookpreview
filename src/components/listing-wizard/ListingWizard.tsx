@@ -90,6 +90,13 @@ export const ListingWizard: React.FC = () => {
   const [isUploadingVideos, setIsUploadingVideos] = useState(false);
   const hasUnsavedChanges = useRef(false);
   const lastSavedData = useRef<string>('');
+
+  // Fire host_listing_started exactly once on wizard mount
+  useEffect(() => {
+    trackLeadEvent('host_listing_started', { source: 'create_listing' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   
   // Track preview image URLs to properly clean up object URLs
   const previewImageUrlsRef = useRef<Map<File, string>>(new Map());
