@@ -93,16 +93,16 @@ Deno.serve(async (req) => {
   for (const tx of txs) {
     // Only send if this is their first completed transaction overall
     const { count: bCount } = await supabase
-      .from('bookings')
+      .from('booking_requests')
       .select('id', { count: 'exact', head: true })
-      .eq('renter_id', tx.userId)
+      .eq('shopper_id', tx.userId)
       .eq('payment_status', 'paid')
       .lt('created_at', oneDayAgoStart)
     const { count: sCount } = await supabase
       .from('sale_transactions')
       .select('id', { count: 'exact', head: true })
       .eq('buyer_id', tx.userId)
-      .eq('payment_status', 'paid')
+      .in('status', ['paid', 'completed'])
       .lt('created_at', oneDayAgoStart)
     if ((bCount ?? 0) + (sCount ?? 0) > 0) continue // not their first
 
