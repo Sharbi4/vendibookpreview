@@ -133,47 +133,40 @@ const SignageRequest = () => {
 
       const fullAddress = `${data.streetAddress}, ${data.city}, ${data.state} ${data.zipCode}`;
 
-      // Submit to Zendesk via edge function
-      const { data: result, error } = await supabase.functions.invoke('create-zendesk-ticket', {
-        body: {
-          requester_name: data.fullName,
-          requester_email: data.email,
-          requester_phone: data.phone || undefined,
-          subject: `Free Signage Request: ${signageLabel}`,
-          description: `
+      // Email support with the full shipping details (address must be preserved)
+      const message = `
 New signage request from VendiBook host:
 
-**Contact Information**
-- Name: ${data.fullName}
-- Email: ${data.email}
-- Phone: ${data.phone || 'Not provided'}
-
-**Shipping Address**
+Shipping Address:
 ${data.streetAddress}
 ${data.city}, ${data.state} ${data.zipCode}
 
-**Signage Selection**
-${signageLabel}
+Signage Selection: ${signageLabel}
+Custom Signage Text: "${data.signageText.toUpperCase()}"
 
-**Custom Signage Text**
-"${data.signageText.toUpperCase()}"
+Listing ID: ${listingId || 'Not specified'}
+Listing Title: ${listingInfo?.title || 'Not specified'}
+Category: ${listingInfo?.category || 'Not specified'}
+      `.trim();
 
-**Listing Information**
-- Listing ID: ${listingId || 'Not specified'}
-- Listing Title: ${listingInfo?.title || 'Not specified'}
-- Category: ${listingInfo?.category || 'Not specified'}
-
----
-This request was submitted via the VendiBook signage request form.
-          `.trim(),
-          type: 'task',
-          priority: 'normal',
-          tags: ['vendibook', 'signage-request', 'free-signage', data.signageType],
-          external_id: listingId || undefined,
+      const { error } = await supabase.functions.invoke('send-contact-email', {
+        body: {
+          name: data.fullName,
+          email: data.email,
+          phone: data.phone || 'Not provided',
+          subject: `Free Signage Request: ${signageLabel}`,
+          message,
         },
       });
 
       if (error) throw error;
+
+      // Also trigger Vapi outbound call to confirm shipping details
+      if (data.phone) {
+        supabase.functions.invoke('vapi-outbound-call', {
+          body: { name: data.fullName, phone: data.phone },
+        }).catch((err) => console.error('Vapi call error:', err));
+      }
 
       setIsSubmitted(true);
       toast({
