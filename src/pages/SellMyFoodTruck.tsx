@@ -647,28 +647,29 @@ const SellMyFoodTruck = () => {
               >
                 <h2 className="text-2xl md:text-3xl font-bold mb-3 text-background">Ready to sell?</h2>
                 <p className="text-background/60 mb-8">
-                  List your truck today — or get a price estimate first.
+                  List your food truck today and reach buyers actively searching — not scrolling Facebook Marketplace.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
                   <Button size="lg" className="bg-background text-foreground hover:bg-background/90" asChild>
                     <Link to="/list?mode=sale">
-                      List for Sale
+                      List Your Food Truck
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                   <Button size="lg" variant="outline" className="border-background/20 text-background hover:bg-background/10 hover:text-background" asChild>
-                    <Link to="/tools/pricepilot">
-                      Get a Price Estimate
+                    <Link to="/food-trucks-for-sale">
+                      See Food Trucks for Sale
                     </Link>
                   </Button>
                 </div>
                 <Link 
-                  to="/search?mode=sale" 
+                  to="/tools/pricepilot" 
                   className="text-sm text-background/50 hover:text-background/70 transition-colors inline-flex items-center gap-1"
                 >
-                  Browse active for-sale listings
+                  Get a price estimate first
                   <ChevronRight className="h-3 w-3" />
                 </Link>
+
               </motion.div>
             </div>
           </section>
