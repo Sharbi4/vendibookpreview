@@ -468,7 +468,7 @@ const handler = async (req: Request): Promise<Response> => {
           activeDisputes: enrichedDisputes.length,
           totalItems,
         },
-        emailResponse,
+        sendResults,
       }),
       {
         status: 200,
