@@ -1,8 +1,14 @@
 // Admin actions for the referral program.
 // Supported actions:
 //   qualify, approve, reject, void, place_on_hold, mark_paid_manual,
-//   add_note, suspend_referrer, update_program, set_flag
+//   add_note, flag_fraud, suspend_referrer, update_program, set_flag
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
+const fail = (err: any, corsHeaders: Record<string, string>) =>
+  new Response(JSON.stringify({ error: err?.message ?? String(err) }), {
+    status: 400,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
