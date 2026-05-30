@@ -158,15 +158,16 @@ const SellMyFoodTruck = () => {
   return (
     <>
       <SEO
-        title="Sell My Food Truck Online | List Your Food Truck on Vendibook"
-        description="List your food truck or food trailer on Vendibook and reach buyers, renters, and mobile food entrepreneurs looking for commercial food assets."
+        title="Sell Your Food Truck — Without Getting Buried on Facebook Marketplace"
+        description="List your food truck or trailer on Vendibook and reach buyers who are actively searching — not scrolling. Verified inquiries, secure checkout, financing-friendly buyers, and nationwide freight."
         canonical="/sell-my-food-truck"
         type="website"
-        ogTitle="Sell My Food Truck Online | List Your Food Truck on Vendibook"
-        ogDescription="List your food truck or trailer on Vendibook — reach verified buyers and renters in 2026 with zero listing fees and escrow-secured checkout."
-        twitterTitle="Sell My Food Truck Online — List on Vendibook"
-        twitterDescription="Reach buyers, renters, and mobile food entrepreneurs. Free to list, escrow-secured checkout."
+        ogTitle="Sell Your Food Truck — Without Getting Buried on Facebook Marketplace"
+        ogDescription="Reach buyers actively searching for food trucks. Verified inquiries, secure checkout, financing-friendly traffic, nationwide freight."
+        twitterTitle="Sell Your Food Truck — Without Getting Buried on Facebook Marketplace"
+        twitterDescription="Buyers come to Vendibook ready to buy. List in minutes, get serious inquiries."
       />
+
       <JsonLd schema={[faqSchema, breadcrumbSchema, howToSchema, serviceSchema]} />
       
       <div className="min-h-screen flex flex-col bg-background">
@@ -191,25 +192,26 @@ const SellMyFoodTruck = () => {
                 className="max-w-3xl mx-auto text-center"
               >
                 <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-                  Sell your food truck — with serious buyers and a clean process.
+                  Sell your food truck — without getting buried on Facebook Marketplace.
                 </h1>
                 <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                  List in minutes. Get a price estimate instantly. Manage offers, payments, and next steps from your dashboard.
+                  List once and reach buyers actively searching for food trucks and trailers — not scrolling past your post. Verified inquiries, secure checkout, financing-friendly buyers.
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
                   <Button size="lg" variant="glass-cta" asChild className="text-base">
                     <Link to="/list?mode=sale">
-                      List for Sale
+                      List Your Food Truck
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                   <Button size="lg" variant="glass-cta" asChild className="text-base">
-                    <Link to="/tools/pricepilot">
-                      Get a Price Estimate
+                    <Link to="/food-trucks-for-sale">
+                      See Food Trucks for Sale
                     </Link>
                   </Button>
                 </div>
+
                 
                 {/* Trust Row */}
                 <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
@@ -248,8 +250,69 @@ const SellMyFoodTruck = () => {
             </div>
           </section>
 
+          {/* Why Sellers Choose Vendibook (vs Facebook Marketplace) */}
+          <section className="py-16 border-t border-foreground/5">
+            <div className="container">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="text-center max-w-2xl mx-auto mb-12"
+              >
+                <h2 className="text-2xl md:text-3xl font-bold mb-3">
+                  Why food truck sellers choose Vendibook.
+                </h2>
+                <p className="text-muted-foreground">
+                  Facebook Marketplace was built for couches. Vendibook is built for mobile food assets — every visitor is here on purpose.
+                </p>
+              </motion.div>
+
+              <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-4">
+                <Card className="border-foreground/10">
+                  <CardContent className="p-6">
+                    <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Facebook Marketplace</div>
+                    <ul className="space-y-2.5 text-sm text-muted-foreground">
+                      <li>• Buried in a feed of couches, cars, and random goods</li>
+                      <li>• "Is this still available?" from people who never reply</li>
+                      <li>• No verification — scams and lowballers everywhere</li>
+                      <li>• Cash-only handoffs with no buyer protection</li>
+                      <li>• No financing — buyers walk if they can't pay cash</li>
+                      <li>• No freight — buyer has to live nearby</li>
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-foreground/20 bg-foreground/[0.02]">
+                  <CardContent className="p-6">
+                    <div className="text-xs font-medium uppercase tracking-wider text-foreground mb-3">Vendibook</div>
+                    <ul className="space-y-2.5 text-sm">
+                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Buyers come searching specifically for trucks &amp; trailers</span></li>
+                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Verified inquiries from real operators</span></li>
+                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Identity verification &amp; secure checkout</span></li>
+                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Optional notarized sale receipts</span></li>
+                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Affirm &amp; Afterpay — buyers finance, you get paid upfront</span></li>
+                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Nationwide freight across all 48 states</span></li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="text-center mt-8">
+                <Button size="lg" variant="glass-cta" asChild>
+                  <Link to="/list?mode=sale">
+                    List Your Food Truck
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                <p className="text-xs text-muted-foreground mt-3">Free to list. Pay 0% if you handle payment in person.</p>
+              </div>
+            </div>
+          </section>
+
           {/* Pricing Tools Section */}
           <section className="py-16 bg-muted/30">
+
             <div className="container">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -584,28 +647,29 @@ const SellMyFoodTruck = () => {
               >
                 <h2 className="text-2xl md:text-3xl font-bold mb-3 text-background">Ready to sell?</h2>
                 <p className="text-background/60 mb-8">
-                  List your truck today — or get a price estimate first.
+                  List your food truck today and reach buyers actively searching — not scrolling Facebook Marketplace.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
                   <Button size="lg" className="bg-background text-foreground hover:bg-background/90" asChild>
                     <Link to="/list?mode=sale">
-                      List for Sale
+                      List Your Food Truck
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                   <Button size="lg" variant="outline" className="border-background/20 text-background hover:bg-background/10 hover:text-background" asChild>
-                    <Link to="/tools/pricepilot">
-                      Get a Price Estimate
+                    <Link to="/food-trucks-for-sale">
+                      See Food Trucks for Sale
                     </Link>
                   </Button>
                 </div>
                 <Link 
-                  to="/search?mode=sale" 
+                  to="/tools/pricepilot" 
                   className="text-sm text-background/50 hover:text-background/70 transition-colors inline-flex items-center gap-1"
                 >
-                  Browse active for-sale listings
+                  Get a price estimate first
                   <ChevronRight className="h-3 w-3" />
                 </Link>
+
               </motion.div>
             </div>
           </section>
@@ -617,12 +681,13 @@ const SellMyFoodTruck = () => {
         <div className="fixed bottom-0 left-0 right-0 p-3 bg-background/95 backdrop-blur-sm border-t md:hidden z-40">
           <div className="flex gap-2">
             <Button variant="glass-cta" asChild className="flex-1">
-              <Link to="/list?mode=sale">List for Sale</Link>
+              <Link to="/list?mode=sale">List Your Food Truck</Link>
             </Button>
             <Button variant="glass-cta" asChild className="flex-1">
-              <Link to="/tools/pricepilot">Price Estimate</Link>
+              <Link to="/food-trucks-for-sale">For Sale</Link>
             </Button>
           </div>
+
         </div>
       </div>
     </>
