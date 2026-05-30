@@ -12,6 +12,50 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
 
+/**
+ * Auto-adjust referrals attached to a transaction when a Stripe dispute/refund hits.
+ * Uses log_referral_status_change RPC with deterministic idempotency to avoid duplicate logs.
+ */
+async function adjustReferralsForTransaction(
+  supabaseClient: any,
+  opts: {
+    transactionId?: string | null;
+    bookingId?: string | null;
+    eventId: string;
+    newStatus: "on_hold" | "voided";
+    note: string;
+    actionType: string;
+  }
+) {
+  try {
+    const { transactionId, bookingId, eventId, newStatus, note, actionType } = opts;
+    const ids = [transactionId, bookingId].filter(Boolean) as string[];
+    if (ids.length === 0) return;
+
+    const { data: refs } = await supabaseClient
+      .from("referrals")
+      .select("id, status")
+      .in("transaction_id", ids)
+      .in("status", ["pending_review", "qualified", "transaction_started"]);
+
+    for (const r of refs ?? []) {
+      const { error } = await supabaseClient.rpc("log_referral_status_change", {
+        p_referral_id: r.id,
+        p_new_status: newStatus,
+        p_source: "system",
+        p_note: note,
+        p_idempotency_key: `stripe-${eventId}-${r.id}`,
+        p_action_type: actionType,
+      });
+      if (error) logStep("WARNING: referral auto-adjust failed", { referralId: r.id, error: error.message });
+      else logStep("Referral auto-adjusted", { referralId: r.id, newStatus });
+    }
+  } catch (e) {
+    logStep("WARNING: adjustReferralsForTransaction threw", { error: String(e) });
+  }
+}
+
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -524,6 +568,10 @@ serve(async (req) => {
               ...(depositAmount > 0 && paymentStatus === 'authorized' && {
                 deposit_amount: depositAmount,
                 deposit_status: 'pending',
+              }),
+              // Persist referral code for rental attribution at completion time
+              ...(session.metadata?.referral_code && {
+                referral_code: session.metadata.referral_code,
               }),
             })
             .eq("id", bookingId);
@@ -1121,11 +1169,70 @@ serve(async (req) => {
                 message: `Your refund of $${refundAmount.toFixed(2)} for "${listingTitle}" has been processed.`,
                 link: '/dashboard',
               });
+
+              // Void any qualifying referrals tied to this booking
+              await adjustReferralsForTransaction(supabaseClient, {
+                bookingId: booking.id,
+                eventId: event.id,
+                newStatus: "voided",
+                note: `Auto-void: rental refunded ($${refundAmount.toFixed(2)}) — payment_intent ${paymentIntentId}`,
+                actionType: "void_refund",
+              });
             }
+          }
+
+          // Also void referrals tied to a refunded sale_transaction
+          const { data: saleTx } = await supabaseClient
+            .from("sale_transactions")
+            .select("id")
+            .eq("payment_intent_id", paymentIntentId)
+            .maybeSingle();
+          if (saleTx?.id) {
+            await supabaseClient
+              .from("sale_transactions")
+              .update({ status: "refunded" })
+              .eq("id", saleTx.id);
+            await adjustReferralsForTransaction(supabaseClient, {
+              transactionId: saleTx.id,
+              eventId: event.id,
+              newStatus: "voided",
+              note: `Auto-void: sale refunded — payment_intent ${paymentIntentId}`,
+              actionType: "void_refund",
+            });
           }
         }
         break;
       }
+
+      case "charge.dispute.created": {
+        const dispute = event.data.object as Stripe.Dispute;
+        logStep("Processing charge.dispute.created", { disputeId: dispute.id });
+        const paymentIntentId = typeof dispute.payment_intent === 'string'
+          ? dispute.payment_intent
+          : dispute.payment_intent?.id;
+        if (paymentIntentId) {
+          const { data: booking } = await supabaseClient
+            .from("booking_requests")
+            .select("id")
+            .eq("payment_intent_id", paymentIntentId)
+            .maybeSingle();
+          const { data: saleTx } = await supabaseClient
+            .from("sale_transactions")
+            .select("id")
+            .eq("payment_intent_id", paymentIntentId)
+            .maybeSingle();
+          await adjustReferralsForTransaction(supabaseClient, {
+            bookingId: booking?.id ?? null,
+            transactionId: saleTx?.id ?? null,
+            eventId: event.id,
+            newStatus: "on_hold",
+            note: `Auto-hold: Stripe dispute opened (${dispute.reason ?? "unknown reason"}) on payment_intent ${paymentIntentId}`,
+            actionType: "hold_dispute",
+          });
+        }
+        break;
+      }
+
 
       case "transfer.paid": {
         const transfer = event.data.object as Stripe.Transfer;
