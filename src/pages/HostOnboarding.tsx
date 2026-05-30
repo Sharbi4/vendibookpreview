@@ -54,12 +54,10 @@ const HostOnboarding = () => {
   const [activeTab, setActiveTab] = useState<'rentals' | 'sales'>('rentals');
 
   const openZendeskChat = () => {
-    if (window.zE) {
-      try {
-        window.zE('messenger', 'open');
-      } catch (error) {
-        console.debug('Zendesk messenger open:', error);
-      }
+    try {
+      (window as any).Tawk_API?.maximize?.();
+    } catch (error) {
+      console.debug('Tawk chat open error:', error);
     }
   };
 
