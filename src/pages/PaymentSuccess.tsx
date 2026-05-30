@@ -538,6 +538,8 @@ const PaymentSuccess = () => {
                     </Button>
                   </div>
 
+                  <PostTransactionReferralCard variant="purchase" />
+
                   <Collapsible open={showEmailPreview} onOpenChange={setShowEmailPreview} className="mt-6">
                     <CollapsibleTrigger asChild>
                       <Button variant="ghost" size="sm" className="w-full gap-2 text-muted-foreground hover:text-foreground">
@@ -939,6 +941,8 @@ const PaymentSuccess = () => {
                       </Link>
                     </Button>
                   </div>
+
+                  <PostTransactionReferralCard variant="rental" />
 
                   {/* Email Preview for Confirmed Rentals (not holds) */}
                   {!isHold && (
