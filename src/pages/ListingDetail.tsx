@@ -453,6 +453,14 @@ const ListingDetail = () => {
                     <Share2 className="h-4 w-4" />
                     Share
                   </Button>
+                  {!isOwner && (
+                    <Link
+                      to={`/referral?source=listing_share&listing=${id}`}
+                      className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 ml-1"
+                    >
+                      Share & earn a referral reward →
+                    </Link>
+                  )}
                   <FavoriteButton 
                     listingId={id!} 
                     category={listing.category}
