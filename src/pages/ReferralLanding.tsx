@@ -126,9 +126,30 @@ const ReferralLanding = () => {
                 >
                   <CountUp to={500} />
                 </div>
-                <p className="mt-4 text-white/60 text-lg">per qualifying purchase referral</p>
+                <p className="mt-4 text-white/60 text-lg">you may earn per qualifying purchase referral</p>
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}>
+                <h1 className="text-4xl md:text-6xl font-black leading-tight mb-6">
+                  Turn your network into eligible rewards.
+                </h1>
+                <p className="text-lg md:text-xl text-white/70 mb-8 leading-relaxed">
+                  Refer buyers, sellers, and renters to Vendibook. Eligible rewards are paid through Stripe after the referred transaction completes and our team reviews it.
+                </p>
+                {programEnabled ? (
+                  <div className="flex flex-wrap gap-3">
+                    <Button asChild size="lg" className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white text-base shadow-[0_0_40px_rgba(255,81,36,0.4)] hover:shadow-[0_0_60px_rgba(255,81,36,0.6)] transition-shadow">
+                      <Link to={ctaHref}>Start referring <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
+                    </Button>
+                    <Button asChild size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10">
+                      <a href="#how-it-works">See how it works</a>
+                    </Button>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-sm text-white/80 mb-3 px-3 py-1.5 rounded-full bg-white/10 inline-block">Program opens soon — join the waitlist</p>
+                    <WaitlistForm />
+                  </div>
+                )}
                 <h1 className="text-4xl md:text-6xl font-black leading-tight mb-6">
                   Turn your network into income.
                 </h1>
