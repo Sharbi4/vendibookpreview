@@ -495,30 +495,6 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
       </div>
       </Link>
 
-      {/* Lower-friction CTA: Check Availability (rent) / Ask About This Listing (sale) */}
-      <div className="px-4 pb-3 pt-0">
-        <Link
-          to={`/listing/${listing.id}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            trackLeadEvent('listing_card_click', {
-              listing_id: listing.id,
-              category: listing.category,
-              source: 'listing_card_cta',
-              intent: listing.mode === 'sale' ? 'ask_about_listing' : 'check_availability',
-            });
-          }}
-          className={cn(
-            "block w-full text-center text-sm font-semibold py-2 rounded-xl transition-all duration-200",
-            listing.mode === 'sale'
-              ? "bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/20"
-              : "bg-primary/15 text-primary hover:bg-primary/25 border border-primary/20"
-          )}
-        >
-          {listing.mode === 'sale' ? 'Ask About This Listing' : 'Check Availability'}
-        </Link>
-      </div>
-      
       {/* Availability Calendar Modal */}
       {listing.mode === 'rent' && (
         <AvailabilityCalendarModal
@@ -530,6 +506,13 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           availableTo={(listing as any).available_to}
         />
       )}
+
+      {/* Conversion overlay (sale or rent) */}
+      <ListingCardOverlay
+        open={showOverlay}
+        onClose={() => setShowOverlay(false)}
+        listing={listing}
+      />
     </div>
   );
 };
