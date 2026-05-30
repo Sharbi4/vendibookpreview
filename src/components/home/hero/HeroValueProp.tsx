@@ -304,6 +304,23 @@ const HeroValueProp = () => {
               </button>
             </motion.div>
 
+            {/* Concierge soft-conversion CTA */}
+            <motion.div
+              className="w-full max-w-xl mx-auto mb-7 sm:mb-9 space-y-2.5"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.8 }}
+            >
+              <TellVendibookButton
+                variant="glass-cta"
+                size="lg"
+                className="w-full rounded-full px-7 gap-2 text-sm sm:text-base"
+                sourcePage="home_hero"
+              />
+              <ConciergeTrustLine className="justify-center text-center" />
+            </motion.div>
+
+
             {/* Trust row — structured pills */}
             <motion.div
               className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-5 gap-y-2.5 max-w-3xl mx-auto"
