@@ -145,6 +145,7 @@ const popularAmenityIcons: Record<string, { icon: React.ElementType; label: stri
 
 const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook, canDeliverToUser, distanceMiles, compact = false }: ListingCardProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(false);
   
   // Featured badge: dynamic, source of truth in src/lib/featured.ts
   const isFeatured = isListingFeatured(listing as any);
