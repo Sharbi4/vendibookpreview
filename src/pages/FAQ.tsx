@@ -268,6 +268,10 @@ const faqSections: FAQSection[] = [
         question: 'How does the dispute process work?',
         answer: 'First, attempt resolution with the other party in-platform. If unresolved, open a dispute with documentation. Vendibook reviews evidence and may request additional info. A decision is issued (refund, partial refund, or denial).',
       },
+      {
+        question: 'How do I request a refund?',
+        answer: '1) Open the booking from your dashboard. 2) Click "Report an issue" or "Open dispute." 3) Our admin team reviews your case and determines refund eligibility. Once approved, refunds are returned to your original payment method within 5–10 business days, depending on your bank. Disputes between guests and hosts are resolved through admin mediation, where evidence from both parties is reviewed.',
+      },
     ],
   },
   {
