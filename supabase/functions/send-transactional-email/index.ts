@@ -1,11 +1,12 @@
 import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 
 // Configuration baked in at scaffold time — do NOT change these manually.
 // To update, re-run the email domain setup flow.
-const SITE_NAME = "Vendibook"
+const SITE_NAME = "vendibookpreview"
 // SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
 // It MUST match the subdomain delegated to Lovable's nameservers — never the root domain.
 // The email API looks up this exact domain; a mismatch causes "No email domain record found".
@@ -13,13 +14,7 @@ const SENDER_DOMAIN = "notify.vendibook.com"
 // FROM_DOMAIN is the domain shown in the From: header (e.g., "example.com").
 // When display_from_root is enabled, this can be the root domain for cleaner branding,
 // even though actual sending uses the subdomain above.
-const FROM_DOMAIN = "notify.vendibook.com"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type',
-}
+const FROM_DOMAIN = "vendibook.com"
 
 // Generate a cryptographically random 32-byte hex token
 function generateToken(): string {
@@ -60,7 +55,6 @@ Deno.serve(async (req) => {
   let idempotencyKey: string
   let messageId: string
   let templateData: Record<string, any> = {}
-  let replyTo: string | undefined
   try {
     const body = await req.json()
     templateName = body.templateName || body.template_name
@@ -70,7 +64,6 @@ Deno.serve(async (req) => {
     if (body.templateData && typeof body.templateData === 'object') {
       templateData = body.templateData
     }
-    replyTo = body.replyTo || body.reply_to
   } catch {
     return new Response(
       JSON.stringify({ error: 'Invalid JSON in request body' }),
@@ -294,40 +287,10 @@ Deno.serve(async (req) => {
   )
 
   // Resolve subject — supports static string or dynamic function
-  let resolvedSubject =
+  const resolvedSubject =
     typeof template.subject === 'function'
       ? template.subject(templateData)
       : template.subject
-
-  // Optional AI-personalized subject line via Lovable AI Gateway.
-  // Caller opts in by setting templateData.aiSubject = true. Falls back silently.
-  if (templateData?.aiSubject === true) {
-    try {
-      const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
-      if (LOVABLE_API_KEY) {
-        const ctx = JSON.stringify(templateData).slice(0, 800)
-        const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'google/gemini-2.5-flash-lite',
-            messages: [
-              { role: 'system', content: 'You write concise, high-open-rate email subject lines for Vendibook (a marketplace for food trucks, trailers, ghost kitchens, and vendor lots). Max 55 chars. No emoji unless natural. No clickbait. Reply with ONLY the subject line, no quotes.' },
-              { role: 'user', content: `Template: ${templateName}\nFallback subject: ${resolvedSubject}\nContext (JSON): ${ctx}\n\nWrite a better, personalized subject line.` },
-            ],
-          }),
-          signal: AbortSignal.timeout(4000),
-        })
-        if (r.ok) {
-          const j = await r.json()
-          const ai = j?.choices?.[0]?.message?.content?.trim()?.replace(/^["']|["']$/g, '')
-          if (ai && ai.length > 3 && ai.length < 120) resolvedSubject = ai
-        }
-      }
-    } catch (e) {
-      console.warn('AI subject generation skipped:', e instanceof Error ? e.message : e)
-    }
-  }
 
   // 5. Enqueue the pre-rendered email for async processing by the dispatcher.
   // The dispatcher (process-email-queue) handles sending, retries, and rate-limit backoff.
@@ -346,7 +309,6 @@ Deno.serve(async (req) => {
       message_id: messageId,
       to: effectiveRecipient,
       from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-      reply_to: replyTo || `support@${FROM_DOMAIN}`,
       sender_domain: SENDER_DOMAIN,
       subject: resolvedSubject,
       html,
