@@ -10,11 +10,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Badge } from "@/components/ui/badge";
 import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
-import { useReferralCode, useMyReferrals, buildReferralUrl } from "@/hooks/useReferral";
+import { useReferralCode, useMyReferrals, buildReferralUrl, useFeatureFlag, useAcceptReferralTerms } from "@/hooks/useReferral";
 import { useStripeConnect } from "@/hooks/useStripeConnect";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Copy, Download, Facebook, MessageCircle, Mail, Share2, Twitter, ExternalLink, AlertCircle } from "lucide-react";
+import { Copy, Download, Facebook, MessageCircle, Mail, Share2, Twitter, ExternalLink, AlertCircle, Info } from "lucide-react";
 
 const TERMS_VERSION = "2026-05-30";
 const PROGRAMS = [
