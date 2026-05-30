@@ -279,70 +279,42 @@ serve(async (req) => {
         ? documentLabels.map(label => `<li style="color: #166534;">${label}</li>`).join('')
         : `<li style="color: #166534;">${documentLabel}</li>`;
 
+      const approvedDocs = is_bulk_approval && documentLabels.length > 0
+        ? documentLabels.join(", ")
+        : documentLabel;
+
       // Email to RENTER
       if (renter?.email) {
         emails.push({
           to: renter.email,
-          subject: `✅ Your Documents Have Been Approved - ${listingTitle}`,
-          html: `
-            <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 22px;">Documents Approved! 🎉</h1>
-              </div>
-              
-              <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
-                  Hi ${renter.full_name || 'there'},
-                </p>
-                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                  Great news! All your documents for <strong>${listingTitle}</strong> have been reviewed and approved by our team.
-                </p>
-                
-                ${isInstantBook ? `
-                <div style="background: #dbeafe; border-radius: 8px; padding: 12px; border: 1px solid #93c5fd; margin: 0 0 16px 0;">
-                  <p style="margin: 0; color: #1e40af; font-size: 14px;">
-                    ⚡ <strong>Instant Book:</strong> Your booking has been automatically confirmed!
-                  </p>
-                </div>
-                ` : ''}
-                
-                <div style="background: #dcfce7; border-radius: 8px; padding: 16px; border: 1px solid #bbf7d0; margin: 0 0 20px 0;">
-                  <p style="margin: 0 0 8px 0; font-weight: 600; color: #166534; font-size: 16px;">✓ Approved Documents:</p>
-                  <ul style="margin: 0; padding-left: 20px;">
-                    ${docListHtml}
-                  </ul>
-                </div>
-                
-                <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e5e7eb; margin: 0 0 20px 0;">
-                  <table style="width: 100%; border-collapse: collapse;">
-                    <tr>
-                      <td style="padding: 8px 0; color: #6b7280;">Listing:</td>
-                      <td style="padding: 8px 0; font-weight: 600; color: #1f2937;">${listingTitle}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 8px 0; color: #6b7280;">Booking Dates:</td>
-                      <td style="padding: 8px 0; color: #1f2937;">${startDate} - ${endDate}</td>
-                    </tr>
-                  </table>
-                </div>
-                
-                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                  ${isInstantBook 
-                    ? 'Your booking is now confirmed and you\'re all set!' 
-                    : 'The host will now review your booking request and respond soon.'}
-                </p>
-                
-                <div style="text-align: center;">
-                  <a href="https://vendibook.com/dashboard" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Your Booking</a>
-                </div>
-              </div>
-              
-              <div style="padding: 16px; text-align: center; color: #9ca3af; font-size: 12px;">
-                <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+17257559598" style="color: #FF5124; text-decoration: none;">(725) 755-9598</a></p>
-                <p style="margin: 0;">© ${new Date().getFullYear()} Vendibook. All rights reserved.</p>
-              </div>
-            </div>
-          `,
+          idempotencyKey: `doc-all-approved-renter-${booking_id}`,
+          payload: {
+            preview: `Your documents have been approved — ${listingTitle}`,
+            kicker: "Documents approved",
+            heading: "Documents approved 🎉",
+            greeting: `Hi ${renter.full_name || "there"},`,
+            paragraphs: [
+              `Great news! All your documents for ${listingTitle} have been reviewed and approved by our team.`,
+              isInstantBook
+                ? "⚡ Instant Book: your booking has been automatically confirmed!"
+                : "The host will now review your booking request and respond soon.",
+            ],
+            details: [
+              { label: "Listing", value: listingTitle },
+              { label: "Booking dates", value: `${startDate} – ${endDate}` },
+              { label: "Approved documents", value: approvedDocs },
+            ],
+            alert: {
+              tone: "success",
+              title: "All set",
+              body: isInstantBook
+                ? "Your booking is confirmed and you're all set."
+                : "All documentation requirements are complete.",
+            },
+            ctaLabel: "View your booking",
+            ctaUrl: DASHBOARD_URL,
+            footnote: "Need help? Call (725) 755-9598 or email support@vendibook.com.",
+          },
         });
       }
 
@@ -350,68 +322,33 @@ serve(async (req) => {
       if (host?.email) {
         emails.push({
           to: host.email,
-          subject: `✅ All Documents Approved - ${listingTitle}`,
-          html: `
-            <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 22px;">All Documents Verified! 🎉</h1>
-              </div>
-              
-              <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
-                  Hi ${host.full_name || 'there'},
-                </p>
-                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                  Great news! All required documents for <strong>${renter?.full_name || 'your renter'}</strong>'s booking of <strong>${listingTitle}</strong> have been verified and approved.
-                </p>
-                
-                ${isInstantBook ? `
-                <div style="background: #dbeafe; border-radius: 8px; padding: 12px; border: 1px solid #93c5fd; margin: 0 0 16px 0;">
-                  <p style="margin: 0; color: #1e40af; font-size: 14px;">
-                    ⚡ <strong>Instant Book:</strong> This booking has been automatically confirmed. Payment has already been collected.
-                  </p>
-                </div>
-                ` : ''}
-                
-                <div style="background: #dcfce7; border-radius: 8px; padding: 16px; border: 1px solid #bbf7d0; margin: 0 0 20px 0;">
-                  <p style="margin: 0 0 8px 0; font-weight: 600; color: #166534; font-size: 16px;">✓ Approved Documents:</p>
-                  <ul style="margin: 0; padding-left: 20px;">
-                    ${docListHtml}
-                  </ul>
-                </div>
-                
-                <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e5e7eb; margin: 0 0 20px 0;">
-                  <table style="width: 100%; border-collapse: collapse;">
-                    <tr>
-                      <td style="padding: 8px 0; color: #6b7280;">Renter:</td>
-                      <td style="padding: 8px 0; font-weight: 600; color: #1f2937;">${renter?.full_name || 'N/A'}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 8px 0; color: #6b7280;">Booking Dates:</td>
-                      <td style="padding: 8px 0; color: #1f2937;">${startDate} - ${endDate}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 8px 0; color: #6b7280;">Listing:</td>
-                      <td style="padding: 8px 0; color: #1f2937;">${listingTitle}</td>
-                    </tr>
-                  </table>
-                </div>
-                
-                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                  The booking is now fully compliant with all documentation requirements. You can proceed with confidence!
-                </p>
-                
-                <div style="text-align: center;">
-                  <a href="https://vendibook.com/dashboard" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Dashboard</a>
-                </div>
-              </div>
-              
-              <div style="padding: 16px; text-align: center; color: #9ca3af; font-size: 12px;">
-                <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+17257559598" style="color: #FF5124; text-decoration: none;">(725) 755-9598</a></p>
-                <p style="margin: 0;">© ${new Date().getFullYear()} Vendibook. All rights reserved.</p>
-              </div>
-            </div>
-          `,
+          idempotencyKey: `doc-all-approved-host-${booking_id}`,
+          payload: {
+            preview: `All documents approved — ${listingTitle}`,
+            kicker: "Documents verified",
+            heading: "All documents verified 🎉",
+            greeting: `Hi ${host.full_name || "there"},`,
+            paragraphs: [
+              `All required documents for ${renter?.full_name || "your renter"}'s booking of ${listingTitle} have been verified and approved.`,
+              isInstantBook
+                ? "⚡ Instant Book: this booking has been automatically confirmed. Payment has already been collected."
+                : "The booking is now fully compliant with all documentation requirements.",
+            ],
+            details: [
+              { label: "Renter", value: renter?.full_name || "N/A" },
+              { label: "Listing", value: listingTitle },
+              { label: "Booking dates", value: `${startDate} – ${endDate}` },
+              { label: "Approved documents", value: approvedDocs },
+            ],
+            alert: {
+              tone: "success",
+              title: "Documents complete",
+              body: "All required documents have been submitted and approved.",
+            },
+            ctaLabel: "View dashboard",
+            ctaUrl: DASHBOARD_URL,
+            footnote: "Need help? Call (725) 755-9598 or email support@vendibook.com.",
+          },
         });
       }
 
