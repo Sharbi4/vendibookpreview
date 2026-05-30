@@ -259,31 +259,6 @@ export const EnhancedBookingSummaryCard: React.FC<EnhancedBookingSummaryCardProp
                   </Button>
                 </motion.div>
 
-                <p className="text-xs text-center text-muted-foreground">
-                  Request now — pay only after the host approves.
-                </p>
-              </motion.div>
-            ) : (
-              <motion.div 
-                key="empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-4"
-              >
-                {/* Select dates button */}
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button
-                    variant="dark-shine"
-                    className="w-full h-14 text-base font-semibold shadow-lg"
-                    size="lg"
-                    onClick={() => setShowDateModal(true)}
-                  >
-                    <Calendar className="h-5 w-5 mr-2" />
-                    Check availability
-                  </Button>
-                </motion.div>
-
                 {instantBook && (
                   <motion.div 
                     className="flex items-center justify-center gap-2"
