@@ -213,7 +213,7 @@ serve(async (req) => {
       day: "numeric",
     });
 
-    const emails: { to: string; subject: string; html: string }[] = [];
+    const emails: EmailJob[] = [];
 
     if (event_type === "uploaded") {
       // Notify ADMIN that a document was uploaded for review (not host)
