@@ -2,7 +2,16 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+// Emails are sent via the Lovable Emails queue (send-transactional-email),
+// using the premium Satin Lux `generic-notice` template. No direct Resend usage.
+const DASHBOARD_URL = "https://vendibook.com/dashboard";
+const ADMIN_URL = "https://vendibook.com/admin";
+
+type EmailJob = {
+  to: string;
+  idempotencyKey: string;
+  payload: Record<string, unknown>;
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
