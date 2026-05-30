@@ -14,19 +14,14 @@
   <url><loc>https://vendibook.com/las-vegas</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/lawrenceville</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/los-angeles</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://vendibook.com/memphis</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/miami</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://vendibook.com/nashville</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/phoenix</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/reno</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://vendibook.com/san-antonio</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/san-diego</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/san-francisco</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/santa-cruz</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://vendibook.com/santa-monica</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/scottsdale</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/seattle</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://vendibook.com/the-woodlands</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/tucson</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/atlanta-ga</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-trailer/atlanta-ga</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
@@ -42,8 +37,6 @@
   <url><loc>https://vendibook.com/buy/food-trailer/houston-tx</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/lawrenceville-ga</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-trailer/lawrenceville-ga</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/rent/food-trailer/los-angeles-ca</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/buy/food-trailer/los-angeles-ca</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/san-diego-ca</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-trailer/san-diego-ca</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/santa-cruz-ca</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
@@ -84,16 +77,4 @@
   <url><loc>https://vendibook.com/buy/shared-kitchen/miami-fl</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/shared-kitchen/scottsdale-az</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/shared-kitchen/scottsdale-az</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/rent/vendor-space/austin-tx</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/buy/vendor-space/austin-tx</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/rent/vendor-space/dallas-tx</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/buy/vendor-space/dallas-tx</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/rent/vendor-space/houston-tx</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/buy/vendor-space/houston-tx</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/rent/vendor-space/phoenix-az</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/buy/vendor-space/phoenix-az</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/rent/vendor-space/santa-monica-ca</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/buy/vendor-space/santa-monica-ca</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/rent/vendor-space/the-woodlands-tx</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/buy/vendor-space/the-woodlands-tx</loc><lastmod>2026-05-30</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
 </urlset>
