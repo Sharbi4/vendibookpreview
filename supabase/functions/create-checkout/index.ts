@@ -35,6 +35,8 @@ interface CheckoutRequest {
   vendibook_freight_enabled?: boolean;
   freight_payer?: 'buyer' | 'seller';
   freight_cost?: number; // Estimated freight cost in dollars
+  // Referral attribution (manual code entered at checkout; cookie attribution is on the user's profile)
+  referral_code?: string;
 }
 
 serve(async (req) => {
@@ -82,7 +84,9 @@ serve(async (req) => {
       vendibook_freight_enabled = false,
       freight_payer = 'buyer',
       freight_cost: rawFreightCost,
+      referral_code: rawReferralCode,
     } = body;
+    const referral_code = rawReferralCode ? String(rawReferralCode).trim().toUpperCase().slice(0, 32) : '';
     
     // Handle null values from request body (null !== undefined, so defaults don't apply)
     const delivery_fee = rawDeliveryFee ?? 0;
@@ -379,6 +383,7 @@ serve(async (req) => {
             deposit_amount: deposit_amount.toString(),
             platform_fee_cents: applicationFee.toString(),
             host_payout_cents: hostReceives.toString(),
+            referral_code,
           },
         },
         success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
@@ -390,6 +395,7 @@ serve(async (req) => {
           buyer_id: user.id,
           host_id: listing.host_id,
           deposit_amount: deposit_amount.toString(),
+          referral_code,
         },
       };
     } else {
@@ -477,6 +483,7 @@ serve(async (req) => {
             freight_cost: freightAmount.toString(),
             buyer_freight_cost: buyerFreightCost.toString(),
             seller_freight_deduction: isSellerPaidFreight ? freightAmount.toString() : '0',
+            referral_code,
           },
         },
         success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true`,
@@ -501,6 +508,7 @@ serve(async (req) => {
           freight_cost: freightAmount.toString(),
           buyer_freight_cost: buyerFreightCost.toString(),
           seller_freight_deduction: isSellerPaidFreight ? freightAmount.toString() : '0',
+          referral_code,
         },
       };
     }

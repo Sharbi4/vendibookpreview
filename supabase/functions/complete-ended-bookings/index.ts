@@ -95,6 +95,41 @@ serve(async (req) => {
                 });
               })()
             );
+
+            // Fire rental referral qualifying event (idempotent via booking id).
+            // referral-record-event enforces all eligibility gates (min value, duration, fraud).
+            EdgeRuntime.waitUntil((async () => {
+              try {
+                const { data: full } = await supabaseClient
+                  .from('booking_requests')
+                  .select('referral_code, total_price, dispute_status, payment_status, booking_end_timestamp, start_date')
+                  .eq('id', booking.id)
+                  .maybeSingle();
+                if (!full || full.dispute_status || full.payment_status !== 'paid') return;
+                const durationHours = full.booking_end_timestamp && full.start_date
+                  ? (new Date(full.booking_end_timestamp).getTime() - new Date(full.start_date).getTime()) / 36e5
+                  : 24;
+                if (durationHours < 2) return;
+                await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/referral-record-event`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+                  },
+                  body: JSON.stringify({
+                    program_type: 'rental',
+                    referred_user_id: booking.shopper_id,
+                    transaction_id: booking.id,
+                    transaction_value: Number(full.total_price ?? 0),
+                    referral_code: full.referral_code || undefined,
+                    seller_id: booking.host_id,
+                    idempotency_key: `rental-complete-${booking.id}`,
+                  }),
+                });
+              } catch (e) {
+                logStep('WARNING: rental referral event failed', { bookingId: booking.id, error: String(e) });
+              }
+            })());
           }
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);

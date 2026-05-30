@@ -3018,6 +3018,8 @@ export type Database = {
           cookie_attribution_code: string | null
           created_at: string
           id: string
+          listing_id: string | null
+          listing_published_at: string | null
           manual_attribution_code: string | null
           on_hold_until: string | null
           payout_date: string | null
@@ -3036,6 +3038,7 @@ export type Database = {
           referrer_reward_status: string | null
           reward_amount: number | null
           status: string
+          supply_first_txn_at: string | null
           transaction_id: string | null
           updated_at: string
           void_reason: string | null
@@ -3049,6 +3052,8 @@ export type Database = {
           cookie_attribution_code?: string | null
           created_at?: string
           id?: string
+          listing_id?: string | null
+          listing_published_at?: string | null
           manual_attribution_code?: string | null
           on_hold_until?: string | null
           payout_date?: string | null
@@ -3067,6 +3072,7 @@ export type Database = {
           referrer_reward_status?: string | null
           reward_amount?: number | null
           status?: string
+          supply_first_txn_at?: string | null
           transaction_id?: string | null
           updated_at?: string
           void_reason?: string | null
@@ -3080,6 +3086,8 @@ export type Database = {
           cookie_attribution_code?: string | null
           created_at?: string
           id?: string
+          listing_id?: string | null
+          listing_published_at?: string | null
           manual_attribution_code?: string | null
           on_hold_until?: string | null
           payout_date?: string | null
@@ -3098,6 +3106,7 @@ export type Database = {
           referrer_reward_status?: string | null
           reward_amount?: number | null
           status?: string
+          supply_first_txn_at?: string | null
           transaction_id?: string | null
           updated_at?: string
           void_reason?: string | null
