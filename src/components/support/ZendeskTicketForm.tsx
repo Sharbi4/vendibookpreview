@@ -67,28 +67,22 @@ const ZendeskTicketForm = () => {
     setIsSubmitting(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('create-zendesk-ticket', {
-        body: {
-          requester_name: result.data.name,
-          requester_email: result.data.email,
-          requester_phone: result.data.phone || undefined,
-          subject: result.data.subject,
-          description: result.data.message,
-          type: result.data.category,
-          priority: result.data.priority,
-          tags: ['vendibook', 'contact-form', result.data.category],
-        },
+      if (!result.data.phone) {
+        throw new Error('Phone number required for callback');
+      }
+      const { error } = await supabase.functions.invoke('vapi-outbound-call', {
+        body: { name: result.data.name, phone: result.data.phone },
       });
 
       if (error) throw error;
 
-      setTicketId(data.ticket_id);
+      setTicketId(`call-${Date.now()}`);
       toast({
-        title: 'Ticket created!',
-        description: `Your ticket #${data.ticket_id} has been submitted. We'll be in touch soon.`,
+        title: "We're calling you now!",
+        description: "Our team is dialing your number — please answer to get connected.",
       });
     } catch (error) {
-      console.error('Ticket creation error:', error);
+      console.error('Callback request error:', error);
       toast({
         title: 'Something went wrong',
         description: 'Please try again or email us directly at support@vendibook.com',
