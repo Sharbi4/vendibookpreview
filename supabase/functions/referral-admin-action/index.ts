@@ -228,12 +228,25 @@ Deno.serve(async (req) => {
 
     if (lastError) {
       console.error("[referral-admin-action]", action, lastError);
+      // Roll back the reservation so the caller can retry with the same key after fixing the issue.
+      if (idempotencyKey) {
+        await admin.from("admin_action_idempotency").delete().eq("idempotency_key", idempotencyKey);
+      }
       return fail(lastError, corsHeaders);
     }
 
-    return new Response(JSON.stringify({ ok: true }), {
+    const successBody = { ok: true };
+    if (idempotencyKey) {
+      await admin
+        .from("admin_action_idempotency")
+        .update({ response: successBody })
+        .eq("idempotency_key", idempotencyKey);
+    }
+
+    return new Response(JSON.stringify(successBody), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+
   } catch (e) {
     return new Response(JSON.stringify({ error: String(e) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
