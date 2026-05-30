@@ -412,20 +412,11 @@ const BookingCheckout = () => {
       });
 
       // Detect availability conflict (409) from either data body or FunctionsHttpError body
-      let conflictReason: string | null = null;
-      if ((checkoutData as { code?: string } | null)?.code === 'availability_conflict') {
-        conflictReason = (checkoutData as { error?: string }).error || 'This time is no longer available.';
-      } else if (checkoutError) {
-        try {
-          const ctxResp = (checkoutError as { context?: { response?: Response } })?.context?.response;
-          if (ctxResp && ctxResp.status === 409) {
-            const body = await ctxResp.clone().json();
-            if (body?.code === 'availability_conflict') {
-              conflictReason = body.error || 'This time is no longer available.';
-            }
-          }
-        } catch { /* ignore */ }
-      }
+      const conflictReason = await detectAvailabilityConflict({
+        data: checkoutData as { code?: string; error?: string } | null,
+        error: checkoutError,
+      });
+
 
       if (conflictReason) {
         if (checkoutWindow) checkoutWindow.close();
