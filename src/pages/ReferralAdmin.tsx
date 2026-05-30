@@ -107,6 +107,8 @@ const ReferralAdmin = () => {
   const [holdUntil, setHoldUntil] = useState("");
   const [severity, setSeverity] = useState<"low" | "medium" | "high">("medium");
   const [submitting, setSubmitting] = useState(false);
+  const [dialogIdempotencyKey, setDialogIdempotencyKey] = useState<string>("");
+
 
   useEffect(() => {
     if (!user?.id) {
