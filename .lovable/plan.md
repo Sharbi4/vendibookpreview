@@ -1,157 +1,161 @@
+# Rental Availability & Booking Entry Redesign
 
-## Goal
-
-Reshape `/` into a focused, premium marketplace for **food trucks and food trailers** — rent, buy, sell, list — with the concierge lead form as the primary soft-conversion path. Strip vendor-space copy, demote the newsletter popup, and tighten every section to earn its place.
+Turn the card → overlay → booking handoff into a real booking surface that mirrors the listing-page widget, blocks paid/approved/buffered time correctly, and prevents double bookings server-side.
 
 ---
 
-## 1. Section order (rewrite `src/pages/Index.tsx`)
+## 1. Card micro-action ("View availability →")
 
+**File:** `src/components/listing/ListingCard.tsx`
+
+- For `listing.mode === 'rent'`, change the CTA label from **"Check dates"** to **"View availability →"** and rename the event to `listing_view_availability_click` (sale path unchanged — still "Start purchase").
+- Keep the existing inline-text styling already in place (13px, #f97316, arrow translates 4px on hover, no background/border/pill, `e.stopPropagation()`). No structural changes needed.
+- Remove the now-dead `<AvailabilityCalendarModal>` mount (`showCalendar` state) — superseded by the overlay.
+
+---
+
+## 2. Shared `RentalAvailabilityPicker` component (single source of truth)
+
+**New file:** `src/components/listing/RentalAvailabilityPicker.tsx`
+
+Extract the booking-engine logic so the card overlay and the listing-detail widget render the **exact same** availability surface.
+
+Props:
+
+```text
+listingId, listingTitle, category, instantBook,
+priceHourly, priceDaily, priceWeekly, priceMonthly,
+totalSlots, slotNames, availableFrom, availableTo,
+source: 'listing_card_availability_overlay' | 'listing_detail_widget',
+onClose?: () => void
 ```
-AnnouncementBanner
-VerificationBanner (logged-in unverified only — unchanged)
-Hero (new)
-ListingsSections (Recently Added Trucks & Trailers)
-ConciergeSection
-TrustInfrastructure
-BecomeHostSection (host/seller CTA)
-FinalCTA (new copy)
-```
 
-Remove from homepage: `PaymentsBanner` (already minor, but consolidated into trust pillars).
+Internal state: `mode ('hourly' | 'daily')`, `startDate`, `endDate`, `hourlySelections` (`{ [yyyy-MM-dd]: string[] }`), `selectedSlotNumber`, `selectedSlotCount`.
 
----
+Data: reuses `useHourlyAvailability(listingId)` and `useBlockedDates({ listingId })` — no new fetch logic. Both hooks already pull listing settings, blocked dates, blocked times, buffer days, and paid/approved/pending-paid/instant-book bookings; we preserve that contract.
 
-## 2. Hero — `src/components/home/Hero.tsx` (rebuild)
+Sub-sections rendered top-to-bottom:
 
-Replace the current `HeroValueProp` import with a new `HeroFocused` component (build alongside, keep `HeroValueProp` for other pages).
+1. **Mode toggle** — only shown when both `hourlyEnabled` and `dailyEnabled` are true. Labels: `Hourly` / `Daily`. Tracked as `availability_mode_changed`.
+2. **Month calendar** — built on `getDayAvailabilityInfo(date)`:
+   - `available` → dark cell, white text
+   - `limited` → amber dot/ring (partial slots or some hours booked)
+   - `booked` / `blocked` / past / outside-window → muted, disabled
+   - `today` → thin orange ring when available
+   - selected day → orange ring; selected daily range → orange fill
+3. **Hourly slot strip** (only in hourly mode after day selected) — uses `getAvailableWindowsForDate(date)`, renders one chip per hour inside each window. Clicks toggle the hour in `hourlySelections[dateKey]`; multiple days supported (matches the listing-page widget's `hourlyData` encoding). Unavailable hours appear muted/disabled. Shows `Minimum booking time: N hours`.
+4. **Daily range summary** (daily mode) — `May 31 · 1 day` or `May 31 → Jun 3 · 4 days`. Shows `Minimum booking time: N day(s)`.
+5. **Slot selector** — only when `totalSlots > 1`. Reuses logic from `RentalBookingWidget` (slot number + slot count).
+6. **Price preview** — uses `calculateRentalFees` from `src/lib/commissions.ts`. Shows base × units + service fee + estimated total. Daily mode shows tiered weekly/monthly breakdown when applicable.
+7. **Primary CTA**:
+   - No date → `Select a date to continue` (disabled)
+   - Hourly mode, no hours → `Select a time to continue` (disabled)
+   - Ready + `instant_book` → `Book Now`
+   - Ready + standard → `Start Booking Request`
+   - On click → emits `booking_request_started` then `navigate(\`/book/\${listingId}?\${params}\`)` using the **same URLSearchParams shape** as `RentalBookingWidget.handleContinue` (`start`, `end`, `hours`, `hourlyData`, optional `slot`, `slotName`, `slotCount`).
+8. **Secondary CTA** — `View Full Listing` link only. No other secondary actions.
 
-Structure, top-to-bottom, vertically tight (mobile-first, value prop above fold):
-
-- Small wordmark (logo height reduced from `h-20` to `h-10`, no glow halo).
-- **Eyebrow** (uppercase tracked): "Food trucks and trailers, easier to find and list"
-- **Headline** (3xl → 5xl, balanced): "Find, rent, buy, or sell food trucks and food trailers"
-- **Subheadline** (lg, muted): "Vendibook helps food entrepreneurs find available trucks and trailers, compare real listings, check availability, and get help with next steps before they commit."
-- **Search row** (reusing `HeroSearchInput` with `useHeroSearch`) + a visible **"Search Listings"** submit button to the right of the input (or stacked on mobile). Wire to `handleAISearch` so Enter, mic, and the new button all behave the same. Fire `homepage_search_submit`.
-- **Primary CTA row**:
-  - `Tell Vendibook What You Need` — opens `TellVendibookModal` (concierge lead). Fires `homepage_primary_cta_click`.
-  - `Browse Trucks & Trailers` — navigates `/search?category=food_truck,food_trailer`. Fires `homepage_browse_click`.
-- **Host nudge** (small text link under the CTAs): "Have a truck or trailer? List it free." → `/list`. Fires `homepage_host_list_click`.
-- **Fine print** (xs, muted): "Free to browse. No commitment. Listings are subject to owner availability, approval, verification status, and final terms."
-- **Trust row** (small chip strip): "Secure payments · Owner profiles · Document collection · Booking requests · Concierge help"
-- Replace the 4-pill category strip and `HeroVendiButton` (already redundant with concierge CTA).
-
-Keep `HeroBackground` ambient. Reduce min-height from `92vh` to ~`auto` with `py-12 md:py-20` so CTAs sit higher.
+Language rule: replace every "minimum stay" / "stay" / "nights" string with **"Minimum booking time"**. No lodging language anywhere in the new component.
 
 ---
 
-## 3. Search submit button — `src/components/home/hero/HeroSearchInput.tsx`
+## 3. Rewire the card overlay around the shared picker
 
-Add a visible right-side submit button labeled "Search Listings" (icon + text on desktop, icon-only fallback at narrow widths). Calls the existing `handleAISearch`. Mic + locate stay, but are visually demoted (ghost icons). Tracks `homepage_search_submit`.
+**File:** `src/components/listing/ListingCardOverlay.tsx`
 
----
-
-## 4. Listings — `src/components/home/ListingsSections.tsx`
-
-Rename header to **"Recently Added Trucks & Trailers"** with sub: "Real listings from verified owners across the US."
-
-Tabs (4):
-- For Rent
-- For Sale
-- Food Trucks
-- Food Trailers
-
-No Vendor Spaces tab (already removed in prior turn). Each tab pulls published listings where `category IN ('food_truck','food_trailer')` plus its filter (`mode='rent'`, `mode='sale'`, `category='food_truck'`, `category='food_trailer'`), `Demo%` titles excluded.
-
-Card CTAs (in `src/components/listing/ListingCard.tsx`, already wired to `trackLeadEvent('listing_card_click')` — confirm copy):
-- Rent → "Check Availability"
-- Sale → "Ask About This Listing"
-
-Add `homepage_listing_card_click` event alongside the existing `listing_card_click` when fired from this section (pass `source: 'home_recently_added'`).
+- Sale path (`mode === 'sale'`) is untouched.
+- Rent path:
+  - Headline: **"View availability"**
+  - Subhead: **"Choose an available day or booking window before starting your request."**
+  - Listing summary row added at top: thumbnail (cover image), title, city/state, price summary, `For Rent` badge.
+  - Replace the current stat strip + `InlineAvailabilitySlotPicker` + bottom `Start Purchase Request` button with a single `<RentalAvailabilityPicker source="listing_card_availability_overlay" onClose={onClose} />`.
+  - Remove the redundant `View Availability` / `Start booking` primary button at the bottom of the overlay — the picker owns the CTA. Keep only the **View Full Listing** secondary link.
+  - Container preserved: `#111113` bg, `rgba(255,255,255,0.1)` border, 2px top `#f97316`, rounded-2xl, 28px desktop / 22px mobile padding, AnimatePresence (opacity 0→1, scale 0.96→1, y 8→0, 280ms ease-out / 200ms exit), backdrop click + Escape close, small ✕ close button added top-right, mobile bottom-sheet handle preserved.
+- Delete now-orphan files: `src/components/listing/InlineAvailabilitySlotPicker.tsx` and `src/components/listing/AvailabilityCalendarModal.tsx`.
 
 ---
 
-## 5. Concierge — `src/components/home/ConciergeSection.tsx`
+## 4. Bring the listing-detail booking widget in line
 
-Rewrite copy:
-- Eyebrow: "Concierge"
-- Headline: "Get help finding a truck or trailer"
-- Body: "Share what you're trying to rent, buy, sell, or list. Vendibook can help confirm availability, pricing, owner details, documents, and next steps."
-- Primary CTA: **"Get Help Finding a Truck or Trailer"** → opens `TellVendibookModal` (replaces `TicketFormDialog`/Match Me wiring).
-- Trust pills: keep "Free service · Response in 2 hrs · No commitment"
+**File:** `src/components/listing-detail/RentalBookingWidget.tsx`
 
-Fire `homepage_concierge_click` on CTA click.
+- Replace its hand-rolled calendar + slot UI with `<RentalAvailabilityPicker source="listing_detail_widget" ... />` so card and detail are guaranteed identical.
+- Owner view, instant-book vs request CTAs, and the existing `/book/:listingId` navigation params remain.
+- Update any string saying "Minimum stay" to **"Minimum booking time"**.
 
----
-
-## 6. Trust — `src/components/home/TrustInfrastructure.tsx`
-
-Replace headline copy with the brief's precise claim:
-- Headline: "Tools that move every deal forward"
-- Body: "Vendibook gives buyers, renters, owners, and sellers tools for secure payments, document collection, owner profiles, messaging, and booking requests — so every deal has a clearer path forward."
-
-Replace the "Vendor lots" photo with a second truck/trailer photo (use existing `trustHandoff` or swap with an asset already in `src/assets/home/`). If no second appropriate photo exists, drop to a 2-photo grid (kitchen + handoff) — vendor-lot tile is removed regardless.
-
-Pillars: keep the 9-card grid; no copy changes (already precise).
+`src/components/listing-detail/InlineAvailabilityCalendar.tsx` becomes the read-only "availability section" on the listing page (kept), since it is a passive visualization, not a picker.
 
 ---
 
-## 7. Final CTA — `src/components/home/FinalCTA.tsx`
+## 5. Booking-status & blocking truth table (frontend)
 
-Rewrite:
-- Headline: "Ready to find or list a food truck or trailer?"
-- Body: remove generic line.
-- Primary: **"Tell Vendibook What You Need"** → opens `TellVendibookModal`. Fires `homepage_final_cta_click` with `cta: 'concierge'`.
-- Secondary: **"Browse Listings"** → `/search`. Fires `homepage_final_cta_click` with `cta: 'browse'`.
+The picker treats a day/hour as unavailable when **any** of these are true (existing `useHourlyAvailability` + `useBlockedDates` already enforce this; we just preserve and document it):
 
----
-
-## 8. Newsletter popup — `src/components/newsletter/NewsletterPopup.tsx`
-
-Suppress on homepage first visits. Implementation:
-- Read `useLocation().pathname` — if `/`, do not register the scroll listener at all (component renders null).
-- Keep popup behavior on every other route.
-
-No new concierge popup added in this pass (concierge already lives in the page body, the modal, and the final CTA — adding a popup would re-introduce the friction the brief is removing).
-
----
-
-## 9. Analytics events — `src/lib/leadTracking.ts` + call sites
-
-Register and fire (all via `trackLeadEvent` → `analytics_events` table, GA-optional):
-
-| Event | Where it fires |
+| Source | Blocking rule |
 |---|---|
-| `homepage_primary_cta_click` | Hero "Tell Vendibook" button |
-| `homepage_browse_click` | Hero "Browse Trucks & Trailers" |
-| `homepage_host_list_click` | Hero host link |
-| `homepage_search_submit` | Search submit button + Enter |
-| `homepage_listing_card_click` | Recently-Added cards |
-| `homepage_concierge_click` | Concierge section CTA |
-| `homepage_final_cta_click` | Final CTA (both variants, with `cta` payload) |
+| `booking_requests` status `approved` or `completed` | Block full range / hours |
+| `booking_requests` status `pending` AND `payment_status = 'paid'` | Block (instant-book paid awaiting host) |
+| `booking_requests` `is_instant_book = true` AND `payment_status = 'paid'` | Block |
+| `listing_blocked_dates` | Full day blocked |
+| `listing_blocked_times` | Specific hours blocked |
+| `rental_buffer_days` | Pad daily ranges on both sides |
+| `buffer_time_mins` | Pad hourly bookings on both sides |
+| `min_notice_hours` | Block today's hours before now + N |
 
-Each event includes `route: '/'` and any relevant `source` / `cta` metadata.
+Daily multi-day range (e.g. June 1 → June 10) is expanded to all 10 dates. With `total_slots > 1`, slot capacity decrements per day; day is fully blocked only when **all** slots are taken. With `total_slots = 1`, day blocks immediately. Hourly bookings prefer `hourly_slots` JSONB (multi-day) and fall back to legacy `start_time`/`end_time`.
 
----
-
-## 10. SEO
-
-Update `index.html` `<title>` and `<meta name="description">` already done in prior turn; no further changes.
+Declined / canceled / expired-hold / failed-payment / unpaid-abandoned requests do **not** block. (Already correct in `useHourlyAvailability` and `useBlockedDates` — no change.)
 
 ---
 
-## Out of scope (this pass)
+## 6. Server-side double-booking guard (new)
 
-- No new pages, no listing card refactor beyond confirming CTA labels and tracking source.
-- No changes to vendor-space pages (`/vendor-spaces`, `VendorLotsSection`); they remain reachable, just absent from the homepage.
-- No changes to header/nav, footer, or auth flows.
-- No new design tokens; reuse `glass-cta`, `dark-shine`, semantic tokens already in the design system.
+**New migration:** `validate_listing_availability(listing_id uuid, start_date date, end_date date, start_time time, end_time time, is_hourly boolean, hourly_slots jsonb, slot_number int)` returning `boolean` + reason. Implements the same blocking table above using `booking_requests`, `listing_blocked_dates`, `listing_blocked_times`, listing settings.
+
+**Edge functions updated** to call it before issuing Stripe sessions:
+
+- `supabase/functions/create-booking-hold/index.ts`
+- `supabase/functions/create-checkout/index.ts`
+
+On conflict, return HTTP 409 with code `availability_conflict`. Frontend `BookingCheckout` shows toast **"Sorry, this time is no longer available. Please choose another date or time."** and emits `availability_unavailable_conflict`.
+
+This guarantees a stale overlay cannot create a double booking, regardless of what the renter sees.
 
 ---
 
-## Technical notes
+## 7. Analytics
 
-- All new buttons use existing `Button` variants (`glass-cta` for primary, `outline` for secondary, ghost link for the host nudge).
-- All copy lives inside components (no i18n changes needed for this pass).
-- `TellVendibookModal` mount: hero + concierge + final CTA all share one instance via local state per section; modal already self-contained.
-- Touch any file already in the prior turn's set without re-introducing vendor-space references.
+Add these `LeadEventName`s in `src/lib/leadTracking.ts` and emit from the picker / overlay:
+
+```
+listing_view_availability_click
+availability_overlay_opened
+availability_overlay_dismissed
+availability_mode_changed
+availability_date_selected
+availability_time_slot_selected
+availability_time_range_selected
+booking_request_started
+availability_overlay_view_full_listing
+availability_unavailable_conflict
+```
+
+Metadata payload: `listing_id, listing_title, category, mode, price_hourly, price_daily, selected_date, selected_start, selected_end, selected_hours, selected_days, selected_slot_number, selected_slot_count, source`.
+
+---
+
+## 8. Technical notes
+
+- No new data fetching layer. `useHourlyAvailability` and `useBlockedDates` are the only sources; both already scope by `listingId`, so the overlay and detail page show the exact calendar for the clicked listing.
+- URL contract to `/book/:listingId` is identical to the current `RentalBookingWidget`, so `BookingCheckout` needs no parser changes.
+- Fix the `t.$_Tawk.i18next is not a function` runtime error (quietly) while touching this area.
+- Files created: `RentalAvailabilityPicker.tsx`, one migration, validator helper.
+- Files removed: `InlineAvailabilitySlotPicker.tsx`, `AvailabilityCalendarModal.tsx`.
+- Files edited: `ListingCard.tsx`, `ListingCardOverlay.tsx`, `RentalBookingWidget.tsx`, `BookingCheckout.tsx`, `create-booking-hold/index.ts`, `create-checkout/index.ts`, `leadTracking.ts`.
+
+---
+
+## Out of scope (flagging, not doing now)
+
+- Search / map card availability indicators (mentioned in spec) — large surface; can be a follow-up that consumes `useHourlyAvailability` per card.
+- Host calendar refactor — already uses the same tables; no functional change required for this work.

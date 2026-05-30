@@ -15,7 +15,7 @@ import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 import { trackListingCardClick } from '@/lib/analytics';
 import { trackLeadEvent } from '@/lib/leadTracking';
-import { AvailabilityCalendarModal } from '@/components/listing/AvailabilityCalendarModal';
+// AvailabilityCalendarModal removed — calendar lives inside ListingCardOverlay now
 import { normalizeScheduleKeys } from '@/lib/scheduleUtils';
 import { isListingFeatured } from '@/lib/featured';
 
@@ -144,7 +144,6 @@ const popularAmenityIcons: Record<string, { icon: React.ElementType; label: stri
 };
 
 const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook, canDeliverToUser, distanceMiles, compact = false }: ListingCardProps) => {
-  const [showCalendar, setShowCalendar] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   
   // Featured badge: dynamic, source of truth in src/lib/featured.ts
@@ -348,7 +347,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           {/* Calendar & Quick Book Buttons */}
           {!compact && (
             <div className="flex items-center gap-1.5">
-              {/* View Availability Button for Rentals */}
+              {/* View Availability Button for Rentals (opens the same overlay as the inline CTA) */}
               {listing.mode === 'rent' && (
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
@@ -358,7 +357,12 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          setShowCalendar(true);
+                          trackLeadEvent('listing_view_availability_click', {
+                            listing_id: listing.id,
+                            category: listing.category,
+                            source: 'listing_card_icon',
+                          });
+                          setShowOverlay(true);
                         }}
                       >
                         <Calendar className="h-3.5 w-3.5" />
@@ -370,6 +374,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
                   </Tooltip>
                 </TooltipProvider>
               )}
+              
               
               {/* Quick Book Button */}
               {showQuickBook && listing.mode === 'rent' && onQuickBook && (
@@ -459,7 +464,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
               trackLeadEvent(
                 listing.mode === 'sale'
                   ? 'listing_start_purchase_click'
-                  : 'listing_check_dates_click',
+                  : 'listing_view_availability_click',
                 {
                   listing_id: listing.id,
                   category: listing.category,
@@ -471,8 +476,8 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
             }}
             className="group/cta relative z-10 inline-flex items-center gap-1 text-[13px] font-medium text-[#f97316] hover:text-[#fb923c] whitespace-nowrap shrink-0 transition-colors"
           >
-            <span>{listing.mode === 'sale' ? 'Start purchase' : 'Check dates'}</span>
-            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-150 ease-out group-hover/cta:translate-x-1" />
+            <span>{listing.mode === 'sale' ? 'Start purchase' : 'View availability'}</span>
+            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-150 ease-out group-hover/cta:translate-x-1 group-hover/cta:text-[#fb923c]" />
           </button>
         </div>
         
@@ -494,18 +499,6 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         )}
       </div>
       </Link>
-
-      {/* Availability Calendar Modal */}
-      {listing.mode === 'rent' && (
-        <AvailabilityCalendarModal
-          open={showCalendar}
-          onOpenChange={setShowCalendar}
-          listingId={listing.id}
-          listingTitle={listing.title}
-          availableFrom={(listing as any).available_from}
-          availableTo={(listing as any).available_to}
-        />
-      )}
 
       {/* Conversion overlay (sale or rent) */}
       <ListingCardOverlay
