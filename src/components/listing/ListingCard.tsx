@@ -495,18 +495,6 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
       </div>
       </Link>
 
-      {/* Availability Calendar Modal */}
-      {listing.mode === 'rent' && (
-        <AvailabilityCalendarModal
-          open={showCalendar}
-          onOpenChange={setShowCalendar}
-          listingId={listing.id}
-          listingTitle={listing.title}
-          availableFrom={(listing as any).available_from}
-          availableTo={(listing as any).available_to}
-        />
-      )}
-
       {/* Conversion overlay (sale or rent) */}
       <ListingCardOverlay
         open={showOverlay}
