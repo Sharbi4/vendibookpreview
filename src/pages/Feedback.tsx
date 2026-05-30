@@ -74,13 +74,18 @@ export default function Feedback() {
     setDone(true);
   };
 
+  const seoNoIndex = (
+    <SEO title="Share your feedback · Vendibook" description="Token-gated feedback page." noindex canonical="/feedback" />
+  );
+
   if (loading) {
-    return <div className="min-h-screen grid place-items-center bg-background"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+    return <div className="min-h-screen grid place-items-center bg-background">{seoNoIndex}<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
   }
 
   if (!token || !record) {
     return (
       <div className="min-h-screen grid place-items-center bg-background px-4">
+        {seoNoIndex}
         <div className="max-w-md text-center space-y-4">
           <h1 className="text-2xl font-semibold">Feedback link invalid</h1>
           <p className="text-muted-foreground">This feedback link is missing or expired. You can still reach us anytime.</p>
@@ -93,6 +98,7 @@ export default function Feedback() {
   if (done) {
     return (
       <div className="min-h-screen grid place-items-center bg-background px-4">
+        {seoNoIndex}
         <div className="max-w-md text-center space-y-4">
           <CheckCircle2 className="h-12 w-12 text-primary mx-auto" />
           <h1 className="text-2xl font-semibold">Thank you</h1>
@@ -102,6 +108,7 @@ export default function Feedback() {
       </div>
     );
   }
+
 
   const isPublish = record.context_type === "listing_publish";
   const label = record.metadata?.listing_title
