@@ -128,3 +128,44 @@ export const CITY_CATEGORY_CONFIGS: CategoryIndexConfig[] = SPECS.map((s) => {
     ],
   };
 });
+
+// Flat-URL variants for high-intent commercial keywords surfaced in Search Console
+// (e.g. "food trucks for sale houston"). Pattern: /food-trucks-for-sale-{city}.
+// These render the same CategoryIndex grid as /{city}/food-trucks-for-sale but
+// publish their own canonical so Google can match the exact-match query.
+type FlatSpec = CityCatSpec & { path: string };
+
+const FLAT_SPECS: FlatSpec[] = [
+  { path: '/food-trucks-for-sale-houston',   citySlug: 'houston',  cityName: 'Houston',  stateCode: 'TX', category: 'food_truck',   mode: 'sale' },
+  { path: '/food-trucks-for-sale-phoenix',   citySlug: 'phoenix',  cityName: 'Phoenix',  stateCode: 'AZ', category: 'food_truck',   mode: 'sale' },
+  { path: '/food-trucks-for-sale-tucson',    citySlug: 'tucson',   cityName: 'Tucson',   stateCode: 'AZ', category: 'food_truck',   mode: 'sale' },
+  { path: '/food-trucks-for-sale-atlanta',   citySlug: 'atlanta',  cityName: 'Atlanta',  stateCode: 'GA', category: 'food_truck',   mode: 'sale' },
+  { path: '/food-trucks-for-sale-portland',  citySlug: 'portland', cityName: 'Portland', stateCode: 'OR', category: 'food_truck',   mode: 'sale' },
+  { path: '/food-trailers-for-sale-houston', citySlug: 'houston',  cityName: 'Houston',  stateCode: 'TX', category: 'food_trailer', mode: 'sale' },
+];
+
+CITY_CATEGORY_CONFIGS.push(
+  ...FLAT_SPECS.map((s): CategoryIndexConfig => {
+    const plural = catLabelPlural(s.category);
+    const pluralTitle = catLabelTitle(s.category);
+    const intentLabel = modeLabel(s.mode);
+    return {
+      path: s.path,
+      category: s.category,
+      mode: s.mode,
+      city: { name: s.cityName, stateCode: s.stateCode },
+      h1: `${pluralTitle} ${intentLabel} in ${s.cityName}, ${s.stateCode}`,
+      title: `${pluralTitle} ${intentLabel} in ${s.cityName}, ${s.stateCode} | Vendibook`,
+      description: `Browse verified ${plural} ${intentLabel.toLowerCase()} in ${s.cityName}, ${s.stateCode}. Direct contact with owners, transparent pricing, and a secure checkout — without the spam of Facebook Marketplace.`,
+      intro: `Looking for ${plural} ${intentLabel.toLowerCase()} in ${s.cityName}? Vendibook is the dedicated marketplace for mobile food assets — every listing is owner-managed, with full specs, photos, and a clean inquiry flow. No tire-kickers, no scams, no losing your listing in a Marketplace feed.`,
+      faqs: cityFaqs(s.cityName, s.category),
+      related: [
+        { href: `/${s.citySlug}/${catSlug(s.category)}${modeSuffix(s.mode)}`, label: `${pluralTitle} ${intentLabel} in ${s.cityName} (alt URL)` },
+        { href: `/${s.citySlug}/${catSlug(s.category)}${modeSuffix('rent')}`, label: `${pluralTitle} for Rent in ${s.cityName}` },
+        { href: `/${catSlug(s.category)}${modeSuffix(s.mode)}`, label: `All ${pluralTitle.toLowerCase()} ${intentLabel.toLowerCase()}` },
+        { href: '/sell-my-food-truck', label: `Sell your ${s.category === 'food_trailer' ? 'food trailer' : 'food truck'}` },
+        { href: `/${s.citySlug}`, label: `${s.cityName} marketplace overview` },
+      ],
+    };
+  })
+);
