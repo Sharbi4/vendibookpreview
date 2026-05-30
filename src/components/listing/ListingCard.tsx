@@ -347,7 +347,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           {/* Calendar & Quick Book Buttons */}
           {!compact && (
             <div className="flex items-center gap-1.5">
-              {/* View Availability Button for Rentals */}
+              {/* View Availability Button for Rentals (opens the same overlay as the inline CTA) */}
               {listing.mode === 'rent' && (
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
@@ -357,7 +357,12 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          setShowCalendar(true);
+                          trackLeadEvent('listing_view_availability_click', {
+                            listing_id: listing.id,
+                            category: listing.category,
+                            source: 'listing_card_icon',
+                          });
+                          setShowOverlay(true);
                         }}
                       >
                         <Calendar className="h-3.5 w-3.5" />
@@ -369,6 +374,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
                   </Tooltip>
                 </TooltipProvider>
               )}
+              
               
               {/* Quick Book Button */}
               {showQuickBook && listing.mode === 'rent' && onQuickBook && (
