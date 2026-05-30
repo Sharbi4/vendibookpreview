@@ -33,94 +33,133 @@ Deno.serve(async (req) => {
     if (!isAdmin) return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: corsHeaders });
 
     const { action, referral_id, referrer_id, suspend, note, hold_until, payload } = await req.json();
+    let lastError: any = null;
 
     switch (action) {
-      case "qualify":
-        await admin.rpc("log_referral_status_change", {
+      case "qualify": {
+        const { error } = await admin.rpc("log_referral_status_change", {
           p_referral_id: referral_id, p_new_status: "qualified",
           p_source: "admin", p_note: note || "Admin moved to qualified",
         });
+        lastError = error;
         break;
+      }
 
-      case "approve":
-        await admin.from("referrals").update({
+      case "approve": {
+        const { error: e1 } = await admin.from("referrals").update({
           approved_at: new Date().toISOString(),
           approved_by: user.id,
           admin_notes: note || null,
         }).eq("id", referral_id);
-        await admin.rpc("log_referral_status_change", {
+        const { error: e2 } = await admin.rpc("log_referral_status_change", {
           p_referral_id: referral_id, p_new_status: "approved",
           p_source: "admin", p_note: note || "Admin approved for payout",
         });
+        lastError = e1 || e2;
         break;
+      }
 
-      case "reject":
-        await admin.from("referrals").update({
-          void_reason: note || "admin rejected",
-          admin_notes: note || null,
+      case "reject": {
+        if (!note || note.trim().length < 3) return fail("note required for reject", corsHeaders);
+        const { error: e1 } = await admin.from("referrals").update({
+          void_reason: note,
+          admin_notes: note,
         }).eq("id", referral_id);
-        await admin.rpc("log_referral_status_change", {
+        const { error: e2 } = await admin.rpc("log_referral_status_change", {
           p_referral_id: referral_id, p_new_status: "voided",
-          p_source: "admin", p_note: note || "Admin rejected",
+          p_source: "admin", p_note: note,
         });
+        lastError = e1 || e2;
         break;
+      }
 
-      case "void":
-        await admin.from("referrals").update({ void_reason: note || "admin voided" }).eq("id", referral_id);
-        await admin.rpc("log_referral_status_change", {
+      case "void": {
+        const { error: e1 } = await admin.from("referrals")
+          .update({ void_reason: note || "admin voided" }).eq("id", referral_id);
+        const { error: e2 } = await admin.rpc("log_referral_status_change", {
           p_referral_id: referral_id, p_new_status: "voided",
           p_source: "admin", p_note: note || "Admin voided",
         });
+        lastError = e1 || e2;
         break;
+      }
 
-      case "place_on_hold":
-        await admin.from("referrals").update({
+      case "place_on_hold": {
+        const { error: e1 } = await admin.from("referrals").update({
           on_hold_until: hold_until || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
           admin_notes: note || null,
         }).eq("id", referral_id);
-        await admin.rpc("log_referral_status_change", {
+        const { error: e2 } = await admin.rpc("log_referral_status_change", {
           p_referral_id: referral_id, p_new_status: "on_hold",
           p_source: "admin", p_note: note || "Admin placed on hold",
         });
+        lastError = e1 || e2;
         break;
+      }
 
-      case "mark_paid_manual":
-        if (!note || note.trim().length < 3) {
-          return new Response(JSON.stringify({ error: "note required for manual payout" }), {
-            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        await admin.from("referrals").update({
+      case "mark_paid_manual": {
+        if (!note || note.trim().length < 3) return fail("note required for manual payout", corsHeaders);
+        const { error: e1 } = await admin.from("referrals").update({
           admin_notes: note,
           payout_date: new Date().toISOString(),
         }).eq("id", referral_id);
-        await admin.rpc("log_referral_status_change", {
+        const { error: e2 } = await admin.rpc("log_referral_status_change", {
           p_referral_id: referral_id, p_new_status: "paid",
           p_source: "admin", p_note: `MANUAL PAYOUT: ${note}`,
         });
+        lastError = e1 || e2;
         break;
+      }
 
-      case "add_note":
-        // Log-only — does not change status. Useful for audit trail without state change.
-        await admin.from("referral_status_log").insert({
+      case "add_note": {
+        if (!note || note.trim().length < 3) return fail("note required", corsHeaders);
+        const { error: e1 } = await admin.from("referral_status_log").insert({
           referral_id,
           old_status: null,
           new_status: null,
           changed_by_source: "admin",
           changed_by_user_id: user.id,
-          note: note || "(no note)",
+          note,
         });
-        if (note) {
-          await admin.from("referrals").update({ admin_notes: note }).eq("id", referral_id);
-        }
+        const { error: e2 } = await admin.from("referrals")
+          .update({ admin_notes: note }).eq("id", referral_id);
+        lastError = e1 || e2;
         break;
+      }
 
-      case "suspend_referrer":
-        await admin.from("profiles").update({ referral_suspended: !!suspend }).eq("id", referrer_id);
+      case "flag_fraud": {
+        if (!note || note.trim().length < 3) return fail("note required for fraud flag", corsHeaders);
+        const severity = payload?.severity ?? "medium";
+        if (!["low", "medium", "high"].includes(severity))
+          return fail("invalid severity", corsHeaders);
+        const { error: e1 } = await admin.from("referral_fraud_flags").insert({
+          referral_id,
+          flag_type: payload?.flag_type || "manual_admin_flag",
+          severity,
+          details: { note, flagged_by: user.id },
+        });
+        // Log to status_log for audit trail without changing status
+        const { error: e2 } = await admin.from("referral_status_log").insert({
+          referral_id,
+          old_status: null,
+          new_status: null,
+          changed_by_source: "admin",
+          changed_by_user_id: user.id,
+          note: `FRAUD FLAG (${severity}): ${note}`,
+        });
+        lastError = e1 || e2;
         break;
+      }
 
-      case "update_program":
-        await admin.rpc("admin_update_referral_config", {
+      case "suspend_referrer": {
+        const { error } = await admin.from("profiles")
+          .update({ referral_suspended: !!suspend }).eq("id", referrer_id);
+        lastError = error;
+        break;
+      }
+
+      case "update_program": {
+        const { error } = await admin.rpc("admin_update_referral_config", {
           p_program_type: payload.program_type,
           p_reward_amount: payload.reward_amount,
           p_min_transaction_value: payload.min_transaction_value,
@@ -128,25 +167,31 @@ Deno.serve(async (req) => {
           p_monthly_cap: payload.monthly_cap,
           p_is_active: payload.is_active,
         });
+        lastError = error;
         break;
+      }
 
-      case "set_flag":
-        // payload = { key: string, enabled: boolean }
+      case "set_flag": {
         if (!payload?.key || typeof payload.enabled !== "boolean") {
-          return new Response(JSON.stringify({ error: "payload.key and payload.enabled required" }), {
-            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
+          return fail("payload.key and payload.enabled required", corsHeaders);
         }
-        await admin.from("app_feature_flags").upsert({
+        const { error } = await admin.from("app_feature_flags").upsert({
           key: payload.key,
           enabled: payload.enabled,
           updated_at: new Date().toISOString(),
           updated_by: user.id,
         }, { onConflict: "key" });
+        lastError = error;
         break;
+      }
 
       default:
-        return new Response(JSON.stringify({ error: "unknown action" }), { status: 400, headers: corsHeaders });
+        return fail("unknown action", corsHeaders);
+    }
+
+    if (lastError) {
+      console.error("[referral-admin-action]", action, lastError);
+      return fail(lastError, corsHeaders);
     }
 
     return new Response(JSON.stringify({ ok: true }), {
