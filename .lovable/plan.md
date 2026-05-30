@@ -1,161 +1,110 @@
-# Rental Availability & Booking Entry Redesign
+# Vendibook Referral Program — Build Plan
 
-Turn the card → overlay → booking handoff into a real booking surface that mirrors the listing-page widget, blocks paid/approved/buffered time correctly, and prevents double bookings server-side.
+This expands the **existing** referral system (already has `referral_codes`, `referrals` tables, `ReferralPanel`, `ReferralCapture`, `redeem-referral` edge function, and a `VB-XXXX` code generator trigger) into the full three-program engine you spec'd.
 
----
+## Scope check — what already exists
 
-## 1. Card micro-action ("View availability →")
+- ✅ `referral_codes` table with `code`, `give/get_amount`, totals
+- ✅ `referrals` table with `referrer_id`, `referred_user_id`, `code`, `status`, `qualifying_event`
+- ✅ Auto-code generation on profile insert (`generate_referral_code_for_user`)
+- ✅ `redeem-referral` edge function + `ReferralCapture` cookie+URL handler
+- ✅ `lookup_referral_code` RPC, `useReferral` hook, basic share UI in `ReferralPanel`
 
-**File:** `src/components/listing/ListingCard.tsx`
-
-- For `listing.mode === 'rent'`, change the CTA label from **"Check dates"** to **"View availability →"** and rename the event to `listing_view_availability_click` (sale path unchanged — still "Start purchase").
-- Keep the existing inline-text styling already in place (13px, #f97316, arrow translates 4px on hover, no background/border/pill, `e.stopPropagation()`). No structural changes needed.
-- Remove the now-dead `<AvailabilityCalendarModal>` mount (`showCalendar` state) — superseded by the overlay.
-
----
-
-## 2. Shared `RentalAvailabilityPicker` component (single source of truth)
-
-**New file:** `src/components/listing/RentalAvailabilityPicker.tsx`
-
-Extract the booking-engine logic so the card overlay and the listing-detail widget render the **exact same** availability surface.
-
-Props:
-
-```text
-listingId, listingTitle, category, instantBook,
-priceHourly, priceDaily, priceWeekly, priceMonthly,
-totalSlots, slotNames, availableFrom, availableTo,
-source: 'listing_card_availability_overlay' | 'listing_detail_widget',
-onClose?: () => void
-```
-
-Internal state: `mode ('hourly' | 'daily')`, `startDate`, `endDate`, `hourlySelections` (`{ [yyyy-MM-dd]: string[] }`), `selectedSlotNumber`, `selectedSlotCount`.
-
-Data: reuses `useHourlyAvailability(listingId)` and `useBlockedDates({ listingId })` — no new fetch logic. Both hooks already pull listing settings, blocked dates, blocked times, buffer days, and paid/approved/pending-paid/instant-book bookings; we preserve that contract.
-
-Sub-sections rendered top-to-bottom:
-
-1. **Mode toggle** — only shown when both `hourlyEnabled` and `dailyEnabled` are true. Labels: `Hourly` / `Daily`. Tracked as `availability_mode_changed`.
-2. **Month calendar** — built on `getDayAvailabilityInfo(date)`:
-   - `available` → dark cell, white text
-   - `limited` → amber dot/ring (partial slots or some hours booked)
-   - `booked` / `blocked` / past / outside-window → muted, disabled
-   - `today` → thin orange ring when available
-   - selected day → orange ring; selected daily range → orange fill
-3. **Hourly slot strip** (only in hourly mode after day selected) — uses `getAvailableWindowsForDate(date)`, renders one chip per hour inside each window. Clicks toggle the hour in `hourlySelections[dateKey]`; multiple days supported (matches the listing-page widget's `hourlyData` encoding). Unavailable hours appear muted/disabled. Shows `Minimum booking time: N hours`.
-4. **Daily range summary** (daily mode) — `May 31 · 1 day` or `May 31 → Jun 3 · 4 days`. Shows `Minimum booking time: N day(s)`.
-5. **Slot selector** — only when `totalSlots > 1`. Reuses logic from `RentalBookingWidget` (slot number + slot count).
-6. **Price preview** — uses `calculateRentalFees` from `src/lib/commissions.ts`. Shows base × units + service fee + estimated total. Daily mode shows tiered weekly/monthly breakdown when applicable.
-7. **Primary CTA**:
-   - No date → `Select a date to continue` (disabled)
-   - Hourly mode, no hours → `Select a time to continue` (disabled)
-   - Ready + `instant_book` → `Book Now`
-   - Ready + standard → `Start Booking Request`
-   - On click → emits `booking_request_started` then `navigate(\`/book/\${listingId}?\${params}\`)` using the **same URLSearchParams shape** as `RentalBookingWidget.handleContinue` (`start`, `end`, `hours`, `hourlyData`, optional `slot`, `slotName`, `slotCount`).
-8. **Secondary CTA** — `View Full Listing` link only. No other secondary actions.
-
-Language rule: replace every "minimum stay" / "stay" / "nights" string with **"Minimum booking time"**. No lodging language anywhere in the new component.
+What's missing: program-typed rewards (Supply/Purchase/Rental), payouts, fraud detection, admin tooling, terms ledger, W-9, full lifecycle logging, notifications, landing/terms/admin pages.
 
 ---
 
-## 3. Rewire the card overlay around the shared picker
+## 1. Database (one migration)
 
-**File:** `src/components/listing/ListingCardOverlay.tsx`
+**Modify existing**
+- `referral_codes`: add `program_type` is NOT needed (one code per user, three link destinations); keep as-is.
+- `referrals`: add `program_type enum('supply','purchase','rental')`, `reward_amount numeric`, `transaction_id uuid`, `qualified_at`, `payout_date`, `void_reason text`, `on_hold_until timestamptz`, expand `status` enum to include `clicked|signed_up|qualified|on_hold|paid|voided`.
 
-- Sale path (`mode === 'sale'`) is untouched.
-- Rent path:
-  - Headline: **"View availability"**
-  - Subhead: **"Choose an available day or booking window before starting your request."**
-  - Listing summary row added at top: thumbnail (cover image), title, city/state, price summary, `For Rent` badge.
-  - Replace the current stat strip + `InlineAvailabilitySlotPicker` + bottom `Start Purchase Request` button with a single `<RentalAvailabilityPicker source="listing_card_availability_overlay" onClose={onClose} />`.
-  - Remove the redundant `View Availability` / `Start booking` primary button at the bottom of the overlay — the picker owns the CTA. Keep only the **View Full Listing** secondary link.
-  - Container preserved: `#111113` bg, `rgba(255,255,255,0.1)` border, 2px top `#f97316`, rounded-2xl, 28px desktop / 22px mobile padding, AnimatePresence (opacity 0→1, scale 0.96→1, y 8→0, 280ms ease-out / 200ms exit), backdrop click + Escape close, small ✕ close button added top-right, mobile bottom-sheet handle preserved.
-- Delete now-orphan files: `src/components/listing/InlineAvailabilitySlotPicker.tsx` and `src/components/listing/AvailabilityCalendarModal.tsx`.
+**New tables**
+- `referral_clicks` — click_id, code, ts, hashed_ip, user_agent, device_type, source_header, country, region, program_type, converted_to_signup, signup_user_id, cookie_set
+- `referral_status_log` — referral_id, old/new status, changed_by (system|admin|user uuid), ts, note
+- `referral_payouts` — referral_id, referrer_id, amount_gross, stripe_fee, amount_net, stripe_transfer_id, status, attempted_at, completed_at, failure_reason
+- `referral_fraud_flags` — referral_id, flag_type, detected_at, resolved_by, resolution_note, severity
+- `referral_terms_acceptance` — user_id, terms_version, accepted_at, ip_address, user_agent
+- `referral_w9_records` — user_id, collected_at, taxpayer_name, tax_id_last4, storage_path
+- `referral_program_config` — program_type PK, reward_amount, min_transaction_value, hold_days, monthly_cap, is_active (admin-tunable kill switch + amounts)
 
----
+**Profile additions** — `referral_ytd_earnings numeric default 0`, `referral_w9_collected boolean default false`, `referral_suspended boolean default false`, `referral_terms_version_accepted text`.
 
-## 4. Bring the listing-detail booking widget in line
+All tables: GRANTs (authenticated select-own; service_role all; anon none), RLS scoped to `auth.uid()` or `is_admin()`. Status transitions written via SECURITY DEFINER RPCs that auto-write `referral_status_log`.
 
-**File:** `src/components/listing-detail/RentalBookingWidget.tsx`
+**Triggers**
+- After insert on `booking_requests` (status=paid+completed) → resolve rental referral, gate on min $150.
+- After insert on `sale_transactions` (status=paid) → create purchase referral row in `on_hold` for 14 days, gate on $3,000 min, host≠referrer.
+- After listing publish + 30 days alive + first transaction within 90d → resolve supply referral.
+- Status change → notification insert.
 
-- Replace its hand-rolled calendar + slot UI with `<RentalAvailabilityPicker source="listing_detail_widget" ... />` so card and detail are guaranteed identical.
-- Owner view, instant-book vs request CTAs, and the existing `/book/:listingId` navigation params remain.
-- Update any string saying "Minimum stay" to **"Minimum booking time"**.
+## 2. Edge functions
 
-`src/components/listing-detail/InlineAvailabilityCalendar.tsx` becomes the read-only "availability section" on the listing page (kept), since it is a passive visualization, not a picker.
+- `referral-track-click` — called by `/r/[code]` handler; logs `referral_clicks`, sets cookie, redirects to program-specific URL.
+- `referral-attribute-signup` — extend `redeem-referral` to write `program_type` based on signup path/cookie source.
+- `referral-apply-code` — validate code at checkout/booking; returns `{ok, referrer_first_name}` for green-check UX; called from purchase + rental flows.
+- `referral-qualify` — internal RPC-callable; promotes `signed_up → qualified` after program-specific conditions.
+- `referral-stripe-onboard` — reuses existing `create-stripe-connect` (already in repo); add `purpose=referral_payout` flag.
+- `referral-payout-batch` — pg_cron Monday 09:00 UTC; finds `qualified` past hold window, ≥$50 accumulated per user, W-9 present if YTD≥$500; creates Stripe transfers, writes `referral_payouts`.
+- `referral-stripe-webhook` — handles `transfer.paid/failed`, updates payout + referral status, fires notification.
+- `referral-fraud-scan` — pg_cron hourly; runs the 7 detection rules, writes `referral_fraud_flags`, auto-moves matching referrals to `on_hold`.
+- `referral-admin-action` — admin-only approve/void/suspend/adjust-reward, all logged.
+- `referral-send-notification` — switch on event, calls existing `send-transactional-email`.
 
----
+## 3. Frontend pages
 
-## 5. Booking-status & blocking truth table (frontend)
+- `/referral` (public landing) — dark hero (#0F0F0F + #FF5124), Barlow Condensed display, count-up `$150/$500/$50` numbers (motion), 3 program cards, how-it-works, trust bar, FAQ accordion, final CTA. Mobile-first.
+- `/referral/dashboard` — terms-gate modal on first visit (writes `referral_terms_acceptance`); earnings summary (Total / Pending / Available); program-tab switcher; link generator with destination dropdown (Supply→`/list-your-space`, Purchase→`/buy`, Rental→`/rent`); share row (copy, SMS, email, WhatsApp, X, Web Share, QR PNG download via `qrcode` lib) with FTC disclosure baked into copy; activity table; Stripe Connect banner reusing `useStripeConnect`; payout history; W-9 prompt when YTD≥$500.
+- `/referral/terms` — sticky anchor sidebar, version + last-updated, full verbatim text from spec. Re-prompt re-acceptance if version bumps.
+- `/referral/admin` — role-gated by `is_admin()`. Ledger w/ filters, per-referral timeline (reads `referral_status_log`), approve/void/suspend, adjustable rewards (writes `referral_program_config`), global kill switch toggle, fraud queue, bulk payout button, ROI + cohort dashboards, CSV export, 1099 generator filtered by tax year.
+- `/referral/admin/test` — admin-only end-to-end runner that exercises every step in Stripe test mode and asserts DB state.
+- `/r/:code` route in `App.tsx` → calls `referral-track-click` then `<Navigate>` to destination.
 
-The picker treats a day/hour as unavailable when **any** of these are true (existing `useHourlyAvailability` + `useBlockedDates` already enforce this; we just preserve and document it):
+## 4. Checkout integrations
 
-| Source | Blocking rule |
-|---|---|
-| `booking_requests` status `approved` or `completed` | Block full range / hours |
-| `booking_requests` status `pending` AND `payment_status = 'paid'` | Block (instant-book paid awaiting host) |
-| `booking_requests` `is_instant_book = true` AND `payment_status = 'paid'` | Block |
-| `listing_blocked_dates` | Full day blocked |
-| `listing_blocked_times` | Specific hours blocked |
-| `rental_buffer_days` | Pad daily ranges on both sides |
-| `buffer_time_mins` | Pad hourly bookings on both sides |
-| `min_notice_hours` | Block today's hours before now + N |
+- `BookingCheckout.tsx` — add visible "Referral code" field that auto-fills from cookie/localStorage with "Referral code applied ✓"; calls `referral-apply-code`; persists code on `booking_requests.referral_code`.
+- Purchase checkout (`PurchaseStep*`) — visible required-but-blank field above submit; same validation + green confirmation; persists to `sale_transactions.referral_code`.
+- Listing wizard signup — pre-fill from cookie; "Were you referred?" toggle if no cookie.
 
-Daily multi-day range (e.g. June 1 → June 10) is expanded to all 10 dates. With `total_slots > 1`, slot capacity decrements per day; day is fully blocked only when **all** slots are taken. With `total_slots = 1`, day blocks immediately. Hourly bookings prefer `hourly_slots` JSONB (multi-day) and fall back to legacy `start_time`/`end_time`.
+## 5. Tracking & attribution rules
 
-Declined / canceled / expired-hold / failed-payment / unpaid-abandoned requests do **not** block. (Already correct in `useHourlyAvailability` and `useBlockedDates` — no change.)
+- 30-day cookie (existing `ReferralCapture` pattern) + localStorage fallback.
+- Manual code at checkout always overrides cookie; conflicts logged.
+- Existing-user clicks: no attribution, log only.
+- First-cookie-wins when no manual code.
 
----
+## 6. Compliance & money safety
 
-## 6. Server-side double-booking guard (new)
+- Country gate on Stripe Connect onboarding (eligibility check before account create).
+- W-9 collection flow ($500 buffer below IRS $600) gates further payouts.
+- Min payout threshold $50; weekly batch; Stripe fee logged per payout.
+- FTC line auto-appended in social share copy.
+- Terms versioning with forced re-acceptance.
 
-**New migration:** `validate_listing_availability(listing_id uuid, start_date date, end_date date, start_time time, end_time time, is_hourly boolean, hourly_slots jsonb, slot_number int)` returning `boolean` + reason. Implements the same blocking table above using `booking_requests`, `listing_blocked_dates`, `listing_blocked_times`, listing settings.
+## 7. Verification before sign-off
 
-**Edge functions updated** to call it before issuing Stripe sessions:
-
-- `supabase/functions/create-booking-hold/index.ts`
-- `supabase/functions/create-checkout/index.ts`
-
-On conflict, return HTTP 409 with code `availability_conflict`. Frontend `BookingCheckout` shows toast **"Sorry, this time is no longer available. Please choose another date or time."** and emits `availability_unavailable_conflict`.
-
-This guarantees a stale overlay cannot create a double booking, regardless of what the renter sees.
-
----
-
-## 7. Analytics
-
-Add these `LeadEventName`s in `src/lib/leadTracking.ts` and emit from the picker / overlay:
-
-```
-listing_view_availability_click
-availability_overlay_opened
-availability_overlay_dismissed
-availability_mode_changed
-availability_date_selected
-availability_time_slot_selected
-availability_time_range_selected
-booking_request_started
-availability_overlay_view_full_listing
-availability_unavailable_conflict
-```
-
-Metadata payload: `listing_id, listing_title, category, mode, price_hourly, price_daily, selected_date, selected_start, selected_end, selected_hours, selected_days, selected_slot_number, selected_slot_count, source`.
+- Vitest: code attribution priority (manual > cookie), min-value gates, hold-window math.
+- Edge function tests: `referral-apply-code` validation, `referral-payout-batch` selection logic.
+- Manual run of `/referral/admin/test` in Stripe test mode.
 
 ---
 
-## 8. Technical notes
+## Technical notes
 
-- No new data fetching layer. `useHourlyAvailability` and `useBlockedDates` are the only sources; both already scope by `listingId`, so the overlay and detail page show the exact calendar for the clicked listing.
-- URL contract to `/book/:listingId` is identical to the current `RentalBookingWidget`, so `BookingCheckout` needs no parser changes.
-- Fix the `t.$_Tawk.i18next is not a function` runtime error (quietly) while touching this area.
-- Files created: `RentalAvailabilityPicker.tsx`, one migration, validator helper.
-- Files removed: `InlineAvailabilitySlotPicker.tsx`, `AvailabilityCalendarModal.tsx`.
-- Files edited: `ListingCard.tsx`, `ListingCardOverlay.tsx`, `RentalBookingWidget.tsx`, `BookingCheckout.tsx`, `create-booking-hold/index.ts`, `create-checkout/index.ts`, `leadTracking.ts`.
+- Reuse `useStripeConnect`, `create-stripe-connect`, `create-stripe-dashboard-link` already in repo for onboarding/dashboard links.
+- Reuse `send-transactional-email` + existing template registry — add new templates: `referral-clicked`, `referral-signup`, `referral-qualified`, `referral-paid`, `referral-voided`, `referral-w9-required`, `referral-fraud-hold`.
+- QR generation client-side with `qrcode` (add dep).
+- Animations via existing `framer-motion`; count-up via `useMotionValue` + `animate`.
+- Charts on admin ROI use existing recharts.
+- All status mutations go through SECURITY DEFINER RPCs so `referral_status_log` can't be bypassed.
+
+## Out of scope (flagging now)
+
+- Actual W-9 PDF generation/e-sign — collect data + store; PDF/IRS filing handled manually by ops year-end.
+- International tax forms (W-8BEN) — block non-US referrers from program v1, show "coming soon".
+- Real-time fraud ML — rule-based only for v1.
 
 ---
 
-## Out of scope (flagging, not doing now)
-
-- Search / map card availability indicators (mentioned in spec) — large surface; can be a follow-up that consumes `useHourlyAvailability` per card.
-- Host calendar refactor — already uses the same tables; no functional change required for this work.
+This is large. Confirm and I'll execute in this order: **(1) migration → (2) edge functions + cron → (3) `/r/:code` + checkout integrations → (4) dashboard → (5) landing → (6) terms → (7) admin → (8) tests**. Want me to ship all in one go, or stage it (e.g. 1–4 first, then 5–8)?
