@@ -708,8 +708,9 @@ serve(async (req) => {
             const amount = session.amount_total ? session.amount_total / 100 : 0;
             const platformFeeStr = session.metadata?.platform_fee;
             const sellerPayoutStr = session.metadata?.seller_payout;
-            const platformFee = platformFeeStr ? Number(platformFeeStr) : amount * 0.15;
-            const sellerPayout = sellerPayoutStr ? Number(sellerPayoutStr) : amount - platformFee;
+            // Metadata values are stored as integer cents — divide by 100 to get dollars.
+            const platformFee = platformFeeStr ? Number(platformFeeStr) / 100 : amount * 0.129;
+            const sellerPayout = sellerPayoutStr ? Number(sellerPayoutStr) / 100 : amount - platformFee;
             
             // Get fulfillment data from metadata
             const fulfillmentType = session.metadata?.fulfillment_type || 'pickup';
