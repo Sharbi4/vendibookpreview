@@ -11,6 +11,7 @@ import Footer from '@/components/layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
 
 import { EmailReceiptPreview } from '@/components/checkout';
+import { PostTransactionReferralCard } from '@/components/referrals/PostTransactionReferralCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { calculateRentalFees } from '@/lib/commissions';
 import { generateReceiptPdf } from '@/lib/generateReceiptPdf';
@@ -537,6 +538,8 @@ const PaymentSuccess = () => {
                     </Button>
                   </div>
 
+                  <PostTransactionReferralCard variant="purchase" />
+
                   <Collapsible open={showEmailPreview} onOpenChange={setShowEmailPreview} className="mt-6">
                     <CollapsibleTrigger asChild>
                       <Button variant="ghost" size="sm" className="w-full gap-2 text-muted-foreground hover:text-foreground">
@@ -938,6 +941,8 @@ const PaymentSuccess = () => {
                       </Link>
                     </Button>
                   </div>
+
+                  <PostTransactionReferralCard variant="rental" />
 
                   {/* Email Preview for Confirmed Rentals (not holds) */}
                   {!isHold && (
