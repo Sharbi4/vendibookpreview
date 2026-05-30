@@ -29,7 +29,13 @@ export type LeadEventName =
   | 'homepage_search_submit'
   | 'homepage_listing_card_click'
   | 'homepage_concierge_click'
-  | 'homepage_final_cta_click';
+  | 'homepage_final_cta_click'
+  // Listing card overlay funnel
+  | 'listing_start_purchase_click'
+  | 'listing_check_dates_click'
+  | 'purchase_request_started'
+  | 'rental_dates_request_started'
+  | 'overlay_dismissed';
 
 export interface LeadEventPayload {
   listing_id?: string;
@@ -58,6 +64,11 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   homepage_listing_card_click: 'homepage',
   homepage_concierge_click: 'homepage',
   homepage_final_cta_click: 'homepage',
+  listing_start_purchase_click: 'discovery',
+  listing_check_dates_click: 'discovery',
+  purchase_request_started: 'lead',
+  rental_dates_request_started: 'lead',
+  overlay_dismissed: 'lead',
 };
 
 export const trackLeadEvent = (name: LeadEventName, payload: LeadEventPayload = {}) => {

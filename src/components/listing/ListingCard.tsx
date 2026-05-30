@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Star, Calendar, Clock } from 'lucide-react';
+import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Star, Calendar, Clock, ArrowRight } from 'lucide-react';
+import ListingCardOverlay from '@/components/listing/ListingCardOverlay';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -144,6 +145,7 @@ const popularAmenityIcons: Record<string, { icon: React.ElementType; label: stri
 
 const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook, canDeliverToUser, distanceMiles, compact = false }: ListingCardProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(false);
   
   // Featured badge: dynamic, source of truth in src/lib/featured.ts
   const isFeatured = isListingFeatured(listing as any);
@@ -432,21 +434,46 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           {!compact && <RatingBadge listingId={listing.id} />}
         </div>
 
-        {/* Price - Editorial Premium */}
-        <div className="flex items-baseline gap-2 flex-wrap mt-auto pt-1">
-          <span className={cn("text-white font-bold tracking-tight", compact ? "text-base" : "text-lg")}>
-            {price}
-          </span>
-          {showHourlyRate && (
-            <span className={cn("text-white/50 font-medium", compact ? "text-xs" : "text-sm")}>
-              ${listing.price_hourly}/hr
+        {/* Price + Micro-action — the only conversion surface on the card */}
+        <div className="flex items-center justify-between gap-3 mt-auto pt-1">
+          <div className="flex items-baseline gap-2 flex-wrap min-w-0">
+            <span className={cn("text-white font-bold tracking-tight tabular-nums", compact ? "text-base" : "text-xl")}>
+              {price}
             </span>
-          )}
-          {!compact && listing.mode === 'rent' && listing.price_weekly && (
-            <span className="text-sm text-white/50 font-medium">
-              ${listing.price_weekly}/week
-            </span>
-          )}
+            {showHourlyRate && (
+              <span className={cn("text-white/50 font-medium", compact ? "text-xs" : "text-xs")}>
+                ${listing.price_hourly}/hr
+              </span>
+            )}
+            {!compact && listing.mode === 'rent' && listing.price_weekly && (
+              <span className="text-xs text-white/50 font-medium">
+                ${listing.price_weekly}/week
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              trackLeadEvent(
+                listing.mode === 'sale'
+                  ? 'listing_start_purchase_click'
+                  : 'listing_check_dates_click',
+                {
+                  listing_id: listing.id,
+                  category: listing.category,
+                  price: listing.mode === 'sale' ? listing.price_sale : listing.price_daily,
+                  source: 'listing_card',
+                },
+              );
+              setShowOverlay(true);
+            }}
+            className="group/cta relative z-10 inline-flex items-center gap-1 text-[13px] font-medium text-[#f97316] hover:text-[#fb923c] whitespace-nowrap shrink-0 transition-colors"
+          >
+            <span>{listing.mode === 'sale' ? 'Start purchase' : 'Check dates'}</span>
+            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-150 ease-out group-hover/cta:translate-x-1" />
+          </button>
         </div>
         
         {/* Hourly Schedule Summary - shows available days/hours for hourly rentals */}
@@ -468,30 +495,6 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
       </div>
       </Link>
 
-      {/* Lower-friction CTA: Check Availability (rent) / Ask About This Listing (sale) */}
-      <div className="px-4 pb-3 pt-0">
-        <Link
-          to={`/listing/${listing.id}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            trackLeadEvent('listing_card_click', {
-              listing_id: listing.id,
-              category: listing.category,
-              source: 'listing_card_cta',
-              intent: listing.mode === 'sale' ? 'ask_about_listing' : 'check_availability',
-            });
-          }}
-          className={cn(
-            "block w-full text-center text-sm font-semibold py-2 rounded-xl transition-all duration-200",
-            listing.mode === 'sale'
-              ? "bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/20"
-              : "bg-primary/15 text-primary hover:bg-primary/25 border border-primary/20"
-          )}
-        >
-          {listing.mode === 'sale' ? 'Ask About This Listing' : 'Check Availability'}
-        </Link>
-      </div>
-      
       {/* Availability Calendar Modal */}
       {listing.mode === 'rent' && (
         <AvailabilityCalendarModal
@@ -503,6 +506,13 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           availableTo={(listing as any).available_to}
         />
       )}
+
+      {/* Conversion overlay (sale or rent) */}
+      <ListingCardOverlay
+        open={showOverlay}
+        onClose={() => setShowOverlay(false)}
+        listing={listing}
+      />
     </div>
   );
 };
