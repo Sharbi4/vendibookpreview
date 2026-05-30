@@ -10,11 +10,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Badge } from "@/components/ui/badge";
 import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
-import { useReferralCode, useMyReferrals, buildReferralUrl } from "@/hooks/useReferral";
+import { useReferralCode, useMyReferrals, buildReferralUrl, useFeatureFlag, useAcceptReferralTerms } from "@/hooks/useReferral";
 import { useStripeConnect } from "@/hooks/useStripeConnect";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Copy, Download, Facebook, MessageCircle, Mail, Share2, Twitter, ExternalLink, AlertCircle } from "lucide-react";
+import { Copy, Download, Facebook, MessageCircle, Mail, Share2, Twitter, ExternalLink, AlertCircle, Info } from "lucide-react";
 
 const TERMS_VERSION = "2026-05-30";
 const PROGRAMS = [
@@ -28,7 +28,10 @@ const STATUS_STYLE: Record<string, string> = {
   pending: "bg-slate-200 text-slate-700",
   clicked: "bg-slate-200 text-slate-700",
   signed_up: "bg-blue-100 text-blue-700",
+  transaction_started: "bg-blue-100 text-blue-700",
+  pending_review: "bg-purple-100 text-purple-700",
   qualified: "bg-amber-100 text-amber-800",
+  approved: "bg-emerald-100 text-emerald-800",
   on_hold: "bg-amber-100 text-amber-800",
   paid: "bg-green-100 text-green-700",
   voided: "bg-red-100 text-red-700",
@@ -39,6 +42,8 @@ const ReferralDashboard = () => {
   const { data: code } = useReferralCode();
   const { data: referrals = [] } = useMyReferrals();
   const stripe = useStripeConnect();
+  const { data: programEnabled = true } = useFeatureFlag("referral_program_enabled", true);
+  const acceptTermsMut = useAcceptReferralTerms();
 
   const [tab, setTab] = useState<string>("all");
   const [destination, setDestination] = useState<"purchase" | "supply" | "rental">("purchase");
@@ -105,14 +110,13 @@ const ReferralDashboard = () => {
 
   const acceptTerms = async () => {
     if (!user?.id) return;
-    await supabase.from("referral_terms_acceptance").insert({
-      user_id: user.id,
-      terms_version: TERMS_VERSION,
-      user_agent: navigator.userAgent.slice(0, 500),
-    });
-    await supabase.from("profiles").update({ referral_terms_version_accepted: TERMS_VERSION }).eq("id", user.id);
-    setNeedsTerms(false);
-    toast.success("Terms accepted");
+    try {
+      await acceptTermsMut.mutateAsync(TERMS_VERSION);
+      setNeedsTerms(false);
+      toast.success("Terms accepted");
+    } catch {
+      toast.error("Could not record acceptance. Please try again.");
+    }
   };
 
   const FTC = "(I may earn a referral reward.)";
@@ -144,12 +148,35 @@ const ReferralDashboard = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold">Referral Dashboard</h1>
-            <p className="text-muted-foreground text-sm">Share your link and get paid when friends transact.</p>
+            <p className="text-muted-foreground text-sm">Share your link — eligible rewards are paid after admin review.</p>
           </div>
           <Button asChild variant="ghost" size="sm">
             <Link to="/referral/terms">View terms <ExternalLink className="ml-1 h-3 w-3" /></Link>
           </Button>
         </div>
+
+        {/* Program-disabled banner */}
+        {!programEnabled && (
+          <Card className="p-4 mb-6 border-slate-300 bg-slate-50 flex items-center gap-3">
+            <Info className="h-5 w-5 text-slate-600 shrink-0" />
+            <div>
+              <p className="font-medium text-slate-900">The referral program is paused</p>
+              <p className="text-xs text-slate-700">You can still see prior activity, but new attributions and payouts are temporarily disabled.</p>
+            </div>
+          </Card>
+        )}
+
+        {/* Beta / tax notice */}
+        <Card className="p-4 mb-6 border-amber-200 bg-amber-50/50 flex items-start gap-3">
+          <Info className="h-5 w-5 text-amber-700 shrink-0 mt-0.5" />
+          <div className="text-xs text-amber-900 leading-relaxed">
+            <strong>Beta program.</strong> You may earn an eligible reward when a qualified referral completes a transaction. All rewards
+            go through admin review before payout. Rewards may be taxable income — Vendibook may require a W-9 before payout for U.S.
+            referrers earning $600+ in a calendar year. Prohibited: spam, paid traffic, bots, link farms, scraping, fake accounts,
+            self-referrals, or mass distribution outside normal personal or business sharing.
+          </div>
+        </Card>
+
 
         {/* Stripe Connect banner */}
         {!stripe.isConnected && (

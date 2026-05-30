@@ -3,8 +3,12 @@ import { useEffect, useState } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Input } from "@/components/ui/input";
 import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFeatureFlag } from "@/hooks/useReferral";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { ArrowRight, Link as LinkIcon, Share2, DollarSign, Shield, FileText, Clock } from "lucide-react";
 
 const CountUp = ({ to, prefix = "$" }: { to: number; prefix?: string }) => {
@@ -23,7 +27,7 @@ const PROGRAMS = [
     amount: 500,
     title: "Refer a buyer",
     who: "Anyone who buys a food truck, trailer, or commercial equipment",
-    trigger: "Pays out 14 days after the transaction clears with no disputes",
+    trigger: "Eligible after the transaction clears, no disputes, and admin review",
     fine: "Minimum $3,000 purchase. Max 10 per month per referrer.",
   },
   {
@@ -31,7 +35,7 @@ const PROGRAMS = [
     amount: 150,
     title: "Refer a lister",
     who: "Anyone who lists their food truck, trailer, or kitchen on Vendibook",
-    trigger: "Pays out 7 days after their first transaction (within 90 days)",
+    trigger: "Eligible after their first transaction (within 90 days) and admin review",
     fine: "Listing must remain active 30+ days and pass verification.",
   },
   {
@@ -39,14 +43,14 @@ const PROGRAMS = [
     amount: 50,
     title: "Refer a renter",
     who: "Anyone who books a kitchen, lot, or vendor space on Vendibook",
-    trigger: "Pays out 48 hours after the booking is completed",
+    trigger: "Eligible after the booking completes and admin review",
     fine: "Minimum $150 booking value. One reward per referred renter.",
   },
 ];
 
 const FAQ = [
   ["Who counts as a new user?", "Anyone without a prior Vendibook account using their email, phone, or device. We check at signup."],
-  ["When do I get paid?", "Rental: 48 hours after booking completes. Supply: 7 days after first transaction. Purchase: 14 days after sale clears with no dispute."],
+  ["When do I get paid?", "After your referral qualifies, our team reviews it. Once approved and any hold window has passed, payouts run weekly on Mondays via Stripe Connect once you've accumulated at least $50."],
   ["How is the money sent?", "Through Stripe Connect, batched weekly on Mondays. Minimum $50 accumulated before a transfer is initiated."],
   ["Can I refer myself with a second account?", "No. Self-referrals are auto-detected and voided. Fraud also triggers account suspension."],
   ["Are referral rewards taxable?", "Yes. If you earn $600+ in a calendar year, we collect W-9 info and issue a 1099 form."],
@@ -55,16 +59,49 @@ const FAQ = [
   ["Can I share my link at events or markets?", "Yes — your dashboard generates a downloadable QR code for in-person sharing."],
 ];
 
+const WaitlistForm = () => {
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      toast.error("Enter a valid email");
+      return;
+    }
+    try {
+      await supabase.from("newsletter_signups" as any).insert({ email, source: "referral_waitlist" });
+    } catch {}
+    setSubmitted(true);
+    toast.success("You're on the waitlist — we'll email when we open.");
+  };
+  if (submitted) {
+    return <p className="text-sm text-white/70">Thanks — we'll email <span className="text-white">{email}</span> when the program opens.</p>;
+  }
+  return (
+    <form onSubmit={submit} className="flex flex-col sm:flex-row gap-2 max-w-md">
+      <Input
+        type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+        placeholder="you@email.com" required
+        className="bg-white/5 border-white/15 text-white placeholder:text-white/30"
+        style={{ fontSize: "16px" }}
+      />
+      <Button type="submit" className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white">Join waitlist</Button>
+    </form>
+  );
+};
+
 const ReferralLanding = () => {
   const { user } = useAuth();
+  const { data: programEnabled = true } = useFeatureFlag("referral_program_enabled", true);
   const ctaHref = user ? "/referral/dashboard" : "/auth?redirect=/referral/dashboard";
 
   return (
     <>
       <SEO
         title="Vendibook Referral Program — Earn up to $500"
-        description="Refer buyers, sellers, and renters to Vendibook and get paid when they transact. Up to $500 per qualified referral."
+        description="Refer buyers, sellers, and renters to Vendibook. You may earn up to $500 per qualified referral, paid after admin review."
       />
+
       <div className="min-h-screen bg-[#0F0F0F] text-white">
         {/* HERO */}
         <section className="relative overflow-hidden">
@@ -89,29 +126,30 @@ const ReferralLanding = () => {
                 >
                   <CountUp to={500} />
                 </div>
-                <p className="mt-4 text-white/60 text-lg">per qualifying purchase referral</p>
+                <p className="mt-4 text-white/60 text-lg">you may earn per qualifying purchase referral</p>
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}>
                 <h1 className="text-4xl md:text-6xl font-black leading-tight mb-6">
-                  Turn your network into income.
+                  Turn your network into eligible rewards.
                 </h1>
                 <p className="text-lg md:text-xl text-white/70 mb-8 leading-relaxed">
-                  Refer buyers, sellers, and renters to Vendibook — and get paid when they transact. No fluff. Real money, paid through Stripe.
+                  Refer buyers, sellers, and renters to Vendibook. Eligible rewards are paid through Stripe after the referred transaction completes and our team reviews it.
                 </p>
-                <div className="flex flex-wrap gap-3">
-                  <Button
-                    asChild
-                    size="lg"
-                    className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white text-base shadow-[0_0_40px_rgba(255,81,36,0.4)] hover:shadow-[0_0_60px_rgba(255,81,36,0.6)] transition-shadow"
-                  >
-                    <Link to={ctaHref}>
-                      Start referring <ArrowRight className="ml-1.5 h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Button asChild size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10">
-                    <a href="#how-it-works">See how it works</a>
-                  </Button>
-                </div>
+                {programEnabled ? (
+                  <div className="flex flex-wrap gap-3">
+                    <Button asChild size="lg" className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white text-base shadow-[0_0_40px_rgba(255,81,36,0.4)] hover:shadow-[0_0_60px_rgba(255,81,36,0.6)] transition-shadow">
+                      <Link to={ctaHref}>Start referring <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
+                    </Button>
+                    <Button asChild size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10">
+                      <a href="#how-it-works">See how it works</a>
+                    </Button>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-sm text-white/80 mb-3 px-3 py-1.5 rounded-full bg-white/10 inline-block">Program opens soon — join the waitlist</p>
+                    <WaitlistForm />
+                  </div>
+                )}
               </motion.div>
             </div>
           </div>

@@ -100,3 +100,34 @@ export const buildReferralUrl = (code: string, path = "/") => {
   url.searchParams.set("utm_campaign", "give_get_25");
   return url.toString();
 };
+
+/** Reads a single global feature flag from `app_feature_flags`. Defaults to `true` if not found. */
+export const useFeatureFlag = (key: string, defaultValue = true) => {
+  return useQuery({
+    queryKey: ["feature-flag", key],
+    queryFn: async (): Promise<boolean> => {
+      const { data } = await supabase
+        .from("app_feature_flags")
+        .select("enabled")
+        .eq("key", key)
+        .maybeSingle();
+      return data ? !!data.enabled : defaultValue;
+    },
+    staleTime: 60_000,
+  });
+};
+
+export const useAcceptReferralTerms = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (terms_version: string) => {
+      const { data, error } = await supabase.functions.invoke("referral-accept-terms", {
+        body: { terms_version },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["referral-terms-accepted"] }),
+  });
+};
+
