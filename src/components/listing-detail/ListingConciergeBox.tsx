@@ -16,10 +16,11 @@ interface ListingConciergeBoxProps {
 
 const toLeadCategory = (c?: ListingCategory): LeadCategory | undefined => {
   if (!c) return undefined;
-  if (c === 'food_truck') return 'food_truck';
-  if (c === 'food_trailer') return 'food_trailer';
-  if (c === 'commercial_kitchen' || c === 'kitchen') return 'commercial_kitchen';
-  if (c === 'vendor_space' || c === 'vendor_lot') return 'vendor_space';
+  const s = String(c);
+  if (s === 'food_truck') return 'food_truck';
+  if (s === 'food_trailer') return 'food_trailer';
+  if (s === 'ghost_kitchen' || s.includes('kitchen')) return 'commercial_kitchen';
+  if (s === 'vendor_lot' || s === 'vendor_space') return 'vendor_space';
   return undefined;
 };
 
