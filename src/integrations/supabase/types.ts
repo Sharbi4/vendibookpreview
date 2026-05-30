@@ -901,6 +901,79 @@ export type Database = {
           },
         ]
       }
+      email_events: {
+        Row: {
+          event_type: Database["public"]["Enums"]["marketing_event_type"]
+          id: string
+          metadata: Json
+          occurred_at: string
+          recipient_email: string | null
+          send_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          event_type: Database["public"]["Enums"]["marketing_event_type"]
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          recipient_email?: string | null
+          send_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          event_type?: Database["public"]["Enums"]["marketing_event_type"]
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          recipient_email?: string | null
+          send_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_events_send_id_fkey"
+            columns: ["send_id"]
+            isOneToOne: false
+            referencedRelation: "email_sends"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_feedback: {
+        Row: {
+          clicked_at: string
+          id: string
+          rating: Database["public"]["Enums"]["marketing_feedback_rating"]
+          recipient_email: string | null
+          send_id: string
+          user_id: string | null
+        }
+        Insert: {
+          clicked_at?: string
+          id?: string
+          rating: Database["public"]["Enums"]["marketing_feedback_rating"]
+          recipient_email?: string | null
+          send_id: string
+          user_id?: string | null
+        }
+        Update: {
+          clicked_at?: string
+          id?: string
+          rating?: Database["public"]["Enums"]["marketing_feedback_rating"]
+          recipient_email?: string | null
+          send_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_feedback_send_id_fkey"
+            columns: ["send_id"]
+            isOneToOne: false
+            referencedRelation: "email_sends"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -964,6 +1037,95 @@ export type Database = {
         }
         Relationships: []
       }
+      email_sends: {
+        Row: {
+          composed_payload: Json
+          created_at: string
+          created_by: string | null
+          hero_headline: string
+          id: string
+          issue_number: number
+          recipient_count: number | null
+          referral_rotation: string
+          resend_broadcast_id: string | null
+          scheduled_for: string | null
+          send_day: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["marketing_send_status"]
+          subject_line: string
+          updated_at: string
+        }
+        Insert: {
+          composed_payload?: Json
+          created_at?: string
+          created_by?: string | null
+          hero_headline: string
+          id?: string
+          issue_number?: number
+          recipient_count?: number | null
+          referral_rotation?: string
+          resend_broadcast_id?: string | null
+          scheduled_for?: string | null
+          send_day?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["marketing_send_status"]
+          subject_line: string
+          updated_at?: string
+        }
+        Update: {
+          composed_payload?: Json
+          created_at?: string
+          created_by?: string | null
+          hero_headline?: string
+          id?: string
+          issue_number?: number
+          recipient_count?: number | null
+          referral_rotation?: string
+          resend_broadcast_id?: string | null
+          scheduled_for?: string | null
+          send_day?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["marketing_send_status"]
+          subject_line?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_test_sends: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          id: string
+          recipient_email: string
+          send_id: string
+          sent_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          id?: string
+          recipient_email: string
+          send_id: string
+          sent_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          id?: string
+          recipient_email?: string
+          send_id?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_test_sends_send_id_fkey"
+            columns: ["send_id"]
+            isOneToOne: false
+            referencedRelation: "email_sends"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_unsubscribe_tokens: {
         Row: {
           created_at: string
@@ -985,6 +1147,30 @@ export type Database = {
           id?: string
           token?: string
           used_at?: string | null
+        }
+        Relationships: []
+      }
+      email_unsubscribes: {
+        Row: {
+          email: string
+          id: string
+          reason: string | null
+          unsubscribed_at: string
+          user_id: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          reason?: string | null
+          unsubscribed_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          reason?: string | null
+          unsubscribed_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -3913,6 +4099,24 @@ export type Database = {
         | "vendor_space"
       listing_mode: "rent" | "sale"
       listing_status: "draft" | "published" | "paused"
+      marketing_event_type:
+        | "delivered"
+        | "opened"
+        | "clicked"
+        | "bounced"
+        | "complained"
+        | "unsubscribed"
+        | "sent"
+        | "deferred"
+      marketing_feedback_rating: "helpful" | "okay" | "not_for_me"
+      marketing_send_status:
+        | "draft"
+        | "test_sent"
+        | "test_approved"
+        | "sending"
+        | "sent"
+        | "failed"
+        | "canceled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4076,6 +4280,26 @@ export const Constants = {
       ],
       listing_mode: ["rent", "sale"],
       listing_status: ["draft", "published", "paused"],
+      marketing_event_type: [
+        "delivered",
+        "opened",
+        "clicked",
+        "bounced",
+        "complained",
+        "unsubscribed",
+        "sent",
+        "deferred",
+      ],
+      marketing_feedback_rating: ["helpful", "okay", "not_for_me"],
+      marketing_send_status: [
+        "draft",
+        "test_sent",
+        "test_approved",
+        "sending",
+        "sent",
+        "failed",
+        "canceled",
+      ],
     },
   },
 } as const
