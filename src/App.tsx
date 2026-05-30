@@ -15,7 +15,7 @@ import { usePendingMessage } from "@/hooks/usePendingMessage";
 import { AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import GoogleOneTap from "@/components/auth/GoogleOneTap";
-import VendiChatWidget from "@/components/support/VendiChatWidget";
+
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import OfflineBanner from "@/components/system/OfflineBanner";
 import { useOfflineQueueSync } from "@/hooks/useOfflineQueue";
@@ -387,7 +387,7 @@ const AppContent = () => {
       <CookieConsent />
 
       <GoogleOneTap />
-      <VendiChatWidget />
+      
       <AnimatedRoutes />
       <MobileBottomNav />
       <Suspense fallback={null}>
