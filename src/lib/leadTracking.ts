@@ -21,7 +21,15 @@ export type LeadEventName =
   | 'booking_request_started'
   | 'booking_request_submitted'
   | 'host_listing_started'
-  | 'host_listing_published';
+  | 'host_listing_published'
+  // Homepage funnel — operational, first-party, not GA-gated
+  | 'homepage_primary_cta_click'
+  | 'homepage_browse_click'
+  | 'homepage_host_list_click'
+  | 'homepage_search_submit'
+  | 'homepage_listing_card_click'
+  | 'homepage_concierge_click'
+  | 'homepage_final_cta_click';
 
 export interface LeadEventPayload {
   listing_id?: string;
@@ -43,6 +51,13 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   booking_request_submitted: 'booking',
   host_listing_started: 'supply',
   host_listing_published: 'supply',
+  homepage_primary_cta_click: 'homepage',
+  homepage_browse_click: 'homepage',
+  homepage_host_list_click: 'homepage',
+  homepage_search_submit: 'homepage',
+  homepage_listing_card_click: 'homepage',
+  homepage_concierge_click: 'homepage',
+  homepage_final_cta_click: 'homepage',
 };
 
 export const trackLeadEvent = (name: LeadEventName, payload: LeadEventPayload = {}) => {

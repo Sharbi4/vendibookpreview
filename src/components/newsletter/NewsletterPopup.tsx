@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { X, Mail, Loader2, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 const NewsletterPopup = () => {
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -13,13 +15,17 @@ const NewsletterPopup = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Do not interrupt first-time visitors on the homepage —
+    // the homepage uses the concierge lead form as its primary soft-conversion.
+    if (location.pathname === '/') return;
+
     const hasSeenPopup = localStorage.getItem('newsletter_popup_dismissed');
     const hasSubscribed = localStorage.getItem('newsletter_subscribed');
-    
     if (hasSeenPopup || hasSubscribed) return;
 
     const handleScroll = () => {
-      const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+      const scrollPercent =
+        (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
       if (scrollPercent >= 30) {
         setIsOpen(true);
         window.removeEventListener('scroll', handleScroll);
@@ -28,7 +34,7 @@ const NewsletterPopup = () => {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [location.pathname]);
 
   const handleClose = () => {
     setIsOpen(false);

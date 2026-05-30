@@ -8,7 +8,6 @@ import Hero from '@/components/home/Hero';
 
 import AnnouncementBanner from '@/components/home/AnnouncementBanner';
 import VerificationBanner from '@/components/home/VerificationBanner';
-import PaymentsBanner from '@/components/home/PaymentsBanner';
 import ConciergeSection from '@/components/home/ConciergeSection';
 
 import { useAuth } from '@/contexts/AuthContext';

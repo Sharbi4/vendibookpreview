@@ -1,5 +1,6 @@
-import { Navigation, Wand2, Mic, MicOff } from 'lucide-react';
+import { Navigation, Wand2, Mic, MicOff, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 interface HeroSearchInputProps {
   location: string;
@@ -36,6 +37,15 @@ const HeroSearchInput = ({
   placeholders,
   className,
 }: HeroSearchInputProps) => {
+  const onSubmit = () => {
+    trackLeadEvent('homepage_search_submit', {
+      route: '/',
+      query: location.trim(),
+      source: 'home_hero_search_button',
+    });
+    handleAISearch();
+  };
+
   return (
     <div className={`relative group ${className || ''}`}>
       <div className="absolute -inset-0.5 bg-gradient-to-r from-foreground/10 via-foreground/5 to-foreground/10 rounded-2xl blur-sm opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-500" />
@@ -43,21 +53,31 @@ const HeroSearchInput = ({
         isInputFocused ? 'border-foreground/30 shadow-lg shadow-foreground/5' : 'border-border/80 group-hover:border-foreground/25'
       }`}>
         {isAIParsing && (
-          <Wand2 className="absolute left-4 w-5 h-5 text-foreground/60 animate-pulse" />
+          <Wand2 className="absolute left-4 w-5 h-5 text-foreground/60 animate-pulse z-10" />
         )}
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-0">
           <input
             ref={inputRef}
             type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAISearch()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                trackLeadEvent('homepage_search_submit', {
+                  route: '/',
+                  query: location.trim(),
+                  source: 'home_hero_enter_key',
+                });
+                handleAISearch();
+              }
+            }}
             onFocus={() => setIsInputFocused(true)}
             onBlur={() => setIsInputFocused(false)}
-            className={`w-full h-14 ${isAIParsing ? 'pl-12' : 'pl-5'} pr-36 bg-transparent text-foreground text-[16px] sm:text-sm focus:outline-none`}
+            aria-label="Search food trucks and trailers"
+            className={`w-full h-14 ${isAIParsing ? 'pl-12' : 'pl-5'} pr-2 bg-transparent text-foreground text-[16px] sm:text-sm focus:outline-none`}
           />
           {!location && !isInputFocused && (
-            <div className={`absolute inset-0 flex items-center ${isAIParsing ? 'pl-12' : 'pl-5'} pr-36 pointer-events-none overflow-hidden`}>
+            <div className={`absolute inset-0 flex items-center ${isAIParsing ? 'pl-12' : 'pl-5'} pr-2 pointer-events-none overflow-hidden`}>
               <AnimatePresence mode="wait">
                 <motion.span
                   key={placeholderIndex}
@@ -73,28 +93,45 @@ const HeroSearchInput = ({
             </div>
           )}
         </div>
-        <div className="absolute right-2 flex items-center gap-2">
+
+        {/* Demoted helpers: mic + locate */}
+        <div className="flex items-center gap-0.5 pr-1.5">
           <button
+            type="button"
             onClick={toggleVoiceSearch}
             disabled={isConnectingMic}
-            className={`p-2.5 rounded-xl transition-colors ${
+            className={`p-2 rounded-lg transition-colors ${
               isRecording
                 ? 'text-destructive bg-destructive/10 hover:bg-destructive/20 animate-pulse'
-                : 'text-muted-foreground hover:text-primary hover:bg-accent'
+                : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent'
             } disabled:opacity-50`}
             aria-label={isRecording ? 'Stop voice search' : 'Voice search'}
           >
-            {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+            {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
           </button>
           <button
+            type="button"
             onClick={handleGeolocation}
             disabled={isLocating}
-            className="p-2.5 text-muted-foreground hover:text-primary transition-colors rounded-xl hover:bg-accent disabled:opacity-50"
+            className="p-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-accent disabled:opacity-50"
             aria-label="Use current location"
           >
-            <Navigation className={`w-5 h-5 ${isLocating ? 'animate-pulse' : ''}`} />
+            <Navigation className={`w-4 h-4 ${isLocating ? 'animate-pulse' : ''}`} />
           </button>
         </div>
+
+        {/* Primary submit */}
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={isAIParsing}
+          aria-label="Search listings"
+          className="shrink-0 h-11 sm:h-12 m-1 px-4 sm:px-5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center gap-2 hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60"
+        >
+          <Search className="w-4 h-4" />
+          <span className="hidden sm:inline">Search Listings</span>
+          <span className="sm:hidden">Search</span>
+        </button>
       </div>
     </div>
   );

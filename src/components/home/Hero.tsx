@@ -1,5 +1,5 @@
-import HeroValueProp from './hero/HeroValueProp';
+import HeroFocused from './hero/HeroFocused';
 
-const Hero = () => <HeroValueProp />;
+const Hero = () => <HeroFocused />;
 
 export default Hero;

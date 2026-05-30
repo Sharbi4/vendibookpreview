@@ -16,12 +16,12 @@ import {
 import { Button } from '@/components/ui/button';
 import trustKitchen from '@/assets/home/trust-kitchen.jpg';
 import trustHandoff from '@/assets/home/trust-handoff.jpg';
-import trustVendorLot from '@/assets/home/trust-vendor-lot.jpg';
+import ownersFoodTruck from '@/assets/home/owners-food-truck.jpg';
 
 const TRUST_PHOTOS = [
-  { src: trustKitchen, alt: 'Commercial commissary kitchen in operation', label: 'Commissary kitchens' },
-  { src: trustVendorLot, alt: 'Outdoor food vendor lot at golden hour', label: 'Vendor lots' },
-  { src: trustHandoff, alt: 'Food trailer hitched to a pickup truck', label: 'Trucks & trailers' },
+  { src: ownersFoodTruck, alt: 'Food truck owners at their truck', label: 'Food trucks' },
+  { src: trustHandoff, alt: 'Food trailer hitched to a pickup truck', label: 'Food trailers' },
+  { src: trustKitchen, alt: 'Commercial commissary kitchen in operation', label: 'Real businesses' },
 ];
 
 const PILLARS = [
@@ -96,11 +96,10 @@ const TrustInfrastructure = () => {
             Trust Infrastructure
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground leading-[1.1] tracking-tight mb-4 max-w-2xl mx-auto">
-            Built for real food businesses,{' '}
-            <span className="text-muted-foreground">not casual classifieds.</span>
+            Tools that move every deal forward.
           </h2>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-            Every transaction is backed by payments, documents, verification, and booking infrastructure — so you can move serious money with confidence.
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Vendibook gives buyers, renters, owners, and sellers tools for secure payments, document collection, owner profiles, messaging, and booking requests — so every deal has a clearer path forward.
           </p>
         </motion.div>
 
