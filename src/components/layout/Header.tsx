@@ -285,7 +285,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
         willChange: 'transform',
       }}
     >
-      <div className="container max-w-7xl mx-auto px-4 flex h-16 items-center justify-between">
+      <div className="container max-w-7xl mx-auto px-4 flex h-32 items-center justify-between">
         {/* Logo - hide when mobile search is open */}
         <Link 
           to="/" 
@@ -295,7 +295,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
             <img 
               src={vendibookFavicon} 
               alt="Vendibook" 
-              className="h-7 w-auto brightness-125"
+              className="h-28 w-auto brightness-125"
             />
           </div>
         </Link>
