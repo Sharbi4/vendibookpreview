@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 interface HeaderSearchFieldProps {
   className?: string;
@@ -13,9 +14,11 @@ const HeaderSearchField = ({ className }: HeaderSearchFieldProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    trackEventToDb('search_submit', 'search', { query: searchQuery.trim(), source: 'header' });
-    if (searchQuery.trim()) {
-      navigate(`/homepage2?q=${encodeURIComponent(searchQuery.trim())}`);
+    const q = searchQuery.trim();
+    trackEventToDb('search_submit', 'search', { query: q, source: 'header' });
+    trackLeadEvent('search_performed', { query: q, source: 'header' });
+    if (q) {
+      navigate(`/homepage2?q=${encodeURIComponent(q)}`);
     } else {
       navigate('/homepage2');
     }
