@@ -122,6 +122,11 @@ export const StickyMobileCTA = ({
   };
 
   const handleRentalCTA = () => {
+    trackLeadEvent('check_availability_click', {
+      listing_id: listingId,
+      source: 'sticky_mobile_cta',
+      instant_book: instantBook,
+    });
     // Open unified booking modal
     setShowBookingModal(true);
   };
