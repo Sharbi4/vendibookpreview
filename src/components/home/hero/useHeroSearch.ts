@@ -72,6 +72,7 @@ export const useHeroSearch = () => {
   const handleAISearch = async () => {
     const query = location.trim();
     if (!query) {
+      trackLeadEvent('search_performed', { query: '', source: 'home_hero' });
       navigate('/search?mode=rent');
       return;
     }
@@ -88,10 +89,18 @@ export const useHeroSearch = () => {
         if (data.location) params.set('q', data.location);
         if (data.mode) params.set('mode', data.mode === 'sale' ? 'sale' : 'rent');
         if (data.category) params.set('category', data.category);
+        trackLeadEvent('search_performed', {
+          query,
+          city: data.location,
+          category: data.category,
+          intent: data.mode,
+          source: 'home_hero_ai',
+        });
         navigate(`/search?${params.toString()}`);
       } catch {
         const params = new URLSearchParams();
         params.set('q', query);
+        trackLeadEvent('search_performed', { query, source: 'home_hero' });
         navigate(`/search?${params.toString()}`);
       } finally {
         setIsAIParsing(false);
@@ -99,6 +108,7 @@ export const useHeroSearch = () => {
     } else {
       const params = new URLSearchParams();
       params.set('q', query);
+      trackLeadEvent('search_performed', { query, source: 'home_hero' });
       navigate(`/search?${params.toString()}`);
     }
   };
