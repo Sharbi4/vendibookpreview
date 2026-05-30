@@ -29,7 +29,13 @@ export type LeadEventName =
   | 'homepage_search_submit'
   | 'homepage_listing_card_click'
   | 'homepage_concierge_click'
-  | 'homepage_final_cta_click';
+  | 'homepage_final_cta_click'
+  // Listing card overlay funnel
+  | 'listing_start_purchase_click'
+  | 'listing_check_dates_click'
+  | 'purchase_request_started'
+  | 'rental_dates_request_started'
+  | 'overlay_dismissed';
 
 export interface LeadEventPayload {
   listing_id?: string;
