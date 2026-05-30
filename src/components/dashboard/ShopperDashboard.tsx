@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, CheckCircle2, Clock, XCircle, Store, Loader2, HelpCircle } from 'lucide-react';
+import { Calendar, CheckCircle2, Clock, XCircle, Loader2, Search, Heart, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ShopperBookingCard from './ShopperBookingCard';
@@ -8,254 +8,224 @@ import { BuyerOffersSection } from './BuyerOffersSection';
 import { DiscoveryHeroCard, DiscoveryGrid } from './DiscoveryGrid';
 import BecomeHostCard from './BecomeHostCard';
 import { ReferralPanel } from '@/components/referrals/ReferralPanel';
+import { CommandHeader } from './CommandHeader';
+import { CommandStatCard } from './CommandStatCard';
+import { SectionReveal, Reveal } from './SectionReveal';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 import { useAuth } from '@/contexts/AuthContext';
 
+const Section = ({
+  title,
+  children,
+}: {
+  title?: string;
+  children: React.ReactNode;
+}) => (
+  <section>
+    {title && (
+      <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-4">
+        {title}
+      </h2>
+    )}
+    {children}
+  </section>
+);
+
 const ShopperDashboard = () => {
   const { bookings, isLoading, stats, cancelBooking, refetch } = useShopperBookings();
-  const { hasRole } = useAuth();
+  const { hasRole, profile } = useAuth();
   const isHost = hasRole('host');
+  const firstName = profile?.full_name?.split(' ')[0];
 
-  const pendingBookings = bookings.filter(b => b.status === 'pending');
-  const approvedBookings = bookings.filter(b => b.status === 'approved');
-  const pastBookings = bookings.filter(b => ['declined', 'cancelled', 'completed'].includes(b.status));
+  const pendingBookings = bookings.filter((b) => b.status === 'pending');
+  const approvedBookings = bookings.filter((b) => b.status === 'approved');
+  const pastBookings = bookings.filter((b) =>
+    ['declined', 'cancelled', 'completed'].includes(b.status),
+  );
 
-  // Zero State: Discovery-First Pattern
-  // Show discovery grid when user has no activity at all
+  /* ── Empty state ── */
   if (!isLoading && bookings.length === 0) {
     return (
-      <div className="space-y-8">
-        <div id="discovery-hero">
-          <DiscoveryHeroCard />
-        </div>
-        <DiscoveryGrid />
-        {!isHost && (
-          <div id="become-host-card">
-            <BecomeHostCard />
-          </div>
-        )}
+      <div className="max-w-[1320px] mx-auto">
+        <SectionReveal className="space-y-10 sm:space-y-12">
+          <Reveal>
+            <CommandHeader
+              name={firstName}
+              context="Nothing booked yet. Let's find your next rental."
+              actions={[
+                { icon: Search, label: 'Search', href: '/search' },
+                { icon: Heart, label: 'Favorites', href: '/favorites' },
+                { icon: MessageSquare, label: 'Messages', href: '/messages' },
+              ]}
+            />
+          </Reveal>
+          <Reveal>
+            <div id="discovery-hero">
+              <DiscoveryHeroCard />
+            </div>
+          </Reveal>
+          <Reveal>
+            <DiscoveryGrid />
+          </Reveal>
+          {!isHost && (
+            <Reveal>
+              <div id="become-host-card">
+                <BecomeHostCard />
+              </div>
+            </Reveal>
+          )}
+        </SectionReveal>
       </div>
     );
   }
 
+  /* ── Context line ── */
+  const contextLine =
+    stats.pending > 0
+      ? `${stats.pending} request${stats.pending > 1 ? 's' : ''} awaiting host reply.`
+      : stats.approved > 0
+      ? `${stats.approved} confirmed booking${stats.approved > 1 ? 's' : ''}. You're ready to roll.`
+      : 'Nothing pressing. Browse to find your next rental.';
+
   return (
-    <div className="space-y-8">
-      <ReferralPanel />
-      {/* Hero Browse CTA - Airbnb minimal style */}
-      <div className="rounded-xl border border-border p-6 bg-card">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-              <Store className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-foreground">Find your next rental</h2>
-              <p className="text-sm text-muted-foreground">
-                Browse trucks, trailers, kitchens, and lots near you.
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button asChild className="bg-foreground text-background hover:bg-foreground/90">
-              <Link to="/search">
-                Browse Listings
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link to="/help" className="flex items-center gap-2">
-                <HelpCircle className="h-4 w-4" />
-                Support
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div className="max-w-[1320px] mx-auto">
+      <SectionReveal className="space-y-10 sm:space-y-12">
+        {/* Header */}
+        <Reveal>
+          <CommandHeader
+            name={firstName}
+            context={contextLine}
+            actions={[
+              { icon: Search, label: 'Browse', href: '/search' },
+              { icon: Heart, label: 'Favorites', href: '/favorites' },
+              { icon: MessageSquare, label: 'Messages', href: '/messages' },
+            ]}
+          />
+        </Reveal>
 
-      {/* Quick Stats - Airbnb minimal style */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-border p-4 bg-card">
-          <div className="flex items-center gap-3 mb-2">
-            <Calendar className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Bookings</span>
+        {/* Metrics */}
+        <Reveal>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <CommandStatCard label="Bookings" value={stats.total} />
+            <CommandStatCard
+              label="Pending"
+              value={stats.pending}
+              accent={stats.pending > 0}
+              hint={stats.pending > 0 ? 'Awaiting host' : 'All clear'}
+            />
+            <CommandStatCard
+              label="Approved"
+              value={stats.approved}
+              hint={stats.approved > 0 ? 'Ready to go' : 'None yet'}
+            />
+            <CommandStatCard label="Declined" value={stats.declined} />
           </div>
-          <p className="text-2xl font-semibold text-foreground">{stats.total}</p>
-        </div>
-        <div className="rounded-xl border border-border p-4 bg-card">
-          <div className="flex items-center gap-3 mb-2">
-            <Clock className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Pending</span>
-          </div>
-          <p className="text-2xl font-semibold text-foreground">{stats.pending}</p>
-          {stats.pending > 0 && (
-            <p className="text-xs text-amber-600 mt-1">Awaiting response</p>
-          )}
-        </div>
-        <div className="rounded-xl border border-border p-4 bg-card">
-          <div className="flex items-center gap-3 mb-2">
-            <CheckCircle2 className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Approved</span>
-          </div>
-          <p className="text-2xl font-semibold text-foreground">{stats.approved}</p>
-          {stats.approved > 0 && (
-            <p className="text-xs text-emerald-600 mt-1">Ready to go</p>
-          )}
-        </div>
-        <div className="rounded-xl border border-border p-4 bg-card">
-          <div className="flex items-center gap-3 mb-2">
-            <XCircle className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Declined</span>
-          </div>
-          <p className="text-2xl font-semibold text-foreground">{stats.declined}</p>
-        </div>
-      </div>
+        </Reveal>
 
-      {/* Bookings Tabs - Airbnb Underline Style */}
-      <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="w-full justify-start gap-6 h-auto p-0 bg-transparent border-b border-border rounded-none mb-6">
-          <TabsTrigger 
-            value="pending" 
-            className="relative flex items-center gap-2 pb-3 px-0 rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground transition-colors"
-          >
-            Pending
-            {stats.pending > 0 && (
-              <span className="px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full min-w-[20px] text-center">
-                {stats.pending}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger 
-            value="approved" 
-            className="relative flex items-center gap-2 pb-3 px-0 rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground transition-colors"
-          >
-            Approved
-            {stats.approved > 0 && (
-              <span className="px-1.5 py-0.5 text-xs bg-emerald-500 text-white rounded-full min-w-[20px] text-center">
-                {stats.approved}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger 
-            value="past" 
-            className="pb-3 px-0 rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground transition-colors"
-          >
-            Past
-          </TabsTrigger>
-        </TabsList>
+        {/* Referral */}
+        <Reveal>
+          <ReferralPanel />
+        </Reveal>
 
-        {/* Pending Tab */}
-        <TabsContent value="pending" className="animate-fade-in">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : pendingBookings.length === 0 ? (
-            <div className="rounded-xl border border-border p-12 text-center bg-card">
-              <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                <Clock className="h-7 w-7 text-muted-foreground" />
-              </div>
-              <h4 className="font-semibold text-foreground mb-2">No pending requests</h4>
-              <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-                Requests awaiting host response appear here.
-              </p>
-              <Button asChild className="bg-foreground text-background hover:bg-foreground/90">
-                <Link to="/search">Browse Listings</Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {pendingBookings.map((booking, index) => (
-                <div 
-                  key={booking.id}
-                  className="animate-fade-in"
-                  style={{ animationDelay: `${index * 50}ms` }}
+        {/* Bookings */}
+        <Reveal>
+          <Section title="My bookings">
+            <Tabs defaultValue="pending" className="w-full">
+              <TabsList className="w-full justify-start gap-6 h-auto p-0 bg-transparent border-b border-border rounded-none mb-6">
+                <TabsTrigger
+                  value="pending"
+                  className="relative flex items-center gap-2 pb-3 px-0 rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground transition-colors text-sm font-medium"
                 >
-                  <ShopperBookingCard
-                    booking={booking}
-                    onCancel={cancelBooking}
-                    onPaymentInitiated={refetch}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Approved Tab */}
-        <TabsContent value="approved" className="animate-fade-in">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : approvedBookings.length === 0 ? (
-            <div className="rounded-xl border border-border p-12 text-center bg-card">
-              <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="h-7 w-7 text-muted-foreground" />
-              </div>
-              <h4 className="font-semibold text-foreground mb-2">No confirmed bookings</h4>
-              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                Confirmed bookings appear here.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {approvedBookings.map((booking, index) => (
-                <div 
-                  key={booking.id}
-                  className="animate-fade-in"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  Pending
+                  {stats.pending > 0 && (
+                    <span className="text-[10px] font-semibold text-primary tabular-nums">
+                      {stats.pending}
+                    </span>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="approved"
+                  className="relative flex items-center gap-2 pb-3 px-0 rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground transition-colors text-sm font-medium"
                 >
-                  <ShopperBookingCard
-                    booking={booking}
-                    onCancel={cancelBooking}
-                    onPaymentInitiated={refetch}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Past Tab */}
-        <TabsContent value="past" className="animate-fade-in">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : pastBookings.length === 0 ? (
-            <div className="rounded-xl border border-border p-12 text-center bg-card">
-              <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                <Calendar className="h-7 w-7 text-muted-foreground" />
-              </div>
-              <h4 className="font-semibold text-foreground mb-2">No past bookings</h4>
-              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                Completed and cancelled bookings appear here.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {pastBookings.map((booking, index) => (
-                <div 
-                  key={booking.id}
-                  className="animate-fade-in"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  Approved
+                  {stats.approved > 0 && (
+                    <span className="text-[10px] font-semibold text-foreground tabular-nums">
+                      {stats.approved}
+                    </span>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="past"
+                  className="pb-3 px-0 rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground transition-colors text-sm font-medium"
                 >
-                  <ShopperBookingCard
-                    booking={booking}
-                    onCancel={cancelBooking}
-                    onPaymentInitiated={refetch}
-                  />
-                </div>
+                  Past
+                </TabsTrigger>
+              </TabsList>
+
+              {[
+                { v: 'pending', list: pendingBookings, icon: Clock, empty: 'No pending requests' },
+                { v: 'approved', list: approvedBookings, icon: CheckCircle2, empty: 'No confirmed bookings' },
+                { v: 'past', list: pastBookings, icon: Calendar, empty: 'No past bookings' },
+              ].map(({ v, list, icon: Icon, empty }) => (
+                <TabsContent key={v} value={v} className="animate-fade-in">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-16">
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : list.length === 0 ? (
+                    <div className="rounded-xl border border-border bg-card py-16 text-center">
+                      <Icon className="h-6 w-6 text-muted-foreground mx-auto mb-3" />
+                      <p className="text-sm font-medium text-foreground mb-1">{empty}</p>
+                      <p className="text-xs text-muted-foreground mb-5 max-w-sm mx-auto">
+                        They'll appear here when the time comes.
+                      </p>
+                      {v === 'pending' && (
+                        <Button
+                          asChild
+                          size="sm"
+                          className="bg-foreground text-background hover:bg-foreground/90 rounded-lg"
+                        >
+                          <Link to="/search">Browse listings</Link>
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {list.map((booking, index) => (
+                        <div
+                          key={booking.id}
+                          className="animate-fade-in"
+                          style={{ animationDelay: `${index * 40}ms` }}
+                        >
+                          <ShopperBookingCard
+                            booking={booking}
+                            onCancel={cancelBooking}
+                            onPaymentInitiated={refetch}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
               ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+            </Tabs>
+          </Section>
+        </Reveal>
 
-      {/* My Offers Section */}
-      <BuyerOffersSection />
+        {/* Offers */}
+        <Reveal>
+          <Section title="My offers">
+            <BuyerOffersSection />
+          </Section>
+        </Reveal>
 
-      {/* Purchases/Sales Section */}
-      <BuyerSalesSection />
+        {/* Purchases */}
+        <Reveal>
+          <Section title="Purchases">
+            <BuyerSalesSection />
+          </Section>
+        </Reveal>
+      </SectionReveal>
     </div>
   );
 };
