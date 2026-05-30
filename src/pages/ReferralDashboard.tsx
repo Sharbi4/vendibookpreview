@@ -148,12 +148,35 @@ const ReferralDashboard = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold">Referral Dashboard</h1>
-            <p className="text-muted-foreground text-sm">Share your link and get paid when friends transact.</p>
+            <p className="text-muted-foreground text-sm">Share your link — eligible rewards are paid after admin review.</p>
           </div>
           <Button asChild variant="ghost" size="sm">
             <Link to="/referral/terms">View terms <ExternalLink className="ml-1 h-3 w-3" /></Link>
           </Button>
         </div>
+
+        {/* Program-disabled banner */}
+        {!programEnabled && (
+          <Card className="p-4 mb-6 border-slate-300 bg-slate-50 flex items-center gap-3">
+            <Info className="h-5 w-5 text-slate-600 shrink-0" />
+            <div>
+              <p className="font-medium text-slate-900">The referral program is paused</p>
+              <p className="text-xs text-slate-700">You can still see prior activity, but new attributions and payouts are temporarily disabled.</p>
+            </div>
+          </Card>
+        )}
+
+        {/* Beta / tax notice */}
+        <Card className="p-4 mb-6 border-amber-200 bg-amber-50/50 flex items-start gap-3">
+          <Info className="h-5 w-5 text-amber-700 shrink-0 mt-0.5" />
+          <div className="text-xs text-amber-900 leading-relaxed">
+            <strong>Beta program.</strong> You may earn an eligible reward when a qualified referral completes a transaction. All rewards
+            go through admin review before payout. Rewards may be taxable income — Vendibook may require a W-9 before payout for U.S.
+            referrers earning $600+ in a calendar year. Prohibited: spam, paid traffic, bots, link farms, scraping, fake accounts,
+            self-referrals, or mass distribution outside normal personal or business sharing.
+          </div>
+        </Card>
+
 
         {/* Stripe Connect banner */}
         {!stripe.isConnected && (
