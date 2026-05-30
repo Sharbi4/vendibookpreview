@@ -35,10 +35,8 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      throw new Error("RESEND_API_KEY is not configured");
-    }
+    // Email sending now goes through send-transactional-email (Lovable Email)
+
 
     logStep("Starting document reminder job");
 
