@@ -83,7 +83,7 @@ serve(async (req) => {
     const sendDay = new Date().getDay() === 2 ? "tuesday" : new Date().getDay() === 6 ? "saturday" : "manual";
     const subject = send.subject_line;
     const payload = send.composed_payload ?? {};
-    const tools = payload.tools && payload.tools.length === 3 ? payload.tools : DEFAULT_TOOLS.slice(0, 3);
+    const tools = payload.tools && payload.tools.length >= 3 ? payload.tools : DEFAULT_TOOLS.slice(0, 6);
 
     let sentCount = 0, failedCount = 0;
     const eventsToInsert: any[] = [];
@@ -100,6 +100,11 @@ serve(async (req) => {
         insightTitle: payload.insight?.title ?? "",
         insightPullQuote: payload.insight?.pullQuote ?? "",
         insightBody: payload.insight?.body ?? "",
+        saleSectionLabel: payload.sectionLabelSale ?? send.section_label_sale ?? undefined,
+        rentalSectionLabel: payload.sectionLabelRental ?? send.section_label_rental ?? undefined,
+        listingsReplacement: payload.listingsReplacement ?? null,
+        rentalReplacement: payload.rentalReplacement ?? null,
+        expandTools: !!payload.meta?.bothThin,
         recipientEmail: to,
         sendId: send.id,
         unsubscribeUrl: `${UNSUBSCRIBE_URL_BASE}?e=${encodeURIComponent(to)}`,
@@ -126,11 +131,20 @@ serve(async (req) => {
       await supabase.from("email_events").insert(eventsToInsert.slice(i, i + 200));
     }
 
+    const meta = payload.meta ?? {};
     await supabase.from("email_sends").update({
       status: "sent",
       sent_at: new Date().toISOString(),
       recipient_count: sentCount,
       send_day: sendDay,
+      featured_rental_id: payload.featuredRental?.id ?? null,
+      sale_listing_ids: (payload.saleListings ?? []).map((l: any) => l.id).filter(Boolean),
+      section_label_sale: payload.sectionLabelSale ?? null,
+      section_label_rental: payload.sectionLabelRental ?? null,
+      used_fallback_listings: !!meta.usedFallbackListings,
+      used_fallback_rental: !!meta.usedFallbackRental,
+      listings_section_replaced: !!meta.listingsSectionReplaced,
+      rental_section_replaced: !!meta.rentalSectionReplaced,
     }).eq("id", sendId);
 
     return new Response(JSON.stringify({ ok: true, sentCount, failedCount, total: recipients.length }), {
