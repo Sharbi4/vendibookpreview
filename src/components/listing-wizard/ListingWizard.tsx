@@ -33,6 +33,7 @@ import { PublishSuccessModal } from './PublishSuccessModal';
 import { StripeConnectBanner } from './StripeConnectBanner';
 import { ListingPreviewModal } from './ListingPreviewModal';
 import { WizardPreviewSidebar } from './WizardPreviewSidebar';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 const STEPS = ['Type', 'Details', 'Pricing', 'Location', 'Documents', 'Media', 'Review'];
 
