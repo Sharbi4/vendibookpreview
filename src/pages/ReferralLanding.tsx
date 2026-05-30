@@ -150,26 +150,6 @@ const ReferralLanding = () => {
                     <WaitlistForm />
                   </div>
                 )}
-                <h1 className="text-4xl md:text-6xl font-black leading-tight mb-6">
-                  Turn your network into income.
-                </h1>
-                <p className="text-lg md:text-xl text-white/70 mb-8 leading-relaxed">
-                  Refer buyers, sellers, and renters to Vendibook — and get paid when they transact. No fluff. Real money, paid through Stripe.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <Button
-                    asChild
-                    size="lg"
-                    className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white text-base shadow-[0_0_40px_rgba(255,81,36,0.4)] hover:shadow-[0_0_60px_rgba(255,81,36,0.6)] transition-shadow"
-                  >
-                    <Link to={ctaHref}>
-                      Start referring <ArrowRight className="ml-1.5 h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Button asChild size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10">
-                    <a href="#how-it-works">See how it works</a>
-                  </Button>
-                </div>
               </motion.div>
             </div>
           </div>
