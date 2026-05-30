@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet, Truck, LayoutGrid, Map, Columns, Rows3, Star, Heart } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format, parseISO } from 'date-fns';
@@ -110,7 +110,7 @@ const Search = () => {
   const [verifiedHostsOnly, setVerifiedHostsOnly] = useState(searchParams.get('verified') === 'true');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
-  const [viewMode, setViewMode] = useState<'grid' | 'map' | 'split' | 'list'>('split');
+  const [viewMode, setViewMode] = useState<'grid' | 'map' | 'split' | 'list'>('list');
   const [hoveredListingId, setHoveredListingId] = useState<string | null>(null);
   const [page, setPage] = useState(initialPage);
 
@@ -977,7 +977,12 @@ const Search = () => {
                     userLocation={locationCoords}
                     searchRadius={searchRadius}
                     onListingClick={(listing) => {
-                      window.location.href = `/listing/${listing.id}`;
+                      trackLeadEvent('listing_card_click', {
+                        listing_id: listing.id,
+                        category: (listing as any).category,
+                        source: 'search_map',
+                      });
+                      navigate(`/listing/${listing.id}`);
                     }}
                   />
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
