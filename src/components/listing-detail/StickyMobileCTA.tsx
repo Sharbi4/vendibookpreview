@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import { RentalBookingWidget } from './RentalBookingWidget';
+import { trackLeadEvent } from '@/lib/leadTracking';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 
 interface StickyMobileCTAProps {
