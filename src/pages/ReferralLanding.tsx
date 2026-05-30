@@ -59,16 +59,49 @@ const FAQ = [
   ["Can I share my link at events or markets?", "Yes — your dashboard generates a downloadable QR code for in-person sharing."],
 ];
 
+const WaitlistForm = () => {
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      toast.error("Enter a valid email");
+      return;
+    }
+    try {
+      await supabase.from("newsletter_signups" as any).insert({ email, source: "referral_waitlist" });
+    } catch {}
+    setSubmitted(true);
+    toast.success("You're on the waitlist — we'll email when we open.");
+  };
+  if (submitted) {
+    return <p className="text-sm text-white/70">Thanks — we'll email <span className="text-white">{email}</span> when the program opens.</p>;
+  }
+  return (
+    <form onSubmit={submit} className="flex flex-col sm:flex-row gap-2 max-w-md">
+      <Input
+        type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+        placeholder="you@email.com" required
+        className="bg-white/5 border-white/15 text-white placeholder:text-white/30"
+        style={{ fontSize: "16px" }}
+      />
+      <Button type="submit" className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white">Join waitlist</Button>
+    </form>
+  );
+};
+
 const ReferralLanding = () => {
   const { user } = useAuth();
+  const { data: programEnabled = true } = useFeatureFlag("referral_program_enabled", true);
   const ctaHref = user ? "/referral/dashboard" : "/auth?redirect=/referral/dashboard";
 
   return (
     <>
       <SEO
         title="Vendibook Referral Program — Earn up to $500"
-        description="Refer buyers, sellers, and renters to Vendibook and get paid when they transact. Up to $500 per qualified referral."
+        description="Refer buyers, sellers, and renters to Vendibook. You may earn up to $500 per qualified referral, paid after admin review."
       />
+
       <div className="min-h-screen bg-[#0F0F0F] text-white">
         {/* HERO */}
         <section className="relative overflow-hidden">
