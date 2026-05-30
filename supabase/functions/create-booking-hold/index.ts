@@ -240,6 +240,7 @@ serve(async (req) => {
           authorization_hold: 'true',
           platform_fee_cents: applicationFee.toString(),
           host_payout_cents: hostReceives.toString(),
+          referral_code,
         },
       },
       success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&hold=true`,
@@ -252,6 +253,7 @@ serve(async (req) => {
         host_id: listing.host_id,
         deposit_amount: deposit_amount.toString(),
         authorization_hold: 'true',
+        referral_code,
       },
     });
 
