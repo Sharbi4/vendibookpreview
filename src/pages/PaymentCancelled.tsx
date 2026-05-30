@@ -29,28 +29,27 @@ const PaymentCancelled = () => {
               </div>
               
               <h1 className="text-2xl font-bold text-foreground mb-2">
-                Payment Cancelled
+                No problem — your card wasn't charged
               </h1>
-              
+
               <p className="text-muted-foreground mb-6">
-                Your payment was cancelled. Don't worry - your booking request is still active 
-                and you can complete payment anytime.
+                You stepped away from checkout. Your booking request is still active and you can complete payment anytime.
               </p>
 
               <div className="bg-muted/50 rounded-xl p-4 mb-6 text-left">
-                <h3 className="font-medium text-foreground mb-2">What happens now?</h3>
+                <h3 className="font-medium text-foreground mb-2">What happens next</h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-start gap-2">
                     <span className="text-primary mt-0.5">•</span>
-                    Your booking request remains active
+                    Your card was not charged — nothing to undo.
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary mt-0.5">•</span>
-                    You can complete payment from your dashboard
+                    Finish payment anytime from your dashboard.
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary mt-0.5">•</span>
-                    The host will be notified once payment is complete
+                    The host is notified only once payment is securely held.
                   </li>
                 </ul>
               </div>
