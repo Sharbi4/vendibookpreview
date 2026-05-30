@@ -122,6 +122,7 @@ export default function Feedback() {
 
   return (
     <div className="min-h-screen bg-background px-4 py-12">
+      <SEO title="Share your feedback · Vendibook" description="Token-gated feedback page." noindex canonical="/feedback" />
       <div className="max-w-xl mx-auto space-y-8">
         <div className="space-y-2">
           <p className="text-xs tracking-[0.2em] text-muted-foreground font-semibold">FEEDBACK</p>
