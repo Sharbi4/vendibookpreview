@@ -94,6 +94,18 @@ const BookingWizard = ({
   // Check if this category requires business info
   const requiresBusinessInfo = ['food_truck', 'food_trailer', 'ghost_kitchen'].includes(category);
 
+  // Fire booking_request_started exactly once on mount
+  useEffect(() => {
+    trackLeadEvent('booking_request_started', {
+      listing_id: listingId,
+      category,
+      intent: 'rent',
+      instant_book: instantBook,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+
   // Wizard state - add extra steps if needed
   // Start at step 2 (Requirements) if dates are pre-selected
   const hasPreselectedDates = initialStartDate && initialEndDate;
