@@ -18,7 +18,7 @@ const tabs: { key: TabKey; label: string; icon: typeof Truck }[] = [
   { key: 'trailers', label: 'Food Trailers', icon: Caravan },
 ];
 
-const BASE_CATEGORIES = ['food_truck', 'food_trailer'];
+const BASE_CATEGORIES = ['food_truck', 'food_trailer'] as const;
 
 const ListingsSections = () => {
   const navigate = useNavigate();
