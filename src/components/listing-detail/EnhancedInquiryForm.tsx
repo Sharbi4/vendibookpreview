@@ -10,6 +10,7 @@ import { trackCTAClick } from '@/lib/analytics';
 import { useAuth } from '@/contexts/AuthContext';
 import { MakeOfferModal, AuthGateOfferModal } from '@/components/offers';
 import { LeadCaptureModal } from './LeadCaptureModal';
+import SecurePaymentStrip from '@/components/trust/SecurePaymentStrip';
 
 interface EnhancedInquiryFormProps {
   listingId: string;
@@ -321,22 +322,8 @@ const EnhancedInquiryForm = ({
           )}
         </div>
 
-        {/* Trust indicators */}
-        <motion.div 
-          className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          <span className="flex items-center gap-1.5">
-            <Shield className="h-3.5 w-3.5" />
-            Secure payment
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5" />
-            Buyer protection
-          </span>
-        </motion.div>
+        {/* Trust strip — single source of truth */}
+        <SecurePaymentStrip variant="compact" />
 
         {/* Financing options */}
         {priceSale && (isAffirmEligible(priceSale) || isAfterpayEligible(priceSale)) && (

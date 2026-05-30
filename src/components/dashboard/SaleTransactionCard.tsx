@@ -19,6 +19,44 @@ import {
 } from '@/components/ui/dialog';
 import { SaleTransaction } from '@/hooks/useSaleTransactions';
 import { CATEGORY_LABELS } from '@/types/listing';
+import SecurePaymentStrip from '@/components/trust/SecurePaymentStrip';
+
+/** Map sale-transaction status into a short, plain-language next-action line. */
+const getSaleNextAction = (
+  status: string,
+  role: 'buyer' | 'seller',
+  tx: SaleTransaction,
+): string | null => {
+  const hasShipping = tx.fulfillment_type === 'delivery' || tx.fulfillment_type === 'vendibook_freight';
+  if (role === 'buyer') {
+    switch (status) {
+      case 'pending': return 'Complete checkout to secure your purchase. Your card is not charged until you finish.';
+      case 'paid':
+        if (hasShipping && !tx.shipped_at) return 'Payment secured. The seller will ship your item shortly.';
+        if (hasShipping && tx.shipped_at && !tx.delivered_at) return 'Your item is on the way. Confirm receipt once it arrives.';
+        return 'Payment is securely held. Confirm receipt to release funds to the seller.';
+      case 'seller_confirmed': return 'Seller confirmed. Confirm receipt to release funds.';
+      case 'buyer_confirmed': return 'You confirmed receipt. Funds release once the seller confirms.';
+      case 'completed': return 'All done — funds were released to the seller.';
+      case 'disputed': return 'Payment is on hold while Vendibook mediates. We will be in touch.';
+      case 'refunded': return 'This purchase was refunded to your account.';
+      default: return null;
+    }
+  }
+  switch (status) {
+    case 'pending': return 'Waiting on the buyer to complete payment.';
+    case 'paid':
+      if (hasShipping && !tx.shipped_at) return 'Payment secured. Ship the item and mark as shipped.';
+      if (hasShipping && tx.shipped_at && !tx.delivered_at) return 'Item in transit — buyer will confirm on delivery.';
+      return 'Payment is securely held. Confirm handoff to release your payout.';
+    case 'buyer_confirmed': return 'Buyer confirmed. Confirm to release funds.';
+    case 'seller_confirmed': return 'Awaiting buyer confirmation before funds release.';
+    case 'completed': return 'Funds released to your payout account.';
+    case 'disputed': return 'Payment on hold pending resolution. Our team is reviewing.';
+    case 'refunded': return 'This sale was refunded to the buyer.';
+    default: return null;
+  }
+};
 
 interface SaleTransactionCardProps {
   transaction: SaleTransaction;
@@ -192,6 +230,18 @@ const SaleTransactionCard = ({
                 {statusConfig.label}
               </Badge>
             </div>
+
+            {/* Next-action banner — single line of guidance */}
+            {(() => {
+              const next = getSaleNextAction(transaction.status, role, transaction);
+              if (!next) return null;
+              return (
+                <div className="mb-3 flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm">
+                  <ShieldCheck className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                  <span className="text-foreground/90 leading-snug">{next}</span>
+                </div>
+            );
+            })()}
             
             {/* Other party info */}
             <div className="flex items-center gap-3 mb-3">

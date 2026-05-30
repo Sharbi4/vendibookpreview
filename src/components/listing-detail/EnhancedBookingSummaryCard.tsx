@@ -13,6 +13,7 @@ import { AfterpayBadge, isAfterpayEligible } from '@/components/ui/AfterpayBadge
 import { useAuth } from '@/contexts/AuthContext';
 import { trackCTAClick } from '@/lib/analytics';
 import { LeadCaptureModal } from './LeadCaptureModal';
+import SecurePaymentStrip from '@/components/trust/SecurePaymentStrip';
 
 interface EnhancedBookingSummaryCardProps {
   listingId: string;
@@ -232,9 +233,10 @@ export const EnhancedBookingSummaryCard: React.FC<EnhancedBookingSummaryCardProp
                 {!instantBook && (
                   <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5">
                     <Shield className="h-3.5 w-3.5" />
-                    Your card will be authorized now and only charged if approved
+                    Your card is authorized now and only charged after the host approves
                   </p>
                 )}
+                <SecurePaymentStrip variant="compact" />
               </motion.div>
             ) : (
               <motion.div 
@@ -271,22 +273,8 @@ export const EnhancedBookingSummaryCard: React.FC<EnhancedBookingSummaryCardProp
                   </motion.div>
                 )}
 
-                {/* Trust indicators */}
-                <motion.div 
-                  className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <span className="flex items-center gap-1.5">
-                    <Shield className="h-3.5 w-3.5" />
-                    Secure booking
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5" />
-                    Free cancellation
-                  </span>
-                </motion.div>
+                {/* Trust strip — single source of truth */}
+                <SecurePaymentStrip variant="compact" />
 
                 {/* Request Info for anonymous visitors */}
                 {!user && (

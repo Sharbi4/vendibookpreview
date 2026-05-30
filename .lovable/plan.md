@@ -1,65 +1,131 @@
-# Resend → Lovable Email Migration Plan
+## Goal
 
-**Status so far (verified):**
-- `notify.vendibook.com` ✅ verified
-- Email infrastructure, queue dispatcher, auth-email-hook, send-transactional-email, unsubscribe page (`/email-unsubscribe`) ✅ deployed
-- 32 transactional templates ✅ scaffolded in registry
-- 22 functions already on Lovable Email
-- 26 functions still on Resend
+Make the full Vendibook transaction feel effortless and trustworthy — from browsing → request → payment → host approval → completion → funds released — for both the customer and the host/seller. Pure UX, copy, and visual polish. **No changes to Stripe checkout, webhook, payout, or commission logic.**
 
-## Stays on Resend (per hybrid decision)
+## Guiding principles
 
-These 5 are bulk/marketing — Lovable Email refuses these to protect domain reputation:
-- `send-newsletter-email`
-- `send-weekly-newsletter`
-- `send-launch-email`
-- `send-campaign-email`
-- `send-marketplace-digest`
+- One vocabulary, used everywhere (customer and host side, rentals and sales).
+- Trust copy stays short and reassuring — never legalistic.
+- Every screen tells the user what *just* happened and what's *next*.
+- Satin Lux aesthetic preserved (dark charcoal, near-white text, orange CTAs, hairline borders, glass surfaces). No new color systems.
 
-## Migrate to send-transactional-email (21 functions)
+---
 
-Each Resend `fetch` call is replaced with `supabase.functions.invoke('send-transactional-email', { body: { templateName, recipientEmail, idempotencyKey, templateData } })`. All surrounding logic (DB writes, auth checks, validation) is preserved.
+## 1. Unified status vocabulary
 
-| # | Function | → Template | Notes |
-|---|---|---|---|
-| 1 | `send-welcome-email` | `welcome` | role + name passed as templateData |
-| 2 | `send-booking-notification` | `booking-request-host` | host-side notification of new request |
-| 3 | `send-contact-email` | `support-reply` | already partially refactored; finish swap |
-| 4 | `send-admin-notification` | `admin-daily-digest` | admin alert payload |
-| 5 | `send-document-notification` | `document-status` | document upload/verification status |
-| 6 | `send-document-reminder` | `document-status` | reminder variant of doc status |
-| 7 | `send-deposit-notification` | `payment-receipt` | deposit confirmation |
-| 8 | `send-pending-request-reminder` | `booking-request-host` | host reminder |
-| 9 | `send-availability-alerts` | `new-message` | listing availability ping |
-| 10 | `send-abandoned-listing-email` | `listing-draft-nudge` | abandoned draft nudge |
-| 11 | `send-draft-reminder` | `listing-draft-nudge` | same template, different trigger |
-| 12 | `send-stripe-onboarding-reminder` | `stripe-onboarding-nudge` | direct match |
-| 13 | `send-admin-daily-digest` | `admin-daily-digest` | direct match |
-| 14 | `raise-dispute` | `support-reply` | dispute confirmation to filer |
-| 15 | `resolve-dispute` | `support-reply` | resolution notice |
-| 16 | `schedule-callback` | `support-reply` | callback confirmation |
-| 17 | `send-qr-signage-address-request` | `support-reply` | signage shipping confirmation |
-| 18 | `send-password-reset-email` | — | **delete** (auth-email-hook handles `recovery`; this is dead code) |
-| 19 | `send-test-draft-email` | `listing-draft-nudge` | dev util, point at any template |
-| 20 | `create-notification` | varies | only swap the email portion, keep notification DB write |
-| 21 | `vapi-listings-lookup` | `new-message` | lead alert email portion only |
+Adopt the wording you specified across rentals and sales:
 
-## Cleanup after migration
+| Phase | Customer label | Host/Seller label |
+|---|---|---|
+| Just submitted | Request Sent | New Request |
+| Host hasn't decided | Awaiting Approval | Action Needed — Approve or Decline |
+| Host approved, awaiting checkout | Awaiting Payment | Awaiting Buyer Payment |
+| Paid, before service date | Payment Secured · Booking Confirmed | Payment Secured — Booking Confirmed |
+| Service date arrived | Happening Now | Happening Now |
+| Ended, awaiting confirmation | Awaiting Completion | Confirm to Release Funds |
+| Done | Completed | Funds Released |
+| Dispute open | Dispute Open | Dispute Open |
 
-- Remove `RESEND_API_KEY` references from all 21 migrated functions
-- Leave `RESEND_API_KEY` secret in place (still used by 5 marketing functions)
-- Update memory: `mem://integrations/resend-email-service-v1` → mark Lovable Email as primary, Resend retained ONLY for bulk/marketing
+Implementation: update labels and descriptions in `src/components/dashboard/BookingPhaseIndicator.tsx` (phase taxonomy is already correct). Replace the local `StatusBadge` in `ShopperBookingCard.tsx` and `StatusPill` in `BookingRequestCard.tsx` / `SaleTransactionCard.tsx` with a single shared `TransactionStatusPill` component reading the same vocabulary.
 
-## Risks
+## 2. Shared trust strip
 
-- **Template payload mismatch**: Some functions pass richer HTML than the matching template renders. Templates will fall back to default copy where `templateData` is missing — emails will still send, but copy may be generic for edge cases. Worth a visual pass per template later.
-- **No more inline custom HTML**: Custom marketing-style HTML inside transactional functions (e.g. `send-welcome-email`'s logo + custom CSS) is replaced by the React Email template. The brand looks consistent across all sends, but loses one-off styling.
-- **`send-password-reset-email` deletion**: If anything in the codebase still calls it, those callers must be redirected to Supabase auth's `resetPasswordForEmail` (which routes through auth-email-hook). Will grep for callers.
+New `src/components/trust/SecurePaymentStrip.tsx` — a slim horizontal strip with three icons + short copy:
 
-## Execution order
+- 🛡️ Payment securely held by Vendibook
+- ✓ Released after both sides confirm
+- ⚡ Protected for buyer and host
 
-1. Migrate functions 1–17 (template swap) in parallel batches
-2. Delete `send-password-reset-email` + rewire any callers
-3. Migrate dev/edge functions 19–21
-4. Deploy all changed functions in one batch
-5. Update memory file
+Reused in:
+- Listing-detail booking widget (`EnhancedBookingSummaryCard`, `RentalBookingWidget`)
+- Booking wizard review step (`BookingWizard`)
+- Purchase wizard review step (`PurchaseStepReview`)
+- Inquiry form (`EnhancedInquiryForm`)
+- Payment success page
+- Checkout overlay (replacing the busy SSL / Stripe / encryption badges)
+
+Copy bank (one source of truth, used everywhere):
+- "Your payment is securely held until the booking is complete."
+- "Funds are released after both sides confirm."
+- "Vendibook protects both sides of the transaction."
+
+## 3. Checkout overlay refresh
+
+`src/components/checkout/CheckoutOverlay.tsx`: replace the Stripe-purple ripple, orbiting lock, and bouncing dots with a calmer Satin Lux treatment — single soft shield icon, hairline progress bar, one line of reassurance ("Your payment will be securely held until your booking is complete"). Keep the redirect mechanic and the existing `isVisible`/`message` API untouched.
+
+## 4. Per-step "what's next" helper copy
+
+Add short helper sentences (italic muted text under section headers, ~12 words) so customers always know the next step:
+
+- `BookingWizard` (rental): under each step header — Dates ("Pick when you need it"), Details ("Tell the host how you'll use it"), Documents ("These keep your booking compliant"), Review ("Confirm and pay — funds stay protected"), Confirmation ("We've sent the request. The host responds within 24h.").
+- `PurchaseStepInfo / Delivery / Review`: same pattern.
+- `EnhancedInquiryForm`: a single "The host typically responds within a few hours" line.
+- `RentalBookingWidget` collapsed state: "Request now, pay only after the host approves."
+
+## 5. Payment confirmation pages
+
+- `src/pages/PaymentSuccess.tsx` (or the existing equivalent): lead with "Payment secured ✓" plus the new trust strip and a 3-step "What happens next" ladder (1. Host confirms · 2. You enjoy your booking · 3. Funds release after completion).
+- `src/pages/PaymentCancelled.tsx` (92 lines): soften copy, add "Your card was not charged" reassurance, and a single CTA back to the listing.
+
+## 6. Host & seller dashboard clarity
+
+In `BookingRequestCard.tsx` and `SaleTransactionCard.tsx`:
+
+- Replace ad-hoc status pills with the shared `TransactionStatusPill` (item 1).
+- Add a single-line **Next action** banner at the top of each card derived from phase:
+  - pending → "Action needed: approve or decline this request."
+  - approved, unpaid → "Waiting on the buyer to complete payment."
+  - paid, upcoming → "Payment secured. Get ready for the booking."
+  - ended_awaiting_confirmation → "Confirm completion to release your payout."
+  - completed → "Funds released to your payout account."
+- Mirror the customer-side phase indicator visually so both sides see the same progress.
+
+## 7. Booking-detail trust polish
+
+`EnhancedBookingSummaryCard` and `RentalBookingWidget`: place the new `SecurePaymentStrip` directly above the primary CTA, replacing the various scattered "Secure checkout" / "Affirm/Afterpay" / "Stripe-secured" snippets with one consistent block. Keep the Affirm/Afterpay badges, just group them.
+
+## 8. Mobile responsiveness pass
+
+- Confirm every new strip/banner stacks gracefully under 380px.
+- Bottom-sheet padding audit on `BookingWizard` and `RequestDatesModal` (already known to need the 16px input rule).
+- Ensure dashboard cards' "Next action" banner doesn't clip when stacked.
+
+---
+
+## What is explicitly NOT changing
+
+- Stripe checkout sessions, edge functions, webhook flow, payout timing (24h rentals / 25d sales), commission math (12.9% / 12.9%).
+- Database schema, RLS, status enums, transaction creation flow.
+- Listing wizard, search, messaging, identity verification.
+- Routing, auth, or any business rule from memory.
+
+## Files touched (estimate)
+
+```text
+new   src/components/trust/SecurePaymentStrip.tsx
+new   src/components/shared/TransactionStatusPill.tsx
+new   src/lib/transactionVocabulary.ts          (labels + helper-copy source of truth)
+edit  src/components/dashboard/BookingPhaseIndicator.tsx
+edit  src/components/dashboard/BookingRequestCard.tsx
+edit  src/components/dashboard/SaleTransactionCard.tsx
+edit  src/components/dashboard/ShopperBookingCard.tsx
+edit  src/components/checkout/CheckoutOverlay.tsx
+edit  src/components/listing-detail/BookingWizard.tsx
+edit  src/components/listing-detail/RentalBookingWidget.tsx
+edit  src/components/listing-detail/EnhancedBookingSummaryCard.tsx
+edit  src/components/listing-detail/EnhancedInquiryForm.tsx
+edit  src/components/purchase-wizard/PurchaseStepInfo.tsx
+edit  src/components/purchase-wizard/PurchaseStepDelivery.tsx
+edit  src/components/purchase-wizard/PurchaseStepReview.tsx
+edit  src/pages/PaymentCancelled.tsx
+edit  src/pages/PaymentSuccess.tsx               (locate exact file during build)
+```
+
+Roughly 3 new files and ~14 surgical edits. No migrations, no edge-function changes.
+
+## Verification after implementation
+
+1. Run through a rental: listing → request dates → wizard → checkout overlay → payment-success → host approves in dashboard → mark complete. Confirm the status vocabulary is consistent at every step on both sides.
+2. Same for a purchase via `PurchaseStep*`.
+3. Mobile viewport (375px) walkthrough of the same two flows.
+4. Spot-check that no Stripe call signatures, webhook handlers, or DB columns were touched.
