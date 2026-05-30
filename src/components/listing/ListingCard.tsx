@@ -15,7 +15,7 @@ import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 import { trackListingCardClick } from '@/lib/analytics';
 import { trackLeadEvent } from '@/lib/leadTracking';
-import { AvailabilityCalendarModal } from '@/components/listing/AvailabilityCalendarModal';
+// AvailabilityCalendarModal removed — calendar lives inside ListingCardOverlay now
 import { normalizeScheduleKeys } from '@/lib/scheduleUtils';
 import { isListingFeatured } from '@/lib/featured';
 
@@ -144,7 +144,6 @@ const popularAmenityIcons: Record<string, { icon: React.ElementType; label: stri
 };
 
 const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook, canDeliverToUser, distanceMiles, compact = false }: ListingCardProps) => {
-  const [showCalendar, setShowCalendar] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   
   // Featured badge: dynamic, source of truth in src/lib/featured.ts
