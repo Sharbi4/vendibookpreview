@@ -108,9 +108,22 @@ export default function Feedback() {
     );
   }
 
+  const isPublish = record.context_type === "listing_publish";
   const label = record.metadata?.listing_title
-    ? `${record.context_type === "sale" ? "your purchase of" : "your booking at"} ${record.metadata.listing_title}`
+    ? isPublish
+      ? `publishing ${record.metadata.listing_title}`
+      : `${record.context_type === "sale" ? "your purchase of" : "your booking at"} ${record.metadata.listing_title}`
     : "your recent experience";
+
+  const businessOptions = [
+    "Food truck owner",
+    "Commercial kitchen / commissary",
+    "Event or venue host",
+    "Pop-up / market organizer",
+    "Caterer or restaurant",
+    "Shopper / customer",
+    "Other",
+  ];
 
   return (
     <div className="min-h-screen bg-background px-4 py-12">
@@ -120,6 +133,17 @@ export default function Feedback() {
           <h1 className="text-3xl font-semibold tracking-tight">How was {label}?</h1>
           <p className="text-muted-foreground">30 seconds. We read every response.</p>
         </div>
+
+        {isPublish && (
+          <div className="rounded-2xl border border-border bg-muted/30 p-5 space-y-2">
+            <p className="text-xs tracking-[0.2em] text-muted-foreground font-semibold">A NOTE FROM THE FOUNDERS</p>
+            <p className="text-sm text-foreground/90 leading-relaxed">
+              Vendibook is a tech startup built by working food-truck and small-business owners. We kept losing
+              deals to clunky tools and hidden fees, so we built the marketplace we wished existed. Every host
+              that publishes makes this real — and your honest take shapes what we build next.
+            </p>
+          </div>
+        )}
 
         <div className="space-y-3">
           <p className="text-sm font-medium">Overall rating</p>
