@@ -29,6 +29,13 @@ export interface FeaturedRental {
   amenities: string[];
   image: string;
   url: string;
+  extraTagline?: string | null;
+}
+export interface ReplacementBlock {
+  headline: string;
+  body: string;
+  ctaLabel: string;
+  ctaUrl: string;
 }
 export interface ToolHighlight {
   label: string;
