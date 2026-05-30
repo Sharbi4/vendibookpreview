@@ -1046,6 +1046,16 @@ const BookingCheckout = () => {
                         </div>
                       </div>
 
+                      {/* Referral code */}
+                      <div className="p-3 border border-border rounded-lg">
+                        <ReferralCodeField
+                          programType="rental"
+                          value={referralCode}
+                          onChange={(code, valid) => { setReferralCode(code); setReferralValid(valid); }}
+                          autoFillFromCookie
+                        />
+                      </div>
+
                       {/* Trust badges */}
                       <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
                         <Shield className="h-4 w-4 text-primary" />
