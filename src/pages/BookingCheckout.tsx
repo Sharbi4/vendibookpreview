@@ -412,6 +412,7 @@ const BookingCheckout = () => {
           amount: fees.subtotal,
           delivery_fee: currentDeliveryFee,
           deposit_amount: depositAmount,
+          referral_code: referralValid ? referralCode : undefined,
         },
       });
 
