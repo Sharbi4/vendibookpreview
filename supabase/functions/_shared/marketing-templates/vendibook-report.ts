@@ -53,6 +53,12 @@ export interface ReportPayload {
   insightTitle: string;
   insightPullQuote: string;
   insightBody: string;
+  // Fallback / dynamic content
+  saleSectionLabel?: string;
+  rentalSectionLabel?: string;
+  listingsReplacement?: ReplacementBlock | null;
+  rentalReplacement?: ReplacementBlock | null;
+  expandTools?: boolean; // when both sections are thin, render 6 tools (2x3)
   recipientEmail: string;
   sendId: string;
   unsubscribeUrl: string;
