@@ -50,6 +50,7 @@ import { calculateRentalFees, formatCurrency } from '@/lib/commissions';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
 import { useHourlyAvailability } from '@/hooks/useHourlyAvailability';
 import { trackCTAClick } from '@/lib/analytics';
+import { trackLeadEvent } from '@/lib/leadTracking';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 
 interface RentalBookingWidgetProps {
@@ -978,10 +979,20 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {/* ─────────────────────────────────────────────────────────────────────── */}
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Button
-            variant="dark-shine"
-            className="w-full h-14 text-base font-semibold shadow-lg"
+            variant={instantBook ? 'dark-shine' : 'outline'}
+            className={cn(
+              'w-full h-14 text-base font-semibold',
+              instantBook ? 'shadow-lg' : 'border-primary/40 hover:bg-primary/5'
+            )}
             size="lg"
-            onClick={handleContinue}
+            onClick={() => {
+              trackLeadEvent('check_availability_click', {
+                listing_id: listingId,
+                source: 'rental_booking_widget',
+                instant_book: instantBook,
+              });
+              handleContinue();
+            }}
             disabled={!canContinue}
           >
             {instantBook ? (

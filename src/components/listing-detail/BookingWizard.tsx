@@ -11,6 +11,7 @@ import { useListingRequiredDocuments } from '@/hooks/useRequiredDocuments';
 import { calculateRentalFees } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
+import { trackLeadEvent } from '@/lib/leadTracking';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { DocumentType } from '@/types/documents';
 import type { TablesInsert } from '@/integrations/supabase/types';
@@ -92,6 +93,18 @@ const BookingWizard = ({
   
   // Check if this category requires business info
   const requiresBusinessInfo = ['food_truck', 'food_trailer', 'ghost_kitchen'].includes(category);
+
+  // Fire booking_request_started exactly once on mount
+  useEffect(() => {
+    trackLeadEvent('booking_request_started', {
+      listing_id: listingId,
+      category,
+      intent: 'rent',
+      instant_book: instantBook,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   // Wizard state - add extra steps if needed
   // Start at step 2 (Requirements) if dates are pre-selected
@@ -302,6 +315,15 @@ const BookingWizard = ({
 
       if (error) throw error;
       setBookingId(bookingResult.id);
+
+      trackLeadEvent('booking_request_submitted', {
+        listing_id: listingId,
+        category,
+        intent: 'rent',
+        instant_book: instantBook,
+        booking_id: bookingResult.id,
+      });
+
 
       // For Instant Book: redirect to payment
       if (instantBook) {

@@ -33,6 +33,7 @@ import { PublishSuccessModal } from './PublishSuccessModal';
 import { StripeConnectBanner } from './StripeConnectBanner';
 import { ListingPreviewModal } from './ListingPreviewModal';
 import { WizardPreviewSidebar } from './WizardPreviewSidebar';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 const STEPS = ['Type', 'Details', 'Pricing', 'Location', 'Documents', 'Media', 'Review'];
 
@@ -89,6 +90,13 @@ export const ListingWizard: React.FC = () => {
   const [isUploadingVideos, setIsUploadingVideos] = useState(false);
   const hasUnsavedChanges = useRef(false);
   const lastSavedData = useRef<string>('');
+
+  // Fire host_listing_started exactly once on wizard mount
+  useEffect(() => {
+    trackLeadEvent('host_listing_started', { source: 'create_listing' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   
   // Track preview image URLs to properly clean up object URLs
   const previewImageUrlsRef = useRef<Map<File, string>>(new Map());
@@ -827,6 +835,13 @@ export const ListingWizard: React.FC = () => {
           priceSale: formData.price_sale ? parseFloat(formData.price_sale) : null,
         });
         setShowSuccessModal(true);
+
+        trackLeadEvent('host_listing_published', {
+          listing_id: listing.id,
+          category: formData.category!,
+          intent: formData.mode === 'sale' ? 'sell' : 'host',
+          city: formData.city || undefined,
+        });
       } else {
         toast({
           title: 'Draft Saved',

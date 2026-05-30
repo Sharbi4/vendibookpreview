@@ -30,6 +30,7 @@ import { useBlockedDates } from '@/hooks/useBlockedDates';
 import { useHourlyAvailability } from '@/hooks/useHourlyAvailability';
 import { useAuth } from '@/contexts/AuthContext';
 import { trackCTAClick } from '@/lib/analytics';
+import { trackLeadEvent } from '@/lib/leadTracking';
 import { cn } from '@/lib/utils';
 import { AffirmBadge, isAffirmEligible } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge, isAfterpayEligible } from '@/components/ui/AfterpayBadge';
@@ -660,10 +661,20 @@ export const BookingWidget = ({
             {/* CTA Button */}
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
-                variant="dark-shine"
-                className="w-full h-14 text-base font-semibold shadow-lg"
+                variant={instantBook ? 'dark-shine' : 'outline'}
+                className={cn(
+                  'w-full h-14 text-base font-semibold',
+                  instantBook ? 'shadow-lg' : 'border-primary/40 hover:bg-primary/5'
+                )}
                 size="lg"
-                onClick={handleContinueToBooking}
+                onClick={() => {
+                  trackLeadEvent('check_availability_click', {
+                    listing_id: listingId,
+                    source: 'booking_widget',
+                    instant_book: instantBook,
+                  });
+                  handleContinueToBooking();
+                }}
                 disabled={bookingMode === 'daily' ? (!startDate || !endDate) : (!selectedDate || !selectedStartTime)}
               >
                 {instantBook ? (

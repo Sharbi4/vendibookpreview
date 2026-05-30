@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import { RentalBookingWidget } from './RentalBookingWidget';
+import { trackLeadEvent } from '@/lib/leadTracking';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 
 interface StickyMobileCTAProps {
@@ -121,6 +122,11 @@ export const StickyMobileCTA = ({
   };
 
   const handleRentalCTA = () => {
+    trackLeadEvent('check_availability_click', {
+      listing_id: listingId,
+      source: 'sticky_mobile_cta',
+      instant_book: instantBook,
+    });
     // Open unified booking modal
     setShowBookingModal(true);
   };
@@ -155,11 +161,11 @@ export const StickyMobileCTA = ({
           {/* Rental CTA */}
           {isRental ? (
             <Button
-              variant="dark-shine"
+              variant={instantBook ? 'dark-shine' : 'outline'}
               size="lg"
               onClick={handleRentalCTA}
               disabled={!isAvailable}
-              className="gap-2 min-w-[140px] h-12 text-base font-semibold shadow-lg"
+              className={`gap-2 min-w-[140px] h-12 text-base font-semibold ${instantBook ? 'shadow-lg' : 'border-primary/40'}`}
             >
               {instantBook ? <Zap className="h-5 w-5" /> : <Calendar className="h-5 w-5" />}
               {instantBook ? 'Book Now' : 'Request to Book'}
