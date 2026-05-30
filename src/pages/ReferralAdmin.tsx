@@ -263,7 +263,7 @@ const ReferralAdmin = () => {
       body.payload = { severity, flag_type: "manual_admin_flag" };
     }
 
-    const ok = await callAdmin(body);
+    const ok = await callAdmin(body, dialogIdempotencyKey);
     setSubmitting(false);
     if (ok) setDialogOpen(false);
   };
