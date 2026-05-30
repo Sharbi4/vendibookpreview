@@ -176,26 +176,19 @@ Additional Notes: ${formData.additionalNotes || 'None'}
 Wants Demo Call: ${formData.wantsDemoCall ? 'Yes' : 'No'}
       `.trim();
 
-      const { data, error } = await supabase.functions.invoke('create-zendesk-ticket', {
-        body: {
-          requester_name: formData.contactName,
-          requester_email: formData.email,
-          requester_phone: formData.phone || undefined,
-          subject: `Enterprise Listing Request: ${formData.companyName} (${formData.numberOfLocations || 'Multiple'} locations)`,
-          description,
-          priority: 'high',
-          type: 'task',
-          tags: ['enterprise', 'multi-kitchen', 'listing-request', 'high-value'],
-        },
-      });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (formData.phone) {
+        const { error } = await supabase.functions.invoke('vapi-outbound-call', {
+          body: { name: formData.contactName, phone: formData.phone },
+        });
+        if (error) throw error;
+      }
 
       setIsSubmitted(true);
       toast({
         title: 'Request submitted!',
-        description: 'Our enterprise team will contact you within 24 hours.',
+        description: formData.phone
+          ? "Our enterprise team is calling you now — please answer."
+          : 'Our enterprise team will contact you within 24 hours.',
       });
     } catch (error) {
       console.error('Enterprise form submission error:', error);
