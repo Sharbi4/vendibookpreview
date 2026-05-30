@@ -459,7 +459,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
               trackLeadEvent(
                 listing.mode === 'sale'
                   ? 'listing_start_purchase_click'
-                  : 'listing_check_dates_click',
+                  : 'listing_view_availability_click',
                 {
                   listing_id: listing.id,
                   category: listing.category,
@@ -471,8 +471,8 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
             }}
             className="group/cta relative z-10 inline-flex items-center gap-1 text-[13px] font-medium text-[#f97316] hover:text-[#fb923c] whitespace-nowrap shrink-0 transition-colors"
           >
-            <span>{listing.mode === 'sale' ? 'Start purchase' : 'Check dates'}</span>
-            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-150 ease-out group-hover/cta:translate-x-1" />
+            <span>{listing.mode === 'sale' ? 'Start purchase' : 'View availability'}</span>
+            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-150 ease-out group-hover/cta:translate-x-1 group-hover/cta:text-[#fb923c]" />
           </button>
         </div>
         
