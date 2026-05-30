@@ -251,7 +251,7 @@ serve(async (req) => {
     emailPromises.push(
       resend.emails.send({
         from: "Vendibook <updates@vendibook.com>",
-        to: ["support@vendibook.com", "atlasmom421@gmail.com"],
+        to: ["support@vendibook.com", "support@vendibook.com"],
         subject: `[ACTION REQUIRED] New Dispute - ${listingTitle}`,
         html: `
           <!DOCTYPE html>

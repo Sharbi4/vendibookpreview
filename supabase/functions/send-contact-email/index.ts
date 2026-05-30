@@ -260,7 +260,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     await sendEmail(
-      ["support@vendibook.com", "atlasmom421@gmail.com"],
+      ["support@vendibook.com", "support@vendibook.com"],
       `🔔 URGENT: New Contact Form - ${safeSubject}`,
       supportEmailHtml
     );

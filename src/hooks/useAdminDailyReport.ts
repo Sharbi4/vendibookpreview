@@ -10,7 +10,7 @@ const EXCLUDED_EMAILS = [
   'ellemh13@gmail.com',
   'ellemh13@@gmailc.om',
   'darlingsherla@gmail.com',
-  'atlasmom421@gmail.com',
+  'support@vendibook.com',
   'shawnnaharbin@vendibook.com',
 ];
 

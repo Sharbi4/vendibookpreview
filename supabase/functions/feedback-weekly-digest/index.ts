@@ -1,5 +1,5 @@
 // Weekly AI digest of all feedback collected in the last 7 days.
-// Sends a themed summary + suggested fixes to atlasmom421@gmail.com.
+// Sends a themed summary + suggested fixes to support@vendibook.com.
 // Triggered by pg_cron weekly or on-demand via POST.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
   const { error: sendErr } = await supabase.functions.invoke('send-transactional-email', {
     body: {
       templateName: 'feedback-weekly-digest',
-      recipientEmail: 'atlasmom421@gmail.com',
+      recipientEmail: 'support@vendibook.com',
       idempotencyKey: `feedback-digest-${new Date().toISOString().slice(0, 10)}`,
       templateData: { weekLabel, totalSubmissions: valid.length, avgNps, promoters, detractors, themes, highlightQuotes, rawSummary },
     },
