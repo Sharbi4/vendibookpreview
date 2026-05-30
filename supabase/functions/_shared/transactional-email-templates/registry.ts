@@ -40,6 +40,7 @@ import { template as featuredPaymentReceipt } from './featured-payment-receipt.t
 import { template as featuredPaymentAdminAlert } from './featured-payment-admin-alert.tsx'
 import { template as refundProcessed } from './refund-processed.tsx'
 import { template as feedbackReceivedAdmin } from './feedback-received-admin.tsx'
+import { template as feedbackWeeklyDigest } from './feedback-weekly-digest.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-abandoned': bookingAbandoned,
@@ -73,4 +74,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'featured-payment-admin-alert': featuredPaymentAdminAlert,
   'refund-processed': refundProcessed,
   'feedback-received-admin': feedbackReceivedAdmin,
+  'feedback-weekly-digest': feedbackWeeklyDigest,
 }

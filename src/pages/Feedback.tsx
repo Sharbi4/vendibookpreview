@@ -9,12 +9,13 @@ import { toast } from "sonner";
 export default function Feedback() {
   const [params] = useSearchParams();
   const token = params.get("token") || "";
+  const prefilledNps = params.get("nps");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [record, setRecord] = useState<any>(null);
   const [rating, setRating] = useState(0);
-  const [nps, setNps] = useState<number | null>(null);
+  const [nps, setNps] = useState<number | null>(prefilledNps !== null && !Number.isNaN(parseInt(prefilledNps, 10)) ? parseInt(prefilledNps, 10) : null);
   const [message, setMessage] = useState("");
   const [businessType, setBusinessType] = useState("");
   const [businessTypeOther, setBusinessTypeOther] = useState("");
@@ -39,7 +40,7 @@ export default function Feedback() {
   }, [token]);
 
   const submit = async () => {
-    if (!rating) { toast.error("Please select a rating"); return; }
+    if (!rating && nps === null) { toast.error("Please select a rating or NPS score"); return; }
     setSubmitting(true);
     const resolvedBusinessType = businessType === "Other" ? businessTypeOther.trim() : businessType;
     const newMetadata = {
