@@ -102,8 +102,16 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
         price: isSale ? listing.price_sale : listing.price_daily,
       },
     );
+    if (isSale) {
+      // Take the buyer straight into the full purchase wizard: review item,
+      // collect buyer info, delivery, then consents + payment.
+      onClose();
+      navigate(`/checkout/${listing.id}`);
+      return;
+    }
     setLeadOpen(true);
   };
+
 
   const handleBackdropClick = () => {
     trackLeadEvent('overlay_dismissed' as any, {
