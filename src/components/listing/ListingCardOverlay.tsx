@@ -159,7 +159,7 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full sm:max-w-[440px] mx-0 sm:mx-4 bg-[#111113] border border-white/10 rounded-t-2xl sm:rounded-2xl p-7 shadow-2xl"
+            className={`relative w-full ${isSale ? 'sm:max-w-[440px]' : 'sm:max-w-[520px]'} mx-0 sm:mx-4 bg-[#111113] border border-white/10 rounded-t-2xl sm:rounded-2xl p-7 shadow-2xl max-h-[92vh] overflow-y-auto`}
             style={{ borderTopWidth: 2, borderTopColor: '#f97316' }}
           >
             {/* Mobile drag handle */}
@@ -172,29 +172,67 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
 
             <div className="my-5 h-px bg-white/[0.07]" />
 
-            <div className="space-y-4">
-              {steps.map((step, i) => (
-                <motion.div
-                  key={step.n}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.08 + i * 0.06, duration: 0.25, ease: 'easeOut' }}
-                  className="flex gap-3"
-                >
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#f97316] pt-0.5 w-7 shrink-0">
-                    {step.n}
-                  </span>
-                  <div>
-                    <div className="text-[14px] font-semibold text-white leading-snug">
-                      {step.title}
+            {isSale ? (
+              <div className="space-y-4">
+                {steps.map((step, i) => (
+                  <motion.div
+                    key={step.n}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.08 + i * 0.06, duration: 0.25, ease: 'easeOut' }}
+                    className="flex gap-3"
+                  >
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#f97316] pt-0.5 w-7 shrink-0">
+                      {step.n}
+                    </span>
+                    <div>
+                      <div className="text-[14px] font-semibold text-white leading-snug">
+                        {step.title}
+                      </div>
+                      <div className="mt-0.5 text-[12px] text-[#6b7280] leading-relaxed">
+                        {step.desc}
+                      </div>
                     </div>
-                    <div className="mt-0.5 text-[12px] text-[#6b7280] leading-relaxed">
-                      {step.desc}
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <>
+                {/* Listing stat strip */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {[
+                    { label: 'Daily rate', value: dailyRate ? `$${Number(dailyRate).toLocaleString()}` : '—' },
+                    { label: 'Minimum stay', value: `${minDays} day${minDays > 1 ? 's' : ''}` },
+                    { label: 'Slots', value: `${totalSlots}` },
+                  ].map((s) => (
+                    <div
+                      key={s.label}
+                      className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5"
+                    >
+                      <div className="text-[10px] uppercase tracking-wider text-[#6b7280]">
+                        {s.label}
+                      </div>
+                      <div className="mt-0.5 text-[14px] font-semibold text-white tabular-nums">
+                        {s.value}
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                  ))}
+                </div>
+
+                <div className="text-[11px] uppercase tracking-wider text-[#6b7280] mb-2">
+                  {monthLabel}
+                </div>
+
+                {/* Live availability calendar */}
+                <div className="rounded-xl border border-white/10 bg-black/30 p-2 sm:p-3">
+                  <AvailabilityCalendarDisplay
+                    listingId={listing.id}
+                    availableFrom={anyListing.available_from}
+                    availableTo={anyListing.available_to}
+                  />
+                </div>
+              </>
+            )}
 
             <div className="my-5 h-px bg-white/[0.07]" />
 
@@ -204,6 +242,7 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
             >
               {primaryLabel}
             </button>
+
 
             <Link
               to={`/listing/${listing.id}`}
