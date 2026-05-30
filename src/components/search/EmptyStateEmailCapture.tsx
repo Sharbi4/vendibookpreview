@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { TellVendibookButton } from '@/components/lead/TellVendibookButton';
 
 interface EmptyStateEmailCaptureProps {
   locationText?: string;
@@ -121,9 +122,30 @@ export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFi
       </motion.div>
 
       <h3 className="text-2xl font-bold text-foreground mb-2 relative">No listings found here yet</h3>
-      <p className="text-muted-foreground text-center max-w-sm mb-6 text-sm relative">
-        Enter your name, email, and zip code — we'll notify you as soon as rentals or listings become available in your area.
+      <p className="text-muted-foreground text-center max-w-sm mb-5 text-sm relative">
+        Tell Vendibook what you need — our concierge will text or email you within 1 business hour with verified options.
       </p>
+
+      {/* Primary action: Concierge lead */}
+      <div className="relative w-full max-w-md mb-4">
+        <TellVendibookButton
+          variant="dark-shine"
+          size="lg"
+          className="w-full rounded-xl"
+          defaultCity={locationText}
+          defaultCategory={category as any}
+          sourcePage="search_empty_state"
+        >
+          Tell Vendibook what you need
+        </TellVendibookButton>
+      </div>
+
+      <div className="relative flex items-center gap-3 w-full max-w-md mb-4">
+        <div className="h-px bg-border flex-1" />
+        <span className="text-[11px] uppercase tracking-wider text-muted-foreground">or get notified</span>
+        <div className="h-px bg-border flex-1" />
+      </div>
+
 
       {/* Form */}
       {!isSubmitted ? (

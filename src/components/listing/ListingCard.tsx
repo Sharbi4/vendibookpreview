@@ -13,6 +13,7 @@ import { FavoriteButton } from '@/components/listing/FavoriteButton';
 import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 import { trackListingCardClick } from '@/lib/analytics';
+import { trackLeadEvent } from '@/lib/leadTracking';
 import { AvailabilityCalendarModal } from '@/components/listing/AvailabilityCalendarModal';
 import { normalizeScheduleKeys } from '@/lib/scheduleUtils';
 import { isListingFeatured } from '@/lib/featured';
@@ -215,7 +216,10 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
       <Link 
         to={`/listing/${listing.id}`} 
         className={cn("cursor-pointer block flex-1 flex flex-col", className)}
-        onClick={() => trackListingCardClick(listing.id, listing.category, 'listing_card')}
+        onClick={() => {
+          trackListingCardClick(listing.id, listing.category, 'listing_card');
+          trackLeadEvent('listing_card_click', { listing_id: listing.id, category: listing.category });
+        }}
       >
         {/* Image Container - Turo Look */}
         <div className={cn(

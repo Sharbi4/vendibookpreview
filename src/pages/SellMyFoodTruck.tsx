@@ -36,6 +36,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
+import { TellVendibookButton } from '@/components/lead/TellVendibookButton';
 import affirmLogo from '@/assets/affirm-logo.png';
 import afterpayLogo from '@/assets/afterpay-logo.jpg';
 
@@ -198,7 +199,7 @@ const SellMyFoodTruck = () => {
                   List once and reach buyers actively searching for food trucks and trailers — not scrolling past your post. Verified inquiries, secure checkout, financing-friendly buyers.
                 </p>
                 
-                <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
                   <Button size="lg" variant="glass-cta" asChild className="text-base">
                     <Link to="/list?mode=sale">
                       List Your Food Truck
@@ -210,6 +211,17 @@ const SellMyFoodTruck = () => {
                       See Food Trucks for Sale
                     </Link>
                   </Button>
+                </div>
+                <div className="flex justify-center mb-8">
+                  <TellVendibookButton
+                    variant="ghost"
+                    size="default"
+                    defaultIntent="sell"
+                    defaultCategory="food_truck"
+                    sourcePage="sell_my_food_truck"
+                  >
+                    Just exploring? Tell Vendibook about your truck →
+                  </TellVendibookButton>
                 </div>
 
                 

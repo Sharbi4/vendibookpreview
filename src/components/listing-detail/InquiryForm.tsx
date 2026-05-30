@@ -6,6 +6,7 @@ import type { FulfillmentType } from '@/types/listing';
 import { AffirmBadge, isAffirmEligible } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge, isAfterpayEligible } from '@/components/ui/AfterpayBadge';
 import { trackCTAClick } from '@/lib/analytics';
+import { trackLeadEvent } from '@/lib/leadTracking';
 import { useAuth } from '@/contexts/AuthContext';
 import { MakeOfferModal, AuthGateOfferModal } from '@/components/offers';
 import { LeadCaptureModal } from './LeadCaptureModal';
@@ -190,6 +191,7 @@ const InquiryForm = ({
           <Button 
             onClick={() => {
               trackCTAClick('request_info', 'inquiry_form');
+              trackLeadEvent('contact_host_click', { listing_id: listingId, source: 'inquiry_form' });
               setShowLeadModal(true);
             }}
             variant="outline"

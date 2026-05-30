@@ -17,8 +17,10 @@ import {
   Star,
   Clock,
   CalendarCheck,
+  Sparkles,
 } from 'lucide-react';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
+import { TellVendibookButton } from '@/components/lead/TellVendibookButton';
 
 // Food truck images
 // Browse page uses commercial/professional trailers
@@ -71,7 +73,17 @@ const Browse = () => {
                   <Link to="/how-it-works">Learn More</Link>
                 </Button>
               </div>
-              <p className="text-sm text-muted-foreground">Free to browse · No hidden fees · Pay only when you book</p>
+              <p className="text-sm text-muted-foreground mb-4">Free to browse · No hidden fees · Pay only when you book</p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <span className="text-sm text-muted-foreground">Can't find it?</span>
+                <TellVendibookButton
+                  variant="outline"
+                  size="default"
+                  sourcePage="browse_hero"
+                >
+                  Tell Vendibook what you need
+                </TellVendibookButton>
+              </div>
             </div>
           </div>
         </section>
@@ -249,6 +261,15 @@ const Browse = () => {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
+                <TellVendibookButton
+                  variant="outline"
+                  size="lg"
+                  className="text-lg px-8 py-6"
+                  sourcePage="browse_final_cta"
+                >
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  Tell Vendibook what you need
+                </TellVendibookButton>
               </div>
             </div>
           </div>
