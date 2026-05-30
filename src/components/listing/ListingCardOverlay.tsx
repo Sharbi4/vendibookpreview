@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import TellVendibookModal from '@/components/lead/TellVendibookModal';
+import { AvailabilityCalendarDisplay } from '@/components/listing-detail/AvailabilityCalendarDisplay';
 import type { Listing } from '@/types/listing';
+
 
 
 interface ListingCardOverlayProps {
