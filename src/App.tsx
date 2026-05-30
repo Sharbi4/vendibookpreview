@@ -110,6 +110,11 @@ const SignageRequest = lazy(() => import("./pages/SignageRequest"));
 
 const StartFoodBusiness = lazy(() => import("./pages/StartFoodBusiness"));
 const Homepage2 = lazy(() => import("./pages/Homepage2"));
+const ReferralLanding = lazy(() => import("./pages/ReferralLanding"));
+const ReferralDashboard = lazy(() => import("./pages/ReferralDashboard"));
+const ReferralTerms = lazy(() => import("./pages/ReferralTerms"));
+const ReferralAdmin = lazy(() => import("./pages/ReferralAdmin"));
+const RHandler = lazy(() => import("./pages/RHandler"));
 const CategoryCityPage = lazy(() => import("./pages/CategoryCityPage"));
 const CategoryIndex = lazy(() => import("./pages/CategoryIndex"));
 import { CATEGORY_INDEX_CONFIGS } from "./data/categoryIndexConfigs";
