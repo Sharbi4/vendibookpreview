@@ -90,7 +90,10 @@ serve(async (req) => {
       send_id: sendId,
       recipient_email: testEmail,
     });
-    await supabase.from("email_sends").update({ status: "test_sent" }).eq("id", sendId);
+    await supabase.from("email_sends").update({
+      status: "test_sent",
+      test_message_id: result.id ?? null,
+    }).eq("id", sendId);
 
     return new Response(JSON.stringify({ ok: true, recipient: testEmail, resendId: result.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
