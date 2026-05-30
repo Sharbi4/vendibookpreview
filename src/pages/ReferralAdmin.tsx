@@ -242,32 +242,18 @@ const ReferralAdmin = () => {
       return;
     }
     setSubmitting(true);
-    let ok = false;
-    if (dialogAction === "flag_fraud") {
-      const { error } = await supabase.from("referral_fraud_flags").insert({
-        referral_id: dialogReferral.id,
-        flag_type: "manual_admin_flag",
-        severity,
-        details: { note: noteValue },
-      });
-      if (error) {
-        toast.error("Flag failed");
-      } else {
-        toast.success("Fraud flag created");
-        setRunning((x) => !x);
-        ok = true;
-      }
-    } else {
-      const body: any = {
-        action: dialogAction,
-        referral_id: dialogReferral.id,
-        note: noteValue || undefined,
-      };
-      if (dialogAction === "place_on_hold" && holdUntil) {
-        body.hold_until = new Date(holdUntil).toISOString();
-      }
-      ok = await callAdmin(body);
+    const body: any = {
+      action: dialogAction,
+      referral_id: dialogReferral.id,
+      note: noteValue || undefined,
+    };
+    if (dialogAction === "place_on_hold" && holdUntil) {
+      body.hold_until = new Date(holdUntil).toISOString();
     }
+    if (dialogAction === "flag_fraud") {
+      body.payload = { severity, flag_type: "manual_admin_flag" };
+    }
+    const ok = await callAdmin(body);
     setSubmitting(false);
     if (ok) setDialogOpen(false);
   };
