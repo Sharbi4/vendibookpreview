@@ -1,116 +1,64 @@
-# Referral Program — Phase 1 Hardening Plan
+# Referral Program — Wiring Plan (Audit-Based)
 
-The referral system already has: public landing, dashboard, terms page, `/r/[code]` handler, code generation trigger, cookie + localStorage capture, code fields in signup/booking/purchase, all 9 referral tables, admin ledger page, and edge functions for tracking, applying, redeeming, payout batch, and admin actions.
+## Audit summary (what already exists — DO NOT rebuild)
 
-This plan adds the missing **beta guardrails** without touching any unrelated flow (signup, listing, checkout, marketing, feedback).
+**Database (all present):** `referrals`, `referral_codes`, `referral_clicks`, `referral_status_log`, `referral_fraud_flags`, `referral_payouts`, `referral_program_config`, `referral_terms_acceptance`, `referral_w9_records`, `admin_action_idempotency`, plus `app_feature_flags` (`referral_program_enabled=true`, `referral_auto_payout_enabled=false`) and config rows for supply/$150, purchase/$500, rental/$50 with correct hold days and caps.
 
----
+**Edge functions (all present):** `redeem-referral`, `referral-track-click`, `referral-apply-code`, `referral-record-event`, `referral-admin-action` (with idempotency), `referral-payout-batch`, `referral-accept-terms`, `send-referral-emails`.
 
-## 1. Admin feature flags
+**Frontend (all present):** `/r/:code` (RHandler), `/referral`, `/referral/dashboard`, `/referral/terms`, `/referral/admin`, `ReferralCapture` mounted globally, `ReferralCodeField` already wired into `BookingCheckout` and `SaleCheckout` (passed to Stripe metadata), code generation trigger `generate_referral_code_for_user`, `log_referral_status_change` RPC with idempotency, `has_role`/admin gating, terms acceptance flow.
 
-Add two global flags to `referral_program_config` (or a new `app_feature_flags` row):
-- `referral_program_enabled` (default **true** — system already live, but gated UI-side)
-- `referral_auto_payout_enabled` (default **false**)
+## What is actually missing (the wiring gap)
 
-Surface in `ReferralAdmin.tsx` as two toggles at the top.
+Despite all the surface area existing, **no production flow ever calls `referral-record-event`**. `rg "referral" supabase/functions/stripe-webhook supabase/functions/complete-ended-bookings` returns zero matches. That is the central break: referrals can be attributed at signup and codes captured at checkout, but they never advance past `signed_up` because no upstream system fires the qualifying event.
 
-Behavior when `referral_program_enabled = false`:
-- `/referral` → waitlist / coming-soon panel
-- `/referral/dashboard` → "Program temporarily unavailable" state
-- `/r/[code]` → click is still logged to `referral_clicks`, but `redeem-referral` and `referral-apply-code` short-circuit (no new `referrals` rows)
+Secondary gaps: supply program has no publish-time / first-transaction trigger; rental has no booking-completion trigger; fraud auto-flags (self/seller/IP) are not evaluated on event; admin "void" path doesn't auto-fire on Stripe dispute/refund webhook events.
 
-## 2. Manual code beats cookie
+## Changes to make
 
-In `redeem-referral` and the booking/checkout apply paths:
-- Accept both `manual_code` and `cookie_code` in the request
-- If both present and different → use manual, store cookie in `referrals.attribution_source` as JSON `{ manual, cookie }`
-- If only cookie → use cookie
-- Audit log entry on every attribution decision
+### 1. Stripe webhook → fire qualifying events (purchase + rental)
+Edit `supabase/functions/stripe-webhook/index.ts`:
+- On `checkout.session.completed` / `payment_intent.succeeded` where `payment_status==='paid'`, read `metadata.referral_code` (already set by `BookingCheckout`/`SaleCheckout`) and the resulting `sale_transactions` / `booking_requests` row.
+- If sale: call `referral-record-event` with `program_type:'purchase'`, `referred_user_id=buyer_id`, `transaction_id`, `transaction_value`. Pre-filter: skip when `seller_id===referrer` (handled both here and inside the function).
+- If rental booking paid: store `referral_code` on `booking_requests.referral_code` (new nullable column) — do NOT fire `rental` event yet; rental qualifies on completion, not on payment.
+- On `charge.dispute.created` / `charge.refunded` for a referred transaction: invoke `referral-admin-action` (`place_on_hold` or `void` with reason) via service role.
 
-## 3. Status flow + pending_review
+### 2. Rental qualification on completion
+Edit `supabase/functions/complete-ended-bookings/index.ts`:
+- For each booking transitioned to `completed`, if it has `referral_code` or its `shopper_id` has a `signed_up` referral row, and booking duration ≥ 2h and value ≥ $150 and not cancelled/disputed, call `referral-record-event` with `program_type:'rental'`. Function already enforces config (`min_transaction_value=150`, `hold_days=2` mapped to 48h post-completion → `pending_review`).
 
-Extend allowed statuses on `referrals.status`:
-`clicked → signed_up → transaction_started → pending_review → qualified → approved → on_hold → paid → voided`
+### 3. Supply program wiring
+- **Migration:** add `referrals.listing_id uuid`, `referrals.listing_published_at timestamptz`, `referrals.supply_first_txn_at timestamptz`; add `booking_requests.referral_code text` and `sale_transactions.referral_code text` (nullable) so webhook can read them when Stripe metadata is lost.
+- **Listing publish hook:** in `PublishWizard` publish path (or via a small DB trigger on `listings.status -> 'published'`), if owner has a `signed_up` referral with no `program_type`, set `program_type='supply'`, `listing_id`, `listing_published_at=now()`, status `transaction_started`, log it. Prefer trigger to keep client paths clean.
+- **First-transaction watcher:** in `stripe-webhook` after a successful sale/booking, if the listing's host has an attached supply referral with `listing_published_at` set and `supply_first_txn_at IS NULL`:
+  - if `now() - listing_published_at >= 30 days` AND `now() - listing_published_at <= 90 days` AND listing still `published`/in good standing → call `referral-record-event` with `program_type:'supply'`.
+  - else if past 90d → mark `expired` via admin-action.
+- **Daily cron:** add a small scheduled function (or extend an existing one) `referral-supply-expiry` to flip stale supply referrals to `expired` after the 90-day window.
 
-Update `referral-record-event` so that when a qualifying transaction lands, status moves to **`pending_review`** (not directly `qualified`). Admin moves it to `qualified` → `approved` manually unless auto-flag is on.
+### 4. Auto-fraud evaluation
+Extend `referral-record-event` (single place) to insert `referral_fraud_flags` rows when:
+- referrer == seller_id / host_id of the qualifying entity,
+- buyer email/phone matches referrer email/phone,
+- referrer's `profiles.referral_suspended=true` (skip event entirely),
+- > N clicks from same hashed_ip in <1h (lookup `referral_clicks`),
+- signup-to-qualify gap < threshold for purchase.
+Flags block auto-payout (already enforced) but do not block status progression — admin reviews.
 
-Every transition continues to go through `log_referral_status_change` (already exists) — verify all code paths use it.
+### 5. Payout safety
+Confirm `referral-payout-batch` already checks `referral_auto_payout_enabled` flag, Stripe Connect status, fraud flags, hold window, threshold. Add the explicit short-circuit on `app_feature_flags.referral_auto_payout_enabled=false` at the top of the function if not already present, and ensure it returns "manual-only" without firing transfers.
 
-## 4. Stripe Connect: required for payout, not for sharing
+### 6. Notifications
+Hook into `send-referral-emails` (already present) from the three flip points: `pending_review`, `qualified/approved`, `paid`, `voided/on_hold`. Use the existing email queue (`enqueue_email`), not raw Resend. Add admin notifications for `qualified` + `fraud_flag_detected` via the existing `notifications` table.
 
-Confirmed already correct in `ReferralDashboard` (sharing works without Connect). Add a clear "Connect payouts to receive earnings" banner with non-blocking CTA. Block only the **Withdraw** / payout action when `stripe_onboarding_complete = false`.
+### 7. Dashboard real-data check
+`/referral/dashboard` already uses `useReferralCode` + `useMyReferrals`. Verify the aggregations on the page (total earned / pending / paid) read from `referrals.reward_amount` filtered by status — patch any remaining mock values. No redesign.
 
-## 5. Auto-payout gating
+## Technical notes
 
-In `referral-payout-batch`:
-- First read `referral_auto_payout_enabled`. If `false`, exit early with `{ ok: true, skipped: "auto_payout_disabled" }`.
-- Continue to skip referrals with any `referral_fraud_flags` row (already partially handled — verify).
+- All admin writes already go through `referral-admin-action` with idempotency + unique `(referral_id, action_type, idempotency_key)` on `referral_status_log` and `referral_fraud_flags`. Webhook-driven auto-actions must pass a deterministic idempotency key (e.g. `stripe-event-${event.id}`) so Stripe retries don't double-log.
+- New columns require a single migration with `GRANT` re-issued only if needed (existing tables already have grants).
+- Keep `referral_program_enabled=false` short-circuits at the top of `redeem-referral`, `referral-track-click`, `referral-apply-code`, `referral-record-event` (already in place — verify).
+- Do not touch unrelated cron jobs, marketing emails, Zendesk paths (Zendesk is removed), or notification trigger functions beyond adding referral events.
 
-## 6. Terms acceptance logging
-
-`referral_terms_acceptance` table exists. Wire up:
-- On `/referral/terms` "I accept" CTA → insert row `{user_id, version, accepted_at, ip, user_agent}` via new edge function `referral-accept-terms`
-- Block code generation/sharing UI until accepted (check on dashboard load)
-
-## 7. Tax & payout language
-
-Update `/referral`, `/referral/dashboard`, `/referral/terms` copy:
-- Replace "earn $X" → "may earn up to $X"
-- Add: "Rewards may be taxable. Vendibook may require a W-9 before payout for U.S. residents earning $600+ per year."
-- Add prohibited-activity policy block (spam, paid traffic, bots, link farms, self-referrals, etc.)
-
-## 8. Admin panel — expand actions
-
-`ReferralAdmin.tsx` + `referral-admin-action` already supports `qualify`, `void`, `suspend_referrer`, `update_program`. Add:
-- `approve` (pending_review → approved)
-- `reject` (→ voided with reason)
-- `place_on_hold` (sets `on_hold_until`)
-- `mark_paid_manual` (status → paid, no Stripe transfer, note required)
-- `add_note` (log-only entry)
-- CSV export button (client-side from already-fetched ledger)
-
-Each action writes to `referral_status_log` with `changed_by_source = 'admin'`.
-
-## 9. Isolation guarantees
-
-No changes to:
-- `handle_new_user` trigger (other than already-present code generation)
-- marketing cron / templates / fallback logic
-- listing wizard, checkout, booking, Stripe webhook
-- feedback emails
-
-All new logic lives in:
-- `supabase/functions/referral-*` + new `referral-accept-terms`
-- `src/pages/Referral*.tsx`, `src/components/referrals/*`
-- one migration for flags + status enum widening
-
----
-
-## Technical Details
-
-**Migration:**
-```sql
--- Add feature flags (rows in referral_program_config or new singleton table)
-INSERT INTO public.referral_program_config (program_type, is_active, reward_amount, ...)
-  VALUES ('_flags', true, 0, ...) -- or new app_feature_flags table
-
--- Widen allowed statuses (no enum — text column today, just validation in code)
--- Add columns: cookie_attribution_code text, manual_attribution_code text on referrals
-ALTER TABLE public.referrals
-  ADD COLUMN IF NOT EXISTS cookie_attribution_code text,
-  ADD COLUMN IF NOT EXISTS manual_attribution_code text,
-  ADD COLUMN IF NOT EXISTS pending_review_at timestamptz,
-  ADD COLUMN IF NOT EXISTS approved_at timestamptz,
-  ADD COLUMN IF NOT EXISTS approved_by uuid;
-```
-
-I'll use a dedicated `app_feature_flags` table (key/bool/updated_by) so flags are not entangled with program config rows.
-
-**Files touched (~12):**
-- 1 migration
-- 4 edge functions edited: `redeem-referral`, `referral-apply-code`, `referral-payout-batch`, `referral-admin-action`, `referral-record-event`
-- 1 new edge function: `referral-accept-terms`
-- 4 pages: `ReferralLanding`, `ReferralDashboard`, `ReferralTerms`, `ReferralAdmin`
-- 1 hook update: `useReferral.ts` (terms-accepted query, flag query)
-
-**No changes** to: AuthContext, listing wizard, checkout, booking flow, Stripe webhook, marketing functions, feedback functions.
+## Out of scope
+UI redesign, new tables for already-covered concepts, Stripe Connect onboarding rewrite, W9 collection UX, CSV export beyond what `ReferralAdmin` already renders.
