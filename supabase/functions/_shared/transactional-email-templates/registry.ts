@@ -38,6 +38,7 @@ import { template as bookingAbandoned } from './booking-abandoned.tsx'
 import { template as supportReply } from './support-reply.tsx'
 import { template as featuredPaymentReceipt } from './featured-payment-receipt.tsx'
 import { template as featuredPaymentAdminAlert } from './featured-payment-admin-alert.tsx'
+import { template as refundProcessed } from './refund-processed.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-abandoned': bookingAbandoned,
@@ -69,4 +70,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'support-reply': supportReply,
   'featured-payment-receipt': featuredPaymentReceipt,
   'featured-payment-admin-alert': featuredPaymentAdminAlert,
+  'refund-processed': refundProcessed,
 }
