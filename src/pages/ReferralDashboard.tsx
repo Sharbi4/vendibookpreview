@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { SEO } from "@/components/SEO";
+import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { useReferralCode, useMyReferrals, buildReferralUrl } from "@/hooks/useReferral";
 import { useStripeConnect } from "@/hooks/useStripeConnect";
@@ -35,7 +35,7 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 const ReferralDashboard = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { data: code } = useReferralCode();
   const { data: referrals = [] } = useMyReferrals();
   const stripe = useStripeConnect();

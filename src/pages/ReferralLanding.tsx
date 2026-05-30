@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { SEO } from "@/components/SEO";
+import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowRight, Link as LinkIcon, Share2, DollarSign, Shield, FileText, Clock } from "lucide-react";
 
