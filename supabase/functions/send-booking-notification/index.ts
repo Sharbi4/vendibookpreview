@@ -331,7 +331,9 @@ serve(async (req) => {
           message: `${shopper?.full_name || "A guest"} paid $${booking.total_price} for ${listingTitle}.`,
           link: "/dashboard",
         });
+      }
       if (shopper?.email && shopperWantsRequest) {
+
         emails.push({
           to: shopper.email,
           subject: `Booking confirmed · ${listingTitle} · #${bookingRef}`,
