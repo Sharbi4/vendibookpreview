@@ -5,8 +5,8 @@ import { TrendingUp } from 'lucide-react';
 const POPULAR = [
   { label: 'Food trucks under $30K', q: 'food truck', mode: 'sale' },
   { label: 'Trailers in Texas', q: 'trailer Texas', mode: 'sale' },
-  { label: 'Commissary kitchens', q: 'commissary kitchen', mode: 'rent' },
-  { label: 'Vendor spaces', q: 'vendor space', mode: 'rent' },
+  { label: 'Food trucks for rent', q: 'food truck', mode: 'rent' },
+  { label: 'Food trailers for sale', q: 'food trailer', mode: 'sale' },
 ];
 
 const HeroPopularSearches = () => {

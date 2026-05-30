@@ -114,7 +114,7 @@ const HeroValueProp = () => {
             >
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
               <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/75">
-                Rent, buy, host, or sell food trucks, trailers, shared kitchens, and vendor spaces
+                Rent, buy, host, or sell food trucks and food trailers
               </span>
             </motion.div>
 

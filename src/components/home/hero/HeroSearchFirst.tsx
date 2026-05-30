@@ -11,10 +11,10 @@ import { useHeroSearch } from './useHeroSearch';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
 const CATEGORIES = [
-  { label: 'Food trucks', mode: 'rent', cat: 'food_truck' },
-  { label: 'Trailers', mode: 'sale', cat: 'food_trailer' },
-  { label: 'Kitchens', mode: 'rent', cat: 'ghost_kitchen' },
-  { label: 'Spaces', mode: 'rent', cat: 'vendor_space' },
+  { label: 'Trucks for rent', mode: 'rent', cat: 'food_truck' },
+  { label: 'Trucks for sale', mode: 'sale', cat: 'food_truck' },
+  { label: 'Trailers for rent', mode: 'rent', cat: 'food_trailer' },
+  { label: 'Trailers for sale', mode: 'sale', cat: 'food_trailer' },
 ];
 
 const HeroSearchFirst = () => {
