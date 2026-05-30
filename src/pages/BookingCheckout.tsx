@@ -50,6 +50,7 @@ import type { DocumentType } from '@/types/documents';
 import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
