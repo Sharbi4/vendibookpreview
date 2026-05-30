@@ -6,6 +6,7 @@ import { trackLeadEvent } from '@/lib/leadTracking';
 import TellVendibookModal from '@/components/lead/TellVendibookModal';
 import { InlineAvailabilitySlotPicker } from '@/components/listing/InlineAvailabilitySlotPicker';
 import { useHourlyAvailability } from '@/hooks/useHourlyAvailability';
+import { cn } from '@/lib/utils';
 import type { Listing } from '@/types/listing';
 
 
