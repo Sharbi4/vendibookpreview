@@ -525,6 +525,10 @@ serve(async (req) => {
                 deposit_amount: depositAmount,
                 deposit_status: 'pending',
               }),
+              // Persist referral code for rental attribution at completion time
+              ...(session.metadata?.referral_code && {
+                referral_code: session.metadata.referral_code,
+              }),
             })
             .eq("id", bookingId);
 
