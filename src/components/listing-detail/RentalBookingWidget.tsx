@@ -50,6 +50,7 @@ import { calculateRentalFees, formatCurrency } from '@/lib/commissions';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
 import { useHourlyAvailability } from '@/hooks/useHourlyAvailability';
 import { trackCTAClick } from '@/lib/analytics';
+import { trackLeadEvent } from '@/lib/leadTracking';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 
 interface RentalBookingWidgetProps {
