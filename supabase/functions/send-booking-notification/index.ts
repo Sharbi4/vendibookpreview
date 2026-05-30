@@ -1,7 +1,7 @@
+// Routes booking-event notifications through the Lovable Emails queue using the
+// premium Satin Lux `generic-notice` template. No direct Resend usage.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,696 +15,325 @@ interface NotificationRequest {
   reason?: string;
 }
 
+const SITE_URL = "https://vendibook.com";
+
 const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : "";
   console.log(`[BOOKING-NOTIFICATION] ${step}${detailsStr}`);
 };
 
-// Production domain - always use vendibook.com
-const SITE_URL = 'https://vendibook.com';
-const LOGO_URL = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png";
-
-const wrapEmailHtml = (content: string) => `
-  <!DOCTYPE html>
-  <html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-      @font-face {
-        font-family: 'Sofia Pro Soft';
-        src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-        font-weight: 300;
-        font-style: normal;
-      }
-    </style>
-  </head>
-  <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
-    <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-      <!-- Logo Header -->
-      <div style="text-align: center; margin-bottom: 24px;">
-        <a href="${SITE_URL}" style="display: inline-block; text-decoration: none;">
-          <img src="${LOGO_URL}" alt="VendiBook" style="height: 56px;" />
-        </a>
-      </div>
-      <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-        ${content}
-        <p style="color: #888; font-size: 14px; margin-top: 30px;">
-          — The VendiBook Team<br>
-          <a href="tel:+17257559598" style="color: #FF5124; text-decoration: none;">(725) 755-9598</a>
-        </p>
-      </div>
-    </div>
-  </body>
-  </html>
-`;
+type Tone = "neutral" | "success" | "warning" | "danger" | "info";
+interface QueuedEmail {
+  to: string;
+  subject: string;
+  payload: {
+    subject: string;
+    kicker?: string;
+    heading?: string;
+    greeting?: string;
+    paragraphs?: string[];
+    details?: { label: string; value: string; mono?: boolean }[];
+    alert?: { tone?: Tone; title?: string; body: string };
+    ctaLabel?: string;
+    ctaUrl?: string;
+  };
+  idempotencyKey: string;
+}
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     logStep("Function started");
-
-    const supabaseClient = createClient(
+    const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
 
     const { booking_id, event_type, host_response, reason }: NotificationRequest = await req.json();
-    logStep("Request received", { booking_id, event_type, reason });
+    logStep("Request received", { booking_id, event_type });
+    if (!booking_id || !event_type) throw new Error("Missing booking_id or event_type");
 
-    if (!booking_id || !event_type) {
-      throw new Error("Missing required fields: booking_id and event_type");
-    }
+    const { data: booking, error: bookingError } = await supabase
+      .from("booking_requests").select("*").eq("id", booking_id).single();
+    if (bookingError || !booking) throw new Error(`Failed to fetch booking: ${bookingError?.message}`);
 
-    // Fetch booking details with listing and user info
-    const { data: booking, error: bookingError } = await supabaseClient
-      .from("booking_requests")
-      .select("*")
-      .eq("id", booking_id)
-      .single();
-
-    if (bookingError || !booking) {
-      throw new Error(`Failed to fetch booking: ${bookingError?.message}`);
-    }
-    logStep("Booking fetched", { booking_id: booking.id, status: booking.status });
-
-    // Fetch listing details
-    const { data: listing, error: listingError } = await supabaseClient
-      .from("listings")
-      .select("title, cover_image_url, address, fulfillment_type")
-      .eq("id", booking.listing_id)
-      .single();
-
-    if (listingError) {
-      logStep("Warning: Could not fetch listing", { error: listingError.message });
-    }
-
-    // Fetch shopper profile
-    const { data: shopper, error: shopperError } = await supabaseClient
-      .from("profiles")
-      .select("email, full_name")
-      .eq("id", booking.shopper_id)
-      .single();
-
-    if (shopperError) {
-      logStep("Warning: Could not fetch shopper", { error: shopperError.message });
-    }
-
-    // Fetch host profile
-    const { data: host, error: hostError } = await supabaseClient
-      .from("profiles")
-      .select("email, full_name")
-      .eq("id", booking.host_id)
-      .single();
-
-    if (hostError) {
-      logStep("Warning: Could not fetch host", { error: hostError.message });
-    }
+    const { data: listing } = await supabase
+      .from("listings").select("title, address, fulfillment_type").eq("id", booking.listing_id).single();
+    const { data: shopper } = await supabase
+      .from("profiles").select("email, full_name").eq("id", booking.shopper_id).single();
+    const { data: host } = await supabase
+      .from("profiles").select("email, full_name").eq("id", booking.host_id).single();
 
     const listingTitle = listing?.title || "your listing";
-    const startDate = new Date(booking.start_date).toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-    const endDate = new Date(booking.end_date).toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-
-    // Create short booking reference ID (first 8 chars uppercase)
+    const fmt = (d: string) => new Date(d).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+    const startDate = fmt(booking.start_date);
+    const endDate = fmt(booking.end_date);
     const bookingRef = booking.id.substring(0, 8).toUpperCase();
 
-    // Fetch notification preferences for host and shopper
-    const { data: hostPrefs } = await supabaseClient
-      .from("notification_preferences")
-      .select("*")
-      .eq("user_id", booking.host_id)
-      .maybeSingle();
+    const { data: hostPrefs } = await supabase
+      .from("notification_preferences").select("*").eq("user_id", booking.host_id).maybeSingle();
+    const { data: shopperPrefs } = await supabase
+      .from("notification_preferences").select("*").eq("user_id", booking.shopper_id).maybeSingle();
 
-    const { data: shopperPrefs } = await supabaseClient
-      .from("notification_preferences")
-      .select("*")
-      .eq("user_id", booking.shopper_id)
-      .maybeSingle();
+    const hostWantsRequest = hostPrefs?.booking_request_email !== false;
+    const shopperWantsRequest = shopperPrefs?.booking_request_email !== false;
+    const hostWantsInapp = hostPrefs?.booking_request_inapp !== false;
+    const shopperWantsInapp = shopperPrefs?.booking_response_inapp !== false;
 
-    // Check email preferences - default to true if no preferences exist
-    const hostWantsBookingRequestEmail = hostPrefs?.booking_request_email !== false;
-    const hostWantsBookingResponseEmail = hostPrefs?.booking_response_email !== false;
-    const shopperWantsBookingRequestEmail = shopperPrefs?.booking_request_email !== false;
-    const shopperWantsBookingResponseEmail = shopperPrefs?.booking_response_email !== false;
+    const emails: QueuedEmail[] = [];
+    const inApp: { user_id: string; type: string; title: string; message: string; link: string }[] = [];
 
-    // Check in-app preferences
-    const hostWantsBookingRequestInapp = hostPrefs?.booking_request_inapp !== false;
-    const shopperWantsBookingResponseInapp = shopperPrefs?.booking_response_inapp !== false;
-
-    logStep("Notification preferences loaded", { 
-      hostWantsBookingRequestEmail, 
-      shopperWantsBookingRequestEmail,
-      hostWantsBookingResponseEmail,
-      shopperWantsBookingResponseEmail 
-    });
-
-    const emails: { to: string; subject: string; html: string }[] = [];
-    const inAppNotifications: { user_id: string; type: string; title: string; message: string; link: string }[] = [];
-
-    // Parse business info if present
-    const businessInfo = booking.business_info as {
-      licenseType?: string;
-      licenseTypeOther?: string;
-      hasFoodHandlersCert?: boolean;
-      hasKitchenManagerCert?: boolean;
-      hasLiabilityInsurance?: boolean;
-      employeeCount?: string;
-      intendedUse?: string;
-      equipmentNeeded?: string;
-      cuisineType?: string;
-      additionalNotes?: string;
-    } | null;
-
-    // Helper to format business info for email
-    const formatBusinessInfoHtml = () => {
-      if (!businessInfo) return "";
-      
-      const licenseDisplay = businessInfo.licenseType === 'other' 
-        ? businessInfo.licenseTypeOther 
-        : businessInfo.licenseType?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-      
-      const certs = [];
-      if (businessInfo.hasFoodHandlersCert) certs.push("Food Handler's Certificate");
-      if (businessInfo.hasKitchenManagerCert) certs.push("Kitchen Manager Certification");
-      if (businessInfo.hasLiabilityInsurance) certs.push("Commercial Liability Insurance");
-      
-      return `
-        <div style="background: #FFF5F2; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #FF5124;">
-          <h3 style="color: #FF5124; font-size: 16px; margin: 0 0 16px 0;">📋 Applicant Business Information</h3>
-          ${licenseDisplay ? `<p style="margin: 0 0 8px 0;"><strong>License Type:</strong> ${licenseDisplay}</p>` : ""}
-          ${businessInfo.cuisineType ? `<p style="margin: 0 0 8px 0;"><strong>Cuisine Type:</strong> ${businessInfo.cuisineType}</p>` : ""}
-          ${businessInfo.employeeCount ? `<p style="margin: 0 0 8px 0;"><strong>Staff Size:</strong> ${businessInfo.employeeCount.replace(/_/g, ' ')}</p>` : ""}
-          ${certs.length > 0 ? `<p style="margin: 0 0 8px 0;"><strong>Certifications:</strong> ${certs.join(", ")}</p>` : `<p style="margin: 0 0 8px 0;"><strong>Certifications:</strong> <em>None provided</em></p>`}
-          ${businessInfo.intendedUse ? `<p style="margin: 0 0 8px 0;"><strong>Intended Use:</strong> ${businessInfo.intendedUse}</p>` : ""}
-          ${businessInfo.equipmentNeeded ? `<p style="margin: 0 0 8px 0;"><strong>Equipment Needed:</strong> ${businessInfo.equipmentNeeded}</p>` : ""}
-          ${businessInfo.additionalNotes ? `<p style="margin: 0;"><strong>Additional Notes:</strong> ${businessInfo.additionalNotes}</p>` : ""}
-        </div>
-      `;
-    };
+    const baseDetails = [
+      { label: "Booking", value: `#${bookingRef}`, mono: true },
+      { label: "Listing", value: listingTitle },
+      { label: "Dates", value: `${startDate} → ${endDate}` },
+    ];
 
     if (event_type === "submitted") {
-      // Email to host about new booking request - only if host wants email notifications
-      if (host?.email && hostWantsBookingRequestEmail) {
+      if (host?.email && hostWantsRequest) {
         emails.push({
           to: host.email,
-          subject: `New Booking Request #${bookingRef} - ${listingTitle}`,
-          html: wrapEmailHtml(`
-            <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">New Booking Request 📩</h1>
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-              You have received a new booking request for <strong>${listingTitle}</strong>.
-            </p>
-            <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
-              <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Guest:</strong> ${shopper?.full_name || "A shopper"}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Total:</strong> $${booking.total_price}</p>
-              ${booking.message ? `<p style="margin: 0;"><strong>Message:</strong> ${booking.message}</p>` : ""}
-            </div>
-            ${formatBusinessInfoHtml()}
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
-              Please review and respond to this request as soon as possible.
-            </p>
-            <div style="text-align: center; margin: 24px 0;">
-              <a href="${SITE_URL}/dashboard" 
-                 style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                View Booking Request
-              </a>
-            </div>
-            <p style="color: #888; font-size: 12px; margin-top: 20px;">
-              <a href="${SITE_URL}/notification-preferences" style="color: #FF5124; text-decoration: none;">Manage notification preferences</a>
-            </p>
-          `),
+          subject: `New booking request · ${listingTitle} · #${bookingRef}`,
+          payload: {
+            subject: `New booking request · #${bookingRef}`,
+            kicker: "New request",
+            heading: "You have a new booking request.",
+            greeting: `From ${shopper?.full_name || "a guest"}`,
+            paragraphs: ["Please review and respond within 24 hours to keep your response rate high."],
+            details: [
+              ...baseDetails,
+              { label: "Total", value: `$${Number(booking.total_price).toFixed(2)}` },
+              ...(booking.message ? [{ label: "Message", value: booking.message }] : []),
+            ],
+            ctaLabel: "Review request",
+            ctaUrl: `${SITE_URL}/dashboard`,
+          },
+          idempotencyKey: `booking-${booking_id}-submitted-host`,
         });
-      } else if (host?.email && !hostWantsBookingRequestEmail) {
-        logStep("Host email skipped due to preferences", { host_id: booking.host_id });
       }
-      
-      // In-app notification to host - only if host wants in-app notifications
-      if (hostWantsBookingRequestInapp) {
-        inAppNotifications.push({
-          user_id: booking.host_id,
-          type: "booking_request",
+      if (hostWantsInapp) {
+        inApp.push({
+          user_id: booking.host_id, type: "booking_request",
           title: `New Booking Request #${bookingRef}`,
-          message: `${shopper?.full_name || "Someone"} requested to book ${listingTitle} from ${startDate} to ${endDate}`,
+          message: `${shopper?.full_name || "Someone"} requested ${listingTitle} from ${startDate} to ${endDate}`,
           link: "/dashboard",
         });
       }
-
-      // Confirmation email to shopper - only if shopper wants email notifications
-      if (shopper?.email && shopperWantsBookingRequestEmail) {
+      if (shopper?.email && shopperWantsRequest) {
         emails.push({
           to: shopper.email,
-          subject: `Booking Request #${bookingRef} Submitted - ${listingTitle}`,
-          html: wrapEmailHtml(`
-            <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">Booking Request Submitted ✓</h1>
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
-              Hi ${shopper.full_name || "there"},
-            </p>
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-              Your booking request for <strong>${listingTitle}</strong> has been submitted successfully.
-            </p>
-            <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
-              <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
-              <p style="margin: 0;"><strong>Total:</strong> $${booking.total_price}</p>
-            </div>
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
-              The host will review your request and respond soon. We'll notify you once they respond.
-            </p>
-            <div style="text-align: center; margin: 24px 0;">
-              <a href="${SITE_URL}/dashboard" 
-                 style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                View Booking Status
-              </a>
-            </div>
-            <p style="color: #888; font-size: 12px; margin-top: 20px;">
-              <a href="${SITE_URL}/notification-preferences" style="color: #FF5124; text-decoration: none;">Manage notification preferences</a>
-            </p>
-          `),
+          subject: `Booking request submitted · #${bookingRef}`,
+          payload: {
+            subject: `Booking request submitted · #${bookingRef}`,
+            kicker: "Request submitted",
+            heading: "We sent your request to the host.",
+            greeting: `Hi ${shopper.full_name?.split(" ")[0] || "there"},`,
+            paragraphs: [`Your request for ${listingTitle} is in. You'll get an email the moment the host responds.`],
+            details: [...baseDetails, { label: "Total", value: `$${Number(booking.total_price).toFixed(2)}` }],
+            ctaLabel: "View status",
+            ctaUrl: `${SITE_URL}/dashboard`,
+          },
+          idempotencyKey: `booking-${booking_id}-submitted-guest`,
         });
-      } else if (shopper?.email && !shopperWantsBookingRequestEmail) {
-        logStep("Shopper email skipped due to preferences", { shopper_id: booking.shopper_id });
       }
     } else if (event_type === "approved") {
-      // Get deposit amount if available
       const depositAmount = booking.deposit_amount || 0;
-      const totalDue = booking.total_price + depositAmount;
-      
-      // Send branded booking confirmation email to shopper with payment required
+      const totalDue = Number(booking.total_price) + Number(depositAmount);
       if (shopper?.email) {
-        try {
-          const confirmationResponse = await fetch(
-            `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-booking-confirmation`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
-              },
-              body: JSON.stringify({
-                email: shopper.email,
-                fullName: shopper.full_name || "",
-                listingTitle: listingTitle,
-                startDate: booking.start_date,
-                endDate: booking.end_date,
-                totalPrice: booking.total_price,
-                hostName: host?.full_name || "Your host",
-                fulfillmentType: booking.fulfillment_selected || listing?.fulfillment_type || "pickup",
-                address: listing?.address || booking.address_snapshot,
-                deliveryAddress: booking.delivery_address,
-                bookingId: booking.id,
-                depositAmount: depositAmount,
-              }),
-            }
-          );
-          
-          if (confirmationResponse.ok) {
-            logStep("Branded booking confirmation email sent with payment gate", { to: shopper.email });
-          } else {
-            const errorData = await confirmationResponse.json();
-            logStep("Failed to send branded confirmation, falling back", { error: errorData });
-            // Fallback to basic email with payment required notice
-            emails.push({
-              to: shopper.email,
-              subject: `💳 Action Required: Complete Payment for Booking #${bookingRef}`,
-              html: wrapEmailHtml(`
-                <div style="text-align: center; margin-bottom: 20px;">
-                  <span style="display: inline-block; background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%); color: #ffffff; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;">
-                    💳 Payment Required
-                  </span>
-                </div>
-                <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">Booking Approved! 🎉</h1>
-                <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
-                  Great news, ${shopper.full_name || "there"}!
-                </p>
-                <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                  Your booking for <strong>${listingTitle}</strong> has been approved. <strong>Complete your payment to confirm the booking.</strong>
-                </p>
-                <div style="background: #FFF5F2; border-radius: 12px; padding: 20px; margin: 20px 0;">
-                  <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
-                  <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
-                  <p style="margin: 0 0 10px 0;"><strong>Rental Total (incl. 12.9% fee):</strong> $${booking.total_price}</p>
-                  ${depositAmount > 0 ? `<p style="margin: 0 0 10px 0;"><strong>Security Deposit:</strong> $${depositAmount.toFixed(2)} <span style="color: #6b7280; font-size: 12px;">(refundable)</span></p>` : ""}
-                  <div style="border-top: 2px solid #FF5124; padding-top: 12px; margin-top: 12px;">
-                    <p style="margin: 0; font-size: 18px;"><strong>Total Due Now: $${totalDue.toFixed(2)}</strong></p>
-                  </div>
-                </div>
-                ${host_response ? `
-                  <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
-                    <p style="margin: 0 0 10px 0; font-weight: bold;">Message from host:</p>
-                    <p style="margin: 0; color: #4a4a4a;">${host_response}</p>
-                  </div>
-                ` : ""}
-                <div style="background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 20px 0;">
-                  <p style="color: #92400E; font-size: 14px; line-height: 1.6; margin: 0;">
-                    <strong>⏰ Action Required:</strong> Complete your payment to confirm this booking. Your booking will not be guaranteed until payment is received.
-                  </p>
-                </div>
-                <div style="text-align: center; margin: 24px 0;">
-                  <a href="${SITE_URL}/dashboard" 
-                     style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 18px;">
-                    💳 Complete Payment - $${totalDue.toFixed(2)}
-                  </a>
-                </div>
-              `),
-            });
-          }
-        } catch (confirmError: any) {
-          logStep("Error calling booking confirmation function", { error: confirmError.message });
-        }
+        emails.push({
+          to: shopper.email,
+          subject: `Approved — complete payment · #${bookingRef}`,
+          payload: {
+            subject: `Approved — complete payment · #${bookingRef}`,
+            kicker: "Approved",
+            heading: "Your booking is approved — pay to confirm.",
+            greeting: `Hi ${shopper.full_name?.split(" ")[0] || "there"},`,
+            paragraphs: [`The host approved ${listingTitle}. Complete payment now to lock in your dates.`],
+            details: [
+              ...baseDetails,
+              { label: "Rental total", value: `$${Number(booking.total_price).toFixed(2)}` },
+              ...(depositAmount > 0 ? [{ label: "Refundable deposit", value: `$${Number(depositAmount).toFixed(2)}` }] : []),
+              { label: "Due now", value: `$${totalDue.toFixed(2)}` },
+            ],
+            alert: host_response
+              ? { tone: "info", title: "Message from host", body: host_response }
+              : { tone: "warning", title: "Action required", body: "Your dates are not held until payment is received." },
+            ctaLabel: `Complete payment · $${totalDue.toFixed(2)}`,
+            ctaUrl: `${SITE_URL}/dashboard`,
+          },
+          idempotencyKey: `booking-${booking_id}-approved-guest`,
+        });
       }
-      
-      // In-app notification to shopper - indicate payment required
-      inAppNotifications.push({
-        user_id: booking.shopper_id,
-        type: "booking_approved",
-        title: `💳 Booking #${bookingRef} Approved - Payment Required`,
-        message: `Your booking for ${listingTitle} has been approved! Complete your payment to confirm.`,
+      inApp.push({
+        user_id: booking.shopper_id, type: "booking_approved",
+        title: `💳 Booking #${bookingRef} Approved — Payment Required`,
+        message: `Your booking for ${listingTitle} has been approved. Complete payment to confirm.`,
         link: "/dashboard",
       });
     } else if (event_type === "declined") {
-      // Email to shopper about decline
       if (shopper?.email) {
         emails.push({
           to: shopper.email,
-          subject: `Booking #${bookingRef} Update - ${listingTitle}`,
-          html: wrapEmailHtml(`
-            <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">Booking Not Available</h1>
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
-              Hi ${shopper.full_name || "there"},
-            </p>
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 12px 0;">
-              <strong>Booking Reference:</strong> #${bookingRef}
-            </p>
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-              Unfortunately, the host was unable to approve your booking request for <strong>${listingTitle}</strong> for ${startDate} - ${endDate}.
-            </p>
-            ${host_response ? `
-              <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
-                <p style="margin: 0 0 10px 0; font-weight: bold;">Message from host:</p>
-                <p style="margin: 0; color: #4a4a4a;">${host_response}</p>
-              </div>
-            ` : ""}
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
-              Don't worry! There are plenty of other great options available. Browse our marketplace to find your perfect match.
-            </p>
-            <div style="text-align: center; margin: 24px 0;">
-              <a href="${SITE_URL}/search" 
-                 style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                Browse Listings
-              </a>
-            </div>
-          `),
+          subject: `Booking update · #${bookingRef}`,
+          payload: {
+            subject: `Booking update · #${bookingRef}`,
+            kicker: "Update",
+            heading: "Your booking wasn't approved this time.",
+            greeting: `Hi ${shopper.full_name?.split(" ")[0] || "there"},`,
+            paragraphs: [`The host could not approve your request for ${listingTitle} for ${startDate} → ${endDate}. Your card was not charged.`],
+            ...(host_response ? { alert: { tone: "info" as Tone, title: "Message from host", body: host_response } } : {}),
+            ctaLabel: "Browse similar listings",
+            ctaUrl: `${SITE_URL}/search`,
+          },
+          idempotencyKey: `booking-${booking_id}-declined-guest`,
         });
       }
-      
-      // In-app notification to shopper
-      inAppNotifications.push({
-        user_id: booking.shopper_id,
-        type: "booking_declined",
+      inApp.push({
+        user_id: booking.shopper_id, type: "booking_declined",
         title: `Booking #${bookingRef} Declined`,
         message: `Your booking request for ${listingTitle} was not approved${host_response ? `: "${host_response}"` : ""}`,
         link: "/dashboard",
       });
     } else if (event_type === "hold_released") {
-      // Payment hold was released (host declined or other reason)
-      const releaseReason = reason || host_response || "The host was unable to approve your booking";
-      
+      const releaseReason = reason || host_response || "The host was unable to approve your booking.";
       if (shopper?.email) {
         emails.push({
           to: shopper.email,
-          subject: `Booking #${bookingRef} - Payment Released`,
-          html: wrapEmailHtml(`
-            <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">Payment Hold Released 💳</h1>
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
-              Hi ${shopper.full_name || "there"},
-            </p>
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-              The payment hold for your booking request for <strong>${listingTitle}</strong> has been released. 
-              Your card will <strong>not be charged</strong>.
-            </p>
-            <div style="background: #DCFCE7; border-left: 4px solid #22C55E; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 20px 0;">
-              <p style="color: #166534; font-size: 14px; line-height: 1.6; margin: 0;">
-                <strong>✓ No Charge:</strong> The authorization hold has been released. You will see the pending charge disappear from your statement within 3-5 business days.
-              </p>
-            </div>
-            <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
-              <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Reason:</strong> ${releaseReason}</p>
-            </div>
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
-              Don't worry! There are plenty of other great options available. Browse our marketplace to find your perfect match.
-            </p>
-            <div style="text-align: center; margin: 24px 0;">
-              <a href="${SITE_URL}/search" 
-                 style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                Browse Listings
-              </a>
-            </div>
-          `),
+          subject: `Payment hold released · #${bookingRef}`,
+          payload: {
+            subject: `Payment hold released · #${bookingRef}`,
+            kicker: "Hold released",
+            heading: "Your card will not be charged.",
+            greeting: `Hi ${shopper.full_name?.split(" ")[0] || "there"},`,
+            paragraphs: [`The authorization hold for ${listingTitle} has been released. Any pending charge will disappear from your statement within 3–5 business days.`],
+            details: [{ label: "Booking", value: `#${bookingRef}`, mono: true }, { label: "Reason", value: releaseReason }],
+            alert: { tone: "success", title: "No charge", body: "The pending authorization has been voided." },
+            ctaLabel: "Browse other listings",
+            ctaUrl: `${SITE_URL}/search`,
+          },
+          idempotencyKey: `booking-${booking_id}-hold-released`,
         });
       }
-      
-      // In-app notification to shopper
-      inAppNotifications.push({
-        user_id: booking.shopper_id,
-        type: "payment_released",
-        title: `Payment Hold Released - Booking #${bookingRef}`,
-        message: `Your payment hold for ${listingTitle} has been released. Your card will not be charged.`,
+      inApp.push({
+        user_id: booking.shopper_id, type: "payment_released",
+        title: `Payment Hold Released — Booking #${bookingRef}`,
+        message: `Your payment hold for ${listingTitle} has been released.`,
         link: "/dashboard",
       });
     } else if (event_type === "hold_expired") {
-      // Payment hold expired without host response
-      // Notify shopper
       if (shopper?.email) {
         emails.push({
           to: shopper.email,
-          subject: `Booking #${bookingRef} Expired - Payment Released`,
-          html: wrapEmailHtml(`
-            <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">Booking Request Expired ⏰</h1>
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
-              Hi ${shopper.full_name || "there"},
-            </p>
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-              Your booking request for <strong>${listingTitle}</strong> has expired because the host did not respond in time.
-              <strong>Your card will not be charged.</strong>
-            </p>
-            <div style="background: #DCFCE7; border-left: 4px solid #22C55E; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 20px 0;">
-              <p style="color: #166534; font-size: 14px; line-height: 1.6; margin: 0;">
-                <strong>✓ No Charge:</strong> The authorization hold has been released. Any pending charge will disappear from your statement within 3-5 business days.
-              </p>
-            </div>
-            <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
-              <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
-            </div>
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
-              We apologize for the inconvenience. Please try booking another listing or reach out to our support team.
-            </p>
-            <div style="text-align: center; margin: 24px 0;">
-              <a href="${SITE_URL}/search" 
-                 style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                Browse Listings
-              </a>
-            </div>
-          `),
+          subject: `Request expired — hold released · #${bookingRef}`,
+          payload: {
+            subject: `Request expired · #${bookingRef}`,
+            kicker: "Expired",
+            heading: "Your request expired without a host response.",
+            greeting: `Hi ${shopper.full_name?.split(" ")[0] || "there"},`,
+            paragraphs: [`The host didn't respond in time, so the authorization hold for ${listingTitle} was released. Your card was not charged.`],
+            details: baseDetails,
+            alert: { tone: "success", title: "No charge", body: "Any pending hold will clear within 3–5 business days." },
+            ctaLabel: "Find another listing",
+            ctaUrl: `${SITE_URL}/search`,
+          },
+          idempotencyKey: `booking-${booking_id}-expired-guest`,
         });
       }
-      
-      // Notify host about expired booking
       if (host?.email) {
         emails.push({
           to: host.email,
-          subject: `Booking Request #${bookingRef} Expired`,
-          html: wrapEmailHtml(`
-            <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">Booking Request Expired ⏰</h1>
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-              A booking request for <strong>${listingTitle}</strong> has expired because it wasn't responded to in time.
-            </p>
-            <div style="background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 20px 0;">
-              <p style="color: #92400E; font-size: 14px; line-height: 1.6; margin: 0;">
-                <strong>💡 Tip:</strong> Responding to booking requests quickly helps you secure more bookings and improves your host rating!
-              </p>
-            </div>
-            <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0;">
-              <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Guest:</strong> ${shopper?.full_name || "A shopper"}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
-            </div>
-            <div style="text-align: center; margin: 24px 0;">
-              <a href="${SITE_URL}/dashboard" 
-                 style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                View Dashboard
-              </a>
-            </div>
-          `),
+          subject: `Booking request expired · #${bookingRef}`,
+          payload: {
+            subject: `Booking request expired · #${bookingRef}`,
+            kicker: "Expired",
+            heading: "A request expired before you could respond.",
+            paragraphs: [`The request for ${listingTitle} from ${shopper?.full_name || "a guest"} timed out.`],
+            details: baseDetails,
+            alert: { tone: "warning", title: "Tip", body: "Responding within 24 hours protects your response rate and ranking." },
+            ctaLabel: "Go to dashboard",
+            ctaUrl: `${SITE_URL}/dashboard`,
+          },
+          idempotencyKey: `booking-${booking_id}-expired-host`,
         });
       }
-      
-      // In-app notifications
-      inAppNotifications.push({
-        user_id: booking.shopper_id,
-        type: "booking_expired",
-        title: `Booking #${bookingRef} Expired`,
-        message: `Your booking request for ${listingTitle} expired. Your payment hold has been released.`,
-        link: "/dashboard",
-      });
-      
-      inAppNotifications.push({
-        user_id: booking.host_id,
-        type: "booking_expired",
-        title: `Booking Request #${bookingRef} Expired`,
-        message: `A booking request for ${listingTitle} expired without a response.`,
-        link: "/dashboard",
-      });
+      inApp.push(
+        { user_id: booking.shopper_id, type: "booking_expired", title: `Booking #${bookingRef} Expired`, message: `Your request for ${listingTitle} expired. Hold released.`, link: "/dashboard" },
+        { user_id: booking.host_id, type: "booking_expired", title: `Request #${bookingRef} Expired`, message: `A request for ${listingTitle} expired without a response.`, link: "/dashboard" }
+      );
     } else if (event_type === "paid") {
-      // Payment captured — booking is locked in. Notify host (the shopper already gets a payment receipt elsewhere).
-      if (host?.email && hostWantsBookingRequestEmail) {
+      if (host?.email && hostWantsRequest) {
         emails.push({
           to: host.email,
-          subject: `💰 Payment Received — Booking #${bookingRef} Confirmed`,
-          html: wrapEmailHtml(`
-            <div style="text-align: center; margin-bottom: 20px;">
-              <span style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: #ffffff; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;">
-                ✓ Payment Confirmed
-              </span>
-            </div>
-            <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 20px 0;">Payment Received — Booking Confirmed</h1>
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-              Great news! Payment has been received for <strong>${listingTitle}</strong>. The booking is now fully confirmed.
-            </p>
-            <div style="background: #f0fdf4; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #10b981;">
-              <p style="margin: 0 0 10px 0;"><strong>Booking Reference:</strong> #${bookingRef}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Guest:</strong> ${shopper?.full_name || "A shopper"}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Dates:</strong> ${startDate} - ${endDate}</p>
-              <p style="margin: 0;"><strong>Amount Paid:</strong> $${booking.total_price}</p>
-            </div>
-            <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
-              Your payout will be released 24 hours after the rental concludes.
-            </p>
-            <div style="text-align: center; margin: 24px 0;">
-              <a href="${SITE_URL}/dashboard"
-                 style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                View Booking
-              </a>
-            </div>
-          `),
+          subject: `Payment received — booking confirmed · #${bookingRef}`,
+          payload: {
+            subject: `Payment received · #${bookingRef}`,
+            kicker: "Payment received",
+            heading: "The booking is fully confirmed.",
+            paragraphs: [`Payment came through for ${listingTitle}. Your payout will be released 24 hours after the rental concludes.`],
+            details: [
+              ...baseDetails,
+              { label: "Guest", value: shopper?.full_name || "A shopper" },
+              { label: "Amount paid", value: `$${Number(booking.total_price).toFixed(2)}` },
+            ],
+            alert: { tone: "success", title: "Locked in", body: "You're all set — just deliver an amazing experience." },
+            ctaLabel: "View booking",
+            ctaUrl: `${SITE_URL}/dashboard`,
+          },
+          idempotencyKey: `booking-${booking_id}-paid-host`,
         });
       }
-
-      if (hostWantsBookingRequestInapp) {
-        inAppNotifications.push({
-          user_id: booking.host_id,
-          type: "booking_paid",
+      if (hostWantsInapp) {
+        inApp.push({
+          user_id: booking.host_id, type: "booking_paid",
           title: `💰 Payment Received — Booking #${bookingRef}`,
-          message: `${shopper?.full_name || "A guest"} paid $${booking.total_price} for ${listingTitle}. Your booking is confirmed.`,
+          message: `${shopper?.full_name || "A guest"} paid $${booking.total_price} for ${listingTitle}.`,
           link: "/dashboard",
         });
       }
     }
-    
-    // Create in-app notifications and send push notifications
-    for (const notif of inAppNotifications) {
-      try {
-        await supabaseClient.from("notifications").insert(notif);
-        logStep("In-app notification created", { user_id: notif.user_id, type: notif.type });
-        
-        // Send push notification for this in-app notification
-        try {
-          const pushResponse = await fetch(
-            `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-notification`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-              },
-              body: JSON.stringify({
-                user_id: notif.user_id,
-                title: notif.title,
-                body: notif.message,
-                url: notif.link,
-                tag: `booking-${booking_id}`,
-              }),
-            }
-          );
-          
-          if (pushResponse.ok) {
-            const pushResult = await pushResponse.json();
-            logStep("Push notification sent", { user_id: notif.user_id, sent: pushResult.sent });
-          } else {
-            logStep("Push notification failed", { user_id: notif.user_id, status: pushResponse.status });
-          }
-        } catch (pushError: any) {
-          logStep("Error sending push notification", { error: pushError.message });
-        }
-      } catch (notifError: any) {
-        logStep("Failed to create in-app notification", { error: notifError.message });
-      }
-    }
 
-    // Send all emails using fetch to Resend API
-    const results = [];
-    for (const email of emails) {
+    // In-app notifications + push
+    for (const notif of inApp) {
       try {
-        const response = await fetch("https://api.resend.com/emails", {
+        await supabase.from("notifications").insert(notif);
+        await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-notification`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${RESEND_API_KEY}`,
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+          body: JSON.stringify({ user_id: notif.user_id, title: notif.title, body: notif.message, url: notif.link, tag: `booking-${booking_id}` }),
+        }).catch(() => {});
+      } catch (e: any) { logStep("In-app notif failed", { error: e.message }); }
+    }
+
+    // Send all emails through the Lovable Emails queue
+    const results: { to: string; success: boolean; error?: string }[] = [];
+    for (const e of emails) {
+      try {
+        const { error } = await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "generic-notice",
+            recipientEmail: e.to,
+            idempotencyKey: e.idempotencyKey,
+            templateData: e.payload,
           },
-          body: JSON.stringify({
-            from: "VendiBook <noreply@updates.vendibook.com>",
-            to: [email.to],
-            subject: email.subject,
-            html: email.html,
-          }),
         });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to send email");
-        }
-        
-        logStep("Email sent", { to: email.to, subject: email.subject });
-        results.push({ success: true, to: email.to });
-      } catch (emailError: any) {
-        logStep("Failed to send email", { to: email.to, error: emailError.message });
-        results.push({ success: false, to: email.to, error: emailError.message });
+        if (error) throw error;
+        results.push({ to: e.to, success: true });
+        logStep("Queued via Lovable Emails", { to: e.to, subject: e.subject });
+      } catch (err: any) {
+        results.push({ to: e.to, success: false, error: err.message });
+        logStep("Queue failed", { to: e.to, error: err.message });
       }
     }
 
-    logStep("Function completed", { emailsSent: results.filter(r => r.success).length });
-
-    return new Response(
-      JSON.stringify({ success: true, results }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
+    return new Response(JSON.stringify({ success: true, results }), {
+      status: 200, headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   } catch (error: any) {
     logStep("ERROR", { message: error.message });
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500, headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 });
