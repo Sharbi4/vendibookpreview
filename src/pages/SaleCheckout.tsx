@@ -54,6 +54,8 @@ const SaleCheckout = () => {
   // Accepted offer state - price from negotiation
   const [acceptedOfferPrice, setAcceptedOfferPrice] = useState<number | null>(null);
   const [isLoadingOffer, setIsLoadingOffer] = useState(false);
+  const [referralCode, setReferralCode] = useState<string>('');
+  const [referralValid, setReferralValid] = useState<boolean>(false);
 
   // Check if user is the owner of this listing
   const isOwner = user?.id && listing?.host_id && user.id === listing.host_id;
