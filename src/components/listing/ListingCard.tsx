@@ -440,7 +440,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         </div>
 
         {/* Price + Micro-action — the only conversion surface on the card */}
-        <div className="flex items-center justify-between gap-3 mt-auto pt-1">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mt-auwith pt-1">
           <div className="flex items-baseline gap-2 flex-wrap min-w-0">
             <span className={cn("text-white font-bold tracking-tight tabular-nums", compact ? "text-base" : "text-xl")}>
               {price}
@@ -480,6 +480,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
             <ArrowRight className="h-3.5 w-3.5 transition-transform duration-150 ease-out group-hover/cta:translate-x-1 group-hover/cta:text-[#fb923c]" />
           </button>
         </div>
+
         
         {/* Hourly Schedule Summary - shows available days/hours for hourly rentals */}
         {scheduleSummary && (
