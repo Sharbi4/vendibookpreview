@@ -41,17 +41,41 @@ export default function Feedback() {
   const submit = async () => {
     if (!rating) { toast.error("Please select a rating"); return; }
     setSubmitting(true);
+    const resolvedBusinessType = businessType === "Other" ? businessTypeOther.trim() : businessType;
+    const newMetadata = {
+      ...(record?.metadata || {}),
+      token,
+      status: "submitted",
+      business_type: resolvedBusinessType || null,
+      can_share: canShare,
+    };
     const { error } = await supabase
       .from("feedback_submissions")
-      .update({
-        rating,
-        nps,
-        message,
-        metadata: { ...(record?.metadata || {}), token, status: "submitted" },
-      })
+      .update({ rating, nps, message, metadata: newMetadata })
       .eq("id", record.id);
+    if (error) { setSubmitting(false); toast.error("Couldn't save feedback"); return; }
+
+    // Notify admin (best-effort, do not block UX)
+    supabase.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "feedback-received-admin",
+        recipientEmail: "atlasmom421@gmail.com",
+        idempotencyKey: `feedback-admin-${record.id}`,
+        templateData: {
+          fromEmail: record?.email,
+          fromName: record?.metadata?.recipient_name,
+          rating,
+          nps,
+          message,
+          contextType: record?.context_type,
+          contextLabel: record?.metadata?.listing_title,
+          businessType: resolvedBusinessType,
+          canShare,
+        },
+      },
+    }).catch(() => {});
+
     setSubmitting(false);
-    if (error) { toast.error("Couldn't save feedback"); return; }
     setDone(true);
   };
 
