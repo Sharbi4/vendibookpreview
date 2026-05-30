@@ -473,6 +473,7 @@ const SaleCheckout = () => {
           vendibook_freight_enabled: isVendibookFreight,
           freight_payer: isVendibookFreight ? freightPayer : 'buyer',
           freight_cost: isVendibookFreight ? freightCost : 0,
+          referral_code: referralValid ? referralCode : undefined,
         },
       });
 
