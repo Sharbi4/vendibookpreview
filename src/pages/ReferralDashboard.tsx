@@ -110,14 +110,13 @@ const ReferralDashboard = () => {
 
   const acceptTerms = async () => {
     if (!user?.id) return;
-    await supabase.from("referral_terms_acceptance").insert({
-      user_id: user.id,
-      terms_version: TERMS_VERSION,
-      user_agent: navigator.userAgent.slice(0, 500),
-    });
-    await supabase.from("profiles").update({ referral_terms_version_accepted: TERMS_VERSION }).eq("id", user.id);
-    setNeedsTerms(false);
-    toast.success("Terms accepted");
+    try {
+      await acceptTermsMut.mutateAsync(TERMS_VERSION);
+      setNeedsTerms(false);
+      toast.success("Terms accepted");
+    } catch {
+      toast.error("Could not record acceptance. Please try again.");
+    }
   };
 
   const FTC = "(I may earn a referral reward.)";
