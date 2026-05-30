@@ -88,7 +88,7 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
     ? 'Review the next steps before contacting the seller.'
     : 'Open dates for this month, plus the host\'s minimum stay and slot count.';
   const steps = isSale ? SALE_STEPS : RENT_STEPS;
-  const primaryLabel = isSale ? 'Start Purchase Request' : 'Request these dates';
+  const primaryLabel = isSale ? 'Start Purchase Request' : 'View Availability';
   const finePrint = isSale
     ? 'No commitment. Final terms, availability, and transfer details are confirmed with the seller.'
     : 'No commitment. Dates, deposits, and final terms are confirmed before any payment is taken.';
