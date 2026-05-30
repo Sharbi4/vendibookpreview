@@ -12,6 +12,50 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
 
+/**
+ * Auto-adjust referrals attached to a transaction when a Stripe dispute/refund hits.
+ * Uses log_referral_status_change RPC with deterministic idempotency to avoid duplicate logs.
+ */
+async function adjustReferralsForTransaction(
+  supabaseClient: any,
+  opts: {
+    transactionId?: string | null;
+    bookingId?: string | null;
+    eventId: string;
+    newStatus: "on_hold" | "voided";
+    note: string;
+    actionType: string;
+  }
+) {
+  try {
+    const { transactionId, bookingId, eventId, newStatus, note, actionType } = opts;
+    const ids = [transactionId, bookingId].filter(Boolean) as string[];
+    if (ids.length === 0) return;
+
+    const { data: refs } = await supabaseClient
+      .from("referrals")
+      .select("id, status")
+      .in("transaction_id", ids)
+      .in("status", ["pending_review", "qualified", "transaction_started"]);
+
+    for (const r of refs ?? []) {
+      const { error } = await supabaseClient.rpc("log_referral_status_change", {
+        p_referral_id: r.id,
+        p_new_status: newStatus,
+        p_source: "system",
+        p_note: note,
+        p_idempotency_key: `stripe-${eventId}-${r.id}`,
+        p_action_type: actionType,
+      });
+      if (error) logStep("WARNING: referral auto-adjust failed", { referralId: r.id, error: error.message });
+      else logStep("Referral auto-adjusted", { referralId: r.id, newStatus });
+    }
+  } catch (e) {
+    logStep("WARNING: adjustReferralsForTransaction threw", { error: String(e) });
+  }
+}
+
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
