@@ -32,16 +32,22 @@ const ReferralAdmin = () => {
   useEffect(() => {
     if (!isAdmin) return;
     (async () => {
-      const [r, c, f] = await Promise.all([
+      const [r, c, f, fl] = await Promise.all([
         supabase.from("referrals").select("*").order("created_at", { ascending: false }).limit(200),
         supabase.from("referral_program_config").select("*").order("program_type"),
         supabase.from("referral_fraud_flags").select("*").is("resolved_at", null).order("created_at", { ascending: false }),
+        supabase.from("app_feature_flags").select("*").in("key", ["referral_program_enabled", "referral_auto_payout_enabled"]),
       ]);
       setReferrals(r.data ?? []);
       setConfig(c.data ?? []);
       setFlags(f.data ?? []);
+      setFeatureFlags(fl.data ?? []);
     })();
   }, [isAdmin, running]);
+
+  const setFlag = async (key: string, enabled: boolean) => {
+    await callAdmin({ action: "set_flag", payload: { key, enabled } });
+  };
 
   const callAdmin = async (body: any) => {
     const { data, error } = await supabase.functions.invoke("referral-admin-action", { body });
