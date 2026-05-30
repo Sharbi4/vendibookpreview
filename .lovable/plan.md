@@ -1,39 +1,50 @@
-# Vendi Web Chat Agent — System Prompt
+# Plan: Lovable Emails everywhere + Post-publish feedback
 
-I'll deliver a single ready-to-paste system prompt for the Vapi chat assistant (ID `3896c198-a43b-4c5f-8f25-d3e77dc81dc6`). You'll copy it into the Vapi dashboard → Assistant → Model → System Message. No code changes needed (the `vapi-chat` edge function already forwards messages to whatever prompt is configured on the assistant).
+## Scope
 
-The prompt is grounded in VendiBook's real rules pulled from project memory:
+You have ~24 edge functions still calling Resend directly. Migrating every single one in one shot is risky (each has bespoke HTML, custom params, callers). I'll do it in two phases.
 
-**Sourced facts baked in:**
-- Marketplace model: rent or buy vending machines, food trucks, kiosks, ATMs, commercial spaces, equipment
-- Commission: **12.9% buyer-paid**, cash transactions are free
-- Payouts: rentals 24h after start, sales 25 days after delivery
-- Refunds / disputes: admin mediation, Zendesk-backed
-- Privacy: exact address masked to 800m radius until booking confirmed / instant book
-- Stripe is source of truth — payment_status must be `paid` before host notified
-- Ownership rule: users cannot buy/rent/offer on their own listings
-- Identity: Stripe Identity verification badges
-- Contact: (725) 755-9598, support email handled through Zendesk
-- Cash flow: 4-step "Pay in Person" tracking
-- Negotiated offers, business-info booking step for commercial spaces, compliance docs, freight $4.50/mile, rental tiers (daily/weekly/monthly), QR signage fulfillment
+## Phase 1 — Ship now (this turn)
 
-## Prompt sections (outline)
+Migrate the **transaction-critical** functions onto the existing `send-transactional-email` queued system. These are the ones your customers see during purchase/booking — they need suppression lists, retry queue, unsubscribe footers, and `email_send_log` tracking.
 
-1. **Identity & Role** — "You are Vendi, VendiBook's support concierge…" tone: warm, concise, on-brand (dark/Linear aesthetic — no emoji spam).
-2. **Scope** — answers how-it-works, payments, refunds, listings, bookings, account/auth, troubleshooting. Escalates legal, dispute decisions, or account-specific data to human support.
-3. **How VendiBook Works** — buyer flow, host flow, listing flow, instant-book vs request-to-book, location reveal rules.
-4. **Payments & Fees** — 12.9% buyer commission, cash = free, Stripe authorization wording standard, payout timelines.
-5. **Refunds & Disputes** — cancellation windows, refund routing via admin mediation, how to open a dispute, Zendesk ticket creation path.
-6. **Account / Identity / Trust** — Stripe Identity, verified badges, ownership restriction.
-7. **Common Troubleshooting** — checkout errors, "listing not visible," geocoding/address issues, Stripe onboarding `details_submitted` lag, document uploads (10MB / allowed types), HEIC support, mobile zoom (16px inputs), map not loading, voice chat vs text chat.
-8. **Escalation Rules** — when to hand off: payment failures with charge ID, identity disputes, suspected fraud, data deletion requests → direct to (725) 755-9598 or open Zendesk ticket; never invent policy.
-9. **Style Rules** — short paragraphs, markdown bullets, no fabricated pricing, never expose internal IDs, never claim to access user account data the chat doesn't actually have.
-10. **Safety** — refuse to give legal/tax/financial advice, no PII echo, no off-topic.
+| Function | Target template (already in registry) |
+|---|---|
+| `send-booking-confirmation` | `booking-confirmation` |
+| `send-payment-receipt` | `payment-receipt` |
+| `send-sale-notification` | `sale-completed-seller` |
+| `send-offer-notification` | `offer-received-seller` / `offer-counter-buyer` / `offer-resolved` |
+| `send-payout-notification` | `payout-sent` |
+| `send-refund-notification` | new `refund-processed` template (none exists) |
+| `send-message-email` | `new-message` |
+| `send-listing-live-email` | `listing-published` |
 
-## Deliverable
+Strategy: **keep the function names** (callers don't change) but rewrite each body to internally call `send-transactional-email`. Idempotency keys derived from `bookingId` / `transactionId` / `messageId` so retries are safe.
 
-A single ~600-800 word system prompt formatted for direct paste into Vapi. After you approve I'll also save it to `mem://features/vendi-text-chat` so future edits stay in sync.
+## Phase 2 — Follow-up (call out, don't ship)
 
-## Question before I write
+Lower-priority + admin/digest/marketing-adjacent functions that still use Resend. I'll list them at the end so you can greenlight a second pass:
+- `send-admin-notification`, `send-admin-daily-digest`, `send-daily-digests`, `send-host-weekly-digests`
+- `send-draft-reminder`, `send-abandoned-listing-email`, `send-stripe-onboarding-reminder`, `send-pending-request-reminder`
+- `send-document-notification`, `send-document-reminder`, `send-deposit-notification`
+- `send-launch-email`, `send-campaign-email`, `send-newsletter-email`, `send-weekly-newsletter`, `send-marketplace-digest` (these may be marketing — need your call)
+- `send-qr-signage-address-request`, `send-test-draft-email`, `send-password-reset-email`, `send-welcome-email`, `send-contact-email`
+- `create-notification`, `raise-dispute`, `resolve-dispute`
 
-Do you want me to also include a short **FAQ knowledge block** inline (e.g., 10–15 Q&A pairs covering "How do I list?", "When do I get paid?", "How do refunds work?", "Why can't I see the address?") so the agent answers without needing tool calls? Recommend **yes** — it dramatically improves first-response accuracy for a text chat with no live data tools.
+## New: Post-publish feedback email
+
+Add a cron-triggered job `send-post-publish-feedback` that:
+1. Runs hourly.
+2. Finds listings published 24–48h ago where no feedback email was sent.
+3. Inserts into `feedback_email_sent` (existing table, idempotent) with `context_type = 'listing_publish'`.
+4. Fires `feedback-request` template via `send-transactional-email`, contextLabel = "publishing your listing".
+5. Schedule via pg_cron, hourly.
+
+Why 24–48h? Long enough that the host has actually used the dashboard / share kit, short enough that the publish experience is fresh.
+
+## Out of scope (explicitly)
+
+- Phase 2 functions
+- Marketing emails (campaign/newsletter) — those should likely move to a marketing-specific provider per Lovable's transactional rules
+- Any auth email changes (already on Lovable hook)
+- Changes to Stephanie's listing
