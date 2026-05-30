@@ -84,7 +84,9 @@ serve(async (req) => {
       vendibook_freight_enabled = false,
       freight_payer = 'buyer',
       freight_cost: rawFreightCost,
+      referral_code: rawReferralCode,
     } = body;
+    const referral_code = rawReferralCode ? String(rawReferralCode).trim().toUpperCase().slice(0, 32) : '';
     
     // Handle null values from request body (null !== undefined, so defaults don't apply)
     const delivery_fee = rawDeliveryFee ?? 0;
