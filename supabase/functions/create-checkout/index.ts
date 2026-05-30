@@ -483,6 +483,7 @@ serve(async (req) => {
             freight_cost: freightAmount.toString(),
             buyer_freight_cost: buyerFreightCost.toString(),
             seller_freight_deduction: isSellerPaidFreight ? freightAmount.toString() : '0',
+            referral_code,
           },
         },
         success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true`,
@@ -507,6 +508,7 @@ serve(async (req) => {
           freight_cost: freightAmount.toString(),
           buyer_freight_cost: buyerFreightCost.toString(),
           seller_freight_deduction: isSellerPaidFreight ? freightAmount.toString() : '0',
+          referral_code,
         },
       };
     }
