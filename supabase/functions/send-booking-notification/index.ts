@@ -331,8 +331,38 @@ serve(async (req) => {
           message: `${shopper?.full_name || "A guest"} paid $${booking.total_price} for ${listingTitle}.`,
           link: "/dashboard",
         });
+      if (shopper?.email && shopperWantsRequest) {
+        emails.push({
+          to: shopper.email,
+          subject: `Booking confirmed · ${listingTitle} · #${bookingRef}`,
+          payload: {
+            subject: `Booking confirmed · #${bookingRef}`,
+            kicker: "Confirmed",
+            heading: "Your dates are locked in.",
+            greeting: `Hi ${shopper.full_name?.split(" ")[0] || "there"},`,
+            paragraphs: [`Payment received for ${listingTitle}. The host has been notified and your booking is fully confirmed.`],
+            details: [
+              ...baseDetails,
+              { label: "Host", value: host?.full_name || "Your host" },
+              { label: "Amount paid", value: `$${Number(booking.total_price).toFixed(2)}` },
+            ],
+            alert: { tone: "success", title: "You're all set", body: "We'll send a reminder 24 hours before your rental starts." },
+            ctaLabel: "View booking",
+            ctaUrl: `${SITE_URL}/dashboard`,
+          },
+          idempotencyKey: `booking-${booking_id}-paid-guest`,
+        });
+      }
+      if (shopperWantsInapp) {
+        inApp.push({
+          user_id: booking.shopper_id, type: "booking_confirmed",
+          title: `✅ Booking #${bookingRef} Confirmed`,
+          message: `Your booking for ${listingTitle} (${startDate} → ${endDate}) is confirmed.`,
+          link: "/dashboard",
+        });
       }
     }
+
 
     // In-app notifications + push
     for (const notif of inApp) {
