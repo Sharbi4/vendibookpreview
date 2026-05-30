@@ -31,6 +31,16 @@ Deno.serve(async (req) => {
     }
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+
+    // Honor global program flag
+    const { data: flag } = await admin
+      .from("app_feature_flags").select("enabled").eq("key", "referral_program_enabled").maybeSingle();
+    if (flag && flag.enabled === false) {
+      return new Response(JSON.stringify({ ok: false, error: "program_disabled" }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { data: lookup } = await admin.rpc("lookup_referral_code", { p_code: normalized });
     const ref = Array.isArray(lookup) ? lookup[0] : lookup;
     if (!ref) {
