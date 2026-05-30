@@ -50,6 +50,7 @@ import type { DocumentType } from '@/types/documents';
 import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
@@ -410,8 +411,44 @@ const BookingCheckout = () => {
         },
       });
 
+      // Detect availability conflict (409) from either data body or FunctionsHttpError body
+      let conflictReason: string | null = null;
+      if ((checkoutData as { code?: string } | null)?.code === 'availability_conflict') {
+        conflictReason = (checkoutData as { error?: string }).error || 'This time is no longer available.';
+      } else if (checkoutError) {
+        try {
+          const ctxResp = (checkoutError as { context?: { response?: Response } })?.context?.response;
+          if (ctxResp && ctxResp.status === 409) {
+            const body = await ctxResp.clone().json();
+            if (body?.code === 'availability_conflict') {
+              conflictReason = body.error || 'This time is no longer available.';
+            }
+          }
+        } catch { /* ignore */ }
+      }
+
+      if (conflictReason) {
+        if (checkoutWindow) checkoutWindow.close();
+        // Remove the just-created booking row so the user can retry cleanly
+        await supabase.from('booking_requests').delete().eq('id', bookingResult.id);
+        trackLeadEvent('availability_unavailable_conflict', {
+          listing_id: listingId,
+          reason: conflictReason,
+          source: 'booking_checkout',
+        });
+        toast({
+          title: 'No longer available',
+          description: 'Sorry, this time is no longer available. Please choose another date or time.',
+          variant: 'destructive',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       if (checkoutError) throw checkoutError;
       if (!checkoutData?.url) throw new Error('Failed to create checkout session');
+
+
 
       // Fire tracking calls asynchronously to not block the redirect
       const formType = listing.instant_book ? 'instant_book' : 'booking_request_hold';

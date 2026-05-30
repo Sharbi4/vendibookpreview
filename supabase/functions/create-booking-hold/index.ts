@@ -69,6 +69,49 @@ serve(async (req) => {
       throw new Error("Missing required fields: booking_id, listing_id, or amount");
     }
 
+    // === Availability guard: prevent double-booking before creating Stripe session ===
+    const { data: bookingRow, error: bookingRowErr } = await supabaseClient
+      .from('booking_requests')
+      .select('start_date, end_date, is_hourly_booking, hourly_slots, slot_number')
+      .eq('id', booking_id)
+      .single();
+
+    if (bookingRowErr || !bookingRow) {
+      throw new Error("Booking not found");
+    }
+
+    const { data: availability, error: availErr } = await supabaseClient.rpc(
+      'check_booking_availability',
+      {
+        p_listing_id: listing_id,
+        p_start_date: bookingRow.start_date,
+        p_end_date: bookingRow.end_date,
+        p_is_hourly_booking: bookingRow.is_hourly_booking ?? false,
+        p_hourly_slots: bookingRow.hourly_slots ?? null,
+        p_slot_number: bookingRow.slot_number ?? null,
+        p_exclude_booking_id: booking_id,
+      }
+    );
+
+    if (availErr) {
+      logStep("Availability RPC error", { error: availErr.message });
+    } else if (availability && (availability as { available?: boolean }).available === false) {
+      const reason = (availability as { error?: string }).error || 'This time is no longer available.';
+      logStep("Availability conflict", { reason });
+      return new Response(
+        JSON.stringify({
+          error: reason,
+          code: 'availability_conflict',
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 409,
+        }
+      );
+    }
+
+
+
     // Fetch listing to get host's Stripe account
     const { data: listing, error: listingError } = await supabaseClient
       .from('listings')
