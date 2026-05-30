@@ -72,4 +72,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'featured-payment-receipt': featuredPaymentReceipt,
   'featured-payment-admin-alert': featuredPaymentAdminAlert,
   'refund-processed': refundProcessed,
+  'feedback-received-admin': feedbackReceivedAdmin,
 }
