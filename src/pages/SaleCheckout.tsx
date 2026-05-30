@@ -23,6 +23,7 @@ import StickySummary from '@/components/shared/StickySummary';
 
 // Step components
 import { PurchaseStepDelivery, PurchaseStepInfo, PurchaseStepReview, type BuyerInfo } from '@/components/purchase-wizard';
+import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 type CheckoutStep = 'information' | 'delivery' | 'review';
