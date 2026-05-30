@@ -8,7 +8,6 @@ import Hero from '@/components/home/Hero';
 
 import AnnouncementBanner from '@/components/home/AnnouncementBanner';
 import VerificationBanner from '@/components/home/VerificationBanner';
-import PaymentsBanner from '@/components/home/PaymentsBanner';
 import ConciergeSection from '@/components/home/ConciergeSection';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -86,22 +85,19 @@ const Index = () => {
 
 
         <Suspense fallback={<SectionSkeleton />}>
-          {/* 3. Listings - Rentals First, Then Sales */}
+          {/* 3. Recently Added Trucks & Trailers */}
           <ListingsSections />
 
-          {/* 4. Trust Infrastructure — the structural proof */}
+          {/* 4. Concierge — primary soft conversion */}
+          <ConciergeSection />
+
+          {/* 5. Trust Infrastructure */}
           <TrustInfrastructure />
 
-          {/* 5. BNPL Banner */}
-          <PaymentsBanner />
-
-          {/* 6. Concierge Service - Manual Matching */}
-          <ConciergeSection />
-          
-          {/* 7. Become a Host CTA (Dark themed) */}
+          {/* 6. Become a Host / Seller */}
           <BecomeHostSection />
-          
-          {/* 8. Final CTA */}
+
+          {/* 7. Final CTA */}
           <FinalCTA />
         </Suspense>
       </main>
