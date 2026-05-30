@@ -315,88 +315,59 @@ serve(async (req) => {
       sellerName
     ).catch(err => logStep("Zendesk update failed", { error: String(err) }));
 
-    // Send notification emails
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (resendApiKey && transaction.buyer?.email && transaction.seller?.email) {
-      try {
-        const { Resend } = await import("https://esm.sh/resend@2.0.0");
-        const resend = new Resend(resendApiKey);
+    // Send notification emails via Lovable Emails (premium generic-notice template)
+    if (transaction.buyer?.email && transaction.seller?.email) {
+      const resolutionText = resolution === "refund_buyer"
+        ? "A full refund has been issued to the buyer."
+        : "The payment has been released to the seller.";
+      const tone = resolution === "refund_buyer" ? "success" : "info";
+      const details = admin_notes ? [{ label: "Admin notes", value: admin_notes }] : [];
+      const dashboardUrl = "https://vendibook.com/dashboard";
 
-        const resolutionText = resolution === "refund_buyer" 
-          ? "A full refund has been issued to the buyer."
-          : "The payment has been released to the seller.";
+      const send = async (to: string, name: string | undefined, audience: "buyer" | "seller") => {
+        try {
+          const { error } = await supabaseClient.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "generic-notice",
+              recipientEmail: to,
+              idempotencyKey: `dispute-resolved-${transaction_id}-${audience}`,
+              templateData: {
+                preview: `Dispute resolved — ${listingTitle}`,
+                kicker: "Dispute resolution",
+                heading: audience === "buyer"
+                  ? "Your dispute has been resolved"
+                  : "A dispute has been resolved",
+                greeting: `Hi ${name || "there"},`,
+                paragraphs: [
+                  audience === "buyer"
+                    ? "Our team has reviewed your dispute and made a decision."
+                    : "Our team has reviewed the dispute on one of your transactions and made a decision.",
+                  resolutionText,
+                ],
+                details: [
+                  { label: "Listing", value: listingTitle },
+                  ...details,
+                ],
+                alert: {
+                  tone,
+                  title: "Resolution",
+                  body: resolutionText,
+                },
+                ctaLabel: "View dashboard",
+                ctaUrl: dashboardUrl,
+                footnote: "Questions? Email support@vendibook.com or call (725) 755-9598.",
+              },
+            },
+          });
+          if (error) throw error;
+        } catch (e) {
+          logStep("Failed to enqueue dispute email", { audience, error: String(e) });
+        }
+      };
 
-        // Email buyer
-        await resend.emails.send({
-          from: "VendiBook <updates@vendibook.com>",
-          to: transaction.buyer.email,
-          subject: "Dispute Resolved - VendiBook",
-          html: `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <style>
-                @font-face {
-                  font-family: 'Sofia Pro Soft';
-                  src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-                  font-weight: 300;
-                  font-style: normal;
-                }
-              </style>
-            </head>
-            <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h2>Your Dispute Has Been Resolved</h2>
-              <p>Hi ${transaction.buyer.full_name || "there"},</p>
-              <p>Our team has reviewed your dispute and made a decision.</p>
-              <p><strong>Resolution:</strong> ${resolutionText}</p>
-              ${admin_notes ? `<p><strong>Admin Notes:</strong> ${admin_notes}</p>` : ""}
-              <p>If you have any questions, please contact our support team.</p>
-              <p>Best regards,<br>The VendiBook Team</p>
-            </body>
-            </html>
-          `,
-        });
-
-        // Email seller
-        await resend.emails.send({
-          from: "VendiBook <updates@vendibook.com>",
-          to: transaction.seller.email,
-          subject: "Dispute Resolved - VendiBook",
-          html: `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <style>
-                @font-face {
-                  font-family: 'Sofia Pro Soft';
-                  src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-                  font-weight: 300;
-                  font-style: normal;
-                }
-              </style>
-            </head>
-            <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h2>A Dispute Has Been Resolved</h2>
-              <p>Hi ${transaction.seller.full_name || "there"},</p>
-              <p>Our team has reviewed the dispute on one of your transactions and made a decision.</p>
-              <p><strong>Resolution:</strong> ${resolutionText}</p>
-              ${admin_notes ? `<p><strong>Admin Notes:</strong> ${admin_notes}</p>` : ""}
-              <p>If you have any questions, please contact our support team.</p>
-              <p>Best regards,<br>The VendiBook Team</p>
-            </body>
-            </html>
-          `,
-        });
-
-        logStep("Notification emails sent");
-      } catch (emailError) {
-        logStep("Failed to send notification emails", { error: String(emailError) });
-        // Don't fail the request if emails fail
-      }
+      await send(transaction.buyer.email, transaction.buyer.full_name, "buyer");
+      await send(transaction.seller.email, transaction.seller.full_name, "seller");
+      logStep("Dispute resolution emails enqueued via Lovable Emails");
     }
 
     // Create in-app notifications for both parties

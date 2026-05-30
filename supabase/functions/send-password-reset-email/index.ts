@@ -1,4 +1,6 @@
-import { Resend } from "https://esm.sh/resend@2.0.0";
+// Sends a password reset email via the premium Satin Lux `generic-notice`
+// template, routed through the Lovable Emails queue (no direct Resend usage).
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,19 +19,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    
-    if (!resendApiKey) {
-      console.error("RESEND_API_KEY not configured");
-      return new Response(
-        JSON.stringify({ error: "Email service not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const { email, resetLink, userName } = await req.json() as PasswordResetEmailRequest;
-
-    console.log("Sending password reset email to:", email);
+    const { email, resetLink, userName } = (await req.json()) as PasswordResetEmailRequest;
 
     if (!email || !resetLink) {
       return new Response(
@@ -38,93 +28,52 @@ Deno.serve(async (req) => {
       );
     }
 
-    const resend = new Resend(resendApiKey);
-    const siteUrl = Deno.env.get("SITE_URL") || "https://vendibook.com";
-    const logoUrl = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png";
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
 
-    const emailResponse = await resend.emails.send({
-      from: "VendiBook <noreply@updates.vendibook.com>",
-      to: email,
-      subject: "Reset Your VendiBook Password",
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <style>
-            @font-face {
-              font-family: 'Sofia Pro Soft';
-              src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-              font-weight: 300;
-              font-style: normal;
-            }
-          </style>
-        </head>
-        <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
-          <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-            <!-- Header with Logo -->
-            <div style="text-align: center; margin-bottom: 40px;">
-              <a href="https://vendibook.com" style="display: inline-block; text-decoration: none;">
-                <img src="${logoUrl}" alt="VendiBook" style="height: 56px;" />
-              </a>
-              <p style="color: #6b7280; font-size: 14px; margin-top: 8px;">Your Mobile Food Business Marketplace</p>
-            </div>
-            
-            <!-- Main Content -->
-            <div style="background: #ffffff; padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-              <div style="text-align: center; margin-bottom: 30px;">
-                <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
-                  <span style="font-size: 28px;">🔐</span>
-                </div>
-                <h1 style="color: #1f2937; font-size: 24px; margin: 0;">Password Reset Request</h1>
-              </div>
-              
-              <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-                Hi${userName ? ` ${userName}` : ''},
-              </p>
-              
-              <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-                We received a request to reset the password for your VendiBook account. Click the button below to create a new password:
-              </p>
-              
-              <div style="text-align: center; margin: 32px 0;">
-                <a href="${resetLink}" style="display: inline-block; background: linear-gradient(135deg, #FF5124 0%, #FF7A50 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Reset Password</a>
-              </div>
-              
-              <div style="background: #fef3cd; padding: 16px 20px; border-radius: 12px; margin: 24px 0; border-left: 4px solid #f59e0b;">
-                <p style="color: #92400e; font-size: 14px; margin: 0; line-height: 1.6;">
-                  <strong>⚠️ Security Notice:</strong> This link will expire in 1 hour. If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
-                </p>
-              </div>
-              
-              <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin-top: 24px;">
-                If the button above doesn't work, copy and paste this link into your browser:
-              </p>
-              <p style="color: #FF5124; font-size: 12px; word-break: break-all; background: #f9fafb; padding: 12px; border-radius: 8px; margin-top: 8px;">
-                ${resetLink}
-              </p>
-            </div>
-            
-            <!-- Footer -->
-            <div style="text-align: center; margin-top: 40px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
-              <p style="color: #9ca3af; font-size: 12px; margin: 0 0 8px 0;">
-                Need help? Call us at <a href="tel:+17257559598" style="color: #FF5124; text-decoration: none;">(725) 755-9598</a> or email <a href="mailto:support@vendibook.com" style="color: #FF5124; text-decoration: none;">support@vendibook.com</a>
-              </p>
-              <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-                © ${new Date().getFullYear()} VendiBook. All rights reserved.
-              </p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `,
+    const greeting = userName ? `Hi ${userName},` : "Hi there,";
+
+    const { error } = await supabase.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "generic-notice",
+        recipientEmail: email,
+        // One token per address; reusing the same key suppresses duplicates within the window.
+        idempotencyKey: `password-reset-${email.toLowerCase()}-${Date.now()}`,
+        templateData: {
+          preview: "Reset your Vendibook password",
+          kicker: "Account security",
+          heading: "Reset your password",
+          greeting,
+          paragraphs: [
+            "We received a request to reset the password for your Vendibook account. Use the secure link below to choose a new one.",
+            "If you didn't ask for this, you can safely ignore this email — your password will stay the same.",
+          ],
+          alert: {
+            tone: "warning",
+            title: "Security notice",
+            body: "This link expires in 1 hour. For your safety, never share it with anyone.",
+          },
+          ctaLabel: "Reset password",
+          ctaUrl: resetLink,
+          footnote: "Need help? Call (725) 755-9598 or email support@vendibook.com.",
+        },
+      },
     });
 
-    console.log("Password reset email sent successfully:", emailResponse);
+    if (error) {
+      console.error("Failed to enqueue password reset email:", error);
+      return new Response(
+        JSON.stringify({ error: error.message || "Failed to send" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
+    console.log("Password reset email enqueued for:", email);
     return new Response(
-      JSON.stringify({ success: true, emailResponse }),
+      JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
