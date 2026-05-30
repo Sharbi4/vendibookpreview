@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
       supabase.functions.invoke('send-transactional-email', {
         body: {
           templateName: 'feedback-received-admin',
-          recipientEmail: 'atlasmom421@gmail.com',
+          recipientEmail: 'support@vendibook.com',
           idempotencyKey: `feedback-admin-nps-${row.id}-${score}`,
           templateData: {
             fromEmail: row.email || meta.recipient_email,

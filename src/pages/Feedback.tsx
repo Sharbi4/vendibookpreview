@@ -53,7 +53,7 @@ export default function Feedback() {
     supabase.functions.invoke("send-transactional-email", {
       body: {
         templateName: "feedback-received-admin",
-        recipientEmail: "atlasmom421@gmail.com",
+        recipientEmail: "support@vendibook.com",
         idempotencyKey: `feedback-admin-${record.id}`,
         templateData: {
           fromEmail: record?.email,

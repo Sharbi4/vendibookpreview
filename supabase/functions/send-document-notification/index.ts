@@ -226,7 +226,7 @@ serve(async (req) => {
       
       // Fallback to hardcoded admin email if no admins found
       if (adminEmails.length === 0) {
-        adminEmails = ["atlasmom421@gmail.com"];
+        adminEmails = ["support@vendibook.com"];
       }
       
       logStep("Sending document upload notification to admins", { adminEmails });
