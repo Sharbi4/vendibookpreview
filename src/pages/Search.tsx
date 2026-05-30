@@ -19,6 +19,7 @@ import SmartNoResults from '@/components/search/SmartNoResults';
 import { EmptyStateEmailCapture } from '@/components/search/EmptyStateEmailCapture';
 import GetAlertsCard from '@/components/search/GetAlertsCard';
 import RequestAssetCTA from '@/components/search/RequestAssetCTA';
+import ReferralBrowseStrip from '@/components/referrals/ReferralBrowseStrip';
 import MobileStickyBar from '@/components/search/MobileStickyBar';
 import SaveSearchButton from '@/components/search/SaveSearchButton';
 import { CategoryPillStrip } from '@/components/search/CategoryPillStrip';
