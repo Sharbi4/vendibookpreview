@@ -1109,6 +1109,8 @@ const Search = () => {
           </div>
         </div>
 
+        <ReferralBrowseStrip />
+
         {/* Request Asset CTA */}
         <div className="container py-8 pb-24 md:pb-8">
           <RequestAssetCTA />
