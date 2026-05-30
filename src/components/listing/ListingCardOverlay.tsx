@@ -51,7 +51,9 @@ const RENT_STEPS = [
 
 const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps) => {
   const isSale = listing.mode === 'sale';
+  const navigate = useNavigate();
   const [leadOpen, setLeadOpen] = useState(false);
+
 
   // Lock body scroll when open
   useEffect(() => {
