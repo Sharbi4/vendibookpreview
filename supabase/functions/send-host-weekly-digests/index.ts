@@ -121,6 +121,12 @@ Deno.serve(async (req) => {
       const tip = TIPS[Math.floor(Math.random() * TIPS.length)];
       const firstName = profile.first_name || profile.display_name || profile.full_name?.split(" ")[0];
 
+      // Rotate referral mention every 3rd week — Purchase, Supply, Rental cycle
+      const weekNumber = Math.floor(since.getTime() / (7 * 24 * 60 * 60 * 1000));
+      const referralProgram = weekNumber % 3 === 0
+        ? (['purchase', 'supply', 'rental'] as const)[Math.floor(weekNumber / 3) % 3]
+        : null;
+
       const templateData = {
         hostName: firstName,
         weekLabel,
@@ -133,6 +139,7 @@ Deno.serve(async (req) => {
         aiInsight: insight,
         tip,
         aiSubject: true,
+        referralProgram,
       };
 
       if (dryRun) {
