@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import TellVendibookModal from '@/components/lead/TellVendibookModal';
 import type { Listing } from '@/types/listing';
+
 
 interface ListingCardOverlayProps {
   open: boolean;
@@ -50,7 +51,9 @@ const RENT_STEPS = [
 
 const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps) => {
   const isSale = listing.mode === 'sale';
+  const navigate = useNavigate();
   const [leadOpen, setLeadOpen] = useState(false);
+
 
   // Lock body scroll when open
   useEffect(() => {
@@ -99,8 +102,16 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
         price: isSale ? listing.price_sale : listing.price_daily,
       },
     );
+    if (isSale) {
+      // Take the buyer straight into the full purchase wizard: review item,
+      // collect buyer info, delivery, then consents + payment.
+      onClose();
+      navigate(`/checkout/${listing.id}`);
+      return;
+    }
     setLeadOpen(true);
   };
+
 
   const handleBackdropClick = () => {
     trackLeadEvent('overlay_dismissed' as any, {
