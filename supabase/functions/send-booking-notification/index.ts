@@ -166,12 +166,34 @@ serve(async (req) => {
           idempotencyKey: `booking-${booking_id}-approved-guest`,
         });
       }
+      if (host?.email && hostWantsRequest) {
+        emails.push({
+          to: host.email,
+          subject: `You approved a booking · #${bookingRef}`,
+          payload: {
+            subject: `You approved a booking · #${bookingRef}`,
+            kicker: "Approval sent",
+            heading: "Approval sent to the guest.",
+            paragraphs: [`${shopper?.full_name || "The guest"} now has a payment link for ${listingTitle}. We'll email you the moment payment clears and the dates are locked in.`],
+            details: [
+              ...baseDetails,
+              { label: "Guest", value: shopper?.full_name || "A shopper" },
+              { label: "Rental total", value: `$${Number(booking.total_price).toFixed(2)}` },
+            ],
+            alert: { tone: "info", title: "Dates not yet locked", body: "The calendar holds these dates until the guest completes payment." },
+            ctaLabel: "View booking",
+            ctaUrl: `${SITE_URL}/dashboard`,
+          },
+          idempotencyKey: `booking-${booking_id}-approved-host`,
+        });
+      }
       inApp.push({
         user_id: booking.shopper_id, type: "booking_approved",
         title: `💳 Booking #${bookingRef} Approved — Payment Required`,
         message: `Your booking for ${listingTitle} has been approved. Complete payment to confirm.`,
         link: "/dashboard",
       });
+
     } else if (event_type === "declined") {
       if (shopper?.email) {
         emails.push({
