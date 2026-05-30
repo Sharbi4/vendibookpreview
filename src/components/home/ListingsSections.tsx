@@ -1,26 +1,25 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Truck, ChefHat, MapPin, Store } from 'lucide-react';
+import { ArrowRight, Truck, ChefHat } from 'lucide-react';
 import ListingCard from '@/components/listing/ListingCard';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type TabKey = 'sale' | 'rent' | 'vendor';
+type TabKey = 'sale' | 'rent';
 
 const tabs: { key: TabKey; label: string; icon: typeof Truck }[] = [
   { key: 'sale', label: 'For Sale', icon: Truck },
   { key: 'rent', label: 'For Rent', icon: ChefHat },
-  { key: 'vendor', label: 'Vendor Spaces', icon: MapPin },
 ];
 
 const ListingsSections = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabKey>('sale');
 
-  // Fetch rental listings
+  // Fetch rental listings — food trucks & trailers only
   const { data: rentListings = [], isLoading: rentLoading } = useQuery({
     queryKey: ['home-rent-listings'],
     queryFn: async () => {
@@ -29,25 +28,7 @@ const ListingsSections = () => {
         .select('*')
         .eq('status', 'published')
         .eq('mode', 'rent')
-        .neq('category', 'vendor_space')
-        .not('title', 'ilike', 'Demo%')
-        .order('published_at', { ascending: false })
-        .limit(6);
-      if (error) throw error;
-      return data;
-    },
-    staleTime: 60000,
-  });
-
-  // Fetch sale listings
-  const { data: saleListings = [], isLoading: saleLoading } = useQuery({
-    queryKey: ['home-sale-listings'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .eq('status', 'published')
-        .eq('mode', 'sale')
+        .in('category', ['food_truck', 'food_trailer'])
         .not('title', 'ilike', 'Demo%')
         .order('published_at', { ascending: false })
         .limit(12);
@@ -57,25 +38,26 @@ const ListingsSections = () => {
     staleTime: 60000,
   });
 
-  // Fetch vendor space listings
-  const { data: vendorSpaceListings = [], isLoading: vendorLoading } = useQuery({
-    queryKey: ['home-vendor-listings'],
+  // Fetch sale listings — food trucks & trailers only
+  const { data: saleListings = [], isLoading: saleLoading } = useQuery({
+    queryKey: ['home-sale-listings'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('listings')
         .select('*')
         .eq('status', 'published')
-        .or('category.eq.vendor_space,category.eq.vendor_lot')
+        .eq('mode', 'sale')
+        .in('category', ['food_truck', 'food_trailer'])
         .not('title', 'ilike', 'Demo%')
         .order('published_at', { ascending: false })
-        .limit(6);
+        .limit(12);
       if (error) throw error;
       return data;
     },
     staleTime: 60000,
   });
 
-  const allListings = useMemo(() => [...rentListings, ...saleListings, ...vendorSpaceListings], [rentListings, saleListings, vendorSpaceListings]);
+  const allListings = useMemo(() => [...rentListings, ...saleListings], [rentListings, saleListings]);
 
   const hostIds = useMemo(() => {
     const ids = allListings.map(l => l.host_id).filter(Boolean);
@@ -104,21 +86,10 @@ const ListingsSections = () => {
     return map;
   }, [hostProfiles]);
 
-  const isLoading = rentLoading || saleLoading || vendorLoading;
+  const isLoading = rentLoading || saleLoading;
 
-  const activeListings = activeTab === 'sale' ? saleListings 
-    : activeTab === 'rent' ? rentListings 
-    : vendorSpaceListings;
-
-  const viewAllPath = activeTab === 'sale' ? '/search?mode=sale' 
-    : activeTab === 'rent' ? '/search?mode=rent' 
-    : '/vendor-spaces';
-
-  const tabCounts: Record<TabKey, number> = {
-    sale: saleListings.length,
-    rent: rentListings.length,
-    vendor: vendorSpaceListings.length,
-  };
+  const activeListings = activeTab === 'sale' ? saleListings : rentListings;
+  const viewAllPath = activeTab === 'sale' ? '/search?mode=sale' : '/search?mode=rent';
 
   if (isLoading) {
     return (
@@ -153,8 +124,8 @@ const ListingsSections = () => {
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Discover Your Next Space</h2>
-          <p className="text-muted-foreground text-sm">Browse verified food trucks, trailers, kitchens & vendor spaces</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Find Your Next Food Truck or Trailer</h2>
+          <p className="text-muted-foreground text-sm">Browse verified food trucks & trailers — for rent or for sale</p>
         </motion.div>
 
         {/* Tab bar */}
@@ -178,8 +149,7 @@ const ListingsSections = () => {
               )}
               <span className="relative flex items-center gap-2">
                 <tab.icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.label.replace('For ', '')}</span>
+                <span>{tab.label}</span>
               </span>
             </button>
           ))}
