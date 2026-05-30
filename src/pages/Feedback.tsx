@@ -25,16 +25,11 @@ export default function Feedback() {
     document.title = "Share your feedback · Vendibook";
     (async () => {
       if (!token) { setLoading(false); return; }
-      // Find pending feedback row by token in metadata
-      const { data } = await supabase
-        .from("feedback_submissions")
-        .select("id, context_type, context_id, metadata, rating, message")
-        .filter("metadata->>token", "eq", token)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      setRecord(data);
-      if (data?.rating) setDone(true);
+      const { data, error } = await supabase.rpc("get_feedback_by_token", { _token: token });
+      const row = Array.isArray(data) ? data[0] : data;
+      if (error) console.warn("feedback lookup failed", error);
+      setRecord(row || null);
+      if (row?.rating) setDone(true);
       setLoading(false);
     })();
   }, [token]);
@@ -43,17 +38,15 @@ export default function Feedback() {
     if (!rating && nps === null) { toast.error("Please select a rating or NPS score"); return; }
     setSubmitting(true);
     const resolvedBusinessType = businessType === "Other" ? businessTypeOther.trim() : businessType;
-    const newMetadata = {
-      ...(record?.metadata || {}),
-      token,
-      status: "submitted",
-      business_type: resolvedBusinessType || null,
-      can_share: canShare,
-    };
-    const { error } = await supabase
-      .from("feedback_submissions")
-      .update({ rating, nps, message, metadata: newMetadata })
-      .eq("id", record.id);
+
+    const { error } = await supabase.rpc("submit_feedback_by_token", {
+      _token: token,
+      _rating: rating || null,
+      _nps: nps,
+      _message: message,
+      _business_type: resolvedBusinessType || null,
+      _can_share: canShare,
+    });
     if (error) { setSubmitting(false); toast.error("Couldn't save feedback"); return; }
 
     // Notify admin (best-effort, do not block UX)
