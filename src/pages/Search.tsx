@@ -195,6 +195,26 @@ const Search = () => {
   const totalCount = searchResults?.total_count ?? 0;
   const totalPages = searchResults?.total_pages ?? 0;
 
+  // Debounced search_performed funnel event — fires ~600ms after results settle so we
+  // don't double-count while the user is still typing or toggling filters.
+  useEffect(() => {
+    if (isLoadingListings) return;
+    const t = setTimeout(() => {
+      trackLeadEvent('search_performed', {
+        query: searchQuery.trim() || undefined,
+        mode: mode !== 'all' ? mode : 'all',
+        category: category !== 'all' ? category : 'all',
+        locationText: locationText || undefined,
+        result_count: totalCount,
+        page,
+        source: 'search_page',
+      });
+    }, 600);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, mode, category, locationText, totalCount, page, isLoadingListings]);
+
+
   // Update URL params
   const handleSearch = (value: string) => {
     setSearchQuery(value);
