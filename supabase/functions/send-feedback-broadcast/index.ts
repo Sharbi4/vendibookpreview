@@ -82,20 +82,28 @@ Deno.serve(async (req) => {
 
     const recipientName = (p as any).first_name || ((p as any).full_name || '').split(' ')[0] || undefined;
 
-    const { error } = await supabase.functions.invoke('send-transactional-email', {
-      body: {
+    const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const FN_URL = `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-transactional-email`;
+    const resp = await fetch(FN_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SERVICE_KEY,
+        'Authorization': `Bearer ${SERVICE_KEY}`,
+      },
+      body: JSON.stringify({
         templateName: 'feedback-request',
         recipientEmail: email,
         idempotencyKey: `feedback-${wave}-${p.id}`,
-        templateData: {
-          recipientName,
-          contextType: 'broadcast',
-          feedbackToken: token,
-        },
-      },
+        templateData: { recipientName, contextType: 'broadcast', feedbackToken: token },
+      }),
     });
-    if (error) errors.push({ id: p.id, email, error: error.message });
-    else sent.push({ id: p.id, email });
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => '');
+      errors.push({ id: p.id, email, status: resp.status, error: text.slice(0, 200) });
+    } else {
+      sent.push({ id: p.id, email });
+    }
   }
 
   return new Response(JSON.stringify({
