@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -143,7 +144,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
         )}
       </div>
 
-      {/* Nav Links - Clean Airbnb Style */}
+      {/* Nav Links — sliding 2px indicator */}
       <ScrollArea className="flex-1">
         <div className="py-3">
           {navigation.map((item) => {
@@ -154,17 +155,20 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 to={item.href}
                 onClick={onLinkClick}
                 className={cn(
-                  "flex items-center gap-3 px-6 py-3 text-sm transition-colors relative",
-                  active 
-                    ? "text-foreground font-medium" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  "group flex items-center gap-3 px-6 py-2.5 text-[13px] transition-colors duration-150 relative",
+                  active
+                    ? "text-foreground font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                 )}
               >
-                {/* Active indicator - left border */}
                 {active && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-foreground rounded-r-full" />
+                  <motion.div
+                    layoutId="sidebar-active-indicator"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-5 bg-foreground rounded-r-full"
+                    transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                  />
                 )}
-                <item.icon className="h-5 w-5" />
+                <item.icon className="h-5 w-5" strokeWidth={active ? 2 : 1.75} />
                 {item.title}
               </Link>
             );
