@@ -661,29 +661,39 @@ const SaleCheckout = () => {
                       )}
 
                       {currentStep === 'review' && (
-                        <PurchaseStepReview
-                          listing={listing}
-                          priceSale={priceSale}
-                          currentDeliveryFee={currentDeliveryFee}
-                          totalPrice={totalPrice}
-                          fulfillmentSelected={fulfillmentSelected}
-                          deliveryAddress={deliveryAddress}
-                          buyerInfo={buyerInfo}
-                          hasValidEstimate={hasValidEstimate}
-                          estimate={estimate}
-                          isFreightSellerPaid={isFreightSellerPaid}
-                          freightCost={freightCost}
-                          paymentMethod={paymentMethod}
-                          setPaymentMethod={setPaymentMethod}
-                          hasMultiplePaymentOptions={hasMultiplePaymentOptions}
-                          agreedToTerms={agreedToTerms}
-                          setAgreedToTerms={setAgreedToTerms}
-                          isPurchasing={isPurchasing}
-                          onBack={() => setCurrentStep('delivery')}
-                          onEditDelivery={() => setCurrentStep('delivery')}
-                          onEditInfo={() => setCurrentStep('information')}
-                          onSubmit={handlePurchase}
-                        />
+                        <>
+                          <div className="p-4 mb-4 border border-border rounded-lg bg-card">
+                            <ReferralCodeField
+                              programType="purchase"
+                              value={referralCode}
+                              onChange={(code, valid) => { setReferralCode(code); setReferralValid(valid); }}
+                              autoFillFromCookie
+                            />
+                          </div>
+                          <PurchaseStepReview
+                            listing={listing}
+                            priceSale={priceSale}
+                            currentDeliveryFee={currentDeliveryFee}
+                            totalPrice={totalPrice}
+                            fulfillmentSelected={fulfillmentSelected}
+                            deliveryAddress={deliveryAddress}
+                            buyerInfo={buyerInfo}
+                            hasValidEstimate={hasValidEstimate}
+                            estimate={estimate}
+                            isFreightSellerPaid={isFreightSellerPaid}
+                            freightCost={freightCost}
+                            paymentMethod={paymentMethod}
+                            setPaymentMethod={setPaymentMethod}
+                            hasMultiplePaymentOptions={hasMultiplePaymentOptions}
+                            agreedToTerms={agreedToTerms}
+                            setAgreedToTerms={setAgreedToTerms}
+                            isPurchasing={isPurchasing}
+                            onBack={() => setCurrentStep('delivery')}
+                            onEditDelivery={() => setCurrentStep('delivery')}
+                            onEditInfo={() => setCurrentStep('information')}
+                            onSubmit={handlePurchase}
+                          />
+                        </>
                       )}
                     </motion.div>
                   </AnimatePresence>
