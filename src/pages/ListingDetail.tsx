@@ -27,6 +27,7 @@ import EnhancedQuickHighlights from '@/components/listing-detail/EnhancedQuickHi
 import PricingSection from '@/components/listing-detail/PricingSection';
 import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
 import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
+import ListingConciergeBox from '@/components/listing-detail/ListingConciergeBox';
 import { FavoriteButton } from '@/components/listing/FavoriteButton';
 import CompactTrustSection from '@/components/trust/CompactTrustSection';
 import CancellationPolicyCard from '@/components/trust/CancellationPolicyCard';
