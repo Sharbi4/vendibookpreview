@@ -82,16 +82,25 @@ Deno.serve(async (req) => {
 
     const recipientName = (p as any).first_name || ((p as any).full_name || '').split(' ')[0] || undefined;
 
-    const { error: invokeErr } = await supabase.functions.invoke('send-transactional-email', {
-      body: {
+    const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_PUBLISHABLE_KEY') || '';
+    const FN_URL = `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-transactional-email`;
+    const resp = await fetch(FN_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': ANON_KEY,
+        'Authorization': `Bearer ${ANON_KEY}`,
+      },
+      body: JSON.stringify({
         templateName: 'feedback-request',
         recipientEmail: email,
         idempotencyKey: `feedback-${wave}-${p.id}`,
         templateData: { recipientName, contextType: 'broadcast', feedbackToken: token },
-      },
+      }),
     });
-    if (invokeErr) {
-      errors.push({ id: p.id, email, error: (invokeErr.message || String(invokeErr)).slice(0, 200) });
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => '');
+      errors.push({ id: p.id, email, status: resp.status, error: text.slice(0, 300) });
     } else {
       sent.push({ id: p.id, email });
     }
