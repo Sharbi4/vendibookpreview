@@ -12,6 +12,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/fc44cd73-df2e-48a8-93b5-4a09cf597d90</loc>
+    <lastmod>2026-05-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/demo/vendor-space-demo.png</image:loc>
+      <image:title>The Woodlands Market Street - Upscale Venue</image:title>
+      <image:caption>The Woodlands Market Street - Upscale Venue in The Woodlands, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/894f40df-0bcb-4569-a568-5c4b402b10ea</loc>
     <lastmod>2026-05-21</lastmod>
     <changefreq>weekly</changefreq>
@@ -20,17 +31,6 @@
       <image:loc>https://images.unsplash.com/photo-1567521464027-f127ff144326?w=800</image:loc>
       <image:title>Food Truck Park Space</image:title>
       <image:caption>Food Truck Park Space on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/fc44cd73-df2e-48a8-93b5-4a09cf597d90</loc>
-    <lastmod>2026-05-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/demo/vendor-space-demo.png</image:loc>
-      <image:title>The Woodlands Market Street - Upscale Venue</image:title>
-      <image:caption>The Woodlands Market Street - Upscale Venue in The Woodlands, TX on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -464,7 +464,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/c649440f-d3df-4f3a-a622-e118767efb4d</loc>
-    <lastmod>2026-05-27</lastmod>
+    <lastmod>2026-05-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
