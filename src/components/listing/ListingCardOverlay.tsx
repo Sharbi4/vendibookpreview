@@ -1,15 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
+import { X, MapPin } from 'lucide-react';
 import { trackLeadEvent } from '@/lib/leadTracking';
-import TellVendibookModal from '@/components/lead/TellVendibookModal';
-import { InlineAvailabilitySlotPicker } from '@/components/listing/InlineAvailabilitySlotPicker';
-import { useHourlyAvailability } from '@/hooks/useHourlyAvailability';
+import { RentalAvailabilityPicker } from '@/components/listing/RentalAvailabilityPicker';
 import { cn } from '@/lib/utils';
 import type { Listing } from '@/types/listing';
-
-
 
 interface ListingCardOverlayProps {
   open: boolean;
@@ -18,66 +15,33 @@ interface ListingCardOverlayProps {
 }
 
 const SALE_STEPS = [
-  {
-    n: '01',
-    title: 'Confirm details',
-    desc: 'Price, location, condition, and seller availability.',
-  },
-  {
-    n: '02',
-    title: 'Choose your path',
-    desc: 'Pay through Vendibook, ask about financing, or coordinate next steps directly.',
-  },
-  {
-    n: '03',
-    title: 'Move forward safely',
-    desc: 'Vendibook keeps your messages, documents, and payment steps organized in one place.',
-  },
-];
-
-const RENT_STEPS = [
-  {
-    n: '01',
-    title: 'Pick your dates',
-    desc: 'Choose your rental window or tell us your general timeline.',
-  },
-  {
-    n: '02',
-    title: 'Confirm with the owner',
-    desc: 'Vendibook helps confirm availability, pricing, deposits, and requirements.',
-  },
-  {
-    n: '03',
-    title: 'Request to book',
-    desc: 'Move forward when the details look right for you.',
-  },
+  { n: '01', title: 'Confirm details', desc: 'Price, location, condition, and seller availability.' },
+  { n: '02', title: 'Choose your path', desc: 'Pay through Vendibook, ask about financing, or coordinate next steps directly.' },
+  { n: '03', title: 'Move forward safely', desc: 'Vendibook keeps your messages, documents, and payment steps organized in one place.' },
 ];
 
 const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps) => {
   const isSale = listing.mode === 'sale';
   const navigate = useNavigate();
-  const [leadOpen, setLeadOpen] = useState(false);
+  const anyListing = listing as any;
 
-
-  // Lock body scroll when open
+  // Lock body scroll
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-    };
+    return () => { document.body.style.overflow = prev; };
   }, [open]);
 
-  // Escape key closes
+  // Escape closes
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        trackLeadEvent('overlay_dismissed' as any, {
-          listing_id: listing.id,
-          overlay_type: isSale ? 'sale' : 'rent',
-        });
+        trackLeadEvent(
+          isSale ? 'overlay_dismissed' : 'availability_overlay_dismissed',
+          { listing_id: listing.id, source: 'listing_card_availability_overlay' },
+        );
         onClose();
       }
     };
@@ -85,61 +49,44 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose, listing.id, isSale]);
 
-  const headline = isSale ? 'Start your purchase' : 'Check live availability';
-  const subhead = isSale
-    ? 'Review the next steps before contacting the seller.'
-    : 'Pick a day to see bookable time slots and start your booking.';
-  const steps = isSale ? SALE_STEPS : RENT_STEPS;
-  const primaryLabel = 'Start Purchase Request';
-  const finePrint = isSale
-    ? 'No commitment. Final terms, availability, and transfer details are confirmed with the seller.'
-    : 'No commitment. Dates, deposits, and final terms are confirmed before any payment is taken.';
-
-  const anyListing = listing as any;
-  const totalSlots = Number(anyListing.total_slots) > 0 ? Number(anyListing.total_slots) : 1;
-  const dailyRate = listing.price_daily;
-  const hourlyRate = (listing as any).price_hourly;
-  const { settings: hourlySettings } = useHourlyAvailability({ listingId: !isSale ? listing.id : '' });
-  const minBookingLabel = hourlySettings.hourlyEnabled
-    ? `${Math.max(1, hourlySettings.minHours || 1)} hr${(hourlySettings.minHours || 1) > 1 ? 's' : ''}`
-    : `${Number(anyListing.rental_min_days) > 0 ? Number(anyListing.rental_min_days) : 1} day${(Number(anyListing.rental_min_days) > 1) ? 's' : ''}`;
-  const monthLabel = useMemo(
-    () => new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }),
-    [],
-  );
-
-
-  const handlePrimary = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    trackLeadEvent(
-      isSale ? ('purchase_request_started' as any) : ('rental_dates_request_started' as any),
-      {
-        listing_id: listing.id,
-        category: listing.category,
-        price: isSale ? listing.price_sale : listing.price_daily,
-      },
-    );
-    if (isSale) {
-      // Take the buyer straight into the full purchase wizard: review item,
-      // collect buyer info, delivery, then consents + payment.
-      onClose();
-      navigate(`/checkout/${listing.id}`);
-      return;
-    }
-    setLeadOpen(true);
-  };
-
-
   const handleBackdropClick = () => {
-    trackLeadEvent('overlay_dismissed' as any, {
-      listing_id: listing.id,
-      overlay_type: isSale ? 'sale' : 'rent',
-    });
+    trackLeadEvent(
+      isSale ? 'overlay_dismissed' : 'availability_overlay_dismissed',
+      { listing_id: listing.id, source: 'listing_card_availability_overlay' },
+    );
     onClose();
   };
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
+
+  const handleSalePrimary = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    trackLeadEvent('purchase_request_started', {
+      listing_id: listing.id,
+      category: listing.category,
+      price: listing.price_sale,
+    });
+    onClose();
+    navigate(`/checkout/${listing.id}`);
+  };
+
+  // ─── Listing summary chip (rentals) ────────────────────────────────────
+  const cover = anyListing.cover_image_url || anyListing.cover_image || (anyListing.images?.[0] ?? null);
+  const locationParts = [anyListing.city, anyListing.state].filter(Boolean);
+  const location = locationParts.join(', ');
+  const priceSummary = !isSale
+    ? listing.price_daily
+      ? `$${Number(listing.price_daily).toLocaleString()}/day`
+      : anyListing.price_hourly
+        ? `$${Number(anyListing.price_hourly).toLocaleString()}/hr`
+        : ''
+    : '';
+
+  const headline = isSale ? 'Start your purchase' : 'View availability';
+  const subhead = isSale
+    ? 'Review the next steps before contacting the seller.'
+    : 'Choose an available day or booking window before starting your request.';
 
   const overlay = (
     <AnimatePresence>
@@ -152,10 +99,8 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
           transition={{ duration: 0.2 }}
           onClick={handleBackdropClick}
         >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
+          <div className="absolute inset-0 bg-black/72 backdrop-blur-md" />
 
-          {/* Container */}
           <motion.div
             role="dialog"
             aria-modal="true"
@@ -165,113 +110,137 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            className={`relative w-full ${isSale ? 'sm:max-w-[440px]' : 'sm:max-w-[520px]'} mx-0 sm:mx-4 bg-[#111113] border border-white/10 rounded-t-2xl sm:rounded-2xl p-7 shadow-2xl max-h-[92vh] overflow-y-auto`}
+            className={cn(
+              'relative w-full sm:max-w-[480px] mx-0 sm:mx-4 bg-[#111113] border border-white/10 rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[92vh] overflow-y-auto',
+              'p-[22px] sm:p-7',
+            )}
             style={{ borderTopWidth: 2, borderTopColor: '#f97316' }}
           >
-            {/* Mobile drag handle */}
+            {/* Mobile handle */}
             <div className="sm:hidden mx-auto mb-3 h-1 w-10 rounded-full bg-white/15" />
 
-            <h2 className="text-[22px] font-semibold text-white leading-tight">
-              {headline}
-            </h2>
-            <p className="mt-1.5 text-[13px] text-[#9ca3af]">{subhead}</p>
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={() => {
+                trackLeadEvent(
+                  isSale ? 'overlay_dismissed' : 'availability_overlay_dismissed',
+                  { listing_id: listing.id, source: 'listing_card_availability_overlay' },
+                );
+                onClose();
+              }}
+              aria-label="Close"
+              className="absolute top-3 right-3 h-8 w-8 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <h2 className="text-[22px] font-semibold text-white leading-tight pr-8">{headline}</h2>
+            <p className="mt-1.5 text-[13px] text-white/60">{subhead}</p>
+
+            {/* Listing summary row (rentals) */}
+            {!isSale && (
+              <div className="mt-4 flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-2.5">
+                {cover ? (
+                  <img
+                    src={cover}
+                    alt={listing.title}
+                    className="h-12 w-12 rounded-lg object-cover shrink-0"
+                  />
+                ) : (
+                  <div className="h-12 w-12 rounded-lg bg-white/5 shrink-0" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="text-[13px] font-semibold text-white truncate">{listing.title}</div>
+                  <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-white/50">
+                    {location && (
+                      <>
+                        <MapPin className="h-3 w-3" />
+                        <span className="truncate">{location}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#f97316]">For Rent</span>
+                  {priceSummary && (
+                    <span className="text-[12px] font-semibold text-white tabular-nums">{priceSummary}</span>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="my-5 h-px bg-white/[0.07]" />
 
             {isSale ? (
-              <div className="space-y-4">
-                {steps.map((step, i) => (
-                  <motion.div
-                    key={step.n}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.08 + i * 0.06, duration: 0.25, ease: 'easeOut' }}
-                    className="flex gap-3"
-                  >
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#f97316] pt-0.5 w-7 shrink-0">
-                      {step.n}
-                    </span>
-                    <div>
-                      <div className="text-[14px] font-semibold text-white leading-snug">
-                        {step.title}
-                      </div>
-                      <div className="mt-0.5 text-[12px] text-[#6b7280] leading-relaxed">
-                        {step.desc}
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            ) : (
               <>
-                {/* Listing stat strip */}
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  {[
-                    {
-                      label: hourlySettings.hourlyEnabled && hourlyRate
-                        ? 'Hourly rate'
-                        : 'Daily rate',
-                      value: hourlySettings.hourlyEnabled && hourlyRate
-                        ? `$${Number(hourlyRate).toLocaleString()}`
-                        : dailyRate
-                          ? `$${Number(dailyRate).toLocaleString()}`
-                          : '—',
-                    },
-                    { label: 'Min booking time', value: minBookingLabel },
-                    { label: 'Slots', value: `${totalSlots}` },
-                  ].map((s) => (
-                    <div
-                      key={s.label}
-                      className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5"
+                <div className="space-y-4">
+                  {SALE_STEPS.map((step, i) => (
+                    <motion.div
+                      key={step.n}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.08 + i * 0.06, duration: 0.25, ease: 'easeOut' }}
+                      className="flex gap-3"
                     >
-                      <div className="text-[10px] uppercase tracking-wider text-[#6b7280]">
-                        {s.label}
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#f97316] pt-0.5 w-7 shrink-0">
+                        {step.n}
+                      </span>
+                      <div>
+                        <div className="text-[14px] font-semibold text-white leading-snug">{step.title}</div>
+                        <div className="mt-0.5 text-[12px] text-white/50 leading-relaxed">{step.desc}</div>
                       </div>
-                      <div className="mt-0.5 text-[14px] font-semibold text-white tabular-nums">
-                        {s.value}
-                      </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
 
-                <div className="text-[11px] uppercase tracking-wider text-[#6b7280] mb-2">
-                  {monthLabel}
-                </div>
+                <div className="my-5 h-px bg-white/[0.07]" />
 
-                {/* Live availability + time-slot picker */}
-                <InlineAvailabilitySlotPicker
-                  listingId={listing.id}
-                  availableFrom={anyListing.available_from}
-                  availableTo={anyListing.available_to}
-                  onClose={onClose}
-                />
+                <button
+                  onClick={handleSalePrimary}
+                  className="w-full h-12 rounded-xl bg-[#f97316] hover:bg-[#ea6c0a] text-white text-[14px] font-semibold transition-all duration-150 hover:scale-[1.01]"
+                >
+                  Start Purchase Request
+                </button>
               </>
+            ) : (
+              <RentalAvailabilityPicker
+                listingId={listing.id}
+                listingTitle={listing.title}
+                category={listing.category}
+                priceHourly={(listing as any).price_hourly}
+                priceDaily={listing.price_daily}
+                priceWeekly={listing.price_weekly}
+                priceMonthly={(listing as any).price_monthly}
+                instantBook={Boolean((listing as any).instant_book)}
+                totalSlots={Number(anyListing.total_slots) > 0 ? Number(anyListing.total_slots) : 1}
+                slotNames={anyListing.slot_names || null}
+                availableFrom={anyListing.available_from}
+                availableTo={anyListing.available_to}
+                source="listing_card_availability_overlay"
+                onClose={onClose}
+              />
             )}
 
-            <div className="my-5 h-px bg-white/[0.07]" />
-
-            {isSale && (
-              <button
-                onClick={handlePrimary}
-                className="w-full h-12 rounded-xl bg-[#f97316] hover:bg-[#ea6c0a] text-white text-[14px] font-semibold transition-all duration-150 hover:scale-[1.01]"
-              >
-                {primaryLabel}
-              </button>
-            )}
-
+            {/* Secondary CTA: View Full Listing */}
             <Link
               to={`/listing/${listing.id}`}
-              onClick={(e) => e.stopPropagation()}
-              className={cn(
-                'flex items-center justify-center w-full h-11 rounded-xl border border-white/15 hover:border-white/30 text-white text-[14px] font-medium transition-colors duration-150',
-                isSale && 'mt-2.5',
-              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                trackLeadEvent(
+                  isSale ? 'overlay_dismissed' : 'availability_overlay_view_full_listing',
+                  { listing_id: listing.id, source: 'listing_card_availability_overlay' },
+                );
+              }}
+              className="mt-3 flex items-center justify-center w-full h-11 rounded-xl border border-white/15 hover:border-white/30 text-white text-[14px] font-medium transition-colors"
             >
               View Full Listing
             </Link>
 
-            <p className="mt-3 text-center text-[11px] text-[#4b5563] leading-relaxed">
-              {finePrint}
+            <p className="mt-3 text-center text-[11px] text-white/30 leading-relaxed">
+              {isSale
+                ? 'No commitment. Final terms, availability, and transfer details are confirmed with the seller.'
+                : 'No commitment. Your card is authorized at checkout and only charged if the host approves.'}
             </p>
           </motion.div>
         </motion.div>
@@ -279,26 +248,7 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
     </AnimatePresence>
   );
 
-  return (
-    <>
-      {typeof document !== 'undefined' && createPortal(overlay, document.body)}
-      <TellVendibookModal
-        open={leadOpen}
-        onOpenChange={(o) => {
-          setLeadOpen(o);
-          if (!o) onClose();
-        }}
-        defaultIntent={isSale ? 'buy' : 'rent'}
-        defaultCategory={
-          listing.category === 'food_truck' || listing.category === 'food_trailer'
-            ? listing.category
-            : undefined
-        }
-        listingId={listing.id}
-        sourcePage="listing_card_overlay"
-      />
-    </>
-  );
+  return typeof document !== 'undefined' ? createPortal(overlay, document.body) : null;
 };
 
 export default ListingCardOverlay;

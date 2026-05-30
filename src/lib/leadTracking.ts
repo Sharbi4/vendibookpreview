@@ -2,12 +2,6 @@
  * Centralized lead + funnel tracking.
  * Writes to public.analytics_events and to window.gtag (if loaded) so the
  * same event powers admin funnels and GA4.
- *
- * Standardized events (do not rename without updating the admin dashboard):
- *   search_performed, listing_card_click, check_availability_click,
- *   contact_host_click, lead_form_started, lead_form_submitted,
- *   booking_request_started, booking_request_submitted,
- *   host_listing_started, host_listing_published
  */
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 
@@ -22,7 +16,7 @@ export type LeadEventName =
   | 'booking_request_submitted'
   | 'host_listing_started'
   | 'host_listing_published'
-  // Homepage funnel — operational, first-party, not GA-gated
+  // Homepage funnel
   | 'homepage_primary_cta_click'
   | 'homepage_browse_click'
   | 'homepage_host_list_click'
@@ -33,9 +27,19 @@ export type LeadEventName =
   // Listing card overlay funnel
   | 'listing_start_purchase_click'
   | 'listing_check_dates_click'
+  | 'listing_view_availability_click'
   | 'purchase_request_started'
   | 'rental_dates_request_started'
-  | 'overlay_dismissed';
+  | 'overlay_dismissed'
+  // Availability overlay funnel (booking-engine surface)
+  | 'availability_overlay_opened'
+  | 'availability_overlay_dismissed'
+  | 'availability_overlay_view_full_listing'
+  | 'availability_mode_changed'
+  | 'availability_date_selected'
+  | 'availability_time_slot_selected'
+  | 'availability_time_range_selected'
+  | 'availability_unavailable_conflict';
 
 export interface LeadEventPayload {
   listing_id?: string;
@@ -66,13 +70,21 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   homepage_final_cta_click: 'homepage',
   listing_start_purchase_click: 'discovery',
   listing_check_dates_click: 'discovery',
+  listing_view_availability_click: 'discovery',
   purchase_request_started: 'lead',
   rental_dates_request_started: 'lead',
   overlay_dismissed: 'lead',
+  availability_overlay_opened: 'booking',
+  availability_overlay_dismissed: 'booking',
+  availability_overlay_view_full_listing: 'booking',
+  availability_mode_changed: 'booking',
+  availability_date_selected: 'booking',
+  availability_time_slot_selected: 'booking',
+  availability_time_range_selected: 'booking',
+  availability_unavailable_conflict: 'booking',
 };
 
 export const trackLeadEvent = (name: LeadEventName, payload: LeadEventPayload = {}) => {
-  // Fire-and-forget — never block UI.
   void trackEventToDb(
     name,
     EVENT_CATEGORY[name],
