@@ -250,8 +250,69 @@ const SellMyFoodTruck = () => {
             </div>
           </section>
 
+          {/* Why Sellers Choose Vendibook (vs Facebook Marketplace) */}
+          <section className="py-16 border-t border-foreground/5">
+            <div className="container">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="text-center max-w-2xl mx-auto mb-12"
+              >
+                <h2 className="text-2xl md:text-3xl font-bold mb-3">
+                  Why food truck sellers choose Vendibook.
+                </h2>
+                <p className="text-muted-foreground">
+                  Facebook Marketplace was built for couches. Vendibook is built for mobile food assets — every visitor is here on purpose.
+                </p>
+              </motion.div>
+
+              <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-4">
+                <Card className="border-foreground/10">
+                  <CardContent className="p-6">
+                    <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Facebook Marketplace</div>
+                    <ul className="space-y-2.5 text-sm text-muted-foreground">
+                      <li>• Buried in a feed of couches, cars, and random goods</li>
+                      <li>• "Is this still available?" from people who never reply</li>
+                      <li>• No verification — scams and lowballers everywhere</li>
+                      <li>• Cash-only handoffs with no buyer protection</li>
+                      <li>• No financing — buyers walk if they can't pay cash</li>
+                      <li>• No freight — buyer has to live nearby</li>
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-foreground/20 bg-foreground/[0.02]">
+                  <CardContent className="p-6">
+                    <div className="text-xs font-medium uppercase tracking-wider text-foreground mb-3">Vendibook</div>
+                    <ul className="space-y-2.5 text-sm">
+                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Buyers come searching specifically for trucks &amp; trailers</span></li>
+                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Verified inquiries from real operators</span></li>
+                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Identity verification &amp; secure checkout</span></li>
+                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Optional notarized sale receipts</span></li>
+                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Affirm &amp; Afterpay — buyers finance, you get paid upfront</span></li>
+                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Nationwide freight across all 48 states</span></li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="text-center mt-8">
+                <Button size="lg" variant="glass-cta" asChild>
+                  <Link to="/list?mode=sale">
+                    List Your Food Truck
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                <p className="text-xs text-muted-foreground mt-3">Free to list. Pay 0% if you handle payment in person.</p>
+              </div>
+            </div>
+          </section>
+
           {/* Pricing Tools Section */}
           <section className="py-16 bg-muted/30">
+
             <div className="container">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
