@@ -683,7 +683,7 @@ export const BookingWidget = ({
                     Book Now
                   </>
                 ) : (
-                  'Check Availability'
+                  'Request to Book'
                 )}
                 <ArrowRight className="h-5 w-5 ml-2" />
               </Button>
@@ -692,7 +692,7 @@ export const BookingWidget = ({
             {!instantBook && (
               <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5">
                 <Shield className="h-3.5 w-3.5" />
-                No charge yet · Confirm details with the host before booking
+                Your card will be authorized now and only charged if approved
               </p>
             )}
 
