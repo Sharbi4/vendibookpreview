@@ -8,6 +8,8 @@ import HeroSearchInput from './HeroSearchInput';
 import HeroVendiButton from './HeroVendiButton';
 import HeroPopularSearches from './HeroPopularSearches';
 import { useHeroSearch } from './useHeroSearch';
+import TellVendibookButton from '@/components/lead/TellVendibookButton';
+import ConciergeTrustLine from '@/components/lead/ConciergeTrustLine';
 
 const TRUST_SIGNALS = [
   { icon: ShieldCheck, label: 'Secure payments' },
