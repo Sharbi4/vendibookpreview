@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useScribe } from '@elevenlabs/react';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 const AI_PLACEHOLDERS = [
   'I need a taco truck in Miami this weekend',
