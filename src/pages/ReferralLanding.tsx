@@ -3,8 +3,12 @@ import { useEffect, useState } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Input } from "@/components/ui/input";
 import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFeatureFlag } from "@/hooks/useReferral";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { ArrowRight, Link as LinkIcon, Share2, DollarSign, Shield, FileText, Clock } from "lucide-react";
 
 const CountUp = ({ to, prefix = "$" }: { to: number; prefix?: string }) => {
