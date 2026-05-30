@@ -11,7 +11,6 @@ interface ListingConciergeBoxProps {
   city?: string;
   category?: ListingCategory;
   isOwner?: boolean;
-  onCheckAvailability: () => void;
 }
 
 const toLeadCategory = (c?: ListingCategory): LeadCategory | undefined => {
@@ -34,7 +33,6 @@ export const ListingConciergeBox = ({
   city,
   category,
   isOwner,
-  onCheckAvailability,
 }: ListingConciergeBoxProps) => {
   const [leadOpen, setLeadOpen] = useState(false);
 
@@ -90,7 +88,7 @@ export const ListingConciergeBox = ({
                 category,
                 source: 'listing_concierge_box',
               });
-              onCheckAvailability();
+              setLeadOpen(true);
             }}
           >
             <CalendarCheck className="w-4 h-4" />
