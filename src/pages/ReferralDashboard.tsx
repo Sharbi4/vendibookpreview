@@ -42,6 +42,8 @@ const ReferralDashboard = () => {
   const { data: code } = useReferralCode();
   const { data: referrals = [] } = useMyReferrals();
   const stripe = useStripeConnect();
+  const { data: programEnabled = true } = useFeatureFlag("referral_program_enabled", true);
+  const acceptTermsMut = useAcceptReferralTerms();
 
   const [tab, setTab] = useState<string>("all");
   const [destination, setDestination] = useState<"purchase" | "supply" | "rental">("purchase");
