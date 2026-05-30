@@ -8,6 +8,7 @@ import HeroSearchInput from './HeroSearchInput';
 import HeroTrustSignals from './HeroTrustSignals';
 import HeroVendiButton from './HeroVendiButton';
 import { useHeroSearch } from './useHeroSearch';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 const CATEGORIES = [
   { label: 'Food trucks', mode: 'rent', cat: 'food_truck' },
