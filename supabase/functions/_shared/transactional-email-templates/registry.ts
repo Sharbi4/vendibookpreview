@@ -76,4 +76,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'refund-processed': refundProcessed,
   'feedback-received-admin': feedbackReceivedAdmin,
   'feedback-weekly-digest': feedbackWeeklyDigest,
+  'generic-notice': genericNotice,
 }
