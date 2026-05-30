@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle2, Loader2, ArrowRight, Sparkles } from 'lucide-react';
+import { CheckCircle2, Loader2, ArrowRight, ArrowLeft, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
@@ -17,13 +17,10 @@ export type LeadCategory = 'food_truck' | 'food_trailer' | 'commercial_kitchen' 
 interface TellVendibookModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Pre-fills intent if known (e.g. on /sell-my-food-truck). */
   defaultIntent?: LeadIntent;
   defaultCategory?: LeadCategory;
   defaultCity?: string;
-  /** Listing id when triggered from a specific listing. */
   listingId?: string;
-  /** Page label stored alongside the lead for routing/analytics. */
   sourcePage?: string;
 }
 
@@ -62,16 +59,15 @@ const BUDGET_BUY = [
   { value: 'gt_120k', label: '$120k+' },
 ];
 
-const schema = z.object({
+// Step 1 schema — only the essentials: intent, city, and at least one contact channel.
+const step1Schema = z.object({
   intent: z.enum(['rent', 'buy', 'list', 'sell']),
-  category: z.enum(['food_truck', 'food_trailer', 'commercial_kitchen', 'vendor_space']),
   city: z.string().trim().min(2, 'Enter your city / state').max(120),
-  timeline: z.string().min(1, 'Pick a timeline'),
-  budget: z.string().min(1, 'Pick a budget range'),
-  name: z.string().trim().min(2, 'Enter your name').max(80),
-  email: z.string().trim().email('Enter a valid email').max(160),
+  email: z.string().trim().email().max(160).optional().or(z.literal('')),
   phone: z.string().trim().max(40).optional().or(z.literal('')),
-  notes: z.string().trim().max(1000).optional().or(z.literal('')),
+}).refine((d) => (d.email && d.email.length > 0) || (d.phone && d.phone.length >= 7), {
+  message: 'Add an email or phone so we can reach you',
+  path: ['email'],
 });
 
 const budgetToRange = (budget: string): { budget_min: number | null; budget_max: number | null } => {
@@ -98,19 +94,22 @@ export const TellVendibookModal = ({
   sourcePage,
 }: TellVendibookModalProps) => {
   const { toast } = useToast();
+  const [step, setStep] = useState<1 | 2>(1);
+  // Step 1 — required
   const [intent, setIntent] = useState<LeadIntent>(defaultIntent || 'rent');
-  const [category, setCategory] = useState<LeadCategory>(defaultCategory || 'food_truck');
   const [city, setCity] = useState(defaultCity || '');
-  const [timeline, setTimeline] = useState('');
-  const [budget, setBudget] = useState('');
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  // Step 2 — optional
+  const [category, setCategory] = useState<LeadCategory | ''>(defaultCategory || '');
+  const [timeline, setTimeline] = useState('');
+  const [budget, setBudget] = useState('');
   const [notes, setNotes] = useState('');
+  const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  // Fire lead_form_started exactly once per open
+  // Fire lead_form_started once per open
   useEffect(() => {
     if (open && !submitted) {
       trackLeadEvent('lead_form_started', {
@@ -123,24 +122,28 @@ export const TellVendibookModal = ({
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Sync defaults if they change while open
-  useEffect(() => {
-    if (defaultIntent) setIntent(defaultIntent);
-  }, [defaultIntent]);
-  useEffect(() => {
-    if (defaultCategory) setCategory(defaultCategory);
-  }, [defaultCategory]);
-  useEffect(() => {
-    if (defaultCity) setCity(defaultCity);
-  }, [defaultCity]);
+  useEffect(() => { if (defaultIntent) setIntent(defaultIntent); }, [defaultIntent]);
+  useEffect(() => { if (defaultCategory) setCategory(defaultCategory); }, [defaultCategory]);
+  useEffect(() => { if (defaultCity) setCity(defaultCity); }, [defaultCity]);
 
   const budgetOptions = intent === 'buy' || intent === 'sell' ? BUDGET_BUY : BUDGET_RENT;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const parsed = schema.safeParse({ intent, category, city, timeline, budget, name, email, phone, notes });
+  const handleNext = () => {
+    const parsed = step1Schema.safeParse({ intent, city, email, phone });
     if (!parsed.success) {
-      toast({ title: 'Please complete the form', description: parsed.error.issues[0]?.message, variant: 'destructive' });
+      toast({ title: 'Almost there', description: parsed.error.issues[0]?.message, variant: 'destructive' });
+      return;
+    }
+    setStep(2);
+  };
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    // Re-validate step 1 in case the user skipped via keyboard
+    const parsed = step1Schema.safeParse({ intent, city, email, phone });
+    if (!parsed.success) {
+      setStep(1);
+      toast({ title: 'Almost there', description: parsed.error.issues[0]?.message, variant: 'destructive' });
       return;
     }
 
@@ -152,28 +155,31 @@ export const TellVendibookModal = ({
       const { error } = await (supabase.from('asset_requests') as any).insert({
         user_id: user?.id || null,
         intent,
-        asset_type: category,
+        asset_type: category || null,
         city: city.trim(),
-        timeline,
+        timeline: timeline || null,
         budget_min: range.budget_min,
         budget_max: range.budget_max,
-        name: name.trim(),
-        email: email.trim(),
+        name: name.trim() || null,
+        email: email.trim() || null,
         phone: phone.trim() || null,
         notes: notes.trim() || null,
         source_page: sourcePage || (typeof window !== 'undefined' ? window.location.pathname : null),
         listing_id: listingId || null,
-        title: `${intent.toUpperCase()} · ${CATEGORY_OPTIONS.find((c) => c.value === category)?.label} · ${city.trim()}`,
+        title: `${intent.toUpperCase()} · ${category ? CATEGORY_OPTIONS.find((c) => c.value === category)?.label : 'Any'} · ${city.trim()}`,
       });
 
       if (error) throw error;
 
       trackLeadEvent('lead_form_submitted', {
         intent,
-        category,
+        category: category || undefined,
         city: city.trim(),
         listing_id: listingId,
         source: sourcePage,
+        has_email: !!email,
+        has_phone: !!phone,
+        completed_step_2: !!(category || timeline || budget || notes || name),
       });
 
       setSubmitted(true);
@@ -188,27 +194,36 @@ export const TellVendibookModal = ({
 
   const handleClose = (next: boolean) => {
     if (!next) {
-      // reset success state when closed
-      setTimeout(() => setSubmitted(false), 300);
+      setTimeout(() => { setSubmitted(false); setStep(1); }, 300);
     }
     onOpenChange(next);
   };
 
+  const labelCls = 'text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground/60';
+  const inputCls = 'bg-white/[0.03] border-white/[0.08] text-[16px]';
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg max-h-[92vh] overflow-y-auto p-0 gap-0 border-white/10 bg-[#0c0c0e]">
-        {/* Header */}
         <div className="p-6 pb-4 border-b border-white/[0.06]">
           <DialogHeader className="space-y-2 text-left">
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-semibold uppercase tracking-[0.14em] w-fit">
               <Sparkles className="w-3 h-3" />
-              Vendibook Concierge
+              Vendibook Concierge · Step {submitted ? '✓' : step} of 2
             </div>
             <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">
-              Tell Vendibook what you need
+              {submitted
+                ? "You're in good hands."
+                : step === 1
+                  ? 'Tell Vendibook what you need'
+                  : 'A few more details (optional)'}
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
-              We'll match you with verified options, confirm availability, and walk you through next steps.
+              {submitted
+                ? 'A concierge will reach out within 1 business hour.'
+                : step === 1
+                  ? "Two quick fields. We'll do the rest."
+                  : 'These help us match faster — skip any field you want.'}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -218,18 +233,16 @@ export const TellVendibookModal = ({
             <div className="mx-auto w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center">
               <CheckCircle2 className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground">You're in good hands.</h3>
             <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-              A Vendibook concierge will text or email you within <strong>1 business hour</strong>. We'll
-              confirm availability, pricing, and next steps before you commit to anything.
+              We'll confirm availability, pricing, and next steps before you commit to anything.
             </p>
             <Button onClick={() => handleClose(false)} variant="outline" className="mt-2">Close</Button>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        ) : step === 1 ? (
+          <div className="p-6 space-y-5">
             {/* INTENT */}
             <div className="space-y-2">
-              <Label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground/60">I want to</Label>
+              <Label className={labelCls}>I want to</Label>
               <div className="grid grid-cols-2 gap-2">
                 {INTENT_OPTIONS.map((opt) => (
                   <button
@@ -249,15 +262,63 @@ export const TellVendibookModal = ({
               </div>
             </div>
 
+            {/* CITY */}
+            <div className="space-y-2">
+              <Label htmlFor="tv-city" className={labelCls}>City / State</Label>
+              <Input
+                id="tv-city"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="e.g. Austin, TX"
+                className={inputCls}
+                required
+              />
+            </div>
+
+            {/* EMAIL or PHONE */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="tv-email" className={labelCls}>Email</Label>
+                <Input id="tv-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} placeholder="you@example.com" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="tv-phone" className={labelCls}>Phone</Label>
+                <Input id="tv-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} placeholder="(555) 555-5555" />
+              </div>
+            </div>
+            <p className="text-[11px] text-foreground/40 -mt-2">Email <em>or</em> phone — whichever's easiest.</p>
+
+            <ConciergeTrustLine />
+
+            <div className="flex gap-2">
+              <Button type="button" onClick={handleNext} variant="dark-shine" size="lg" className="flex-1 rounded-full gap-2">
+                Continue <ArrowRight className="w-4 h-4" />
+              </Button>
+              <Button type="button" onClick={() => handleSubmit()} disabled={submitting} variant="glass-cta" size="lg" className="rounded-full">
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send now'}
+              </Button>
+            </div>
+            <p className="text-[11px] text-foreground/40 text-center">
+              "Send now" submits with just the essentials.
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            {/* NAME (optional) */}
+            <div className="space-y-2">
+              <Label htmlFor="tv-name" className={labelCls}>Your name <span className="text-foreground/30 normal-case font-normal">(optional)</span></Label>
+              <Input id="tv-name" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
+            </div>
+
             {/* CATEGORY */}
             <div className="space-y-2">
-              <Label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground/60">Category</Label>
+              <Label className={labelCls}>Category <span className="text-foreground/30 normal-case font-normal">(optional)</span></Label>
               <div className="flex flex-wrap gap-2">
                 {CATEGORY_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => setCategory(opt.value)}
+                    onClick={() => setCategory(category === opt.value ? '' : opt.value)}
                     className={`text-sm px-3 py-1.5 rounded-full border transition-all ${
                       category === opt.value
                         ? 'border-primary bg-primary/10 text-foreground'
@@ -270,28 +331,15 @@ export const TellVendibookModal = ({
               </div>
             </div>
 
-            {/* CITY */}
-            <div className="space-y-2">
-              <Label htmlFor="tv-city" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground/60">City / State</Label>
-              <Input
-                id="tv-city"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="e.g. Austin, TX"
-                className="bg-white/[0.03] border-white/[0.08] text-[16px]"
-                required
-              />
-            </div>
-
             {/* TIMELINE */}
             <div className="space-y-2">
-              <Label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground/60">Timeline</Label>
+              <Label className={labelCls}>Timeline <span className="text-foreground/30 normal-case font-normal">(optional)</span></Label>
               <div className="flex flex-wrap gap-2">
                 {TIMELINE_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => setTimeline(opt.value)}
+                    onClick={() => setTimeline(timeline === opt.value ? '' : opt.value)}
                     className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
                       timeline === opt.value
                         ? 'border-primary bg-primary/10 text-foreground'
@@ -306,15 +354,15 @@ export const TellVendibookModal = ({
 
             {/* BUDGET */}
             <div className="space-y-2">
-              <Label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground/60">
-                Budget {intent === 'rent' || intent === 'list' ? '(per day)' : '(total)'}
+              <Label className={labelCls}>
+                Budget {intent === 'rent' || intent === 'list' ? '(per day)' : '(total)'} <span className="text-foreground/30 normal-case font-normal">(optional)</span>
               </Label>
               <div className="flex flex-wrap gap-2">
                 {budgetOptions.map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => setBudget(opt.value)}
+                    onClick={() => setBudget(budget === opt.value ? '' : opt.value)}
                     className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
                       budget === opt.value
                         ? 'border-primary bg-primary/10 text-foreground'
@@ -327,30 +375,14 @@ export const TellVendibookModal = ({
               </div>
             </div>
 
-            {/* CONTACT */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="tv-name" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground/60">Name</Label>
-                <Input id="tv-name" value={name} onChange={(e) => setName(e.target.value)} className="bg-white/[0.03] border-white/[0.08] text-[16px]" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tv-email" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground/60">Email</Label>
-                <Input id="tv-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-white/[0.03] border-white/[0.08] text-[16px]" required />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="tv-phone" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground/60">Phone <span className="text-foreground/30 normal-case font-normal">(optional, fastest reply)</span></Label>
-              <Input id="tv-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="bg-white/[0.03] border-white/[0.08] text-[16px]" placeholder="(555) 555-5555" />
-            </div>
-
             {/* NOTES */}
             <div className="space-y-2">
-              <Label htmlFor="tv-notes" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground/60">Notes <span className="text-foreground/30 normal-case font-normal">(optional)</span></Label>
+              <Label htmlFor="tv-notes" className={labelCls}>Notes <span className="text-foreground/30 normal-case font-normal">(optional)</span></Label>
               <Textarea
                 id="tv-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Anything specific — dates, equipment, dietary, build-out, budget context…"
+                placeholder="Dates, equipment, dietary needs, build-out, budget context…"
                 className="bg-white/[0.03] border-white/[0.08] min-h-[80px]"
                 maxLength={1000}
               />
@@ -358,19 +390,18 @@ export const TellVendibookModal = ({
 
             <ConciergeTrustLine />
 
-            <Button
-              type="submit"
-              disabled={submitting}
-              variant="dark-shine"
-              size="lg"
-              className="w-full rounded-full gap-2"
-            >
-              {submitting ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>
-              ) : (
-                <>Send to Vendibook <ArrowRight className="w-4 h-4" /></>
-              )}
-            </Button>
+            <div className="flex gap-2">
+              <Button type="button" onClick={() => setStep(1)} variant="outline" size="lg" className="rounded-full gap-2">
+                <ArrowLeft className="w-4 h-4" /> Back
+              </Button>
+              <Button type="submit" disabled={submitting} variant="dark-shine" size="lg" className="flex-1 rounded-full gap-2">
+                {submitting ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>
+                ) : (
+                  <>Send to Vendibook <ArrowRight className="w-4 h-4" /></>
+                )}
+              </Button>
+            </div>
           </form>
         )}
       </DialogContent>

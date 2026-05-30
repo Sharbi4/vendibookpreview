@@ -485,7 +485,9 @@ const ListingDetail = () => {
                 </div>
                 </div>
 
-                {/* Vendibook Concierge Box — soft-conversion above the fold */}
+                {/* Vendibook Concierge Box — soft-conversion above the fold.
+                    "Check Availability" opens the TellVendibook concierge modal (low-friction lead);
+                    the booking widget further down remains the high-intent secondary path. */}
                 {!isOwner && (
                   <ListingConciergeBox
                     listingId={listing.id}
@@ -493,10 +495,6 @@ const ListingDetail = () => {
                     city={listing.city || undefined}
                     category={listing.category}
                     isOwner={isOwner || false}
-                    onCheckAvailability={() => {
-                      const el = document.getElementById('booking-widget');
-                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }}
                   />
                 )}
 

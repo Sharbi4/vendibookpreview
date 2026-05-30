@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet, Truck, LayoutGrid, Map, Columns, Rows3, Star, Heart } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format, parseISO } from 'date-fns';
@@ -8,6 +8,7 @@ import vendibookLogo from '@/assets/vendibook-logo.png';
 import Footer from '@/components/layout/Footer';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { usePredictivePrefetch } from '@/hooks/usePredictivePrefetch';
+import { trackLeadEvent } from '@/lib/leadTracking';
 import ListingCard from '@/components/listing/ListingCard';
 import QuickBookingModal from '@/components/search/QuickBookingModal';
 import DateRangeFilter from '@/components/search/DateRangeFilter';
@@ -72,6 +73,7 @@ interface SearchResponse {
 
 const Search = () => {
   usePredictivePrefetch();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
   // Track page views with Google Analytics
@@ -110,7 +112,7 @@ const Search = () => {
   const [verifiedHostsOnly, setVerifiedHostsOnly] = useState(searchParams.get('verified') === 'true');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
-  const [viewMode, setViewMode] = useState<'grid' | 'map' | 'split' | 'list'>('split');
+  const [viewMode, setViewMode] = useState<'grid' | 'map' | 'split' | 'list'>('list');
   const [hoveredListingId, setHoveredListingId] = useState<string | null>(null);
   const [page, setPage] = useState(initialPage);
 
@@ -192,6 +194,26 @@ const Search = () => {
   const listings = searchResults?.listings ?? [];
   const totalCount = searchResults?.total_count ?? 0;
   const totalPages = searchResults?.total_pages ?? 0;
+
+  // Debounced search_performed funnel event — fires ~600ms after results settle so we
+  // don't double-count while the user is still typing or toggling filters.
+  useEffect(() => {
+    if (isLoadingListings) return;
+    const t = setTimeout(() => {
+      trackLeadEvent('search_performed', {
+        query: searchQuery.trim() || undefined,
+        mode: mode !== 'all' ? mode : 'all',
+        category: category !== 'all' ? category : 'all',
+        locationText: locationText || undefined,
+        result_count: totalCount,
+        page,
+        source: 'search_page',
+      });
+    }, 600);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, mode, category, locationText, totalCount, page, isLoadingListings]);
+
 
   // Update URL params
   const handleSearch = (value: string) => {
@@ -977,7 +999,12 @@ const Search = () => {
                     userLocation={locationCoords}
                     searchRadius={searchRadius}
                     onListingClick={(listing) => {
-                      window.location.href = `/listing/${listing.id}`;
+                      trackLeadEvent('listing_card_click', {
+                        listing_id: listing.id,
+                        category: (listing as any).category,
+                        source: 'search_map',
+                      });
+                      navigate(`/listing/${listing.id}`);
                     }}
                   />
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
