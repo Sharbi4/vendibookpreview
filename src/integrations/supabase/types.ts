@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_action_idempotency: {
+        Row: {
+          action: string
+          created_at: string
+          idempotency_key: string
+          response: Json
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          idempotency_key: string
+          response: Json
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          idempotency_key?: string
+          response?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_notes: {
         Row: {
           created_at: string
