@@ -52,7 +52,7 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const body: HoldRequest = await req.json();
+    const body: HoldRequest & { referral_code?: string } = await req.json();
     const { 
       booking_id, 
       listing_id, 
@@ -62,8 +62,9 @@ serve(async (req) => {
     
     // Handle null deposit_amount explicitly (null can be passed from frontend)
     const deposit_amount = body.deposit_amount ?? 0;
+    const referral_code = body.referral_code ? String(body.referral_code).trim().toUpperCase().slice(0, 32) : '';
     
-    logStep("Request received", { booking_id, listing_id, amount, delivery_fee, deposit_amount });
+    logStep("Request received", { booking_id, listing_id, amount, delivery_fee, deposit_amount, referral_code });
 
     if (!booking_id || !listing_id || !amount) {
       throw new Error("Missing required fields: booking_id, listing_id, or amount");
