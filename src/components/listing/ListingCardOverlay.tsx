@@ -83,15 +83,25 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose, listing.id, isSale]);
 
-  const headline = isSale ? 'Start your purchase' : 'Check availability';
+  const headline = isSale ? 'Start your purchase' : 'Check live availability';
   const subhead = isSale
     ? 'Review the next steps before contacting the seller.'
-    : 'Tell us when and where you need it before starting a booking request.';
+    : 'Open dates for this month, plus the host\'s minimum stay and slot count.';
   const steps = isSale ? SALE_STEPS : RENT_STEPS;
-  const primaryLabel = isSale ? 'Start Purchase Request' : 'Request Dates';
+  const primaryLabel = isSale ? 'Start Purchase Request' : 'Request these dates';
   const finePrint = isSale
     ? 'No commitment. Final terms, availability, and transfer details are confirmed with the seller.'
     : 'No commitment. Dates, deposits, and final terms are confirmed before any payment is taken.';
+
+  const anyListing = listing as any;
+  const minDays = Number(anyListing.rental_min_days) > 0 ? Number(anyListing.rental_min_days) : 1;
+  const totalSlots = Number(anyListing.total_slots) > 0 ? Number(anyListing.total_slots) : 1;
+  const dailyRate = listing.price_daily;
+  const monthLabel = useMemo(
+    () => new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+    [],
+  );
+
 
   const handlePrimary = (e: React.MouseEvent) => {
     e.preventDefault();
