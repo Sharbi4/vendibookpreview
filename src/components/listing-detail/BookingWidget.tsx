@@ -661,10 +661,20 @@ export const BookingWidget = ({
             {/* CTA Button */}
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
-                variant="dark-shine"
-                className="w-full h-14 text-base font-semibold shadow-lg"
+                variant={instantBook ? 'dark-shine' : 'outline'}
+                className={cn(
+                  'w-full h-14 text-base font-semibold',
+                  instantBook ? 'shadow-lg' : 'border-primary/40 hover:bg-primary/5'
+                )}
                 size="lg"
-                onClick={handleContinueToBooking}
+                onClick={() => {
+                  trackLeadEvent('check_availability_click', {
+                    listing_id: listingId,
+                    source: 'booking_widget',
+                    instant_book: instantBook,
+                  });
+                  handleContinueToBooking();
+                }}
                 disabled={bookingMode === 'daily' ? (!startDate || !endDate) : (!selectedDate || !selectedStartTime)}
               >
                 {instantBook ? (
@@ -673,7 +683,7 @@ export const BookingWidget = ({
                     Book Now
                   </>
                 ) : (
-                  'Request to Book'
+                  'Check Availability'
                 )}
                 <ArrowRight className="h-5 w-5 ml-2" />
               </Button>
@@ -682,7 +692,7 @@ export const BookingWidget = ({
             {!instantBook && (
               <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5">
                 <Shield className="h-3.5 w-3.5" />
-                Your card will be authorized now and only charged if approved
+                No charge yet · Confirm details with the host before booking
               </p>
             )}
 
