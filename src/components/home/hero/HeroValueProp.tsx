@@ -8,6 +8,8 @@ import HeroSearchInput from './HeroSearchInput';
 import HeroVendiButton from './HeroVendiButton';
 import HeroPopularSearches from './HeroPopularSearches';
 import { useHeroSearch } from './useHeroSearch';
+import TellVendibookButton from '@/components/lead/TellVendibookButton';
+import ConciergeTrustLine from '@/components/lead/ConciergeTrustLine';
 
 const TRUST_SIGNALS = [
   { icon: ShieldCheck, label: 'Secure payments' },
@@ -301,6 +303,23 @@ const HeroValueProp = () => {
                 <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
               </button>
             </motion.div>
+
+            {/* Concierge soft-conversion CTA */}
+            <motion.div
+              className="w-full max-w-xl mx-auto mb-7 sm:mb-9 space-y-2.5"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.8 }}
+            >
+              <TellVendibookButton
+                variant="glass-cta"
+                size="lg"
+                className="w-full rounded-full px-7 gap-2 text-sm sm:text-base"
+                sourcePage="home_hero"
+              />
+              <ConciergeTrustLine className="justify-center text-center" />
+            </motion.div>
+
 
             {/* Trust row — structured pills */}
             <motion.div

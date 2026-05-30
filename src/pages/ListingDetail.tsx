@@ -27,6 +27,7 @@ import EnhancedQuickHighlights from '@/components/listing-detail/EnhancedQuickHi
 import PricingSection from '@/components/listing-detail/PricingSection';
 import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
 import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
+import ListingConciergeBox from '@/components/listing-detail/ListingConciergeBox';
 import { FavoriteButton } from '@/components/listing/FavoriteButton';
 import CompactTrustSection from '@/components/trust/CompactTrustSection';
 import CancellationPolicyCard from '@/components/trust/CancellationPolicyCard';
@@ -483,6 +484,21 @@ const ListingDetail = () => {
                   </div>
                 </div>
                 </div>
+
+                {/* Vendibook Concierge Box — soft-conversion above the fold */}
+                {!isOwner && (
+                  <ListingConciergeBox
+                    listingId={listing.id}
+                    listingTitle={listing.title}
+                    city={listing.city || undefined}
+                    category={listing.category}
+                    isOwner={isOwner || false}
+                    onCheckAvailability={() => {
+                      const el = document.getElementById('booking-widget');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                  />
+                )}
 
                 {/* Inline Message Form */}
                 {!isOwner && (
