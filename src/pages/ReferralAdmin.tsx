@@ -93,7 +93,7 @@ const ReferralAdmin = () => {
 
   return (
     <>
-      <SEO title="Referral Admin — Vendibook" />
+      <SEO title="Referral Admin — Vendibook" description="Internal referral program admin." noindex />
       <div className="container mx-auto px-4 py-10 max-w-7xl">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">Referral Admin</h1>
