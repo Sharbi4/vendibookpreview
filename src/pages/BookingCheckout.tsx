@@ -52,6 +52,7 @@ import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { detectAvailabilityConflict } from '@/lib/availabilityConflict';
+import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
