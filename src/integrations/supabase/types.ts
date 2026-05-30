@@ -100,13 +100,18 @@ export type Database = {
           email: string | null
           end_date: string | null
           id: string
+          intent: string | null
           is_public: boolean
+          listing_id: string | null
           matched_listing_id: string | null
+          name: string | null
           notes: string | null
           phone: string | null
+          source_page: string | null
           start_date: string | null
           state: string | null
           status: string | null
+          timeline: string | null
           title: string | null
           updated_at: string
           user_id: string | null
@@ -122,13 +127,18 @@ export type Database = {
           email?: string | null
           end_date?: string | null
           id?: string
+          intent?: string | null
           is_public?: boolean
+          listing_id?: string | null
           matched_listing_id?: string | null
+          name?: string | null
           notes?: string | null
           phone?: string | null
+          source_page?: string | null
           start_date?: string | null
           state?: string | null
           status?: string | null
+          timeline?: string | null
           title?: string | null
           updated_at?: string
           user_id?: string | null
@@ -144,18 +154,30 @@ export type Database = {
           email?: string | null
           end_date?: string | null
           id?: string
+          intent?: string | null
           is_public?: boolean
+          listing_id?: string | null
           matched_listing_id?: string | null
+          name?: string | null
           notes?: string | null
           phone?: string | null
+          source_page?: string | null
           start_date?: string | null
           state?: string | null
           status?: string | null
+          timeline?: string | null
           title?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "asset_requests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "asset_requests_matched_listing_id_fkey"
             columns: ["matched_listing_id"]
@@ -3304,13 +3326,18 @@ export type Database = {
           email: string | null
           end_date: string | null
           id: string
+          intent: string | null
           is_public: boolean
+          listing_id: string | null
           matched_listing_id: string | null
+          name: string | null
           notes: string | null
           phone: string | null
+          source_page: string | null
           start_date: string | null
           state: string | null
           status: string | null
+          timeline: string | null
           title: string | null
           updated_at: string
           user_id: string | null
@@ -3460,13 +3487,18 @@ export type Database = {
           email: string | null
           end_date: string | null
           id: string
+          intent: string | null
           is_public: boolean
+          listing_id: string | null
           matched_listing_id: string | null
+          name: string | null
           notes: string | null
           phone: string | null
+          source_page: string | null
           start_date: string | null
           state: string | null
           status: string | null
+          timeline: string | null
           title: string | null
           updated_at: string
           user_id: string | null

@@ -1,131 +1,97 @@
-## Goal
+# Reduce Booking Friction & Improve Lead Capture
 
-Make the full Vendibook transaction feel effortless and trustworthy — from browsing → request → payment → host approval → completion → funds released — for both the customer and the host/seller. Pure UX, copy, and visual polish. **No changes to Stripe checkout, webhook, payout, or commission logic.**
+Goal: convert more of the existing landing/scroll traffic into qualified leads by adding a soft, concierge-first capture flow, de-emphasizing "Book Now" in favor of lower-friction actions, splitting how-it-works by intent, and standardizing analytics events.
 
-## Guiding principles
+## 1. Lead capture: "Tell Vendibook What You Need"
 
-- One vocabulary, used everywhere (customer and host side, rentals and sales).
-- Trust copy stays short and reassuring — never legalistic.
-- Every screen tells the user what *just* happened and what's *next*.
-- Satin Lux aesthetic preserved (dark charcoal, near-white text, orange CTAs, hairline borders, glass surfaces). No new color systems.
+Build one reusable flow used everywhere, with two surfaces:
 
----
+- **`<TellVendibookButton>`** — branded CTA that opens the modal (variants: primary / glass / inline-link).
+- **`<TellVendibookModal>`** — multi-step form using the project's Satin Lux dialog style.
 
-## 1. Unified status vocabulary
+Form fields (all required unless noted):
+1. Intent — rent · buy · list · sell (segmented control)
+2. Category — food truck · food trailer · commercial kitchen · vendor space
+3. City / State (Google Places autocomplete, reusing `LocationSearchInput`)
+4. Timeline — ASAP · within 2 weeks · within 1 month · 1–3 months · just exploring
+5. Budget range — preset bands per intent (e.g. rentals $/day, sales $ total)
+6. Name, Email, Phone (Phone optional)
+7. Notes (optional)
 
-Adopt the wording you specified across rentals and sales:
+Trust line shown above CTA on every surface:
+> "Need help? Vendibook can help confirm availability, pricing, and next steps before you book."
 
-| Phase | Customer label | Host/Seller label |
-|---|---|---|
-| Just submitted | Request Sent | New Request |
-| Host hasn't decided | Awaiting Approval | Action Needed — Approve or Decline |
-| Host approved, awaiting checkout | Awaiting Payment | Awaiting Buyer Payment |
-| Paid, before service date | Payment Secured · Booking Confirmed | Payment Secured — Booking Confirmed |
-| Service date arrived | Happening Now | Happening Now |
-| Ended, awaiting confirmation | Awaiting Completion | Confirm to Release Funds |
-| Done | Completed | Funds Released |
-| Dispute open | Dispute Open | Dispute Open |
+Success state: confirmation with "We'll text/email you within 1 business hour" + link back to browse.
 
-Implementation: update labels and descriptions in `src/components/dashboard/BookingPhaseIndicator.tsx` (phase taxonomy is already correct). Replace the local `StatusBadge` in `ShopperBookingCard.tsx` and `StatusPill` in `BookingRequestCard.tsx` / `SaleTransactionCard.tsx` with a single shared `TransactionStatusPill` component reading the same vocabulary.
+**Storage:** extend `public.asset_requests` (already holds city/asset_type/budget/notes/email/phone). Add columns: `intent text`, `name text`, `timeline text`, `source_page text`, `listing_id uuid null`. Keep existing RLS (anyone can insert; admins + owner can read). One migration.
 
-## 2. Shared trust strip
+**Placements:**
+- Homepage Hero — secondary CTA "Tell Vendibook what you need" under the search bar.
+- Listing detail — new above-the-fold **Concierge Help Box** (see §2).
+- Search page — persistent right-rail / sticky card "Can't find it? Tell us."
+- Empty search results — primary action becomes the lead form (replace current `EmptyStateEmailCapture` CTA).
+- How-it-works — embedded as Step-3 CTA on both paths.
+- `RentMyCommercialKitchen.tsx` and `SellMyFoodTruck.tsx` — replace existing inline forms with the unified modal trigger so leads land in one table.
 
-New `src/components/trust/SecurePaymentStrip.tsx` — a slim horizontal strip with three icons + short copy:
+## 2. Listing page softer CTAs
 
-- 🛡️ Payment securely held by Vendibook
-- ✓ Released after both sides confirm
-- ⚡ Protected for buyer and host
+Above the fold, add **`<ListingConciergeBox>`**:
 
-Reused in:
-- Listing-detail booking widget (`EnhancedBookingSummaryCard`, `RentalBookingWidget`)
-- Booking wizard review step (`BookingWizard`)
-- Purchase wizard review step (`PurchaseStepReview`)
-- Inquiry form (`EnhancedInquiryForm`)
-- Payment success page
-- Checkout overlay (replacing the busy SSL / Stripe / encryption badges)
+> "Want help with this listing? Vendibook can help confirm availability, answer basic questions, and coordinate next steps with the host."
 
-Copy bank (one source of truth, used everywhere):
-- "Your payment is securely held until the booking is complete."
-- "Funds are released after both sides confirm."
-- "Vendibook protects both sides of the transaction."
+Buttons:
+- **Check Availability** (primary) — opens date picker; for instant-book listings this still flows to checkout, otherwise sends a structured availability inquiry to the host (`listing_leads` insert with `source='check_availability'`).
+- **Ask Vendibook for Help** (secondary) — opens the Tell-Vendibook modal pre-filled with listing id, category, city.
 
-## 3. Checkout overlay refresh
+**CTA hierarchy changes** in `BookingWidget`, `RentalBookingWidget`, and `StickyMobileCTA`:
+- If `instant_book === true` → keep "Book Now" primary (orange).
+- Otherwise → "Check Availability" becomes primary; "Request to Book" demoted to ghost/secondary; "Ask a Question" gains equal weight.
+- Owner banner unchanged.
 
-`src/components/checkout/CheckoutOverlay.tsx`: replace the Stripe-purple ripple, orbiting lock, and bouncing dots with a calmer Satin Lux treatment — single soft shield icon, hairline progress bar, one line of reassurance ("Your payment will be securely held until your booking is complete"). Keep the redirect mechanic and the existing `isVisible`/`message` API untouched.
+## 3. How-it-works split by intent
 
-## 4. Per-step "what's next" helper copy
+Rework `/how-it-works` (`src/pages/HowItWorks.tsx`):
 
-Add short helper sentences (italic muted text under section headers, ~12 words) so customers always know the next step:
+- Replace current hero with a two-card chooser:
+  1. **"I want to find or book something"** → expands to renter/buyer 3-step flow (Search → Check Availability / Ask Vendibook → Book securely). CTA: Browse + Tell Vendibook.
+  2. **"I want to list or sell something"** → expands to host/seller 3-step flow (List in minutes → Verify → Get paid). CTA: Start a Listing + Talk to Concierge.
+- Keep existing deeper pages (`/how-it-works-host`, `/how-it-works-seller`) as "Learn more" links from each path.
+- Maintain trust strip + Satin Lux styling already used on the page.
 
-- `BookingWizard` (rental): under each step header — Dates ("Pick when you need it"), Details ("Tell the host how you'll use it"), Documents ("These keep your booking compliant"), Review ("Confirm and pay — funds stay protected"), Confirmation ("We've sent the request. The host responds within 24h.").
-- `PurchaseStepInfo / Delivery / Review`: same pattern.
-- `EnhancedInquiryForm`: a single "The host typically responds within a few hours" line.
-- `RentalBookingWidget` collapsed state: "Request now, pay only after the host approves."
+## 4. Standardized tracking events
 
-## 5. Payment confirmation pages
+Add `src/lib/leadTracking.ts` exporting `trackLeadEvent(name, payload)` that writes to both `analytics_events` (via existing `trackEventToDb`) and `window.gtag`. Wire these ten events:
 
-- `src/pages/PaymentSuccess.tsx` (or the existing equivalent): lead with "Payment secured ✓" plus the new trust strip and a 3-step "What happens next" ladder (1. Host confirms · 2. You enjoy your booking · 3. Funds release after completion).
-- `src/pages/PaymentCancelled.tsx` (92 lines): soften copy, add "Your card was not charged" reassurance, and a single CTA back to the listing.
+| Event | Fired from |
+|---|---|
+| `search_performed` | `SearchBar` submit, header search, hero search |
+| `listing_card_click` | `ListingCard` link click |
+| `check_availability_click` | new Concierge Box + booking widgets |
+| `contact_host_click` | `InquiryForm`, `EnhancedInquiryForm`, host card |
+| `lead_form_started` | Tell-Vendibook modal open |
+| `lead_form_submitted` | Tell-Vendibook successful insert |
+| `booking_request_started` | Booking wizard step 1 mount |
+| `booking_request_submitted` | Booking wizard final submit |
+| `host_listing_started` | `CreateListing` / wizard step 1 mount |
+| `host_listing_published` | publish success in listing wizard |
 
-## 6. Host & seller dashboard clarity
+Each payload includes `route`, `listing_id?`, `city?`, `category?`, `intent?`.
 
-In `BookingRequestCard.tsx` and `SaleTransactionCard.tsx`:
+## Technical notes
 
-- Replace ad-hoc status pills with the shared `TransactionStatusPill` (item 1).
-- Add a single-line **Next action** banner at the top of each card derived from phase:
-  - pending → "Action needed: approve or decline this request."
-  - approved, unpaid → "Waiting on the buyer to complete payment."
-  - paid, upcoming → "Payment secured. Get ready for the booking."
-  - ended_awaiting_confirmation → "Confirm completion to release your payout."
-  - completed → "Funds released to your payout account."
-- Mirror the customer-side phase indicator visually so both sides see the same progress.
+- **New files:**
+  - `src/components/lead/TellVendibookModal.tsx`
+  - `src/components/lead/TellVendibookButton.tsx`
+  - `src/components/lead/ConciergeTrustLine.tsx`
+  - `src/components/listing-detail/ListingConciergeBox.tsx`
+  - `src/lib/leadTracking.ts`
+- **Edited files:** `Hero.tsx`, `Browse.tsx` / `Search.tsx`, `EmptyStateEmailCapture.tsx`, `HowItWorks.tsx`, `RentMyCommercialKitchen.tsx`, `SellMyFoodTruck.tsx`, `BookingWidget.tsx`, `RentalBookingWidget.tsx`, `StickyMobileCTA.tsx`, `SearchBar.tsx`, `ListingCard.tsx`, `CreateListing.tsx` / wizard publish handler.
+- **Migration:** add `intent`, `name`, `timeline`, `source_page`, `listing_id` to `asset_requests`; index `(intent, created_at desc)`.
+- Reuse existing `SmartConciergeModal` styling tokens; do not replace its exit-intent behavior.
+- All copy and visuals stay on Satin Lux: charcoal `#08080a`, orange-only CTAs, hairline borders, glass cards.
+- No business logic in commissions/payments touched.
 
-## 7. Booking-detail trust polish
-
-`EnhancedBookingSummaryCard` and `RentalBookingWidget`: place the new `SecurePaymentStrip` directly above the primary CTA, replacing the various scattered "Secure checkout" / "Affirm/Afterpay" / "Stripe-secured" snippets with one consistent block. Keep the Affirm/Afterpay badges, just group them.
-
-## 8. Mobile responsiveness pass
-
-- Confirm every new strip/banner stacks gracefully under 380px.
-- Bottom-sheet padding audit on `BookingWizard` and `RequestDatesModal` (already known to need the 16px input rule).
-- Ensure dashboard cards' "Next action" banner doesn't clip when stacked.
-
----
-
-## What is explicitly NOT changing
-
-- Stripe checkout sessions, edge functions, webhook flow, payout timing (24h rentals / 25d sales), commission math (12.9% / 12.9%).
-- Database schema, RLS, status enums, transaction creation flow.
-- Listing wizard, search, messaging, identity verification.
-- Routing, auth, or any business rule from memory.
-
-## Files touched (estimate)
-
-```text
-new   src/components/trust/SecurePaymentStrip.tsx
-new   src/components/shared/TransactionStatusPill.tsx
-new   src/lib/transactionVocabulary.ts          (labels + helper-copy source of truth)
-edit  src/components/dashboard/BookingPhaseIndicator.tsx
-edit  src/components/dashboard/BookingRequestCard.tsx
-edit  src/components/dashboard/SaleTransactionCard.tsx
-edit  src/components/dashboard/ShopperBookingCard.tsx
-edit  src/components/checkout/CheckoutOverlay.tsx
-edit  src/components/listing-detail/BookingWizard.tsx
-edit  src/components/listing-detail/RentalBookingWidget.tsx
-edit  src/components/listing-detail/EnhancedBookingSummaryCard.tsx
-edit  src/components/listing-detail/EnhancedInquiryForm.tsx
-edit  src/components/purchase-wizard/PurchaseStepInfo.tsx
-edit  src/components/purchase-wizard/PurchaseStepDelivery.tsx
-edit  src/components/purchase-wizard/PurchaseStepReview.tsx
-edit  src/pages/PaymentCancelled.tsx
-edit  src/pages/PaymentSuccess.tsx               (locate exact file during build)
-```
-
-Roughly 3 new files and ~14 surgical edits. No migrations, no edge-function changes.
-
-## Verification after implementation
-
-1. Run through a rental: listing → request dates → wizard → checkout overlay → payment-success → host approves in dashboard → mark complete. Confirm the status vocabulary is consistent at every step on both sides.
-2. Same for a purchase via `PurchaseStep*`.
-3. Mobile viewport (375px) walkthrough of the same two flows.
-4. Spot-check that no Stripe call signatures, webhook handlers, or DB columns were touched.
+## Out of scope
+- Email/SMS routing of new leads (existing admin notification path already covers `asset_requests` inserts).
+- Redesign of dashboards or checkout.
+- Any change to Stripe/escrow flow.
