@@ -19,11 +19,35 @@ Deno.serve(async (req) => {
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
     const stripe = new Stripe(STRIPE_KEY, { apiVersion: "2025-08-27.basil" });
 
+    // GUARDRAIL: do not auto-pay unless the admin has explicitly flipped the auto-payout flag.
+    const { data: autoFlag } = await admin
+      .from("app_feature_flags")
+      .select("enabled")
+      .eq("key", "referral_auto_payout_enabled")
+      .maybeSingle();
+    if (!autoFlag?.enabled) {
+      return new Response(
+        JSON.stringify({ ok: true, skipped: "auto_payout_disabled", note: "Flip referral_auto_payout_enabled to true to enable." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const { data: payables } = await admin.rpc("list_payable_referrers", { p_min_payout: 50 });
 
     const results: any[] = [];
     for (const p of (payables ?? []) as Array<{ referrer_id: string; total_owed: number; referral_ids: string[] }>) {
       try {
+        // Skip if ANY referral in this batch has an unresolved fraud flag
+        const { data: flagged } = await admin
+          .from("referral_fraud_flags")
+          .select("referral_id")
+          .in("referral_id", p.referral_ids)
+          .is("resolved_at", null);
+        if (flagged && flagged.length > 0) {
+          results.push({ referrer_id: p.referrer_id, skipped: "fraud_flagged", flagged_count: flagged.length });
+          continue;
+        }
+
         const { data: profile } = await admin
           .from("profiles")
           .select("stripe_account_id, referral_ytd_earnings")
