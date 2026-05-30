@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
 import { LocationSearchInput } from './LocationSearchInput';
 import { trackSearchStarted } from '@/lib/analytics';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 interface SearchBarProps {
   onSearch?: (query: string, dateRange?: DateRange, location?: { name: string; coordinates: [number, number] } | null) => void;
@@ -28,6 +29,10 @@ const SearchBar = ({ onSearch, className, compact = false }: SearchBarProps) => 
     
     // Track search event
     trackSearchStarted(query || selectedLocation?.name);
+    trackLeadEvent('search_performed', {
+      city: selectedLocation?.name || query || undefined,
+      source: 'search_bar',
+    });
     
     if (onSearch) {
       onSearch(query, dateRange, selectedLocation);
